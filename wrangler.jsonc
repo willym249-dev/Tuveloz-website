@@ -29,6 +29,6 @@
     "AUTH_EMAIL_HEADER": "cf-access-authenticated-user-email",
     "OWNER_EMAIL": "hello@tuveloz.com",
     "RESEND_FROM_EMAIL": "Tuveloz <alerts@updates.tuveloz.com>",
-    "SITE_URL": "https://example.com"
+    "SITE_URL": "https://tuveloz.com"
   }
 }
