@@ -10,6 +10,7 @@ import {
   type TuvelozIconName,
 } from "../../components/tuveloz-icons";
 import { SiteLanguageButton } from "../../components/site-language";
+import { providerModeForWorkLocations } from "../../../lib/service-matching";
 
 type StorefrontData = {
   profile: {
@@ -151,6 +152,9 @@ export default function ProviderStorefrontPage() {
               {data.testProvider
                 ? <span className="test-badge">TEST PROFILE</span>
                 : <span className="verified-badge">✓ Tuveloz verified</span>}
+              <span className="provider-mode-badge">
+                {providerModeForWorkLocations(workLocations)}
+              </span>
               <span className={`availability-chip ${profile.availabilityStatus.toLowerCase().replaceAll(" ", "-")}`}>
                 {profile.availabilityStatus}
               </span>
