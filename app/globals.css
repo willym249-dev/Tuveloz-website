@@ -3628,6 +3628,79 @@ label > small {
   margin-top: 18px;
 }
 
+.service-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.service-group {
+  background: #fff;
+  border: 1px solid #dbe3e9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.service-group > summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 13px 14px;
+}
+
+.service-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-group > summary > span {
+  display: block;
+  min-width: 0;
+}
+
+.service-group > summary strong,
+.service-group > summary small {
+  display: block;
+}
+
+.service-group > summary strong {
+  color: #172b3c;
+  font-size: 13px;
+}
+
+.service-group > summary small {
+  color: #687b8a;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.service-group > summary b {
+  background: #edf3f8;
+  border-radius: 999px;
+  color: #34536c;
+  flex: 0 0 auto;
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.service-group[open] > summary {
+  background: #f5f8fb;
+  border-bottom: 1px solid #dbe3e9;
+}
+
+.service-group[open] > summary b {
+  background: #dce9f4;
+}
+
+.service-group > .service-options {
+  padding: 10px;
+}
+
 .service-options {
   display: grid;
   gap: 8px;
@@ -3665,6 +3738,35 @@ label > small {
   font-size: 10px;
   line-height: 1.55;
   margin-top: 10px;
+}
+
+.provider-mode-preview {
+  align-items: center;
+  border-top: 1px solid #dbe3e9;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.provider-mode-preview > span {
+  color: #526b7d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.provider-mode-badge {
+  background: #eaf2ff;
+  border: 1px solid #9fc1ff;
+  border-radius: 999px;
+  color: #0d57c8;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 6px 9px;
+  text-transform: uppercase;
 }
 
 .parts-source-options label {
@@ -3949,6 +4051,10 @@ label > small {
 @media (max-width: 700px) {
   .customer-service-options {
     grid-template-columns: 1fr;
+  }
+
+  .service-group > summary {
+    align-items: flex-start;
   }
 
   .eligibility-questions {
@@ -4820,7 +4926,7 @@ footer > p,
 }
 
 .provider-workspace-badge {
-  margin-bottom: 8px;
+  margin: 0 6px 8px 0;
 }
 
 .verified-inline {
@@ -5205,6 +5311,17 @@ footer > p,
   font-size: 9px;
   font-weight: 750;
   padding: 7px 9px;
+}
+
+.provider-profile-preview-facts .provider-mode-badge {
+  background: #10243d;
+  border-color: #2f69a5;
+  color: #a9d3ff;
+  font-weight: 900;
+}
+
+.admin-card > .provider-mode-badge {
+  margin: 0 0 8px 6px;
 }
 
 .provider-profile-preview-note {
