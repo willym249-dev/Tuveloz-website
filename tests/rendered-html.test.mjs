@@ -148,20 +148,19 @@ test("build protects every important submission with a second confirmation", asy
   assert.ok(contents.includes("Go back"));
 });
 
-test("build limits active service to Montgomery County and collects DMV expansion demand", async () => {
+test("build limits active service to Montgomery County and collects expansion demand", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("DMV vehicle-service marketplace"));
+  assert.ok(contents.includes("Local vehicle-service marketplace"));
   assert.ok(contents.includes("Operating now in Montgomery County, Maryland"));
   assert.ok(contents.includes("Tuveloz currently operates only in Montgomery County, Maryland."));
-  assert.ok(contents.includes("Bring Tuveloz to your DMV area."));
+  assert.ok(contents.includes("Bring Tuveloz to your area."));
   assert.ok(contents.includes("Request my area"));
   assert.ok(contents.includes("Enter a Montgomery County ZIP code"));
-  assert.ok(contents.includes("DMV expansion demand"));
-  assert.ok(!contents.includes("Pilot launch: Montgomery County, MD and Fairfax County, VA."));
+  assert.ok(contents.includes("Expansion demand"));
 });
 
 test("build gives mobile mechanics and service-truck operators clear prominence", async () => {
@@ -203,7 +202,7 @@ test("provider approval requires applicable state and local proof without reques
   assert.ok(contents.includes("cannot be verified until the state and local requirements"));
 });
 
-test("build keeps customer and provider access on Tuveloz private links", async () => {
+test("build provides one passwordless sign-in for customer and verified-provider workspaces", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
@@ -212,12 +211,93 @@ test("build keeps customer and provider access on Tuveloz private links", async 
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
+  const authSource = await readFile(
+    new URL("../lib/account-auth.ts", import.meta.url),
+    "utf8",
+  );
 
-  assert.ok(contents.includes("Your workspace stays on Tuveloz."));
-  assert.ok(contents.includes("Customers and approved providers use private Tuveloz links."));
-  assert.ok(contents.includes("Need your private link again?"));
+  assert.ok(contents.includes("One simple sign-in. The right tools only."));
+  assert.ok(contents.includes("Email me a code"));
+  assert.ok(contents.includes("Verified provider workspace"));
+  assert.ok(contents.includes("Customer workspace"));
+  assert.ok(contents.includes("Codes expire after 10 minutes and work once."));
   assert.ok(contents.includes("Save this private link."));
-  assert.ok(!homeSource.includes("header-sign-in"));
-  assert.ok(!homeSource.includes("signedIn"));
-  assert.ok(homeSource.includes("Workspace help"));
+  assert.ok(homeSource.includes("header-sign-in"));
+  assert.ok(homeSource.includes('href="/account"'));
+  assert.ok(authSource.includes('eq(providerApplications.status, "approved")'));
+  assert.ok(authSource.includes('eq(providerApplications.verificationStatus, "verified")'));
+  assert.ok(authSource.includes('eq(providerApplications.isTestProvider, "no")'));
+  assert.ok(authSource.includes('"HttpOnly"'));
+  assert.ok(authSource.includes('"SameSite=Lax"'));
+  assert.ok(authSource.includes("LOGIN_MAX_ATTEMPTS = 5"));
+  assert.ok(authSource.includes('{ name: "HMAC", hash: "SHA-256" }'));
+});
+
+test("customer and provider pages keep role-specific actions separate", async () => {
+  const customerSource = await readFile(
+    new URL("../app/customer/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const providerSource = await readFile(
+    new URL("../app/provider-jobs/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const accountApiSource = await readFile(
+    new URL("../app/api/account/route.ts", import.meta.url),
+    "utf8",
+  );
+  const customerQuotesSource = await readFile(
+    new URL("../app/api/customer-quotes/route.ts", import.meta.url),
+    "utf8",
+  );
+  const providerAlertsSource = await readFile(
+    new URL("../lib/provider-alerts.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(customerSource.includes("Post a job"));
+  assert.ok(customerSource.includes("My jobs"));
+  assert.ok(customerSource.includes("/my-request?request="));
+  assert.ok(!customerSource.includes("/my-request?token="));
+  assert.ok(!customerSource.includes("Submit quote"));
+  assert.ok(!customerSource.includes("Open Jobs"));
+  assert.ok(!customerSource.includes("Provider sign in"));
+  assert.ok(providerSource.includes("Yes, submit quote"));
+  assert.ok(providerSource.includes("Open Jobs"));
+  assert.ok(!providerSource.includes("Post a job"));
+  assert.ok(!providerSource.includes("My jobs"));
+  assert.ok(accountApiSource.includes('if (session.role === "customer")'));
+  assert.ok(accountApiSource.includes('role: "provider"'));
+  assert.ok(customerQuotesSource.includes("eq(customerRequests.email, session.email)"));
+  assert.ok(providerAlertsSource.includes("/account?role=provider"));
+  assert.ok(!providerAlertsSource.includes("/provider-jobs?token="));
+});
+
+test("build itemizes and snapshots the 10 percent customer service fee", async () => {
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
+  const files = (await builtFiles(distDirectory))
+    .filter((path) => [".js", ".html"].includes(extname(path)));
+  const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
+  const feeSource = await readFile(
+    new URL("../lib/customer-fee.ts", import.meta.url),
+    "utf8",
+  );
+  const migration = await readFile(
+    new URL("../drizzle/0020_kind_rick_jones.sql", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(contents.includes("Provider quote subtotal"));
+  assert.ok(contents.includes("Tuveloz service fee (10%)"));
+  assert.ok(contents.includes("Customer total"));
+  assert.ok(contents.includes("Your provider quote remains your full subtotal."));
+  assert.ok(contents.includes("A 10% customer service fee is shown before you confirm"));
+  assert.ok(contents.includes("Accepted service fees"));
+  assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 1000"));
+  assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
+  assert.ok(migration.includes("customer_fee_rate_bps"));
+  assert.ok(migration.includes("customer_fee_cents"));
+  assert.ok(migration.includes("customer_total_cents"));
+  assert.ok(migration.includes("CREATE TABLE `login_codes`"));
+  assert.ok(migration.includes("CREATE TABLE `auth_sessions`"));
 });

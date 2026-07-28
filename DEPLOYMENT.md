@@ -67,15 +67,20 @@ Update the non-secret placeholders under `vars` in `wrangler.jsonc`:
 - `OWNER_EMAIL`: the email allowed to use the owner dashboard
 - `AUTH_EMAIL_HEADER`: keep
   `cf-access-authenticated-user-email` when using Cloudflare Access
-- `RESEND_FROM_EMAIL`: the verified sender used for provider alerts
+- `RESEND_FROM_EMAIL`: the verified sender used for sign-in codes and provider
+  alerts
 
-If email alerts are enabled, save the Resend key as a Cloudflare secret:
+Save a random authentication secret of at least 32 characters and the Resend
+key as Cloudflare secrets:
 
 ```bash
+npx wrangler secret put AUTH_CODE_SECRET
 npx wrangler secret put RESEND_API_KEY
 ```
 
-Do not add the secret value to `wrangler.jsonc`.
+`AUTH_CODE_SECRET` protects stored one-time codes and session tokens. Rotating
+it signs every customer and provider out. Do not add either secret value to
+`wrangler.jsonc`.
 
 ## 5. Protect owner access
 
@@ -98,6 +103,9 @@ npm run db:migrate:remote
 
 Run this again after adding a new migration.
 
+Migration `0020_kind_rick_jones.sql` adds passwordless login/session storage,
+email lookup indexes, and the 10% customer-fee snapshot stored with each quote.
+
 ## 7. Test and deploy
 
 ```bash
@@ -107,6 +115,10 @@ npm run deploy
 
 The first command builds the production Worker and checks the key Tuveloz
 features. The second deploys the verified source through Cloudflare.
+
+The current quote flow calculates, stores, and discloses the customer fee. A
+payment processor must still be connected and tested before Tuveloz can
+automatically collect that fee.
 
 ## 8. Connect the custom domains
 

@@ -14,7 +14,9 @@ deployment credentials, API keys, or production environment values.
 
 - Public Tuveloz website and service-request flow
 - Customer quote comparison and private request workspace
+- Passwordless customer and verified-provider sign-in with separate workspaces
 - Provider application, jobs, quotes, profiles, work gallery, and QR tools
+- Itemized 10% customer service fee stored with each provider quote
 - Owner dashboard and provider verification controls
 - Cloudflare D1 schema and migrations
 - Cloudflare R2 image storage integration
@@ -30,7 +32,7 @@ deployment credentials, API keys, or production environment values.
 - A Cloudflare D1 database
 - A Cloudflare R2 bucket
 - Cloudflare Images access for image optimization
-- Optional: a Resend account for provider email alerts
+- A Resend account for passwordless sign-in and provider email alerts
 
 ## Local setup
 
@@ -73,6 +75,11 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete GitHub and Cloudflare setup.
 ## Important security notes
 
 - Never commit `.env`, `.dev.vars`, API tokens, or database exports.
+- Keep `AUTH_CODE_SECRET` private and use at least 32 random characters.
+- Sign-in codes are stored only as keyed hashes, expire after 10 minutes, and
+  are limited to five verification attempts.
+- Provider account sessions are granted only to approved, verified, non-test
+  providers. Customer and provider APIs return role-specific data.
 - Keep provider and customer private workspace links private.
 - Protect the owner/admin hostname with Cloudflare Access before using the
   dashboard in production.

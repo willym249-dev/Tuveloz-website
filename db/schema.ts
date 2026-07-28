@@ -36,6 +36,7 @@ export const customerRequests = sqliteTable(
   (table) => [
     index("customer_requests_created_at_idx").on(table.createdAt),
     index("customer_requests_status_idx").on(table.status),
+    index("customer_requests_email_idx").on(table.email),
     index("customer_requests_preferred_provider_idx").on(table.preferredProviderEmail),
   ],
 );
@@ -50,6 +51,9 @@ export const providerQuotes = sqliteTable(
     priceCents: text("price_cents").notNull(),
     laborPriceCents: text("labor_price_cents").notNull().default("0"),
     partsPriceCents: text("parts_price_cents").notNull().default("0"),
+    customerFeeRateBps: integer("customer_fee_rate_bps").notNull().default(1000),
+    customerFeeCents: text("customer_fee_cents").notNull().default("0"),
+    customerTotalCents: text("customer_total_cents").notNull().default("0"),
     partType: text("part_type").notNull().default("Not specified"),
     availability: text("availability").notNull(),
     message: text("message").notNull(),
@@ -118,6 +122,44 @@ export const providerApplications = sqliteTable(
   (table) => [
     index("provider_applications_created_at_idx").on(table.createdAt),
     index("provider_applications_status_idx").on(table.status),
+    index("provider_applications_email_idx").on(table.email),
+  ],
+);
+
+export const loginCodes = sqliteTable(
+  "login_codes",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: text("used_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("login_codes_email_role_idx").on(table.email, table.role),
+    index("login_codes_expires_at_idx").on(table.expiresAt),
+    index("login_codes_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const authSessions = sqliteTable(
+  "auth_sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastSeenAt: text("last_seen_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("auth_sessions_token_hash_unique").on(table.tokenHash),
+    index("auth_sessions_email_idx").on(table.email),
+    index("auth_sessions_expires_at_idx").on(table.expiresAt),
   ],
 );
 

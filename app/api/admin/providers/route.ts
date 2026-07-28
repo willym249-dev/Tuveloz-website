@@ -59,7 +59,7 @@ function requiredChecklistKeys(services: string[], serviceArea: string) {
   if (requirements.montgomeryRegistration) {
     keys.push("localRegistration");
   }
-  if (requirements.marylandCustomerPaperwork || requirements.virginiaCustomerPaperwork) {
+  if (requirements.marylandCustomerPaperwork) {
     keys.push("consumerRules");
   }
   if (requirements.tintCompliance || requirements.washWaterCompliance) {

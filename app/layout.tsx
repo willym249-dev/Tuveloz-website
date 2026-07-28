@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tuveloz | Customer Choice. Provider Freedom.",
   description:
-    "A DMV vehicle-service marketplace currently operating in Montgomery County, Maryland. Customers compare quotes while providers choose their schedule, prices, and work.",
+    "A local vehicle-service marketplace currently operating in Montgomery County, Maryland. Customers compare quotes while providers choose their schedule, prices, and work.",
   icons: {
     icon: "/tuveloz-favicon-v2.svg",
     shortcut: "/tuveloz-favicon-v2.svg",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tuveloz | Customer Choice. Provider Freedom.",
     description:
-      "DMV vehicle services, now operating in Montgomery County, Maryland. Customers compare providers and quotes while providers choose how they work.",
+      "Local vehicle services, now operating in Montgomery County, Maryland. Customers compare providers and quotes while providers choose how they work.",
     images: [{
       url: "/tuveloz-google-profile-logo.png",
       width: 1024,

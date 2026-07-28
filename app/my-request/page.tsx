@@ -20,6 +20,9 @@ type Quote = {
   priceCents: string;
   laborPriceCents: string;
   partsPriceCents: string;
+  customerFeeRateBps: number;
+  customerFeeCents: string;
+  customerTotalCents: string;
   partType: string;
   availability: string;
   message: string;
@@ -79,15 +82,20 @@ export default function MyRequestPage() {
   const acceptedQuote = quotes.find((quote) => quote.status === "accepted");
 
   useEffect(() => {
-    const value = new URLSearchParams(window.location.search).get("token") ?? "";
-    if (!value) {
-      Promise.resolve().then(() => setError("Use the private link provided after submitting your request."));
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get("token") ?? "";
+    const requestId = searchParams.get("request") ?? "";
+    if (!token && !requestId) {
+      Promise.resolve().then(() => setError("Sign in or use the private link provided after submitting your request."));
       return;
     }
-    fetch(`/api/customer-quotes?token=${encodeURIComponent(value)}`).then(async (response) => {
+    const query = token
+      ? `token=${encodeURIComponent(token)}`
+      : `requestId=${encodeURIComponent(requestId)}`;
+    fetch(`/api/customer-quotes?${query}`).then(async (response) => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setAccessToken(value);
+      setAccessToken(result.accessToken || token);
       setJob(result.job); setQuotes(result.quotes); setReview(result.review);
     }).catch((reason) => setError(reason.message || "Unable to load request."));
   }, []);
@@ -95,10 +103,9 @@ export default function MyRequestPage() {
   async function accept(quoteId: string) {
     setError("");
     setSubmittingQuoteId(quoteId);
-    const token = new URLSearchParams(window.location.search).get("token") ?? "";
     const response = await fetch("/api/customer-quotes", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "accept-quote", token, quoteId }),
+      body: JSON.stringify({ action: "accept-quote", token: accessToken, quoteId }),
     });
     const result = (await response.json()) as { error?: string; providerEmail?: string };
     setSubmittingQuoteId("");
@@ -184,7 +191,10 @@ export default function MyRequestPage() {
       <header className="portal-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <span>Private customer request</span>
-        <SiteLanguageButton />
+        <div className="portal-header-actions">
+          <Link className="portal-account-link" href="/customer">Customer account</Link>
+          <SiteLanguageButton />
+        </div>
       </header>
       <section className="portal-intro">
         <span className="kicker">Your request</span>
@@ -263,7 +273,15 @@ export default function MyRequestPage() {
                   <dd>${(Number(quote.partsPriceCents) / 100).toFixed(2)}</dd>
                 </div>
               )}
-              <div className="total"><dt>Total</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+              <div><dt>Provider quote subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+              <div>
+                <dt>Tuveloz service fee (10%)</dt>
+                <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
+              </div>
+              <div className="total">
+                <dt>Customer total</dt>
+                <dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd>
+              </div>
             </dl>
             <div className="quote-summary">
               <span>What this quote includes</span>
@@ -318,7 +336,10 @@ export default function MyRequestPage() {
             ) : pendingQuoteId === quote.id ? (
               <div className="quote-confirm" role="group" aria-label={`Confirm ${quote.providerName} quote`}>
                 <strong>Confirm this quote?</strong>
-                <p>{quote.providerName} · Total ${(Number(quote.priceCents) / 100).toFixed(2)}</p>
+                <p>
+                  {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
+                  including the 10% Tuveloz service fee
+                </p>
                 <div>
                   <button
                     className="button primary"

@@ -141,7 +141,7 @@ export async function POST(request: Request) {
     }
     if (areaForZip(zip) !== "Montgomery County") {
       return Response.json({
-        error: "Enter a Montgomery County ZIP code, or request your DMV area for future expansion.",
+        error: "Enter a Montgomery County ZIP code, or request your area for future expansion.",
       }, { status: 400 });
     }
 

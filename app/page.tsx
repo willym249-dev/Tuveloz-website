@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import {
   emptyProviderSelfAssessment,
   evaluateProviderServices,
@@ -675,6 +676,9 @@ export default function Home() {
 
         <div className="header-actions">
           <SiteLanguageButton />
+          <Link className="header-sign-in" href="/account">
+            Sign in
+          </Link>
           <a className="header-cta" href="#request">
             Post a job
           </a>
@@ -686,7 +690,7 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="pulse" />
-            DMV vehicle-service marketplace
+            Local vehicle-service marketplace
           </div>
           <h1>
             Vehicle services.
@@ -710,7 +714,7 @@ export default function Home() {
           </div>
           <div className="hero-launch-note">
             <strong>Operating now in Montgomery County, Maryland</strong>
-            <a href="#expansion">Outside the county? Request your DMV area →</a>
+            <a href="#expansion">Outside the county? Request your area →</a>
           </div>
         </div>
 
@@ -939,6 +943,7 @@ export default function Home() {
             <li><span>✓</span> No payment required to post</li>
             <li><span>✓</span> Approved jobs reach matching providers</li>
             <li><span>✓</span> You choose whether to accept a quote</li>
+            <li><span>✓</span> A 10% customer service fee is shown before you confirm</li>
           </ul>
         </div>
 
@@ -1056,7 +1061,7 @@ export default function Home() {
                 <div className="fixed-launch-area">
                   <span>Current service area</span>
                   <strong>Montgomery County, Maryland</strong>
-                  <a href="#expansion">Outside the county? Request your DMV area</a>
+                  <a href="#expansion">Outside the county? Request your area</a>
                 </div>
                 <label>
                   City, town, or municipality
@@ -1443,8 +1448,8 @@ export default function Home() {
                   </strong>
                   <a href="#expansion">
                     {providerFormIsSpanish
-                      ? "¿Está fuera del condado? Solicite su área del DMV"
-                      : "Outside the county? Request your DMV area"}
+                      ? "¿Está fuera del condado? Solicite su área"
+                      : "Outside the county? Request your area"}
                   </a>
                 </div>
                 {selectedProviderServices.length > 0
@@ -1674,11 +1679,11 @@ export default function Home() {
 
       <section className="section expansion-section" id="expansion">
         <div className="expansion-copy">
-          <span className="kicker">Future DMV expansion</span>
-          <h2>Bring Tuveloz to your DMV area.</h2>
+          <span className="kicker">Future expansion</span>
+          <h2>Bring Tuveloz to your area.</h2>
           <p>
             Tuveloz currently operates only in Montgomery County, Maryland.
-            Customers and providers elsewhere in DC, Maryland, or Virginia can
+            Customers and providers elsewhere in Maryland or Washington, DC can
             request their area. We&apos;ll use combined demand to choose where to
             launch next.
           </p>
@@ -1694,7 +1699,7 @@ export default function Home() {
             <div className="success-message expansion-success" role="status">
               <span>✓</span>
               <h3>Your area request is counted.</h3>
-              <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next DMV launch area.</p>
+              <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next launch area.</p>
               <button type="button" onClick={() => setExpansionSent(false)}>
                 Request another area
               </button>
@@ -1743,7 +1748,6 @@ export default function Home() {
                   <select required name="expansion-state" defaultValue="">
                     <option value="" disabled>Select one</option>
                     <option>Maryland</option>
-                    <option>Virginia</option>
                     <option>Washington, DC</option>
                   </select>
                 </label>
@@ -1910,7 +1914,7 @@ export default function Home() {
           <a href="#services">Services</a>
           <a href="#reviews">Reviews</a>
           <a href="#providers">Providers</a>
-          <a href="/account">Workspace help</a>
+          <a href="/account">Sign in</a>
           <a href="#expansion">Request your area</a>
           <a href="#feedback">Give feedback</a>
           {isOwner && <a href="/admin">Owner dashboard</a>}
@@ -1919,7 +1923,7 @@ export default function Home() {
         </div>
         <div className="footer-bottom">
           <span>© 2026 Tuveloz. All rights reserved.</span>
-          <span>DMV marketplace · Operating now in Montgomery County, Maryland.</span>
+          <span>Local marketplace · Operating now in Montgomery County, Maryland.</span>
         </div>
       </footer>
     </main>

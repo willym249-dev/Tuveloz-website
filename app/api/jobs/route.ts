@@ -19,6 +19,7 @@ import {
   storeJobImage,
   validateJobImage,
 } from "../../../lib/job-images";
+import { customerPriceFor } from "../../../lib/customer-fee";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -538,15 +539,19 @@ export async function POST(request: Request) {
     return Response.json({ error: "You already submitted a quote for this job." }, { status: 409 });
   }
 
+  const customerPrice = customerPriceFor(Math.round(price * 100));
   try {
     await db.insert(providerQuotes).values({
       id: await quoteIdFor(requestId, provider.email),
       requestId,
       providerName: provider.name,
       providerEmail: provider.email,
-      priceCents: String(Math.round(price * 100)),
+      priceCents: String(customerPrice.providerQuoteCents),
       laborPriceCents: String(Math.round(laborPrice * 100)),
       partsPriceCents: String(Math.round(partsPrice * 100)),
+      customerFeeRateBps: customerPrice.customerFeeRateBps,
+      customerFeeCents: String(customerPrice.customerFeeCents),
+      customerTotalCents: String(customerPrice.customerTotalCents),
       partType,
       availability,
       message,

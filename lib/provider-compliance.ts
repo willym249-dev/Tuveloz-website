@@ -24,7 +24,6 @@ export type ProviderServiceStatus = {
 export type ProviderLegalRequirementFlags = {
   montgomeryRegistration: boolean;
   marylandCustomerPaperwork: boolean;
-  virginiaCustomerPaperwork: boolean;
   tintCompliance: boolean;
   washWaterCompliance: boolean;
   officialInspectionRestriction: boolean;
@@ -42,7 +41,6 @@ export const emptyProviderSelfAssessment: ProviderSelfAssessment = {
 };
 
 const MONTGOMERY_COUNTY = "Montgomery County, Maryland";
-const FAIRFAX_COUNTY = "Fairfax County, Virginia";
 const REVIEWED_PROVIDER_AREAS = new Set([
   MONTGOMERY_COUNTY,
 ]);
@@ -62,13 +60,6 @@ const MONTGOMERY_REPAIR_SERVICES = new Set([
   TINT_SERVICE,
   RAIN_GUARD_SERVICE,
   SUNSHADE_SERVICE,
-]);
-
-// These launch services involve repair work, rather than diagnosis or estimates
-// alone, under the Virginia Automobile Repair Facilities Act.
-const VIRGINIA_REPAIR_PAPERWORK_SERVICES = new Set([
-  "Battery jump-starts",
-  TIRE_SERVICE,
 ]);
 
 function cleanAnswer(value: unknown): ProviderAssessmentAnswer {
@@ -143,7 +134,6 @@ export function getProviderLegalRequirementFlags(
   const services = normalizeServices(providerServices);
   const areas = normalizeAreas(providerAreas);
   const servesMontgomeryCounty = areas.includes(MONTGOMERY_COUNTY);
-  const servesFairfaxCounty = areas.includes(FAIRFAX_COUNTY);
 
   return {
     // Montgomery County Code Chapter 31A broadly covers repair, maintenance,
@@ -152,8 +142,6 @@ export function getProviderLegalRequirementFlags(
       && services.some((service) => MONTGOMERY_REPAIR_SERVICES.has(service)),
     marylandCustomerPaperwork: servesMontgomeryCounty
       && services.some((service) => MONTGOMERY_REPAIR_SERVICES.has(service)),
-    virginiaCustomerPaperwork: servesFairfaxCounty
-      && services.some((service) => VIRGINIA_REPAIR_PAPERWORK_SERVICES.has(service)),
     tintCompliance: areas.length > 0 && services.includes(TINT_SERVICE),
     washWaterCompliance: areas.length > 0
       && (services.includes(CAR_WASH_SERVICE) || services.includes(LEGACY_CAR_WASH_SERVICE)),
@@ -170,10 +158,8 @@ function evaluateService(
   const blockers: string[] = [];
   const reviews: string[] = [];
   const servesMontgomeryCounty = areas.includes(MONTGOMERY_COUNTY);
-  const servesFairfaxCounty = areas.includes(FAIRFAX_COUNTY);
   const isMontgomeryRepairService = MONTGOMERY_REPAIR_SERVICES.has(service);
-  const requiresCustomerPaperwork = (servesMontgomeryCounty && isMontgomeryRepairService)
-    || (servesFairfaxCounty && VIRGINIA_REPAIR_PAPERWORK_SERVICES.has(service));
+  const requiresCustomerPaperwork = servesMontgomeryCounty && isMontgomeryRepairService;
 
   if (servesMontgomeryCounty && isMontgomeryRepairService) {
     if (assessment.businessRegistered === "no") {

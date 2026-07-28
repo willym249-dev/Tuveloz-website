@@ -156,7 +156,6 @@ export function areaForZip(zipValue: string) {
   if (/^20[89]/.test(zip)) return "Montgomery County";
   if (/^20[67]/.test(zip)) return "Prince George's County";
   if (/^200/.test(zip)) return "Washington, DC";
-  if (/^(201|220|221|222|223)/.test(zip)) return "Northern Virginia";
   return "";
 }
 
@@ -168,7 +167,6 @@ export const SUPPORTED_LAUNCH_AREAS = [
 
 const KNOWN_MARKET_AREAS = [
   CURRENT_LAUNCH_AREA,
-  "Fairfax County, Virginia",
 ] as const;
 
 export const ANYWHERE_PROVIDER_AREA = "Anywhere Tuveloz has jobs";
@@ -198,16 +196,6 @@ function normalizeArea(area: string) {
     "montgomery county, md",
   ].includes(normalized)) {
     return "Montgomery County, Maryland";
-  }
-  if ([
-    "va",
-    "virginia",
-    "northern virginia",
-    "fairfax county",
-    "fairfax county va",
-    "fairfax county, va",
-  ].includes(normalized)) {
-    return "Fairfax County, Virginia";
   }
   return area.trim();
 }
