@@ -1,6 +1,7 @@
 import {
   parseProviderAreas,
   parseProviderServices,
+  PROVIDER_SERVICE_GROUPS,
   providerLegalAreas,
 } from "./service-matching";
 
@@ -51,8 +52,9 @@ const DIAGNOSTICS_SERVICE = "Basic vehicle diagnostics";
 const TIRE_SERVICE = "Spare-tire installation";
 const CAR_WASH_SERVICE = "Car washing with water";
 const LEGACY_CAR_WASH_SERVICE = "Car washing";
+const MOBILE_CAR_WASH_SERVICE = "Mobile car washing";
 
-const MONTGOMERY_REPAIR_SERVICES = new Set([
+const ESTABLISHED_REVIEWED_SERVICES = new Set([
   "Battery jump-starts",
   TIRE_SERVICE,
   DIAGNOSTICS_SERVICE,
@@ -60,6 +62,70 @@ const MONTGOMERY_REPAIR_SERVICES = new Set([
   TINT_SERVICE,
   RAIN_GUARD_SERVICE,
   SUNSHADE_SERVICE,
+  "Waterless exterior washing",
+  CAR_WASH_SERVICE,
+  "Interior detailing",
+]);
+
+const EXPANDED_SERVICE_REVIEW = new Set(
+  PROVIDER_SERVICE_GROUPS.flatMap((group) => (
+    group.options
+      .map((option) => option.value)
+      .filter((service) => !ESTABLISHED_REVIEWED_SERVICES.has(service))
+  )),
+);
+
+const MONTGOMERY_REPAIR_SERVICES = new Set([
+  "Battery jump-starts",
+  "Battery replacement",
+  "Mobile mechanical service",
+  "Mobile tire service",
+  "Windshield chip repair",
+  "Headlight restoration",
+  TIRE_SERVICE,
+  DIAGNOSTICS_SERVICE,
+  "Body repair and paint estimates",
+  "General auto repair",
+  "Tire repair and replacement",
+  "Brake service",
+  "Transmission service",
+  "Suspension and alignment",
+  "Muffler and exhaust",
+  TINT_SERVICE,
+  "Body repair and paint",
+  "Dent repair",
+  "Auto glass replacement",
+  "Wheel and rim repair",
+  "Performance and tuning",
+  "Vehicle wraps and graphics",
+  "Car audio and electronics",
+  RAIN_GUARD_SERVICE,
+  SUNSHADE_SERVICE,
+  "Pre-purchase inspections",
+  "Fleet maintenance",
+  "Trailer service",
+  "Motorcycle service",
+  "RV service",
+  "Diesel service",
+  "Hybrid and EV service",
+  "Classic car restoration",
+]);
+
+const TIRE_SERVICES = new Set([
+  TIRE_SERVICE,
+  "Mobile tire service",
+  "Tire repair and replacement",
+]);
+
+const INDEPENDENT_INSPECTION_SERVICES = new Set([
+  DIAGNOSTICS_SERVICE,
+  "Pre-purchase inspections",
+]);
+
+const WASH_WATER_SERVICES = new Set([
+  CAR_WASH_SERVICE,
+  LEGACY_CAR_WASH_SERVICE,
+  MOBILE_CAR_WASH_SERVICE,
 ]);
 
 function cleanAnswer(value: unknown): ProviderAssessmentAnswer {
@@ -144,9 +210,11 @@ export function getProviderLegalRequirementFlags(
       && services.some((service) => MONTGOMERY_REPAIR_SERVICES.has(service)),
     tintCompliance: areas.length > 0 && services.includes(TINT_SERVICE),
     washWaterCompliance: areas.length > 0
-      && (services.includes(CAR_WASH_SERVICE) || services.includes(LEGACY_CAR_WASH_SERVICE)),
-    officialInspectionRestriction: areas.length > 0 && services.includes(DIAGNOSTICS_SERVICE),
-    removedTireRule: areas.length > 0 && services.includes(TIRE_SERVICE),
+      && services.some((service) => WASH_WATER_SERVICES.has(service)),
+    officialInspectionRestriction: areas.length > 0
+      && services.some((service) => INDEPENDENT_INSPECTION_SERVICES.has(service)),
+    removedTireRule: areas.length > 0
+      && services.some((service) => TIRE_SERVICES.has(service)),
   };
 }
 
@@ -197,7 +265,7 @@ function evaluateService(
     }
   }
 
-  if (service === CAR_WASH_SERVICE || service === LEGACY_CAR_WASH_SERVICE) {
+  if (WASH_WATER_SERVICES.has(service)) {
     if (assessment.washWaterReady === "no") {
       blockers.push(
         "Commercial car-wash water must be kept out of storm drains and waterways.",
@@ -207,6 +275,12 @@ function evaluateService(
         "Confirm the legally required commercial wash-water disposal process.",
       );
     }
+  }
+
+  if (EXPANDED_SERVICE_REVIEW.has(service)) {
+    reviews.push(
+      "Confirm service-specific licensing, insurance, training, safety, and local requirements before activation.",
+    );
   }
 
   return buildStatus(blockers, reviews);
