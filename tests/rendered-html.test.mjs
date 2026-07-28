@@ -329,3 +329,101 @@ test("build groups the expanded service catalog and shows automatic provider mod
   assert.ok(matchingSource.includes('if (mobile && shop) return "Both"'));
   assert.ok(complianceSource.includes("service-specific licensing, insurance, training, safety"));
 });
+
+test("Stripe Connect uses a single SDK client, V2 recipient accounts, and direct status checks", async () => {
+  const stripeSource = await readFile(
+    new URL("../lib/stripe.ts", import.meta.url),
+    "utf8",
+  );
+  const providerSource = await readFile(
+    new URL("../lib/stripe-provider.ts", import.meta.url),
+    "utf8",
+  );
+  const connectWebhookSource = await readFile(
+    new URL("../app/api/stripe/webhooks/connect/route.ts", import.meta.url),
+    "utf8",
+  );
+  const packageJson = JSON.parse(await readFile(
+    new URL("../package.json", import.meta.url),
+    "utf8",
+  ));
+
+  const accountCreateStart = providerSource.indexOf(
+    "stripeClient.v2.core.accounts.create",
+  );
+  const accountCreateEnd = providerSource.indexOf(
+    "idempotencyKey:",
+    accountCreateStart,
+  );
+  const accountCreateSource = providerSource.slice(
+    accountCreateStart,
+    accountCreateEnd,
+  );
+
+  assert.equal(packageJson.dependencies.stripe, "^22.3.2");
+  assert.ok(stripeSource.includes("return new Stripe(secretKey"));
+  assert.ok(!stripeSource.includes("apiVersion:"));
+  assert.ok(stripeSource.includes('secretKey.startsWith("sk_live_")'));
+  assert.ok(stripeSource.includes("STRIPE_ALLOW_LIVE_MODE"));
+  assert.ok(accountCreateStart > -1);
+  assert.ok(accountCreateEnd > accountCreateStart);
+  assert.ok(accountCreateSource.includes('dashboard: "express"'));
+  assert.ok(accountCreateSource.includes('fees_collector: "application"'));
+  assert.ok(accountCreateSource.includes('losses_collector: "application"'));
+  assert.ok(accountCreateSource.includes("stripe_transfers"));
+  assert.ok(!/\btype\s*:/.test(accountCreateSource));
+  assert.ok(providerSource.includes("stripeClient.v2.core.accountLinks.create"));
+  assert.ok(providerSource.includes('configurations: ["recipient"]'));
+  assert.ok(stripeSource.includes("stripeClient.v2.core.accounts.retrieve"));
+  assert.ok(stripeSource.includes('include: ["configuration.recipient", "requirements"]'));
+  assert.ok(connectWebhookSource.includes("parseEventNotificationAsync"));
+  assert.ok(connectWebhookSource.includes("stripeClient.v2.core.events.retrieve"));
+  assert.ok(connectWebhookSource.includes("v2.core.account[requirements].updated"));
+  assert.ok(connectWebhookSource.includes(
+    "v2.core.account[configuration.recipient].capability_status_updated",
+  ));
+});
+
+test("Stripe storefront and job payments preserve server-calculated marketplace settlement rules", async () => {
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
+  const files = (await builtFiles(distDirectory))
+    .filter((path) => [".js", ".html"].includes(extname(path)));
+  const contents = (await Promise.all(
+    files.map((path) => readFile(path, "utf8")),
+  )).join("\n");
+  const productsSource = await readFile(
+    new URL("../app/api/stripe/products/route.ts", import.meta.url),
+    "utf8",
+  );
+  const checkoutSource = await readFile(
+    new URL("../app/api/stripe/checkout/route.ts", import.meta.url),
+    "utf8",
+  );
+  const releaseSource = await readFile(
+    new URL("../app/api/stripe/admin/payments/route.ts", import.meta.url),
+    "utf8",
+  );
+  const migration = await readFile(
+    new URL("../drizzle/0021_romantic_pepper_potts.sql", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(contents.includes("Connected accounts"));
+  assert.ok(contents.includes("Available offerings"));
+  assert.ok(contents.includes("Onboard to collect payments"));
+  assert.ok(contents.includes("Create a storefront offering"));
+  assert.ok(productsSource.includes("stripeClient.products.create"));
+  assert.ok(productsSource.includes("default_price_data"));
+  assert.ok(productsSource.includes("tuveloz_connected_account_id"));
+  assert.ok(!productsSource.includes("stripeAccount:"));
+  assert.ok(checkoutSource.includes("stripeClient.checkout.sessions.create"));
+  assert.ok(checkoutSource.includes("application_fee_amount: applicationFeeCents"));
+  assert.ok(checkoutSource.includes("transfer_data:"));
+  assert.ok(checkoutSource.includes('settlementStrategy = "separate_transfer"'));
+  assert.ok(checkoutSource.includes("Price and destination data"));
+  assert.ok(releaseSource.includes('job?.status !== "completed"'));
+  assert.ok(releaseSource.includes("source_transaction: chargeId"));
+  assert.ok(releaseSource.includes("stripeClient.transfers.create"));
+  assert.ok(migration.includes("CREATE TABLE `stripe_payments`"));
+  assert.ok(migration.includes("stripe_account_id"));
+});

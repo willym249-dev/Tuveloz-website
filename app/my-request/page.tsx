@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
 import { SiteLanguageButton } from "../components/site-language";
+import { QuotePaymentCard } from "../components/quote-payment-card";
 import {
   parseCustomerServiceLocations,
   parseJobServices,
@@ -418,6 +419,9 @@ export default function MyRequestPage() {
           </article>
         ))}
       </section>
+      {acceptedQuote && job && !job.isTestJob && accessToken && (
+        <QuotePaymentCard accessToken={accessToken} quote={acceptedQuote} />
+      )}
       {job?.status === "completed"
         && !job.isTestJob
         && acceptedQuote?.providerVerified

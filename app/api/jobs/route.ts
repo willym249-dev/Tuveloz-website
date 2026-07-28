@@ -5,6 +5,7 @@ import {
   providerApplications,
   providerJobRecords,
   providerQuotes,
+  stripePayments,
 } from "../../../db/schema";
 import {
   effectiveProviderServices,
@@ -436,6 +437,17 @@ export async function POST(request: Request) {
           updatedAt: completedAt,
         },
       });
+
+      // A paid quote uses separate charges and transfers. Completion makes the
+      // provider amount eligible for the owner's explicit release; it does not
+      // transfer funds from a provider-controlled status button.
+      await db.update(stripePayments).set({
+        status: "ready_for_release",
+        updatedAt: completedAt,
+      }).where(and(
+        eq(stripePayments.requestId, requestId),
+        eq(stripePayments.status, "paid_pending_completion"),
+      ));
     }
     return Response.json({
       ok: true,

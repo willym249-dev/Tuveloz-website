@@ -7658,6 +7658,323 @@ footer > p,
   }
 }
 
+/* Stripe Connect, Checkout, and platform storefront */
+.stripe-connect-panel,
+.quote-payment-card {
+  background: #101010;
+  border: 1px solid #37261c;
+  border-radius: 24px;
+  color: #f8f8f8;
+  margin: 28px auto;
+  max-width: 1180px;
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.stripe-connect-heading,
+.stripe-storefront .storefront-section-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.stripe-connect-heading h2,
+.quote-payment-card h2,
+.stripe-product-form h3 {
+  letter-spacing: -0.03em;
+  margin: 8px 0 10px;
+}
+
+.stripe-connect-heading p,
+.quote-payment-card p,
+.stripe-product-form p {
+  color: #b9afa8;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 720px;
+}
+
+.stripe-status-card {
+  background: #080808;
+  border: 1px solid #2e2e2e;
+  border-radius: 16px;
+  margin-top: 24px;
+  padding: 22px;
+}
+
+.stripe-status-card.needs-action {
+  border-color: #8c461d;
+}
+
+.stripe-status-card > strong {
+  color: #ff8a2a;
+  display: block;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.stripe-status-card .button {
+  margin-top: 18px;
+}
+
+.stripe-status-card ul {
+  color: #d9d2cd;
+  line-height: 1.55;
+  padding-left: 20px;
+}
+
+.stripe-status-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 25px;
+}
+
+.stripe-status-grid article,
+.stripe-account-grid article {
+  background: #080808;
+  border: 1px solid #292929;
+  border-radius: 14px;
+  display: grid;
+  gap: 7px;
+  padding: 18px;
+}
+
+.stripe-status-grid span,
+.stripe-account-grid span {
+  color: #ff8a2a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stripe-status-grid strong {
+  overflow-wrap: anywhere;
+  text-transform: capitalize;
+}
+
+.stripe-product-form {
+  border-top: 1px solid #30271f;
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 28px;
+}
+
+.stripe-product-form label,
+.stripe-storefront-hero label {
+  color: #f4f4f4;
+  display: grid;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.stripe-product-form input,
+.stripe-product-form textarea,
+.stripe-storefront-hero input {
+  background: #050505;
+  border: 1px solid #3b312a;
+  border-radius: 11px;
+  color: white;
+  padding: 13px 14px;
+}
+
+.stripe-product-form small,
+.payment-release-note {
+  color: #9f938b;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.quote-payment-card {
+  display: grid;
+  gap: 22px;
+}
+
+.quote-payment-card .quote-breakdown {
+  margin: 0;
+}
+
+.quote-payment-card .button {
+  justify-self: start;
+}
+
+.payment-release-note {
+  display: block;
+  max-width: 720px;
+}
+
+.stripe-storefront {
+  background: #070707;
+  min-height: 100vh;
+}
+
+.stripe-storefront-hero,
+.stripe-account-roster,
+.stripe-product-section {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 64px 24px 0;
+}
+
+.stripe-storefront-hero {
+  padding-top: 84px;
+}
+
+.stripe-storefront-hero h1 {
+  color: #f8f8f8;
+  font-size: clamp(42px, 7vw, 76px);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  margin: 16px 0;
+  max-width: 900px;
+}
+
+.stripe-storefront-hero > p {
+  color: #b9afa8;
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 750px;
+}
+
+.stripe-storefront-hero label {
+  margin-top: 28px;
+  max-width: 430px;
+}
+
+.stripe-storefront-hero .form-error {
+  margin-top: 16px;
+  max-width: 700px;
+}
+
+.stripe-account-grid,
+.stripe-product-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 28px;
+}
+
+.stripe-account-grid strong {
+  color: #f8f8f8;
+  font-size: 17px;
+}
+
+.stripe-account-grid small {
+  color: #938981;
+  overflow-wrap: anywhere;
+}
+
+.stripe-product-section {
+  padding-bottom: 90px;
+}
+
+.stripe-product-grid article {
+  background: #101010;
+  border: 1px solid #30251e;
+  border-radius: 18px;
+  color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.stripe-product-grid h2 {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  margin: 15px 0 8px;
+}
+
+.stripe-product-grid article > p {
+  color: #aaa098;
+  flex: 1;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.stripe-product-grid .button {
+  margin-top: 18px;
+  width: 100%;
+}
+
+.stripe-payment-card .quote-breakdown {
+  margin: 18px 0;
+}
+
+.payment-result-shell {
+  background: #070707;
+  color: #f8f8f8;
+  display: grid;
+  min-height: 100vh;
+  padding: 30px clamp(22px, 7vw, 100px);
+}
+
+.payment-result-shell > section {
+  align-self: center;
+  background: #101010;
+  border: 1px solid #38271d;
+  border-radius: 24px;
+  justify-self: center;
+  max-width: 760px;
+  padding: clamp(30px, 6vw, 68px);
+  width: 100%;
+}
+
+.payment-result-shell h1 {
+  font-size: clamp(38px, 6vw, 64px);
+  letter-spacing: -0.05em;
+  line-height: 1.03;
+  margin: 16px 0;
+}
+
+.payment-result-shell p {
+  color: #b8afa8;
+  line-height: 1.65;
+}
+
+.payment-result-shell section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+@media (max-width: 780px) {
+  .stripe-connect-panel,
+  .quote-payment-card {
+    border-radius: 18px;
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .stripe-connect-heading,
+  .stripe-storefront .storefront-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stripe-status-grid,
+  .stripe-account-grid,
+  .stripe-product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stripe-storefront-hero,
+  .stripe-account-roster,
+  .stripe-product-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .quote-payment-card .button,
+  .stripe-connect-heading .button {
+    width: 100%;
+  }
+}
+
 @page {
   margin: 0.25in;
   size: letter portrait;

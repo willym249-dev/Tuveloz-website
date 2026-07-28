@@ -582,6 +582,7 @@ export default function Home() {
           <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="#reviews" onClick={() => setMenuOpen(false)}>Reviews</a>
           <a href="#providers" onClick={() => setMenuOpen(false)}>For providers</a>
+          <Link href="/storefront" onClick={() => setMenuOpen(false)}>Storefront</Link>
         </nav>
 
         <div className="header-actions">
@@ -1907,6 +1908,7 @@ export default function Home() {
           <a href="#services">Services</a>
           <a href="#reviews">Reviews</a>
           <a href="#providers">Providers</a>
+          <a href="/storefront">Storefront</a>
           <a href="/account">Sign in</a>
           <a href="#expansion">Request your area</a>
           <a href="#feedback">Give feedback</a>

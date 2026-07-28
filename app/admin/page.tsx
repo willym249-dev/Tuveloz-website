@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
+import { StripePaymentAdmin } from "../components/stripe-payment-admin";
 import { BrandMark } from "../components/tuveloz-icons";
 import {
   effectiveProviderServices,
@@ -699,6 +700,8 @@ export default function AdminPage() {
               </div>
             )}
           </section>
+
+          <StripePaymentAdmin />
 
           <section className="admin-section">
             <h2>Provider applications</h2>

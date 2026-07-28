@@ -76,13 +76,56 @@ key as Cloudflare secrets:
 ```bash
 npx wrangler secret put AUTH_CODE_SECRET
 npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_PAYMENT_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET
 ```
 
 `AUTH_CODE_SECRET` protects stored one-time codes and session tokens. Rotating
-it signs every customer and provider out. Do not add either secret value to
-`wrangler.jsonc`.
+it signs every customer and provider out. The Stripe values must be sandbox
+`sk_test_...` and `whsec_...` values during testing. Do not add any real secret
+value to `wrangler.jsonc`.
 
-## 5. Protect owner access
+Leave `STRIPE_ALLOW_LIVE_MODE` set to `"false"` in `wrangler.jsonc` until the
+legal business owner has completed the live-account, compliance, refund,
+dispute, and provider-payout review.
+
+## 5. Configure Stripe webhooks
+
+Create two Stripe event destinations:
+
+1. A standard snapshot webhook at
+   `https://YOUR-DOMAIN/api/stripe/webhooks/payments` for:
+   - `checkout.session.completed`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+   - `checkout.session.expired`
+2. A connected-account destination at
+   `https://YOUR-DOMAIN/api/stripe/webhooks/connect`. Select **Connected
+   accounts**, **Thin** payload style, and:
+   - `v2.core.account[requirements].updated`
+   - `v2.core.account[configuration.recipient].capability_status_updated`
+
+Each destination has its own `whsec_...` signing secret. Store the standard
+destination secret in `STRIPE_PAYMENT_WEBHOOK_SECRET` and the thin destination
+secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+
+For local testing, run separate Stripe CLI listeners:
+
+```bash
+stripe listen \
+  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired' \
+  --forward-to http://localhost:3000/api/stripe/webhooks/payments
+
+stripe listen \
+  --thin-events 'v2.core.account[requirements].updated,v2.core.account[configuration.recipient].capability_status_updated' \
+  --forward-thin-to http://localhost:3000/api/stripe/webhooks/connect
+```
+
+Use the signing secret printed by each listener only in the matching local
+environment variable.
+
+## 6. Protect owner access
 
 Use a dedicated admin hostname, such as `admin.your-domain.example`, that routes
 to the same Worker. Protect that whole hostname with Cloudflare Access and allow
@@ -93,7 +136,7 @@ admin hostname supplies the verified email header used by the owner dashboard.
 Open `/admin` on the protected hostname after signing in through Cloudflare
 Access.
 
-## 6. Apply the database migrations
+## 7. Apply the database migrations
 
 Apply all included migrations to the production D1 database:
 
@@ -105,8 +148,11 @@ Run this again after adding a new migration.
 
 Migration `0020_kind_rick_jones.sql` adds passwordless login/session storage,
 email lookup indexes, and the 10% customer-fee snapshot stored with each quote.
+Migration `0021_romantic_pepper_potts.sql` adds provider-to-Stripe account
+mappings and immutable payment records used for Checkout, webhook
+reconciliation, and idempotent transfers.
 
-## 7. Test and deploy
+## 8. Test and deploy
 
 ```bash
 npm test
@@ -116,11 +162,11 @@ npm run deploy
 The first command builds the production Worker and checks the key Tuveloz
 features. The second deploys the verified source through Cloudflare.
 
-The current quote flow calculates, stores, and discloses the customer fee. A
-payment processor must still be connected and tested before Tuveloz can
-automatically collect that fee.
+Before deployment, complete the full sandbox path: provider onboarding, product
+creation, storefront Checkout, accepted-quote Checkout, signed webhook delivery,
+job completion, and owner-confirmed transfer release.
 
-## 8. Connect the custom domains
+## 9. Connect the custom domains
 
 In Cloudflare, attach the public domain to the deployed Worker. Attach the
 protected admin hostname to the same Worker, then confirm its Access policy is

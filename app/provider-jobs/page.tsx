@@ -7,6 +7,7 @@ import { ConfirmAction } from "../components/confirm-action";
 import { MarketPriceLinks } from "../components/market-price-links";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
+import { StripeConnectPanel } from "../components/stripe-connect-panel";
 import { BrandMark, TuvelozIcon } from "../components/tuveloz-icons";
 import {
   parseCustomerServiceLocations,
@@ -417,9 +418,13 @@ export default function ProviderJobsPage() {
         )}
         {provider?.testProvider && <p>This workspace is isolated to test jobs. No real alerts or public ratings are created.</p>}
       </section>
+      {!loading && provider && !provider.testProvider && (
+        <StripeConnectPanel signedIn={signedIn} />
+      )}
       {!loading && !error && (
         <>
           <nav className="job-center-nav" aria-label="Provider Job Center">
+            {!provider?.testProvider && <a href="#stripe-payouts"><span>Stripe</span>Payments</a>}
             <a href="#business-page"><TuvelozIcon name="storefront" /><span>Page</span>Business Page</a>
             <a href="#open-jobs"><TuvelozIcon name="open-jobs" /><span>{jobs.length}</span>Open Jobs</a>
             <a href="#active-jobs"><TuvelozIcon name="active-job" /><span>{activeJobs.length}</span>Active Jobs</a>
