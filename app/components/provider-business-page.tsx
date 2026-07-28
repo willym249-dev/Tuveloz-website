@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { ConfirmAction } from "./confirm-action";
 import { BrandMark, TuvelozIcon } from "./tuveloz-icons";
+import { providerModeForWorkLocations } from "../../lib/service-matching";
 
 type Profile = {
   id: string;
@@ -297,6 +298,9 @@ export function ProviderBusinessPage({ token }: { token: string }) {
               </div>
             </div>
             <div className="provider-profile-preview-facts">
+              <span className="provider-mode-badge">
+                {providerModeForWorkLocations(data.workLocations)}
+              </span>
               <span>{profile.availabilityStatus}</span>
               <span>{profile.yearsExperience || "Add experience"}</span>
               <span>{data.services.length} approved {data.services.length === 1 ? "service" : "services"}</span>
