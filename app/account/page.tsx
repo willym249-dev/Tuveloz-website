@@ -1,8 +1,82 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
-export default function PrivateAccessPage() {
+type Role = "customer" | "provider";
+
+export default function AccountPage() {
+  const [role, setRole] = useState<Role>("customer");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [codeRequested, setCodeRequested] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const requestedRole = new URLSearchParams(window.location.search).get("role");
+    if (requestedRole === "provider" || requestedRole === "customer") {
+      Promise.resolve().then(() => setRole(requestedRole));
+    }
+    fetch("/api/account", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) return;
+      const result = (await response.json()) as { role?: Role };
+      if (result.role) {
+        window.location.replace(result.role === "customer" ? "/customer" : "/provider-jobs");
+      }
+    }).finally(() => setChecking(false));
+  }, []);
+
+  function chooseRole(nextRole: Role) {
+    setRole(nextRole);
+    setCode("");
+    setCodeRequested(false);
+    setMessage("");
+    setError("");
+  }
+
+  async function requestCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setMessage("");
+    const response = await fetch("/api/auth/request-code", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, role }),
+    });
+    const result = (await response.json()) as { error?: string; message?: string };
+    setBusy(false);
+    if (!response.ok) {
+      setError(result.error || "Unable to send a sign-in code.");
+      return;
+    }
+    setCodeRequested(true);
+    setMessage(result.message || "Check your email for a sign-in code.");
+  }
+
+  async function verifyCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/auth/verify-code", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, role, code }),
+    });
+    const result = (await response.json()) as { destination?: string; error?: string };
+    setBusy(false);
+    if (!response.ok || !result.destination) {
+      setError(result.error || "Unable to verify this code.");
+      return;
+    }
+    window.location.replace(result.destination);
+  }
+
   return (
     <main className="account-shell">
       <header className="account-header">
@@ -12,79 +86,125 @@ export default function PrivateAccessPage() {
         </Link>
         <div className="account-header-actions">
           <SiteLanguageButton />
-          <Link className="account-home-link" href="/">
-            Home
-          </Link>
+          <Link className="account-home-link" href="/">Home</Link>
         </div>
       </header>
 
-      <section className="account-main">
+      <section className="account-main account-login-main">
         <div className="account-welcome">
-          <span className="account-kicker">Private Tuveloz access</span>
-          <h1>Your workspace stays on Tuveloz.</h1>
+          <span className="account-kicker">Tuveloz sign in</span>
+          <h1>One simple sign-in. The right tools only.</h1>
           <p>
-            Customers and approved providers use private Tuveloz links. No
-            outside account or extra password is required.
+            Enter the email used for your customer request or verified provider
+            account. We&apos;ll email a one-time code—no password needed.
           </p>
         </div>
 
-        <div className="account-grid">
-          <section className="account-card">
-            <span className="account-role">Customer access</span>
-            <h2>Keep your request link.</h2>
-            <p>
-              After you post a job, Tuveloz opens your private request page.
-              Use that link to review provider quotes and job updates.
-            </p>
-            <div className="account-feature-list">
-              <span>Review quotes and job updates</span>
-              <span>Choose the provider that works for you</span>
-              <span>Book the same provider again</span>
-            </div>
-            <Link className="button primary account-button" href="/#request">
-              Post a job <span>→</span>
-            </Link>
-          </section>
-
-          <section className="account-card">
-            <span className="account-role">Provider access</span>
-            <h2>Use your provider workspace link.</h2>
-            <p>
-              Tuveloz gives approved providers a private workspace link for
-              matching jobs, quotes, schedules, and business tools.
-            </p>
-            <div className="account-feature-list">
-              <span>Matching jobs, quotes, and schedule</span>
-              <span>Business page and work gallery</span>
-              <span>QR code and printable business cards</span>
-            </div>
-            <Link className="button secondary account-button" href="/#providers">
-              Apply to join <span>→</span>
-            </Link>
-          </section>
-
-          <section className="account-card account-help-card">
-            <div>
-              <span className="account-role">Workspace help</span>
-              <h2>Need your private link again?</h2>
-              <p>
-                Email us from the same address used for your request or provider
-                application so we can verify and help you.
-              </p>
-            </div>
-            <a
-              className="button secondary account-button"
-              href="mailto:hello@tuveloz.com?subject=Private%20workspace%20link"
+        <section className="account-login-card" aria-busy={checking || busy}>
+          <div className="account-role-tabs" aria-label="Choose a workspace">
+            <button
+              aria-pressed={role === "customer"}
+              className={role === "customer" ? "selected" : ""}
+              disabled={busy}
+              onClick={() => chooseRole("customer")}
+              type="button"
             >
-              Email Tuveloz <span>→</span>
-            </a>
-          </section>
-        </div>
+              Customer
+            </button>
+            <button
+              aria-pressed={role === "provider"}
+              className={role === "provider" ? "selected" : ""}
+              disabled={busy}
+              onClick={() => chooseRole("provider")}
+              type="button"
+            >
+              Verified provider
+            </button>
+          </div>
 
-        <p className="account-private-note">
-          Keep every private link to yourself. Anyone with the link can open
-          that workspace.
-        </p>
+          <span className="account-role">
+            {role === "customer" ? "Customer workspace" : "Verified provider workspace"}
+          </span>
+          <h2>
+            {role === "customer"
+              ? "Open your requests and quotes."
+              : "Open your jobs and business tools."}
+          </h2>
+          <p>
+            {role === "customer"
+              ? "Use the same email address you entered when posting a job."
+              : "Provider sign-in is available only after Tuveloz approves and verifies your account."}
+          </p>
+
+          {!codeRequested ? (
+            <form className="account-login-form" onSubmit={requestCode}>
+              <label>
+                Email address
+                <input
+                  autoComplete="email"
+                  disabled={checking || busy}
+                  name="email"
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  type="email"
+                  value={email}
+                />
+              </label>
+              <button className="button primary" disabled={checking || busy} type="submit">
+                {checking ? "Checking…" : busy ? "Sending…" : "Email me a code"}
+              </button>
+            </form>
+          ) : (
+            <form className="account-login-form" onSubmit={verifyCode}>
+              <label>
+                6-digit sign-in code
+                <input
+                  autoComplete="one-time-code"
+                  autoFocus
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  required
+                  value={code}
+                />
+              </label>
+              <button className="button primary" disabled={busy || code.length !== 6} type="submit">
+                {busy ? "Signing in…" : "Sign in"}
+              </button>
+              <button
+                className="account-text-button"
+                disabled={busy}
+                onClick={() => {
+                  setCodeRequested(false);
+                  setCode("");
+                  setMessage("");
+                  setError("");
+                }}
+                type="button"
+              >
+                Use a different email
+              </button>
+            </form>
+          )}
+          {message && <p className="form-success account-login-message" role="status">{message}</p>}
+          {error && <p className="form-error account-login-message" role="alert">{error}</p>}
+          <small className="account-security-note">
+            Codes expire after 10 minutes and work once. Tuveloz never asks for
+            your email password.
+          </small>
+        </section>
+
+        <div className="account-login-help">
+          <p>
+            New provider? Verification starts with an application.
+          </p>
+          <Link className="button secondary" href="/#providers">
+            Apply to join <span>→</span>
+          </Link>
+        </div>
       </section>
     </main>
   );

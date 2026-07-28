@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
+import { StripePaymentAdmin } from "../components/stripe-payment-admin";
 import { BrandMark } from "../components/tuveloz-icons";
 import {
   effectiveProviderServices,
@@ -12,12 +13,14 @@ import {
   providerMatchesArea,
   providerMatchesJob,
   providerMatchesServiceLocation,
+  providerModeForWorkLocations,
 } from "../../lib/service-matching";
 import {
   evaluateProviderServices,
   getProviderLegalRequirementFlags,
   parseProviderSelfAssessment,
 } from "../../lib/provider-compliance";
+import { customerPriceFor } from "../../lib/customer-fee";
 
 type CustomerRequest = {
   id: string;
@@ -108,6 +111,9 @@ type ProviderQuote = {
   providerName: string;
   providerEmail: string;
   priceCents: string;
+  customerFeeRateBps: number;
+  customerFeeCents: string;
+  customerTotalCents: string;
   partType: string;
   availability: string;
   message: string;
@@ -121,6 +127,21 @@ type PendingAdminAction = {
   title: string;
   message: string;
 };
+
+function customerPriceSnapshot(quote: ProviderQuote) {
+  const providerQuoteCents = Number(quote.priceCents);
+  const customerFeeCents = Number(quote.customerFeeCents);
+  const customerTotalCents = Number(quote.customerTotalCents);
+  if (
+    Number.isFinite(customerFeeCents)
+    && Number.isFinite(customerTotalCents)
+    && customerTotalCents > 0
+    && providerQuoteCents + customerFeeCents === customerTotalCents
+  ) {
+    return { customerFeeCents, customerTotalCents };
+  }
+  return customerPriceFor(providerQuoteCents, quote.customerFeeRateBps);
+}
 
 type VerificationChecklist = {
   businessIdentity: boolean;
@@ -158,7 +179,7 @@ function requiredChecklistLabels(
       "Required Montgomery County repair-registration proof received and verified",
     ]);
   }
-  if (requirements.marylandCustomerPaperwork || requirements.virginiaCustomerPaperwork) {
+  if (requirements.marylandCustomerPaperwork) {
     labels.push([
       "consumerRules",
       "Required customer authorization and invoice process verified",
@@ -477,6 +498,9 @@ export default function AdminPage() {
       || first.state.localeCompare(second.state)
       || first.locality.localeCompare(second.locality)
     ));
+  const acceptedFeeCents = quotes
+    .filter((quote) => quote.status === "accepted")
+    .reduce((total, quote) => total + customerPriceSnapshot(quote).customerFeeCents, 0);
 
   return (
     <main className="admin-shell">
@@ -497,6 +521,7 @@ export default function AdminPage() {
             <div className="admin-stats">
               <article><strong>{requests.length}</strong><span>Job requests</span></article>
               <article><strong>{quotes.length}</strong><span>Provider quotes</span></article>
+              <article><strong>${(acceptedFeeCents / 100).toFixed(2)}</strong><span>Accepted service fees</span></article>
               <article><strong>{providers.length}</strong><span>Provider applications</span></article>
               <article><strong>{expansion.length}</strong><span>Expansion requests</span></article>
               <article><strong>{feedback.length}</strong><span>Feedback responses</span></article>
@@ -641,6 +666,7 @@ export default function AdminPage() {
               <div className="admin-grid">
                 {quotes.map((quote) => {
                   const job = requests.find((item) => item.id === quote.requestId);
+                  const customerPrice = customerPriceSnapshot(quote);
                   return (
                     <article className={`admin-card quote-admin-card ${quote.status === "accepted" ? "is-accepted" : ""}`} key={quote.id}>
                       <div className="admin-card-top">
@@ -652,7 +678,14 @@ export default function AdminPage() {
                           <h3>{quote.providerName}</h3>
                           <p>{job ? `${job.service} · ${job.vehicle}` : "Job request"}</p>
                         </div>
-                        <strong>${(Number(quote.priceCents) / 100).toFixed(2)}</strong>
+                        <div className="quote-admin-price">
+                          <small>Customer total</small>
+                          <strong>${(customerPrice.customerTotalCents / 100).toFixed(2)}</strong>
+                          <span>
+                            ${(Number(quote.priceCents) / 100).toFixed(2)} provider quote
+                            {" "}+ ${(customerPrice.customerFeeCents / 100).toFixed(2)} fee
+                          </span>
+                        </div>
                       </div>
                       <p><b>Availability:</b> {quote.availability}</p>
                       <p><b>Parts:</b> {quote.partType === "Not specified" ? "Legacy quote — not labeled" : quote.partType}</p>
@@ -668,6 +701,8 @@ export default function AdminPage() {
             )}
           </section>
 
+          <StripePaymentAdmin />
+
           <section className="admin-section">
             <h2>Provider applications</h2>
             <p className="admin-section-copy">
@@ -676,7 +711,7 @@ export default function AdminPage() {
               Tuveloz currently reviews applications only for Montgomery County, Maryland.
               When a license or registration applies, receive and verify the proof before approval.
               Do not request one when none applies. Add a reviewed compliance guide before opening
-              any future DMV launch area.
+              any future launch area.
             </p>
             <div className="compliance-guides">
               <article>
@@ -729,8 +764,8 @@ export default function AdminPage() {
                     && isTestProvider === (request.isTestJob === "yes")
                   ));
                   const alertJob = matchingJobs[0];
-                  const workspaceUrl = (isVerified || isTestProvider) && item.accessToken
-                    ? `https://tuveloz.com/provider-jobs?token=${encodeURIComponent(item.accessToken)}`
+                  const workspaceUrl = isVerified
+                    ? "https://tuveloz.com/account?role=provider"
                     : "";
                   const alertHref = !isTestProvider && alertJob && workspaceUrl
                     ? `mailto:${item.email}?subject=${encodeURIComponent(`New Tuveloz ${alertJob.service} request`)}&body=${encodeURIComponent(`A new ${alertJob.service} request for ${alertJob.vehicle} is available in ${alertJob.launchArea || `ZIP ${alertJob.zip.slice(0, 5)}`}.\n\nService-location options: ${parseCustomerServiceLocations(alertJob.serviceLocations).join(" or ")}.\n\nReview and quote the job through your private provider workspace:\n${workspaceUrl}\n\nCustomer contact details and exact location remain private until a quote is selected.`)}`
@@ -740,6 +775,9 @@ export default function AdminPage() {
                     <div className="admin-card-top"><span>{item.status} · {item.verificationStatus}</span><time>{item.createdAt}</time></div>
                     <h3>{item.name}</h3>
                     {isVerified && <span className="verified-badge">✓ Tuveloz verified</span>}
+                    <span className="provider-mode-badge">
+                      {providerModeForWorkLocations(item.workLocations)}
+                    </span>
                     {isTestProvider && <span className="test-badge">TEST PROVIDER · NOT VERIFIED</span>}
                     <p>Requested services: {requestedServices.join(", ")} · {item.serviceArea}</p>
                     <p>
@@ -919,7 +957,7 @@ export default function AdminPage() {
           </section>
 
           <section className="admin-section">
-            <h2>DMV expansion demand</h2>
+            <h2>Expansion demand</h2>
             <p className="admin-section-copy">
               Areas are ranked by unique people, with customer and provider
               interest shown separately.

@@ -36,6 +36,7 @@ export const customerRequests = sqliteTable(
   (table) => [
     index("customer_requests_created_at_idx").on(table.createdAt),
     index("customer_requests_status_idx").on(table.status),
+    index("customer_requests_email_idx").on(table.email),
     index("customer_requests_preferred_provider_idx").on(table.preferredProviderEmail),
   ],
 );
@@ -50,6 +51,9 @@ export const providerQuotes = sqliteTable(
     priceCents: text("price_cents").notNull(),
     laborPriceCents: text("labor_price_cents").notNull().default("0"),
     partsPriceCents: text("parts_price_cents").notNull().default("0"),
+    customerFeeRateBps: integer("customer_fee_rate_bps").notNull().default(1000),
+    customerFeeCents: text("customer_fee_cents").notNull().default("0"),
+    customerTotalCents: text("customer_total_cents").notNull().default("0"),
     partType: text("part_type").notNull().default("Not specified"),
     availability: text("availability").notNull(),
     message: text("message").notNull(),
@@ -112,12 +116,95 @@ export const providerApplications = sqliteTable(
     verifiedBy: text("verified_by").notNull().default(""),
     accessToken: text("access_token").notNull().default(""),
     alertsEnabled: text("alerts_enabled").notNull().default("yes"),
+    // This is the only Stripe value stored on the provider record. Onboarding
+    // and capability status are always fetched from Stripe's V2 Accounts API.
+    stripeAccountId: text("stripe_account_id"),
     status: text("status").notNull().default("new"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("provider_applications_created_at_idx").on(table.createdAt),
     index("provider_applications_status_idx").on(table.status),
+    index("provider_applications_email_idx").on(table.email),
+    index("provider_applications_stripe_account_idx").on(table.stripeAccountId),
+  ],
+);
+
+export const stripePayments = sqliteTable(
+  "stripe_payments",
+  {
+    id: text("id").primaryKey(),
+    paymentType: text("payment_type").notNull(),
+    requestId: text("request_id"),
+    quoteId: text("quote_id"),
+    stripeProductId: text("stripe_product_id"),
+    stripePriceId: text("stripe_price_id"),
+    productName: text("product_name").notNull(),
+    providerApplicationId: text("provider_application_id").notNull(),
+    connectedAccountId: text("connected_account_id").notNull(),
+    customerEmail: text("customer_email").notNull().default(""),
+    currency: text("currency").notNull().default("usd"),
+    quantity: integer("quantity").notNull().default(1),
+    providerAmountCents: integer("provider_amount_cents").notNull(),
+    applicationFeeCents: integer("application_fee_cents").notNull(),
+    customerTotalCents: integer("customer_total_cents").notNull(),
+    settlementStrategy: text("settlement_strategy").notNull(),
+    checkoutSessionId: text("checkout_session_id"),
+    paymentIntentId: text("payment_intent_id"),
+    chargeId: text("charge_id"),
+    transferGroup: text("transfer_group"),
+    transferId: text("transfer_id"),
+    status: text("status").notNull().default("checkout_creating"),
+    paidAt: text("paid_at").notNull().default(""),
+    releasedAt: text("released_at").notNull().default(""),
+    releasedBy: text("released_by").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("stripe_payments_request_id_idx").on(table.requestId),
+    index("stripe_payments_quote_id_idx").on(table.quoteId),
+    index("stripe_payments_provider_idx").on(table.providerApplicationId),
+    index("stripe_payments_status_idx").on(table.status),
+    uniqueIndex("stripe_payments_checkout_session_unique").on(table.checkoutSessionId),
+    index("stripe_payments_payment_intent_idx").on(table.paymentIntentId),
+  ],
+);
+
+export const loginCodes = sqliteTable(
+  "login_codes",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: text("used_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("login_codes_email_role_idx").on(table.email, table.role),
+    index("login_codes_expires_at_idx").on(table.expiresAt),
+    index("login_codes_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const authSessions = sqliteTable(
+  "auth_sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastSeenAt: text("last_seen_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("auth_sessions_token_hash_unique").on(table.tokenHash),
+    index("auth_sessions_email_idx").on(table.email),
+    index("auth_sessions_expires_at_idx").on(table.expiresAt),
   ],
 );
 

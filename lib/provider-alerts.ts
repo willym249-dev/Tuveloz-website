@@ -76,7 +76,7 @@ async function sendProviderJobAlert(
   ));
 
   const results = await Promise.all(matches.map(async (provider) => {
-    const workspaceUrl = `${siteUrl()}/provider-jobs?token=${encodeURIComponent(provider.accessToken)}`;
+    const workspaceUrl = `${siteUrl()}/account?role=provider`;
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -175,7 +175,7 @@ export async function sendAcceptedQuoteAlert(
     return { configured: true, sent: false, failure: "The selected provider has no active private workspace." };
   }
 
-  const workspaceUrl = `${siteUrl()}/provider-jobs?token=${encodeURIComponent(provider.accessToken)}`;
+  const workspaceUrl = `${siteUrl()}/account?role=provider`;
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -194,7 +194,7 @@ export async function sendAcceptedQuoteAlert(
         "Open your private provider workspace to view the customer's contact information and update the job status:",
         workspaceUrl,
         "",
-        "For customer privacy, do not share your private workspace link.",
+        "For account security, keep every sign-in code private.",
       ].join("\n"),
     }),
   });

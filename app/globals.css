@@ -147,6 +147,20 @@ a {
   background: var(--blue);
 }
 
+.header-sign-in {
+  border: 1px solid #d9e2ec;
+  border-radius: 11px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 11px 14px;
+}
+
+.header-sign-in:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
 .header-actions {
   align-items: center;
   display: flex;
@@ -2356,6 +2370,38 @@ footer > p {
   text-transform: uppercase;
 }
 
+.portal-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.portal-account-link {
+  background: transparent;
+  border: 1px solid #654027;
+  border-radius: 10px;
+  color: #ff9a55;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.portal-account-link:hover {
+  background: rgba(255, 106, 0, 0.1);
+  border-color: #ff8a2a;
+}
+
+.provider-fee-note {
+  background: rgba(255, 106, 0, 0.08);
+  border: 1px solid rgba(255, 106, 0, 0.25);
+  border-radius: 12px;
+  color: #d6c5b9 !important;
+  max-width: 720px;
+  padding: 12px 14px;
+}
+
 .portal-intro,
 .portal-grid,
 .portal-alert {
@@ -2893,6 +2939,7 @@ footer > p {
 .quote-breakdown div {
   align-items: center;
   display: flex;
+  gap: 14px;
   justify-content: space-between;
   padding: 10px 13px;
 }
@@ -2904,10 +2951,13 @@ footer > p {
 .quote-breakdown dt {
   color: #a6978c;
   font-size: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .quote-breakdown dd {
   color: #f5e8de;
+  flex: 0 0 auto;
   font-weight: 800;
   margin: 0;
 }
@@ -3229,12 +3279,48 @@ footer > p {
 }
 
 @media (max-width: 700px) {
+  .portal-header {
+    padding: 14px 16px;
+  }
+
+  .portal-header > span {
+    display: none;
+  }
+
+  .portal-header-actions {
+    gap: 5px;
+  }
+
+  .portal-account-link {
+    min-height: 42px;
+    padding: 9px 10px;
+  }
+
+  .portal-header .site-language-button {
+    gap: 0;
+    min-width: 42px;
+    padding: 7px 9px;
+  }
+
+  .portal-header .site-language-button strong {
+    display: none;
+  }
+
   .portal-intro {
-    padding-top: 46px;
+    padding: 42px 16px 28px;
   }
 
   .portal-intro h1 {
-    font-size: 44px;
+    font-size: clamp(36px, 11vw, 44px);
+  }
+
+  .portal-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 16px;
+  }
+
+  .portal-card {
+    border-radius: 18px;
   }
 
   .quote-decision-actions,
@@ -3245,17 +3331,21 @@ footer > p {
   .job-center-nav {
     grid-template-columns: 1fr 1fr;
     position: static;
+    width: calc(100% - 32px);
   }
 
   .provider-control-note {
     align-items: start;
     flex-direction: column;
     gap: 5px;
+    width: calc(100% - 32px);
   }
 
   .portal-section-heading {
     align-items: start;
     flex-direction: column;
+    padding-left: 16px;
+    padding-right: 16px;
   }
 
   .quote-breakdown-fields,
@@ -3538,6 +3628,79 @@ label > small {
   margin-top: 18px;
 }
 
+.service-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.service-group {
+  background: #fff;
+  border: 1px solid #dbe3e9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.service-group > summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  list-style: none;
+  padding: 13px 14px;
+}
+
+.service-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-group > summary > span {
+  display: block;
+  min-width: 0;
+}
+
+.service-group > summary strong,
+.service-group > summary small {
+  display: block;
+}
+
+.service-group > summary strong {
+  color: #172b3c;
+  font-size: 13px;
+}
+
+.service-group > summary small {
+  color: #687b8a;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+.service-group > summary b {
+  background: #edf3f8;
+  border-radius: 999px;
+  color: #34536c;
+  flex: 0 0 auto;
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  padding: 6px 8px;
+  text-transform: uppercase;
+}
+
+.service-group[open] > summary {
+  background: #f5f8fb;
+  border-bottom: 1px solid #dbe3e9;
+}
+
+.service-group[open] > summary b {
+  background: #dce9f4;
+}
+
+.service-group > .service-options {
+  padding: 10px;
+}
+
 .service-options {
   display: grid;
   gap: 8px;
@@ -3575,6 +3738,35 @@ label > small {
   font-size: 10px;
   line-height: 1.55;
   margin-top: 10px;
+}
+
+.provider-mode-preview {
+  align-items: center;
+  border-top: 1px solid #dbe3e9;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.provider-mode-preview > span {
+  color: #526b7d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.provider-mode-badge {
+  background: #eaf2ff;
+  border: 1px solid #9fc1ff;
+  border-radius: 999px;
+  color: #0d57c8;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 6px 9px;
+  text-transform: uppercase;
 }
 
 .parts-source-options label {
@@ -3861,6 +4053,10 @@ label > small {
     grid-template-columns: 1fr;
   }
 
+  .service-group > summary {
+    align-items: flex-start;
+  }
+
   .eligibility-questions {
     grid-template-columns: 1fr;
   }
@@ -3955,11 +4151,31 @@ label > small {
   justify-content: space-between;
 }
 
-.quote-admin-heading strong {
+.quote-admin-price {
+  display: grid;
+  justify-items: end;
+  margin-top: 13px;
+  min-width: 160px;
+}
+
+.quote-admin-price small {
+  color: #88796f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quote-admin-price strong {
   color: #ff7a1a;
   font-size: 28px;
-  margin-top: 16px;
   white-space: nowrap;
+}
+
+.quote-admin-price span {
+  color: #8f8177;
+  font-size: 10px;
+  text-align: right;
 }
 
 .quote-admin-card b {
@@ -4710,7 +4926,7 @@ footer > p,
 }
 
 .provider-workspace-badge {
-  margin-bottom: 8px;
+  margin: 0 6px 8px 0;
 }
 
 .verified-inline {
@@ -5095,6 +5311,17 @@ footer > p,
   font-size: 9px;
   font-weight: 750;
   padding: 7px 9px;
+}
+
+.provider-profile-preview-facts .provider-mode-badge {
+  background: #10243d;
+  border-color: #2f69a5;
+  color: #a9d3ff;
+  font-weight: 900;
+}
+
+.admin-card > .provider-mode-badge {
+  margin: 0 0 8px 6px;
 }
 
 .provider-profile-preview-note {
@@ -6868,9 +7095,11 @@ footer > p,
 
 .account-home-link {
   align-items: center;
+  background: transparent;
   border: 1px solid rgba(255, 106, 0, 0.58);
   border-radius: 11px;
   color: #ff8a2a;
+  cursor: pointer;
   display: inline-flex;
   font-size: 13px;
   font-weight: 800;
@@ -7139,6 +7368,165 @@ footer > p,
   text-align: center;
 }
 
+.account-login-main {
+  max-width: 920px;
+}
+
+.account-login-card {
+  background: rgba(17, 17, 17, 0.96);
+  border: 1px solid #3a291e;
+  border-radius: 22px;
+  margin-top: 42px;
+  max-width: 620px;
+  padding: clamp(24px, 5vw, 38px);
+}
+
+.account-login-card h2 {
+  color: #f7f3ef;
+  font-size: clamp(27px, 4vw, 36px);
+  letter-spacing: -0.035em;
+  margin: 14px 0 10px;
+}
+
+.account-login-card > p {
+  color: #a99d94;
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.account-role-tabs {
+  background: #090909;
+  border: 1px solid #30251e;
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 28px;
+  padding: 6px;
+}
+
+.account-role-tabs button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #8f837a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 9px 12px;
+}
+
+.account-role-tabs button.selected {
+  background: rgba(255, 106, 0, 0.13);
+  border-color: rgba(255, 106, 0, 0.48);
+  color: #ffad72;
+}
+
+.account-login-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 25px;
+}
+
+.account-login-form label {
+  color: #d8ccc3;
+  display: grid;
+  font-size: 12px;
+  font-weight: 750;
+  gap: 8px;
+}
+
+.account-login-form input {
+  background: #080808;
+  border: 1px solid #443127;
+  border-radius: 11px;
+  color: #f7f3ef;
+  font: inherit;
+  font-size: 16px;
+  min-height: 52px;
+  padding: 12px 14px;
+}
+
+.account-login-form input:focus {
+  border-color: #ff7a1a;
+  outline: 3px solid rgba(255, 106, 0, 0.13);
+}
+
+.account-login-form .button {
+  justify-content: center;
+  min-height: 50px;
+}
+
+.account-text-button {
+  background: transparent;
+  border: 0;
+  color: #ff9a55;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  justify-self: center;
+  padding: 6px;
+}
+
+.account-login-message {
+  margin: 16px 0 0;
+  max-width: 620px;
+}
+
+.form-success.account-login-message {
+  background: rgba(110, 190, 85, 0.1);
+  border: 1px solid rgba(130, 208, 105, 0.3);
+  border-radius: 11px;
+  color: #bceaa9;
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 11px 12px;
+}
+
+.account-security-note {
+  color: #786e67;
+  display: block;
+  font-size: 10px;
+  line-height: 1.55;
+  margin-top: 20px;
+}
+
+.account-login-help {
+  align-items: center;
+  background: rgba(17, 17, 17, 0.7);
+  border: 1px solid #30251e;
+  border-radius: 16px;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-top: 18px;
+  max-width: 620px;
+  padding: 16px 18px;
+}
+
+.account-login-help p {
+  color: #9f9289;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.account-customer-grid .account-card {
+  min-height: 390px;
+}
+
+.account-customer-guide p {
+  margin-top: auto;
+}
+
+.account-loading {
+  margin-top: 34px;
+}
+
 @media (max-width: 900px) {
   .hero-value-line {
     font-size: 0.72em;
@@ -7186,12 +7574,36 @@ footer > p,
   }
 
   .account-header .site-language-button {
+    gap: 0;
     min-width: 40px;
+    padding: 7px 9px;
+  }
+
+  .account-header .site-language-button strong {
+    display: none;
+  }
+
+  .account-header-actions {
+    gap: 5px;
+  }
+
+  .account-header-actions .account-home-link {
+    font-size: 11px;
+    min-height: 42px;
     padding: 7px 9px;
   }
 
   .account-main {
     padding: 52px 16px 72px;
+  }
+
+  .account-welcome h1 {
+    font-size: clamp(34px, 11vw, 42px);
+    letter-spacing: -0.045em;
+  }
+
+  .account-welcome p {
+    font-size: 16px;
   }
 
   .account-grid {
@@ -7223,6 +7635,343 @@ footer > p,
 
   .account-help-card .account-button {
     margin: 22px 0 0;
+  }
+
+  .account-role-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .account-login-card {
+    border-radius: 18px;
+    margin-top: 30px;
+    padding: 22px 18px;
+  }
+
+  .account-login-help {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-login-help .button {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+/* Stripe Connect, Checkout, and platform storefront */
+.stripe-connect-panel,
+.quote-payment-card {
+  background: #101010;
+  border: 1px solid #37261c;
+  border-radius: 24px;
+  color: #f8f8f8;
+  margin: 28px auto;
+  max-width: 1180px;
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.stripe-connect-heading,
+.stripe-storefront .storefront-section-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.stripe-connect-heading h2,
+.quote-payment-card h2,
+.stripe-product-form h3 {
+  letter-spacing: -0.03em;
+  margin: 8px 0 10px;
+}
+
+.stripe-connect-heading p,
+.quote-payment-card p,
+.stripe-product-form p {
+  color: #b9afa8;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 720px;
+}
+
+.stripe-status-card {
+  background: #080808;
+  border: 1px solid #2e2e2e;
+  border-radius: 16px;
+  margin-top: 24px;
+  padding: 22px;
+}
+
+.stripe-status-card.needs-action {
+  border-color: #8c461d;
+}
+
+.stripe-status-card > strong {
+  color: #ff8a2a;
+  display: block;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.stripe-status-card .button {
+  margin-top: 18px;
+}
+
+.stripe-status-card ul {
+  color: #d9d2cd;
+  line-height: 1.55;
+  padding-left: 20px;
+}
+
+.stripe-status-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 25px;
+}
+
+.stripe-status-grid article,
+.stripe-account-grid article {
+  background: #080808;
+  border: 1px solid #292929;
+  border-radius: 14px;
+  display: grid;
+  gap: 7px;
+  padding: 18px;
+}
+
+.stripe-status-grid span,
+.stripe-account-grid span {
+  color: #ff8a2a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stripe-status-grid strong {
+  overflow-wrap: anywhere;
+  text-transform: capitalize;
+}
+
+.stripe-product-form {
+  border-top: 1px solid #30271f;
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 28px;
+}
+
+.stripe-product-form label,
+.stripe-storefront-hero label {
+  color: #f4f4f4;
+  display: grid;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.stripe-product-form input,
+.stripe-product-form textarea,
+.stripe-storefront-hero input {
+  background: #050505;
+  border: 1px solid #3b312a;
+  border-radius: 11px;
+  color: white;
+  padding: 13px 14px;
+}
+
+.stripe-product-form small,
+.payment-release-note {
+  color: #9f938b;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.quote-payment-card {
+  display: grid;
+  gap: 22px;
+}
+
+.quote-payment-card .quote-breakdown {
+  margin: 0;
+}
+
+.quote-payment-card .button {
+  justify-self: start;
+}
+
+.payment-release-note {
+  display: block;
+  max-width: 720px;
+}
+
+.stripe-storefront {
+  background: #070707;
+  min-height: 100vh;
+}
+
+.stripe-storefront-hero,
+.stripe-account-roster,
+.stripe-product-section {
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 64px 24px 0;
+}
+
+.stripe-storefront-hero {
+  padding-top: 84px;
+}
+
+.stripe-storefront-hero h1 {
+  color: #f8f8f8;
+  font-size: clamp(42px, 7vw, 76px);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  margin: 16px 0;
+  max-width: 900px;
+}
+
+.stripe-storefront-hero > p {
+  color: #b9afa8;
+  font-size: 17px;
+  line-height: 1.65;
+  max-width: 750px;
+}
+
+.stripe-storefront-hero label {
+  margin-top: 28px;
+  max-width: 430px;
+}
+
+.stripe-storefront-hero .form-error {
+  margin-top: 16px;
+  max-width: 700px;
+}
+
+.stripe-account-grid,
+.stripe-product-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 28px;
+}
+
+.stripe-account-grid strong {
+  color: #f8f8f8;
+  font-size: 17px;
+}
+
+.stripe-account-grid small {
+  color: #938981;
+  overflow-wrap: anywhere;
+}
+
+.stripe-product-section {
+  padding-bottom: 90px;
+}
+
+.stripe-product-grid article {
+  background: #101010;
+  border: 1px solid #30251e;
+  border-radius: 18px;
+  color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.stripe-product-grid h2 {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  margin: 15px 0 8px;
+}
+
+.stripe-product-grid article > p {
+  color: #aaa098;
+  flex: 1;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.stripe-product-grid .button {
+  margin-top: 18px;
+  width: 100%;
+}
+
+.stripe-payment-card .quote-breakdown {
+  margin: 18px 0;
+}
+
+.payment-result-shell {
+  background: #070707;
+  color: #f8f8f8;
+  display: grid;
+  min-height: 100vh;
+  padding: 30px clamp(22px, 7vw, 100px);
+}
+
+.payment-result-shell > section {
+  align-self: center;
+  background: #101010;
+  border: 1px solid #38271d;
+  border-radius: 24px;
+  justify-self: center;
+  max-width: 760px;
+  padding: clamp(30px, 6vw, 68px);
+  width: 100%;
+}
+
+.payment-result-shell h1 {
+  font-size: clamp(38px, 6vw, 64px);
+  letter-spacing: -0.05em;
+  line-height: 1.03;
+  margin: 16px 0;
+}
+
+.payment-result-shell p {
+  color: #b8afa8;
+  line-height: 1.65;
+}
+
+.payment-result-shell section > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+@media (max-width: 780px) {
+  .stripe-connect-panel,
+  .quote-payment-card {
+    border-radius: 18px;
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .stripe-connect-heading,
+  .stripe-storefront .storefront-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stripe-status-grid,
+  .stripe-account-grid,
+  .stripe-product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stripe-storefront-hero,
+  .stripe-account-roster,
+  .stripe-product-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .quote-payment-card .button,
+  .stripe-connect-heading .button {
+    width: 100%;
   }
 }
 

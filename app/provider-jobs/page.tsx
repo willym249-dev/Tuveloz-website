@@ -7,6 +7,7 @@ import { ConfirmAction } from "../components/confirm-action";
 import { MarketPriceLinks } from "../components/market-price-links";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
+import { StripeConnectPanel } from "../components/stripe-connect-panel";
 import { BrandMark, TuvelozIcon } from "../components/tuveloz-icons";
 import {
   parseCustomerServiceLocations,
@@ -14,6 +15,7 @@ import {
   parseProviderServices,
   parseProviderWorkLocations,
   PARTS_SOURCE_OPTIONS,
+  providerModeForWorkLocations,
   QUOTE_PART_TYPE_OPTIONS,
 } from "../../lib/service-matching";
 
@@ -149,19 +151,46 @@ export default function ProviderJobsPage() {
   const [savingRecordId, setSavingRecordId] = useState("");
   const [pendingRecordId, setPendingRecordId] = useState("");
   const [timerJobId, setTimerJobId] = useState("");
+  const [signedIn, setSignedIn] = useState(false);
+  const [canSwitchWorkspace, setCanSwitchWorkspace] = useState(false);
 
   useEffect(() => {
-    const value = new URLSearchParams(window.location.search).get("token") ?? "";
-    fetch(`/api/jobs?token=${encodeURIComponent(value)}`).then(async (response) => {
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Unable to load approved jobs.");
-      setProviderToken(value);
-      setJobs(data.jobs ?? []);
-      setAssignedJobs(data.assignedJobs ?? []);
-      setProvider(data.provider);
-    })
-      .catch((reason) => setError(reason.message || "Unable to load approved jobs."))
-      .finally(() => setLoading(false));
+    async function loadWorkspace() {
+      try {
+        let value = new URLSearchParams(window.location.search).get("token") ?? "";
+        if (!value) {
+          const accountResponse = await fetch("/api/account", { cache: "no-store" });
+          const account = await accountResponse.json();
+          if (accountResponse.status === 401) {
+            window.location.replace("/account?role=provider");
+            return;
+          }
+          if (!accountResponse.ok) {
+            throw new Error(account.error || "Unable to load your verified provider account.");
+          }
+          if (account.role !== "provider" || !account.provider?.accessToken) {
+            window.location.replace("/customer");
+            return;
+          }
+          value = account.provider.accessToken;
+          setSignedIn(true);
+          setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
+        }
+
+        const response = await fetch(`/api/jobs?token=${encodeURIComponent(value)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to load approved jobs.");
+        setProviderToken(value);
+        setJobs(data.jobs ?? []);
+        setAssignedJobs(data.assignedJobs ?? []);
+        setProvider(data.provider);
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "Unable to load approved jobs.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    void loadWorkspace();
   }, []);
 
   useEffect(() => {
@@ -188,7 +217,6 @@ export default function ProviderJobsPage() {
   async function submitQuote() {
     if (!pendingQuote) return;
     setSubmittingQuoteId(pendingQuote.requestId);
-    const providerToken = new URLSearchParams(window.location.search).get("token") ?? "";
     const response = await fetch("/api/jobs", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -205,7 +233,6 @@ export default function ProviderJobsPage() {
   async function updateStatus(requestId: string, status: string) {
     setError("");
     setUpdatingJobId(requestId);
-    const providerToken = new URLSearchParams(window.location.search).get("token") ?? "";
     const isCompletion = status === "completed";
     const response = isCompletion
       ? await (() => {
@@ -301,6 +328,25 @@ export default function ProviderJobsPage() {
     )));
   }
 
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.replace("/account?role=provider");
+  }
+
+  async function switchWorkspace() {
+    const response = await fetch("/api/auth/switch-role", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ role: "customer" }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setError(result.error || "Unable to switch workspaces.");
+      return;
+    }
+    window.location.replace(result.destination);
+  }
+
   const activeJobs = assignedJobs.filter((job) => job.status !== "completed");
   const completedJobs = assignedJobs.filter((job) => job.status === "completed");
   const completedTotalCents = completedJobs.reduce(
@@ -329,12 +375,29 @@ export default function ProviderJobsPage() {
       <header className="portal-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <span>Founding provider workspace</span>
-        <SiteLanguageButton />
+        <div className="portal-header-actions">
+          {signedIn && canSwitchWorkspace && (
+            <button className="portal-account-link" onClick={switchWorkspace} type="button">
+              Switch
+            </button>
+          )}
+          {signedIn ? (
+            <button className="portal-account-link" onClick={signOut} type="button">Sign out</button>
+          ) : (
+            <Link className="portal-account-link" href="/account?role=provider">Provider sign in</Link>
+          )}
+          <SiteLanguageButton />
+        </div>
       </header>
       <section className="portal-intro">
         <span className="kicker">Matched job alerts</span>
         <h1>{provider ? `Jobs matched for ${provider.name}.` : "Your provider workspace."}</h1>
         {provider?.verified && <span className="verified-badge provider-workspace-badge">✓ Tuveloz verified</span>}
+        {provider && (
+          <span className="provider-mode-badge provider-workspace-badge">
+            {providerModeForWorkLocations(provider.workLocations)}
+          </span>
+        )}
         {provider?.testProvider && <span className="test-badge provider-workspace-badge">TEST PROVIDER · FICTIONAL</span>}
         <p>
           {provider
@@ -347,11 +410,21 @@ export default function ProviderJobsPage() {
             Service options: {parseProviderWorkLocations(provider.workLocations).join(" · ")}
           </p>
         )}
+        {provider && !provider.testProvider && (
+          <p className="provider-fee-note">
+            Your provider quote remains your full subtotal. Tuveloz adds a separate
+            10% service fee to the customer&apos;s total.
+          </p>
+        )}
         {provider?.testProvider && <p>This workspace is isolated to test jobs. No real alerts or public ratings are created.</p>}
       </section>
+      {!loading && provider && !provider.testProvider && (
+        <StripeConnectPanel signedIn={signedIn} />
+      )}
       {!loading && !error && (
         <>
           <nav className="job-center-nav" aria-label="Provider Job Center">
+            {!provider?.testProvider && <a href="#stripe-payouts"><span>Stripe</span>Payments</a>}
             <a href="#business-page"><TuvelozIcon name="storefront" /><span>Page</span>Business Page</a>
             <a href="#open-jobs"><TuvelozIcon name="open-jobs" /><span>{jobs.length}</span>Open Jobs</a>
             <a href="#active-jobs"><TuvelozIcon name="active-job" /><span>{activeJobs.length}</span>Active Jobs</a>

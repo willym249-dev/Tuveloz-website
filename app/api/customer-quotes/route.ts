@@ -9,12 +9,29 @@ import {
   providerMatchesServiceLocation,
 } from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASON_VALUES } from "../../../lib/quote-feedback";
+import { customerPriceFor } from "../../../lib/customer-fee";
+import { getAccountSession } from "../../../lib/account-auth";
 
 export async function GET(request: Request) {
-  const token = new URL(request.url).searchParams.get("token") ?? "";
-  const [job] = await getDb().select().from(customerRequests)
-    .where(eq(customerRequests.accessToken, token)).limit(1);
-  if (!job || !token) return Response.json({ error: "Private request link not found." }, { status: 404 });
+  const searchParams = new URL(request.url).searchParams;
+  const token = searchParams.get("token") ?? "";
+  const requestId = searchParams.get("requestId") ?? "";
+  let job: typeof customerRequests.$inferSelect | undefined;
+  if (token) {
+    [job] = await getDb().select().from(customerRequests)
+      .where(eq(customerRequests.accessToken, token)).limit(1);
+  } else if (requestId) {
+    const session = await getAccountSession(request);
+    if (session?.role === "customer") {
+      [job] = await getDb().select().from(customerRequests)
+        .where(and(
+          eq(customerRequests.id, requestId),
+          eq(customerRequests.email, session.email),
+        ))
+        .limit(1);
+    }
+  }
+  if (!job) return Response.json({ error: "Customer request not found." }, { status: 404 });
   const quotes = await getDb().select().from(providerQuotes)
     .where(eq(providerQuotes.requestId, job.id)).orderBy(desc(providerQuotes.createdAt));
   const [review] = await getDb().select({
@@ -72,6 +89,7 @@ export async function GET(request: Request) {
     ratings.set(item.providerEmail, current);
   }
   return Response.json({
+    accessToken: job.accessToken,
     job: {
       id: job.id,
       customerName: job.name,
@@ -95,9 +113,25 @@ export async function GET(request: Request) {
     quotes: quotes.map((quote) => {
       const usesLegacyTotal = Number(quote.laborPriceCents) + Number(quote.partsPriceCents) === 0
         && Number(quote.priceCents) > 0;
+      const storedFeeCents = Number(quote.customerFeeCents);
+      const storedTotalCents = Number(quote.customerTotalCents);
+      const hasStoredCustomerPrice = Number.isFinite(storedFeeCents)
+        && Number.isFinite(storedTotalCents)
+        && storedTotalCents > 0
+        && Number(quote.priceCents) + storedFeeCents === storedTotalCents;
+      const customerPrice = hasStoredCustomerPrice
+        ? {
+            customerFeeRateBps: quote.customerFeeRateBps,
+            customerFeeCents: storedFeeCents,
+            customerTotalCents: storedTotalCents,
+          }
+        : customerPriceFor(Number(quote.priceCents), quote.customerFeeRateBps);
       return {
         ...quote,
         laborPriceCents: usesLegacyTotal ? quote.priceCents : quote.laborPriceCents,
+        customerFeeRateBps: customerPrice.customerFeeRateBps,
+        customerFeeCents: String(customerPrice.customerFeeCents),
+        customerTotalCents: String(customerPrice.customerTotalCents),
         ratingAverage: ratings.has(quote.providerEmail)
           ? Number(((ratings.get(quote.providerEmail)?.total ?? 0) / (ratings.get(quote.providerEmail)?.count ?? 1)).toFixed(1))
           : 0,
@@ -135,6 +169,10 @@ export async function POST(request: Request) {
   const [quote] = await db.select({
     id: providerQuotes.id,
     providerEmail: providerQuotes.providerEmail,
+    priceCents: providerQuotes.priceCents,
+    customerFeeRateBps: providerQuotes.customerFeeRateBps,
+    customerFeeCents: providerQuotes.customerFeeCents,
+    customerTotalCents: providerQuotes.customerTotalCents,
     status: providerQuotes.status,
   }).from(providerQuotes)
     .where(and(eq(providerQuotes.id, body.quoteId ?? ""), eq(providerQuotes.requestId, job.id))).limit(1);
@@ -231,7 +269,24 @@ export async function POST(request: Request) {
   if (acceptedRequest.length === 0) {
     return Response.json({ error: "A quote has already been accepted for this request." }, { status: 409 });
   }
-  await db.update(providerQuotes).set({ status: "accepted" })
+  const storedFeeCents = Number(quote.customerFeeCents);
+  const storedTotalCents = Number(quote.customerTotalCents);
+  const customerPrice = Number.isFinite(storedFeeCents)
+      && Number.isFinite(storedTotalCents)
+      && storedTotalCents > 0
+      && Number(quote.priceCents) + storedFeeCents === storedTotalCents
+    ? {
+        customerFeeRateBps: quote.customerFeeRateBps,
+        customerFeeCents: storedFeeCents,
+        customerTotalCents: storedTotalCents,
+      }
+    : customerPriceFor(Number(quote.priceCents), quote.customerFeeRateBps);
+  await db.update(providerQuotes).set({
+    status: "accepted",
+    customerFeeRateBps: customerPrice.customerFeeRateBps,
+    customerFeeCents: String(customerPrice.customerFeeCents),
+    customerTotalCents: String(customerPrice.customerTotalCents),
+  })
     .where(eq(providerQuotes.id, quote.id));
   await db.update(providerQuotes).set({ status: "not selected" })
     .where(and(

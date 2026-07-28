@@ -1,0 +1,188 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { customerPriceFor } from "../../lib/customer-fee";
+import { SiteLanguageButton } from "../components/site-language";
+import { BrandMark } from "../components/tuveloz-icons";
+
+type StorefrontProduct = {
+  id: string;
+  name: string;
+  description: string;
+  unitAmount: number;
+  currency: string;
+  providerName: string;
+  providerReady: boolean;
+};
+
+type ConnectedAccount = {
+  providerId: string;
+  providerName: string;
+  accountReference: string;
+  readyToReceivePayments: boolean;
+  transferStatus: string;
+};
+
+function dollars(cents: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(cents / 100);
+}
+
+export default function StripeStorefrontPage() {
+  const [products, setProducts] = useState<StorefrontProduct[]>([]);
+  const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [buyingId, setBuyingId] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/stripe/products", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json() as {
+          products?: StorefrontProduct[];
+          connectedAccounts?: ConnectedAccount[];
+          error?: string;
+        };
+        if (!response.ok) throw new Error(result.error || "Unable to load the storefront.");
+        setProducts(result.products ?? []);
+        setAccounts(result.connectedAccounts ?? []);
+      })
+      .catch((failure) => {
+        setError(failure instanceof Error ? failure.message : "Unable to load the storefront.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function buy(productId: string) {
+    setBuyingId(productId);
+    setError("");
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          productId,
+          quantity: 1,
+          customerEmail: email,
+        }),
+      });
+      const result = await response.json() as { url?: string; error?: string };
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || "Unable to open Stripe Checkout.");
+      }
+      window.location.assign(result.url);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Unable to open Stripe Checkout.");
+      setBuyingId("");
+    }
+  }
+
+  return (
+    <main className="storefront-shell stripe-storefront">
+      <header className="storefront-header">
+        <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
+        <div className="portal-header-actions">
+          <Link className="portal-account-link" href="/account">Sign in</Link>
+          <SiteLanguageButton />
+        </div>
+      </header>
+
+      <section className="stripe-storefront-hero">
+        <span className="kicker">Stripe storefront</span>
+        <h1>Book a fixed-price provider offering.</h1>
+        <p>
+          Prices come from connected Tuveloz providers. Stripe hosts payment,
+          and the 10% Tuveloz customer service fee is shown before checkout.
+        </p>
+        <label>
+          Receipt email
+          <input
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            type="email"
+            value={email}
+          />
+        </label>
+        {error && <p className="form-error" role="alert">{error}</p>}
+      </section>
+
+      <section className="stripe-account-roster">
+        <div className="storefront-section-heading">
+          <div><span className="kicker">Connected accounts</span><h2>Providers on Stripe Connect</h2></div>
+          <p>Status is retrieved directly from Stripe when this page loads.</p>
+        </div>
+        {loading ? (
+          <p className="admin-note">Loading Stripe accounts…</p>
+        ) : accounts.length === 0 ? (
+          <p className="admin-note">No connected provider accounts are ready yet.</p>
+        ) : (
+          <div className="stripe-account-grid">
+            {accounts.map((account) => (
+              <article key={account.providerId}>
+                <span>{account.readyToReceivePayments ? "Ready" : "Onboarding"}</span>
+                <strong>{account.providerName}</strong>
+                <small>
+                  Account ••••{account.accountReference} · transfers {account.transferStatus}
+                </small>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="stripe-product-section">
+        <div className="storefront-section-heading">
+          <div><span className="kicker">Products</span><h2>Available offerings</h2></div>
+          <p>Products and default prices are stored on the Tuveloz Stripe platform.</p>
+        </div>
+        {loading ? (
+          <p className="admin-note">Loading Stripe products…</p>
+        ) : products.length === 0 ? (
+          <div className="storefront-empty">
+            <span>No products yet</span>
+            <p>A connected provider can create the first offering from their workspace.</p>
+          </div>
+        ) : (
+          <div className="stripe-product-grid">
+            {products.map((product) => {
+              const totals = customerPriceFor(product.unitAmount);
+              return (
+                <article key={product.id}>
+                  <span className="portal-service">{product.providerName}</span>
+                  <h2>{product.name}</h2>
+                  <p>{product.description}</p>
+                  <dl className="quote-breakdown compact">
+                    <div><dt>Provider price</dt><dd>{dollars(product.unitAmount)}</dd></div>
+                    <div><dt>Tuveloz fee (10%)</dt><dd>{dollars(totals.customerFeeCents)}</dd></div>
+                    <div className="total"><dt>Total</dt><dd>{dollars(totals.customerTotalCents)}</dd></div>
+                  </dl>
+                  <button
+                    className="button primary"
+                    disabled={
+                      !product.providerReady
+                      || !email
+                      || Boolean(buyingId)
+                    }
+                    onClick={() => buy(product.id)}
+                    type="button"
+                  >
+                    {buyingId === product.id
+                      ? "Opening Stripe…"
+                      : product.providerReady
+                        ? "Buy with Stripe"
+                        : "Provider onboarding"}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}

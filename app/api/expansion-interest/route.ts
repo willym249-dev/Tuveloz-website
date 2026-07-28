@@ -2,9 +2,8 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { expansionInterests } from "../../../db/schema";
 
-const DMV_STATES = new Set([
+const EXPANSION_AREAS = new Set([
   "Maryland",
-  "Virginia",
   "Washington, DC",
 ]);
 
@@ -52,9 +51,9 @@ export async function POST(request: Request) {
     ) {
       return Response.json({ error: "Choose the type of provider you are." }, { status: 400 });
     }
-    if (!locality || !DMV_STATES.has(state)) {
+    if (!locality || !EXPANSION_AREAS.has(state)) {
       return Response.json({
-        error: "Enter your county or independent city and choose a DMV state or district.",
+        error: "Enter your county or city and choose Maryland or Washington, DC.",
       }, { status: 400 });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

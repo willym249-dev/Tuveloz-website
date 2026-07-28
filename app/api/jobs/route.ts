@@ -5,6 +5,7 @@ import {
   providerApplications,
   providerJobRecords,
   providerQuotes,
+  stripePayments,
 } from "../../../db/schema";
 import {
   effectiveProviderServices,
@@ -19,6 +20,7 @@ import {
   storeJobImage,
   validateJobImage,
 } from "../../../lib/job-images";
+import { customerPriceFor } from "../../../lib/customer-fee";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -435,6 +437,17 @@ export async function POST(request: Request) {
           updatedAt: completedAt,
         },
       });
+
+      // A paid quote uses separate charges and transfers. Completion makes the
+      // provider amount eligible for the owner's explicit release; it does not
+      // transfer funds from a provider-controlled status button.
+      await db.update(stripePayments).set({
+        status: "ready_for_release",
+        updatedAt: completedAt,
+      }).where(and(
+        eq(stripePayments.requestId, requestId),
+        eq(stripePayments.status, "paid_pending_completion"),
+      ));
     }
     return Response.json({
       ok: true,
@@ -538,15 +551,19 @@ export async function POST(request: Request) {
     return Response.json({ error: "You already submitted a quote for this job." }, { status: 409 });
   }
 
+  const customerPrice = customerPriceFor(Math.round(price * 100));
   try {
     await db.insert(providerQuotes).values({
       id: await quoteIdFor(requestId, provider.email),
       requestId,
       providerName: provider.name,
       providerEmail: provider.email,
-      priceCents: String(Math.round(price * 100)),
+      priceCents: String(customerPrice.providerQuoteCents),
       laborPriceCents: String(Math.round(laborPrice * 100)),
       partsPriceCents: String(Math.round(partsPrice * 100)),
+      customerFeeRateBps: customerPrice.customerFeeRateBps,
+      customerFeeCents: String(customerPrice.customerFeeCents),
+      customerTotalCents: String(customerPrice.customerTotalCents),
       partType,
       availability,
       message,
