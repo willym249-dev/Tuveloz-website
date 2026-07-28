@@ -10,11 +10,14 @@ import {
 } from "../lib/provider-compliance";
 import {
   CURRENT_LAUNCH_AREA,
+  CUSTOMER_SERVICE_GROUPS,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
   parseCustomerServiceLocations,
   PARTS_PREFERENCE_OPTIONS,
   PARTS_SOURCE_OPTIONS,
+  PROVIDER_SERVICE_GROUPS,
   PROVIDER_WORK_LOCATION_OPTIONS,
+  providerModeForWorkLocations,
 } from "../lib/service-matching";
 import { MarketPriceLinks } from "./components/market-price-links";
 import VehicleSelector from "./components/vehicle-selector";
@@ -103,99 +106,6 @@ const feedbackCustomerOptions = [
   "Service history and reminders",
   "More providers and service choices",
 ];
-
-const providerServiceOptions = [
-  {
-    value: "Battery jump-starts",
-    label: "Battery jump-starts",
-    labelEs: "Arranque de batería",
-    note: "Jump-start service only.",
-    noteEs: "Solo servicio de arranque de batería.",
-  },
-  {
-    value: "Spare-tire installation",
-    label: "Flat-tire help and spare installation",
-    labelEs: "Ayuda con llantas e instalación del repuesto",
-    note: "The removed tire stays with the customer.",
-    noteEs: "La llanta retirada permanece con el cliente.",
-  },
-  {
-    value: "Basic vehicle diagnostics",
-    label: "Basic vehicle diagnostics",
-    labelEs: "Diagnóstico básico del vehículo",
-    note: "A basic assessment is not an official state safety or emissions inspection.",
-    noteEs: "Una evaluación básica no es una inspección oficial estatal de seguridad o emisiones.",
-  },
-  {
-    value: "Body repair and paint estimates",
-    label: "Body repair and paint estimates",
-    labelEs: "Cotizaciones de carrocería y pintura",
-    note: "Estimates only; repair and painting are not included.",
-    noteEs: "Solo cotizaciones; no incluye reparación ni pintura.",
-  },
-  {
-    value: "Window tint installation",
-    label: "Window tint installation",
-    labelEs: "Instalación de polarizado de ventanas",
-    note: "Install only tint that is legal for the vehicle and state.",
-    noteEs: "Instale únicamente polarizado legal para el vehículo y el estado.",
-  },
-  {
-    value: "Rain guard / vent visor installation",
-    label: "Rain guard, vent visor, or window deflector installation",
-    labelEs: "Instalación de deflectores de lluvia o viseras de ventana",
-    note: "Use vehicle-fit parts that do not block the driver’s view.",
-    noteEs: "Use piezas compatibles con el vehículo que no obstruyan la vista del conductor.",
-  },
-  {
-    value: "Vehicle sunshade installation",
-    label: "Vehicle sunshade installation",
-    labelEs: "Instalación de parasoles para vehículo",
-    note: "Removable or retractable shade accessories only—not window tint film. Do not block the driver’s view while driving.",
-    noteEs: "Solo accesorios removibles o retráctiles, no película polarizada. No deben obstruir la vista al conducir.",
-  },
-  {
-    value: "Waterless exterior washing",
-    label: "Waterless exterior wash",
-    labelEs: "Lavado exterior sin agua",
-    note: "Spray cleaner, towel wipe-off, and basic rim cleaning. No hose or runoff.",
-    noteEs: "Limpiador en aerosol, secado con toalla y limpieza básica de rines. Sin manguera ni escurrimiento.",
-  },
-  {
-    value: "Car washing with water",
-    label: "Exterior car wash with water",
-    labelEs: "Lavado exterior con agua",
-    note: "Includes basic rim cleaning. Wash water must follow local discharge laws.",
-    noteEs: "Incluye limpieza básica de rines. El agua de lavado debe cumplir las leyes locales de descarga.",
-  },
-  {
-    value: "Interior detailing",
-    label: "Interior detailing",
-    labelEs: "Detallado interior",
-    note: "Vacuuming and interior surface cleaning.",
-    noteEs: "Aspirado y limpieza de superficies interiores.",
-  },
-] as const;
-
-const customerServiceOptions = [
-  { value: "Battery or jump start", label: "Battery or jump start" },
-  { value: "Tire help", label: "Flat-tire help or spare installation" },
-  { value: "Basic vehicle diagnostics", label: "Basic vehicle diagnostics" },
-  { value: "Minor dent repair quote", label: "Minor dent repair quote" },
-  { value: "Scratch or paintwork quote", label: "Scratch or paintwork quote" },
-  { value: "Window tint installation quote", label: "Window tint installation quote" },
-  {
-    value: "Rain guard / vent visor installation",
-    label: "Rain guard / vent visor installation",
-  },
-  {
-    value: "Vehicle sunshade installation",
-    label: "Vehicle sunshade installation",
-  },
-  { value: "Waterless exterior wash", label: "Waterless exterior wash" },
-  { value: "Exterior car wash with water", label: "Exterior wash with water" },
-  { value: "Interior detailing", label: "Interior detailing" },
-] as const;
 
 type PublicReview = {
   id: string;
@@ -1086,33 +996,55 @@ export default function Home() {
               <fieldset className="area-fieldset service-fieldset customer-service-fieldset">
                 <legend>What does your vehicle need?</legend>
                 <p>Choose one or more. One provider must be able to handle the complete request.</p>
-                <div className="service-options customer-service-options">
-                  {customerServiceOptions.map((option) => (
-                    <label
-                      className={selectedCustomerServices.includes(option.value) ? "selected" : ""}
-                      key={option.value}
-                    >
-                      <input
-                        checked={selectedCustomerServices.includes(option.value)}
-                        name="service"
-                        type="checkbox"
-                        value={option.value}
-                        onChange={(event) => {
-                          setPriceGuidanceBusy(true);
-                          setSelectedCustomerServices((current) => (
-                            event.target.checked
-                              ? [...current, option.value]
-                              : current.filter((service) => service !== option.value)
-                          ));
-                        }}
-                      />
-                      <span>{option.label}</span>
-                    </label>
-                  ))}
+                <div className="service-groups customer-service-groups">
+                  {CUSTOMER_SERVICE_GROUPS.map((group) => {
+                    const selectedCount = group.options.filter((option) => (
+                      selectedCustomerServices.includes(option.value)
+                    )).length;
+                    return (
+                      <details
+                        className="service-group"
+                        open={group.id === "mobile" ? true : undefined}
+                        key={group.id}
+                      >
+                        <summary>
+                          <span>
+                            <strong>{group.label}</strong>
+                            <small>{group.description}</small>
+                          </span>
+                          <b>{selectedCount ? `${selectedCount} selected` : "View"}</b>
+                        </summary>
+                        <div className="service-options customer-service-options">
+                          {group.options.map((option) => (
+                            <label
+                              className={selectedCustomerServices.includes(option.value) ? "selected" : ""}
+                              key={option.value}
+                            >
+                              <input
+                                checked={selectedCustomerServices.includes(option.value)}
+                                name="service"
+                                type="checkbox"
+                                value={option.value}
+                                onChange={(event) => {
+                                  setPriceGuidanceBusy(true);
+                                  setSelectedCustomerServices((current) => (
+                                    event.target.checked
+                                      ? [...current, option.value]
+                                      : current.filter((service) => service !== option.value)
+                                  ));
+                                }}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </details>
+                    );
+                  })}
                 </div>
                 <small className="customer-service-note">
-                  Rain guards also include vent visors and window deflectors.
-                  Sunshades are removable or retractable accessories; window tint is a separate service.
+                  Availability depends on a verified provider being approved for that exact service.
+                  Rain guards include vent visors and window deflectors; window tint is separate.
                 </small>
               </fieldset>
               {selectedCustomerServices.length > 0 && (
@@ -1354,27 +1286,76 @@ export default function Home() {
                       ? "Seleccione todos los que correspondan."
                       : "Choose all that apply."}
                   </p>
-                  <div className="service-options">
-                    {providerServiceOptions.map((service) => (
-                      <label key={service.value}>
-                        <input
-                          checked={selectedProviderServices.includes(service.value)}
-                          name="provider-service"
-                          type="checkbox"
-                          value={service.value}
-                          onChange={(event) => setSelectedProviderServices((current) => (
-                            event.target.checked
-                              ? [...current, service.value]
-                              : current.filter((item) => item !== service.value)
-                          ))}
-                        />
-                        <span>
-                          <strong>{providerFormIsSpanish ? service.labelEs : service.label}</strong>
-                          <small>{providerFormIsSpanish ? service.noteEs : service.note}</small>
-                        </span>
-                      </label>
-                    ))}
+                  <div className="service-groups provider-service-groups">
+                    {PROVIDER_SERVICE_GROUPS.map((group) => {
+                      const selectedCount = group.options.filter((service) => (
+                        selectedProviderServices.includes(service.value)
+                      )).length;
+                      return (
+                        <details
+                          className="service-group"
+                          open={group.id === "mobile" ? true : undefined}
+                          key={group.id}
+                        >
+                          <summary>
+                            <span>
+                              <strong>
+                                {providerFormIsSpanish ? group.labelEs : group.label}
+                              </strong>
+                              <small>
+                                {providerFormIsSpanish
+                                  ? group.descriptionEs
+                                  : group.description}
+                              </small>
+                            </span>
+                            <b>
+                              {selectedCount
+                                ? providerFormIsSpanish
+                                  ? `${selectedCount} seleccionados`
+                                  : `${selectedCount} selected`
+                                : providerFormIsSpanish
+                                  ? "Ver"
+                                  : "View"}
+                            </b>
+                          </summary>
+                          <div className="service-options">
+                            {group.options.map((service) => (
+                              <label key={service.value}>
+                                <input
+                                  checked={selectedProviderServices.includes(service.value)}
+                                  name="provider-service"
+                                  type="checkbox"
+                                  value={service.value}
+                                  onChange={(event) => setSelectedProviderServices((current) => (
+                                    event.target.checked
+                                      ? [...current, service.value]
+                                      : current.filter((item) => item !== service.value)
+                                  ))}
+                                />
+                                <span>
+                                  <strong>
+                                    {providerFormIsSpanish ? service.labelEs : service.label}
+                                  </strong>
+                                  {service.note && (
+                                    <small>
+                                      {providerFormIsSpanish
+                                        ? service.noteEs
+                                        : service.note}
+                                    </small>
+                                  )}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </details>
+                      );
+                    })}
                   </div>
+                  <small className="customer-service-note">
+                    {providerFormIsSpanish
+                      ? "Cada servicio se activa solo después de la revisión y aprobación de Tuveloz."
+                      : "Each service is activated only after Tuveloz review and approval."}
+                  </small>
                 </fieldset>
                 <label>
                   {providerFormIsSpanish ? "Ubicación del negocio" : "Business location"}
@@ -1418,6 +1399,18 @@ export default function Home() {
                       </label>
                     ))}
                   </div>
+                  {selectedProviderWorkLocations.length > 0 && (
+                    <div className="provider-mode-preview" aria-live="polite">
+                      <span>
+                        {providerFormIsSpanish
+                          ? "La insignia del perfil será"
+                          : "Profile badge"}
+                      </span>
+                      <strong className="provider-mode-badge">
+                        {providerModeForWorkLocations(selectedProviderWorkLocations)}
+                      </strong>
+                    </div>
+                  )}
                 </fieldset>
                 {providerAcceptsCustomersAtBusiness && (
                   <label>
@@ -1610,11 +1603,11 @@ export default function Home() {
                       )}
                       {providerLegalRequirements.officialInspectionRestriction && (
                         <div className="legal-requirement-note">
-                          <strong>{providerFormIsSpanish ? "Diagnóstico básico solamente" : "Basic diagnostics only"}</strong>
+                          <strong>{providerFormIsSpanish ? "Evaluaciones independientes solamente" : "Independent checks only"}</strong>
                           <small>
                             {providerFormIsSpanish
-                              ? "No anuncie este servicio como una inspección estatal oficial. Solo una estación autorizada puede ofrecer inspecciones oficiales."
-                              : "Do not advertise this service as an official state inspection. Only an authorized station may offer official inspections."}
+                              ? "No anuncie un diagnóstico o una inspección antes de comprar como una inspección estatal oficial. Solo una estación autorizada puede ofrecer inspecciones oficiales."
+                              : "Do not advertise diagnostics or a pre-purchase inspection as an official state inspection. Only an authorized station may offer official inspections."}
                           </small>
                         </div>
                       )}
