@@ -12,6 +12,7 @@ import {
   providerMatchesArea,
   providerMatchesJob,
   providerMatchesServiceLocation,
+  providerModeForWorkLocations,
 } from "../../lib/service-matching";
 import {
   evaluateProviderServices,
@@ -771,6 +772,9 @@ export default function AdminPage() {
                     <div className="admin-card-top"><span>{item.status} · {item.verificationStatus}</span><time>{item.createdAt}</time></div>
                     <h3>{item.name}</h3>
                     {isVerified && <span className="verified-badge">✓ Tuveloz verified</span>}
+                    <span className="provider-mode-badge">
+                      {providerModeForWorkLocations(item.workLocations)}
+                    </span>
                     {isTestProvider && <span className="test-badge">TEST PROVIDER · NOT VERIFIED</span>}
                     <p>Requested services: {requestedServices.join(", ")} · {item.serviceArea}</p>
                     <p>
