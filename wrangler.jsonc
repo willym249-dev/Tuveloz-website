@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "tuveloz-db",
-      "database_id": "00000000-0000-0000-0000-000000000000"
+      "database_id": "76a19869-f771-42ce-9bc9-f88605ea6f29","migrations_dir": "drizzle"
     }
   ],
   "r2_buckets": [
@@ -27,8 +27,8 @@
   ],
   "vars": {
     "AUTH_EMAIL_HEADER": "cf-access-authenticated-user-email",
-    "OWNER_EMAIL": "owner@example.com",
-    "RESEND_FROM_EMAIL": "Tuveloz <notifications@example.com>",
+    "OWNER_EMAIL": "hello@tuveloz.com",
+    "RESEND_FROM_EMAIL": "Tuveloz <alerts@updates.tuveloz.com>",
     "SITE_URL": "https://example.com"
   }
 }
