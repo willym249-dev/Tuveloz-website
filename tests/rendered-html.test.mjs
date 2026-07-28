@@ -301,3 +301,31 @@ test("build itemizes and snapshots the 10 percent customer service fee", async (
   assert.ok(migration.includes("CREATE TABLE `login_codes`"));
   assert.ok(migration.includes("CREATE TABLE `auth_sessions`"));
 });
+
+test("build groups the expanded service catalog and shows automatic provider modes", async () => {
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
+  const files = (await builtFiles(distDirectory))
+    .filter((path) => [".js", ".html"].includes(extname(path)));
+  const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
+  const matchingSource = await readFile(
+    new URL("../lib/service-matching.ts", import.meta.url),
+    "utf8",
+  );
+  const complianceSource = await readFile(
+    new URL("../lib/provider-compliance.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(contents.includes("Mobile services"));
+  assert.ok(contents.includes("Shop services"));
+  assert.ok(contents.includes("Specialty services"));
+  assert.ok(contents.includes("Mobile mechanic"));
+  assert.ok(contents.includes("Auto repair"));
+  assert.ok(contents.includes("Pre-purchase inspection"));
+  assert.ok(contents.includes("Hybrid or EV service"));
+  assert.ok(contents.includes("Classic car restoration"));
+  assert.ok(contents.includes("Profile badge"));
+  assert.ok(matchingSource.includes('export type ProviderMode = "Mobile" | "Shop" | "Both"'));
+  assert.ok(matchingSource.includes('if (mobile && shop) return "Both"'));
+  assert.ok(complianceSource.includes("service-specific licensing, insurance, training, safety"));
+});
