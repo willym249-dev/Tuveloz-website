@@ -14,6 +14,7 @@ import {
   parseProviderServices,
   parseProviderWorkLocations,
   PARTS_SOURCE_OPTIONS,
+  providerModeForWorkLocations,
   QUOTE_PART_TYPE_OPTIONS,
 } from "../../lib/service-matching";
 
@@ -391,6 +392,11 @@ export default function ProviderJobsPage() {
         <span className="kicker">Matched job alerts</span>
         <h1>{provider ? `Jobs matched for ${provider.name}.` : "Your provider workspace."}</h1>
         {provider?.verified && <span className="verified-badge provider-workspace-badge">✓ Tuveloz verified</span>}
+        {provider && (
+          <span className="provider-mode-badge provider-workspace-badge">
+            {providerModeForWorkLocations(provider.workLocations)}
+          </span>
+        )}
         {provider?.testProvider && <span className="test-badge provider-workspace-badge">TEST PROVIDER · FICTIONAL</span>}
         <p>
           {provider
