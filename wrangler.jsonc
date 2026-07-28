@@ -2,12 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tuveloz",
   "compatibility_date": "2026-07-27",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "main": "./worker/index.ts",
   "routes": [
     {
-      "pattern": "tuveloz.com/*",
-      "zone_name": "tuveloz.com"
+      "pattern": "tuveloz.com",
+      "custom_domain": true
     }
   ],
   "assets": {
@@ -22,7 +24,8 @@
     {
       "binding": "DB",
       "database_name": "tuveloz-db",
-      "database_id": "76a19869-f771-42ce-9bc9-f88605ea6f29","migrations_dir": "drizzle"
+      "database_id": "76a19869-f771-42ce-9bc9-f88605ea6f29",
+      "migrations_dir": "drizzle"
     }
   ],
   "r2_buckets": [
