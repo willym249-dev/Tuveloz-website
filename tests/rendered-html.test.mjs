@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 async function builtFiles(directory) {
@@ -13,7 +14,7 @@ async function builtFiles(directory) {
 }
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -24,7 +25,7 @@ test("build contains separate tint, rain-guard, and sunshade services", async ()
 });
 
 test("build contains permanent provider QR controls and privacy-safe scan totals", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -35,7 +36,7 @@ test("build contains permanent provider QR controls and privacy-safe scan totals
 });
 
 test("build contains editable provider previews and printable QR business cards", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -48,7 +49,7 @@ test("build contains editable provider previews and printable QR business cards"
 });
 
 test("build clearly explains customer choice and provider freedom", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -61,7 +62,7 @@ test("build clearly explains customer choice and provider freedom", async () => 
 });
 
 test("build contains a simple, protected quote choice and factual private analytics", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -79,7 +80,7 @@ test("build contains a simple, protected quote choice and factual private analyt
 });
 
 test("build prefers confirmed vehicle choices and never invents motor data", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -98,7 +99,7 @@ test("build prefers confirmed vehicle choices and never invents motor data", asy
 });
 
 test("build contains global language, optional budget details, repeat booking, and honest price guidance", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -114,7 +115,7 @@ test("build contains global language, optional budget details, repeat booking, a
 });
 
 test("build itemizes provider-supplied parts separately from labor", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -127,7 +128,7 @@ test("build itemizes provider-supplied parts separately from labor", async () =>
 });
 
 test("build protects every important submission with a second confirmation", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -148,7 +149,7 @@ test("build protects every important submission with a second confirmation", asy
 });
 
 test("build limits active service to Montgomery County and collects DMV expansion demand", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -164,7 +165,7 @@ test("build limits active service to Montgomery County and collects DMV expansio
 });
 
 test("build gives mobile mechanics and service-truck operators clear prominence", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -191,7 +192,7 @@ test("layout uses the enlarged drop favicon with a cache-busting filename", asyn
 });
 
 test("provider approval requires applicable state and local proof without requesting unnecessary documents", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
@@ -203,7 +204,7 @@ test("provider approval requires applicable state and local proof without reques
 });
 
 test("build keeps customer and provider access on Tuveloz private links", async () => {
-  const distDirectory = new URL("../dist", import.meta.url).pathname;
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
