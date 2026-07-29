@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { StripePaymentAdmin } from "../components/stripe-payment-admin";
@@ -27,6 +27,13 @@ import {
   parseProviderSelfAssessment,
 } from "../../lib/provider-compliance";
 import { customerPriceFor } from "../../lib/customer-fee";
+import {
+  PROVIDER_CREDENTIAL_METHODS,
+  PROVIDER_CREDENTIAL_STATUSES,
+  providerCredentialRequirementsAreSatisfied,
+  requiredProviderCredentialRequirements,
+  type ProviderCredentialVerificationRecord,
+} from "../../lib/provider-credentials";
 
 type CustomerRequest = {
   id: string;
@@ -76,6 +83,7 @@ type ProviderApplication = {
   alertsEnabled: string;
   status: string;
   createdAt: string;
+  credentialVerifications: Array<ProviderCredentialVerificationRecord & { notes?: string }>;
 };
 
 type LaunchFeedback = {
@@ -384,6 +392,60 @@ export default function AdminPage() {
     setAlertStatus("Provider compliance checklist saved. Verification still requires the second confirmation.");
   }
 
+  async function saveCredential(
+    providerId: string,
+    requirementKey: string,
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setError("");
+    setVerificationBusyId(providerId);
+    const response = await fetch("/api/admin/providers", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        id: providerId,
+        action: "save-credential",
+        credential: {
+          requirementKey,
+          credentialIdentifier: String(form.get("credentialIdentifier") ?? ""),
+          status: String(form.get("status") ?? ""),
+          verificationMethod: String(form.get("verificationMethod") ?? ""),
+          expiresAt: String(form.get("expiresAt") ?? ""),
+          notes: String(form.get("notes") ?? ""),
+        },
+      }),
+    });
+    const result = await response.json() as {
+      error?: string;
+      credential?: ProviderCredentialVerificationRecord & { notes?: string };
+    };
+    setVerificationBusyId("");
+    if (!response.ok || !result.credential) {
+      return setError(result.error || "Unable to save the official credential check.");
+    }
+    const savedCredential = result.credential;
+    setProviders((items) => items.map((item) => (
+      item.id === providerId
+        ? {
+            ...item,
+            credentialVerifications: [
+              ...(item.credentialVerifications ?? []).filter(
+                (credential) => credential.requirementKey !== requirementKey,
+              ),
+              savedCredential,
+            ],
+          }
+        : item
+    )));
+    setAlertStatus(
+      savedCredential.status === "verified"
+        ? "Official credential check saved. Activation still requires every applicable check."
+        : "Credential review status saved. This provider cannot be activated until every applicable credential is verified.",
+    );
+  }
+
   async function confirmPendingAction() {
     if (!pendingAction) return;
     setActionBusy(true);
@@ -413,7 +475,10 @@ export default function AdminPage() {
         if (!response.ok) throw new Error(result.error || "Unable to load dashboard.");
         setRequests(result.requests);
         const providerItems = result.providers as ProviderApplication[];
-        setProviders(providerItems);
+        setProviders(providerItems.map((provider) => ({
+          ...provider,
+          credentialVerifications: provider.credentialVerifications ?? [],
+        })));
         setVerificationDrafts(Object.fromEntries(providerItems.map((provider) => [
           provider.id,
           {
@@ -691,12 +756,11 @@ export default function AdminPage() {
           <section className="admin-section" hidden={activeAdminView !== "providers"} id="owner-provider-approvals">
             <h2>Provider applications</h2>
             <p className="admin-section-copy">
-              A provider receives workspace access and the Tuveloz verified badge only after every
-              saved compliance check passes. This checklist records your review; it is not a government license or legal opinion.
+              A provider receives workspace access only after service eligibility and every legally
+              triggered government credential are checked. The public profile names the exact
+              credential checked; Tuveloz does not publish a vague licensed or verified claim.
               Tuveloz currently reviews applications only for Montgomery County, Maryland.
-              When a license or registration applies, receive and verify the proof before approval.
-              Do not request one when none applies. Add a reviewed compliance guide before opening
-              any future launch area.
+              Do not request a credential when the saved services and jurisdiction do not legally require it.
             </p>
             <div className="compliance-guides">
               <article>
@@ -734,8 +798,19 @@ export default function AdminPage() {
                     item.serviceArea,
                   );
                   const savedChecklist = parseChecklist(item.verificationChecklist);
+                  const credentialRequirements = requiredProviderCredentialRequirements(
+                    savedApprovedServices,
+                    item.serviceArea,
+                    parseProviderSelfAssessment(item.providerSelfAssessment),
+                  );
+                  const savedCredentials = item.credentialVerifications ?? [];
+                  const savedCredentialsComplete = providerCredentialRequirementsAreSatisfied(
+                    credentialRequirements,
+                    savedCredentials,
+                  );
                   const savedComplete = savedChecklistLabels.every(([key]) => savedChecklist[key])
-                    && savedApprovedServices.length > 0;
+                    && savedApprovedServices.length > 0
+                    && savedCredentialsComplete;
                   const isVerified = item.verificationStatus === "verified";
                   const isTestProvider = item.isTestProvider === "yes";
                   const matchingJobs = requests.filter((request) => (
@@ -759,7 +834,11 @@ export default function AdminPage() {
                   <article className="admin-card" key={item.id}>
                     <div className="admin-card-top"><span>{item.status} · {item.verificationStatus}</span><time>{item.createdAt}</time></div>
                     <h3>{item.name}</h3>
-                    {isVerified && <span className="verified-badge">✓ Tuveloz verified</span>}
+                    {isVerified && (
+                      <span className="verified-badge">
+                        ✓ Eligibility reviewed
+                      </span>
+                    )}
                     <span className="provider-mode-badge">
                       {providerModeForWorkLocations(item.workLocations)}
                     </span>
@@ -791,7 +870,7 @@ export default function AdminPage() {
                         </div>
                         {checklistLabels.length === 0 && (
                           <p className="admin-link-note">
-                            No document or registration item is triggered by these selections.
+                            No checklist-only legal process is triggered by these draft selections.
                           </p>
                         )}
                         {checklistLabels.map(([key, label]) => (
@@ -852,6 +931,110 @@ export default function AdminPage() {
                             );
                           })}
                         </div>
+                        <div className="credential-review">
+                          <div>
+                            <strong>Official government credential checks</strong>
+                            <span>
+                              Requirements are derived from the saved services, service area, and
+                              provider answers. Use an official record or direct issuing-authority
+                              confirmation. Do not store Social Security numbers, driver-license
+                              numbers, or unrelated private documents.
+                            </span>
+                          </div>
+                          {savedApprovedServices.length === 0 ? (
+                            <p className="admin-link-note">
+                              Save at least one approved service before recording a credential check.
+                            </p>
+                          ) : credentialRequirements.length === 0 ? (
+                            <p className="verification-record">
+                              Eligibility reviewed — these saved services do not trigger a government
+                              credential in the current Montgomery County launch rules.
+                            </p>
+                          ) : credentialRequirements.map((requirement) => {
+                            const credential = savedCredentials.find(
+                              (record) => record.requirementKey === requirement.key,
+                            );
+                            return (
+                              <form
+                                className="credential-card"
+                                key={`${requirement.key}:${credential?.checkedAt ?? ""}:${credential?.status ?? ""}`}
+                                onSubmit={(event) => saveCredential(item.id, requirement.key, event)}
+                              >
+                                <div>
+                                  <strong>{requirement.label}</strong>
+                                  <span>{requirement.jurisdiction} · {requirement.issuingAuthority}</span>
+                                </div>
+                                <p>{requirement.verificationGuidance}</p>
+                                <div className="admin-link-actions">
+                                  <a href={requirement.legalBasisUrl} target="_blank" rel="noreferrer">
+                                    Official requirement
+                                  </a>
+                                  <a href={requirement.officialLookupUrl} target="_blank" rel="noreferrer">
+                                    Official lookup
+                                  </a>
+                                </div>
+                                <label>
+                                  Exact official listing name or credential number
+                                  <input
+                                    defaultValue={credential?.credentialIdentifier ?? ""}
+                                    name="credentialIdentifier"
+                                    placeholder="Enter exactly what the official source shows"
+                                    required
+                                    type="text"
+                                  />
+                                </label>
+                                <label>
+                                  Review status
+                                  <select defaultValue={credential?.status ?? "pending"} name="status">
+                                    {PROVIDER_CREDENTIAL_STATUSES.map((status) => (
+                                      <option key={status} value={status}>
+                                        {status.replaceAll("-", " ")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label>
+                                  Verification method
+                                  <select
+                                    defaultValue={credential?.verificationMethod ?? "official-online-record"}
+                                    name="verificationMethod"
+                                  >
+                                    {PROVIDER_CREDENTIAL_METHODS.map((method) => (
+                                      <option key={method} value={method}>
+                                        {method.replaceAll("-", " ")}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <label>
+                                  Expiration date, if the authority provides one
+                                  <input defaultValue={credential?.expiresAt ?? ""} name="expiresAt" type="date" />
+                                </label>
+                                <label>
+                                  Owner review note
+                                  <textarea
+                                    defaultValue={credential?.notes ?? ""}
+                                    name="notes"
+                                    placeholder="Record the source and any name-match details; avoid unnecessary personal data."
+                                    rows={3}
+                                  />
+                                </label>
+                                {credential?.checkedAt && (
+                                  <p className="verification-record">
+                                    Last verified {new Date(credential.checkedAt).toLocaleDateString()}
+                                  </p>
+                                )}
+                                <button
+                                  className="save-compliance"
+                                  disabled={verificationBusyId === item.id}
+                                  type="submit"
+                                >
+                                  {verificationBusyId === item.id ? "Saving…" : "Save official check"}
+                                </button>
+                              </form>
+                            );
+                          })}
+                        </div>
                         {!isVerified && (pendingVerificationId === item.id ? (
                           <ConfirmAction
                             busy={verificationBusyId === item.id}
@@ -896,15 +1079,15 @@ export default function AdminPage() {
                           id: item.id,
                           status: "approved",
                           title: "Verify and activate this provider?",
-                          message: "This grants private workspace access, matching job alerts for the saved approved services, and a public Tuveloz verified badge. Confirm that every saved check is accurate.",
-                        })}>{item.status === "approved" ? "Mark Tuveloz verified" : "Approve and verify"}</button>
+                          message: "This grants private workspace access and matching job alerts for the saved approved services. The public profile will show only exact current credential checks or that no government credential was triggered. Confirm that every saved record is accurate.",
+                        })}>{item.status === "approved" ? "Activate after eligibility review" : "Approve after eligibility review"}</button>
                         {item.status === "new" && (
                           <button onClick={() => setPendingAction({
                             kind: "provider",
                             id: item.id,
                             status: "declined",
                             title: "Decline this provider?",
-                            message: "The provider will not receive workspace access, job alerts, or a verified badge.",
+                            message: "The provider will not receive workspace access, job alerts, or a public eligibility record.",
                           })}>Decline</button>
                         )}
                         <button onClick={() => setPendingAction({
@@ -912,9 +1095,14 @@ export default function AdminPage() {
                           id: item.id,
                           status: "test",
                           title: "Activate this fictional test provider?",
-                          message: "This grants test-only workspace access. It will receive no real job alerts, verified badge, public rating, or access to real customer jobs.",
+                          message: "This grants test-only workspace access. It will receive no real job alerts, public eligibility record, public rating, or access to real customer jobs.",
                         })}>Activate as test provider</button>
-                        {!savedComplete && <span className="admin-link-note">Save every applicable-law check and at least one approved service before verification.</span>}
+                        {!savedComplete && (
+                          <span className="admin-link-note">
+                            Save at least one approved service, every applicable checklist item, and
+                            every legally triggered official credential check before activation.
+                          </span>
+                        )}
                       </div>
                     )}
                     {(isVerified || isTestProvider) && item.status === "approved" && alertHref && (
