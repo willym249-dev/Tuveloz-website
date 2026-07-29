@@ -14,6 +14,7 @@ type CustomerRequest = {
   municipality: string;
   status: string;
   createdAt: string;
+  quoteCount: number;
 };
 
 type CustomerAccount = {
@@ -22,6 +23,45 @@ type CustomerAccount = {
   availableRoles: Array<"customer" | "provider">;
   requests: CustomerRequest[];
 };
+
+type CustomerView = "requests" | "quotes" | "active" | "history";
+
+const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
+const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
+
+const CUSTOMER_VIEW_COPY: Record<CustomerView, {
+  title: string;
+  emptyTitle: string;
+  emptyText: string;
+}> = {
+  requests: {
+    title: "My requests",
+    emptyTitle: "No requests yet",
+    emptyText: "Your vehicle-service requests will appear here.",
+  },
+  quotes: {
+    title: "Quotes received",
+    emptyTitle: "No quotes received yet",
+    emptyText: "Requests with provider quotes will appear here.",
+  },
+  active: {
+    title: "Active jobs",
+    emptyTitle: "No active jobs",
+    emptyText: "Jobs begin appearing here after you accept a provider quote.",
+  },
+  history: {
+    title: "Job history",
+    emptyTitle: "No completed jobs yet",
+    emptyText: "Completed and cancelled jobs will appear here.",
+  },
+};
+
+function requestMatchesView(request: CustomerRequest, view: CustomerView) {
+  if (view === "quotes") return request.quoteCount > 0;
+  if (view === "active") return ACTIVE_JOB_STATUSES.has(request.status.toLowerCase());
+  if (view === "history") return HISTORY_JOB_STATUSES.has(request.status.toLowerCase());
+  return true;
+}
 
 function shortDate(value: string) {
   const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
@@ -37,6 +77,7 @@ export default function CustomerPage() {
   const [account, setAccount] = useState<CustomerAccount | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [activeView, setActiveView] = useState<CustomerView>("requests");
 
   useEffect(() => {
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
@@ -76,6 +117,11 @@ export default function CustomerPage() {
     window.location.replace(result.destination);
   }
 
+  const visibleRequests = account
+    ? account.requests.filter((request) => requestMatchesView(request, activeView))
+    : [];
+  const viewCopy = CUSTOMER_VIEW_COPY[activeView];
+
   return (
     <main className="account-shell">
       <header className="account-header">
@@ -110,24 +156,56 @@ export default function CustomerPage() {
           <div className="account-grid account-customer-grid">
             <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
               <Link className="workspace-nav-primary" href="/post-job">Post a job</Link>
-              <a href="#my-requests">My requests</a>
-              <a href="#my-requests">Quotes received</a>
-              <a href="#my-requests">Active jobs</a>
-              <a href="#my-requests">Job history</a>
-              <Link href="/payments">Payments</Link>
+              <button
+                aria-controls="my-requests"
+                aria-pressed={activeView === "requests"}
+                className={activeView === "requests" ? "is-active" : ""}
+                onClick={() => setActiveView("requests")}
+                type="button"
+              >
+                My requests
+              </button>
+              <button
+                aria-controls="my-requests"
+                aria-pressed={activeView === "quotes"}
+                className={activeView === "quotes" ? "is-active" : ""}
+                onClick={() => setActiveView("quotes")}
+                type="button"
+              >
+                Quotes received
+              </button>
+              <button
+                aria-controls="my-requests"
+                aria-pressed={activeView === "active"}
+                className={activeView === "active" ? "is-active" : ""}
+                onClick={() => setActiveView("active")}
+                type="button"
+              >
+                Active jobs
+              </button>
+              <button
+                aria-controls="my-requests"
+                aria-pressed={activeView === "history"}
+                className={activeView === "history" ? "is-active" : ""}
+                onClick={() => setActiveView("history")}
+                type="button"
+              >
+                Job history
+              </button>
+              <Link href="/payments">Payment policy</Link>
             </nav>
 
-            <section className="account-card" id="my-requests">
+            <section aria-live="polite" className="account-card" id="my-requests">
               <div className="account-card-heading">
                 <div>
                   <span className="account-role">Customer requests</span>
-                  <h2>My jobs</h2>
+                  <h2>{viewCopy.title}</h2>
                 </div>
-                <span className="account-count">{account.requests.length}</span>
+                <span className="account-count">{visibleRequests.length}</span>
               </div>
-              {account.requests.length > 0 ? (
+              {visibleRequests.length > 0 ? (
                 <div className="account-request-list">
-                  {account.requests.map((request) => (
+                  {visibleRequests.map((request) => (
                     <Link
                       className="account-request"
                       href={`/my-request?request=${encodeURIComponent(request.id)}`}
@@ -147,8 +225,8 @@ export default function CustomerPage() {
                 </div>
               ) : (
                 <div className="account-empty">
-                  <strong>No requests yet</strong>
-                  <span>Your vehicle-service requests will appear here.</span>
+                  <strong>{viewCopy.emptyTitle}</strong>
+                  <span>{viewCopy.emptyText}</span>
                 </div>
               )}
               <Link className="button primary account-button" href="/post-job">

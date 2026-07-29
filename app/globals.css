@@ -8451,6 +8451,7 @@ footer > p,
 }
 
 .workspace-nav > a,
+.workspace-nav > button,
 .workspace-nav > details > summary {
   align-items: center;
   border-radius: 13px;
@@ -8465,7 +8466,21 @@ footer > p,
 }
 
 .workspace-nav > a:hover,
+.workspace-nav > button:hover,
 .workspace-nav > details > summary:hover {
+  background: #24150d;
+  color: #fff;
+}
+
+.workspace-nav > button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+}
+
+.workspace-nav > button.is-active {
   background: #24150d;
   color: #fff;
 }
@@ -8704,6 +8719,7 @@ footer > p,
   }
 
   .workspace-nav > a,
+  .workspace-nav > button,
   .workspace-nav > details > summary {
     justify-content: space-between;
     width: 100%;
