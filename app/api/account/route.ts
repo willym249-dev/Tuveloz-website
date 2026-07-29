@@ -1,4 +1,4 @@
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { desc, inArray, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   customerRequests,
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         status: customerRequests.status,
         createdAt: customerRequests.createdAt,
       }).from(customerRequests)
-        .where(eq(customerRequests.email, session.email))
+        .where(sql`lower(${customerRequests.email}) = ${session.email.toLowerCase()}`)
         .orderBy(desc(customerRequests.createdAt))
         .limit(100);
       const quoteRows = requests.length > 0

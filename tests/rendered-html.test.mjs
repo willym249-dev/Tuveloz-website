@@ -24,7 +24,7 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 25);
+  assert.equal(journal.entries.length, 26);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
@@ -571,9 +571,10 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   assert.ok(publicSource.includes('view === "provider" ? ('));
   assert.ok(!customerSource.includes("<summary>More tools</summary>"));
   assert.ok(!customerSource.includes('<a href="#my-requests">'));
-  assert.ok(customerSource.includes('setActiveView("quotes")'));
-  assert.ok(customerSource.includes('setActiveView("active")'));
-  assert.ok(customerSource.includes('setActiveView("history")'));
+  assert.ok(customerSource.includes('["quotes", "Quotes received"]'));
+  assert.ok(customerSource.includes('["active", "Active jobs"]'));
+  assert.ok(customerSource.includes('["history", "Job history"]'));
+  assert.ok(customerSource.includes("onClick={() => setActiveView(view)}"));
   assert.ok(customerSource.includes('request.quoteCount > 0'));
   assert.ok(customerSource.includes("Payment policy"));
   assert.ok(accountSource.includes("inArray(providerQuotes.requestId"));
@@ -593,7 +594,7 @@ test("customer payment history is private and uses stored payment facts", async 
     "utf8",
   );
 
-  assert.ok(customerSource.includes('setActiveView("payments")'));
+  assert.ok(customerSource.includes('["payments", "Payments"]'));
   assert.ok(customerSource.includes("Customer account:"));
   assert.ok(customerSource.includes("account.payments.map"));
   assert.ok(customerSource.includes("Provider subtotal:"));
@@ -633,7 +634,8 @@ test("provider dashboard exposes only provider-owned factual tools", async () =>
   assert.ok(providerSource.includes('href="#provider-schedule"'));
   assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-reviews")'));
   assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-performance")'));
-  assert.ok(!providerSource.includes(">Messages</a>"));
+  assert.ok(providerSource.includes('href="#provider-messages"'));
+  assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
   assert.ok(jobsApiSource.includes("myQuotes: submittedQuotes"));
   assert.ok(jobsApiSource.includes("eq(providerQuotes.providerEmail, provider.email)"));
   assert.ok(jobsApiSource.includes('"cache-control": "no-store"'));
@@ -682,4 +684,66 @@ test("provider workspaces never expose long-lived provider access tokens", async
   assert.ok(!mediaApiSource.includes('searchParams.get("token")'));
   assert.ok(!publicProviderApiSource.includes('searchParams.get("token")'));
   assert.ok(!jobImagesSource.includes("providerApplications.accessToken"));
+});
+
+
+test("customer account features are authenticated and backed by real records", async () => {
+  const [
+    customerSource,
+    providerSource,
+    accountSource,
+    customerToolsSource,
+    messagesSource,
+    customerToolsComponent,
+    messagesComponent,
+    schemaSource,
+    migrationSource,
+  ] = await Promise.all([
+    readFile(new URL("../app/customer/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/provider-jobs/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/customer-tools/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/messages/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/customer-account-tools.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/job-messages.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0025_legit_customer_workspace.sql", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(customerSource.includes('"messages"'));
+  assert.ok(customerSource.includes('"saved"'));
+  assert.ok(customerSource.includes('"settings"'));
+  assert.ok(customerSource.includes('<JobMessages audience="customer" />'));
+  assert.ok(customerSource.includes('activeView === "saved" || activeView === "settings"'));
+  assert.ok(customerSource.includes("<CustomerAccountTools view={activeView} />"));
+  assert.ok(providerSource.includes('href="#provider-messages"'));
+  assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
+
+  assert.ok(customerToolsSource.includes("getAccountSession(request)"));
+  assert.ok(customerToolsSource.includes("inArray(providerQuotes.requestId"));
+  assert.ok(customerToolsSource.includes('eq(providerApplications.status, "approved")'));
+  assert.ok(customerToolsSource.includes('eq(providerApplications.verificationStatus, "verified")'));
+  assert.ok(customerToolsSource.includes('eq(providerApplications.isTestProvider, "no")'));
+  assert.ok(messagesSource.includes("getAccountSession(request)"));
+  assert.ok(messagesSource.includes('eq(providerQuotes.status, "accepted")'));
+  assert.ok(messagesSource.includes("conversations.find((item) => item.requestId === requestId)"));
+  assert.ok(messagesSource.includes("recipientEmail: (session.role === \"customer\""));
+  assert.ok(messagesComponent.includes("Do not share passwords, payment-card details"));
+  assert.ok(messagesComponent.includes("Tuveloz stores messages and may review them"));
+  assert.ok(customerToolsComponent.includes("Existing job requests keep the name originally submitted."));
+  assert.ok(!providerSource.includes("Only you and that customer can view the conversation."));
+  assert.ok(accountSource.includes('lower(${customerRequests.email}) = ${session.email.toLowerCase()}'));
+
+  assert.ok(schemaSource.includes('export const customerProfiles = sqliteTable'));
+  assert.ok(schemaSource.includes('export const savedProviders = sqliteTable'));
+  assert.ok(schemaSource.includes('export const jobMessages = sqliteTable'));
+  assert.ok(migrationSource.includes('CREATE TABLE `customer_profiles`'));
+  assert.ok(migrationSource.includes('CREATE TABLE `saved_providers`'));
+  assert.ok(migrationSource.includes('CREATE TABLE `job_messages`'));
+
+  for (const source of [customerToolsSource, customerToolsComponent, schemaSource, migrationSource]) {
+    assert.ok(!/\bphone\b/i.test(source));
+    assert.ok(!source.includes("emailNotifications"));
+    assert.ok(!source.includes("email_notifications"));
+  }
 });

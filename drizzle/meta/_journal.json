@@ -176,6 +176,13 @@
       "when": 1785280641166,
       "tag": "0024_gigantic_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1785306641325,
+      "tag": "0025_legit_customer_workspace",
+      "breakpoints": true
     }
   ]
 }

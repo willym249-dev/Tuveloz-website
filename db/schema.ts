@@ -326,6 +326,53 @@ export const jobReviews = sqliteTable(
   ],
 );
 
+export const customerProfiles = sqliteTable(
+  "customer_profiles",
+  {
+    email: text("email").primaryKey(),
+    displayName: text("display_name").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("customer_profiles_updated_at_idx").on(table.updatedAt),
+  ],
+);
+
+export const savedProviders = sqliteTable(
+  "saved_providers",
+  {
+    id: text("id").primaryKey(),
+    customerEmail: text("customer_email").notNull(),
+    providerId: text("provider_id").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("saved_providers_customer_provider_unique")
+      .on(table.customerEmail, table.providerId),
+    index("saved_providers_customer_email_idx").on(table.customerEmail),
+    index("saved_providers_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const jobMessages = sqliteTable(
+  "job_messages",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    senderEmail: text("sender_email").notNull(),
+    senderRole: text("sender_role").notNull(),
+    recipientEmail: text("recipient_email").notNull(),
+    body: text("body").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_messages_request_created_idx").on(table.requestId, table.createdAt),
+    index("job_messages_recipient_email_idx").on(table.recipientEmail),
+    index("job_messages_sender_email_idx").on(table.senderEmail),
+  ],
+);
+
 export const launchFeedback = sqliteTable(
   "launch_feedback",
   {
