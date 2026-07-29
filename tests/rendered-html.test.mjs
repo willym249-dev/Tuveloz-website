@@ -256,6 +256,7 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(homeSource.includes('"Customer account"'));
   assert.ok(homeSource.includes('"Provider account"'));
   assert.ok(homeSource.includes('href={accountHref}'));
+  assert.ok(homeSource.includes("<Link href={accountHref}>{accountLabel}</Link>"));
   assert.ok(authSource.includes('"Path=/"'));
   assert.ok(authSource.includes('eq(providerApplications.status, "approved")'));
   assert.ok(authSource.includes('eq(providerApplications.verificationStatus, "verified")'));
