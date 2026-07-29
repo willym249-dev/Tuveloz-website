@@ -24,6 +24,8 @@ type ConnectedAccount = {
   transferStatus: string;
 };
 
+type AccountState = "checking" | "signed-out" | "customer" | "provider";
+
 function dollars(cents: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -39,6 +41,43 @@ export default function StripeStorefrontPage() {
   const [buyingId, setBuyingId] = useState("");
   const [acceptedPaymentPolicy, setAcceptedPaymentPolicy] = useState(false);
   const [error, setError] = useState("");
+  const [accountState, setAccountState] = useState<AccountState>("checking");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/account", {
+      cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (response.status === 401) {
+          setAccountState("signed-out");
+          return;
+        }
+        if (!response.ok) throw new Error("Account status unavailable.");
+
+        const result = (await response.json()) as {
+          email?: string;
+          role?: "customer" | "provider";
+        };
+        if (result.role === "customer" || result.role === "provider") {
+          setAccountState(result.role);
+          if (result.role === "customer" && result.email) {
+            setEmail((current) => current || result.email || "");
+          }
+          return;
+        }
+        setAccountState("checking");
+      })
+      .catch((failure) => {
+        if (failure instanceof DOMException && failure.name === "AbortError") return;
+        setAccountState("checking");
+      });
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     fetch("/api/stripe/products", { cache: "no-store" })
@@ -83,12 +122,27 @@ export default function StripeStorefrontPage() {
     }
   }
 
+  const accountHref =
+    accountState === "customer"
+      ? "/customer"
+      : accountState === "provider"
+        ? "/provider-jobs"
+        : "/account";
+  const accountLabel =
+    accountState === "customer"
+      ? "Customer account"
+      : accountState === "provider"
+        ? "Provider account"
+        : accountState === "signed-out"
+          ? "Sign up / Sign in"
+          : "Account";
+
   return (
     <main className="storefront-shell stripe-storefront">
       <header className="storefront-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <div className="portal-header-actions">
-          <Link className="portal-account-link" href="/account">Sign in</Link>
+          <Link className="portal-account-link" href={accountHref}>{accountLabel}</Link>
           <SiteLanguageButton />
         </div>
       </header>
