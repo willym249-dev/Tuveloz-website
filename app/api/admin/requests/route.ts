@@ -1,11 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { customerRequests } from "../../../../db/schema";
-import { isOwnerRequest } from "../../../../lib/owner-auth";
+import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import { sendMatchingProviderAlerts } from "../../../../lib/provider-alerts";
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
   const body = (await request.json()) as { id?: string; status?: string; action?: string };
