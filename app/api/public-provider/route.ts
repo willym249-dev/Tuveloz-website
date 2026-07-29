@@ -4,6 +4,7 @@ import {
   customerRequests,
   jobReviews,
   providerApplications,
+  providerCredentialVerifications,
   providerGalleryItems,
   providerProfiles,
   providerQuotes,
@@ -14,6 +15,12 @@ import {
   parseProviderWorkLocations,
 } from "../../../lib/service-matching";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { parseProviderSelfAssessment } from "../../../lib/provider-compliance";
+import {
+  providerCredentialRecordIsCurrent,
+  providerCredentialRequirementsAreSatisfied,
+  requiredProviderCredentialRequirements,
+} from "../../../lib/provider-credentials";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -35,11 +42,41 @@ export async function GET(request: Request) {
   if (!result) {
     return Response.json({ error: "Provider page not found." }, { status: 404 });
   }
+  const credentialRequirements = requiredProviderCredentialRequirements(
+    result.provider.approvedServices,
+    result.provider.serviceArea,
+    parseProviderSelfAssessment(result.provider.providerSelfAssessment),
+  );
+  const credentialRecords = credentialRequirements.length > 0
+    ? await db.select().from(providerCredentialVerifications)
+      .where(eq(providerCredentialVerifications.providerId, result.provider.id))
+    : [];
+  const credentialRequirementsSatisfied = providerCredentialRequirementsAreSatisfied(
+    credentialRequirements,
+    credentialRecords,
+  );
+  const currentCredentials = credentialRequirements.flatMap((requirement) => {
+    const record = credentialRecords.find((candidate) => (
+      candidate.requirementKey === requirement.key
+      && providerCredentialRecordIsCurrent(candidate)
+    ));
+    return record ? [{
+      requirementKey: requirement.key,
+      label: requirement.publicLabel,
+      jurisdiction: requirement.jurisdiction,
+      issuingAuthority: requirement.issuingAuthority,
+      legalBasisUrl: requirement.legalBasisUrl,
+      officialLookupUrl: requirement.officialLookupUrl,
+      checkedAt: record.checkedAt,
+      expiresAt: record.expiresAt,
+    }] : [];
+  });
   const publicAccess = (
     result.profile.publicStatus === "published"
     && result.provider.status === "approved"
     && result.provider.verificationStatus === "verified"
     && result.provider.isTestProvider === "no"
+    && credentialRequirementsSatisfied
   );
   const session = await getAccountSession(request);
   const previewProvider = session?.role === "provider"
@@ -119,12 +156,17 @@ export async function GET(request: Request) {
     privatePreview: !publicAccess && privatePreview,
     testProvider: result.provider.isTestProvider === "yes",
     reviewSummary: { average, count: reviews.length },
+    credentialReview: {
+      requirementsSatisfied: credentialRequirementsSatisfied,
+      noGovernmentCredentialTriggered: credentialRequirements.length === 0,
+      credentials: currentCredentials,
+    },
     confidence: {
       completedJobs: Number(completedJobs?.count ?? 0),
     },
   }, {
     headers: {
-      "cache-control": publicAccess ? "public, max-age=60" : "private, no-store",
+      "cache-control": publicAccess ? "public, max-age=0, must-revalidate" : "private, no-store",
     },
   });
 }
