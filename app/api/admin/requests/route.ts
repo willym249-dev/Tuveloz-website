@@ -17,15 +17,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid request update." }, { status: 400 });
   }
 
-  if (body.action === "create-link") {
-    const accessToken = crypto.randomUUID();
-    await getDb()
-      .update(customerRequests)
-      .set({ accessToken })
-      .where(eq(customerRequests.id, body.id));
-    return Response.json({ ok: true, accessToken });
-  }
-
   if (body.action === "mark-test") {
     const updated = await getDb()
       .update(customerRequests)
