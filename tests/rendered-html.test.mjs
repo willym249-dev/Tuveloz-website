@@ -240,12 +240,22 @@ test("build provides secure password sign-in with verified email setup and a cod
     new URL("../db/schema.ts", import.meta.url),
     "utf8",
   );
+  const passwordRouteSource = await readFile(
+    new URL("../app/api/auth/password/route.ts", import.meta.url),
+    "utf8",
+  );
+  const passwordVerifySource = await readFile(
+    new URL("../app/api/auth/password/verify/route.ts", import.meta.url),
+    "utf8",
+  );
 
   assert.ok(contents.includes("Welcome to Tuveloz."));
   assert.ok(contents.includes("Create account"));
   assert.ok(contents.includes("Forgot password?"));
   assert.ok(contents.includes("Email me a one-time code instead"));
-  assert.ok(contents.includes("We know 15 characters can feel long."));
+  assert.ok(contents.includes("Use at least 10 characters"));
+  assert.ok(contents.includes("Remember my email on this device"));
+  assert.ok(contents.includes("Finish sign in"));
   assert.ok(contents.includes("Verified provider workspace"));
   assert.ok(contents.includes("Customer workspace"));
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
@@ -266,6 +276,14 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(authSource.includes("LOGIN_MAX_ATTEMPTS = 5"));
   assert.ok(authSource.includes("PASSWORD_LOGIN_MAX_ATTEMPTS = 5"));
   assert.ok(authSource.includes("PASSWORD_HASH_ITERATIONS = 100_000"));
+  assert.ok(authSource.includes("PASSWORD_MIN_LENGTH = 10"));
+  assert.ok(authSource.includes('PasswordPurpose | "signin"'));
+  assert.ok(authSource.includes("issuePasswordChallenge"));
+  assert.ok(authSource.includes("verifyPasswordSignIn"));
+  assert.ok(passwordRouteSource.includes("challengeRequired: true"));
+  assert.ok(!passwordRouteSource.includes("sessionCookie"));
+  assert.ok(passwordVerifySource.includes("sessionCookie"));
+  assert.ok(passwordVerifySource.includes("verifyPasswordSignIn"));
   assert.ok(authSource.includes("`password:${password.normalize(\"NFKC\")}`"));
   assert.ok(authSource.includes('"PBKDF2"'));
   assert.ok(authSource.includes('hash: "SHA-256"'));

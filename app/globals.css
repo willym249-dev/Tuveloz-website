@@ -7657,6 +7657,29 @@ footer > p,
   margin-top: -4px;
 }
 
+.account-remember-email {
+  align-items: center;
+  display: flex !important;
+  gap: 10px !important;
+  line-height: 1.35;
+}
+
+.account-remember-email input {
+  accent-color: #ff6a00;
+  flex: 0 0 auto;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 0 !important;
+  width: 18px;
+}
+
+.account-remember-note {
+  color: #9badbb;
+  font-size: 10px;
+  line-height: 1.45;
+  margin-top: -8px;
+}
+
 .policy-consent {
   align-items: flex-start;
   display: flex !important;
