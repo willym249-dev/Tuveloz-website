@@ -750,12 +750,28 @@ test("customer account features are authenticated and backed by real records", a
 
 
 test("owner control center uses signed access and exposes focused factual tools", async () => {
-  const [pageSource, controlSource, accountSource, sessionSource, ownerAuthSource] = await Promise.all([
+  const [
+    pageSource,
+    controlSource,
+    accountSource,
+    sessionSource,
+    ownerAuthSource,
+    legacyAdminSource,
+    jobActionSource,
+    providerActionSource,
+    paymentSource,
+    paymentUiSource,
+  ] = await Promise.all([
     readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/owner-control-center.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/admin/control-center/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/admin/users/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/owner-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/requests/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/providers/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/stripe/admin/payments/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/stripe-payment-admin.tsx", import.meta.url), "utf8"),
   ]);
 
   for (const label of [
@@ -782,9 +798,21 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(ownerAuthSource.includes("issuer: teamDomain"));
   assert.ok(ownerAuthSource.includes("audience"));
   assert.ok(ownerAuthSource.includes("cf-access-jwt-assertion"));
-  assert.ok(accountSource.includes("await isVerifiedOwnerRequest(request)"));
-  assert.ok(sessionSource.includes("await isVerifiedOwnerRequest(request)"));
+  for (const signedOwnerSource of [
+    accountSource,
+    sessionSource,
+    legacyAdminSource,
+    jobActionSource,
+    providerActionSource,
+    paymentSource,
+  ]) {
+    assert.ok(signedOwnerSource.includes("await isVerifiedOwnerRequest(request)"));
+    assert.ok(!signedOwnerSource.includes("isOwnerRequest(request)"));
+  }
   assert.ok(sessionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(jobActionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(providerActionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(paymentSource.includes("isSameOriginRequest(request)"));
 
   for (const secretField of [
     "passwordHash",
@@ -799,6 +827,12 @@ test("owner control center uses signed access and exposes focused factual tools"
 
   assert.ok(accountSource.includes("activeSessionCount"));
   assert.ok(accountSource.includes("paymentCount"));
+  assert.ok(paymentSource.includes("accountCredentials"));
+  assert.ok(paymentSource.includes("customerProfiles"));
+  assert.ok(paymentSource.includes("customerHasAccount"));
+  assert.ok(paymentUiSource.includes("Customer contact:"));
+  assert.ok(paymentUiSource.includes("Tuveloz account:"));
+  assert.ok(paymentUiSource.includes("No matching sign-in account"));
   assert.ok(accountSource.includes('verificationStatus === "verified"'));
   assert.ok(accountSource.includes('isTestProvider === "no"'));
   assert.ok(controlSource.includes("Read-only runtime facts"));
