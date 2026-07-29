@@ -425,6 +425,18 @@ test("build records policy consent and publishes legal, privacy, payment, and se
     new URL("../worker/index.ts", import.meta.url),
     "utf8",
   );
+  const layoutSource = await readFile(
+    new URL("../app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+  const sitemapSource = await readFile(
+    new URL("../public/sitemap.xml", import.meta.url),
+    "utf8",
+  );
+  const manifest = JSON.parse(await readFile(
+    new URL("../public/manifest.webmanifest", import.meta.url),
+    "utf8",
+  ));
 
   assert.ok(contents.includes("Terms of Use"));
   assert.ok(contents.includes("Customer Agreement"));
@@ -434,6 +446,17 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(contents.includes("I am 18 or older and agree to the"));
   assert.ok(contents.includes("TUVELOZ LLC"));
   assert.ok(contents.includes("merchant of record"));
+  assert.ok(contents.includes("Storefront purchases use Stripe destination charges"));
+  assert.ok(contents.includes("Quote-based payments use a charge created on the Tuveloz platform"));
+  assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
+  assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
+  assert.ok(sitemapSource.includes("<loc>https://tuveloz.com/payments</loc>"));
+  assert.ok(!sitemapSource.includes("/admin"));
+  assert.ok(!sitemapSource.includes("/customer"));
+  assert.ok(!sitemapSource.includes("/provider-jobs"));
+  assert.equal(manifest.name, "Tuveloz");
+  assert.equal(manifest.start_url, "/");
+  assert.equal(manifest.display, "standalone");
   assert.ok(contents.includes("does not sell personal information"));
   assert.ok(contents.includes("customer and provider form a separate service agreement"));
   assert.ok(termsSource.includes("do not require private"));
