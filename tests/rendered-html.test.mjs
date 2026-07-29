@@ -484,7 +484,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!customerSource.includes("Provider sign in"));
   assert.ok(providerSource.includes("Yes, submit quote"));
   assert.ok(providerSource.includes("Submitted quotes"));
-  assert.ok(providerSource.includes("Payments and business page"));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("earnings")}'));
   assert.ok(providerSource.includes("History and private totals"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
   assert.ok(providerSource.includes("Available jobs"));
@@ -765,7 +765,7 @@ test("provider dashboard exposes focused, factual, provider-owned tools", async 
   assert.ok(!providerSource.includes("openWorkspaceSection"));
   assert.ok(!providerSource.includes('href="#provider-reviews"'));
   assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
-  assert.ok(providerSource.includes('<ProviderBusinessPage focus={activeView} />'));
+  assert.ok(providerSource.includes('focus={activeView === "reviews" ? "reviews" : activeView === "performance" ? "performance" : "profile"}'));
   assert.ok(providerSource.includes("if (!response.ok)"));
   assert.ok(providerSource.includes("Your session is still active."));
   assert.ok(providerSource.includes("disabled={signingOut}"));
@@ -888,7 +888,7 @@ test("customer account features are authenticated and backed by real records", a
   assert.ok(customerSource.includes('<JobMessages audience="customer" />'));
   assert.ok(customerSource.includes('activeView === "saved" || activeView === "settings"'));
   assert.ok(customerSource.includes("<CustomerAccountTools view={activeView} />"));
-  assert.ok(providerSource.includes('href="#provider-messages"'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("messages")}'));
   assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
 
   assert.ok(customerToolsSource.includes("getAccountSession(request)"));
