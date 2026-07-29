@@ -23,7 +23,9 @@ const LOGIN_CODE_LIFETIME_MS = 10 * 60 * 1000;
 const LOGIN_RATE_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_RATE_LIMIT = 3;
 const LOGIN_MAX_ATTEMPTS = 5;
-const PASSWORD_HASH_ITERATIONS = 600_000;
+// Cloudflare Workers rejects a single PBKDF2 operation above 100,000 rounds.
+// A server-side HMAC pepper protects the password material before PBKDF2.
+const PASSWORD_HASH_ITERATIONS = 100_000;
 const PASSWORD_MIN_LENGTH = 15;
 const PASSWORD_MAX_LENGTH = 128;
 const PASSWORD_LOGIN_MAX_ATTEMPTS = 5;
@@ -137,9 +139,21 @@ async function derivePasswordHash(
   salt: string,
   iterations: number,
 ) {
+  const pepperKey = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const pepperedPassword = await crypto.subtle.sign(
+    "HMAC",
+    pepperKey,
+    new TextEncoder().encode(`password:${password.normalize("NFKC")}`),
+  );
   const material = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(password.normalize("NFKC")),
+    pepperedPassword,
     "PBKDF2",
     false,
     ["deriveBits"],

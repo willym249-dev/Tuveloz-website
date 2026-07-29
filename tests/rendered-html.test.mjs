@@ -260,7 +260,8 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(authSource.includes('"SameSite=Lax"'));
   assert.ok(authSource.includes("LOGIN_MAX_ATTEMPTS = 5"));
   assert.ok(authSource.includes("PASSWORD_LOGIN_MAX_ATTEMPTS = 5"));
-  assert.ok(authSource.includes("PASSWORD_HASH_ITERATIONS = 600_000"));
+  assert.ok(authSource.includes("PASSWORD_HASH_ITERATIONS = 100_000"));
+  assert.ok(authSource.includes("`password:${password.normalize(\"NFKC\")}`"));
   assert.ok(authSource.includes('"PBKDF2"'));
   assert.ok(authSource.includes('hash: "SHA-256"'));
   assert.ok(authSource.includes("credentialRows.length > 0 || customerRows.length > 0"));
