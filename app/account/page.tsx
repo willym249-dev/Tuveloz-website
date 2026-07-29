@@ -2,6 +2,16 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  browserSupportsWebAuthn,
+  platformAuthenticatorIsAvailable,
+  startAuthentication,
+  startRegistration,
+} from "@simplewebauthn/browser";
+import type {
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+} from "@simplewebauthn/browser";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -23,12 +33,21 @@ export default function AccountPage() {
   const [codeRequested, setCodeRequested] = useState(false);
   const [passwordChallengeRequested, setPasswordChallengeRequested] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
+  const [passkeySupported, setPasskeySupported] = useState(false);
+  const [passkeySetupDestination, setPasskeySetupDestination] = useState("");
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (browserSupportsWebAuthn()) {
+      platformAuthenticatorIsAvailable()
+        .then((available) => setPasskeySupported(available))
+        .catch(() => {
+          // Password and email-code sign-in remain available.
+        });
+    }
     try {
       const rememberedEmail = window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
       if (rememberedEmail) {
@@ -166,6 +185,13 @@ export default function AccountPage() {
         setError(result.error || "Unable to verify this code.");
         return;
       }
+      if (passkeySupported) {
+        setPasswordChallengeRequested(false);
+        setCode("");
+        setMessage("");
+        setPasskeySetupDestination(result.destination);
+        return;
+      }
       window.location.replace(result.destination);
     } catch {
       setError("Sign-in is temporarily unavailable. Please try again.");
@@ -237,6 +263,13 @@ export default function AccountPage() {
         setError(result.error || "Unable to verify this code.");
         return;
       }
+      if (passkeySupported) {
+        setCodeRequested(false);
+        setCode("");
+        setMessage("");
+        setPasskeySetupDestination(result.destination);
+        return;
+      }
       window.location.replace(result.destination);
     } catch {
       setError("Account setup is temporarily unavailable. Please try again.");
@@ -300,6 +333,99 @@ export default function AccountPage() {
     }
   }
 
+  async function signInWithPasskey() {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const optionsResponse = await fetch(
+        "/api/auth/passkeys/authenticate/options",
+        { method: "POST" },
+      );
+      const optionsResult = (await optionsResponse.json()) as {
+        error?: string;
+        options?: PublicKeyCredentialRequestOptionsJSON;
+      };
+      if (!optionsResponse.ok || !optionsResult.options) {
+        setError(optionsResult.error || "Passkey sign-in is unavailable.");
+        return;
+      }
+
+      const passkeyResponse = await startAuthentication({
+        optionsJSON: optionsResult.options,
+      });
+      const verificationResponse = await fetch(
+        "/api/auth/passkeys/authenticate/verify",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ response: passkeyResponse }),
+        },
+      );
+      const verificationResult = (await verificationResponse.json()) as {
+        destination?: string;
+        error?: string;
+      };
+      if (!verificationResponse.ok || !verificationResult.destination) {
+        setError(
+          verificationResult.error || "That passkey could not sign you in.",
+        );
+        return;
+      }
+      window.location.replace(verificationResult.destination);
+    } catch {
+      setError("Passkey sign-in was canceled or is unavailable on this device.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function setUpPasskey() {
+    setBusy(true);
+    setError("");
+    try {
+      const optionsResponse = await fetch(
+        "/api/auth/passkeys/register/options",
+        { method: "POST" },
+      );
+      const optionsResult = (await optionsResponse.json()) as {
+        error?: string;
+        options?: PublicKeyCredentialCreationOptionsJSON;
+      };
+      if (!optionsResponse.ok || !optionsResult.options) {
+        setError(optionsResult.error || "Passkey setup is unavailable.");
+        return;
+      }
+
+      const passkeyResponse = await startRegistration({
+        optionsJSON: optionsResult.options,
+      });
+      const verificationResponse = await fetch(
+        "/api/auth/passkeys/register/verify",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ response: passkeyResponse }),
+        },
+      );
+      const verificationResult = (await verificationResponse.json()) as {
+        error?: string;
+        ok?: boolean;
+      };
+      if (!verificationResponse.ok || !verificationResult.ok) {
+        setError(
+          verificationResult.error || "This passkey could not be verified.",
+        );
+        return;
+      }
+      window.location.replace(passkeySetupDestination);
+    } catch {
+      setError("Passkey setup was canceled or is unavailable on this device.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const workspaceDescription = role === "customer"
     ? "Use the same email address you entered when posting a job."
     : "Provider sign-in is available only after Tuveloz approves and verifies your account.";
@@ -325,6 +451,37 @@ export default function AccountPage() {
         </div>
 
         <section className="account-login-card" aria-busy={checking || busy}>
+          {passkeySetupDestination ? (
+            <div className="account-passkey-setup">
+              <span className="account-kicker">Optional</span>
+              <h2>Sign in faster next time.</h2>
+              <p>
+                Set up a passkey to use Face ID, Touch ID, a fingerprint, or
+                your device lock.
+              </p>
+              <button
+                className="button primary"
+                disabled={busy}
+                onClick={setUpPasskey}
+                type="button"
+              >
+                {busy ? "Setting up…" : "Set up a passkey"}
+              </button>
+              <button
+                className="account-text-button"
+                disabled={busy}
+                onClick={() => window.location.replace(passkeySetupDestination)}
+                type="button"
+              >
+                Not now
+              </button>
+              <small className="account-passkey-privacy">
+                Tuveloz stores a public key—not your face or fingerprint. Your
+                device or password manager may securely sync the passkey.
+              </small>
+            </div>
+          ) : (
+            <>
           <div className="account-role-tabs" aria-label="Choose a workspace">
             <button
               aria-pressed={role === "customer"}
@@ -388,10 +545,28 @@ export default function AccountPage() {
 
           {mode === "signin" && !passwordChallengeRequested && (
             <form className="account-login-form" onSubmit={signInWithPassword}>
+              {passkeySupported && (
+                <>
+                  <button
+                    className="account-passkey-button"
+                    disabled={checking || busy}
+                    onClick={signInWithPasskey}
+                    type="button"
+                  >
+                    Use a passkey
+                  </button>
+                  <small className="account-passkey-hint">
+                    Use Face ID, Touch ID, a fingerprint, or your device lock.
+                  </small>
+                  <div className="account-signin-divider" aria-hidden="true">
+                    <span>or</span>
+                  </div>
+                </>
+              )}
               <label>
                 Email address
                 <input
-                  autoComplete="username webauthn"
+                  autoComplete="username"
                   disabled={checking || busy}
                   name="email"
                   onChange={(event) => setEmail(event.target.value)}
@@ -667,6 +842,8 @@ export default function AccountPage() {
               </button>
             </form>
           )}
+            </>
+          )}
 
           {message && (
             <p className="form-success account-login-message" role="status">
@@ -678,10 +855,12 @@ export default function AccountPage() {
               {error}
             </p>
           )}
-          <small className="account-security-note">
-            Passwords are securely hashed. Email codes expire in 10 minutes and
-            can be used once.
-          </small>
+          {!passkeySetupDestination && (
+            <small className="account-security-note">
+              Passwords are securely hashed. Email codes expire in 10 minutes
+              and can be used once.
+            </small>
+          )}
         </section>
 
         <div className="account-login-help">
