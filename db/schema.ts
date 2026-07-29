@@ -331,7 +331,6 @@ export const customerProfiles = sqliteTable(
   {
     email: text("email").primaryKey(),
     displayName: text("display_name").notNull().default(""),
-    emailNotifications: text("email_notifications").notNull().default("important"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
