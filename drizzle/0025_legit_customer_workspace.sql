@@ -1,8 +1,6 @@
 CREATE TABLE `customer_profiles` (
 	`email` text PRIMARY KEY NOT NULL,
 	`display_name` text DEFAULT '' NOT NULL,
-	`phone` text DEFAULT '' NOT NULL,
-	`email_notifications` text DEFAULT 'important' NOT NULL,
 	`created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`updated_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
