@@ -333,6 +333,15 @@ export default function ProviderJobsPage() {
     window.location.replace("/account?role=provider");
   }
 
+  function openWorkspaceSection(sectionId: "provider-history" | "provider-tools") {
+    const section = document.getElementById(sectionId);
+    if (!(section instanceof HTMLDetailsElement)) return;
+    section.open = true;
+    window.requestAnimationFrame(() => {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   async function switchWorkspace() {
     const response = await fetch("/api/auth/switch-role", {
       method: "POST",
@@ -432,13 +441,24 @@ export default function ProviderJobsPage() {
           <a className="workspace-nav-primary" href="#open-jobs"><TuvelozIcon name="open-jobs" />Available jobs <span>{jobs.length}</span></a>
           <a href="#open-jobs">My quotes</a>
           <a href="#active-jobs"><TuvelozIcon name="active-job" />Accepted jobs <span>{activeJobs.length}</span></a>
-          <a href="#provider-history">Earnings</a>
-          <a href="#provider-tools">Business profile</a>
-          <details>
-            <summary>More tools</summary>
-            <span>Schedule · Messages · Reviews · Performance tools</span>
-            <small>These focused tools will appear here as Tuveloz grows.</small>
-          </details>
+          <a
+            href="#provider-history"
+            onClick={(event) => {
+              event.preventDefault();
+              openWorkspaceSection("provider-history");
+            }}
+          >
+            Earnings
+          </a>
+          <a
+            href="#provider-tools"
+            onClick={(event) => {
+              event.preventDefault();
+              openWorkspaceSection("provider-tools");
+            }}
+          >
+            Business profile
+          </a>
         </nav>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}
