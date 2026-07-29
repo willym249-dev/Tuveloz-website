@@ -3,7 +3,6 @@ import {
   isSameOriginRequest,
   isValidAccountEmail,
   normalizeAccountEmail,
-  sessionCookie,
   signInWithPassword,
 } from "../../../../lib/account-auth";
 
@@ -35,18 +34,22 @@ export async function POST(request: Request) {
     const result = await signInWithPassword(email, body.role, password);
     if (!result.ok) {
       return Response.json(
-        { error: "The email or password is incorrect, or this workspace is not available." },
-        { status: 401, headers: { "cache-control": "no-store" } },
+        {
+          error: result.rateLimited
+            ? "Too many sign-in codes were requested. Please wait 15 minutes and try again."
+            : "The email or password is incorrect, or this workspace is not available.",
+        },
+        {
+          status: result.rateLimited ? 429 : 401,
+          headers: { "cache-control": "no-store" },
+        },
       );
     }
-    const response = Response.json({
+    return Response.json({
       ok: true,
-      role: result.role,
-      availableRoles: result.roles,
-      destination: result.destination,
+      challengeRequired: true,
+      message: "Enter the 6-digit code sent to your email to finish signing in.",
     }, { headers: { "cache-control": "no-store" } });
-    response.headers.append("set-cookie", sessionCookie(request, result.token));
-    return response;
   } catch (error) {
     console.error("Unable to sign in with a Tuveloz password", error);
     return Response.json(
