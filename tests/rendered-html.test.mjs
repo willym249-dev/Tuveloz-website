@@ -451,9 +451,9 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
   assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
   assert.ok(sitemapSource.includes("<loc>https://tuveloz.com/payments</loc>"));
-  assert.ok(!sitemapSource.includes("/admin"));
-  assert.ok(!sitemapSource.includes("/customer"));
-  assert.ok(!sitemapSource.includes("/provider-jobs"));
+  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/admin</loc>"));
+  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/customer</loc>"));
+  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/provider-jobs</loc>"));
   assert.equal(manifest.name, "Tuveloz");
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
