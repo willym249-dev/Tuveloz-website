@@ -359,7 +359,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!customerSource.includes("Open Jobs"));
   assert.ok(!customerSource.includes("Provider sign in"));
   assert.ok(providerSource.includes("Yes, submit quote"));
-  assert.ok(providerSource.includes("Open jobs"));
+  assert.ok(providerSource.includes("Submitted quotes"));
   assert.ok(providerSource.includes("Payments and business page"));
   assert.ok(providerSource.includes("History and private totals"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
