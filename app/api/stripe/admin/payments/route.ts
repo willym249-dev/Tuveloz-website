@@ -1,6 +1,8 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "../../../../../db";
 import {
+  accountCredentials,
+  customerProfiles,
   customerRequests,
   providerApplications,
   stripePayments,
@@ -8,7 +10,7 @@ import {
 import { isSameOriginRequest } from "../../../../../lib/account-auth";
 import {
   getAuthenticatedEmail,
-  isOwnerRequest,
+  isVerifiedOwnerRequest,
 } from "../../../../../lib/owner-auth";
 import {
   getStripeClient,
@@ -17,7 +19,7 @@ import {
 } from "../../../../../lib/stripe";
 
 export async function GET(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
 
@@ -29,6 +31,8 @@ export async function GET(request: Request) {
     productName: stripePayments.productName,
     providerName: providerApplications.name,
     customerEmail: stripePayments.customerEmail,
+    customerAccountEmail: accountCredentials.email,
+    customerDisplayName: customerProfiles.displayName,
     currency: stripePayments.currency,
     quantity: stripePayments.quantity,
     providerAmountCents: stripePayments.providerAmountCents,
@@ -57,11 +61,20 @@ export async function GET(request: Request) {
       customerRequests,
       eq(customerRequests.id, stripePayments.requestId),
     )
+    .leftJoin(
+      accountCredentials,
+      eq(accountCredentials.email, stripePayments.customerEmail),
+    )
+    .leftJoin(
+      customerProfiles,
+      eq(customerProfiles.email, stripePayments.customerEmail),
+    )
     .orderBy(desc(stripePayments.createdAt))
     .limit(100);
 
   return Response.json({
     payments: payments.map((payment) => {
+      const { customerAccountEmail, ...safePayment } = payment;
       const readyAfterCompletion =
         payment.settlementStrategy === "separate_transfer"
         && payment.status === "paid_pending_completion"
@@ -69,7 +82,8 @@ export async function GET(request: Request) {
         && !payment.disputeStatus
         && payment.jobStatus === "completed";
       return {
-        ...payment,
+        ...safePayment,
+        customerHasAccount: Boolean(customerAccountEmail),
         status: readyAfterCompletion ? "ready_for_release" : payment.status,
         canRelease:
           payment.settlementStrategy === "separate_transfer"
@@ -84,7 +98,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
   if (!isSameOriginRequest(request)) {

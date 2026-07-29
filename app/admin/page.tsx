@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { StripePaymentAdmin } from "../components/stripe-payment-admin";
+import {
+  OwnerControlCenter,
+  type AdminView,
+  type OwnerPlatform,
+  type OwnerUser,
+} from "../components/owner-control-center";
 import { BrandMark } from "../components/tuveloz-icons";
 import {
   effectiveProviderServices,
@@ -38,7 +44,6 @@ type CustomerRequest = {
   repeatOfRequestId: string;
   details: string;
   status: string;
-  accessToken: string;
   approvedAt: string;
   reminderSentAt: string;
   reminderLastAttemptAt: string;
@@ -68,7 +73,6 @@ type ProviderApplication = {
   verificationChecklist: string;
   verifiedAt: string;
   verifiedBy: string;
-  accessToken: string;
   alertsEnabled: string;
   status: string;
   createdAt: string;
@@ -213,12 +217,12 @@ export default function AdminPage() {
   const [feedback, setFeedback] = useState<LaunchFeedback[]>([]);
   const [expansion, setExpansion] = useState<ExpansionInterest[]>([]);
   const [quotes, setQuotes] = useState<ProviderQuote[]>([]);
-  const [copiedRequestId, setCopiedRequestId] = useState("");
-  const [copiedProviderId, setCopiedProviderId] = useState("");
-  const [pendingLinkRequestId, setPendingLinkRequestId] = useState("");
-  const [creatingLinkRequestId, setCreatingLinkRequestId] = useState("");
+  const [users, setUsers] = useState<OwnerUser[]>([]);
+  const [platform, setPlatform] = useState<OwnerPlatform | null>(null);
+  const [activeAdminView, setActiveAdminView] = useState<AdminView>("jobs");
   const [alertStatus, setAlertStatus] = useState("");
   const [error, setError] = useState("");
+  const [controlCenterError, setControlCenterError] = useState("");
   const [loading, setLoading] = useState(true);
   const [accessGranted, setAccessGranted] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAdminAction | null>(null);
@@ -265,39 +269,6 @@ export default function AdminPage() {
     }
   }
 
-  async function copyCustomerLink(id: string, token: string) {
-    const url = `${window.location.origin}/my-request?token=${encodeURIComponent(token)}`;
-
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedRequestId(id);
-      window.setTimeout(() => setCopiedRequestId(""), 2000);
-    } catch {
-      setError("Unable to copy the link. Open the customer request and copy the address from your browser.");
-    }
-  }
-
-  async function createCustomerLink(id: string) {
-    setError("");
-    setCreatingLinkRequestId(id);
-    const response = await fetch("/api/admin/requests", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "create-link" }),
-    });
-    const result = (await response.json()) as { error?: string; accessToken?: string };
-    setCreatingLinkRequestId("");
-
-    if (!response.ok || !result.accessToken) {
-      return setError(result.error || "Unable to create the private link.");
-    }
-
-    setPendingLinkRequestId("");
-    setRequests((items) => items.map((item) => (
-      item.id === id ? { ...item, accessToken: result.accessToken ?? "" } : item
-    )));
-  }
-
   async function updateProvider(id: string, status: "approved" | "declined") {
     setError("");
     const response = await fetch("/api/admin/providers", {
@@ -307,7 +278,6 @@ export default function AdminPage() {
     });
     const result = (await response.json()) as {
       error?: string;
-      accessToken?: string;
       serviceArea?: string;
       verificationStatus?: string;
     };
@@ -316,7 +286,6 @@ export default function AdminPage() {
       item.id === id ? {
         ...item,
         status,
-        accessToken: result.accessToken ?? "",
         serviceArea: result.serviceArea ?? item.serviceArea,
         verificationStatus: result.verificationStatus ?? item.verificationStatus,
       } : item
@@ -349,7 +318,6 @@ export default function AdminPage() {
     });
     const result = (await response.json()) as {
       error?: string;
-      accessToken?: string;
       verificationStatus?: string;
       isTestProvider?: string;
     };
@@ -358,7 +326,6 @@ export default function AdminPage() {
       item.id === id ? {
         ...item,
         status: "approved",
-        accessToken: result.accessToken ?? item.accessToken,
         verificationStatus: result.verificationStatus ?? "test",
         isTestProvider: result.isTestProvider ?? "yes",
         alertsEnabled: "no",
@@ -435,17 +402,6 @@ export default function AdminPage() {
     }
   }
 
-  async function copyProviderLink(id: string, token: string) {
-    const url = `${window.location.origin}/provider-jobs?token=${encodeURIComponent(token)}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedProviderId(id);
-      window.setTimeout(() => setCopiedProviderId(""), 2000);
-    } catch {
-      setError("Unable to copy the provider link. Open it and copy the address from your browser.");
-    }
-  }
-
   useEffect(() => {
     fetch("/api/admin")
       .then(async (response) => {
@@ -472,6 +428,30 @@ export default function AdminPage() {
       })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load dashboard."))
       .finally(() => setLoading(false));
+
+    fetch("/api/admin/control-center", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json() as {
+          users?: OwnerUser[];
+          platform?: OwnerPlatform;
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(
+            result.error || "Signed owner verification is required for account management.",
+          );
+        }
+        setUsers(result.users ?? []);
+        setPlatform(result.platform ?? null);
+        setControlCenterError("");
+      })
+      .catch((reason) => {
+        setControlCenterError(
+          reason instanceof Error
+            ? reason.message
+            : "Signed owner verification is required for account management.",
+        );
+      });
   }, []);
 
   const expansionDemand = expansion
@@ -507,6 +487,22 @@ export default function AdminPage() {
   const acceptedFeeCents = quotes
     .filter((quote) => quote.status === "accepted")
     .reduce((total, quote) => total + customerPriceSnapshot(quote).customerFeeCents, 0);
+  const ownerMetrics = {
+    jobRequests: requests.length,
+    approvedJobs: requests.filter((item) => item.status === "approved").length,
+    testJobs: requests.filter((item) => item.isTestJob === "yes").length,
+    providerQuotes: quotes.length,
+    acceptedQuotes: quotes.filter((quote) => quote.status === "accepted").length,
+    providerApplications: providers.length,
+    verifiedProviders: providers.filter((provider) => (
+      provider.status === "approved"
+      && provider.verificationStatus === "verified"
+      && provider.isTestProvider !== "yes"
+    )).length,
+    expansionRequests: expansion.length,
+    feedbackResponses: feedback.length,
+    acceptedFeeCents,
+  };
 
   if (!accessGranted && !error) return null;
 
@@ -518,9 +514,9 @@ export default function AdminPage() {
       </header>
 
       <section className="admin-intro">
-        <span className="kicker">Launch control</span>
-        <h1>Requests and provider interest</h1>
-        <p>Keep contact information private. Reach out manually while the marketplace is in early testing.</p>
+        <span className="kicker">Owner control center</span>
+        <h1>Tuveloz operations</h1>
+        <p>Use focused owner-only views backed by stored Tuveloz records and connected service status.</p>
         {loading ? <p className="admin-note">Loading submissions…</p> : error ? (
           <p className="form-error" role="alert">{error}</p>
         ) : (
@@ -540,7 +536,21 @@ export default function AdminPage() {
 
       {!loading && !error && (
         <>
-          <section className="admin-section">
+          <OwnerControlCenter
+            activeView={activeAdminView}
+            metrics={ownerMetrics}
+            onSessionsRevoked={(email) => {
+              setUsers((items) => items.map((item) => (
+                item.email === email ? { ...item, activeSessionCount: 0 } : item
+              )));
+            }}
+            onViewChange={setActiveAdminView}
+            platform={platform}
+            securityError={controlCenterError}
+            users={users}
+          />
+
+          <section className="admin-section" hidden={activeAdminView !== "jobs"} id="owner-jobs">
             <h2>Customer job requests</h2>
             {requests.length === 0 ? <p className="admin-note">No requests yet.</p> : (
               <div className="admin-grid">
@@ -627,39 +637,6 @@ export default function AdminPage() {
                         )}
                       </div>
                     )}
-                    {item.accessToken ? (
-                      <div className="admin-link-actions">
-                        <a
-                          href={`/my-request?token=${encodeURIComponent(item.accessToken)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open customer request
-                        </a>
-                        <button type="button" onClick={() => copyCustomerLink(item.id, item.accessToken)}>
-                          {copiedRequestId === item.id ? "Link copied" : "Copy customer link"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="admin-link-missing">
-                        <p className="admin-link-note">This older request does not have a private link yet.</p>
-                        {pendingLinkRequestId === item.id ? (
-                          <ConfirmAction
-                            busy={creatingLinkRequestId === item.id}
-                            busyLabel="Creating…"
-                            confirmLabel="Confirm and create link"
-                            message="Anyone with this link can open the private customer request. Share it only with the customer."
-                            onBack={() => setPendingLinkRequestId("")}
-                            onConfirm={() => createCustomerLink(item.id)}
-                            title="Create a private customer link?"
-                          />
-                        ) : (
-                          <button type="button" onClick={() => setPendingLinkRequestId(item.id)}>
-                            Create private link
-                          </button>
-                        )}
-                      </div>
-                    )}
                     <div className="admin-contact"><strong>{item.name}</strong><a href={`mailto:${item.email}`}>{item.email}</a></div>
                   </article>
                 ))}
@@ -667,7 +644,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "jobs"}>
             <h2>Quote management</h2>
             <p className="admin-section-copy">Review every price offered and see which provider the customer selected.</p>
             {quotes.length === 0 ? <p className="admin-note">No provider quotes yet.</p> : (
@@ -709,9 +686,9 @@ export default function AdminPage() {
             )}
           </section>
 
-          <StripePaymentAdmin />
+          {activeAdminView === "payments" && <StripePaymentAdmin />}
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "providers"} id="owner-provider-approvals">
             <h2>Provider applications</h2>
             <p className="admin-section-copy">
               A provider receives workspace access and the Tuveloz verified badge only after every
@@ -940,13 +917,9 @@ export default function AdminPage() {
                         {!savedComplete && <span className="admin-link-note">Save every applicable-law check and at least one approved service before verification.</span>}
                       </div>
                     )}
-                    {(isVerified || isTestProvider) && item.status === "approved" && item.accessToken && (
+                    {(isVerified || isTestProvider) && item.status === "approved" && alertHref && (
                       <div className="admin-link-actions">
-                        <a href={`/provider-jobs?token=${encodeURIComponent(item.accessToken)}`} target="_blank" rel="noreferrer">Open provider workspace</a>
-                        <button type="button" onClick={() => copyProviderLink(item.id, item.accessToken)}>
-                          {copiedProviderId === item.id ? "Link copied" : "Copy provider link"}
-                        </button>
-                        {alertHref && <a href={alertHref}>Email matching-job alert</a>}
+                        <a href={alertHref}>Email matching-job alert</a>
                       </div>
                     )}
                     {(isVerified || isTestProvider) && item.status === "approved" && (
@@ -964,7 +937,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "reports"} id="owner-reports">
             <h2>Expansion demand</h2>
             <p className="admin-section-copy">
               Areas are ranked by unique people, with customer and provider
@@ -1000,7 +973,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "reports"}>
             <h2>Tuveloz feedback</h2>
             {feedback.length === 0 ? <p className="admin-note">No feedback yet.</p> : (
               <div className="admin-grid">

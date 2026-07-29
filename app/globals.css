@@ -9125,3 +9125,353 @@ footer > p,
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Signed owner control center */
+.admin-section[hidden] {
+  display: none !important;
+}
+
+.admin-control-nav {
+  background: rgba(8, 8, 8, 0.97);
+  border: 1px solid #50301d;
+  border-radius: 20px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(7, minmax(118px, 1fr));
+  margin: 0 auto 26px;
+  max-width: 1240px;
+  padding: 10px;
+  position: sticky;
+  top: 10px;
+  z-index: 20;
+}
+
+.admin-control-nav button {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  color: #c9beb6;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  min-height: 48px;
+  padding: 10px 12px;
+}
+
+.admin-control-nav button:hover,
+.admin-control-nav button:focus-visible {
+  border-color: #7f4522;
+  color: #fff;
+  outline: none;
+}
+
+.admin-control-nav button.is-active,
+.admin-control-nav button[aria-pressed="true"] {
+  background: #ff6a00;
+  border-color: #ff6a00;
+  color: #080808;
+}
+
+.admin-control-message {
+  margin: 0 auto 20px;
+  max-width: 1240px;
+}
+
+.admin-section-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.admin-section-heading h2 {
+  margin: 8px 0 0;
+}
+
+.admin-section-heading > strong {
+  background: #19110c;
+  border: 1px solid #58351f;
+  border-radius: 999px;
+  color: #ff9b54;
+  font-size: 12px;
+  padding: 9px 13px;
+}
+
+.owner-user-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  margin-top: 24px;
+}
+
+.owner-user-card {
+  background: linear-gradient(145deg, #0d1724, #07111c);
+  border: 1px solid #31506b;
+  border-radius: 18px;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.owner-user-card > header {
+  align-items: flex-start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.owner-user-card h3 {
+  color: #f8fbff;
+  margin: 0 0 6px;
+}
+
+.owner-user-card a {
+  color: #ff9b54;
+  overflow-wrap: anywhere;
+}
+
+.owner-user-card .status-ok,
+.owner-user-card .status-warning {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  padding: 7px 10px;
+  text-transform: capitalize;
+}
+
+.owner-user-card .status-ok {
+  background: #103c2b;
+  color: #9cf2c4;
+}
+
+.owner-user-card .status-warning {
+  background: #4a260e;
+  color: #ffc38f;
+}
+
+.owner-role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-role-list span {
+  background: #152b3e;
+  border: 1px solid #31506b;
+  border-radius: 999px;
+  color: #dbeeff;
+  font-size: 11px;
+  font-weight: 850;
+  padding: 6px 9px;
+  text-transform: capitalize;
+}
+
+.owner-user-facts,
+.owner-settings-grid,
+.owner-policy-versions dl {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.owner-user-facts > div,
+.owner-settings-grid > div,
+.owner-policy-versions dl > div {
+  background: rgba(4, 13, 23, 0.72);
+  border: 1px solid #29465e;
+  border-radius: 12px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.owner-user-facts dt,
+.owner-settings-grid dt,
+.owner-policy-versions dt {
+  color: #8fa6b9;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.owner-user-facts dd,
+.owner-settings-grid dd,
+.owner-policy-versions dd {
+  color: #f4f8fc;
+  font-weight: 750;
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-secondary-action,
+.admin-danger-action {
+  appearance: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+.admin-secondary-action {
+  background: #101f2d;
+  border: 1px solid #3a5a72;
+  color: #eaf5ff;
+}
+
+.admin-danger-action {
+  background: #6c2318;
+  border: 1px solid #a8402f;
+  color: #fff;
+}
+
+.admin-secondary-action:disabled,
+.admin-danger-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.owner-session-confirm {
+  background: #1a100c;
+  border: 1px solid #714128;
+  border-radius: 14px;
+  padding: 15px;
+}
+
+.owner-session-confirm p {
+  color: #d5c8bf;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.owner-session-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-metric-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin-top: 24px;
+}
+
+.owner-metric-grid article {
+  background: linear-gradient(145deg, #17100b, #0d0d0d);
+  border: 1px solid #55321e;
+  border-radius: 16px;
+  display: grid;
+  gap: 8px;
+  min-height: 126px;
+  padding: 20px;
+}
+
+.owner-metric-grid strong {
+  color: #fff;
+  font-size: 30px;
+  letter-spacing: -0.04em;
+}
+
+.owner-metric-grid span {
+  color: #bcaea5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.owner-settings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin-top: 24px;
+}
+
+.owner-settings-grid > div,
+.owner-policy-versions dl > div {
+  background: #0d1724;
+}
+
+.owner-policy-versions {
+  border-top: 1px solid #3d2a1e;
+  margin-top: 26px;
+  padding-top: 24px;
+}
+
+.owner-policy-versions h3 {
+  margin: 0 0 14px;
+}
+
+.owner-live-money-note {
+  background: #24160d;
+  border: 1px solid #744323;
+  border-radius: 14px;
+  color: #d8c5b8;
+  line-height: 1.6;
+  margin: 22px 0 0;
+  padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .admin-control-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-left: 18px;
+    margin-right: 18px;
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-control-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 14px;
+    margin-right: 14px;
+    padding: 8px;
+  }
+
+  .admin-control-nav button {
+    font-size: 11px;
+    min-height: 46px;
+    padding: 8px;
+  }
+
+  .admin-section-heading,
+  .owner-user-card > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-section-heading > strong,
+  .owner-user-card .status-ok,
+  .owner-user-card .status-warning {
+    align-self: flex-start;
+  }
+
+  .owner-user-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-user-card {
+    border-radius: 15px;
+    padding: 15px;
+  }
+
+  .owner-user-facts,
+  .owner-policy-versions dl {
+    grid-template-columns: 1fr;
+  }
+
+  .owner-session-confirm > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-secondary-action,
+  .admin-danger-action {
+    width: 100%;
+  }
+}

@@ -1,25 +1,20 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { customerRequests } from "../../../../db/schema";
-import { isOwnerRequest } from "../../../../lib/owner-auth";
+import { isSameOriginRequest } from "../../../../lib/account-auth";
+import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import { sendMatchingProviderAlerts } from "../../../../lib/provider-alerts";
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
+  }
+  if (!isSameOriginRequest(request)) {
+    return Response.json({ error: "Cross-origin owner actions are not allowed." }, { status: 403 });
   }
   const body = (await request.json()) as { id?: string; status?: string; action?: string };
   if (!body.id) {
     return Response.json({ error: "Invalid request update." }, { status: 400 });
-  }
-
-  if (body.action === "create-link") {
-    const accessToken = crypto.randomUUID();
-    await getDb()
-      .update(customerRequests)
-      .set({ accessToken })
-      .where(eq(customerRequests.id, body.id));
-    return Response.json({ ok: true, accessToken });
   }
 
   if (body.action === "mark-test") {

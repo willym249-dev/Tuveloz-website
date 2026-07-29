@@ -747,3 +747,106 @@ test("customer account features are authenticated and backed by real records", a
     assert.ok(!source.includes("email_notifications"));
   }
 });
+
+
+test("owner control center uses signed access and exposes focused factual tools", async () => {
+  const [
+    pageSource,
+    controlSource,
+    accountSource,
+    sessionSource,
+    ownerAuthSource,
+    legacyAdminSource,
+    jobActionSource,
+    providerActionSource,
+    paymentSource,
+    paymentUiSource,
+  ] = await Promise.all([
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/owner-control-center.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/control-center/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/users/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/owner-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/requests/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/providers/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/stripe/admin/payments/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/stripe-payment-admin.tsx", import.meta.url), "utf8"),
+  ]);
+
+  for (const label of [
+    "User management",
+    "Provider approvals",
+    "Jobs",
+    "Payments",
+    "Reports",
+    "Analytics",
+    "Platform settings",
+  ]) {
+    assert.ok(controlSource.includes(label), `Missing owner tool: ${label}`);
+  }
+
+  assert.ok(pageSource.includes('fetch("/api/admin/control-center"'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "jobs"}'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "providers"}'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "reports"}'));
+  assert.ok(pageSource.includes('activeAdminView === "payments"'));
+
+  assert.ok(ownerAuthSource.includes("createRemoteJWKSet"));
+  assert.ok(ownerAuthSource.includes("jwtVerify"));
+  assert.ok(ownerAuthSource.includes('algorithms: ["RS256"]'));
+  assert.ok(ownerAuthSource.includes("issuer: teamDomain"));
+  assert.ok(ownerAuthSource.includes("audience"));
+  assert.ok(ownerAuthSource.includes("cf-access-jwt-assertion"));
+  for (const signedOwnerSource of [
+    accountSource,
+    sessionSource,
+    legacyAdminSource,
+    jobActionSource,
+    providerActionSource,
+    paymentSource,
+  ]) {
+    assert.ok(signedOwnerSource.includes("await isVerifiedOwnerRequest(request)"));
+    assert.ok(!signedOwnerSource.includes("isOwnerRequest(request)"));
+  }
+  assert.ok(sessionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(jobActionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(providerActionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(paymentSource.includes("isSameOriginRequest(request)"));
+
+  assert.ok(!pageSource.includes("Copy customer link"));
+  assert.ok(!pageSource.includes("Copy provider link"));
+  assert.ok(!pageSource.includes("?token="));
+  assert.ok(!jobActionSource.includes('"create-link"'));
+  assert.ok(!providerActionSource.includes("crypto.randomUUID"));
+  assert.ok(legacyAdminSource.includes("const safeRequests"));
+  assert.ok(legacyAdminSource.includes("const safeProviders"));
+  assert.ok(legacyAdminSource.includes('"cache-control": "no-store"'));
+
+  for (const secretField of [
+    "passwordHash",
+    "passwordSalt",
+    "passwordIterations",
+    "tokenHash",
+    "codeHash",
+    "accessToken",
+  ]) {
+    assert.ok(!accountSource.includes(secretField), `Sensitive field selected: ${secretField}`);
+  }
+
+  assert.ok(accountSource.includes("activeSessionCount"));
+  assert.ok(accountSource.includes("paymentCount"));
+  assert.ok(paymentSource.includes("accountCredentials"));
+  assert.ok(paymentSource.includes("customerProfiles"));
+  assert.ok(paymentSource.includes("customerHasAccount"));
+  assert.ok(paymentUiSource.includes("Customer contact:"));
+  assert.ok(paymentUiSource.includes("Tuveloz account:"));
+  assert.ok(paymentUiSource.includes("No matching sign-in account"));
+  assert.ok(accountSource.includes('verificationStatus === "verified"'));
+  assert.ok(accountSource.includes('isTestProvider === "no"'));
+  assert.ok(controlSource.includes("Read-only runtime facts"));
+  assert.ok(controlSource.includes("exact counts from Tuveloz records"));
+  assert.ok(controlSource.includes("does not pretend"));
+  assert.ok(controlSource.includes("Live money must remain off"));
+  assert.ok(!controlSource.includes("Enable live payments"));
+});
