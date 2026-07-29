@@ -642,3 +642,44 @@ test("provider dashboard exposes only provider-owned factual tools", async () =>
   assert.ok(profileApiSource.includes('eq(jobReviews.status, "published")'));
   assert.ok(profileApiSource.includes('"cache-control": "no-store"'));
 });
+
+
+test("provider workspaces never expose long-lived provider access tokens", async () => {
+  const [
+    dashboardSource,
+    jobsApiSource,
+    accountApiSource,
+    businessSource,
+    profileApiSource,
+    mediaApiSource,
+    publicProviderApiSource,
+    storefrontSource,
+    jobImagesSource,
+  ] = await Promise.all([
+    readFile(new URL("../app/provider-jobs/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/jobs/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/provider-business-page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/provider-profile/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/provider-media/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/public-provider/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/job-images/route.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(jobsApiSource.includes("getAccountSession(request)"));
+  assert.ok(jobsApiSource.includes("providerAccountFor(session.email)"));
+  assert.ok(profileApiSource.includes("getAccountSession(request)"));
+  assert.ok(mediaApiSource.includes("getAccountSession(request)"));
+  assert.ok(publicProviderApiSource.includes("getAccountSession(request)"));
+  assert.ok(jobImagesSource.includes("providerAccountFor(session.email)"));
+  assert.ok(!accountApiSource.includes("accessToken: provider.accessToken"));
+  assert.ok(!dashboardSource.includes("providerToken"));
+  assert.ok(!dashboardSource.includes("/api/jobs?token="));
+  assert.ok(!businessSource.includes("?token="));
+  assert.ok(!businessSource.includes('formData.set("token"'));
+  assert.ok(!storefrontSource.includes("useSearchParams"));
+  assert.ok(!mediaApiSource.includes('searchParams.get("token")'));
+  assert.ok(!publicProviderApiSource.includes('searchParams.get("token")'));
+  assert.ok(!jobImagesSource.includes("providerApplications.accessToken"));
+});
