@@ -1,12 +1,16 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { customerRequests } from "../../../../db/schema";
+import { isSameOriginRequest } from "../../../../lib/account-auth";
 import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import { sendMatchingProviderAlerts } from "../../../../lib/provider-alerts";
 
 export async function POST(request: Request) {
   if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
+  }
+  if (!isSameOriginRequest(request)) {
+    return Response.json({ error: "Cross-origin owner actions are not allowed." }, { status: 403 });
   }
   const body = (await request.json()) as { id?: string; status?: string; action?: string };
   if (!body.id) {
