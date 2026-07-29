@@ -68,6 +68,7 @@ type OwnerControlCenterProps = {
   users: OwnerUser[];
   platform: OwnerPlatform | null;
   metrics: OwnerMetrics;
+  securityError: string;
   onSessionsRevoked: (email: string) => void;
 };
 
@@ -97,6 +98,7 @@ export function OwnerControlCenter({
   users,
   platform,
   metrics,
+  securityError,
   onSessionsRevoked,
 }: OwnerControlCenterProps) {
   const [pendingEmail, setPendingEmail] = useState("");
@@ -169,7 +171,9 @@ export function OwnerControlCenter({
             session identifiers, or authentication tokens. Provider roles appear only after
             Tuveloz approval and verification.
           </p>
-          {users.length === 0 ? (
+          {securityError ? (
+            <p className="form-error" role="alert">{securityError}</p>
+          ) : users.length === 0 ? (
             <p className="admin-note">No verified sign-in accounts yet.</p>
           ) : (
             <div className="owner-user-grid">
@@ -285,7 +289,9 @@ export function OwnerControlCenter({
             This page reports the configuration the server actually sees. It does not pretend
             to change Cloudflare, Resend, Stripe, or legal-policy settings.
           </p>
-          {!platform ? (
+          {securityError ? (
+            <p className="form-error" role="alert">{securityError}</p>
+          ) : !platform ? (
             <p className="admin-note">Platform configuration could not be loaded.</p>
           ) : (
             <>
