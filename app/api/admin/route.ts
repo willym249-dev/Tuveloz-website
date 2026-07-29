@@ -8,11 +8,24 @@ import {
   providerCredentialVerifications,
   providerQuotes,
 } from "../../../db/schema";
-import { isVerifiedOwnerRequest } from "../../../lib/owner-auth";
+import { verifyOwnerRequest } from "../../../lib/owner-auth";
 
 export async function GET(request: Request) {
-  if (!(await isVerifiedOwnerRequest(request))) {
-    return Response.json({ error: "This dashboard is only available to the Tuveloz owner." }, { status: 403 });
+  const verification = await verifyOwnerRequest(request);
+  if (!verification.ok) {
+    const configurationMissing = verification.reason === "owner-config-missing";
+    return Response.json(
+      {
+        error: configurationMissing
+          ? "Owner access is not fully configured on this deployment."
+          : "Cloudflare could not verify this owner session. Sign in with hello@tuveloz.com.",
+        reason: verification.reason,
+      },
+      {
+        status: configurationMissing ? 503 : 403,
+        headers: { "cache-control": "no-store" },
+      },
+    );
   }
 
   try {
