@@ -110,7 +110,7 @@ export function JobMessages({ audience }: { audience: "customer" | "provider" })
       <div className="job-messages-heading">
         <div>
           <strong>Job messages</strong>
-          <span>Private to the customer and accepted provider for each job.</span>
+          <span>Available in this workspace to the customer and accepted provider for each job.</span>
         </div>
         <button className="button secondary" onClick={() => void loadMessages()} type="button">
           Refresh
@@ -173,7 +173,7 @@ export function JobMessages({ audience }: { audience: "customer" | "provider" })
                 <button className="button primary" disabled={sending} type="submit">
                   {sending ? "Sending…" : "Send message"}
                 </button>
-                <small>Do not share passwords, payment-card details, or unrelated sensitive information.</small>
+                <small>Do not share passwords, payment-card details, or unrelated sensitive information. Tuveloz stores messages and may review them for support, safety, privacy, payment, or legal issues under the <a href="/privacy">Privacy Policy</a>.</small>
               </form>
             </section>
           )}
