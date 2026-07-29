@@ -8841,3 +8841,287 @@ footer > p,
     width: 0.95in;
   }
 }
+
+
+/* Customer account tools and accepted-job messaging */
+.job-messages-panel,
+.customer-settings-panel,
+.saved-provider-panel {
+  background: linear-gradient(145deg, rgba(7, 24, 45, 0.96), rgba(10, 31, 48, 0.96));
+  border: 1px solid #36536b;
+  border-radius: 20px;
+  color: #f7fbff;
+  padding: 22px;
+}
+
+.job-messages-heading {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.job-messages-heading > div {
+  display: grid;
+  gap: 5px;
+}
+
+.job-messages-heading span,
+.job-message-thread header span,
+.customer-tool-explainer,
+.customer-security-note p,
+.saved-provider-grid article > small {
+  color: #91a4b4;
+  line-height: 1.55;
+}
+
+.job-messages-layout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(210px, 0.72fr) minmax(0, 1.8fr);
+}
+
+.job-message-threads {
+  align-content: start;
+  display: grid;
+  gap: 8px;
+}
+
+.job-message-threads button {
+  background: #07182d;
+  border: 1px solid #36536b;
+  border-radius: 14px;
+  color: #f7fbff;
+  cursor: pointer;
+  display: grid;
+  gap: 5px;
+  min-height: 78px;
+  padding: 14px;
+  text-align: left;
+  width: 100%;
+}
+
+.job-message-threads button:hover,
+.job-message-threads button:focus-visible,
+.job-message-threads button.is-active {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.18);
+  outline: none;
+}
+
+.job-message-threads span,
+.job-message-threads small {
+  color: #91a4b4;
+  line-height: 1.4;
+}
+
+.job-message-thread {
+  background: #061522;
+  border: 1px solid #29475f;
+  border-radius: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.job-message-thread > header {
+  align-items: center;
+  border-bottom: 1px solid #29475f;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 16px 18px;
+}
+
+.job-message-thread > header > div {
+  display: grid;
+  gap: 4px;
+}
+
+.job-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 460px;
+  min-height: 180px;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.job-message-list article {
+  align-self: flex-start;
+  background: #102b40;
+  border: 1px solid #36536b;
+  border-radius: 15px 15px 15px 5px;
+  max-width: min(82%, 560px);
+  padding: 11px 13px;
+}
+
+.job-message-list article.is-mine {
+  align-self: flex-end;
+  background: #4c220a;
+  border-color: #9a4714;
+  border-radius: 15px 15px 5px 15px;
+}
+
+.job-message-list article > span,
+.job-message-list article > small {
+  color: #91a4b4;
+  display: block;
+  font-size: 11px;
+}
+
+.job-message-list article p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.job-message-form {
+  border-top: 1px solid #29475f;
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+.job-message-form label,
+.customer-profile-form label {
+  display: grid;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.job-message-form textarea,
+.customer-profile-form input {
+  background: #041421;
+  border: 1px solid #36536b;
+  border-radius: 13px;
+  color: #f7fbff;
+  font: inherit;
+  min-height: 50px;
+  padding: 13px 14px;
+  width: 100%;
+}
+
+.job-message-form textarea:focus,
+.customer-profile-form input:focus {
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.18);
+  outline: none;
+}
+
+.job-message-form > small,
+.customer-profile-form small {
+  color: #91a4b4;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.customer-settings-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.customer-profile-form {
+  display: grid;
+  gap: 16px;
+  max-width: 680px;
+}
+
+.customer-profile-form input:disabled {
+  color: #91a4b4;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.customer-security-note {
+  background: #07182d;
+  border: 1px solid #29475f;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.customer-security-note p {
+  margin: 6px 0 0;
+}
+
+.saved-provider-panel {
+  display: grid;
+  gap: 24px;
+}
+
+.saved-provider-panel > section {
+  display: grid;
+  gap: 14px;
+}
+
+.saved-provider-panel h3 {
+  margin: 0;
+}
+
+.saved-provider-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.saved-provider-grid article {
+  background: #07182d;
+  border: 1px solid #29475f;
+  border-radius: 16px;
+  display: grid;
+  gap: 10px;
+  padding: 17px;
+}
+
+.saved-provider-grid article p {
+  margin: 0;
+}
+
+.saved-provider-grid article > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .job-messages-panel,
+  .customer-settings-panel,
+  .saved-provider-panel {
+    border-radius: 16px;
+    padding: 15px;
+  }
+
+  .job-messages-heading,
+  .job-message-thread > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .job-messages-heading .button {
+    width: 100%;
+  }
+
+  .job-messages-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .job-message-threads {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .job-message-threads button {
+    flex: 0 0 min(82vw, 260px);
+  }
+
+  .job-message-list article {
+    max-width: 92%;
+  }
+
+  .saved-provider-grid {
+    grid-template-columns: 1fr;
+  }
+}
