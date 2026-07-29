@@ -460,6 +460,10 @@ test("customer and provider pages keep role-specific actions separate", async ()
     new URL("../app/provider-jobs/page.tsx", import.meta.url),
     "utf8",
   );
+  const providerBusinessSource = await readFile(
+    new URL("../app/components/provider-business-page.tsx", import.meta.url),
+    "utf8",
+  );
   const accountApiSource = await readFile(
     new URL("../app/api/account/route.ts", import.meta.url),
     "utf8",
@@ -486,8 +490,15 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(providerSource.includes("Submitted quotes"));
   assert.ok(providerSource.includes('onClick={() => setActiveView("earnings")}'));
   assert.ok(providerSource.includes("Private totals"));
-  assert.ok(providerSource.includes("Earnings & hours"));
+  assert.ok(providerSource.includes("Job value & hours"));
+  assert.ok(providerSource.includes("not a Stripe payout or transfer status"));
+  assert.ok(providerSource.includes("const workspaceReady = !loading && provider !== null;"));
+  assert.ok(!providerSource.includes("!loading && !error"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
+  assert.ok(providerBusinessSource.includes("Business tools could not load."));
+  assert.ok(providerBusinessSource.includes("Try again"));
+  assert.ok(providerBusinessSource.includes("provider-selected work photos"));
+  assert.ok(!providerBusinessSource.includes("real work photos"));
   assert.ok(providerSource.includes("Available jobs"));
   assert.ok(providerSource.includes("Business profile"));
   assert.ok(customerSource.includes("customer-workspace-nav"));
