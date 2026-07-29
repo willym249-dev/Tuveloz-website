@@ -131,6 +131,11 @@ export async function recordPaidCheckoutSession(
   }).where(eq(stripePayments.id, payment.id));
 }
 
+const CHECKOUT_FAILURE_MUTABLE_STATUSES = new Set([
+  "checkout_creating",
+  "checkout_open",
+]);
+
 export async function recordCheckoutSessionStatus(
   session: Stripe.Checkout.Session,
   status: "checkout_expired" | "payment_failed",
@@ -138,10 +143,30 @@ export async function recordCheckoutSessionStatus(
   const paymentRecordId = session.metadata?.tuveloz_payment_record_id ?? "";
   if (!paymentRecordId) return;
 
+  const [payment] = await getDb().select({
+    id: stripePayments.id,
+    status: stripePayments.status,
+  }).from(stripePayments)
+    .where(eq(stripePayments.id, paymentRecordId))
+    .limit(1);
+  if (!payment) return;
+
+  // Stripe may deliver webhooks more than once or out of order. An old
+  // expiration/failure event must never replace a successful, refunded, or
+  // disputed payment state.
+  if (!CHECKOUT_FAILURE_MUTABLE_STATUSES.has(payment.status)) {
+    console.warn("Ignoring a late Checkout failure status", {
+      paymentRecordId,
+      currentStatus: payment.status,
+      ignoredStatus: status,
+    });
+    return;
+  }
+
   await getDb().update(stripePayments).set({
     status,
     updatedAt: new Date().toISOString(),
-  }).where(eq(stripePayments.id, paymentRecordId));
+  }).where(eq(stripePayments.id, payment.id));
 }
 
 async function paymentForStripeObject(

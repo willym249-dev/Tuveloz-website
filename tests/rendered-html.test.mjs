@@ -690,6 +690,8 @@ test("Stripe webhooks quarantine refunds and disputes before provider release", 
   assert.ok(webhookSource.includes('case "charge.dispute.closed"'));
   assert.ok(paymentSource.includes("recordRefundedCharge"));
   assert.ok(paymentSource.includes("recordDisputeStatus"));
+  assert.ok(paymentSource.includes("CHECKOUT_FAILURE_MUTABLE_STATUSES"));
+  assert.ok(paymentSource.includes("Ignoring a late Checkout failure status"));
   assert.ok(checkoutSource.includes("REVIEW_PAYMENT_STATUSES"));
   assert.ok(releaseSource.includes("payment.refundAmountCents > 0"));
   assert.ok(releaseSource.includes("charge.amount_refunded > 0"));
@@ -1028,6 +1030,9 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(paymentSource.includes("accountCredentials"));
   assert.ok(paymentSource.includes("customerProfiles"));
   assert.ok(paymentSource.includes("customerHasAccount"));
+  assert.ok(paymentSource.includes("lower(${accountCredentials.email})"));
+  assert.ok(paymentSource.includes("lower(${customerProfiles.email})"));
+  assert.ok(paymentSource.includes("lower(${stripePayments.customerEmail})"));
   assert.ok(paymentUiSource.includes("Customer contact:"));
   assert.ok(paymentUiSource.includes("Tuveloz account:"));
   assert.ok(paymentUiSource.includes("No matching sign-in account"));
