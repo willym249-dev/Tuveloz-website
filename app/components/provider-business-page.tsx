@@ -90,7 +90,9 @@ function initials(value: string) {
     .join("") || "TV";
 }
 
-export function ProviderBusinessPage() {
+type ProviderBusinessFocus = "profile" | "reviews" | "performance";
+
+export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBusinessFocus }) {
   const [data, setData] = useState<ProfileResponse | null>(null);
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [loading, setLoading] = useState(true);
@@ -253,7 +255,12 @@ export function ProviderBusinessPage() {
   }
 
   if (loading) {
-    return <section className="provider-business-page" id="business-page"><p className="admin-note">Loading your business page…</p></section>;
+    const loadingLabel = focus === "reviews"
+      ? "Loading verified reviews…"
+      : focus === "performance"
+        ? "Loading private performance tools…"
+        : "Loading your business profile…";
+    return <section className="provider-business-page" id="business-page"><p className="admin-note">{loadingLabel}</p></section>;
   }
   if (!data) return null;
 
@@ -265,6 +272,8 @@ export function ProviderBusinessPage() {
     : "";
   return (
     <section className="provider-business-page" id="business-page">
+      {focus === "profile" && (
+        <>
       <div className="business-page-heading">
         <div>
           <span className="kicker">Digital Garage</span>
@@ -637,7 +646,10 @@ export function ProviderBusinessPage() {
           </section>
         </aside>
       </div>
+        </>
+      )}
 
+      {focus === "reviews" && (
       <section className="storefront-section provider-private-reviews" id="provider-reviews">
         <div className="storefront-section-heading">
           <div><span className="kicker">Reviews</span><h2>Verified customer feedback</h2></div>
@@ -668,7 +680,10 @@ export function ProviderBusinessPage() {
           </div>
         )}
       </section>
+      )}
 
+      {focus === "performance" && (
+        <>
       <section className="provider-health" id="provider-performance">
         <div className="provider-health-score">
           <span className="kicker">Private coaching</span>
@@ -759,7 +774,10 @@ export function ProviderBusinessPage() {
           )}
         </div>
       </section>
+        </>
+      )}
 
+      {focus === "profile" && (
       <div className="business-page-footer">
         <p>Approved services and verified completed-job reviews are added automatically. Your email and exact addresses are never shown here.</p>
         {profile.publicStatus === "published" ? (
@@ -774,9 +792,10 @@ export function ProviderBusinessPage() {
           </div>
         ) : <span>Save the draft to create a private preview.</span>}
       </div>
+      )}
       {error && <p className="form-error business-page-message">{error}</p>}
       {notice && <p className="portal-success business-page-message">{notice}</p>}
-      {activeQrSlug && qrDataUrl && (
+      {focus === "profile" && activeQrSlug && qrDataUrl && (
         <div className="provider-card-print-sheet" aria-hidden="true">
           {printableCardSlots.map((slot) => (
             <article className="provider-business-card" key={slot}>
