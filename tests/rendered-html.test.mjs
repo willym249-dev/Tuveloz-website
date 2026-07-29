@@ -294,6 +294,108 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(authSource.includes('{ name: "HMAC", hash: "SHA-256" }'));
 });
 
+test("passkeys are optional, verified on the server, and never store biometric data", async () => {
+  const [
+    accountSource,
+    authSource,
+    passkeySource,
+    schemaSource,
+    migrationSource,
+    registerOptionsSource,
+    registerVerifySource,
+    authenticationOptionsSource,
+    authenticationVerifySource,
+  ] = await Promise.all([
+    readFile(new URL("../app/account/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/account-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/passkeys.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../drizzle/0026_ordinary_thunderbolts.sql", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../app/api/auth/passkeys/register/options/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../app/api/auth/passkeys/register/verify/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../app/api/auth/passkeys/authenticate/options/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+    readFile(
+      new URL(
+        "../app/api/auth/passkeys/authenticate/verify/route.ts",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ]);
+
+  assert.ok(accountSource.includes("Use a passkey"));
+  assert.ok(accountSource.includes("Set up a passkey"));
+  assert.ok(accountSource.includes("Not now"));
+  assert.ok(accountSource.includes("not your face or fingerprint"));
+  assert.ok(accountSource.includes("password manager may securely sync the passkey"));
+  assert.ok(accountSource.includes("platformAuthenticatorIsAvailable"));
+
+  assert.ok(passkeySource.includes("generateRegistrationOptions"));
+  assert.ok(passkeySource.includes("verifyRegistrationResponse"));
+  assert.ok(passkeySource.includes("generateAuthenticationOptions"));
+  assert.ok(passkeySource.includes("verifyAuthenticationResponse"));
+  assert.ok(passkeySource.includes('userVerification: "required"'));
+  assert.ok(passkeySource.includes("requireUserVerification: true"));
+  assert.ok(passkeySource.includes('residentKey: "required"'));
+  assert.ok(passkeySource.includes('attestationType: "none"'));
+  assert.ok(passkeySource.includes("getAccountSession(request)"));
+  assert.ok(passkeySource.includes("createAccountSession"));
+  assert.ok(passkeySource.includes("credential.publicKey"));
+  assert.ok(!passkeySource.includes("faceData"));
+  assert.ok(!passkeySource.includes("fingerprintData"));
+
+  for (const routeSource of [
+    registerOptionsSource,
+    registerVerifySource,
+    authenticationOptionsSource,
+    authenticationVerifySource,
+  ]) {
+    assert.ok(routeSource.includes("isSameOriginRequest(request)"));
+    assert.ok(routeSource.includes('"cache-control": "no-store"'));
+  }
+  assert.ok(registerOptionsSource.includes("Sign in before setting up a passkey."));
+  assert.ok(authenticationVerifySource.includes("finishPasskeyAuthentication"));
+  assert.ok(authenticationVerifySource.includes("sessionCookie"));
+  assert.ok(
+    authenticationVerifySource.indexOf("finishPasskeyAuthentication")
+      < authenticationVerifySource.indexOf("sessionCookie"),
+  );
+  assert.ok(!authenticationOptionsSource.includes("sessionCookie"));
+  assert.ok(!registerOptionsSource.includes("sessionCookie"));
+  assert.ok(!registerVerifySource.includes("sessionCookie"));
+
+  assert.ok(authSource.includes("export async function createAccountSession"));
+  assert.ok(schemaSource.includes('export const passkeyCredentials = sqliteTable'));
+  assert.ok(schemaSource.includes('"public_key"'));
+  assert.ok(schemaSource.includes('"counter"'));
+  assert.ok(schemaSource.includes('"transports"'));
+  assert.ok(migrationSource.includes("CREATE TABLE `passkey_credentials`"));
+  assert.ok(
+    migrationSource.includes("passkey_credentials_email_role_idx"),
+  );
+});
+
 test("build records policy consent and publishes legal, privacy, payment, and security controls", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
