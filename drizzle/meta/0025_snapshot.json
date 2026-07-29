@@ -206,22 +206,6 @@
           "autoincrement": false,
           "default": "''"
         },
-        "phone": {
-          "name": "phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "email_notifications": {
-          "name": "email_notifications",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'important'"
-        },
         "created_at": {
           "name": "created_at",
           "type": "text",
