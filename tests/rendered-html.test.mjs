@@ -582,3 +582,29 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   assert.ok(adminSource.includes('window.location.replace("/")'));
   assert.ok(adminSource.includes("if (!accessGranted && !error) return null;"));
 });
+
+test("customer payment history is private and uses stored payment facts", async () => {
+  const customerSource = await readFile(
+    new URL("../app/customer/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const accountSource = await readFile(
+    new URL("../app/api/account/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(customerSource.includes('setActiveView("payments")'));
+  assert.ok(customerSource.includes("Customer account:"));
+  assert.ok(customerSource.includes("account.payments.map"));
+  assert.ok(customerSource.includes("Provider subtotal:"));
+  assert.ok(customerSource.includes("Tuveloz fee:"));
+  assert.ok(customerSource.includes("Refund recorded:"));
+  assert.ok(customerSource.includes("Dispute status:"));
+  assert.ok(customerSource.includes('href="/payments"'));
+  assert.ok(accountSource.includes("stripePayments.customerEmail"));
+  assert.ok(accountSource.includes("session.email.toLowerCase()"));
+  assert.ok(accountSource.includes("customerTotalCents: stripePayments.customerTotalCents"));
+  assert.ok(accountSource.includes("refundAmountCents: stripePayments.refundAmountCents"));
+  assert.ok(accountSource.includes("disputeStatus: stripePayments.disputeStatus"));
+  assert.ok(accountSource.includes("payments,"));
+});
