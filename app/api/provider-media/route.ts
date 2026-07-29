@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   providerApplications,
@@ -6,26 +6,13 @@ import {
   providerProfiles,
 } from "../../../db/schema";
 import { getProviderImage } from "../../../lib/provider-media";
+import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 
-async function providerCanReadPrivateMedia(providerId: string, token: string) {
-  if (!token) return false;
-  const [provider] = await getDb().select({
-    id: providerApplications.id,
-    status: providerApplications.status,
-    verificationStatus: providerApplications.verificationStatus,
-    isTestProvider: providerApplications.isTestProvider,
-  }).from(providerApplications).where(and(
-    eq(providerApplications.id, providerId),
-    eq(providerApplications.accessToken, token),
-  )).limit(1);
-  return Boolean(
-    provider
-    && provider.status === "approved"
-    && (
-      provider.isTestProvider === "yes"
-      || provider.verificationStatus === "verified"
-    ),
-  );
+async function providerCanReadPrivateMedia(request: Request, providerId: string) {
+  const session = await getAccountSession(request);
+  if (!session || session.role !== "provider") return false;
+  const provider = await providerAccountFor(session.email);
+  return provider?.id === providerId;
 }
 
 async function providerIsPublic(providerId: string) {
@@ -52,7 +39,6 @@ async function providerIsPublic(providerId: string) {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const token = url.searchParams.get("token") ?? "";
   const galleryId = url.searchParams.get("galleryId") ?? "";
   const profileId = url.searchParams.get("profileId") ?? "";
   let providerId = "";
@@ -82,10 +68,15 @@ export async function GET(request: Request) {
   if (!providerId || !key) {
     return Response.json({ error: "Provider image not found." }, { status: 404 });
   }
-  const allowed = await providerIsPublic(providerId)
-    || await providerCanReadPrivateMedia(providerId, token);
-  if (!allowed) {
-    return Response.json({ error: "Provider image access required." }, { status: 403 });
+  const publicAccess = await providerIsPublic(providerId);
+  const privateAccess = publicAccess
+    ? false
+    : await providerCanReadPrivateMedia(request, providerId);
+  if (!publicAccess && !privateAccess) {
+    return Response.json(
+      { error: "Provider image access required." },
+      { status: 403, headers: { "cache-control": "no-store" } },
+    );
   }
   const image = await getProviderImage(key);
   if (!image) {
@@ -93,7 +84,7 @@ export async function GET(request: Request) {
   }
   return new Response(image.body, {
     headers: {
-      "cache-control": token ? "private, no-store" : "public, max-age=300",
+      "cache-control": publicAccess ? "public, max-age=300" : "private, no-store",
       "content-type": image.httpMetadata?.contentType || contentType || "application/octet-stream",
       "content-disposition": "inline",
       "x-content-type-options": "nosniff",
