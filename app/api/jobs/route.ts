@@ -209,7 +209,7 @@ export async function GET(request: Request) {
       submittedQuote: quoteByRequestId.get(job.id) ?? null,
       issueImageKey: undefined,
     })),
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }
 
 export async function POST(request: Request) {
