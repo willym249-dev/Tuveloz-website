@@ -24,7 +24,7 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 26);
+  assert.equal(journal.entries.length, 27);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
@@ -378,8 +378,12 @@ test("passkeys are optional, verified on the server, and never store biometric d
   assert.ok(authenticationVerifySource.includes("finishPasskeyAuthentication"));
   assert.ok(authenticationVerifySource.includes("sessionCookie"));
   assert.ok(
-    authenticationVerifySource.indexOf("finishPasskeyAuthentication")
-      < authenticationVerifySource.indexOf("sessionCookie"),
+    authenticationVerifySource.indexOf(
+      "const result = await finishPasskeyAuthentication",
+    )
+      < authenticationVerifySource.indexOf(
+        "sessionCookie(request, result.token)",
+      ),
   );
   assert.ok(!authenticationOptionsSource.includes("sessionCookie"));
   assert.ok(!registerOptionsSource.includes("sessionCookie"));
