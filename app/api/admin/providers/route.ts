@@ -1,6 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { providerApplications } from "../../../../db/schema";
+import {
+  providerApplications,
+  providerCredentialVerifications,
+} from "../../../../db/schema";
 import {
   parseProviderAreas,
   parseProviderServices,
@@ -14,6 +17,14 @@ import {
   parseProviderSelfAssessment,
   providerAreasHaveReviewedCompliance,
 } from "../../../../lib/provider-compliance";
+import {
+  PROVIDER_CREDENTIAL_METHODS,
+  PROVIDER_CREDENTIAL_STATUSES,
+  requiredProviderCredentialRequirements,
+  unmetProviderCredentialRequirements,
+  type ProviderCredentialMethod,
+  type ProviderCredentialStatus,
+} from "../../../../lib/provider-credentials";
 import { isSameOriginRequest } from "../../../../lib/account-auth";
 import {
   getAuthenticatedEmail,
@@ -53,6 +64,10 @@ function cleanChecklist(value: unknown) {
   ) as VerificationChecklist;
 }
 
+function clean(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
 function requiredChecklistKeys(services: string[], serviceArea: string) {
   const requirements = getProviderLegalRequirementFlags(services, serviceArea);
   const keys: ChecklistKey[] = [];
@@ -85,6 +100,14 @@ export async function POST(request: Request) {
     status?: string;
     checklist?: unknown;
     approvedServices?: unknown;
+    credential?: {
+      requirementKey?: unknown;
+      credentialIdentifier?: unknown;
+      status?: unknown;
+      verificationMethod?: unknown;
+      expiresAt?: unknown;
+      notes?: unknown;
+    };
   };
   if (!body.id) {
     return Response.json({ error: "Invalid provider update." }, { status: 400 });
@@ -138,6 +161,119 @@ export async function POST(request: Request) {
     });
   }
 
+  if (body.action === "save-credential") {
+    if (provider.status === "declined" || provider.isTestProvider === "yes") {
+      return Response.json({
+        error: "Credential checks are available only for real provider applications.",
+      }, { status: 409 });
+    }
+
+    const approvedServices = parseProviderServices(provider.approvedServices);
+    if (approvedServices.length === 0) {
+      return Response.json({
+        error: "Save the services approved for review before recording a credential check.",
+      }, { status: 409 });
+    }
+
+    const assessment = parseProviderSelfAssessment(provider.providerSelfAssessment);
+    const requirements = requiredProviderCredentialRequirements(
+      approvedServices,
+      provider.serviceArea,
+      assessment,
+    );
+    const credentialInput = body.credential ?? {};
+    const requirementKey = clean(credentialInput.requirementKey, 120);
+    const requirement = requirements.find((item) => item.key === requirementKey);
+    if (!requirement) {
+      return Response.json({
+        error: "That government credential is not legally triggered by the saved services and service area.",
+      }, { status: 409 });
+    }
+
+    const statusInput = clean(credentialInput.status, 60);
+    if (!PROVIDER_CREDENTIAL_STATUSES.includes(
+      statusInput as ProviderCredentialStatus,
+    )) {
+      return Response.json({ error: "Choose a valid credential status." }, { status: 400 });
+    }
+    const verificationMethodInput = clean(credentialInput.verificationMethod, 80);
+    if (!PROVIDER_CREDENTIAL_METHODS.includes(
+      verificationMethodInput as ProviderCredentialMethod,
+    )) {
+      return Response.json({ error: "Choose a valid official verification method." }, { status: 400 });
+    }
+
+    const status = statusInput as ProviderCredentialStatus;
+    const verificationMethod = verificationMethodInput as ProviderCredentialMethod;
+    const credentialIdentifier = clean(credentialInput.credentialIdentifier, 180);
+    const expiresAt = clean(credentialInput.expiresAt, 10);
+    const notes = clean(credentialInput.notes, 600);
+    if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
+      return Response.json({ error: "Use a valid credential expiration date." }, { status: 400 });
+    }
+    if (status === "verified" && !credentialIdentifier) {
+      return Response.json({
+        error: "Enter the exact official listing name or credential number before marking this record verified.",
+      }, { status: 400 });
+    }
+    if (
+      status === "verified"
+      && expiresAt
+      && Date.parse(expiresAt + "T23:59:59.999Z") < Date.now()
+    ) {
+      return Response.json({
+        error: "An expired credential cannot be marked verified.",
+      }, { status: 409 });
+    }
+
+    const now = new Date().toISOString();
+    const checkedAt = status === "verified" ? now : "";
+    const verifiedBy = status === "verified" ? email : "";
+    const [existing] = await db.select()
+      .from(providerCredentialVerifications)
+      .where(and(
+        eq(providerCredentialVerifications.providerId, provider.id),
+        eq(providerCredentialVerifications.requirementKey, requirement.key),
+      ))
+      .limit(1);
+    const values = {
+      requirementLabel: requirement.label,
+      jurisdiction: requirement.jurisdiction,
+      credentialIdentifier,
+      issuingAuthority: requirement.issuingAuthority,
+      legalBasisUrl: requirement.legalBasisUrl,
+      officialLookupUrl: requirement.officialLookupUrl,
+      status,
+      verificationMethod,
+      checkedAt,
+      expiresAt,
+      verifiedBy,
+      notes,
+      updatedAt: now,
+    };
+
+    if (existing) {
+      await db.update(providerCredentialVerifications).set(values)
+        .where(eq(providerCredentialVerifications.id, existing.id));
+    } else {
+      await db.insert(providerCredentialVerifications).values({
+        id: crypto.randomUUID(),
+        providerId: provider.id,
+        requirementKey: requirement.key,
+        ...values,
+      });
+    }
+
+    const [credential] = await db.select()
+      .from(providerCredentialVerifications)
+      .where(and(
+        eq(providerCredentialVerifications.providerId, provider.id),
+        eq(providerCredentialVerifications.requirementKey, requirement.key),
+      ))
+      .limit(1);
+    return Response.json({ ok: true, credential });
+  }
+
   if (body.action === "mark-test") {
     if (provider.status === "declined") {
       return Response.json({ error: "A declined provider cannot receive test access." }, { status: 409 });
@@ -177,6 +313,27 @@ export async function POST(request: Request) {
     if (requiredKeys.some((key) => !checklist[key])) {
       return Response.json({ error: "Complete and save every required legal check before verification." }, { status: 409 });
     }
+    const assessment = parseProviderSelfAssessment(provider.providerSelfAssessment);
+    const credentialRequirements = requiredProviderCredentialRequirements(
+      approvedServices,
+      provider.serviceArea,
+      assessment,
+    );
+    const credentialRecords = await db.select()
+      .from(providerCredentialVerifications)
+      .where(eq(providerCredentialVerifications.providerId, provider.id));
+    const unmetCredentials = unmetProviderCredentialRequirements(
+      credentialRequirements,
+      credentialRecords,
+    );
+    if (unmetCredentials.length > 0) {
+      return Response.json({
+        error: `Official credential check required before activation: ${unmetCredentials
+          .map((requirement) => requirement.label)
+          .join("; ")}.`,
+      }, { status: 409 });
+    }
+
     const normalizedAreas = parseProviderAreas(provider.serviceArea);
     if (
       normalizedAreas.length === 0
