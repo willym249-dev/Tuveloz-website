@@ -289,7 +289,7 @@ export async function eligibleAccountRoles(email: string): Promise<AccountRole[]
   return roles;
 }
 
-async function createAccountSession(email: string, role: AccountRole) {
+export async function createAccountSession(email: string, role: AccountRole) {
   const roles = await eligibleAccountRoles(email);
   if (!roles.includes(role)) return null;
 
