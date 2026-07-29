@@ -2043,6 +2043,10 @@ footer > p {
     grid-template-columns: 1fr;
   }
 
+  .vehicle-extra-details .vehicle-fields {
+    grid-template-columns: 1fr;
+  }
+
   .vin-input-row {
     grid-template-columns: 1fr;
   }
