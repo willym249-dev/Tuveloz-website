@@ -66,12 +66,32 @@ export async function GET(request: Request) {
     provider.isTestProvider,
   );
   const submittedQuotes = await getDb()
-    .select({ requestId: providerQuotes.requestId })
+    .select({
+      requestId: providerQuotes.requestId,
+      vehicle: customerRequests.vehicle,
+      service: customerRequests.service,
+      zip: customerRequests.zip,
+      launchArea: customerRequests.launchArea,
+      municipality: customerRequests.municipality,
+      requestStatus: customerRequests.status,
+      priceCents: providerQuotes.priceCents,
+      laborPriceCents: providerQuotes.laborPriceCents,
+      partsPriceCents: providerQuotes.partsPriceCents,
+      customerTotalCents: providerQuotes.customerTotalCents,
+      partType: providerQuotes.partType,
+      availability: providerQuotes.availability,
+      message: providerQuotes.message,
+      status: providerQuotes.status,
+      createdAt: providerQuotes.createdAt,
+    })
     .from(providerQuotes)
-    .where(eq(providerQuotes.providerEmail, provider.email));
-  const quotedRequestIds = new Set(
-    submittedQuotes.map((quote) => quote.requestId),
+    .innerJoin(customerRequests, eq(providerQuotes.requestId, customerRequests.id))
+    .where(eq(providerQuotes.providerEmail, provider.email))
+    .orderBy(desc(providerQuotes.createdAt));
+  const quoteByRequestId = new Map(
+    submittedQuotes.map((quote) => [quote.requestId, quote]),
   );
+  const quotedRequestIds = new Set(quoteByRequestId.keys());
 
   const jobs = await getDb()
     .select({
@@ -151,6 +171,7 @@ export async function GET(request: Request) {
       verified: provider.verificationStatus === "verified",
       testProvider: provider.isTestProvider === "yes",
     },
+    myQuotes: submittedQuotes,
     assignedJobs: assignedJobs.filter(
       (job) => (provider.isTestProvider === "yes") === (job.isTestJob === "yes"),
     ).map((job) => {
@@ -185,9 +206,10 @@ export async function GET(request: Request) {
       preferredProviderEmail: undefined,
       hasIssueImage: Boolean(job.issueImageKey),
       quoteSubmitted: quotedRequestIds.has(job.id),
+      submittedQuote: quoteByRequestId.get(job.id) ?? null,
       issueImageKey: undefined,
     })),
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }
 
 export async function POST(request: Request) {

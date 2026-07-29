@@ -359,7 +359,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!customerSource.includes("Open Jobs"));
   assert.ok(!customerSource.includes("Provider sign in"));
   assert.ok(providerSource.includes("Yes, submit quote"));
-  assert.ok(providerSource.includes("Open jobs"));
+  assert.ok(providerSource.includes("Submitted quotes"));
   assert.ok(providerSource.includes("Payments and business page"));
   assert.ok(providerSource.includes("History and private totals"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
@@ -607,4 +607,38 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(accountSource.includes("refundAmountCents: stripePayments.refundAmountCents"));
   assert.ok(accountSource.includes("disputeStatus: stripePayments.disputeStatus"));
   assert.ok(accountSource.includes("payments,"));
+});
+
+test("provider dashboard exposes only provider-owned factual tools", async () => {
+  const providerSource = await readFile(
+    new URL("../app/provider-jobs/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const jobsApiSource = await readFile(
+    new URL("../app/api/jobs/route.ts", import.meta.url),
+    "utf8",
+  );
+  const businessSource = await readFile(
+    new URL("../app/components/provider-business-page.tsx", import.meta.url),
+    "utf8",
+  );
+  const profileApiSource = await readFile(
+    new URL("../app/api/provider-profile/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(providerSource.includes("Accepted-job availability"));
+  assert.ok(providerSource.includes("Only quotes submitted from this provider account appear here."));
+  assert.ok(providerSource.includes("Customer sees"));
+  assert.ok(providerSource.includes('href="#provider-schedule"'));
+  assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-reviews")'));
+  assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-performance")'));
+  assert.ok(!providerSource.includes(">Messages</a>"));
+  assert.ok(jobsApiSource.includes("myQuotes: submittedQuotes"));
+  assert.ok(jobsApiSource.includes("eq(providerQuotes.providerEmail, provider.email)"));
+  assert.ok(jobsApiSource.includes('"cache-control": "no-store"'));
+  assert.ok(businessSource.includes("Verified customer feedback"));
+  assert.ok(businessSource.includes("Only feedback from completed Tuveloz jobs appears here."));
+  assert.ok(profileApiSource.includes('eq(jobReviews.status, "published")'));
+  assert.ok(profileApiSource.includes('"cache-control": "no-store"'));
 });
