@@ -271,7 +271,21 @@ export async function POST(request: Request) {
         eq(providerCredentialVerifications.requirementKey, requirement.key),
       ))
       .limit(1);
-    return Response.json({ ok: true, credential });
+
+    if (status !== "verified") {
+      await db.update(providerApplications).set({
+        verificationStatus: "in review",
+        verifiedAt: "",
+        verifiedBy: "",
+        alertsEnabled: "no",
+      }).where(eq(providerApplications.id, provider.id));
+    }
+
+    return Response.json({
+      ok: true,
+      credential,
+      providerSuspended: status !== "verified",
+    });
   }
 
   if (body.action === "mark-test") {
