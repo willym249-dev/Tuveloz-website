@@ -9,7 +9,8 @@ type Role = "customer" | "provider";
 type AuthMode = "signin" | "create" | "reset" | "code";
 type PasswordPurpose = "create" | "reset";
 
-const PASSWORD_MIN_LENGTH = 15;
+const PASSWORD_MIN_LENGTH = 10;
+const REMEMBERED_EMAIL_KEY = "tuveloz.remembered-email";
 
 export default function AccountPage() {
   const [role, setRole] = useState<Role>("customer");
@@ -20,12 +21,23 @@ export default function AccountPage() {
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [code, setCode] = useState("");
   const [codeRequested, setCodeRequested] = useState(false);
+  const [passwordChallengeRequested, setPasswordChallengeRequested] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    try {
+      const rememberedEmail = window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (rememberedEmail) {
+        setEmail(rememberedEmail);
+        setRememberEmail(true);
+      }
+    } catch {
+      // Sign-in still works when this browser blocks local storage.
+    }
     const requestedRole = new URLSearchParams(window.location.search).get("role");
     if (requestedRole === "provider" || requestedRole === "customer") {
       Promise.resolve().then(() => setRole(requestedRole));
@@ -46,6 +58,7 @@ export default function AccountPage() {
   function clearFlowMessages() {
     setCode("");
     setCodeRequested(false);
+    setPasswordChallengeRequested(false);
     setMessage("");
     setError("");
   }
@@ -66,12 +79,33 @@ export default function AccountPage() {
     clearFlowMessages();
   }
 
+  function rememberCurrentEmail() {
+    try {
+      if (rememberEmail) {
+        window.localStorage.setItem(
+          REMEMBERED_EMAIL_KEY,
+          email.trim().toLowerCase(),
+        );
+      } else {
+        window.localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+      }
+    } catch {
+      // Remembering the email is optional and never blocks sign-in.
+    }
+  }
+
   function passwordError() {
     if (Array.from(password).length < PASSWORD_MIN_LENGTH) {
       return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
     }
     if (Array.from(password).length > 128) {
       return "Use no more than 128 characters.";
+    }
+    if (!/\p{Lu}/u.test(password)) {
+      return "Add at least one uppercase letter.";
+    }
+    if (!/[^\p{L}\p{N}\s]/u.test(password)) {
+      return "Add at least one special character.";
     }
     if (password !== confirmPassword) {
       return "The passwords do not match.";
@@ -91,11 +125,43 @@ export default function AccountPage() {
         body: JSON.stringify({ email, role, password }),
       });
       const result = (await response.json()) as {
+        challengeRequired?: boolean;
+        error?: string;
+        message?: string;
+      };
+      if (!response.ok || !result.challengeRequired) {
+        setError(result.error || "Unable to sign in.");
+        return;
+      }
+      rememberCurrentEmail();
+      setCode("");
+      setPasswordChallengeRequested(true);
+      setMessage(
+        result.message || "Enter the code sent to your email to finish signing in.",
+      );
+    } catch {
+      setError("Sign-in is temporarily unavailable. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyPasswordSignIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/password/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code, email, role }),
+      });
+      const result = (await response.json()) as {
         destination?: string;
         error?: string;
       };
       if (!response.ok || !result.destination) {
-        setError(result.error || "Unable to sign in.");
+        setError(result.error || "Unable to verify this code.");
         return;
       }
       window.location.replace(result.destination);
@@ -131,6 +197,7 @@ export default function AccountPage() {
         setError(result.error || "Unable to send a verification code.");
         return;
       }
+      rememberCurrentEmail();
       setCodeRequested(true);
       setMessage(
         result.message || "Check your email for a verification code.",
@@ -195,6 +262,7 @@ export default function AccountPage() {
         setError(result.error || "Unable to send a sign-in code.");
         return;
       }
+      rememberCurrentEmail();
       setCodeRequested(true);
       setMessage(result.message || "Check your email for a sign-in code.");
     } catch {
@@ -316,12 +384,12 @@ export default function AccountPage() {
             </button>
           </div>
 
-          {mode === "signin" && (
+          {mode === "signin" && !passwordChallengeRequested && (
             <form className="account-login-form" onSubmit={signInWithPassword}>
               <label>
                 Email address
                 <input
-                  autoComplete="username"
+                  autoComplete="username webauthn"
                   disabled={checking || busy}
                   name="email"
                   onChange={(event) => setEmail(event.target.value)}
@@ -343,6 +411,18 @@ export default function AccountPage() {
                   value={password}
                 />
               </label>
+              <label className="account-remember-email">
+                <input
+                  checked={rememberEmail}
+                  disabled={busy}
+                  onChange={(event) => setRememberEmail(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>Remember my email on this device</span>
+              </label>
+              <small className="account-remember-note">
+                Tuveloz never saves your password in this browser.
+              </small>
               <div className="account-form-links">
                 <button
                   className="account-text-button"
@@ -363,6 +443,41 @@ export default function AccountPage() {
                 type="button"
               >
                 Email me a one-time code instead
+              </button>
+            </form>
+          )}
+
+          {mode === "signin" && passwordChallengeRequested && (
+            <form className="account-login-form" onSubmit={verifyPasswordSignIn}>
+              <label>
+                6-digit verification code
+                <input
+                  autoComplete="one-time-code"
+                  autoFocus
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  required
+                  value={code}
+                />
+              </label>
+              <button className="button primary" disabled={busy || code.length !== 6} type="submit">
+                {busy ? "Verifying…" : "Finish sign in"}
+              </button>
+              <button
+                className="account-text-button"
+                disabled={busy}
+                onClick={() => {
+                  setPasswordChallengeRequested(false);
+                  setCode("");
+                  setMessage("");
+                  setError("");
+                }}
+                type="button"
+              >
+                Start over
               </button>
             </form>
           )}
@@ -407,9 +522,8 @@ export default function AccountPage() {
                 />
               </label>
               <small className="account-password-guidance">
-                We know 15 characters can feel long. We ask for a longer password to
-                help keep your account, personal information, and job details safe.
-                Spaces are allowed.
+                Use at least 10 characters, including one uppercase letter and one
+                special character. Spaces are allowed.
               </small>
               {mode === "create" && (
                 <label className="policy-consent">
