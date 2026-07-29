@@ -115,11 +115,6 @@ export default function CustomerPage() {
               <a href="#my-requests">Active jobs</a>
               <a href="#my-requests">Job history</a>
               <Link href="/payments">Payments</Link>
-              <details>
-                <summary>More tools</summary>
-                <span>Messages · Saved providers · Profile &amp; settings</span>
-                <small>These focused tools will appear here as Tuveloz grows.</small>
-              </details>
             </nav>
 
             <section className="account-card" id="my-requests">

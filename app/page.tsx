@@ -742,9 +742,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
           <span className="kicker">Built for both sides</span>
-          <h2 id="audience-heading">
-            One marketplace. Clear benefits for customers and providers.
-          </h2>
+          {view === "about" ? (
+            <h1 id="audience-heading">
+              One marketplace. Clear benefits for customers and providers.
+            </h1>
+          ) : (
+            <h2 id="audience-heading">
+              One marketplace. Clear benefits for customers and providers.
+            </h2>
+          )}
           <p>
             Tuveloz keeps customers in control of their vehicle-service
             decisions and independent providers in control of their business.
@@ -897,7 +903,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section request-section" id="request">
         <div className="request-copy">
           <span className="kicker">New and growing</span>
-          <h2>Post your job. We&apos;ll send it to providers who match.</h2>
+          {view === "request" ? (
+            <h1>Post your job. We&apos;ll send it to providers who match.</h1>
+          ) : (
+            <h2>Post your job. We&apos;ll send it to providers who match.</h2>
+          )}
           <p>
             Tuveloz reviews each request before sharing it with eligible local
             providers. Because our network is new, getting a quote may take longer
@@ -1295,11 +1305,19 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="kicker light">
               {providerFormIsSpanish ? "Para proveedores independientes" : "For independent providers"}
             </span>
-            <h2>
-              {providerFormIsSpanish
-                ? "Reciba aprobación. Revise trabajos compatibles. Maneje su negocio a su manera."
-                : "Get approved. Review matching jobs. Run your business your way."}
-            </h2>
+            {view === "provider" ? (
+              <h1>
+                {providerFormIsSpanish
+                  ? "Reciba aprobación. Revise trabajos compatibles. Maneje su negocio a su manera."
+                  : "Get approved. Review matching jobs. Run your business your way."}
+              </h1>
+            ) : (
+              <h2>
+                {providerFormIsSpanish
+                  ? "Reciba aprobación. Revise trabajos compatibles. Maneje su negocio a su manera."
+                  : "Get approved. Review matching jobs. Run your business your way."}
+              </h2>
+            )}
             <p>
               {providerFormIsSpanish
                 ? "Defina su disponibilidad, revise trabajos que coincidan con sus servicios, envíe su precio y gestione el trabajo seleccionado desde un solo lugar. Los mecánicos móviles, operadores de camiones de servicio y proveedores con taller son partes importantes de la red. También puede solicitar funciones que faciliten el manejo y el crecimiento de su negocio."

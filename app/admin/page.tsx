@@ -220,6 +220,7 @@ export default function AdminPage() {
   const [alertStatus, setAlertStatus] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [accessGranted, setAccessGranted] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAdminAction | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [verificationDrafts, setVerificationDrafts] = useState<Record<string, VerificationDraft>>({});
@@ -448,6 +449,10 @@ export default function AdminPage() {
   useEffect(() => {
     fetch("/api/admin")
       .then(async (response) => {
+        if (response.status === 401 || response.status === 403) {
+          window.location.replace("/");
+          return;
+        }
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Unable to load dashboard.");
         setRequests(result.requests);
@@ -463,6 +468,7 @@ export default function AdminPage() {
         setFeedback(result.feedback);
         setExpansion(result.expansion ?? []);
         setQuotes(result.quotes);
+        setAccessGranted(true);
       })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load dashboard."))
       .finally(() => setLoading(false));
@@ -501,6 +507,8 @@ export default function AdminPage() {
   const acceptedFeeCents = quotes
     .filter((quote) => quote.status === "accepted")
     .reduce((total, quote) => total + customerPriceSnapshot(quote).customerFeeCents, 0);
+
+  if (!accessGranted && !error) return null;
 
   return (
     <main className="admin-shell">

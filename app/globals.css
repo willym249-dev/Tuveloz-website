@@ -720,6 +720,7 @@ a {
   max-width: 940px;
 }
 
+.audience-intro h1,
 .audience-intro h2 {
   color: #f7f3ef;
   font-size: clamp(38px, 4.6vw, 62px);
@@ -857,6 +858,7 @@ a {
   color: var(--lime);
 }
 
+.section h1,
 .section h2 {
   font-size: clamp(38px, 4.2vw, 60px);
   letter-spacing: -0.055em;

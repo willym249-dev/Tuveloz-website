@@ -559,3 +559,17 @@ test("Stripe webhooks quarantine refunds and disputes before provider release", 
   assert.ok(releaseSource.includes("charge.amount_refunded > 0"));
   assert.ok(releaseSource.includes("charge.disputed"));
 });
+
+test("focused public pages and private workspaces expose only accurate UI", async () => {
+  const publicSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const customerSource = await readFile(new URL("../app/customer/page.tsx", import.meta.url), "utf8");
+  const adminSource = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
+
+  assert.ok(publicSource.includes('view === "about" ? ('));
+  assert.ok(publicSource.includes('view === "request" ? ('));
+  assert.ok(publicSource.includes('view === "provider" ? ('));
+  assert.ok(!customerSource.includes("<summary>More tools</summary>"));
+  assert.ok(adminSource.includes("response.status === 401 || response.status === 403"));
+  assert.ok(adminSource.includes('window.location.replace("/")'));
+  assert.ok(adminSource.includes("if (!accessGranted && !error) return null;"));
+});
