@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../../../../db";
 import {
   accountCredentials,
@@ -63,11 +63,11 @@ export async function GET(request: Request) {
     )
     .leftJoin(
       accountCredentials,
-      eq(accountCredentials.email, stripePayments.customerEmail),
+      sql`lower(${accountCredentials.email}) = lower(${stripePayments.customerEmail})`,
     )
     .leftJoin(
       customerProfiles,
-      eq(customerProfiles.email, stripePayments.customerEmail),
+      sql`lower(${customerProfiles.email}) = lower(${stripePayments.customerEmail})`,
     )
     .orderBy(desc(stripePayments.createdAt))
     .limit(100);
