@@ -36,6 +36,25 @@ type Job = {
   isTestJob: string;
   repeatCustomer: boolean;
 };
+type ProviderQuote = {
+  requestId: string;
+  vehicle: string;
+  service: string;
+  zip: string;
+  launchArea: string;
+  municipality: string;
+  requestStatus: string;
+  priceCents: string;
+  laborPriceCents: string;
+  partsPriceCents: string;
+  customerTotalCents: string;
+  partType: string;
+  availability: string;
+  message: string;
+  status: string;
+  createdAt: string;
+};
+
 type AssignedJob = Job & {
   customerName: string;
   customerEmail: string;
@@ -137,6 +156,7 @@ function trackedSecondsNow(job: AssignedJob, now: number | null) {
 export default function ProviderJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [assignedJobs, setAssignedJobs] = useState<AssignedJob[]>([]);
+  const [myQuotes, setMyQuotes] = useState<ProviderQuote[]>([]);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [sent, setSent] = useState("");
@@ -183,6 +203,7 @@ export default function ProviderJobsPage() {
         setProviderToken(value);
         setJobs(data.jobs ?? []);
         setAssignedJobs(data.assignedJobs ?? []);
+        setMyQuotes(data.myQuotes ?? []);
         setProvider(data.provider);
       } catch (reason) {
         setError(reason instanceof Error ? reason.message : "Unable to load approved jobs.");
@@ -227,6 +248,13 @@ export default function ProviderJobsPage() {
     if (!response.ok) return setError(result.error || "Unable to submit quote.");
     setError("");
     setSent(pendingQuote.requestId);
+    const refreshedResponse = await fetch(`/api/jobs?token=${encodeURIComponent(providerToken)}`);
+    if (refreshedResponse.ok) {
+      const refreshed = await refreshedResponse.json();
+      setJobs(refreshed.jobs ?? []);
+      setAssignedJobs(refreshed.assignedJobs ?? []);
+      setMyQuotes(refreshed.myQuotes ?? []);
+    }
     setPendingQuote(null);
   }
 
@@ -333,12 +361,15 @@ export default function ProviderJobsPage() {
     window.location.replace("/account?role=provider");
   }
 
-  function openWorkspaceSection(sectionId: "provider-history" | "provider-tools") {
+  function openWorkspaceSection(
+    sectionId: "provider-history" | "provider-tools",
+    targetId: string = sectionId,
+  ) {
     const section = document.getElementById(sectionId);
     if (!(section instanceof HTMLDetailsElement)) return;
     section.open = true;
     window.requestAnimationFrame(() => {
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
@@ -356,6 +387,7 @@ export default function ProviderJobsPage() {
     window.location.replace(result.destination);
   }
 
+  const openJobs = jobs.filter((job) => !job.quoteSubmitted && sent !== job.id);
   const activeJobs = assignedJobs.filter((job) => job.status !== "completed");
   const completedJobs = assignedJobs.filter((job) => job.status === "completed");
   const completedTotalCents = completedJobs.reduce(
@@ -438,30 +470,72 @@ export default function ProviderJobsPage() {
       </section>
       {!loading && !error && (
         <nav className="workspace-nav provider-dashboard-nav" aria-label="Provider dashboard">
-          <a className="workspace-nav-primary" href="#open-jobs"><TuvelozIcon name="open-jobs" />Available jobs <span>{jobs.length}</span></a>
-          <a href="#open-jobs">My quotes</a>
+          <a className="workspace-nav-primary" href="#open-jobs"><TuvelozIcon name="open-jobs" />Available jobs <span>{openJobs.length}</span></a>
+          <a href="#my-quotes">My quotes <span>{myQuotes.length}</span></a>
           <a href="#active-jobs"><TuvelozIcon name="active-job" />Accepted jobs <span>{activeJobs.length}</span></a>
+          <a href="#provider-schedule">Schedule</a>
           <a
-            href="#provider-history"
+            href="#earnings-hours"
             onClick={(event) => {
               event.preventDefault();
-              openWorkspaceSection("provider-history");
+              openWorkspaceSection("provider-history", "earnings-hours");
             }}
           >
             Earnings
           </a>
           <a
-            href="#provider-tools"
+            href="#provider-reviews"
             onClick={(event) => {
               event.preventDefault();
-              openWorkspaceSection("provider-tools");
+              openWorkspaceSection("provider-tools", "provider-reviews");
+            }}
+          >
+            Reviews
+          </a>
+          <a
+            href="#business-page"
+            onClick={(event) => {
+              event.preventDefault();
+              openWorkspaceSection("provider-tools", "business-page");
             }}
           >
             Business profile
           </a>
+          <a
+            href="#provider-performance"
+            onClick={(event) => {
+              event.preventDefault();
+              openWorkspaceSection("provider-tools", "provider-performance");
+            }}
+          >
+            Performance tools
+          </a>
         </nav>
       )}
-      {error && <p className="form-error portal-alert">{error}</p>}
+      {!loading && !error && (
+        <section className="portal-section provider-schedule-section" id="provider-schedule">
+          <div className="portal-section-heading">
+            <div><span className="kicker">Schedule</span><h2>Accepted-job availability</h2></div>
+            <p>These are the availability details from quotes customers accepted. Confirm exact timing with each customer.</p>
+          </div>
+          {activeJobs.length === 0 ? (
+            <p className="admin-note">No accepted jobs are currently scheduled.</p>
+          ) : (
+            <div className="portal-grid">
+              {activeJobs.map((job) => (
+                <article className="portal-card" key={`schedule-${job.id}`}>
+                  <span className="portal-service">{job.status}</span>
+                  <h2>{job.availability || "Time not confirmed"}</h2>
+                  <p>{parseJobServices(job.service).join(" + ")} · {job.vehicle}</p>
+                  <p>{job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
+                  <small>Private work status: {job.workStatus}</small>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {error && <p className="form-error portal-alert">{error}</p>
       {!loading && !error && provider && (
         <details className="workspace-tools provider-workspace-tools" id="provider-tools">
           <summary>Payments and business page</summary>
@@ -716,6 +790,39 @@ export default function ProviderJobsPage() {
         </section>
       )}
       {!loading && !error && (
+        <section className="portal-section" id="my-quotes">
+          <div className="portal-section-heading">
+            <div><span className="kicker">My quotes</span><h2>Submitted quotes</h2></div>
+            <p>Only quotes submitted from this provider account appear here.</p>
+          </div>
+          {myQuotes.length === 0 ? (
+            <p className="admin-note">You have not submitted any quotes yet.</p>
+          ) : (
+            <div className="portal-grid">
+              {myQuotes.map((quote) => (
+                <article className="portal-card" key={quote.requestId}>
+                  <div className="job-status-row">
+                    <span className="portal-service">{quote.status}</span>
+                    <strong>${(Number(quote.priceCents) / 100).toFixed(2)}</strong>
+                  </div>
+                  <h2>{parseJobServices(quote.service).join(" + ")}</h2>
+                  <p>{quote.vehicle} · {quote.launchArea || `ZIP ${quote.zip}`} · {quote.municipality}</p>
+                  <dl className="quote-breakdown compact">
+                    <div><dt>Labor</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Parts ({quote.partType})</dt><dd>${(Number(quote.partsPriceCents) / 100).toFixed(2)}</dd></div>
+                    <div className="total"><dt>Your subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer sees</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                  </dl>
+                  <p><strong>Availability:</strong> {quote.availability}</p>
+                  <blockquote>{quote.message}</blockquote>
+                  <small>Request status: {quote.requestStatus}</small>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {!loading && !error && (
         <details className="workspace-tools provider-history-tools" id="provider-history">
           <summary>History and private totals ({completedJobs.length})</summary>
           <div className="workspace-tool-content">
@@ -784,12 +891,12 @@ export default function ProviderJobsPage() {
       )}
       {!loading && !error && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">
-          <div><span className="kicker">Matched alerts</span><h2>Open jobs</h2></div>
+          <div><span className="kicker">Matched alerts</span><h2>Available jobs</h2></div>
           <p>These approved requests match your services, job areas, and meeting options.</p>
         </div>
       )}
       <section className="portal-grid">
-        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !error && jobs.length === 0 ? <p className="admin-note">No matching approved jobs are available yet. Check this private link when you receive a new-job alert.</p> : jobs.map((job) => (
+        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !error && openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => (
           <article className="portal-card" key={job.id}>
             <span className="portal-service">{parseJobServices(job.service).join(" + ")}</span>
             {job.isTestJob === "yes" && <span className="test-badge">TEST JOB</span>}
