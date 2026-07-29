@@ -28,6 +28,15 @@ type GalleryItem = {
   createdAt: string;
 };
 
+type ProviderReview = {
+  id: string;
+  customerDisplayName: string;
+  service: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
 type ProfileResponse = {
   profile: Profile;
   gallery: GalleryItem[];
@@ -38,6 +47,7 @@ type ProfileResponse = {
   canPublish: boolean;
   testProvider: boolean;
   reviewSummary: { average: number; count: number };
+  reviews: ProviderReview[];
   profileHealth: {
     score: number;
     improvements: string[];
@@ -630,7 +640,38 @@ export function ProviderBusinessPage({ token }: { token: string }) {
         </aside>
       </div>
 
-      <section className="provider-health">
+      <section className="storefront-section provider-private-reviews" id="provider-reviews">
+        <div className="storefront-section-heading">
+          <div><span className="kicker">Reviews</span><h2>Verified customer feedback</h2></div>
+          <div className="storefront-rating">
+            <strong>{data.reviews.length ? data.reviewSummary.average.toFixed(1) : "—"}</strong>
+            <span>{data.reviews.length ? "★★★★★".slice(0, Math.round(data.reviewSummary.average)) : "No reviews yet"}</span>
+            <small>{data.reviews.length} verified {data.reviews.length === 1 ? "review" : "reviews"}</small>
+          </div>
+        </div>
+        {data.reviews.length ? (
+          <div className="storefront-review-grid">
+            {data.reviews.map((review) => (
+              <article key={review.id}>
+                <div><span>{"★★★★★".slice(0, review.rating)}</span><strong>{review.rating}.0</strong></div>
+                <blockquote>{review.comment}</blockquote>
+                <footer>
+                  <strong>{review.customerDisplayName}</strong>
+                  <span>{review.service}</span>
+                </footer>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="storefront-empty">
+            <TuvelozIcon name="reviews" />
+            <strong>No completed-job reviews yet.</strong>
+            <span>Only feedback from completed Tuveloz jobs appears here.</span>
+          </div>
+        )}
+      </section>
+
+      <section className="provider-health" id="provider-performance">
         <div className="provider-health-score">
           <span className="kicker">Private coaching</span>
           <div>
