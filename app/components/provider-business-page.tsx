@@ -1,5 +1,5 @@
 "use client";
-/* eslint-disable @next/next/no-img-element -- private provider media uses token-gated R2 routes */
+/* eslint-disable @next/next/no-img-element -- private provider media uses session-gated R2 routes */
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
@@ -90,7 +90,7 @@ function initials(value: string) {
     .join("") || "TV";
 }
 
-export function ProviderBusinessPage({ token }: { token: string }) {
+export function ProviderBusinessPage() {
   const [data, setData] = useState<ProfileResponse | null>(null);
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [loading, setLoading] = useState(true);
@@ -116,8 +116,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
   }, []);
 
   useEffect(() => {
-    if (!token) return;
-    fetch(`/api/provider-profile?token=${encodeURIComponent(token)}`)
+    fetch("/api/provider-profile", { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as ProfileResponse;
         if (!response.ok) throw new Error(result.error || "Unable to load your business page.");
@@ -125,7 +124,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
       })
       .catch((reason) => setError(reason.message || "Unable to load your business page."))
       .finally(() => setLoading(false));
-  }, [applyResponse, token]);
+  }, [applyResponse]);
 
   useEffect(() => {
     if (!activeQrSlug) return;
@@ -161,7 +160,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
     const response = await fetch("/api/provider-profile", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token, action: "save-profile", ...profile }),
+      body: JSON.stringify({ action: "save-profile", ...profile }),
     });
     const result = await response.json() as ProfileResponse;
     setBusy("");
@@ -182,7 +181,6 @@ export function ProviderBusinessPage({ token }: { token: string }) {
     setError("");
     setNotice("");
     const formData = new FormData(form);
-    formData.set("token", token);
     formData.set("action", action);
     const response = await fetch("/api/provider-profile", { method: "POST", body: formData });
     const result = await response.json() as ProfileResponse;
@@ -201,7 +199,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
     const response = await fetch("/api/provider-profile", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token, action: "remove-gallery", galleryId }),
+      body: JSON.stringify({ action: "remove-gallery", galleryId }),
     });
     const result = await response.json() as ProfileResponse;
     setBusy("");
@@ -234,7 +232,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
   async function refreshPrivateNumbers() {
     setBusy("qr-metrics");
     setError("");
-    const response = await fetch(`/api/provider-profile?token=${encodeURIComponent(token)}`);
+    const response = await fetch("/api/provider-profile", { cache: "no-store" });
     const result = await response.json() as ProfileResponse;
     setBusy("");
     if (!response.ok) return setError(result.error || "Unable to refresh your private numbers.");
@@ -260,7 +258,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
   if (!data) return null;
 
   const publicUrl = `/providers/${profile.slug}`;
-  const privatePreviewUrl = `${publicUrl}?token=${encodeURIComponent(token)}`;
+  const privatePreviewUrl = publicUrl;
   const displayLocation = data.businessMunicipality || data.serviceArea || "Local service area";
   const displayProfileUrl = activeQrSlug
     ? `tuveloz.com/providers/${activeQrSlug}`
@@ -296,7 +294,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
             <div className="provider-profile-preview-identity">
               {profile.hasLogo && profile.id ? (
                 <img
-                  src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}&token=${encodeURIComponent(token)}`}
+                  src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}`}
                   alt=""
                 />
               ) : (
@@ -451,7 +449,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
             {profile.hasLogo && profile.id && (
               <img
                 className="business-logo-preview"
-                src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}&token=${encodeURIComponent(token)}`}
+                src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}`}
                 alt="Current business logo"
               />
             )}
@@ -516,7 +514,7 @@ export function ProviderBusinessPage({ token }: { token: string }) {
                 {data.gallery.map((item) => (
                   <article key={item.id}>
                     <img
-                      src={`/api/provider-media?galleryId=${encodeURIComponent(item.id)}&token=${encodeURIComponent(token)}`}
+                      src={`/api/provider-media?galleryId=${encodeURIComponent(item.id)}`}
                       alt={item.caption || "Work gallery item"}
                     />
                     <div className="business-gallery-copy">
