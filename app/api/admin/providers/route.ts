@@ -257,7 +257,7 @@ export async function POST(request: Request) {
         .where(eq(providerCredentialVerifications.id, existing.id));
     } else {
       await db.insert(providerCredentialVerifications).values({
-        id: crypto.randomUUID(),
+        id: `${provider.id}:${requirement.key}`,
         providerId: provider.id,
         requirementKey: requirement.key,
         ...values,
