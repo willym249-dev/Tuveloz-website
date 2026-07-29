@@ -7,10 +7,10 @@ import {
   providerApplications,
   providerQuotes,
 } from "../../../db/schema";
-import { isOwnerRequest } from "../../../lib/owner-auth";
+import { isVerifiedOwnerRequest } from "../../../lib/owner-auth";
 
 export async function GET(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "This dashboard is only available to the Tuveloz owner." }, { status: 403 });
   }
 
