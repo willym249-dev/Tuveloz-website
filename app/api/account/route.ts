@@ -76,7 +76,7 @@ export async function GET(request: Request) {
     }
 
     const provider = await providerAccountFor(session.email);
-    if (!provider?.accessToken) {
+    if (!provider) {
       return Response.json(
         { error: "Verified provider access is no longer active." },
         { status: 403, headers: { "cache-control": "no-store" } },
@@ -88,7 +88,6 @@ export async function GET(request: Request) {
       availableRoles: session.availableRoles,
       provider: {
         name: provider.name,
-        accessToken: provider.accessToken,
         verificationStatus: provider.verificationStatus,
       },
     }, { headers: { "cache-control": "no-store" } });
