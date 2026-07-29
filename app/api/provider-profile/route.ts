@@ -164,11 +164,16 @@ async function responseData(
     .where(eq(providerGalleryItems.providerId, provider.id))
     .orderBy(desc(providerGalleryItems.createdAt));
   const reviews = await getDb().select({
+    id: jobReviews.id,
+    customerDisplayName: jobReviews.customerDisplayName,
+    service: jobReviews.service,
     rating: jobReviews.rating,
+    comment: jobReviews.comment,
+    createdAt: jobReviews.createdAt,
   }).from(jobReviews).where(and(
     eq(jobReviews.providerEmail, provider.email),
     eq(jobReviews.status, "published"),
-  ));
+  )).orderBy(desc(jobReviews.createdAt));
   const averageRating = reviews.length
     ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
     : 0;
@@ -233,6 +238,7 @@ async function responseData(
     canPublish,
     testProvider: provider.isTestProvider === "yes",
     reviewSummary: { average: averageRating, count: reviews.length },
+    reviews,
     profileHealth: profileHealth(profile, gallery.length, canPublish),
     analytics: {
       profileViews: storedProfile?.profileViewCount ?? 0,
