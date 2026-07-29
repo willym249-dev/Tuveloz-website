@@ -465,12 +465,8 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    fetch("/api/admin")
+    fetch("/api/admin", { cache: "no-store" })
       .then(async (response) => {
-        if (response.status === 401 || response.status === 403) {
-          window.location.replace("/");
-          return;
-        }
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Unable to load dashboard.");
         setRequests(result.requests);

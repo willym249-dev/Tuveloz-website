@@ -982,10 +982,13 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(ownerAuthSource.includes("issuer: teamDomain"));
   assert.ok(ownerAuthSource.includes("audience"));
   assert.ok(ownerAuthSource.includes("cf-access-jwt-assertion"));
+  assert.ok(ownerAuthSource.includes("OWNER_ACCESS_AUD"));
+  assert.ok(ownerAuthSource.includes("POLICY_AUD"));
+  assert.ok(pageSource.includes('fetch("/api/admin", { cache: "no-store" })'));
+  assert.ok(!pageSource.includes('window.location.replace("/")'));
   for (const signedOwnerSource of [
     accountSource,
     sessionSource,
-    legacyAdminSource,
     jobActionSource,
     providerActionSource,
     paymentSource,
@@ -993,6 +996,7 @@ test("owner control center uses signed access and exposes focused factual tools"
     assert.ok(signedOwnerSource.includes("await isVerifiedOwnerRequest(request)"));
     assert.ok(!signedOwnerSource.includes("isOwnerRequest(request)"));
   }
+  assert.ok(legacyAdminSource.includes("await verifyOwnerRequest(request)"));
   assert.ok(sessionSource.includes("isSameOriginRequest(request)"));
   assert.ok(jobActionSource.includes("isSameOriginRequest(request)"));
   assert.ok(providerActionSource.includes("isSameOriginRequest(request)"));
@@ -1099,3 +1103,22 @@ test("provider activation and public claims require exact current government cre
   assert.ok(accountAuthSource.includes("providerCredentialVerifications"));
 });
 
+
+
+test("owner Access identifiers survive every Cloudflare deployment", async () => {
+  const [wranglerSource, ownerAuthSource, adminApiSource, adminPageSource] = await Promise.all([
+    readFile(new URL("../wrangler.jsonc", import.meta.url), "utf8"),
+    readFile(new URL("../lib/owner-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(wranglerSource.includes('"TEAM_DOMAIN": "https://old-violet-1b67.cloudflareaccess.com"'));
+  assert.ok(wranglerSource.includes('"OWNER_ACCESS_AUD": "e440192c4dcff94d592a94c4661dddb4df210f07c10611a47dd308480149ed06"'));
+  assert.ok(ownerAuthSource.includes("variables.OWNER_ACCESS_AUD?.trim()"));
+  assert.ok(ownerAuthSource.includes("variables.POLICY_AUD?.trim()"));
+  assert.ok(adminApiSource.includes("verification.reason"));
+  assert.ok(adminApiSource.includes('"cache-control": "no-store"'));
+  assert.ok(adminPageSource.includes('fetch("/api/admin", { cache: "no-store" })'));
+  assert.ok(!adminPageSource.includes('window.location.replace("/")'));
+});

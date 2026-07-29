@@ -52,15 +52,37 @@ function accessKeySet(teamDomain: string) {
  * Verifies Cloudflare Access' signed application token before allowing an
  * owner-only route to expose account, session, or payment-linked data.
  *
- * TEAM_DOMAIN and POLICY_AUD must match the Cloudflare Access application.
- * Missing or invalid configuration fails closed.
+ * TEAM_DOMAIN and OWNER_ACCESS_AUD must match the Cloudflare Access application.
+ * POLICY_AUD remains a legacy fallback. Missing or invalid configuration fails closed.
  */
-export async function isVerifiedOwnerRequest(request: Request) {
-  const ownerEmail = runtimeVariables().OWNER_EMAIL?.trim().toLowerCase() ?? "";
+export type OwnerVerificationFailure =
+  | "owner-config-missing"
+  | "access-token-missing"
+  | "access-token-invalid"
+  | "owner-email-mismatch";
+
+export type OwnerVerificationResult =
+  | { ok: true }
+  | { ok: false; reason: OwnerVerificationFailure };
+
+export async function verifyOwnerRequest(
+  request: Request,
+): Promise<OwnerVerificationResult> {
+  const variables = runtimeVariables();
+  const ownerEmail = variables.OWNER_EMAIL?.trim().toLowerCase() ?? "";
   const teamDomain = configuredTeamDomain();
-  const audience = runtimeVariables().POLICY_AUD?.trim() ?? "";
+  const audience =
+    variables.OWNER_ACCESS_AUD?.trim()
+    || variables.POLICY_AUD?.trim()
+    || "";
   const token = request.headers.get("cf-access-jwt-assertion")?.trim() ?? "";
-  if (!ownerEmail || !teamDomain || !audience || !token) return false;
+
+  if (!ownerEmail || !teamDomain || !audience) {
+    return { ok: false, reason: "owner-config-missing" };
+  }
+  if (!token) {
+    return { ok: false, reason: "access-token-missing" };
+  }
 
   try {
     const { payload } = await jwtVerify(token, accessKeySet(teamDomain), {
@@ -72,12 +94,19 @@ export async function isVerifiedOwnerRequest(request: Request) {
       ? payload.email.trim().toLowerCase()
       : "";
     const assertedEmail = getAuthenticatedEmail(request);
-    return (
-      tokenEmail === ownerEmail
-      && (!assertedEmail || assertedEmail === tokenEmail)
-    );
-  } catch (error) {
-    console.error("Cloudflare Access owner-token verification failed", error);
-    return false;
+    if (
+      tokenEmail !== ownerEmail
+      || (assertedEmail && assertedEmail !== tokenEmail)
+    ) {
+      return { ok: false, reason: "owner-email-mismatch" };
+    }
+    return { ok: true };
+  } catch {
+    console.error("Cloudflare Access owner-token verification failed");
+    return { ok: false, reason: "access-token-invalid" };
   }
+}
+
+export async function isVerifiedOwnerRequest(request: Request) {
+  return (await verifyOwnerRequest(request)).ok;
 }
