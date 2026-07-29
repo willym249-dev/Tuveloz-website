@@ -39,6 +39,20 @@ type StorefrontData = {
   privatePreview: boolean;
   testProvider: boolean;
   reviewSummary: { average: number; count: number };
+  credentialReview: {
+    requirementsSatisfied: boolean;
+    noGovernmentCredentialTriggered: boolean;
+    credentials: Array<{
+      requirementKey: string;
+      label: string;
+      jurisdiction: string;
+      issuingAuthority: string;
+      legalBasisUrl: string;
+      officialLookupUrl: string;
+      checkedAt: string;
+      expiresAt: string;
+    }>;
+  };
   confidence: { completedJobs: number };
   error?: string;
 };
@@ -145,7 +159,7 @@ export default function ProviderStorefrontPage() {
             <div className="storefront-eyebrow">
               {data.testProvider
                 ? <span className="test-badge">TEST PROFILE</span>
-                : <span className="verified-badge">✓ Tuveloz verified</span>}
+                : <span className="verified-badge">✓ Eligibility reviewed</span>}
               <span className="provider-mode-badge">
                 {providerModeForWorkLocations(workLocations)}
               </span>
@@ -174,17 +188,27 @@ export default function ProviderStorefrontPage() {
         <div className="storefront-confidence-heading">
           <div>
             <span className="kicker">Customer confidence</span>
-            <h2 id="customer-confidence-heading">Verified, real information</h2>
+            <h2 id="customer-confidence-heading">Checked, specific information</h2>
           </div>
-          <p>Only verified Tuveloz information and actual completed-job activity appear here.</p>
+          <p>Tuveloz shows the exact review performed and actual completed-job activity.</p>
         </div>
         <div className="storefront-confidence-grid">
           <article>
             <TuvelozIcon name="overview" />
             <div>
-              <span>Verified identity</span>
-              <strong>{data.testProvider ? "Test profile" : "Tuveloz verified"}</strong>
-              <small>Provider status checked by Tuveloz.</small>
+              <span>Government credential review</span>
+              <strong>
+                {data.testProvider
+                  ? "Test profile"
+                  : data.credentialReview.noGovernmentCredentialTriggered
+                    ? "Not legally triggered"
+                    : `${data.credentialReview.credentials.length} current ${data.credentialReview.credentials.length === 1 ? "check" : "checks"}`}
+              </strong>
+              <small>
+                {data.credentialReview.noGovernmentCredentialTriggered
+                  ? "The approved services and launch jurisdiction do not trigger a government credential."
+                  : "See the exact issuing authority and official source below."}
+              </small>
             </div>
           </article>
           <article>
@@ -220,6 +244,47 @@ export default function ProviderStorefrontPage() {
           Tuveloz does not estimate missing history. If information is unavailable, we say so.
         </p>
       </section>
+
+      {!data.testProvider && !data.credentialReview.noGovernmentCredentialTriggered && (
+        <section className="storefront-section storefront-credentials" aria-labelledby="credential-checks-heading">
+          <div className="storefront-section-heading">
+            <div>
+              <span className="kicker">Official sources</span>
+              <h2 id="credential-checks-heading">Government credentials checked</h2>
+            </div>
+            <p>
+              These are the specific current credentials required by the provider&apos;s approved
+              services and launch jurisdiction. Tuveloz does not use a blanket licensed-provider claim.
+            </p>
+          </div>
+          <div className="storefront-confidence-grid">
+            {data.credentialReview.credentials.map((credential) => (
+              <article key={credential.requirementKey}>
+                <TuvelozIcon name="overview" />
+                <div>
+                  <span>{credential.jurisdiction}</span>
+                  <strong>{credential.label}</strong>
+                  <small>
+                    Checked {new Date(credential.checkedAt).toLocaleDateString()} through{" "}
+                    {credential.issuingAuthority}.
+                    {credential.expiresAt
+                      ? ` Current through ${new Date(`${credential.expiresAt}T00:00:00Z`).toLocaleDateString()}.`
+                      : ""}
+                  </small>
+                  <span className="admin-link-actions">
+                    <a href={credential.legalBasisUrl} target="_blank" rel="noreferrer">
+                      Official requirement
+                    </a>
+                    <a href={credential.officialLookupUrl} target="_blank" rel="noreferrer">
+                      Official lookup
+                    </a>
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <nav className="storefront-tabs" aria-label="Provider business page">
         <a href="#overview"><TuvelozIcon name="overview" />Overview</a>
