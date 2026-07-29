@@ -197,6 +197,42 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   ]);
   const [selectedProviderWorkLocations, setSelectedProviderWorkLocations] = useState<string[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [headerAccountState, setHeaderAccountState] = useState<
+    "checking" | "signed-out" | "customer" | "provider"
+  >("checking");
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/account", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (response.status === 401) {
+          setHeaderAccountState("signed-out");
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error("Account status unavailable.");
+        }
+
+        const result = (await response.json()) as {
+          role?: "customer" | "provider";
+        };
+
+        if (result.role === "customer" || result.role === "provider") {
+          setHeaderAccountState(result.role);
+          return;
+        }
+
+        setHeaderAccountState("checking");
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setHeaderAccountState("checking");
+      });
+
+    return () => controller.abort();
+  }, []);
   const [providerAssessment, setProviderAssessment] = useState<ProviderSelfAssessment>(
     emptyProviderSelfAssessment,
   );
@@ -562,6 +598,21 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     }
   }
 
+  const accountHref =
+    headerAccountState === "customer"
+      ? "/customer"
+      : headerAccountState === "provider"
+        ? "/provider-jobs"
+        : "/account";
+  const accountLabel =
+    headerAccountState === "customer"
+      ? "Customer account"
+      : headerAccountState === "provider"
+        ? "Provider account"
+        : headerAccountState === "signed-out"
+          ? "Sign up / Sign in"
+          : "Account";
+
   return (
     <main className={`public-site public-view-${view}`}>
       <header className="site-header">
@@ -591,14 +642,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         <div className="header-actions">
           <SiteLanguageButton />
-          <a
-            aria-label="Sign in to Tuveloz"
+          <Link
+            aria-label={accountLabel}
             className="header-sign-in"
-            href="/account"
+            href={accountHref}
             onClick={() => setMenuOpen(false)}
           >
-            Sign in
-          </a>
+            {accountLabel}
+          </Link>
           <Link className="header-cta" href="/post-job">
             Post a job
           </Link>

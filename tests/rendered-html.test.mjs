@@ -251,8 +251,12 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
   assert.ok(contents.includes("Save this private link."));
   assert.ok(homeSource.includes("header-sign-in"));
-  assert.ok(homeSource.includes('href="/account"'));
-  assert.ok(homeSource.includes('aria-label="Sign in to Tuveloz"'));
+  assert.ok(homeSource.includes('fetch("/api/account"'));
+  assert.ok(homeSource.includes('"signed-out"'));
+  assert.ok(homeSource.includes('"Customer account"'));
+  assert.ok(homeSource.includes('"Provider account"'));
+  assert.ok(homeSource.includes('href={accountHref}'));
+  assert.ok(authSource.includes('"Path=/"'));
   assert.ok(authSource.includes('eq(providerApplications.status, "approved")'));
   assert.ok(authSource.includes('eq(providerApplications.verificationStatus, "verified")'));
   assert.ok(authSource.includes('eq(providerApplications.isTestProvider, "no")'));
