@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { StripePaymentAdmin } from "../components/stripe-payment-admin";
+import {
+  OwnerControlCenter,
+  type AdminView,
+  type OwnerPlatform,
+  type OwnerUser,
+} from "../components/owner-control-center";
 import { BrandMark } from "../components/tuveloz-icons";
 import {
   effectiveProviderServices,
@@ -213,12 +219,16 @@ export default function AdminPage() {
   const [feedback, setFeedback] = useState<LaunchFeedback[]>([]);
   const [expansion, setExpansion] = useState<ExpansionInterest[]>([]);
   const [quotes, setQuotes] = useState<ProviderQuote[]>([]);
+  const [users, setUsers] = useState<OwnerUser[]>([]);
+  const [platform, setPlatform] = useState<OwnerPlatform | null>(null);
+  const [activeAdminView, setActiveAdminView] = useState<AdminView>("jobs");
   const [copiedRequestId, setCopiedRequestId] = useState("");
   const [copiedProviderId, setCopiedProviderId] = useState("");
   const [pendingLinkRequestId, setPendingLinkRequestId] = useState("");
   const [creatingLinkRequestId, setCreatingLinkRequestId] = useState("");
   const [alertStatus, setAlertStatus] = useState("");
   const [error, setError] = useState("");
+  const [controlCenterError, setControlCenterError] = useState("");
   const [loading, setLoading] = useState(true);
   const [accessGranted, setAccessGranted] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAdminAction | null>(null);
@@ -472,6 +482,30 @@ export default function AdminPage() {
       })
       .catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load dashboard."))
       .finally(() => setLoading(false));
+
+    fetch("/api/admin/control-center", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json() as {
+          users?: OwnerUser[];
+          platform?: OwnerPlatform;
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(
+            result.error || "Signed owner verification is required for account management.",
+          );
+        }
+        setUsers(result.users ?? []);
+        setPlatform(result.platform ?? null);
+        setControlCenterError("");
+      })
+      .catch((reason) => {
+        setControlCenterError(
+          reason instanceof Error
+            ? reason.message
+            : "Signed owner verification is required for account management.",
+        );
+      });
   }, []);
 
   const expansionDemand = expansion
@@ -507,6 +541,22 @@ export default function AdminPage() {
   const acceptedFeeCents = quotes
     .filter((quote) => quote.status === "accepted")
     .reduce((total, quote) => total + customerPriceSnapshot(quote).customerFeeCents, 0);
+  const ownerMetrics = {
+    jobRequests: requests.length,
+    approvedJobs: requests.filter((item) => item.status === "approved").length,
+    testJobs: requests.filter((item) => item.isTestJob === "yes").length,
+    providerQuotes: quotes.length,
+    acceptedQuotes: quotes.filter((quote) => quote.status === "accepted").length,
+    providerApplications: providers.length,
+    verifiedProviders: providers.filter((provider) => (
+      provider.status === "approved"
+      && provider.verificationStatus === "verified"
+      && provider.isTestProvider !== "yes"
+    )).length,
+    expansionRequests: expansion.length,
+    feedbackResponses: feedback.length,
+    acceptedFeeCents,
+  };
 
   if (!accessGranted && !error) return null;
 
@@ -518,9 +568,9 @@ export default function AdminPage() {
       </header>
 
       <section className="admin-intro">
-        <span className="kicker">Launch control</span>
-        <h1>Requests and provider interest</h1>
-        <p>Keep contact information private. Reach out manually while the marketplace is in early testing.</p>
+        <span className="kicker">Owner control center</span>
+        <h1>Tuveloz operations</h1>
+        <p>Use focused owner-only views backed by stored Tuveloz records and connected service status.</p>
         {loading ? <p className="admin-note">Loading submissions…</p> : error ? (
           <p className="form-error" role="alert">{error}</p>
         ) : (
@@ -540,7 +590,21 @@ export default function AdminPage() {
 
       {!loading && !error && (
         <>
-          <section className="admin-section">
+          <OwnerControlCenter
+            activeView={activeAdminView}
+            metrics={ownerMetrics}
+            onSessionsRevoked={(email) => {
+              setUsers((items) => items.map((item) => (
+                item.email === email ? { ...item, activeSessionCount: 0 } : item
+              )));
+            }}
+            onViewChange={setActiveAdminView}
+            platform={platform}
+            securityError={controlCenterError}
+            users={users}
+          />
+
+          <section className="admin-section" hidden={activeAdminView !== "jobs"} id="owner-jobs">
             <h2>Customer job requests</h2>
             {requests.length === 0 ? <p className="admin-note">No requests yet.</p> : (
               <div className="admin-grid">
@@ -667,7 +731,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "jobs"}>
             <h2>Quote management</h2>
             <p className="admin-section-copy">Review every price offered and see which provider the customer selected.</p>
             {quotes.length === 0 ? <p className="admin-note">No provider quotes yet.</p> : (
@@ -709,9 +773,9 @@ export default function AdminPage() {
             )}
           </section>
 
-          <StripePaymentAdmin />
+          {activeAdminView === "payments" && <StripePaymentAdmin />}
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "providers"} id="owner-provider-approvals">
             <h2>Provider applications</h2>
             <p className="admin-section-copy">
               A provider receives workspace access and the Tuveloz verified badge only after every
@@ -964,7 +1028,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "reports"} id="owner-reports">
             <h2>Expansion demand</h2>
             <p className="admin-section-copy">
               Areas are ranked by unique people, with customer and provider
@@ -1000,7 +1064,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          <section className="admin-section">
+          <section className="admin-section" hidden={activeAdminView !== "reports"}>
             <h2>Tuveloz feedback</h2>
             {feedback.length === 0 ? <p className="admin-note">No feedback yet.</p> : (
               <div className="admin-grid">
