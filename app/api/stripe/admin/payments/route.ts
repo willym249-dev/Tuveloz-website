@@ -8,7 +8,7 @@ import {
 import { isSameOriginRequest } from "../../../../../lib/account-auth";
 import {
   getAuthenticatedEmail,
-  isOwnerRequest,
+  isVerifiedOwnerRequest,
 } from "../../../../../lib/owner-auth";
 import {
   getStripeClient,
@@ -17,7 +17,7 @@ import {
 } from "../../../../../lib/stripe";
 
 export async function GET(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
 
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
   if (!isSameOriginRequest(request)) {
