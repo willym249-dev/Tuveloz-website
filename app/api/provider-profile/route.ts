@@ -15,6 +15,7 @@ import {
 import { parseProviderServices } from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../../lib/quote-feedback";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { isSameOriginRequest } from "../../../lib/request-security";
 
 const AVAILABILITY_STATUSES = new Set(["Available now", "Busy", "Off duty"]);
 const MAX_GALLERY_ITEMS = 12;
@@ -259,11 +260,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const contentType = request.headers.get("content-type") ?? "";
-  const isMultipart = contentType.includes("multipart/form-data");
-  const payload = isMultipart
-    ? Object.fromEntries((await request.formData()).entries())
-    : await request.json() as Record<string, unknown>;
+  if (!isSameOriginRequest(request)) {
+    return Response.json(
+      { error: "This business-profile action must come from Tuveloz." },
+      { status: 403, headers: { "cache-control": "no-store" } },
+    );
+  }
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
@@ -271,6 +273,12 @@ export async function POST(request: Request) {
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
+
+  const contentType = request.headers.get("content-type") ?? "";
+  const isMultipart = contentType.includes("multipart/form-data");
+  const payload = isMultipart
+    ? Object.fromEntries((await request.formData()).entries())
+    : await request.json() as Record<string, unknown>;
   const db = getDb();
   const action = clean(payload.action, 40) || "save-profile";
 
