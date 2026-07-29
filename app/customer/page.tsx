@@ -17,14 +17,33 @@ type CustomerRequest = {
   quoteCount: number;
 };
 
+type CustomerPayment = {
+  id: string;
+  paymentType: string;
+  requestId: string | null;
+  productName: string;
+  currency: string;
+  quantity: number;
+  providerAmountCents: number;
+  applicationFeeCents: number;
+  customerTotalCents: number;
+  status: string;
+  paidAt: string;
+  refundAmountCents: number;
+  refundedAt: string;
+  disputeStatus: string;
+  createdAt: string;
+};
+
 type CustomerAccount = {
   role: "customer";
   email: string;
   availableRoles: Array<"customer" | "provider">;
   requests: CustomerRequest[];
+  payments: CustomerPayment[];
 };
 
-type CustomerView = "requests" | "quotes" | "active" | "history";
+type CustomerView = "requests" | "quotes" | "active" | "history" | "payments";
 
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
@@ -54,6 +73,11 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
     emptyTitle: "No completed jobs yet",
     emptyText: "Completed and cancelled jobs will appear here.",
   },
+  payments: {
+    title: "Payments",
+    emptyTitle: "No payments yet",
+    emptyText: "Real Tuveloz checkout records for this customer account will appear here.",
+  },
 };
 
 function requestMatchesView(request: CustomerRequest, view: CustomerView) {
@@ -71,6 +95,48 @@ function shortDate(value: string) {
   return Number.isNaN(parsed.getTime())
     ? "Recent request"
     : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatMoney(cents: number, currency: string) {
+  const normalizedCurrency = currency.trim().toUpperCase() || "USD";
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: normalizedCurrency,
+    }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${normalizedCurrency}`;
+  }
+}
+
+function paymentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    checkout_creating: "Not paid",
+    checkout_created: "Not paid",
+    checkout_expired: "Checkout expired",
+    payment_failed: "Payment failed",
+    paid_pending_completion: "Paid",
+    ready_for_release: "Paid",
+    released: "Paid",
+    paid_and_transferred: "Paid",
+    refunded: "Refunded",
+    partially_refunded: "Partially refunded",
+    disputed: "Dispute open",
+    dispute_won_review: "Dispute resolved",
+    dispute_lost: "Dispute closed",
+  };
+  return labels[status] ?? status.replaceAll("_", " ");
+}
+
+function paymentStatusIsSettled(status: string) {
+  return [
+    "paid_pending_completion",
+    "ready_for_release",
+    "released",
+    "paid_and_transferred",
+    "refunded",
+    "partially_refunded",
+  ].includes(status);
 }
 
 export default function CustomerPage() {
@@ -117,7 +183,7 @@ export default function CustomerPage() {
     window.location.replace(result.destination);
   }
 
-  const visibleRequests = account
+  const visibleRequests = account && activeView !== "payments"
     ? account.requests.filter((request) => requestMatchesView(request, activeView))
     : [];
   const viewCopy = CUSTOMER_VIEW_COPY[activeView];
@@ -157,7 +223,7 @@ export default function CustomerPage() {
             <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
               <Link className="workspace-nav-primary" href="/post-job">Post a job</Link>
               <button
-                aria-controls="my-requests"
+                aria-controls="customer-dashboard-content"
                 aria-pressed={activeView === "requests"}
                 className={activeView === "requests" ? "is-active" : ""}
                 onClick={() => setActiveView("requests")}
@@ -166,7 +232,7 @@ export default function CustomerPage() {
                 My requests
               </button>
               <button
-                aria-controls="my-requests"
+                aria-controls="customer-dashboard-content"
                 aria-pressed={activeView === "quotes"}
                 className={activeView === "quotes" ? "is-active" : ""}
                 onClick={() => setActiveView("quotes")}
@@ -175,7 +241,7 @@ export default function CustomerPage() {
                 Quotes received
               </button>
               <button
-                aria-controls="my-requests"
+                aria-controls="customer-dashboard-content"
                 aria-pressed={activeView === "active"}
                 className={activeView === "active" ? "is-active" : ""}
                 onClick={() => setActiveView("active")}
@@ -184,7 +250,7 @@ export default function CustomerPage() {
                 Active jobs
               </button>
               <button
-                aria-controls="my-requests"
+                aria-controls="customer-dashboard-content"
                 aria-pressed={activeView === "history"}
                 className={activeView === "history" ? "is-active" : ""}
                 onClick={() => setActiveView("history")}
@@ -192,18 +258,74 @@ export default function CustomerPage() {
               >
                 Job history
               </button>
-              <Link href="/payments">Payment policy</Link>
+              <button
+                aria-controls="customer-dashboard-content"
+                aria-pressed={activeView === "payments"}
+                className={activeView === "payments" ? "is-active" : ""}
+                onClick={() => setActiveView("payments")}
+                type="button"
+              >
+                Payments
+              </button>
             </nav>
 
-            <section aria-live="polite" className="account-card" id="my-requests">
+            <section aria-live="polite" className="account-card" id="customer-dashboard-content">
               <div className="account-card-heading">
                 <div>
-                  <span className="account-role">Customer requests</span>
+                  <span className="account-role">
+                    {activeView === "payments" ? "Customer payments" : "Customer requests"}
+                  </span>
                   <h2>{viewCopy.title}</h2>
                 </div>
-                <span className="account-count">{visibleRequests.length}</span>
+                <span className="account-count">
+                  {activeView === "payments" ? account.payments.length : visibleRequests.length}
+                </span>
               </div>
-              {visibleRequests.length > 0 ? (
+              {activeView === "payments" && (
+                <p>Customer account: <strong>{account.email}</strong></p>
+              )}
+              {activeView === "payments" ? (
+                account.payments.length > 0 ? (
+                  <div className="account-request-list">
+                    {account.payments.map((payment) => (
+                      <article className="account-request" key={payment.id}>
+                        <span>
+                          <strong>{payment.productName}</strong>
+                          <small>
+                            {formatMoney(payment.customerTotalCents, payment.currency)} total
+                            {" · "}
+                            {shortDate(payment.paidAt || payment.createdAt)}
+                          </small>
+                          <small>
+                            Provider subtotal: {formatMoney(payment.providerAmountCents, payment.currency)}
+                            {" · "}
+                            Tuveloz fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
+                          </small>
+                          {payment.refundAmountCents > 0 && (
+                            <small>
+                              Refund recorded: {formatMoney(payment.refundAmountCents, payment.currency)}
+                              {payment.refundedAt ? ` · ${shortDate(payment.refundedAt)}` : ""}
+                            </small>
+                          )}
+                          {payment.disputeStatus && (
+                            <small>Dispute status: {payment.disputeStatus.replaceAll("_", " ")}</small>
+                          )}
+                        </span>
+                        <span className={`account-status ${
+                          paymentStatusIsSettled(payment.status) ? "is-active" : ""
+                        }`}>
+                          {paymentStatusLabel(payment.status)}
+                        </span>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="account-empty">
+                    <strong>{viewCopy.emptyTitle}</strong>
+                    <span>{viewCopy.emptyText}</span>
+                  </div>
+                )
+              ) : visibleRequests.length > 0 ? (
                 <div className="account-request-list">
                   {visibleRequests.map((request) => (
                     <Link
@@ -229,9 +351,15 @@ export default function CustomerPage() {
                   <span>{viewCopy.emptyText}</span>
                 </div>
               )}
-              <Link className="button primary account-button" href="/post-job">
-                Post a job <span>→</span>
-              </Link>
+              {activeView === "payments" ? (
+                <Link className="button secondary account-button" href="/payments">
+                  Payment policy <span>→</span>
+                </Link>
+              ) : (
+                <Link className="button primary account-button" href="/post-job">
+                  Post a job <span>→</span>
+                </Link>
+              )}
             </section>
 
             <details className="workspace-tools account-customer-guide">
