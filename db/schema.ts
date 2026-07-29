@@ -134,6 +134,36 @@ export const providerApplications = sqliteTable(
   ],
 );
 
+export const providerCredentialVerifications = sqliteTable(
+  "provider_credential_verifications",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    requirementKey: text("requirement_key").notNull(),
+    requirementLabel: text("requirement_label").notNull(),
+    jurisdiction: text("jurisdiction").notNull(),
+    credentialIdentifier: text("credential_identifier").notNull().default(""),
+    issuingAuthority: text("issuing_authority").notNull(),
+    legalBasisUrl: text("legal_basis_url").notNull(),
+    officialLookupUrl: text("official_lookup_url").notNull(),
+    status: text("status").notNull().default("pending"),
+    verificationMethod: text("verification_method").notNull().default("official-online-record"),
+    checkedAt: text("checked_at").notNull().default(""),
+    expiresAt: text("expires_at").notNull().default(""),
+    verifiedBy: text("verified_by").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_credential_provider_requirement_unique")
+      .on(table.providerId, table.requirementKey),
+    index("provider_credential_provider_id_idx").on(table.providerId),
+    index("provider_credential_status_idx").on(table.status),
+    index("provider_credential_checked_at_idx").on(table.checkedAt),
+  ],
+);
+
 export const stripePayments = sqliteTable(
   "stripe_payments",
   {
