@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { customerRequests, providerApplications, providerQuotes } from "../../../db/schema";
+import { customerRequests, providerQuotes } from "../../../db/schema";
+import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { getJobImage } from "../../../lib/job-images";
 import { isOwnerRequest } from "../../../lib/owner-auth";
 import {
@@ -24,24 +25,18 @@ export async function GET(request: Request) {
     .where(eq(customerRequests.id, requestId)).limit(1);
   if (!job) return Response.json({ error: "Image not found." }, { status: 404 });
 
+  const session = await getAccountSession(request);
   let allowed = isOwnerRequest(request) || (Boolean(token) && token === job.accessToken);
-  if (!allowed && token) {
-    const [provider] = await db.select().from(providerApplications)
-      .where(and(
-        eq(providerApplications.accessToken, token),
-        eq(providerApplications.status, "approved"),
-      )).limit(1);
-    const providerAccessIsActive = provider && (
-      provider.isTestProvider === "yes"
-      || (
-        provider.verificationStatus === "verified"
-      )
-    );
-    if (
-      provider
-      && providerAccessIsActive
-      && (provider.isTestProvider === "yes") === (job.isTestJob === "yes")
-    ) {
+  if (
+    !allowed
+    && session?.role === "customer"
+    && session.email.toLowerCase() === job.email.toLowerCase()
+  ) {
+    allowed = true;
+  }
+  if (!allowed && session?.role === "provider") {
+    const provider = await providerAccountFor(session.email);
+    if (provider && job.isTestJob !== "yes") {
       const [acceptedQuote] = await db.select({ id: providerQuotes.id }).from(providerQuotes)
         .where(and(
           eq(providerQuotes.requestId, job.id),

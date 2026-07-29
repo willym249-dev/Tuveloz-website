@@ -21,6 +21,7 @@ import {
   validateJobImage,
 } from "../../../lib/job-images";
 import { customerPriceFor } from "../../../lib/customer-fee";
+import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -50,15 +51,20 @@ function providerAccessIsActive(provider: typeof providerApplications.$inferSele
   );
 }
 
+async function providerForSession(request: Request) {
+  const session = await getAccountSession(request);
+  if (!session || session.role !== "provider") return null;
+  const provider = await providerAccountFor(session.email);
+  return provider && providerAccessIsActive(provider) ? provider : null;
+}
+
 export async function GET(request: Request) {
-  const token = new URL(request.url).searchParams.get("token") ?? "";
-  const [provider] = await getDb().select().from(providerApplications)
-    .where(and(
-      eq(providerApplications.accessToken, token),
-      eq(providerApplications.status, "approved"),
-    )).limit(1);
-  if (!provider || !token || !providerAccessIsActive(provider)) {
-    return Response.json({ error: "Tuveloz-verified provider access required." }, { status: 403 });
+  const provider = await providerForSession(request);
+  if (!provider) {
+    return Response.json(
+      { error: "Sign in to your verified provider workspace." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
   }
   const approvedServiceSet = effectiveProviderServices(
     provider.service,
@@ -223,20 +229,18 @@ export async function POST(request: Request) {
   } else {
     body = (await request.json()) as Record<string, unknown>;
   }
-  const providerToken = clean(body.providerToken, 120);
   const requestId = clean(body.requestId, 80);
-  if (!providerToken || !requestId) {
-    return Response.json({ error: "Approved provider access required." }, { status: 403 });
+  if (!requestId) {
+    return Response.json({ error: "Choose a valid job request." }, { status: 400 });
+  }
+  const provider = await providerForSession(request);
+  if (!provider) {
+    return Response.json(
+      { error: "Sign in to your verified provider workspace." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
   }
   const db = getDb();
-  const [provider] = await db.select().from(providerApplications)
-    .where(and(
-      eq(providerApplications.accessToken, providerToken),
-      eq(providerApplications.status, "approved"),
-    )).limit(1);
-  if (!provider || !providerAccessIsActive(provider)) {
-    return Response.json({ error: "Active provider access required." }, { status: 403 });
-  }
 
   if (body.action === "save-job-record" || body.action === "toggle-timer") {
     const [assignedJob] = await db.select({

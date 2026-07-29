@@ -165,7 +165,6 @@ export default function ProviderJobsPage() {
   const [submittingQuoteId, setSubmittingQuoteId] = useState("");
   const [pendingQuote, setPendingQuote] = useState<PendingQuote | null>(null);
   const [pendingStatus, setPendingStatus] = useState<PendingStatus | null>(null);
-  const [providerToken, setProviderToken] = useState("");
   const [completionPhoto, setCompletionPhoto] = useState<File | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [savingRecordId, setSavingRecordId] = useState("");
@@ -177,30 +176,25 @@ export default function ProviderJobsPage() {
   useEffect(() => {
     async function loadWorkspace() {
       try {
-        let value = new URLSearchParams(window.location.search).get("token") ?? "";
-        if (!value) {
-          const accountResponse = await fetch("/api/account", { cache: "no-store" });
-          const account = await accountResponse.json();
-          if (accountResponse.status === 401) {
-            window.location.replace("/account?role=provider");
-            return;
-          }
-          if (!accountResponse.ok) {
-            throw new Error(account.error || "Unable to load your verified provider account.");
-          }
-          if (account.role !== "provider" || !account.provider?.accessToken) {
-            window.location.replace("/customer");
-            return;
-          }
-          value = account.provider.accessToken;
-          setSignedIn(true);
-          setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
+        const accountResponse = await fetch("/api/account", { cache: "no-store" });
+        const account = await accountResponse.json();
+        if (accountResponse.status === 401) {
+          window.location.replace("/account?role=provider");
+          return;
         }
+        if (!accountResponse.ok) {
+          throw new Error(account.error || "Unable to load your verified provider account.");
+        }
+        if (account.role !== "provider") {
+          window.location.replace("/customer");
+          return;
+        }
+        setSignedIn(true);
+        setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
 
-        const response = await fetch(`/api/jobs?token=${encodeURIComponent(value)}`);
+        const response = await fetch("/api/jobs", { cache: "no-store" });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Unable to load approved jobs.");
-        setProviderToken(value);
         setJobs(data.jobs ?? []);
         setAssignedJobs(data.assignedJobs ?? []);
         setMyQuotes(data.myQuotes ?? []);
@@ -241,14 +235,14 @@ export default function ProviderJobsPage() {
     const response = await fetch("/api/jobs", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ providerToken, ...pendingQuote }),
+      body: JSON.stringify({ ...pendingQuote }),
     });
     const result = await response.json();
     setSubmittingQuoteId("");
     if (!response.ok) return setError(result.error || "Unable to submit quote.");
     setError("");
     setSent(pendingQuote.requestId);
-    const refreshedResponse = await fetch(`/api/jobs?token=${encodeURIComponent(providerToken)}`);
+    const refreshedResponse = await fetch("/api/jobs", { cache: "no-store" });
     if (refreshedResponse.ok) {
       const refreshed = await refreshedResponse.json();
       setJobs(refreshed.jobs ?? []);
@@ -267,7 +261,6 @@ export default function ProviderJobsPage() {
           const formData = new FormData();
           formData.set("action", "update-status");
           formData.set("requestId", requestId);
-          formData.set("providerToken", providerToken);
           formData.set("status", status);
           if (completionPhoto) formData.set("completion-photo", completionPhoto);
           return fetch("/api/jobs", { method: "POST", body: formData });
@@ -275,7 +268,7 @@ export default function ProviderJobsPage() {
       : await fetch("/api/jobs", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "update-status", requestId, providerToken, status }),
+          body: JSON.stringify({ action: "update-status", requestId, status }),
         });
     const result = await response.json();
     setUpdatingJobId("");
@@ -315,7 +308,6 @@ export default function ProviderJobsPage() {
       body: JSON.stringify({
         action: "save-job-record",
         requestId: job.id,
-        providerToken,
         workStatus: values.workStatus,
         actualMinutes: Math.round(Number(values.actualHours || 0) * 60),
         billableMinutes: Math.round(Number(values.billableHours || 0) * 60),
@@ -342,7 +334,6 @@ export default function ProviderJobsPage() {
       body: JSON.stringify({
         action: "toggle-timer",
         requestId: job.id,
-        providerToken,
         timerMode: job.timerStartedAt ? "stop" : "start",
       }),
     });
@@ -541,7 +532,7 @@ export default function ProviderJobsPage() {
           <summary>Payments and business page</summary>
           <div className="workspace-tool-content">
             {!provider.testProvider && <StripeConnectPanel signedIn={signedIn} />}
-            <ProviderBusinessPage token={providerToken} />
+            <ProviderBusinessPage />
             <div className="provider-control-note">
               <strong>Your business records</strong>
               <span>Time tracking is optional and controlled by you. It is not payroll or employee monitoring.</span>
@@ -594,7 +585,7 @@ export default function ProviderJobsPage() {
                       <figure className="job-photo">
                         <figcaption>Customer issue photo</figcaption>
                         <img
-                          src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=issue&token=${encodeURIComponent(providerToken)}`}
+                          src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=issue`}
                           alt="Customer-provided view of the vehicle issue"
                           referrerPolicy="no-referrer"
                         />
@@ -774,7 +765,7 @@ export default function ProviderJobsPage() {
                           <figure className="job-photo">
                             <figcaption>Completion photo</figcaption>
                             <img
-                              src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=completion&token=${encodeURIComponent(providerToken)}`}
+                              src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=completion`}
                               alt="Provider-submitted view of the completed work"
                               referrerPolicy="no-referrer"
                             />
@@ -858,7 +849,7 @@ export default function ProviderJobsPage() {
                     <figure className="job-photo">
                       <figcaption>Completion photo</figcaption>
                       <img
-                        src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=completion&token=${encodeURIComponent(providerToken)}`}
+                        src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=completion`}
                         alt="Provider-submitted view of the completed work"
                         referrerPolicy="no-referrer"
                       />
@@ -926,7 +917,7 @@ export default function ProviderJobsPage() {
               <figure className="job-photo">
                 <figcaption>Customer issue photo</figcaption>
                 <img
-                  src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=issue&token=${encodeURIComponent(providerToken)}`}
+                  src={`/api/job-images?requestId=${encodeURIComponent(job.id)}&kind=issue`}
                   alt="Customer-provided view of the vehicle issue"
                   referrerPolicy="no-referrer"
                 />

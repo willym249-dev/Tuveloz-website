@@ -13,11 +13,11 @@ import {
   parseProviderServices,
   parseProviderWorkLocations,
 } from "../../../lib/service-matching";
+import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const slug = url.searchParams.get("slug")?.trim().slice(0, 100) ?? "";
-  const token = url.searchParams.get("token")?.trim().slice(0, 120) ?? "";
   if (!slug) {
     return Response.json({ error: "Provider page not found." }, { status: 404 });
   }
@@ -41,15 +41,11 @@ export async function GET(request: Request) {
     && result.provider.verificationStatus === "verified"
     && result.provider.isTestProvider === "no"
   );
-  const privatePreview = Boolean(
-    token
-    && token === result.provider.accessToken
-    && result.provider.status === "approved"
-    && (
-      result.provider.isTestProvider === "yes"
-      || result.provider.verificationStatus === "verified"
-    ),
-  );
+  const session = await getAccountSession(request);
+  const previewProvider = session?.role === "provider"
+    ? await providerAccountFor(session.email)
+    : null;
+  const privatePreview = previewProvider?.id === result.provider.id;
   if (!publicAccess && !privatePreview) {
     return Response.json({ error: "Provider page not found." }, { status: 404 });
   }
@@ -125,6 +121,10 @@ export async function GET(request: Request) {
     reviewSummary: { average, count: reviews.length },
     confidence: {
       completedJobs: Number(completedJobs?.count ?? 0),
+    },
+  }, {
+    headers: {
+      "cache-control": publicAccess ? "public, max-age=60" : "private, no-store",
     },
   });
 }

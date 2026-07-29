@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   BrandMark,
   TuvelozIcon,
@@ -78,23 +78,20 @@ function StorefrontLoading() {
 
 export default function ProviderStorefrontPage() {
   const params = useParams<{ slug: string }>();
-  const searchParams = useSearchParams();
   const slug = typeof params?.slug === "string" ? params.slug : "";
-  const token = searchParams.get("token") ?? "";
   const [data, setData] = useState<StorefrontData | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!slug) return;
-    const tokenQuery = token ? `&token=${encodeURIComponent(token)}` : "";
-    fetch(`/api/public-provider?slug=${encodeURIComponent(slug)}${tokenQuery}`)
+    fetch(`/api/public-provider?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
       .then(async (response) => {
         const result = await response.json() as StorefrontData;
         if (!response.ok) throw new Error(result.error || "Provider page not found.");
         setData(result);
       })
       .catch((reason) => setError(reason.message || "Provider page not found."));
-  }, [slug, token]);
+  }, [slug]);
 
   if (!data && !error) return <StorefrontLoading />;
   if (!data) {
@@ -116,9 +113,6 @@ export default function ProviderStorefrontPage() {
 
   const { profile, services, areas, workLocations, businessMunicipality, gallery, reviews } = data;
   const average = data.reviewSummary.average;
-  const mediaTokenQuery = data.privatePreview && token
-    ? `&token=${encodeURIComponent(token)}`
-    : "";
 
   return (
     <main className="storefront-shell">
@@ -130,7 +124,7 @@ export default function ProviderStorefrontPage() {
       {data.privatePreview && (
         <div className="storefront-preview-banner">
           <strong>{data.testProvider ? "TEST PROVIDER · FICTIONAL" : "PRIVATE DRAFT PREVIEW"}</strong>
-          <span>This page is visible only through your private provider link. Do not share it.</span>
+          <span>This draft is visible only while you are signed in to the matching provider account.</span>
         </div>
       )}
 
@@ -139,7 +133,7 @@ export default function ProviderStorefrontPage() {
           {profile.hasLogo ? (
             <img
               className="storefront-logo"
-              src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}${mediaTokenQuery}`}
+              src={`/api/provider-media?profileId=${encodeURIComponent(profile.id)}`}
               alt={`${profile.businessName} logo`}
             />
           ) : (
@@ -283,7 +277,7 @@ export default function ProviderStorefrontPage() {
             {gallery.map((item) => (
               <figure key={item.id}>
                 <img
-                  src={`/api/provider-media?galleryId=${encodeURIComponent(item.id)}${mediaTokenQuery}`}
+                  src={`/api/provider-media?galleryId=${encodeURIComponent(item.id)}`}
                   alt={item.caption || `${item.service || "Provider"} work example`}
                 />
                 {(item.caption || item.service) && (

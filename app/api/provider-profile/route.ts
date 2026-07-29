@@ -2,7 +2,6 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   jobReviews,
-  providerApplications,
   providerGalleryItems,
   providerProfiles,
   providerQuotes,
@@ -15,6 +14,7 @@ import {
 } from "../../../lib/provider-media";
 import { parseProviderServices } from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../../lib/quote-feedback";
+import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 
 const AVAILABILITY_STATUSES = new Set(["Available now", "Busy", "Off duty"]);
 const MAX_GALLERY_ITEMS = 12;
@@ -33,20 +33,10 @@ function profileSlug(name: string, providerId: string) {
   return `${base}-${providerId.replace(/[^a-z0-9]/gi, "").slice(0, 8).toLowerCase()}`;
 }
 
-async function activeProvider(token: string) {
-  if (!token) return null;
-  const [provider] = await getDb().select().from(providerApplications)
-    .where(and(
-      eq(providerApplications.accessToken, token),
-      eq(providerApplications.status, "approved"),
-    ))
-    .limit(1);
-  if (!provider) return null;
-  if (
-    provider.isTestProvider !== "yes"
-    && provider.verificationStatus !== "verified"
-  ) return null;
-  return provider;
+async function activeProvider(request: Request) {
+  const session = await getAccountSession(request);
+  if (!session || session.role !== "provider") return null;
+  return providerAccountFor(session.email);
 }
 
 async function profileFor(providerId: string) {
@@ -256,10 +246,12 @@ async function responseData(
 }
 
 export async function GET(request: Request) {
-  const token = new URL(request.url).searchParams.get("token") ?? "";
-  const provider = await activeProvider(token);
+  const provider = await activeProvider(request);
   if (!provider) {
-    return Response.json({ error: "Active provider access required." }, { status: 403 });
+    return Response.json(
+      { error: "Sign in to your verified provider workspace." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
   }
   return Response.json(await responseData(provider), {
     headers: { "cache-control": "no-store" },
@@ -272,10 +264,12 @@ export async function POST(request: Request) {
   const payload = isMultipart
     ? Object.fromEntries((await request.formData()).entries())
     : await request.json() as Record<string, unknown>;
-  const token = clean(payload.token, 120);
-  const provider = await activeProvider(token);
+  const provider = await activeProvider(request);
   if (!provider) {
-    return Response.json({ error: "Active provider access required." }, { status: 403 });
+    return Response.json(
+      { error: "Sign in to your verified provider workspace." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
   }
   const db = getDb();
   const action = clean(payload.action, 40) || "save-profile";
