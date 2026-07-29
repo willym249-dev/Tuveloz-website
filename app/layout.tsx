@@ -3,6 +3,8 @@ import { SiteLanguageProvider } from "./components/site-language";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tuveloz.com"),
+  manifest: "/manifest.webmanifest",
   title: "Tuveloz | Customer Choice. Provider Freedom.",
   description:
     "A local vehicle-service marketplace currently operating in Montgomery County, Maryland. Customers compare quotes while providers choose their schedule, prices, and work.",
