@@ -35,7 +35,7 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   emptyText: string;
 }> = {
   requests: {
-    title: "My requests",
+    title: "My jobs",
     emptyTitle: "No requests yet",
     emptyText: "Your vehicle-service requests will appear here.",
   },
