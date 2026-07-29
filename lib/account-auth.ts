@@ -18,6 +18,7 @@ export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
 export const PASSWORD_PURPOSES = ["create", "reset"] as const;
 export type PasswordPurpose = (typeof PASSWORD_PURPOSES)[number];
+type PasswordChallengePurpose = PasswordPurpose | "signin";
 
 const LOGIN_CODE_LIFETIME_MS = 10 * 60 * 1000;
 const LOGIN_RATE_WINDOW_MS = 15 * 60 * 1000;
@@ -26,7 +27,7 @@ const LOGIN_MAX_ATTEMPTS = 5;
 // Cloudflare Workers rejects a single PBKDF2 operation above 100,000 rounds.
 // A server-side HMAC pepper protects the password material before PBKDF2.
 const PASSWORD_HASH_ITERATIONS = 100_000;
-const PASSWORD_MIN_LENGTH = 15;
+const PASSWORD_MIN_LENGTH = 10;
 const PASSWORD_MAX_LENGTH = 128;
 const PASSWORD_LOGIN_MAX_ATTEMPTS = 5;
 const PASSWORD_LOCKOUT_MS = 15 * 60 * 1000;
@@ -79,6 +80,12 @@ export function passwordValidationError(value: unknown) {
   }
   if (characterCount > PASSWORD_MAX_LENGTH) {
     return `Use no more than ${PASSWORD_MAX_LENGTH} characters.`;
+  }
+  if (!/\p{Lu}/u.test(value)) {
+    return "Add at least one uppercase letter.";
+  }
+  if (!/[^\p{L}\p{N}\s]/u.test(value)) {
+    return "Add at least one special character.";
   }
   const normalized = value.normalize("NFKC").toLowerCase();
   if (
@@ -435,7 +442,7 @@ export async function verifyAccountCode(
 async function sendPasswordVerificationEmail(
   email: string,
   role: AccountRole,
-  purpose: PasswordPurpose,
+  purpose: PasswordChallengePurpose,
   code: string,
 ) {
   const apiKey = runtimeEnv().RESEND_API_KEY;
@@ -447,7 +454,9 @@ async function sendPasswordVerificationEmail(
   const roleLabel = role === "provider" ? "verified provider" : "customer";
   const actionLabel = purpose === "create"
     ? "finish creating your account"
-    : "reset your password";
+    : purpose === "reset"
+      ? "reset your password"
+      : "finish signing in";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -459,7 +468,9 @@ async function sendPasswordVerificationEmail(
       to: [email],
       subject: purpose === "create"
         ? "Verify your Tuveloz account"
-        : "Reset your Tuveloz password",
+        : purpose === "reset"
+          ? "Reset your Tuveloz password"
+          : "Verify your Tuveloz sign-in",
       text: [
         `Use this code to ${actionLabel} for your Tuveloz ${roleLabel} workspace:`,
         "",
@@ -477,6 +488,14 @@ async function sendPasswordVerificationEmail(
     });
     throw new Error("The email service could not send this code.");
   }
+}
+
+async function issuePasswordChallenge(
+  email: string,
+  role: AccountRole,
+  purpose: PasswordChallengePurpose,
+) {
+  return issuePasswordChallenge(email, role, purpose);
 }
 
 export async function requestPasswordVerification(
@@ -706,6 +725,59 @@ export async function signInWithPassword(
     }).where(eq(accountCredentials.email, email));
   }
 
+  const challenge = await issuePasswordChallenge(email, role, "signin");
+  if (!challenge.accepted) {
+    return { ok: false as const, rateLimited: true as const };
+  }
+  return { ok: true as const, challengeRequired: true as const };
+}
+
+export async function verifyPasswordSignIn(
+  email: string,
+  role: AccountRole,
+  code: string,
+) {
+  const purpose: PasswordChallengePurpose = "signin";
+  const [challenge] = await getDb().select().from(passwordVerificationCodes)
+    .where(and(
+      eq(passwordVerificationCodes.email, email),
+      eq(passwordVerificationCodes.role, role),
+      eq(passwordVerificationCodes.purpose, purpose),
+      eq(passwordVerificationCodes.usedAt, ""),
+    ))
+    .orderBy(desc(passwordVerificationCodes.createdAt))
+    .limit(1);
+  if (
+    !challenge
+    || challenge.attempts >= LOGIN_MAX_ATTEMPTS
+    || parseStoredDate(challenge.expiresAt) <= Date.now()
+  ) {
+    return { ok: false as const };
+  }
+
+  const suppliedHash = await hmacHex(
+    `${challenge.id}:${email}:${role}:${purpose}:${code}`,
+  );
+  if (!constantTimeEqual(challenge.codeHash, suppliedHash)) {
+    const attempts = challenge.attempts + 1;
+    await getDb().update(passwordVerificationCodes).set({
+      attempts,
+      usedAt: attempts >= LOGIN_MAX_ATTEMPTS ? new Date().toISOString() : "",
+    }).where(eq(passwordVerificationCodes.id, challenge.id));
+    return { ok: false as const };
+  }
+
+  const roles = await eligibleAccountRoles(email);
+  if (!roles.includes(role)) {
+    await getDb().update(passwordVerificationCodes)
+      .set({ usedAt: new Date().toISOString() })
+      .where(eq(passwordVerificationCodes.id, challenge.id));
+    return { ok: false as const };
+  }
+
+  await getDb().update(passwordVerificationCodes)
+    .set({ usedAt: new Date().toISOString() })
+    .where(eq(passwordVerificationCodes.id, challenge.id));
   const session = await createAccountSession(email, role);
   return session ? { ok: true as const, ...session } : { ok: false as const };
 }
