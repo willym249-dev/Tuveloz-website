@@ -24,7 +24,7 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 27);
+  assert.equal(journal.entries.length, 28);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
@@ -1023,3 +1023,68 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(controlSource.includes("Live money must remain off"));
   assert.ok(!controlSource.includes("Enable live payments"));
 });
+
+test("provider activation and public claims require exact current government credential checks", async () => {
+  const [
+    requirementSource,
+    schemaSource,
+    migrationSource,
+    adminActionSource,
+    adminPageSource,
+    publicApiSource,
+    publicPageSource,
+    accountAuthSource,
+  ] = await Promise.all([
+    readFile(new URL("../lib/provider-credentials.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0027_verified_provider_credentials.sql", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/providers/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/public-provider/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/account-auth.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(schemaSource.includes("export const providerCredentialVerifications = sqliteTable"));
+  assert.ok(schemaSource.includes('"provider_credential_verifications"'));
+  assert.ok(migrationSource.includes("CREATE TABLE `provider_credential_verifications`"));
+  assert.ok(migrationSource.includes("provider_requirement_unique"));
+
+  assert.ok(requirementSource.includes("Montgomery County motor-vehicle repair registration"));
+  assert.ok(requirementSource.includes("Maryland safety-inspection station license"));
+  assert.ok(requirementSource.includes("Maryland safety-inspection mechanic registration"));
+  assert.ok(requirementSource.includes("https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html"));
+  assert.ok(requirementSource.includes("https://egov.maryland.gov/msp/msis/Lookup"));
+  assert.ok(requirementSource.includes('assessment.diagnosticsScope === "official-authorized"'));
+  assert.ok(requirementSource.includes('record.status !== "verified"'));
+  assert.ok(requirementSource.includes("record.expiresAt"));
+
+  assert.ok(adminActionSource.includes("isVerifiedOwnerRequest(request)"));
+  assert.ok(adminActionSource.includes("isSameOriginRequest(request)"));
+  assert.ok(adminActionSource.includes('body.action === "save-credential"'));
+  assert.ok(adminActionSource.includes("requiredProviderCredentialRequirements("));
+  assert.ok(adminActionSource.includes("unmetProviderCredentialRequirements("));
+  assert.ok(adminActionSource.includes("Official credential check required before activation"));
+  assert.ok(adminActionSource.includes('status !== "verified"'));
+  assert.ok(adminActionSource.includes('alertsEnabled: "no"'));
+
+  assert.ok(adminPageSource.includes("Official government credential checks"));
+  assert.ok(adminPageSource.includes("Do not store Social Security numbers"));
+  assert.ok(adminPageSource.includes("Official requirement"));
+  assert.ok(adminPageSource.includes("Official lookup"));
+  assert.ok(!adminPageSource.includes("Tuveloz verified badge"));
+
+  assert.ok(publicApiSource.includes("providerCredentialRecordIsCurrent"));
+  assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
+  assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
+  assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
+  assert.ok(publicPageSource.includes("Government credentials checked"));
+  assert.ok(publicPageSource.includes("Not legally triggered"));
+  assert.ok(publicPageSource.includes("does not use a blanket licensed-provider claim"));
+  assert.ok(!publicPageSource.includes("✓ Tuveloz verified"));
+  assert.ok(!publicPageSource.includes("Verified identity"));
+
+  assert.ok(accountAuthSource.includes("providerCredentialRequirementsAreSatisfied"));
+  assert.ok(accountAuthSource.includes("providerCredentialVerifications"));
+});
+
