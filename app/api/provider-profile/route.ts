@@ -261,7 +261,9 @@ export async function GET(request: Request) {
   if (!provider) {
     return Response.json({ error: "Active provider access required." }, { status: 403 });
   }
-  return Response.json(await responseData(provider));
+  return Response.json(await responseData(provider), {
+    headers: { "cache-control": "no-store" },
+  });
 }
 
 export async function POST(request: Request) {
