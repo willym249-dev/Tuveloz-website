@@ -142,9 +142,8 @@ export async function POST(request: Request) {
     if (provider.status === "declined") {
       return Response.json({ error: "A declined provider cannot receive test access." }, { status: 409 });
     }
-    const accessToken = provider.accessToken || crypto.randomUUID();
     await db.update(providerApplications).set({
-      accessToken,
+      accessToken: "",
       status: "approved",
       verificationStatus: "test",
       isTestProvider: "yes",
@@ -154,7 +153,6 @@ export async function POST(request: Request) {
     }).where(eq(providerApplications.id, provider.id));
     return Response.json({
       ok: true,
-      accessToken,
       status: "approved",
       verificationStatus: "test",
       isTestProvider: "yes",
@@ -188,9 +186,8 @@ export async function POST(request: Request) {
     ) {
       return Response.json({ error: "This provider must use only an active pilot service area." }, { status: 409 });
     }
-    const accessToken = provider.accessToken || crypto.randomUUID();
     await db.update(providerApplications).set({
-      accessToken,
+      accessToken: "",
       serviceArea: serializeProviderAreas(normalizedAreas),
       status: "approved",
       verificationStatus: "verified",
@@ -200,7 +197,6 @@ export async function POST(request: Request) {
     }).where(eq(providerApplications.id, provider.id));
     return Response.json({
       ok: true,
-      accessToken,
       serviceArea: serializeProviderAreas(normalizedAreas),
       status: "approved",
       verificationStatus: "verified",
@@ -229,5 +225,5 @@ export async function POST(request: Request) {
     return Response.json({ error: "This provider application was already reviewed." }, { status: 409 });
   }
 
-  return Response.json({ ok: true, accessToken: "", verificationStatus: "declined" });
+  return Response.json({ ok: true, verificationStatus: "declined" });
 }
