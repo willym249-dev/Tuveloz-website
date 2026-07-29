@@ -2,13 +2,13 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { customerRequests, providerApplications, providerQuotes } from "../../../db/schema";
 import { getJobImage } from "../../../lib/job-images";
+import { isOwnerRequest } from "../../../lib/owner-auth";
 import {
   effectiveProviderServices,
   providerMatchesArea,
   providerMatchesJob,
   providerMatchesServiceLocation,
 } from "../../../lib/service-matching";
-import { isOwnerRequest } from "../../../lib/owner-auth";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

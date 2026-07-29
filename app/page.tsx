@@ -411,6 +411,7 @@ export default function Home() {
       rulesReviewed: legalRequirementsAccepted,
       providerAttestation: legalRequirementsAccepted,
       legalResponsibility: legalRequirementsAccepted,
+      termsAccepted: formData.get("terms-accepted") === "yes",
       providerSelfAssessment: providerAssessment,
     };
 
@@ -587,9 +588,14 @@ export default function Home() {
 
         <div className="header-actions">
           <SiteLanguageButton />
-          <Link className="header-sign-in" href="/account">
+          <a
+            aria-label="Sign in to Tuveloz"
+            className="header-sign-in"
+            href="/account"
+            onClick={() => setMenuOpen(false)}
+          >
             Sign in
-          </Link>
+          </a>
           <a className="header-cta" href="#request">
             Post a job
           </a>
@@ -1196,6 +1202,14 @@ export default function Home() {
                 <input name="issue-photo" type="file" accept="image/jpeg,image/png,image/webp" />
                 <small>JPG, PNG, or WebP · maximum 8 MB. Don&apos;t upload payment details or sensitive documents.</small>
               </label>
+              <label className="policy-consent">
+                <input required name="terms-accepted" type="checkbox" value="yes" />
+                <span>
+                  I am 18 or older and agree to the <a href="/terms">Terms</a> and{" "}
+                  <a href="/customer-agreement">Customer Agreement</a>, and
+                  acknowledge the <a href="/privacy">Privacy Policy</a>.
+                </span>
+              </label>
               {pendingSubmission === "request" ? (
                 <ConfirmAction
                   busy={requestBusy}
@@ -1638,6 +1652,25 @@ export default function Home() {
                     </label>
                   </section>
                 ) : null}
+                <label className="policy-consent">
+                  <input required name="terms-accepted" type="checkbox" value="yes" />
+                  <span>
+                    {providerFormIsSpanish
+                      ? "Confirmo que tengo 18 años o más, acepto los "
+                      : "I am 18 or older and agree to the "}
+                    <a href="/terms">
+                      {providerFormIsSpanish ? "Términos" : "Terms"}
+                    </a>
+                    {providerFormIsSpanish ? " y el " : " and "}
+                    <a href="/provider-agreement">
+                      {providerFormIsSpanish ? "Acuerdo del Proveedor" : "Provider Agreement"}
+                    </a>
+                    {providerFormIsSpanish ? ", y reconozco la " : ", and acknowledge the "}
+                    <a href="/privacy">
+                      {providerFormIsSpanish ? "Política de Privacidad" : "Privacy Policy"}
+                    </a>.
+                  </span>
+                </label>
                 {pendingSubmission === "application" ? (
                   <ConfirmAction
                     backLabel={providerFormIsSpanish ? "Regresar" : "Go back"}
@@ -1910,6 +1943,11 @@ export default function Home() {
           <a href="#providers">Providers</a>
           <a href="/storefront">Storefront</a>
           <a href="/account">Sign in</a>
+          <a href="/terms">Terms</a>
+          <a href="/customer-agreement">Customer agreement</a>
+          <a href="/provider-agreement">Provider agreement</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/payments">Payments</a>
           <a href="#expansion">Request your area</a>
           <a href="#feedback">Give feedback</a>
           {isOwner && <a href="/admin">Owner dashboard</a>}

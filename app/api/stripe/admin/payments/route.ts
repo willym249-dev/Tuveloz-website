@@ -15,7 +15,6 @@ import {
   retrieveRecipientAccountStatus,
   stripeErrorResponse,
 } from "../../../../../lib/stripe";
-import { stripeObjectId } from "../../../../../lib/stripe-payments";
 
 export async function GET(request: Request) {
   if (!isOwnerRequest(request)) {
@@ -44,6 +43,10 @@ export async function GET(request: Request) {
     paidAt: stripePayments.paidAt,
     releasedAt: stripePayments.releasedAt,
     releasedBy: stripePayments.releasedBy,
+    refundAmountCents: stripePayments.refundAmountCents,
+    refundedAt: stripePayments.refundedAt,
+    disputeStatus: stripePayments.disputeStatus,
+    disputeUpdatedAt: stripePayments.disputeUpdatedAt,
     createdAt: stripePayments.createdAt,
   }).from(stripePayments)
     .leftJoin(
@@ -62,6 +65,8 @@ export async function GET(request: Request) {
       const readyAfterCompletion =
         payment.settlementStrategy === "separate_transfer"
         && payment.status === "paid_pending_completion"
+        && payment.refundAmountCents === 0
+        && !payment.disputeStatus
         && payment.jobStatus === "completed";
       return {
         ...payment,
@@ -69,6 +74,8 @@ export async function GET(request: Request) {
         canRelease:
           payment.settlementStrategy === "separate_transfer"
           && payment.jobStatus === "completed"
+          && payment.refundAmountCents === 0
+          && !payment.disputeStatus
           && (payment.status === "paid_pending_completion"
             || payment.status === "ready_for_release"),
       };
@@ -136,6 +143,12 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
+  if (payment.refundAmountCents > 0 || payment.disputeStatus) {
+    return Response.json(
+      { error: "A refunded or disputed payment cannot be released." },
+      { status: 409 },
+    );
+  }
 
   try {
     const stripeClient = getStripeClient();
@@ -156,11 +169,18 @@ export async function POST(request: Request) {
       payment.paymentIntentId,
       { expand: ["latest_charge"] },
     );
-    const chargeId = stripeObjectId(paymentIntent.latest_charge);
+    const charge = paymentIntent.latest_charge
+      && typeof paymentIntent.latest_charge !== "string"
+      ? paymentIntent.latest_charge
+      : null;
+    const chargeId = charge?.id ?? "";
     if (
       paymentIntent.status !== "succeeded"
       || paymentIntent.amount_received !== payment.customerTotalCents
       || !chargeId
+      || charge.refunded
+      || charge.amount_refunded > 0
+      || charge.disputed
       || paymentIntent.metadata.tuveloz_payment_record_id !== payment.id
     ) {
       return Response.json(

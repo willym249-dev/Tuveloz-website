@@ -7,7 +7,9 @@ import {
 } from "../../../../../lib/stripe";
 import {
   recordCheckoutSessionStatus,
+  recordDisputeStatus,
   recordPaidCheckoutSession,
+  recordRefundedCharge,
 } from "../../../../../lib/stripe-payments";
 
 export async function POST(request: Request) {
@@ -41,6 +43,14 @@ export async function POST(request: Request) {
         break;
       case "checkout.session.expired":
         await recordCheckoutSessionStatus(event.data.object, "checkout_expired");
+        break;
+      case "charge.refunded":
+        await recordRefundedCharge(event.data.object);
+        break;
+      case "charge.dispute.created":
+      case "charge.dispute.updated":
+      case "charge.dispute.closed":
+        await recordDisputeStatus(event.data.object);
         break;
       default:
         // A 2xx response acknowledges unrelated events so Stripe does not retry

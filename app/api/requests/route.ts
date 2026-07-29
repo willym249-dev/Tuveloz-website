@@ -21,6 +21,10 @@ import {
   serializeLocationOptions,
   SUPPORTED_LAUNCH_AREAS,
 } from "../../../lib/service-matching";
+import {
+  CUSTOMER_POLICY_BUNDLE_VERSION,
+  policyAccepted,
+} from "../../../lib/policies";
 
 const ALLOWED_SERVICES = new Set<string>([
   ...CUSTOMER_JOB_SERVICE_OPTIONS,
@@ -59,6 +63,7 @@ export async function POST(request: Request) {
         serviceAddress: formData.get("service-address"),
         details: formData.get("job-details"),
         rebookToken: formData.get("rebook-token"),
+        termsAccepted: formData.get("terms-accepted"),
       };
       issuePhoto = formData.get("issue-photo");
     } else {
@@ -84,6 +89,7 @@ export async function POST(request: Request) {
     const serviceAddress = clean(body.serviceAddress, 240);
     const details = clean(body.details, 1500);
     const rebookToken = clean(body.rebookToken, 120);
+    const acceptedTerms = policyAccepted(body.termsAccepted);
 
     if (
       !name
@@ -105,6 +111,11 @@ export async function POST(request: Request) {
     }
     if (!/^\d{5}(?:-\d{4})?$/.test(zip)) {
       return Response.json({ error: "Enter a valid ZIP code." }, { status: 400 });
+    }
+    if (!acceptedTerms) {
+      return Response.json({
+        error: "You must be 18 or older and accept the Terms and Customer Agreement before posting a request.",
+      }, { status: 400 });
     }
     if (services.some((service) => !ALLOWED_SERVICES.has(service))) {
       return Response.json({ error: "Choose only listed launch services." }, { status: 400 });
@@ -250,6 +261,8 @@ export async function POST(request: Request) {
         accessToken,
         issueImageKey,
         issueImageType: image?.contentType ?? "",
+        termsAcceptedAt: new Date().toISOString(),
+        termsVersion: CUSTOMER_POLICY_BUNDLE_VERSION,
       });
     } catch (error) {
       if (issueImageKey) await deleteJobImage(issueImageKey);

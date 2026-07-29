@@ -20,6 +20,10 @@ type AdminPayment = {
   paidAt: string;
   releasedAt: string;
   releasedBy: string;
+  refundAmountCents: number;
+  refundedAt: string;
+  disputeStatus: string;
+  disputeUpdatedAt: string;
   createdAt: string;
 };
 
@@ -121,6 +125,16 @@ export function StripePaymentAdmin() {
         quotes use a separate transfer that becomes releasable only after the
         provider marks the job completed.
       </p>
+      <p className="admin-note">
+        Keep live processing disabled until Tuveloz&apos;s adult legal owner has
+        approved the merchant-of-record, tax, refund, dispute, and reserve
+        procedures and completed Stripe&apos;s live-account review.
+      </p>
+      <p className="admin-note">
+        Refunds and disputes are handled in Stripe Dashboard. Signed webhooks
+        record those changes here and prevent affected payments from being
+        released or charged again without review.
+      </p>
       {message && <p className="portal-success" role="status">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       {loading ? (
@@ -153,6 +167,18 @@ export function StripePaymentAdmin() {
                   : "Owner-released separate transfer"}
               </p>
               {payment.transferId && <p>Transfer: {payment.transferId}</p>}
+              {payment.refundAmountCents > 0 && (
+                <p>
+                  Refunded: {dollars(payment.refundAmountCents)}
+                  {payment.refundedAt ? ` · ${payment.refundedAt}` : ""}
+                </p>
+              )}
+              {payment.disputeStatus && (
+                <p>
+                  Dispute: {payment.disputeStatus.replaceAll("_", " ")}
+                  {payment.disputeUpdatedAt ? ` · ${payment.disputeUpdatedAt}` : ""}
+                </p>
+              )}
 
               {pendingId === payment.id ? (
                 <ConfirmAction

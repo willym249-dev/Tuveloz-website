@@ -279,7 +279,7 @@ function evaluateService(
 
   if (EXPANDED_SERVICE_REVIEW.has(service)) {
     reviews.push(
-      "Confirm service-specific licensing, insurance, training, safety, and local requirements before activation.",
+      "Confirm the service-specific legal, insurance, training, safety, and local rules before activation. Require a credential only if an applicable law requires it.",
     );
   }
 

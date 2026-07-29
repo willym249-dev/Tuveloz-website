@@ -99,10 +99,8 @@ export default function CustomerPage() {
       <section className="account-main">
         <div className="account-welcome">
           <span className="account-kicker">Customer workspace</span>
-          <h1>Your requests, without the provider clutter.</h1>
-          <p>
-            Review quotes, follow job progress, and start your next vehicle-service request.
-          </p>
+          <h1>Your jobs.</h1>
+          <p>View updates, review quotes, or post a new request.</p>
           {account && <small>Signed in as {account.email}</small>}
         </div>
 
@@ -149,20 +147,16 @@ export default function CustomerPage() {
               </Link>
             </section>
 
-            <section className="account-card account-customer-guide">
-              <span className="account-role">Customer tools</span>
-              <h2>Everything in one place.</h2>
-              <div className="account-feature-list">
-                <span>Compare verified-provider quotes</span>
-                <span>See the 10% service fee before choosing</span>
-                <span>Track an accepted job&apos;s progress</span>
-                <span>Book a completed provider again</span>
+            <details className="workspace-tools account-customer-guide">
+              <summary>How customer privacy works</summary>
+              <div className="workspace-tool-content">
+                <p>
+                  Providers see only the information needed to decide whether to
+                  quote. Your exact address and contact details are shared only
+                  with the provider you select.
+                </p>
               </div>
-              <p>
-                Providers never see your exact address or contact details until
-                you select their quote.
-              </p>
-            </section>
+            </details>
           </div>
         )}
       </section>

@@ -400,45 +400,53 @@ export default function ProviderJobsPage() {
         )}
         {provider?.testProvider && <span className="test-badge provider-workspace-badge">TEST PROVIDER · FICTIONAL</span>}
         <p>
-          {provider
-            ? `${parseProviderServices(provider.service).join(", ")} · Job access: ${provider.serviceArea}. `
-            : ""}
+          {provider ? "See active work and matched requests below. " : ""}
           Customer contact details appear only after your quote is selected.
         </p>
         {provider && (
-          <p>
-            Service options: {parseProviderWorkLocations(provider.workLocations).join(" · ")}
-          </p>
+          <details className="workspace-overview-details">
+            <summary>Provider account details</summary>
+            <div>
+              <p>
+                Services: {parseProviderServices(provider.service).join(", ")}
+                {" · "}Job access: {provider.serviceArea}
+              </p>
+              <p>
+                Service options: {parseProviderWorkLocations(provider.workLocations).join(" · ")}
+              </p>
+              {!provider.testProvider && (
+                <p className="provider-fee-note">
+                  Your quote remains your full subtotal. Tuveloz adds a separate
+                  10% service fee to the customer&apos;s total.
+                </p>
+              )}
+              {provider.testProvider && (
+                <p>This workspace is isolated to test jobs. No real alerts or public ratings are created.</p>
+              )}
+            </div>
+          </details>
         )}
-        {provider && !provider.testProvider && (
-          <p className="provider-fee-note">
-            Your provider quote remains your full subtotal. Tuveloz adds a separate
-            10% service fee to the customer&apos;s total.
-          </p>
-        )}
-        {provider?.testProvider && <p>This workspace is isolated to test jobs. No real alerts or public ratings are created.</p>}
       </section>
-      {!loading && provider && !provider.testProvider && (
-        <StripeConnectPanel signedIn={signedIn} />
-      )}
       {!loading && !error && (
-        <>
-          <nav className="job-center-nav" aria-label="Provider Job Center">
-            {!provider?.testProvider && <a href="#stripe-payouts"><span>Stripe</span>Payments</a>}
-            <a href="#business-page"><TuvelozIcon name="storefront" /><span>Page</span>Business Page</a>
-            <a href="#open-jobs"><TuvelozIcon name="open-jobs" /><span>{jobs.length}</span>Open Jobs</a>
-            <a href="#active-jobs"><TuvelozIcon name="active-job" /><span>{activeJobs.length}</span>Active Jobs</a>
-            <a href="#completed-jobs"><TuvelozIcon name="completed" /><span>{completedJobs.length}</span>Completed Jobs</a>
-            <a href="#earnings-hours"><TuvelozIcon name="earnings" /><span>{durationLabel(trackedSecondsTotal)}</span>Earnings & Hours</a>
-          </nav>
-          <div className="provider-control-note">
-            <strong>Your business records</strong>
-            <span>Time tracking is optional and controlled by you. It is not payroll or employee monitoring.</span>
-          </div>
-        </>
+        <nav className="job-center-nav job-center-nav-primary" aria-label="Provider Job Center">
+          <a href="#active-jobs"><TuvelozIcon name="active-job" /><span>{activeJobs.length}</span>Active</a>
+          <a href="#open-jobs"><TuvelozIcon name="open-jobs" /><span>{jobs.length}</span>Open jobs</a>
+        </nav>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}
-      {!loading && !error && provider && <ProviderBusinessPage token={providerToken} />}
+      {!loading && !error && provider && (
+        <details className="workspace-tools provider-workspace-tools" id="provider-tools">
+          <summary>Payments and business page</summary>
+          <div className="workspace-tool-content">
+            {!provider.testProvider && <StripeConnectPanel signedIn={signedIn} />}
+            <ProviderBusinessPage token={providerToken} />
+            <div className="provider-control-note">
+              <strong>Your business records</strong>
+              <span>Time tracking is optional and controlled by you. It is not payroll or employee monitoring.</span>
+            </div>
+          </div>
+        </details>
+      )}
       {!loading && !error && (
         <section className="portal-section" id="active-jobs">
           <div className="portal-section-heading">
@@ -680,6 +688,9 @@ export default function ProviderJobsPage() {
         </section>
       )}
       {!loading && !error && (
+        <details className="workspace-tools provider-history-tools" id="provider-history">
+          <summary>History and private totals ({completedJobs.length})</summary>
+          <div className="workspace-tool-content">
         <section className="portal-section" id="completed-jobs">
           <div className="portal-section-heading">
             <div><span className="kicker">Job history</span><h2>Completed jobs</h2></div>
@@ -723,8 +734,6 @@ export default function ProviderJobsPage() {
             </div>
           )}
         </section>
-      )}
-      {!loading && !error && (
         <section className="portal-section earnings-section" id="earnings-hours">
           <div className="portal-section-heading">
             <div><span className="kicker">Private totals</span><h2>Earnings & hours</h2></div>
@@ -742,6 +751,8 @@ export default function ProviderJobsPage() {
             wages, schedules, or provider performance scoring.
           </p>
         </section>
+          </div>
+        </details>
       )}
       {!loading && !error && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">

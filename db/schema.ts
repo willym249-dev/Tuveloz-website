@@ -31,6 +31,8 @@ export const customerRequests = sqliteTable(
     approvedAt: text("approved_at").notNull().default(""),
     reminderSentAt: text("reminder_sent_at").notNull().default(""),
     reminderLastAttemptAt: text("reminder_last_attempt_at").notNull().default(""),
+    termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
+    termsVersion: text("terms_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
@@ -120,6 +122,8 @@ export const providerApplications = sqliteTable(
     // and capability status are always fetched from Stripe's V2 Accounts API.
     stripeAccountId: text("stripe_account_id"),
     status: text("status").notNull().default("new"),
+    termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
+    termsVersion: text("terms_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
@@ -158,6 +162,12 @@ export const stripePayments = sqliteTable(
     paidAt: text("paid_at").notNull().default(""),
     releasedAt: text("released_at").notNull().default(""),
     releasedBy: text("released_by").notNull().default(""),
+    refundAmountCents: integer("refund_amount_cents").notNull().default(0),
+    refundedAt: text("refunded_at").notNull().default(""),
+    disputeStatus: text("dispute_status").notNull().default(""),
+    disputeUpdatedAt: text("dispute_updated_at").notNull().default(""),
+    policyAcceptedAt: text("policy_accepted_at").notNull().default(""),
+    policyVersion: text("policy_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
@@ -205,6 +215,47 @@ export const authSessions = sqliteTable(
     uniqueIndex("auth_sessions_token_hash_unique").on(table.tokenHash),
     index("auth_sessions_email_idx").on(table.email),
     index("auth_sessions_expires_at_idx").on(table.expiresAt),
+  ],
+);
+
+export const accountCredentials = sqliteTable(
+  "account_credentials",
+  {
+    email: text("email").primaryKey(),
+    passwordHash: text("password_hash").notNull(),
+    passwordSalt: text("password_salt").notNull(),
+    passwordIterations: integer("password_iterations").notNull(),
+    verifiedAt: text("verified_at").notNull(),
+    failedAttempts: integer("failed_attempts").notNull().default(0),
+    lockedUntil: text("locked_until").notNull().default(""),
+    termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
+    termsVersion: text("terms_version").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("account_credentials_locked_until_idx").on(table.lockedUntil),
+  ],
+);
+
+export const passwordVerificationCodes = sqliteTable(
+  "password_verification_codes",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    purpose: text("purpose").notNull(),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: text("used_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("password_codes_email_role_purpose_idx")
+      .on(table.email, table.role, table.purpose),
+    index("password_codes_expires_at_idx").on(table.expiresAt),
+    index("password_codes_created_at_idx").on(table.createdAt),
   ],
 );
 
