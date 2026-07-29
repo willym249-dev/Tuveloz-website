@@ -535,7 +535,7 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {error && <p className="form-error portal-alert">{error}</p>
+      {error && <p className="form-error portal-alert">{error}</p>}
       {!loading && !error && provider && (
         <details className="workspace-tools provider-workspace-tools" id="provider-tools">
           <summary>Payments and business page</summary>
