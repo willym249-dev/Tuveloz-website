@@ -1250,6 +1250,13 @@ textarea:focus {
   color: var(--blue);
 }
 
+.vehicle-entry-help {
+  color: #617482;
+  font-size: 9px;
+  line-height: 1.5;
+  margin: 10px 2px 0;
+}
+
 .vehicle-fields {
   display: grid;
   gap: 10px;

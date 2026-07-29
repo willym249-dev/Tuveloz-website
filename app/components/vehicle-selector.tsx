@@ -60,7 +60,7 @@ export default function VehicleSelector({ onVehicleChange }: VehicleSelectorProp
     () => Array.from({ length: currentYear - 1994 }, (_, index) => String(currentYear + 1 - index)),
     [currentYear],
   );
-  const [mode, setMode] = useState<"search" | "vin">("vin");
+  const [mode, setMode] = useState<"search" | "vin">("search");
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
   const [makeManual, setMakeManual] = useState(false);
@@ -288,7 +288,7 @@ export default function VehicleSelector({ onVehicleChange }: VehicleSelectorProp
       <div className="vehicle-selector-heading">
         <div>
           <strong id="vehicle-selector-title">Your vehicle</strong>
-          <small>Choose the easiest way to identify it.</small>
+          <small>Start with the year, make, and model. Use the VIN lookup if needed.</small>
         </div>
         <details className="legal-help">
           <summary aria-label="Why does Tuveloz need vehicle details?">?</summary>
@@ -298,25 +298,29 @@ export default function VehicleSelector({ onVehicleChange }: VehicleSelectorProp
 
       <div className="vehicle-methods" role="group" aria-label="Vehicle entry method">
         <button
-          aria-pressed={mode === "vin"}
-          className={mode === "vin" ? "selected" : ""}
-          onClick={() => selectMode("vin")}
-          type="button"
-        >
-          VIN lookup <span>Recommended</span>
-        </button>
-        <button
           aria-pressed={mode === "search"}
           className={mode === "search" ? "selected" : ""}
           onClick={() => selectMode("search")}
           type="button"
         >
-          Year, make & model
+          Year, make & model <span>Recommended</span>
+        </button>
+        <button
+          aria-pressed={mode === "vin"}
+          className={mode === "vin" ? "selected" : ""}
+          onClick={() => selectMode("vin")}
+          type="button"
+        >
+          VIN lookup
         </button>
       </div>
 
       {mode === "search" ? (
         <>
+          <p className="vehicle-entry-help">
+            Can&apos;t find your vehicle? Choose “My make is not listed” or “My model is
+            not listed” to type it, or use the VIN lookup.
+          </p>
           <div className="vehicle-fields vehicle-fields-main">
             <div className="vehicle-field-group">
               <label htmlFor="vehicle-year">Year</label>

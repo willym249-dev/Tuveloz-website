@@ -98,9 +98,16 @@ test("build prefers confirmed vehicle choices and never invents motor data", asy
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
+  const vehicleSelectorSource = await readFile(
+    new URL("../app/components/vehicle-selector.tsx", import.meta.url),
+    "utf8",
+  );
 
   assert.ok(contents.includes("My make is not listed"));
   assert.ok(contents.includes("My model is not listed"));
+  assert.ok(contents.includes("Start with the year, make, and model. Use the VIN lookup if needed."));
+  assert.ok(vehicleSelectorSource.includes('useState<"search" | "vin">("search")'));
+  assert.ok(vehicleSelectorSource.includes("Can&apos;t find your vehicle?"));
   assert.ok(contents.includes("No confirmed motor / engine choice was returned."));
   assert.ok(contents.includes("Tuveloz does not guess motor or engine details."));
   assert.ok(contents.includes("customer entered; provider must verify"));
