@@ -10,8 +10,6 @@ import {
 } from "../../../db/schema";
 import { getAccountSession } from "../../../lib/account-auth";
 
-const notificationOptions = new Set(["important", "all", "none"]);
-
 function textValue(value: unknown, maximum: number) {
   return String(value ?? "").trim().slice(0, maximum);
 }
@@ -106,8 +104,6 @@ export async function GET(request: Request) {
       profile: {
         email: session.email,
         displayName: profile?.displayName || latestRequest?.name || "",
-        phone: profile?.phone || "",
-        emailNotifications: profile?.emailNotifications || "important",
       },
       providerChoices: choices,
       savedProviders: choices.filter((provider) => savedIds.has(provider.id)),
@@ -143,11 +139,6 @@ export async function POST(request: Request) {
 
     if (action === "save-profile") {
       const displayName = textValue(payload.displayName, 80);
-      const phone = textValue(payload.phone, 30);
-      const requestedNotifications = textValue(payload.emailNotifications, 20);
-      const emailNotifications = notificationOptions.has(requestedNotifications)
-        ? requestedNotifications
-        : "important";
       if (!displayName) {
         return Response.json(
           { error: "Enter the name you want Tuveloz to use." },
@@ -157,19 +148,15 @@ export async function POST(request: Request) {
       await db.insert(customerProfiles).values({
         email: session.email.toLowerCase(),
         displayName,
-        phone,
-        emailNotifications,
       }).onConflictDoUpdate({
         target: customerProfiles.email,
         set: {
           displayName,
-          phone,
-          emailNotifications,
           updatedAt: sql`CURRENT_TIMESTAMP`,
         },
       });
       return Response.json({
-        profile: { email: session.email, displayName, phone, emailNotifications },
+        profile: { email: session.email, displayName },
       }, { headers: { "cache-control": "no-store" } });
     }
 
