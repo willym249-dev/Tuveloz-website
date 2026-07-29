@@ -158,6 +158,10 @@ function durationLabel(totalSeconds: number) {
   return `${hours}h ${minutes}m`;
 }
 
+function actionErrorMessage(reason: unknown, fallback: string) {
+  return reason instanceof Error && reason.message ? reason.message : fallback;
+}
+
 function trackedSecondsNow(job: AssignedJob, now: number | null) {
   if (!job.timerStartedAt || !now) return job.trackedSeconds;
   const startedAt = Date.parse(job.timerStartedAt);
@@ -191,7 +195,11 @@ export default function ProviderJobsPage() {
     async function loadWorkspace() {
       try {
         const accountResponse = await fetch("/api/account", { cache: "no-store" });
-        const account = await accountResponse.json();
+        const account = await accountResponse.json().catch(() => ({})) as {
+          error?: string;
+          role?: string;
+          availableRoles?: string[];
+        };
         if (accountResponse.status === 401) {
           window.location.replace("/account?role=provider");
           return;
@@ -207,8 +215,15 @@ export default function ProviderJobsPage() {
         setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
 
         const response = await fetch("/api/jobs", { cache: "no-store" });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({})) as {
+          error?: string;
+          jobs?: Job[];
+          assignedJobs?: AssignedJob[];
+          myQuotes?: ProviderQuote[];
+          provider?: Provider;
+        };
         if (!response.ok) throw new Error(data.error || "Unable to load approved jobs.");
+        if (!data.provider) throw new Error("The provider workspace returned incomplete account data.");
         setJobs(data.jobs ?? []);
         setAssignedJobs(data.assignedJobs ?? []);
         setMyQuotes(data.myQuotes ?? []);
@@ -245,66 +260,92 @@ export default function ProviderJobsPage() {
 
   async function submitQuote() {
     if (!pendingQuote) return;
-    setSubmittingQuoteId(pendingQuote.requestId);
-    const response = await fetch("/api/jobs", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...pendingQuote }),
-    });
-    const result = await response.json();
-    setSubmittingQuoteId("");
-    if (!response.ok) return setError(result.error || "Unable to submit quote.");
+    const quote = pendingQuote;
+    setSubmittingQuoteId(quote.requestId);
     setError("");
-    setSent(pendingQuote.requestId);
-    const refreshedResponse = await fetch("/api/jobs", { cache: "no-store" });
-    if (refreshedResponse.ok) {
-      const refreshed = await refreshedResponse.json();
-      setJobs(refreshed.jobs ?? []);
-      setAssignedJobs(refreshed.assignedJobs ?? []);
-      setMyQuotes(refreshed.myQuotes ?? []);
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...quote }),
+      });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Unable to submit quote.");
+
+      setSent(quote.requestId);
+      setPendingQuote(null);
+
+      try {
+        const refreshedResponse = await fetch("/api/jobs", { cache: "no-store" });
+        const refreshed = await refreshedResponse.json().catch(() => ({})) as {
+          jobs?: Job[];
+          assignedJobs?: AssignedJob[];
+          myQuotes?: ProviderQuote[];
+        };
+        if (!refreshedResponse.ok) throw new Error("refresh failed");
+        setJobs(refreshed.jobs ?? []);
+        setAssignedJobs(refreshed.assignedJobs ?? []);
+        setMyQuotes(refreshed.myQuotes ?? []);
+      } catch {
+        setError("Your quote was submitted, but the workspace could not refresh. Reload the page to see the latest status.");
+      }
+    } catch (reason) {
+      setError(actionErrorMessage(reason, "Unable to submit quote."));
+    } finally {
+      setSubmittingQuoteId("");
     }
-    setPendingQuote(null);
   }
 
   async function updateStatus(requestId: string, status: string) {
     setError("");
     setUpdatingJobId(requestId);
     const isCompletion = status === "completed";
-    const response = isCompletion
-      ? await (() => {
-          const formData = new FormData();
-          formData.set("action", "update-status");
-          formData.set("requestId", requestId);
-          formData.set("status", status);
-          if (completionPhoto) formData.set("completion-photo", completionPhoto);
-          return fetch("/api/jobs", { method: "POST", body: formData });
-        })()
-      : await fetch("/api/jobs", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action: "update-status", requestId, status }),
-        });
-    const result = await response.json();
-    setUpdatingJobId("");
-    if (!response.ok) return setError(result.error || "Unable to update this job.");
-    setAssignedJobs((items) => items.map((item) => (
-      item.id === requestId
-        ? {
-            ...item,
-            status: result.status,
-            hasCompletionImage: result.status === "completed" || item.hasCompletionImage,
-            ...(result.status === "completed"
-              ? {
-                  workStatus: "completed",
-                  timerStartedAt: "",
-                  trackedSeconds: result.trackedSeconds ?? item.trackedSeconds,
-                }
-              : {}),
-          }
-        : item
-    )));
-    setPendingStatus(null);
-    setCompletionPhoto(null);
+    try {
+      const response = isCompletion
+        ? await (() => {
+            const formData = new FormData();
+            formData.set("action", "update-status");
+            formData.set("requestId", requestId);
+            formData.set("status", status);
+            if (completionPhoto) formData.set("completion-photo", completionPhoto);
+            return fetch("/api/jobs", { method: "POST", body: formData });
+          })()
+        : await fetch("/api/jobs", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ action: "update-status", requestId, status }),
+          });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        status?: string;
+        trackedSeconds?: number;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to update this job.");
+      if (!result.status) throw new Error("The job update returned an incomplete response.");
+
+      setAssignedJobs((items) => items.map((item) => (
+        item.id === requestId
+          ? {
+              ...item,
+              status: result.status as string,
+              hasCompletionImage: result.status === "completed" || item.hasCompletionImage,
+              ...(result.status === "completed"
+                ? {
+                    workStatus: "completed",
+                    timerStartedAt: "",
+                    trackedSeconds: result.trackedSeconds ?? item.trackedSeconds,
+                  }
+                : {}),
+            }
+          : item
+      )));
+      setPendingStatus(null);
+      setCompletionPhoto(null);
+    } catch (reason) {
+      setError(actionErrorMessage(reason, "Unable to update this job."));
+    } finally {
+      setUpdatingJobId("");
+    }
   }
 
   async function saveJobRecord(event: FormEvent<HTMLFormElement>, job: AssignedJob) {
@@ -316,49 +357,75 @@ export default function ProviderJobsPage() {
     setError("");
     setSavingRecordId(job.id);
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
-    const response = await fetch("/api/jobs", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "save-job-record",
-        requestId: job.id,
-        workStatus: values.workStatus,
-        actualMinutes: Math.round(Number(values.actualHours || 0) * 60),
-        billableMinutes: Math.round(Number(values.billableHours || 0) * 60),
-        workNotes: values.workNotes,
-        partsNotes: values.partsNotes,
-      }),
-    });
-    const result = await response.json();
-    setSavingRecordId("");
-    setPendingRecordId("");
-    if (!response.ok) return setError(result.error || "Unable to save this job record.");
-    setAssignedJobs((items) => items.map((item) => (
-      item.id === job.id ? { ...item, ...result.record } : item
-    )));
-    setSent(`record-${job.id}`);
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "save-job-record",
+          requestId: job.id,
+          workStatus: values.workStatus,
+          actualMinutes: Math.round(Number(values.actualHours || 0) * 60),
+          billableMinutes: Math.round(Number(values.billableHours || 0) * 60),
+          workNotes: values.workNotes,
+          partsNotes: values.partsNotes,
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        record?: Partial<AssignedJob>;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to save this job record.");
+      const record = result.record;
+      if (!record) throw new Error("The saved job record returned an incomplete response.");
+      setAssignedJobs((items) => items.map((item) => (
+        item.id === job.id ? { ...item, ...record } : item
+      )));
+      setSent(`record-${job.id}`);
+    } catch (reason) {
+      setError(actionErrorMessage(reason, "Unable to save this job record."));
+    } finally {
+      setSavingRecordId("");
+      setPendingRecordId("");
+    }
   }
 
   async function toggleTimer(job: AssignedJob) {
     setError("");
     setTimerJobId(job.id);
-    const response = await fetch("/api/jobs", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "toggle-timer",
-        requestId: job.id,
-        timerMode: job.timerStartedAt ? "stop" : "start",
-      }),
-    });
-    const result = await response.json();
-    setTimerJobId("");
-    if (!response.ok) return setError(result.error || "Unable to update the timer.");
-    setAssignedJobs((items) => items.map((item) => (
-      item.id === job.id
-        ? { ...item, timerStartedAt: result.timerStartedAt, trackedSeconds: result.trackedSeconds }
-        : item
-    )));
+    try {
+      const response = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "toggle-timer",
+          requestId: job.id,
+          timerMode: job.timerStartedAt ? "stop" : "start",
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        timerStartedAt?: string;
+        trackedSeconds?: number;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to update the timer.");
+      if (typeof result.trackedSeconds !== "number") {
+        throw new Error("The timer update returned an incomplete response.");
+      }
+      setAssignedJobs((items) => items.map((item) => (
+        item.id === job.id
+          ? {
+              ...item,
+              timerStartedAt: result.timerStartedAt ?? "",
+              trackedSeconds: result.trackedSeconds as number,
+            }
+          : item
+      )));
+    } catch (reason) {
+      setError(actionErrorMessage(reason, "Unable to update the timer."));
+    } finally {
+      setTimerJobId("");
+    }
   }
 
   async function signOut() {
@@ -379,23 +446,29 @@ export default function ProviderJobsPage() {
   }
 
   async function switchWorkspace() {
-    const response = await fetch("/api/auth/switch-role", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ role: "customer" }),
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      setError(result.error || "Unable to switch workspaces.");
-      return;
+    setError("");
+    try {
+      const response = await fetch("/api/auth/switch-role", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ role: "customer" }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        destination?: string;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to switch workspaces.");
+      if (!result.destination) throw new Error("The workspace switch returned an incomplete response.");
+      window.location.replace(result.destination);
+    } catch (reason) {
+      setError(actionErrorMessage(reason, "Unable to switch workspaces."));
     }
-    window.location.replace(result.destination);
   }
 
   const openJobs = jobs.filter((job) => !job.quoteSubmitted && sent !== job.id);
   const activeJobs = assignedJobs.filter((job) => job.status !== "completed");
   const completedJobs = assignedJobs.filter((job) => job.status === "completed");
-  const completedTotalCents = completedJobs.reduce(
+  const completedJobValueCents = completedJobs.reduce(
     (total, job) => total + Number(job.priceCents),
     0,
   );
@@ -411,6 +484,7 @@ export default function ProviderJobsPage() {
     (total, job) => total + trackedSecondsNow(job, now),
     0,
   );
+  const workspaceReady = !loading && provider !== null;
   const billableMinutesTotal = assignedJobs.reduce(
     (total, job) => total + job.billableMinutes,
     0,
@@ -480,7 +554,7 @@ export default function ProviderJobsPage() {
           </details>
         )}
       </section>
-      {!loading && !error && (
+      {workspaceReady && (
         <nav className="workspace-nav provider-dashboard-nav" aria-label="Provider dashboard">
           <button
             aria-pressed={activeView === "available"}
@@ -504,7 +578,7 @@ export default function ProviderJobsPage() {
           <button aria-pressed={activeView === "performance"} className={activeView === "performance" ? "is-active" : ""} onClick={() => setActiveView("performance")} type="button">Performance tools</button>
         </nav>
       )}
-      {!loading && !error && activeView === "schedule" && (
+      {workspaceReady && activeView === "schedule" && (
         <section className="portal-section provider-schedule-section" id="provider-schedule">
           <div className="portal-section-heading">
             <div><span className="kicker">Schedule</span><h2>Accepted-job availability</h2></div>
@@ -527,7 +601,7 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && activeView === "messages" && (
+      {workspaceReady && activeView === "messages" && (
         <section className="portal-section" id="provider-messages">
           <div className="portal-section-heading">
             <div><span className="kicker">Private job communication</span><h2>Messages</h2></div>
@@ -537,7 +611,7 @@ export default function ProviderJobsPage() {
         </section>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}
-      {!loading && !error && provider && activeView === "earnings" && !provider.testProvider && (
+      {workspaceReady && provider && activeView === "earnings" && !provider.testProvider && (
         <details className="workspace-tools provider-workspace-tools" id="provider-payouts">
           <summary>Payout setup</summary>
           <div className="workspace-tool-content">
@@ -545,7 +619,7 @@ export default function ProviderJobsPage() {
           </div>
         </details>
       )}
-      {!loading && !error && provider && (
+      {workspaceReady && provider && (
         activeView === "profile" || activeView === "reviews" || activeView === "performance"
       ) && (
         <section className="portal-section provider-focused-tools" aria-live="polite">
@@ -558,7 +632,7 @@ export default function ProviderJobsPage() {
           </div>
         </section>
       )}
-      {!loading && !error && activeView === "accepted" && (
+      {workspaceReady && activeView === "accepted" && (
         <section className="portal-section" id="active-jobs">
           <div className="portal-section-heading">
             <div><span className="kicker">Job Center</span><h2>Active jobs</h2></div>
@@ -798,7 +872,7 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && activeView === "quotes" && (
+      {workspaceReady && activeView === "quotes" && (
         <section className="portal-section" id="my-quotes">
           <div className="portal-section-heading">
             <div><span className="kicker">My quotes</span><h2>Submitted quotes</h2></div>
@@ -831,13 +905,13 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && activeView === "earnings" && (
+      {workspaceReady && activeView === "earnings" && (
         <div className="provider-history-tools" id="provider-history">
           <div className="workspace-tool-content">
         <section className="portal-section" id="completed-jobs">
           <div className="portal-section-heading">
             <div><span className="kicker">Job history</span><h2>Completed jobs</h2></div>
-            <p>A simple record of finished work, approved amounts, time, notes, and photos.</p>
+            <p>A simple record of finished work, accepted quote subtotals, time, notes, and photos.</p>
           </div>
           {completedJobs.length === 0 ? (
             <p className="admin-note">Completed jobs will appear here.</p>
@@ -854,7 +928,7 @@ export default function ProviderJobsPage() {
                   <dl className="quote-breakdown compact">
                     <div><dt>Labor</dt><dd>${(Number(job.laborPriceCents) / 100).toFixed(2)}</dd></div>
                     <div><dt>Parts</dt><dd>${(Number(job.partsPriceCents) / 100).toFixed(2)}</dd></div>
-                    <div className="total"><dt>Approved total</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
+                    <div className="total"><dt>Accepted quote subtotal</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <div className="completed-record">
                     <span>Actual time <strong>{durationLabel(trackedSecondsNow(job, now))}</strong></span>
@@ -879,25 +953,26 @@ export default function ProviderJobsPage() {
         </section>
         <section className="portal-section earnings-section" id="earnings-hours">
           <div className="portal-section-heading">
-            <div><span className="kicker">Private totals</span><h2>Earnings & hours</h2></div>
-            <p>Based on completed, customer-approved quotes and the time you recorded.</p>
+            <div><span className="kicker">Private totals</span><h2>Job value & hours</h2></div>
+            <p>Completed job value is the sum of accepted quote subtotals for jobs marked completed. It is not a Stripe payout or transfer status.</p>
           </div>
           <div className="earnings-grid">
-            <div><span>Completed earnings</span><strong>${(completedTotalCents / 100).toFixed(2)}</strong></div>
+            <div><span>Completed job value</span><strong>${(completedJobValueCents / 100).toFixed(2)}</strong></div>
             <div><span>Labor</span><strong>${(completedLaborCents / 100).toFixed(2)}</strong></div>
             <div><span>Parts</span><strong>${(completedPartsCents / 100).toFixed(2)}</strong></div>
             <div><span>Actual time</span><strong>{durationLabel(trackedSecondsTotal)}</strong></div>
             <div><span>Billable time</span><strong>{durationLabel(billableMinutesTotal * 60)}</strong></div>
           </div>
           <p className="records-disclaimer">
-            Personal business records only. Tuveloz does not use these hours for payroll,
-            wages, schedules, or provider performance scoring.
+            Personal business records only, not payout confirmations. Check Stripe for payout
+            and transfer status. Tuveloz does not use these hours for payroll, wages, schedules,
+            or provider performance scoring.
           </p>
         </section>
           </div>
         </div>
       )}
-      {!loading && !error && activeView === "available" && (
+      {workspaceReady && activeView === "available" && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">
           <div><span className="kicker">Matched alerts</span><h2>Available jobs</h2></div>
           <p>These approved requests match your services, job areas, and meeting options.</p>
@@ -905,7 +980,7 @@ export default function ProviderJobsPage() {
       )}
       {activeView === "available" && (
       <section className="portal-grid">
-        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !error && openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => (
+        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !provider ? null : openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => (
           <article className="portal-card" key={job.id}>
             <span className="portal-service">{parseJobServices(job.service).join(" + ")}</span>
             {job.isTestJob === "yes" && <span className="test-badge">TEST JOB</span>}

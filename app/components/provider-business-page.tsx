@@ -90,6 +90,10 @@ function initials(value: string) {
     .join("") || "TV";
 }
 
+function profileErrorMessage(reason: unknown, fallback: string) {
+  return reason instanceof Error && reason.message ? reason.message : fallback;
+}
+
 type ProviderBusinessFocus = "profile" | "reviews" | "performance";
 
 export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBusinessFocus }) {
@@ -117,16 +121,28 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
     setProfile(next.profile);
   }, []);
 
-  useEffect(() => {
-    fetch("/api/provider-profile", { cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json() as ProfileResponse;
-        if (!response.ok) throw new Error(result.error || "Unable to load your business page.");
-        applyResponse(result);
-      })
-      .catch((reason) => setError(reason.message || "Unable to load your business page."))
-      .finally(() => setLoading(false));
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/provider-profile", { cache: "no-store" });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to load your business page.");
+      if (!result.profile) throw new Error("The business page returned incomplete profile data.");
+      applyResponse(result);
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to load your business page."));
+    } finally {
+      setLoading(false);
+    }
   }, [applyResponse]);
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => {
+      void loadProfile();
+    }, 0);
+    return () => window.clearTimeout(loadTimer);
+  }, [loadProfile]);
 
   useEffect(() => {
     if (!activeQrSlug) return;
@@ -159,17 +175,23 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
     setBusy("profile");
     setError("");
     setNotice("");
-    const response = await fetch("/api/provider-profile", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "save-profile", ...profile }),
-    });
-    const result = await response.json() as ProfileResponse;
-    setBusy("");
-    setPendingAction("");
-    if (!response.ok) return setError(result.error || "Unable to save your business page.");
-    applyResponse(result);
-    setNotice(profile.publicStatus === "published" ? "Business page saved and published." : "Draft saved.");
+    try {
+      const response = await fetch("/api/provider-profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "save-profile", ...profile }),
+      });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to save your business page.");
+      if (!result.profile) throw new Error("The saved business page returned incomplete profile data.");
+      applyResponse(result);
+      setNotice(profile.publicStatus === "published" ? "Business page saved and published." : "Draft saved.");
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to save your business page."));
+    } finally {
+      setBusy("");
+      setPendingAction("");
+    }
   }
 
   async function uploadMedia(event: FormEvent<HTMLFormElement>, action: "upload-logo" | "upload-gallery") {
@@ -184,31 +206,43 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
     setNotice("");
     const formData = new FormData(form);
     formData.set("action", action);
-    const response = await fetch("/api/provider-profile", { method: "POST", body: formData });
-    const result = await response.json() as ProfileResponse;
-    setBusy("");
-    setPendingAction("");
-    if (!response.ok) return setError(result.error || "Unable to upload that image.");
-    applyResponse(result);
-    form.reset();
-    setNotice(action === "upload-logo" ? "Business logo updated." : "Work photo added.");
+    try {
+      const response = await fetch("/api/provider-profile", { method: "POST", body: formData });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to upload that image.");
+      if (!result.profile) throw new Error("The image upload returned incomplete profile data.");
+      applyResponse(result);
+      form.reset();
+      setNotice(action === "upload-logo" ? "Business logo updated." : "Work photo added.");
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to upload that image."));
+    } finally {
+      setBusy("");
+      setPendingAction("");
+    }
   }
 
   async function removeGallery(galleryId: string) {
     setBusy(galleryId);
     setError("");
     setNotice("");
-    const response = await fetch("/api/provider-profile", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "remove-gallery", galleryId }),
-    });
-    const result = await response.json() as ProfileResponse;
-    setBusy("");
-    setPendingRemovalId("");
-    if (!response.ok) return setError(result.error || "Unable to remove that photo.");
-    applyResponse(result);
-    setNotice("Work photo removed.");
+    try {
+      const response = await fetch("/api/provider-profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "remove-gallery", galleryId }),
+      });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to remove that photo.");
+      if (!result.profile) throw new Error("The photo removal returned incomplete profile data.");
+      applyResponse(result);
+      setNotice("Work photo removed.");
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to remove that photo."));
+    } finally {
+      setBusy("");
+      setPendingRemovalId("");
+    }
   }
 
   async function copyPublicLink() {
@@ -234,12 +268,19 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
   async function refreshPrivateNumbers() {
     setBusy("qr-metrics");
     setError("");
-    const response = await fetch("/api/provider-profile", { cache: "no-store" });
-    const result = await response.json() as ProfileResponse;
-    setBusy("");
-    if (!response.ok) return setError(result.error || "Unable to refresh your private numbers.");
-    applyResponse(result);
-    setNotice("Private numbers refreshed.");
+    setNotice("");
+    try {
+      const response = await fetch("/api/provider-profile", { cache: "no-store" });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to refresh your private numbers.");
+      if (!result.profile) throw new Error("The private-number refresh returned incomplete profile data.");
+      applyResponse(result);
+      setNotice("Private numbers refreshed.");
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to refresh your private numbers."));
+    } finally {
+      setBusy("");
+    }
   }
 
   function printBusinessCards() {
@@ -262,7 +303,17 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
         : "Loading your business profile…";
     return <section className="provider-business-page" id="business-page"><p className="admin-note">{loadingLabel}</p></section>;
   }
-  if (!data) return null;
+  if (!data) {
+    return (
+      <section className="provider-business-page provider-business-error" id="business-page" role="alert">
+        <h2>Business tools could not load.</h2>
+        <p className="form-error">{error || "Unable to load your business tools right now."}</p>
+        <button className="button secondary" onClick={() => void loadProfile()} type="button">
+          Try again
+        </button>
+      </section>
+    );
+  }
 
   const publicUrl = `/providers/${profile.slug}`;
   const privatePreviewUrl = publicUrl;
@@ -324,7 +375,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
               <span>{displayLocation}</span>
             </div>
             <p className="provider-profile-preview-note">
-              Customers will also see your approved services, real work photos, and verified reviews.
+              Customers will also see your approved services, provider-selected work photos, and verified reviews.
             </p>
           </div>
 
