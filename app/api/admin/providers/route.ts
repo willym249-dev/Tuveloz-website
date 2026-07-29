@@ -14,6 +14,7 @@ import {
   parseProviderSelfAssessment,
   providerAreasHaveReviewedCompliance,
 } from "../../../../lib/provider-compliance";
+import { isSameOriginRequest } from "../../../../lib/account-auth";
 import {
   getAuthenticatedEmail,
   isVerifiedOwnerRequest,
@@ -72,6 +73,9 @@ function requiredChecklistKeys(services: string[], serviceArea: string) {
 export async function POST(request: Request) {
   if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
+  }
+  if (!isSameOriginRequest(request)) {
+    return Response.json({ error: "Cross-origin owner actions are not allowed." }, { status: 403 });
   }
   const email = getAuthenticatedEmail(request);
 
