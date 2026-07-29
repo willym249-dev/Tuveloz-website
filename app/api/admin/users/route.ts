@@ -5,10 +5,10 @@ import {
   isSameOriginRequest,
   normalizeAccountEmail,
 } from "../../../../lib/account-auth";
-import { isOwnerRequest } from "../../../../lib/owner-auth";
+import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json(
       { error: "This action is only available to the Tuveloz owner." },
       { status: 403, headers: { "cache-control": "no-store" } },
