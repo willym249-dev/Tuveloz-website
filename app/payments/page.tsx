@@ -33,13 +33,20 @@ export default function PaymentsPage() {
       <section>
         <h2>3. Stripe and the platform transaction</h2>
         <p>
-          Stripe hosts checkout and processes card information. Under the current
-          Connect configuration, TUVELOZ LLC is the merchant of record for the
-          platform transaction and may appear on the receipt or statement.
-          Tuveloz is responsible for its payment-processing obligations, while
-          the selected independent provider remains responsible for performing
-          the vehicle service, supplying listed parts, and honoring provider
-          warranties.
+          Stripe hosts checkout and processes card information. Storefront
+          purchases use Stripe destination charges created on the Tuveloz
+          platform account. For that Stripe charge type, TUVELOZ LLC is the
+          merchant of record, and the Tuveloz platform balance is responsible
+          for Stripe fees, refunds, and chargebacks.
+        </p>
+        <p>
+          Quote-based payments use a charge created on the Tuveloz platform
+          account without an immediate provider transfer. Tuveloz schedules a
+          separate transfer of the provider subtotal only after the job is
+          marked complete and the payment record passes owner review. In both
+          payment paths, the selected independent provider remains responsible
+          for performing the vehicle service, supplying listed parts, and
+          honoring provider warranties.
         </p>
         <p>
           Tuveloz does not receive or store complete card or bank-account numbers.
