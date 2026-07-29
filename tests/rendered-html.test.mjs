@@ -747,3 +747,63 @@ test("customer account features are authenticated and backed by real records", a
     assert.ok(!source.includes("email_notifications"));
   }
 });
+
+
+test("owner control center uses signed access and exposes focused factual tools", async () => {
+  const [pageSource, controlSource, accountSource, sessionSource, ownerAuthSource] = await Promise.all([
+    readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/owner-control-center.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/control-center/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/users/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/owner-auth.ts", import.meta.url), "utf8"),
+  ]);
+
+  for (const label of [
+    "User management",
+    "Provider approvals",
+    "Jobs",
+    "Payments",
+    "Reports",
+    "Analytics",
+    "Platform settings",
+  ]) {
+    assert.ok(controlSource.includes(label), `Missing owner tool: ${label}`);
+  }
+
+  assert.ok(pageSource.includes('fetch("/api/admin/control-center"'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "jobs"}'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "providers"}'));
+  assert.ok(pageSource.includes('hidden={activeAdminView !== "reports"}'));
+  assert.ok(pageSource.includes('activeAdminView === "payments"'));
+
+  assert.ok(ownerAuthSource.includes("createRemoteJWKSet"));
+  assert.ok(ownerAuthSource.includes("jwtVerify"));
+  assert.ok(ownerAuthSource.includes('algorithms: ["RS256"]'));
+  assert.ok(ownerAuthSource.includes("issuer: teamDomain"));
+  assert.ok(ownerAuthSource.includes("audience"));
+  assert.ok(ownerAuthSource.includes("cf-access-jwt-assertion"));
+  assert.ok(accountSource.includes("await isVerifiedOwnerRequest(request)"));
+  assert.ok(sessionSource.includes("await isVerifiedOwnerRequest(request)"));
+  assert.ok(sessionSource.includes("isSameOriginRequest(request)"));
+
+  for (const secretField of [
+    "passwordHash",
+    "passwordSalt",
+    "passwordIterations",
+    "tokenHash",
+    "codeHash",
+    "accessToken",
+  ]) {
+    assert.ok(!accountSource.includes(secretField), `Sensitive field selected: ${secretField}`);
+  }
+
+  assert.ok(accountSource.includes("activeSessionCount"));
+  assert.ok(accountSource.includes("paymentCount"));
+  assert.ok(accountSource.includes('verificationStatus === "verified"'));
+  assert.ok(accountSource.includes('isTestProvider === "no"'));
+  assert.ok(controlSource.includes("Read-only runtime facts"));
+  assert.ok(controlSource.includes("exact counts from Tuveloz records"));
+  assert.ok(controlSource.includes("does not pretend"));
+  assert.ok(controlSource.includes("Live money must remain off"));
+  assert.ok(!controlSource.includes("Enable live payments"));
+});
