@@ -33,14 +33,15 @@ export async function POST(request: Request) {
   try {
     const result = await signInWithPassword(email, body.role, password);
     if (!result.ok) {
+      const rateLimited = "rateLimited" in result && result.rateLimited === true;
       return Response.json(
         {
-          error: result.rateLimited
+          error: rateLimited
             ? "Too many sign-in codes were requested. Please wait 15 minutes and try again."
             : "The email or password is incorrect, or this workspace is not available.",
         },
         {
-          status: result.rateLimited ? 429 : 401,
+          status: rateLimited ? 429 : 401,
           headers: { "cache-control": "no-store" },
         },
       );
