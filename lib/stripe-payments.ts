@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../db";
 import { customerRequests, stripePayments } from "../db/schema";
@@ -94,11 +94,18 @@ export async function recordPaidCheckoutSession(
     return;
   }
 
-  let nextStatus = payment.settlementStrategy === "destination_charge"
-    ? "paid_and_transferred"
-    : "paid_pending_completion";
+  let nextStatus = payment.refundAmountCents > 0 || payment.disputeStatus
+    ? payment.status
+    : payment.settlementStrategy === "destination_charge"
+      ? "paid_and_transferred"
+      : "paid_pending_completion";
 
-  if (payment.requestId && payment.settlementStrategy === "separate_transfer") {
+  if (
+    !payment.disputeStatus
+    && payment.refundAmountCents === 0
+    && payment.requestId
+    && payment.settlementStrategy === "separate_transfer"
+  ) {
     const [job] = await getDb().select({ status: customerRequests.status })
       .from(customerRequests)
       .where(eq(customerRequests.id, payment.requestId))
@@ -137,6 +144,74 @@ export async function recordCheckoutSessionStatus(
   }).where(eq(stripePayments.id, paymentRecordId));
 }
 
+async function paymentForStripeObject(
+  chargeId: string,
+  paymentIntentId: string,
+) {
+  if (!chargeId && !paymentIntentId) return null;
+  const condition = chargeId && paymentIntentId
+    ? or(
+        eq(stripePayments.chargeId, chargeId),
+        eq(stripePayments.paymentIntentId, paymentIntentId),
+      )
+    : chargeId
+      ? eq(stripePayments.chargeId, chargeId)
+      : eq(stripePayments.paymentIntentId, paymentIntentId);
+  const [payment] = await getDb().select().from(stripePayments)
+    .where(condition)
+    .limit(1);
+  return payment ?? null;
+}
+
+export async function recordRefundedCharge(charge: Stripe.Charge) {
+  const payment = await paymentForStripeObject(
+    charge.id,
+    stripeObjectId(charge.payment_intent),
+  );
+  if (!payment) {
+    console.warn("Ignoring a refunded charge without a Tuveloz payment record", {
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  await getDb().update(stripePayments).set({
+    refundAmountCents: charge.amount_refunded,
+    refundedAt: charge.amount_refunded > 0
+      ? payment.refundedAt || now
+      : "",
+    status: charge.refunded ? "refunded" : "partially_refunded",
+    updatedAt: now,
+  }).where(eq(stripePayments.id, payment.id));
+}
+
+export async function recordDisputeStatus(dispute: Stripe.Dispute) {
+  const payment = await paymentForStripeObject(
+    stripeObjectId(dispute.charge),
+    stripeObjectId(dispute.payment_intent),
+  );
+  if (!payment) {
+    console.warn("Ignoring a dispute without a Tuveloz payment record", {
+      disputeId: dispute.id,
+    });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const status = dispute.status === "won"
+    ? "dispute_won_review"
+    : dispute.status === "lost"
+      ? "dispute_lost"
+      : "disputed";
+  await getDb().update(stripePayments).set({
+    disputeStatus: dispute.status,
+    disputeUpdatedAt: now,
+    status,
+    updatedAt: now,
+  }).where(eq(stripePayments.id, payment.id));
+}
+
 export function publicPaymentSummary(
   payment: typeof stripePayments.$inferSelect | undefined,
 ) {
@@ -153,5 +228,8 @@ export function publicPaymentSummary(
     status: payment.status,
     paidAt: payment.paidAt,
     releasedAt: payment.releasedAt,
+    refundAmountCents: payment.refundAmountCents,
+    refundedAt: payment.refundedAt,
+    disputeStatus: payment.disputeStatus,
   };
 }

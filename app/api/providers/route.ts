@@ -14,6 +14,10 @@ import {
   serializeProviderAreas,
   serializeProviderServices,
 } from "../../../lib/service-matching";
+import {
+  policyAccepted,
+  PROVIDER_POLICY_BUNDLE_VERSION,
+} from "../../../lib/policies";
 
 const ALLOWED_SERVICES = new Set<string>(PROVIDER_SERVICE_OPTIONS);
 const ALLOWED_AREAS = new Set<string>(PROVIDER_AREA_OPTIONS);
@@ -44,6 +48,7 @@ export async function POST(request: Request) {
     const rulesReviewed = body.rulesReviewed === true;
     const providerAttestation = body.providerAttestation === true;
     const legalResponsibility = body.legalResponsibility === true;
+    const acceptedTerms = policyAccepted(body.termsAccepted);
     const providerSelfAssessment = cleanProviderSelfAssessment(body.providerSelfAssessment);
 
     if (
@@ -89,6 +94,11 @@ export async function POST(request: Request) {
         error: "Review and confirm the legal requirements shown for your selections.",
       }, { status: 400 });
     }
+    if (!acceptedTerms) {
+      return Response.json({
+        error: "You must be 18 or older and accept the Terms and Provider Agreement before applying.",
+      }, { status: 400 });
+    }
     const serviceEligibilityStatuses = evaluateProviderServices(
       services,
       areas,
@@ -114,6 +124,8 @@ export async function POST(request: Request) {
       serviceEligibilityStatuses: JSON.stringify(serviceEligibilityStatuses),
       serviceRulesVersion: SERVICE_RULES_VERSION,
       serviceRulesAcknowledgedAt: new Date().toISOString(),
+      termsAcceptedAt: new Date().toISOString(),
+      termsVersion: PROVIDER_POLICY_BUNDLE_VERSION,
     });
 
     return Response.json({ ok: true }, { status: 201 });

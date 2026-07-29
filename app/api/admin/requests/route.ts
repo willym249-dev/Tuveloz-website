@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { customerRequests } from "../../../../db/schema";
-import { sendMatchingProviderAlerts } from "../../../../lib/provider-alerts";
 import { isOwnerRequest } from "../../../../lib/owner-auth";
+import { sendMatchingProviderAlerts } from "../../../../lib/provider-alerts";
 
 export async function POST(request: Request) {
   if (!isOwnerRequest(request)) {

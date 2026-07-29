@@ -19,12 +19,24 @@ import {
   stripeErrorResponse,
 } from "../../../../lib/stripe";
 import { publicPaymentSummary } from "../../../../lib/stripe-payments";
+import {
+  CHECKOUT_POLICY_BUNDLE_VERSION,
+  policyAccepted,
+} from "../../../../lib/policies";
 
 const PAID_PAYMENT_STATUSES = [
   "paid_pending_completion",
   "ready_for_release",
   "released",
   "paid_and_transferred",
+] as const;
+
+const REVIEW_PAYMENT_STATUSES = [
+  "refunded",
+  "partially_refunded",
+  "disputed",
+  "dispute_won_review",
+  "dispute_lost",
 ] as const;
 
 function clean(value: unknown, max: number) {
@@ -167,12 +179,19 @@ export async function POST(request: Request) {
     token?: unknown;
     customerEmail?: unknown;
     quantity?: unknown;
+    policyAccepted?: unknown;
   };
   const productId = clean(body.productId, 120);
   const quoteId = clean(body.quoteId, 120);
   if (Boolean(productId) === Boolean(quoteId)) {
     return Response.json(
       { error: "Choose exactly one Stripe product or one accepted quote." },
+      { status: 400 },
+    );
+  }
+  if (!policyAccepted(body.policyAccepted)) {
+    return Response.json(
+      { error: "You must be 18 or older and accept the Terms, Customer Agreement, and Payment Policy before checkout." },
       { status: 400 },
     );
   }
@@ -328,11 +347,31 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      if (existing && (
+        REVIEW_PAYMENT_STATUSES.includes(
+          existing.status as (typeof REVIEW_PAYMENT_STATUSES)[number],
+        )
+        || existing.refundAmountCents > 0
+        || Boolean(existing.disputeStatus)
+      )) {
+        return Response.json(
+          {
+            error: "This quote has a refunded or disputed payment that requires owner review.",
+            payment: publicPaymentSummary(existing),
+          },
+          { status: 409 },
+        );
+      }
       if (existing?.status === "checkout_open" && existing.checkoutSessionId) {
         const checkoutSession = await stripeClient.checkout.sessions.retrieve(
           existing.checkoutSessionId,
         );
         if (checkoutSession.status === "open" && checkoutSession.url) {
+          await getDb().update(stripePayments).set({
+            policyAcceptedAt: now,
+            policyVersion: CHECKOUT_POLICY_BUNDLE_VERSION,
+            updatedAt: now,
+          }).where(eq(stripePayments.id, existing.id));
           return Response.json({ url: checkoutSession.url, reused: true });
         }
       }
@@ -415,9 +454,17 @@ export async function POST(request: Request) {
         settlementStrategy,
         transferGroup,
         status: "checkout_creating",
+        policyAcceptedAt: now,
+        policyVersion: CHECKOUT_POLICY_BUNDLE_VERSION,
         createdAt: now,
         updatedAt: now,
       });
+    } else {
+      await getDb().update(stripePayments).set({
+        policyAcceptedAt: now,
+        policyVersion: CHECKOUT_POLICY_BUNDLE_VERSION,
+        updatedAt: now,
+      }).where(eq(stripePayments.id, paymentId));
     }
 
     const metadata = {
@@ -425,6 +472,7 @@ export async function POST(request: Request) {
       tuveloz_payment_type: paymentType,
       tuveloz_provider_application_id: providerApplicationId,
       tuveloz_connected_account_id: connectedAccountId,
+      tuveloz_policy_version: CHECKOUT_POLICY_BUNDLE_VERSION,
       ...(requestId ? { tuveloz_request_id: requestId } : {}),
       ...(finalQuoteId ? { tuveloz_quote_id: finalQuoteId } : {}),
       ...(finalProductId ? { tuveloz_product_id: finalProductId } : {}),

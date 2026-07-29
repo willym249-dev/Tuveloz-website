@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type PaymentSummary = {
   id: string;
   status: string;
   paidAt: string;
   releasedAt: string;
+  refundAmountCents: number;
+  disputeStatus: string;
 };
 
 type QuotePaymentCardProps = {
@@ -26,6 +29,14 @@ const COMPLETE_STATUSES = new Set([
   "released",
 ]);
 
+const REVIEW_STATUSES = new Set([
+  "refunded",
+  "partially_refunded",
+  "disputed",
+  "dispute_won_review",
+  "dispute_lost",
+]);
+
 function dollars(value: string) {
   return `$${(Number(value) / 100).toFixed(2)}`;
 }
@@ -39,6 +50,7 @@ export function QuotePaymentCard({
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [acceptedPaymentPolicy, setAcceptedPaymentPolicy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -75,6 +87,7 @@ export function QuotePaymentCard({
         body: JSON.stringify({
           quoteId: quote.id,
           token: accessToken,
+          policyAccepted: acceptedPaymentPolicy,
         }),
       });
       const result = await response.json() as {
@@ -119,13 +132,34 @@ export function QuotePaymentCard({
               ? "✓ Paid. The completed job is ready for owner-reviewed payout release."
               : "✓ Paid. The provider amount will be released after job completion and owner review."}
         </div>
+      ) : payment && (
+        REVIEW_STATUSES.has(payment.status)
+        || payment.refundAmountCents > 0
+        || Boolean(payment.disputeStatus)
+      ) ? (
+        <p className="form-error" role="status">
+          This payment is under owner review because it was refunded or disputed.
+          Contact hello@tuveloz.com before attempting another payment.
+        </p>
       ) : (
         <>
           {reason && <p className="admin-note">{reason}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
+          <label className="policy-consent payment-policy-consent">
+            <input
+              checked={acceptedPaymentPolicy}
+              onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
+              type="checkbox"
+            />
+            <span>
+              I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
+              <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
+              <Link href="/payments">Payment Policy</Link>.
+            </span>
+          </label>
           <button
             className="button primary"
-            disabled={!checkoutAllowed || busy}
+            disabled={!checkoutAllowed || !acceptedPaymentPolicy || busy}
             onClick={openCheckout}
             type="button"
           >

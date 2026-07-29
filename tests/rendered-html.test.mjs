@@ -13,6 +13,20 @@ async function builtFiles(directory) {
   return nested.flat();
 }
 
+test("every recorded database migration is included in the project", async () => {
+  const journal = JSON.parse(await readFile(
+    new URL("../drizzle/meta/_journal.json", import.meta.url),
+    "utf8",
+  ));
+  await Promise.all(journal.entries.map((entry) => (
+    readFile(
+      new URL(`../drizzle/${entry.tag}.sql`, import.meta.url),
+      "utf8",
+    )
+  )));
+  assert.equal(journal.entries.length, 25);
+});
+
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
@@ -202,7 +216,7 @@ test("provider approval requires applicable state and local proof without reques
   assert.ok(contents.includes("cannot be verified until the state and local requirements"));
 });
 
-test("build provides one passwordless sign-in for customer and verified-provider workspaces", async () => {
+test("build provides secure password sign-in with verified email setup and a code backup", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
@@ -215,22 +229,87 @@ test("build provides one passwordless sign-in for customer and verified-provider
     new URL("../lib/account-auth.ts", import.meta.url),
     "utf8",
   );
+  const schemaSource = await readFile(
+    new URL("../db/schema.ts", import.meta.url),
+    "utf8",
+  );
 
-  assert.ok(contents.includes("One simple sign-in. The right tools only."));
-  assert.ok(contents.includes("Email me a code"));
+  assert.ok(contents.includes("Welcome to Tuveloz."));
+  assert.ok(contents.includes("Create account"));
+  assert.ok(contents.includes("Forgot password?"));
+  assert.ok(contents.includes("Email me a one-time code instead"));
+  assert.ok(contents.includes("15 characters minimum."));
   assert.ok(contents.includes("Verified provider workspace"));
   assert.ok(contents.includes("Customer workspace"));
-  assert.ok(contents.includes("Codes expire after 10 minutes and work once."));
+  assert.ok(contents.includes("Email codes expire in 10 minutes"));
   assert.ok(contents.includes("Save this private link."));
   assert.ok(homeSource.includes("header-sign-in"));
   assert.ok(homeSource.includes('href="/account"'));
+  assert.ok(homeSource.includes('aria-label="Sign in to Tuveloz"'));
   assert.ok(authSource.includes('eq(providerApplications.status, "approved")'));
   assert.ok(authSource.includes('eq(providerApplications.verificationStatus, "verified")'));
   assert.ok(authSource.includes('eq(providerApplications.isTestProvider, "no")'));
   assert.ok(authSource.includes('"HttpOnly"'));
   assert.ok(authSource.includes('"SameSite=Lax"'));
   assert.ok(authSource.includes("LOGIN_MAX_ATTEMPTS = 5"));
+  assert.ok(authSource.includes("PASSWORD_LOGIN_MAX_ATTEMPTS = 5"));
+  assert.ok(authSource.includes("PASSWORD_HASH_ITERATIONS = 600_000"));
+  assert.ok(authSource.includes('"PBKDF2"'));
+  assert.ok(authSource.includes('hash: "SHA-256"'));
+  assert.ok(schemaSource.includes('"account_credentials"'));
+  assert.ok(schemaSource.includes('"password_verification_codes"'));
   assert.ok(authSource.includes('{ name: "HMAC", hash: "SHA-256" }'));
+});
+
+test("build records policy consent and publishes legal, privacy, payment, and security controls", async () => {
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
+  const files = (await builtFiles(distDirectory))
+    .filter((path) => [".js", ".html"].includes(extname(path)));
+  const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
+  const requestSource = await readFile(
+    new URL("../app/api/requests/route.ts", import.meta.url),
+    "utf8",
+  );
+  const providerSource = await readFile(
+    new URL("../app/api/providers/route.ts", import.meta.url),
+    "utf8",
+  );
+  const checkoutSource = await readFile(
+    new URL("../app/api/stripe/checkout/route.ts", import.meta.url),
+    "utf8",
+  );
+  const termsSource = await readFile(
+    new URL("../app/terms/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const workerSource = await readFile(
+    new URL("../worker/index.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(contents.includes("Terms of Use"));
+  assert.ok(contents.includes("Customer Agreement"));
+  assert.ok(contents.includes("Provider Agreement"));
+  assert.ok(contents.includes("Privacy Policy"));
+  assert.ok(contents.includes("Payment, Cancellation, and Refund Policy"));
+  assert.ok(contents.includes("I am 18 or older and agree to the"));
+  assert.ok(contents.includes("TUVELOZ LLC"));
+  assert.ok(contents.includes("merchant of record"));
+  assert.ok(contents.includes("does not sell personal information"));
+  assert.ok(contents.includes("customer and provider form a separate service agreement"));
+  assert.ok(termsSource.includes("do not require private"));
+  assert.ok(termsSource.includes("arbitration"));
+  assert.ok(contents.includes("If no applicable law requires the credential, Tuveloz does not require one."));
+  assert.ok(requestSource.includes("termsAcceptedAt"));
+  assert.ok(requestSource.includes("CUSTOMER_POLICY_BUNDLE_VERSION"));
+  assert.ok(providerSource.includes("termsAcceptedAt"));
+  assert.ok(providerSource.includes("PROVIDER_POLICY_BUNDLE_VERSION"));
+  assert.ok(checkoutSource.includes("policyAcceptedAt"));
+  assert.ok(checkoutSource.includes("CHECKOUT_POLICY_BUNDLE_VERSION"));
+  assert.ok(workerSource.includes("Content-Security-Policy"));
+  assert.ok(workerSource.includes("Strict-Transport-Security"));
+  assert.ok(workerSource.includes("X-Content-Type-Options"));
+  assert.ok(workerSource.includes("private, no-store"));
 });
 
 test("customer and provider pages keep role-specific actions separate", async () => {
@@ -257,13 +336,18 @@ test("customer and provider pages keep role-specific actions separate", async ()
 
   assert.ok(customerSource.includes("Post a job"));
   assert.ok(customerSource.includes("My jobs"));
+  assert.ok(customerSource.includes("How customer privacy works"));
+  assert.ok(customerSource.includes("workspace-tools"));
   assert.ok(customerSource.includes("/my-request?request="));
   assert.ok(!customerSource.includes("/my-request?token="));
   assert.ok(!customerSource.includes("Submit quote"));
   assert.ok(!customerSource.includes("Open Jobs"));
   assert.ok(!customerSource.includes("Provider sign in"));
   assert.ok(providerSource.includes("Yes, submit quote"));
-  assert.ok(providerSource.includes("Open Jobs"));
+  assert.ok(providerSource.includes("Open jobs"));
+  assert.ok(providerSource.includes("Payments and business page"));
+  assert.ok(providerSource.includes("History and private totals"));
+  assert.ok(providerSource.includes("job-center-nav-primary"));
   assert.ok(!providerSource.includes("Post a job"));
   assert.ok(!providerSource.includes("My jobs"));
   assert.ok(accountApiSource.includes('if (session.role === "customer")'));
@@ -327,7 +411,7 @@ test("build groups the expanded service catalog and shows automatic provider mod
   assert.ok(contents.includes("Profile badge"));
   assert.ok(matchingSource.includes('export type ProviderMode = "Mobile" | "Shop" | "Both"'));
   assert.ok(matchingSource.includes('if (mobile && shop) return "Both"'));
-  assert.ok(complianceSource.includes("service-specific licensing, insurance, training, safety"));
+  assert.ok(complianceSource.includes("Require a credential only if an applicable law requires it."));
 });
 
 test("Stripe Connect uses a single SDK client, V2 recipient accounts, and direct status checks", async () => {
@@ -426,4 +510,33 @@ test("Stripe storefront and job payments preserve server-calculated marketplace 
   assert.ok(releaseSource.includes("stripeClient.transfers.create"));
   assert.ok(migration.includes("CREATE TABLE `stripe_payments`"));
   assert.ok(migration.includes("stripe_account_id"));
+});
+
+test("Stripe webhooks quarantine refunds and disputes before provider release", async () => {
+  const webhookSource = await readFile(
+    new URL("../app/api/stripe/webhooks/payments/route.ts", import.meta.url),
+    "utf8",
+  );
+  const paymentSource = await readFile(
+    new URL("../lib/stripe-payments.ts", import.meta.url),
+    "utf8",
+  );
+  const checkoutSource = await readFile(
+    new URL("../app/api/stripe/checkout/route.ts", import.meta.url),
+    "utf8",
+  );
+  const releaseSource = await readFile(
+    new URL("../app/api/stripe/admin/payments/route.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(webhookSource.includes('case "charge.refunded"'));
+  assert.ok(webhookSource.includes('case "charge.dispute.created"'));
+  assert.ok(webhookSource.includes('case "charge.dispute.closed"'));
+  assert.ok(paymentSource.includes("recordRefundedCharge"));
+  assert.ok(paymentSource.includes("recordDisputeStatus"));
+  assert.ok(checkoutSource.includes("REVIEW_PAYMENT_STATUSES"));
+  assert.ok(releaseSource.includes("payment.refundAmountCents > 0"));
+  assert.ok(releaseSource.includes("charge.amount_refunded > 0"));
+  assert.ok(releaseSource.includes("charge.disputed"));
 });

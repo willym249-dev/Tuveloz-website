@@ -37,6 +37,7 @@ export default function StripeStorefrontPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [buyingId, setBuyingId] = useState("");
+  const [acceptedPaymentPolicy, setAcceptedPaymentPolicy] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export default function StripeStorefrontPage() {
           productId,
           quantity: 1,
           customerEmail: email,
+          policyAccepted: acceptedPaymentPolicy,
         }),
       });
       const result = await response.json() as { url?: string; error?: string };
@@ -107,6 +109,18 @@ export default function StripeStorefrontPage() {
             type="email"
             value={email}
           />
+        </label>
+        <label className="policy-consent payment-policy-consent">
+          <input
+            checked={acceptedPaymentPolicy}
+            onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
+            type="checkbox"
+          />
+          <span>
+            I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
+            <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
+            <Link href="/payments">Payment Policy</Link>.
+          </span>
         </label>
         {error && <p className="form-error" role="alert">{error}</p>}
       </section>
@@ -166,6 +180,7 @@ export default function StripeStorefrontPage() {
                     disabled={
                       !product.providerReady
                       || !email
+                      || !acceptedPaymentPolicy
                       || Boolean(buyingId)
                     }
                     onClick={() => buy(product.id)}
