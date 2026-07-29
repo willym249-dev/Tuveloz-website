@@ -3,6 +3,7 @@ import { getDb } from "../../../db";
 import { customerRequests, jobMessages, providerQuotes } from "../../../db/schema";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { parseJobServices } from "../../../lib/service-matching";
+import { isSameOriginRequest } from "../../../lib/request-security";
 
 type AccountSession = NonNullable<Awaited<ReturnType<typeof getAccountSession>>>;
 
@@ -161,6 +162,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "This message must be sent from Tuveloz." },
+        { status: 403, headers: { "cache-control": "no-store" } },
+      );
+    }
     const session = await getAccountSession(request);
     if (!session) {
       return Response.json(
