@@ -532,7 +532,7 @@ export default function ProviderJobsPage() {
         <section className="portal-section" id="provider-messages">
           <div className="portal-section-heading">
             <div><span className="kicker">Private job communication</span><h2>Messages</h2></div>
-            <p>Messaging opens only after a customer accepts your quote. Only you and that customer can view the conversation.</p>
+            <p>Messaging opens only after a customer accepts your quote. The conversation appears in your workspace and that customer&apos;s workspace; Tuveloz may access stored messages for the purposes in its <a href="/privacy">Privacy Policy</a>.</p>
           </div>
           <JobMessages audience="provider" />
         </section>
