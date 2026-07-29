@@ -16,7 +16,7 @@ import {
 } from "../../../../lib/provider-compliance";
 import {
   getAuthenticatedEmail,
-  isOwnerRequest,
+  isVerifiedOwnerRequest,
 } from "../../../../lib/owner-auth";
 const CHECKLIST_KEYS = [
   "businessIdentity",
@@ -70,7 +70,7 @@ function requiredChecklistKeys(services: string[], serviceArea: string) {
 }
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
+  if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
   }
   const email = getAuthenticatedEmail(request);
