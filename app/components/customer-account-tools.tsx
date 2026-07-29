@@ -118,7 +118,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
             <label>
               Display name
               <input defaultValue={data.profile.displayName} maxLength={80} name="displayName" required />
-              <small>Used in your Tuveloz customer workspace and job communication.</small>
+              <small>Saved to your customer profile. Existing job requests keep the name originally submitted.</small>
             </label>
             <button className="button primary" disabled={busyId === "profile"} type="submit">
               {busyId === "profile" ? "Saving…" : "Save profile"}
