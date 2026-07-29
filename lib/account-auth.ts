@@ -8,7 +8,15 @@ import {
   loginCodes,
   passwordVerificationCodes,
   providerApplications,
+  providerCredentialVerifications,
 } from "../db/schema";
+import {
+  parseProviderSelfAssessment,
+} from "./provider-compliance";
+import {
+  providerCredentialRequirementsAreSatisfied,
+  requiredProviderCredentialRequirements,
+} from "./provider-credentials";
 import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   PROVIDER_POLICY_BUNDLE_VERSION,
@@ -272,7 +280,24 @@ async function verifiedProviderFor(email: string) {
       eq(providerApplications.isTestProvider, "no"),
     ))
     .limit(1);
-  return provider ?? null;
+  if (!provider) return null;
+
+  const credentialRequirements = requiredProviderCredentialRequirements(
+    provider.approvedServices,
+    provider.serviceArea,
+    parseProviderSelfAssessment(provider.providerSelfAssessment),
+  );
+  const credentialRecords = credentialRequirements.length > 0
+    ? await getDb().select().from(providerCredentialVerifications)
+      .where(eq(providerCredentialVerifications.providerId, provider.id))
+    : [];
+  if (!providerCredentialRequirementsAreSatisfied(
+    credentialRequirements,
+    credentialRecords,
+  )) {
+    return null;
+  }
+  return provider;
 }
 
 export async function eligibleAccountRoles(email: string): Promise<AccountRole[]> {

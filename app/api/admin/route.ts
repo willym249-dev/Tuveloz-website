@@ -5,6 +5,7 @@ import {
   expansionInterests,
   launchFeedback,
   providerApplications,
+  providerCredentialVerifications,
   providerQuotes,
 } from "../../../db/schema";
 import { isVerifiedOwnerRequest } from "../../../lib/owner-auth";
@@ -16,9 +17,10 @@ export async function GET(request: Request) {
 
   try {
     const db = getDb();
-    const [requests, providers, feedback, quotes, expansion] = await Promise.all([
+    const [requests, providers, credentials, feedback, quotes, expansion] = await Promise.all([
       db.select().from(customerRequests).orderBy(desc(customerRequests.createdAt)).limit(100),
       db.select().from(providerApplications).orderBy(desc(providerApplications.createdAt)).limit(100),
+      db.select().from(providerCredentialVerifications).orderBy(desc(providerCredentialVerifications.updatedAt)).limit(500),
       db.select().from(launchFeedback).orderBy(desc(launchFeedback.createdAt)).limit(100),
       db.select().from(providerQuotes).orderBy(desc(providerQuotes.createdAt)).limit(250),
       db.select({
@@ -39,7 +41,12 @@ export async function GET(request: Request) {
     });
     const safeProviders = providers.map(({ accessToken, ...providerItem }) => {
       void accessToken;
-      return providerItem;
+      return {
+        ...providerItem,
+        credentialVerifications: credentials.filter(
+          (credential) => credential.providerId === providerItem.id,
+        ),
+      };
     });
     return Response.json(
       { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion },

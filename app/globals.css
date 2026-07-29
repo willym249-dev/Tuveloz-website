@@ -5226,6 +5226,82 @@ footer > p,
   margin: 0;
 }
 
+.credential-review {
+  border-top: 1px solid #294532;
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+  padding-top: 14px;
+}
+
+.credential-review > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.credential-review > div:first-child > span {
+  color: #8fa797;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.credential-card {
+  background: #101712;
+  border: 1px solid #42634b;
+  border-radius: 12px;
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+}
+
+.credential-card > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.credential-card > div:first-child span,
+.credential-card > p {
+  color: #9eb0a2;
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.credential-card > label {
+  color: #d5e2d8;
+  display: grid;
+  font-size: 11px;
+  font-weight: 750;
+  gap: 6px;
+}
+
+.credential-card input,
+.credential-card select,
+.credential-card textarea {
+  background: #070b08;
+  border: 1px solid #405a47;
+  border-radius: 9px;
+  color: #f7f3ef;
+  font: inherit;
+  min-width: 0;
+  padding: 10px 11px;
+  width: 100%;
+}
+
+.credential-card input[type="date"],
+.credential-card select {
+  color-scheme: dark;
+}
+
+.credential-card textarea {
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.credential-card .admin-link-actions {
+  justify-content: flex-start;
+}
+
 .admin-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
