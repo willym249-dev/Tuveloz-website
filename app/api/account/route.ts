@@ -1,6 +1,10 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { customerRequests, providerQuotes } from "../../../db/schema";
+import {
+  customerRequests,
+  providerQuotes,
+  stripePayments,
+} from "../../../db/schema";
 import {
   getAccountSession,
   providerAccountFor,
@@ -39,6 +43,26 @@ export async function GET(request: Request) {
         counts[quote.requestId] = (counts[quote.requestId] ?? 0) + 1;
         return counts;
       }, {});
+      const payments = await getDb().select({
+        id: stripePayments.id,
+        paymentType: stripePayments.paymentType,
+        requestId: stripePayments.requestId,
+        productName: stripePayments.productName,
+        currency: stripePayments.currency,
+        quantity: stripePayments.quantity,
+        providerAmountCents: stripePayments.providerAmountCents,
+        applicationFeeCents: stripePayments.applicationFeeCents,
+        customerTotalCents: stripePayments.customerTotalCents,
+        status: stripePayments.status,
+        paidAt: stripePayments.paidAt,
+        refundAmountCents: stripePayments.refundAmountCents,
+        refundedAt: stripePayments.refundedAt,
+        disputeStatus: stripePayments.disputeStatus,
+        createdAt: stripePayments.createdAt,
+      }).from(stripePayments)
+        .where(sql`lower(${stripePayments.customerEmail}) = ${session.email.toLowerCase()}`)
+        .orderBy(desc(stripePayments.createdAt))
+        .limit(100);
       return Response.json({
         role: "customer",
         email: session.email,
@@ -47,6 +71,7 @@ export async function GET(request: Request) {
           ...item,
           quoteCount: quoteCounts[item.id] ?? 0,
         })),
+        payments,
       }, { headers: { "cache-control": "no-store" } });
     }
 
