@@ -347,7 +347,11 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(providerSource.includes("Open jobs"));
   assert.ok(providerSource.includes("Payments and business page"));
   assert.ok(providerSource.includes("History and private totals"));
-  assert.ok(providerSource.includes("job-center-nav-primary"));
+  assert.ok(providerSource.includes("provider-dashboard-nav"));
+  assert.ok(providerSource.includes("Available jobs"));
+  assert.ok(providerSource.includes("Business profile"));
+  assert.ok(customerSource.includes("customer-workspace-nav"));
+  assert.ok(customerSource.includes("Quotes received"));
   assert.ok(!providerSource.includes("Post a job"));
   assert.ok(!providerSource.includes("My jobs"));
   assert.ok(accountApiSource.includes('if (session.role === "customer")'));

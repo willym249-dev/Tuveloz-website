@@ -428,9 +428,17 @@ export default function ProviderJobsPage() {
         )}
       </section>
       {!loading && !error && (
-        <nav className="job-center-nav job-center-nav-primary" aria-label="Provider Job Center">
-          <a href="#active-jobs"><TuvelozIcon name="active-job" /><span>{activeJobs.length}</span>Active</a>
-          <a href="#open-jobs"><TuvelozIcon name="open-jobs" /><span>{jobs.length}</span>Open jobs</a>
+        <nav className="workspace-nav provider-dashboard-nav" aria-label="Provider dashboard">
+          <a className="workspace-nav-primary" href="#open-jobs"><TuvelozIcon name="open-jobs" />Available jobs <span>{jobs.length}</span></a>
+          <a href="#open-jobs">My quotes</a>
+          <a href="#active-jobs"><TuvelozIcon name="active-job" />Accepted jobs <span>{activeJobs.length}</span></a>
+          <a href="#provider-history">Earnings</a>
+          <a href="#provider-tools">Business profile</a>
+          <details>
+            <summary>More tools</summary>
+            <span>Schedule · Messages · Reviews · Performance tools</span>
+            <small>These focused tools will appear here as Tuveloz grows.</small>
+          </details>
         </nav>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}

@@ -108,7 +108,21 @@ export default function CustomerPage() {
         {!account && !error && <p className="admin-note account-loading">Loading your requests…</p>}
         {account && (
           <div className="account-grid account-customer-grid">
-            <section className="account-card">
+            <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
+              <Link className="workspace-nav-primary" href="/post-job">Post a job</Link>
+              <a href="#my-requests">My requests</a>
+              <a href="#my-requests">Quotes received</a>
+              <a href="#my-requests">Active jobs</a>
+              <a href="#my-requests">Job history</a>
+              <Link href="/payments">Payments</Link>
+              <details>
+                <summary>More tools</summary>
+                <span>Messages · Saved providers · Profile &amp; settings</span>
+                <small>These focused tools will appear here as Tuveloz grows.</small>
+              </details>
+            </nav>
+
+            <section className="account-card" id="my-requests">
               <div className="account-card-heading">
                 <div>
                   <span className="account-role">Customer requests</span>
@@ -142,7 +156,7 @@ export default function CustomerPage() {
                   <span>Your vehicle-service requests will appear here.</span>
                 </div>
               )}
-              <Link className="button primary account-button" href="/#request">
+              <Link className="button primary account-button" href="/post-job">
                 Post a job <span>→</span>
               </Link>
             </section>

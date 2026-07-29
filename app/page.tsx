@@ -156,7 +156,9 @@ function LegalHelp({ label, text }: { label: string; text: string }) {
   );
 }
 
-export default function Home() {
+export type PublicView = "home" | "about" | "request" | "provider";
+
+export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const { language } = useSiteLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
@@ -561,12 +563,12 @@ export default function Home() {
   }
 
   return (
-    <main>
+    <main className={`public-site public-view-${view}`}>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Tuveloz home">
+        <Link className="brand" href="/" aria-label="Tuveloz home">
           <BrandMark />
           <span>Tuveloz</span>
-        </a>
+        </Link>
 
         <button
           className="menu-button"
@@ -579,11 +581,12 @@ export default function Home() {
         </button>
 
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
-          <a href="#services" onClick={() => setMenuOpen(false)}>Services</a>
-          <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-          <a href="#reviews" onClick={() => setMenuOpen(false)}>Reviews</a>
-          <a href="#providers" onClick={() => setMenuOpen(false)}>For providers</a>
-          <Link href="/storefront" onClick={() => setMenuOpen(false)}>Storefront</Link>
+          <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
+          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Post a job</Link>
+          <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
+          <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
+          <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>
+          <Link href="/faq" onClick={() => setMenuOpen(false)}>FAQ</Link>
         </nav>
 
         <div className="header-actions">
@@ -596,9 +599,9 @@ export default function Home() {
           >
             Sign in
           </a>
-          <a className="header-cta" href="#request">
+          <Link className="header-cta" href="/post-job">
             Post a job
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -622,16 +625,16 @@ export default function Home() {
             set their schedule, and help shape tools that make business simpler.
           </p>
           <div className="hero-actions">
-            <a className="button primary" href="#request">
+            <Link className="button primary" href="/post-job">
               Post a job request <span>→</span>
-            </a>
-            <a className="button secondary" href="#providers">
+            </Link>
+            <Link className="button secondary" href="/join">
               Join as a provider
-            </a>
+            </Link>
           </div>
           <div className="hero-launch-note">
             <strong>Operating now in Montgomery County, Maryland</strong>
-            <a href="#expansion">Outside the county? Request your area →</a>
+            <Link href="/about#expansion">Outside the county? Request your area →</Link>
           </div>
         </div>
 
@@ -711,9 +714,9 @@ export default function Home() {
               <li><span>✓</span> Compare providers and quotes</li>
               <li><span>✓</span> You make the final decision</li>
             </ul>
-            <a className="button primary" href="#request">
+            <Link className="button primary" href="/post-job">
               Request vehicle service <span>→</span>
-            </a>
+            </Link>
           </article>
 
           <article className="audience-card audience-provider-card">
@@ -729,9 +732,9 @@ export default function Home() {
               <li><span>✓</span> Use one simple job workspace</li>
               <li><span>✓</span> Request tools that help you grow</li>
             </ul>
-            <a className="button secondary" href="#providers">
+            <Link className="button secondary" href="/join">
               See provider benefits <span>→</span>
-            </a>
+            </Link>
           </article>
         </div>
       </section>
@@ -755,7 +758,7 @@ export default function Home() {
               </div>
               <h3>{service.title}</h3>
               <p>{service.text}</p>
-              <a href="#request">Post this job <span>→</span></a>
+              <Link href="/post-job">Post this job <span>→</span></Link>
             </article>
           ))}
         </div>
@@ -769,9 +772,9 @@ export default function Home() {
               Final pricing may require photos or an in-person inspection.
             </p>
           </div>
-          <a className="button secondary" href="#request">
+          <Link className="button secondary" href="/post-job">
             Request a quote <span>→</span>
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -783,7 +786,7 @@ export default function Home() {
             We&apos;re starting with a request-and-quote model while the local
             provider network grows.
           </p>
-          <a className="text-link" href="#request">Post a job request →</a>
+          <Link className="text-link" href="/post-job">Post a job request →</Link>
         </div>
         <div className="steps">
           {steps.map(([number, title, text]) => (
@@ -978,7 +981,7 @@ export default function Home() {
                 <div className="fixed-launch-area">
                   <span>Current service area</span>
                   <strong>Montgomery County, Maryland</strong>
-                  <a href="#expansion">Outside the county? Request your area</a>
+                  <Link href="/about#expansion">Outside the county? Request your area</Link>
                 </div>
                 <label>
                   City, town, or municipality
@@ -1454,11 +1457,11 @@ export default function Home() {
                       ? "Condado de Montgomery, Maryland"
                       : CURRENT_LAUNCH_AREA}
                   </strong>
-                  <a href="#expansion">
+                  <Link href="/about#expansion">
                     {providerFormIsSpanish
                       ? "¿Está fuera del condado? Solicite su área"
                       : "Outside the county? Request your area"}
-                  </a>
+                  </Link>
                 </div>
                 {selectedProviderServices.length > 0
                   && selectedProviderAreas.length > 0
@@ -1927,20 +1930,23 @@ export default function Home() {
         <span className="kicker light">Tuveloz</span>
         <h2>Start with one clear request.</h2>
         <div>
-          <a className="button lime" href="#request">Post a job request <span>→</span></a>
-          <a className="button ghost" href="#providers">Join the provider network</a>
+          <Link className="button lime" href="/post-job">Post a job request <span>→</span></Link>
+          <Link className="button ghost" href="/join">Join the provider network</Link>
         </div>
       </section>
 
       <footer>
-        <a className="brand footer-brand" href="#top">
+        <Link className="brand footer-brand" href="/">
           <BrandMark /><span>Tuveloz</span>
-        </a>
+        </Link>
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
-          <a href="#services">Services</a>
-          <a href="#reviews">Reviews</a>
-          <a href="#providers">Providers</a>
+          <Link href="/about">Learn about Tuveloz</Link>
+          <Link href="/post-job">Post a job</Link>
+          <Link href="/join">Join as a provider</Link>
+          <Link href="/how-it-works">How it works</Link>
+          <Link href="/safety">Safety &amp; trust</Link>
+          <Link href="/faq">FAQ</Link>
           <a href="/storefront">Storefront</a>
           <a href="/account">Sign in</a>
           <a href="/terms">Terms</a>
@@ -1948,8 +1954,8 @@ export default function Home() {
           <a href="/provider-agreement">Provider agreement</a>
           <a href="/privacy">Privacy</a>
           <a href="/payments">Payments</a>
-          <a href="#expansion">Request your area</a>
-          <a href="#feedback">Give feedback</a>
+          <Link href="/about#expansion">Request your area</Link>
+          <Link href="/about#feedback">Give feedback</Link>
           {isOwner && <a href="/admin">Owner dashboard</a>}
           <a href="mailto:hello@tuveloz.com?subject=Tuveloz%20Early%20Supporter">Early supporters</a>
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
@@ -1961,4 +1967,8 @@ export default function Home() {
       </footer>
     </main>
   );
+}
+
+export default function Home() {
+  return <TuvelozPublic view="home" />;
 }

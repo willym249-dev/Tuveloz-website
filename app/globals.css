@@ -8425,6 +8425,297 @@ footer > p,
   margin-top: 26px;
 }
 
+/* Focused public routes */
+.workspace-nav {
+  align-items: center;
+  background: rgba(13, 13, 13, 0.94);
+  border: 1px solid #3b281d;
+  border-radius: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+}
+
+.workspace-nav > a,
+.workspace-nav > details > summary {
+  align-items: center;
+  border-radius: 13px;
+  color: #d8d0ca;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+.workspace-nav > a:hover,
+.workspace-nav > details > summary:hover {
+  background: #24150d;
+  color: #fff;
+}
+
+.workspace-nav > .workspace-nav-primary {
+  background: #ff6a00;
+  color: #080808;
+}
+
+.workspace-nav > details {
+  position: relative;
+}
+
+.workspace-nav > details > summary {
+  list-style: none;
+}
+
+.workspace-nav > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.workspace-nav > details[open] {
+  flex-basis: 100%;
+}
+
+.workspace-nav > details > span,
+.workspace-nav > details > small {
+  display: block;
+  padding: 4px 14px;
+}
+
+.workspace-nav > details > span {
+  color: #f3ece6;
+  font-weight: 800;
+}
+
+.workspace-nav > details > small {
+  color: #a69c94;
+}
+
+.customer-workspace-nav {
+  grid-column: 1 / -1;
+}
+
+.provider-dashboard-nav {
+  margin: 0 auto 18px;
+  max-width: 1180px;
+}
+
+.public-view-home > .services,
+.public-view-home > .how,
+.public-view-home > .reviews-section,
+.public-view-home > .request-section,
+.public-view-home > .providers,
+.public-view-home > .expansion-section,
+.public-view-home > .feedback-section {
+  display: none;
+}
+
+.public-view-about > .hero,
+.public-view-about > .proof-strip,
+.public-view-about > .request-section,
+.public-view-about > .providers,
+.public-view-about > .final-cta {
+  display: none;
+}
+
+.public-view-request > .hero,
+.public-view-request > .proof-strip,
+.public-view-request > .audience-section,
+.public-view-request > .services,
+.public-view-request > .how,
+.public-view-request > .reviews-section,
+.public-view-request > .providers,
+.public-view-request > .expansion-section,
+.public-view-request > .feedback-section,
+.public-view-request > .final-cta {
+  display: none;
+}
+
+.public-view-provider > .hero,
+.public-view-provider > .proof-strip,
+.public-view-provider > .audience-section,
+.public-view-provider > .services,
+.public-view-provider > .how,
+.public-view-provider > .reviews-section,
+.public-view-provider > .request-section,
+.public-view-provider > .expansion-section,
+.public-view-provider > .feedback-section,
+.public-view-provider > .final-cta {
+  display: none;
+}
+
+.public-view-request > .request-section,
+.public-view-provider > .providers,
+.public-view-about > .audience-section {
+  min-height: calc(100vh - 78px);
+}
+
+.public-site .nav {
+  gap: clamp(12px, 1.6vw, 24px);
+}
+
+.public-site .nav a {
+  white-space: nowrap;
+}
+
+.public-info-shell {
+  background:
+    radial-gradient(circle at 82% 18%, rgba(255, 106, 0, 0.14), transparent 26%),
+    #080808;
+  color: #f8f5f2;
+  min-height: 100vh;
+}
+
+.public-info-hero {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: clamp(72px, 10vw, 130px) clamp(22px, 6vw, 78px) 36px;
+}
+
+.public-info-hero h1 {
+  font-size: clamp(46px, 7vw, 84px);
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  margin: 18px 0 24px;
+  max-width: 900px;
+}
+
+.public-info-hero > p {
+  color: #c8beb7;
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.7;
+  margin: 0;
+  max-width: 780px;
+}
+
+.public-info-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 24px clamp(22px, 6vw, 78px) clamp(72px, 9vw, 120px);
+}
+
+.public-info-grid article {
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid #3b281d;
+  border-radius: 24px;
+  padding: clamp(24px, 4vw, 38px);
+}
+
+.public-info-grid h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.035em;
+  margin: 0 0 14px;
+}
+
+.public-info-grid p {
+  color: #bdb4ad;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.public-info-grid ul {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+}
+
+.public-info-grid li {
+  align-items: flex-start;
+  color: #eee8e3;
+  display: flex;
+  gap: 10px;
+}
+
+.public-info-grid li span {
+  color: #ff6a00;
+  font-weight: 900;
+}
+
+.public-info-actions {
+  background: linear-gradient(135deg, #1b0d04, #090909 65%);
+  border-bottom: 1px solid #3b281d;
+  border-top: 1px solid #3b281d;
+  padding: clamp(52px, 8vw, 90px) clamp(22px, 6vw, 78px);
+  text-align: center;
+}
+
+.public-info-actions h2 {
+  font-size: clamp(34px, 5vw, 56px);
+  letter-spacing: -0.045em;
+  margin: 0 0 26px;
+}
+
+.public-info-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+@media (min-width: 1051px) and (max-width: 1380px) {
+  .public-site .site-header,
+  .public-info-shell .site-header {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .public-site .brand,
+  .public-info-shell .brand {
+    font-size: 20px;
+  }
+
+  .public-site .nav a,
+  .public-info-shell .nav a {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 780px) {
+  .workspace-nav {
+    align-items: stretch;
+    flex-direction: column;
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .customer-workspace-nav {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .workspace-nav > a,
+  .workspace-nav > details > summary {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .public-view-request > .request-section,
+  .public-view-provider > .providers,
+  .public-view-about > .audience-section {
+    min-height: calc(100vh - 68px);
+  }
+
+  .public-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-info-actions > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .public-info-actions .button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 780px) {
   .stripe-connect-panel,
   .quote-payment-card {
