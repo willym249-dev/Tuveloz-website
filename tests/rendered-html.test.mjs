@@ -814,6 +814,15 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(providerActionSource.includes("isSameOriginRequest(request)"));
   assert.ok(paymentSource.includes("isSameOriginRequest(request)"));
 
+  assert.ok(!pageSource.includes("Copy customer link"));
+  assert.ok(!pageSource.includes("Copy provider link"));
+  assert.ok(!pageSource.includes("?token="));
+  assert.ok(!jobActionSource.includes('"create-link"'));
+  assert.ok(!providerActionSource.includes("crypto.randomUUID"));
+  assert.ok(legacyAdminSource.includes("const safeRequests"));
+  assert.ok(legacyAdminSource.includes("const safeProviders"));
+  assert.ok(legacyAdminSource.includes('"cache-control": "no-store"'));
+
   for (const secretField of [
     "passwordHash",
     "passwordSalt",
