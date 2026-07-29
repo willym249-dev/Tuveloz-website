@@ -485,7 +485,8 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(providerSource.includes("Yes, submit quote"));
   assert.ok(providerSource.includes("Submitted quotes"));
   assert.ok(providerSource.includes('onClick={() => setActiveView("earnings")}'));
-  assert.ok(providerSource.includes("History and private totals"));
+  assert.ok(providerSource.includes("Private totals"));
+  assert.ok(providerSource.includes("Earnings & hours"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
   assert.ok(providerSource.includes("Available jobs"));
   assert.ok(providerSource.includes("Business profile"));
