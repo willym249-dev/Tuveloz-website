@@ -44,7 +44,6 @@ type CustomerRequest = {
   repeatOfRequestId: string;
   details: string;
   status: string;
-  accessToken: string;
   approvedAt: string;
   reminderSentAt: string;
   reminderLastAttemptAt: string;
@@ -74,7 +73,6 @@ type ProviderApplication = {
   verificationChecklist: string;
   verifiedAt: string;
   verifiedBy: string;
-  accessToken: string;
   alertsEnabled: string;
   status: string;
   createdAt: string;
@@ -222,10 +220,6 @@ export default function AdminPage() {
   const [users, setUsers] = useState<OwnerUser[]>([]);
   const [platform, setPlatform] = useState<OwnerPlatform | null>(null);
   const [activeAdminView, setActiveAdminView] = useState<AdminView>("jobs");
-  const [copiedRequestId, setCopiedRequestId] = useState("");
-  const [copiedProviderId, setCopiedProviderId] = useState("");
-  const [pendingLinkRequestId, setPendingLinkRequestId] = useState("");
-  const [creatingLinkRequestId, setCreatingLinkRequestId] = useState("");
   const [alertStatus, setAlertStatus] = useState("");
   const [error, setError] = useState("");
   const [controlCenterError, setControlCenterError] = useState("");
@@ -275,39 +269,6 @@ export default function AdminPage() {
     }
   }
 
-  async function copyCustomerLink(id: string, token: string) {
-    const url = `${window.location.origin}/my-request?token=${encodeURIComponent(token)}`;
-
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedRequestId(id);
-      window.setTimeout(() => setCopiedRequestId(""), 2000);
-    } catch {
-      setError("Unable to copy the link. Open the customer request and copy the address from your browser.");
-    }
-  }
-
-  async function createCustomerLink(id: string) {
-    setError("");
-    setCreatingLinkRequestId(id);
-    const response = await fetch("/api/admin/requests", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "create-link" }),
-    });
-    const result = (await response.json()) as { error?: string; accessToken?: string };
-    setCreatingLinkRequestId("");
-
-    if (!response.ok || !result.accessToken) {
-      return setError(result.error || "Unable to create the private link.");
-    }
-
-    setPendingLinkRequestId("");
-    setRequests((items) => items.map((item) => (
-      item.id === id ? { ...item, accessToken: result.accessToken ?? "" } : item
-    )));
-  }
-
   async function updateProvider(id: string, status: "approved" | "declined") {
     setError("");
     const response = await fetch("/api/admin/providers", {
@@ -317,7 +278,6 @@ export default function AdminPage() {
     });
     const result = (await response.json()) as {
       error?: string;
-      accessToken?: string;
       serviceArea?: string;
       verificationStatus?: string;
     };
@@ -326,7 +286,6 @@ export default function AdminPage() {
       item.id === id ? {
         ...item,
         status,
-        accessToken: result.accessToken ?? "",
         serviceArea: result.serviceArea ?? item.serviceArea,
         verificationStatus: result.verificationStatus ?? item.verificationStatus,
       } : item
@@ -359,7 +318,6 @@ export default function AdminPage() {
     });
     const result = (await response.json()) as {
       error?: string;
-      accessToken?: string;
       verificationStatus?: string;
       isTestProvider?: string;
     };
@@ -368,7 +326,6 @@ export default function AdminPage() {
       item.id === id ? {
         ...item,
         status: "approved",
-        accessToken: result.accessToken ?? item.accessToken,
         verificationStatus: result.verificationStatus ?? "test",
         isTestProvider: result.isTestProvider ?? "yes",
         alertsEnabled: "no",
@@ -442,17 +399,6 @@ export default function AdminPage() {
       }
     } finally {
       setActionBusy(false);
-    }
-  }
-
-  async function copyProviderLink(id: string, token: string) {
-    const url = `${window.location.origin}/provider-jobs?token=${encodeURIComponent(token)}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedProviderId(id);
-      window.setTimeout(() => setCopiedProviderId(""), 2000);
-    } catch {
-      setError("Unable to copy the provider link. Open it and copy the address from your browser.");
     }
   }
 
@@ -688,39 +634,6 @@ export default function AdminPage() {
                             title: "Mark this as a test job?",
                             message: "This request will be isolated from real providers and automatic provider alerts. Only test providers will be able to quote it.",
                           })}>Mark as test job</button>
-                        )}
-                      </div>
-                    )}
-                    {item.accessToken ? (
-                      <div className="admin-link-actions">
-                        <a
-                          href={`/my-request?token=${encodeURIComponent(item.accessToken)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open customer request
-                        </a>
-                        <button type="button" onClick={() => copyCustomerLink(item.id, item.accessToken)}>
-                          {copiedRequestId === item.id ? "Link copied" : "Copy customer link"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="admin-link-missing">
-                        <p className="admin-link-note">This older request does not have a private link yet.</p>
-                        {pendingLinkRequestId === item.id ? (
-                          <ConfirmAction
-                            busy={creatingLinkRequestId === item.id}
-                            busyLabel="Creating…"
-                            confirmLabel="Confirm and create link"
-                            message="Anyone with this link can open the private customer request. Share it only with the customer."
-                            onBack={() => setPendingLinkRequestId("")}
-                            onConfirm={() => createCustomerLink(item.id)}
-                            title="Create a private customer link?"
-                          />
-                        ) : (
-                          <button type="button" onClick={() => setPendingLinkRequestId(item.id)}>
-                            Create private link
-                          </button>
                         )}
                       </div>
                     )}
@@ -1004,13 +917,9 @@ export default function AdminPage() {
                         {!savedComplete && <span className="admin-link-note">Save every applicable-law check and at least one approved service before verification.</span>}
                       </div>
                     )}
-                    {(isVerified || isTestProvider) && item.status === "approved" && item.accessToken && (
+                    {(isVerified || isTestProvider) && item.status === "approved" && alertHref && (
                       <div className="admin-link-actions">
-                        <a href={`/provider-jobs?token=${encodeURIComponent(item.accessToken)}`} target="_blank" rel="noreferrer">Open provider workspace</a>
-                        <button type="button" onClick={() => copyProviderLink(item.id, item.accessToken)}>
-                          {copiedProviderId === item.id ? "Link copied" : "Copy provider link"}
-                        </button>
-                        {alertHref && <a href={alertHref}>Email matching-job alert</a>}
+                        <a href={alertHref}>Email matching-job alert</a>
                       </div>
                     )}
                     {(isVerified || isTestProvider) && item.status === "approved" && (
