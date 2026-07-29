@@ -407,7 +407,9 @@ export default function AccountPage() {
                 />
               </label>
               <small className="account-password-guidance">
-                15 characters minimum. Spaces are allowed.
+                We know 15 characters can feel long. We ask for a longer password to
+                help keep your account, personal information, and job details safe.
+                Spaces are allowed.
               </small>
               {mode === "create" && (
                 <label className="policy-consent">

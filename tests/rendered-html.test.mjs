@@ -245,7 +245,7 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Create account"));
   assert.ok(contents.includes("Forgot password?"));
   assert.ok(contents.includes("Email me a one-time code instead"));
-  assert.ok(contents.includes("15 characters minimum."));
+  assert.ok(contents.includes("We know 15 characters can feel long."));
   assert.ok(contents.includes("Verified provider workspace"));
   assert.ok(contents.includes("Customer workspace"));
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
