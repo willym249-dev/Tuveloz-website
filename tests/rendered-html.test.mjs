@@ -1123,3 +1123,22 @@ test("owner Access identifiers survive every Cloudflare deployment", async () =>
   assert.ok(adminPageSource.includes('fetch("/api/admin", { cache: "no-store" })'));
   assert.ok(!adminPageSource.includes('window.location.replace("/")'));
 });
+
+
+test("browser assets never expose private build paths or broken generated fonts", async () => {
+  const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
+  const files = (await builtFiles(distDirectory))
+    .filter((path) => [".css", ".html"].includes(extname(path)));
+  const contents = (await Promise.all(
+    files.map((path) => readFile(path, "utf8")),
+  )).join("\n");
+  const layout = await readFile(
+    new URL("../app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(!contents.includes("/workspace/"));
+  assert.ok(!contents.includes(".vinext/fonts"));
+  assert.ok(!layout.includes("next/font"));
+  assert.ok(layout.includes('className="antialiased"'));
+});
