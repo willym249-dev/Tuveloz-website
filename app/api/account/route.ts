@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "../../../db";
-import { customerRequests } from "../../../db/schema";
+import { customerRequests, providerQuotes } from "../../../db/schema";
 import {
   getAccountSession,
   providerAccountFor,
@@ -29,11 +29,24 @@ export async function GET(request: Request) {
         .where(eq(customerRequests.email, session.email))
         .orderBy(desc(customerRequests.createdAt))
         .limit(100);
+      const quoteRows = requests.length > 0
+        ? await getDb().select({
+            requestId: providerQuotes.requestId,
+          }).from(providerQuotes)
+            .where(inArray(providerQuotes.requestId, requests.map((item) => item.id)))
+        : [];
+      const quoteCounts = quoteRows.reduce<Record<string, number>>((counts, quote) => {
+        counts[quote.requestId] = (counts[quote.requestId] ?? 0) + 1;
+        return counts;
+      }, {});
       return Response.json({
         role: "customer",
         email: session.email,
         availableRoles: session.availableRoles,
-        requests,
+        requests: requests.map((item) => ({
+          ...item,
+          quoteCount: quoteCounts[item.id] ?? 0,
+        })),
       }, { headers: { "cache-control": "no-store" } });
     }
 
