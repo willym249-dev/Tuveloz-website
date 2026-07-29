@@ -190,6 +190,13 @@
       "when": 1785337817233,
       "tag": "0026_ordinary_thunderbolts",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1785344171423,
+      "tag": "0027_verified_provider_credentials",
+      "breakpoints": true
     }
   ]
 }
