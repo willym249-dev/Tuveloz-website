@@ -33,7 +33,18 @@ export async function GET(request: Request) {
         .orderBy(desc(expansionInterests.createdAt))
         .limit(500),
     ]);
-    return Response.json({ requests, providers, feedback, quotes, expansion });
+    const safeRequests = requests.map(({ accessToken, ...requestItem }) => {
+      void accessToken;
+      return requestItem;
+    });
+    const safeProviders = providers.map(({ accessToken, ...providerItem }) => {
+      void accessToken;
+      return providerItem;
+    });
+    return Response.json(
+      { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion },
+      { headers: { "cache-control": "no-store" } },
+    );
   } catch (error) {
     console.error("Unable to load admin dashboard", error);
     return Response.json({ error: "Unable to load submissions." }, { status: 500 });
