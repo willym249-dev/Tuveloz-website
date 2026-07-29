@@ -32,8 +32,10 @@ export default function AccountPage() {
     try {
       const rememberedEmail = window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
       if (rememberedEmail) {
-        setEmail(rememberedEmail);
-        setRememberEmail(true);
+        Promise.resolve().then(() => {
+          setEmail(rememberedEmail);
+          setRememberEmail(true);
+        });
       }
     } catch {
       // Sign-in still works when this browser blocks local storage.
