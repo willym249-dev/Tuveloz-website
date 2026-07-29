@@ -495,32 +495,6 @@ async function issuePasswordChallenge(
   role: AccountRole,
   purpose: PasswordChallengePurpose,
 ) {
-  return issuePasswordChallenge(email, role, purpose);
-}
-
-export async function requestPasswordVerification(
-  email: string,
-  role: AccountRole,
-  purpose: PasswordPurpose,
-) {
-  const [roles, credentialRows] = await Promise.all([
-    eligibleAccountRoles(email),
-    getDb().select({ email: accountCredentials.email })
-      .from(accountCredentials)
-      .where(eq(accountCredentials.email, email))
-      .limit(1),
-  ]);
-  const hasCredential = credentialRows.length > 0;
-  const roleCanCreate = role === "customer" || roles.includes(role);
-  const actionAllowed = (purpose === "create" ? roleCanCreate : roles.includes(role))
-    && (
-      (purpose === "create" && !hasCredential)
-      || (purpose === "reset" && hasCredential)
-    );
-  if (!actionAllowed) {
-    return { accepted: true, delivered: false };
-  }
-
   const recent = await getDb().select({ createdAt: passwordVerificationCodes.createdAt })
     .from(passwordVerificationCodes)
     .where(and(
@@ -561,6 +535,32 @@ export async function requestPasswordVerification(
     throw error;
   }
   return { accepted: true, delivered: true };
+}
+
+export async function requestPasswordVerification(
+  email: string,
+  role: AccountRole,
+  purpose: PasswordPurpose,
+) {
+  const [roles, credentialRows] = await Promise.all([
+    eligibleAccountRoles(email),
+    getDb().select({ email: accountCredentials.email })
+      .from(accountCredentials)
+      .where(eq(accountCredentials.email, email))
+      .limit(1),
+  ]);
+  const hasCredential = credentialRows.length > 0;
+  const roleCanCreate = role === "customer" || roles.includes(role);
+  const actionAllowed = (purpose === "create" ? roleCanCreate : roles.includes(role))
+    && (
+      (purpose === "create" && !hasCredential)
+      || (purpose === "reset" && hasCredential)
+    );
+  if (!actionAllowed) {
+    return { accepted: true, delivered: false };
+  }
+
+  return issuePasswordChallenge(email, role, purpose);
 }
 
 export async function completePasswordVerification(
