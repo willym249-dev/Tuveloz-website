@@ -93,7 +93,7 @@ function shortDate(value: string) {
     : value;
   const parsed = new Date(normalized);
   return Number.isNaN(parsed.getTime())
-    ? "Recent request"
+    ? "Date unavailable"
     : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
