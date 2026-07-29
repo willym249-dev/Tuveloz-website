@@ -4,6 +4,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
+import { JobMessages } from "../components/job-messages";
 import { MarketPriceLinks } from "../components/market-price-links";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
@@ -474,6 +475,7 @@ export default function ProviderJobsPage() {
           >
             Earnings
           </a>
+          <a href="#provider-messages">Messages</a>
           <a
             href="#provider-reviews"
             onClick={(event) => {
@@ -524,6 +526,15 @@ export default function ProviderJobsPage() {
               ))}
             </div>
           )}
+        </section>
+      )}
+      {!loading && !error && (
+        <section className="portal-section" id="provider-messages">
+          <div className="portal-section-heading">
+            <div><span className="kicker">Private job communication</span><h2>Messages</h2></div>
+            <p>Messaging opens only after a customer accepts your quote. Only you and that customer can view the conversation.</p>
+          </div>
+          <JobMessages audience="provider" />
         </section>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}
