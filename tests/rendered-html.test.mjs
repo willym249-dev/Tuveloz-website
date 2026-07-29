@@ -263,6 +263,8 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(authSource.includes("PASSWORD_HASH_ITERATIONS = 600_000"));
   assert.ok(authSource.includes('"PBKDF2"'));
   assert.ok(authSource.includes('hash: "SHA-256"'));
+  assert.ok(authSource.includes("credentialRows.length > 0 || customerRows.length > 0"));
+  assert.ok(authSource.includes('role === "customer" || roles.includes(role)'));
   assert.ok(schemaSource.includes('"account_credentials"'));
   assert.ok(schemaSource.includes('"password_verification_codes"'));
   assert.ok(authSource.includes('{ name: "HMAC", hash: "SHA-256" }'));

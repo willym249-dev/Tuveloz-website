@@ -255,13 +255,15 @@ async function verifiedProviderFor(email: string) {
 }
 
 export async function eligibleAccountRoles(email: string): Promise<AccountRole[]> {
-  const [customerRows, provider] = await Promise.all([
+  const [customerRows, credentialRows, provider] = await Promise.all([
     getDb().select({ id: customerRequests.id }).from(customerRequests)
       .where(eq(customerRequests.email, email)).limit(1),
+    getDb().select({ email: accountCredentials.email }).from(accountCredentials)
+      .where(eq(accountCredentials.email, email)).limit(1),
     verifiedProviderFor(email),
   ]);
   const roles: AccountRole[] = [];
-  if (customerRows.length > 0) roles.push("customer");
+  if (credentialRows.length > 0 || customerRows.length > 0) roles.push("customer");
   if (provider) roles.push("provider");
   return roles;
 }
@@ -476,7 +478,8 @@ export async function requestPasswordVerification(
       .limit(1),
   ]);
   const hasCredential = credentialRows.length > 0;
-  const actionAllowed = roles.includes(role)
+  const roleCanCreate = role === "customer" || roles.includes(role);
+  const actionAllowed = (purpose === "create" ? roleCanCreate : roles.includes(role))
     && (
       (purpose === "create" && !hasCredential)
       || (purpose === "reset" && hasCredential)
@@ -578,8 +581,9 @@ export async function completePasswordVerification(
       .limit(1),
   ]);
   const hasCredential = credentialRows.length > 0;
+  const roleCanCreate = role === "customer" || roles.includes(role);
   if (
-    !roles.includes(role)
+    !(purpose === "create" ? roleCanCreate : roles.includes(role))
     || (purpose === "create" && hasCredential)
     || (purpose === "reset" && !hasCredential)
   ) {
