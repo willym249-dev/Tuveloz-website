@@ -1,4 +1,4 @@
-import { desc, eq, inArray, sql } from "drizzle-orm";
+import { desc, inArray, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   customerRequests,
