@@ -715,8 +715,9 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   assert.ok(customerSource.includes("Payment policy"));
   assert.ok(accountSource.includes("inArray(providerQuotes.requestId"));
   assert.ok(accountSource.includes("quoteCount: quoteCounts[item.id] ?? 0"));
-  assert.ok(adminSource.includes("response.status === 401 || response.status === 403"));
-  assert.ok(adminSource.includes('window.location.replace("/")'));
+  assert.ok(adminSource.includes('fetch("/api/admin", { cache: "no-store" })'));
+  assert.ok(adminSource.includes('if (!response.ok) throw new Error(result.error || "Unable to load dashboard.");'));
+  assert.ok(!adminSource.includes('window.location.replace("/")'));
   assert.ok(adminSource.includes("if (!accessGranted && !error) return null;"));
 });
 
