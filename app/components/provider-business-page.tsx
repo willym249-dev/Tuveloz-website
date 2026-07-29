@@ -138,7 +138,10 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
   }, [applyResponse]);
 
   useEffect(() => {
-    void loadProfile();
+    const loadTimer = window.setTimeout(() => {
+      void loadProfile();
+    }, 0);
+    return () => window.clearTimeout(loadTimer);
   }, [loadProfile]);
 
   useEffect(() => {
