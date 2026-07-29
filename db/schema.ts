@@ -259,6 +259,28 @@ export const passwordVerificationCodes = sqliteTable(
   ],
 );
 
+export const passkeyCredentials = sqliteTable(
+  "passkey_credentials",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    webauthnUserId: text("webauthn_user_id").notNull(),
+    publicKey: text("public_key").notNull(),
+    counter: integer("counter").notNull().default(0),
+    transports: text("transports").notNull().default("[]"),
+    deviceType: text("device_type").notNull(),
+    backedUp: text("backed_up").notNull().default("no"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastUsedAt: text("last_used_at").notNull().default(""),
+  },
+  (table) => [
+    index("passkey_credentials_email_role_idx").on(table.email, table.role),
+    index("passkey_credentials_webauthn_user_id_idx").on(table.webauthnUserId),
+    index("passkey_credentials_last_used_at_idx").on(table.lastUsedAt),
+  ],
+);
+
 export const providerProfiles = sqliteTable(
   "provider_profiles",
   {
