@@ -7,7 +7,6 @@ import { parseProviderServices } from "../../lib/service-matching";
 type CustomerProfile = {
   email: string;
   displayName: string;
-  phone: string;
 };
 
 type CustomerProvider = {
@@ -85,7 +84,6 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
         body: JSON.stringify({
           action: "save-profile",
           displayName: values.displayName,
-          phone: values.phone,
         }),
       });
       const result = await response.json() as { profile?: CustomerProfile; error?: string };
@@ -108,7 +106,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
       <div className="customer-settings-panel">
         {error && <p className="form-error" role="alert">{error}</p>}
         {data && (
-          <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}-${data.profile.phone}`} onSubmit={saveProfile}>
+          <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}`} onSubmit={saveProfile}>
             <label>
               Account email
               <input disabled readOnly value={data.profile.email} />
@@ -118,18 +116,6 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
               Display name
               <input defaultValue={data.profile.displayName} maxLength={80} name="displayName" required />
               <small>Used in your Tuveloz customer workspace and job communication.</small>
-            </label>
-            <label>
-              Phone <span>(optional)</span>
-              <input
-                autoComplete="tel"
-                defaultValue={data.profile.phone}
-                inputMode="tel"
-                maxLength={30}
-                name="phone"
-                placeholder="Your preferred callback number"
-              />
-              <small>Shared only with the provider whose quote you accept.</small>
             </label>
             <button className="button primary" disabled={busyId === "profile"} type="submit">
               {busyId === "profile" ? "Saving…" : "Save profile"}
