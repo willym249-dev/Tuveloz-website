@@ -9,6 +9,8 @@ type AdminPayment = {
   productName: string;
   providerName: string | null;
   customerEmail: string;
+  customerDisplayName: string | null;
+  customerHasAccount: boolean;
   providerAmountCents: number;
   applicationFeeCents: number;
   customerTotalCents: number;
@@ -159,7 +161,17 @@ export function StripePaymentAdmin() {
                 <div><dt>Tuveloz fee</dt><dd>{dollars(payment.applicationFeeCents)}</dd></div>
                 <div className="total"><dt>Customer total</dt><dd>{dollars(payment.customerTotalCents)}</dd></div>
               </dl>
-              {payment.customerEmail && <p>Customer: {payment.customerEmail}</p>}
+              {payment.customerEmail && (
+                <div className="payment-customer-account">
+                  <p><strong>Customer contact:</strong> {payment.customerEmail}</p>
+                  <p>
+                    <strong>Tuveloz account:</strong>{" "}
+                    {payment.customerHasAccount
+                      ? payment.customerDisplayName || payment.customerEmail
+                      : "No matching sign-in account"}
+                  </p>
+                </div>
+              )}
               {payment.jobStatus && <p>Job status: {payment.jobStatus}</p>}
               <p>
                 Settlement: {payment.settlementStrategy === "destination_charge"
