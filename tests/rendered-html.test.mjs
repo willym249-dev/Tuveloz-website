@@ -729,6 +729,9 @@ test("customer account features are authenticated and backed by real records", a
   assert.ok(messagesSource.includes("conversations.find((item) => item.requestId === requestId)"));
   assert.ok(messagesSource.includes("recipientEmail: (session.role === \"customer\""));
   assert.ok(messagesComponent.includes("Do not share passwords, payment-card details"));
+  assert.ok(messagesComponent.includes("Tuveloz stores messages and may review them"));
+  assert.ok(customerToolsComponent.includes("Existing job requests keep the name originally submitted."));
+  assert.ok(!providerSource.includes("Only you and that customer can view the conversation."));
   assert.ok(accountSource.includes('lower(${customerRequests.email}) = ${session.email.toLowerCase()}'));
 
   assert.ok(schemaSource.includes('export const customerProfiles = sqliteTable'));
