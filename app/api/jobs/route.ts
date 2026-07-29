@@ -22,6 +22,7 @@ import {
 } from "../../../lib/job-images";
 import { customerPriceFor } from "../../../lib/customer-fee";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { isSameOriginRequest } from "../../../lib/request-security";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -219,6 +220,20 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return Response.json(
+      { error: "This provider action must come from Tuveloz." },
+      { status: 403, headers: { "cache-control": "no-store" } },
+    );
+  }
+  const provider = await providerForSession(request);
+  if (!provider) {
+    return Response.json(
+      { error: "Sign in to your verified provider workspace." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
+  }
+
   const contentType = request.headers.get("content-type") ?? "";
   let body: Record<string, unknown>;
   let completionPhoto: unknown;
@@ -232,13 +247,6 @@ export async function POST(request: Request) {
   const requestId = clean(body.requestId, 80);
   if (!requestId) {
     return Response.json({ error: "Choose a valid job request." }, { status: 400 });
-  }
-  const provider = await providerForSession(request);
-  if (!provider) {
-    return Response.json(
-      { error: "Sign in to your verified provider workspace." },
-      { status: 401, headers: { "cache-control": "no-store" } },
-    );
   }
   const db = getDb();
 

@@ -2413,6 +2413,11 @@ footer > p {
   border-color: #ff8a2a;
 }
 
+.portal-account-link:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .provider-fee-note {
   background: rgba(255, 106, 0, 0.08);
   border: 1px solid rgba(255, 106, 0, 0.25);
@@ -8625,8 +8630,38 @@ footer > p,
 }
 
 .provider-dashboard-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0 auto 18px;
   max-width: 1180px;
+}
+
+.provider-dashboard-nav > button {
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+}
+
+.workspace-nav.provider-dashboard-nav > .workspace-nav-primary {
+  background: transparent;
+  color: #d8d0ca;
+}
+
+.workspace-nav.provider-dashboard-nav > .workspace-nav-primary.is-active {
+  background: #ff6a00;
+  color: #080808;
+}
+
+.provider-dashboard-nav > button > span {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.11);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  justify-content: center;
+  min-height: 22px;
+  min-width: 22px;
+  padding: 2px 7px;
 }
 
 .public-view-home > .services,
@@ -8815,6 +8850,18 @@ footer > p,
   .customer-workspace-nav {
     margin-left: 0;
     margin-right: 0;
+  }
+
+  .provider-dashboard-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .provider-dashboard-nav > button {
+    justify-content: center;
+    padding-left: 8px;
+    padding-right: 8px;
+    width: auto;
   }
 
   .workspace-nav > a,

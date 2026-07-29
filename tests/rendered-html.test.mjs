@@ -484,8 +484,9 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!customerSource.includes("Provider sign in"));
   assert.ok(providerSource.includes("Yes, submit quote"));
   assert.ok(providerSource.includes("Submitted quotes"));
-  assert.ok(providerSource.includes("Payments and business page"));
-  assert.ok(providerSource.includes("History and private totals"));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("earnings")}'));
+  assert.ok(providerSource.includes("Private totals"));
+  assert.ok(providerSource.includes("Earnings & hours"));
   assert.ok(providerSource.includes("provider-dashboard-nav"));
   assert.ok(providerSource.includes("Available jobs"));
   assert.ok(providerSource.includes("Business profile"));
@@ -734,7 +735,7 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(accountSource.includes("payments,"));
 });
 
-test("provider dashboard exposes only provider-owned factual tools", async () => {
+test("provider dashboard exposes focused, factual, provider-owned tools", async () => {
   const providerSource = await readFile(
     new URL("../app/provider-jobs/page.tsx", import.meta.url),
     "utf8",
@@ -755,18 +756,66 @@ test("provider dashboard exposes only provider-owned factual tools", async () =>
   assert.ok(providerSource.includes("Accepted-job availability"));
   assert.ok(providerSource.includes("Only quotes submitted from this provider account appear here."));
   assert.ok(providerSource.includes("Customer sees"));
-  assert.ok(providerSource.includes('href="#provider-schedule"'));
-  assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-reviews")'));
-  assert.ok(providerSource.includes('openWorkspaceSection("provider-tools", "provider-performance")'));
-  assert.ok(providerSource.includes('href="#provider-messages"'));
+  assert.ok(providerSource.includes("type ProviderView ="));
+  assert.ok(providerSource.includes('aria-pressed={activeView === "available"}'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("schedule")}'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("messages")}'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("reviews")}'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("profile")}'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("performance")}'));
+  assert.ok(!providerSource.includes("openWorkspaceSection"));
+  assert.ok(!providerSource.includes('href="#provider-reviews"'));
   assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
+  assert.ok(providerSource.includes('focus={activeView === "reviews" ? "reviews" : activeView === "performance" ? "performance" : "profile"}'));
+  assert.ok(providerSource.includes("if (!response.ok)"));
+  assert.ok(providerSource.includes("Your session is still active."));
+  assert.ok(providerSource.includes("disabled={signingOut}"));
   assert.ok(jobsApiSource.includes("myQuotes: submittedQuotes"));
   assert.ok(jobsApiSource.includes("eq(providerQuotes.providerEmail, provider.email)"));
   assert.ok(jobsApiSource.includes('"cache-control": "no-store"'));
+  assert.ok(businessSource.includes('type ProviderBusinessFocus = "profile" | "reviews" | "performance"'));
+  assert.ok(businessSource.includes('{focus === "profile" && ('));
+  assert.ok(businessSource.includes('{focus === "reviews" && ('));
+  assert.ok(businessSource.includes('{focus === "performance" && ('));
   assert.ok(businessSource.includes("Verified customer feedback"));
   assert.ok(businessSource.includes("Only feedback from completed Tuveloz jobs appears here."));
   assert.ok(profileApiSource.includes('eq(jobReviews.status, "published")'));
   assert.ok(profileApiSource.includes('"cache-control": "no-store"'));
+});
+
+test("provider write routes reject cross-origin requests before reading request bodies", async () => {
+  const routeSources = await Promise.all([
+    readFile(new URL("../app/api/jobs/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/messages/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/provider-profile/route.ts", import.meta.url), "utf8"),
+  ]);
+  const securitySource = await readFile(
+    new URL("../lib/request-security.ts", import.meta.url),
+    "utf8",
+  );
+
+  for (const routeSource of routeSources) {
+    assert.ok(routeSource.includes('import { isSameOriginRequest } from'));
+    const postSource = routeSource.slice(routeSource.indexOf("export async function POST"));
+    const guardIndex = postSource.indexOf("isSameOriginRequest(request)");
+    const jsonIndex = postSource.indexOf("request.json()");
+    const formIndex = postSource.indexOf("request.formData()");
+    const bodyIndex = jsonIndex >= 0 ? jsonIndex : formIndex;
+    assert.ok(guardIndex >= 0);
+    assert.ok(bodyIndex >= 0);
+    assert.ok(guardIndex < bodyIndex);
+    assert.ok(postSource.includes('{ status: 403, headers: { "cache-control": "no-store" } }'));
+  }
+
+  const jobsPost = routeSources[0].slice(routeSources[0].indexOf("export async function POST"));
+  const messagesPost = routeSources[1].slice(routeSources[1].indexOf("export async function POST"));
+  const profilePost = routeSources[2].slice(routeSources[2].indexOf("export async function POST"));
+  assert.ok(jobsPost.indexOf("providerForSession") < jobsPost.indexOf("request.formData()"));
+  assert.ok(messagesPost.indexOf("getAccountSession") < messagesPost.indexOf("request.json()"));
+  assert.ok(profilePost.indexOf("activeProvider") < profilePost.indexOf("request.formData()"));
+  assert.ok(securitySource.includes("new URL(origin).origin === new URL(request.url).origin"));
+  assert.ok(securitySource.includes('fetchSite === "same-origin"'));
+  assert.ok(securitySource.includes('fetchSite === "none"'));
 });
 
 
@@ -840,7 +889,7 @@ test("customer account features are authenticated and backed by real records", a
   assert.ok(customerSource.includes('<JobMessages audience="customer" />'));
   assert.ok(customerSource.includes('activeView === "saved" || activeView === "settings"'));
   assert.ok(customerSource.includes("<CustomerAccountTools view={activeView} />"));
-  assert.ok(providerSource.includes('href="#provider-messages"'));
+  assert.ok(providerSource.includes('onClick={() => setActiveView("messages")}'));
   assert.ok(providerSource.includes('<JobMessages audience="provider" />'));
 
   assert.ok(customerToolsSource.includes("getAccountSession(request)"));

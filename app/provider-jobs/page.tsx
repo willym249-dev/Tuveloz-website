@@ -98,6 +98,17 @@ type PendingStatus = {
   label: string;
 };
 
+type ProviderView =
+  | "available"
+  | "quotes"
+  | "accepted"
+  | "schedule"
+  | "earnings"
+  | "messages"
+  | "reviews"
+  | "profile"
+  | "performance";
+
 const nextStatus: Record<string, { value: string; label: string }> = {
   "quote accepted": { value: "on my way", label: "I'm on my way" },
   "on my way": { value: "arrived", label: "I've arrived" },
@@ -173,6 +184,8 @@ export default function ProviderJobsPage() {
   const [timerJobId, setTimerJobId] = useState("");
   const [signedIn, setSignedIn] = useState(false);
   const [canSwitchWorkspace, setCanSwitchWorkspace] = useState(false);
+  const [activeView, setActiveView] = useState<ProviderView>("available");
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     async function loadWorkspace() {
@@ -349,20 +362,20 @@ export default function ProviderJobsPage() {
   }
 
   async function signOut() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.replace("/account?role=provider");
-  }
-
-  function openWorkspaceSection(
-    sectionId: "provider-history" | "provider-tools",
-    targetId: string = sectionId,
-  ) {
-    const section = document.getElementById(sectionId);
-    if (!(section instanceof HTMLDetailsElement)) return;
-    section.open = true;
-    window.requestAnimationFrame(() => {
-      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    if (signingOut) return;
+    setSigningOut(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to sign out. Your session is still active.");
+      }
+      window.location.replace("/account?role=provider");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to sign out. Your session is still active.");
+      setSigningOut(false);
+    }
   }
 
   async function switchWorkspace() {
@@ -415,7 +428,14 @@ export default function ProviderJobsPage() {
             </button>
           )}
           {signedIn ? (
-            <button className="portal-account-link" onClick={signOut} type="button">Sign out</button>
+            <button
+              className="portal-account-link"
+              disabled={signingOut}
+              onClick={signOut}
+              type="button"
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
           ) : (
             <Link className="portal-account-link" href="/account?role=provider">Provider sign in</Link>
           )}
@@ -462,50 +482,29 @@ export default function ProviderJobsPage() {
       </section>
       {!loading && !error && (
         <nav className="workspace-nav provider-dashboard-nav" aria-label="Provider dashboard">
-          <a className="workspace-nav-primary" href="#open-jobs"><TuvelozIcon name="open-jobs" />Available jobs <span>{openJobs.length}</span></a>
-          <a href="#my-quotes">My quotes <span>{myQuotes.length}</span></a>
-          <a href="#active-jobs"><TuvelozIcon name="active-job" />Accepted jobs <span>{activeJobs.length}</span></a>
-          <a href="#provider-schedule">Schedule</a>
-          <a
-            href="#earnings-hours"
-            onClick={(event) => {
-              event.preventDefault();
-              openWorkspaceSection("provider-history", "earnings-hours");
-            }}
+          <button
+            aria-pressed={activeView === "available"}
+            className={activeView === "available" ? "workspace-nav-primary is-active" : "workspace-nav-primary"}
+            onClick={() => setActiveView("available")}
+            type="button"
           >
-            Earnings
-          </a>
-          <a href="#provider-messages">Messages</a>
-          <a
-            href="#provider-reviews"
-            onClick={(event) => {
-              event.preventDefault();
-              openWorkspaceSection("provider-tools", "provider-reviews");
-            }}
-          >
-            Reviews
-          </a>
-          <a
-            href="#business-page"
-            onClick={(event) => {
-              event.preventDefault();
-              openWorkspaceSection("provider-tools", "business-page");
-            }}
-          >
-            Business profile
-          </a>
-          <a
-            href="#provider-performance"
-            onClick={(event) => {
-              event.preventDefault();
-              openWorkspaceSection("provider-tools", "provider-performance");
-            }}
-          >
-            Performance tools
-          </a>
+            <TuvelozIcon name="open-jobs" />Available jobs <span>{openJobs.length}</span>
+          </button>
+          <button aria-pressed={activeView === "quotes"} className={activeView === "quotes" ? "is-active" : ""} onClick={() => setActiveView("quotes")} type="button">
+            My quotes <span>{myQuotes.length}</span>
+          </button>
+          <button aria-pressed={activeView === "accepted"} className={activeView === "accepted" ? "is-active" : ""} onClick={() => setActiveView("accepted")} type="button">
+            <TuvelozIcon name="active-job" />Accepted jobs <span>{activeJobs.length}</span>
+          </button>
+          <button aria-pressed={activeView === "schedule"} className={activeView === "schedule" ? "is-active" : ""} onClick={() => setActiveView("schedule")} type="button">Schedule</button>
+          <button aria-pressed={activeView === "earnings"} className={activeView === "earnings" ? "is-active" : ""} onClick={() => setActiveView("earnings")} type="button">Earnings</button>
+          <button aria-pressed={activeView === "messages"} className={activeView === "messages" ? "is-active" : ""} onClick={() => setActiveView("messages")} type="button">Messages</button>
+          <button aria-pressed={activeView === "reviews"} className={activeView === "reviews" ? "is-active" : ""} onClick={() => setActiveView("reviews")} type="button">Reviews</button>
+          <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
+          <button aria-pressed={activeView === "performance"} className={activeView === "performance" ? "is-active" : ""} onClick={() => setActiveView("performance")} type="button">Performance tools</button>
         </nav>
       )}
-      {!loading && !error && (
+      {!loading && !error && activeView === "schedule" && (
         <section className="portal-section provider-schedule-section" id="provider-schedule">
           <div className="portal-section-heading">
             <div><span className="kicker">Schedule</span><h2>Accepted-job availability</h2></div>
@@ -528,7 +527,7 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && (
+      {!loading && !error && activeView === "messages" && (
         <section className="portal-section" id="provider-messages">
           <div className="portal-section-heading">
             <div><span className="kicker">Private job communication</span><h2>Messages</h2></div>
@@ -538,20 +537,28 @@ export default function ProviderJobsPage() {
         </section>
       )}
       {error && <p className="form-error portal-alert">{error}</p>}
-      {!loading && !error && provider && (
-        <details className="workspace-tools provider-workspace-tools" id="provider-tools">
-          <summary>Payments and business page</summary>
+      {!loading && !error && provider && activeView === "earnings" && !provider.testProvider && (
+        <details className="workspace-tools provider-workspace-tools" id="provider-payouts">
+          <summary>Payout setup</summary>
           <div className="workspace-tool-content">
-            {!provider.testProvider && <StripeConnectPanel signedIn={signedIn} />}
-            <ProviderBusinessPage />
-            <div className="provider-control-note">
-              <strong>Your business records</strong>
-              <span>Time tracking is optional and controlled by you. It is not payroll or employee monitoring.</span>
-            </div>
+            <StripeConnectPanel signedIn={signedIn} />
           </div>
         </details>
       )}
-      {!loading && !error && (
+      {!loading && !error && provider && (
+        activeView === "profile" || activeView === "reviews" || activeView === "performance"
+      ) && (
+        <section className="portal-section provider-focused-tools" aria-live="polite">
+          <ProviderBusinessPage
+            focus={activeView === "reviews" ? "reviews" : activeView === "performance" ? "performance" : "profile"}
+          />
+          <div className="provider-control-note">
+            <strong>Your business records</strong>
+            <span>Time tracking is optional and controlled by you. It is not payroll or employee monitoring.</span>
+          </div>
+        </section>
+      )}
+      {!loading && !error && activeView === "accepted" && (
         <section className="portal-section" id="active-jobs">
           <div className="portal-section-heading">
             <div><span className="kicker">Job Center</span><h2>Active jobs</h2></div>
@@ -791,7 +798,7 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && (
+      {!loading && !error && activeView === "quotes" && (
         <section className="portal-section" id="my-quotes">
           <div className="portal-section-heading">
             <div><span className="kicker">My quotes</span><h2>Submitted quotes</h2></div>
@@ -824,9 +831,8 @@ export default function ProviderJobsPage() {
           )}
         </section>
       )}
-      {!loading && !error && (
-        <details className="workspace-tools provider-history-tools" id="provider-history">
-          <summary>History and private totals ({completedJobs.length})</summary>
+      {!loading && !error && activeView === "earnings" && (
+        <div className="provider-history-tools" id="provider-history">
           <div className="workspace-tool-content">
         <section className="portal-section" id="completed-jobs">
           <div className="portal-section-heading">
@@ -889,14 +895,15 @@ export default function ProviderJobsPage() {
           </p>
         </section>
           </div>
-        </details>
+        </div>
       )}
-      {!loading && !error && (
+      {!loading && !error && activeView === "available" && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">
           <div><span className="kicker">Matched alerts</span><h2>Available jobs</h2></div>
           <p>These approved requests match your services, job areas, and meeting options.</p>
         </div>
       )}
+      {activeView === "available" && (
       <section className="portal-grid">
         {loading ? <p className="admin-note">Checking for matching jobs…</p> : !error && openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => (
           <article className="portal-card" key={job.id}>
@@ -1023,6 +1030,7 @@ export default function ProviderJobsPage() {
           </article>
         ))}
       </section>
+      )}
     </main>
   );
 }
