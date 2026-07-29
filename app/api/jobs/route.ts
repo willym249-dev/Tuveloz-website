@@ -68,6 +68,12 @@ export async function GET(request: Request) {
   const submittedQuotes = await getDb()
     .select({
       requestId: providerQuotes.requestId,
+      vehicle: customerRequests.vehicle,
+      service: customerRequests.service,
+      zip: customerRequests.zip,
+      launchArea: customerRequests.launchArea,
+      municipality: customerRequests.municipality,
+      requestStatus: customerRequests.status,
       priceCents: providerQuotes.priceCents,
       laborPriceCents: providerQuotes.laborPriceCents,
       partsPriceCents: providerQuotes.partsPriceCents,
@@ -79,7 +85,9 @@ export async function GET(request: Request) {
       createdAt: providerQuotes.createdAt,
     })
     .from(providerQuotes)
-    .where(eq(providerQuotes.providerEmail, provider.email));
+    .innerJoin(customerRequests, eq(providerQuotes.requestId, customerRequests.id))
+    .where(eq(providerQuotes.providerEmail, provider.email))
+    .orderBy(desc(providerQuotes.createdAt));
   const quoteByRequestId = new Map(
     submittedQuotes.map((quote) => [quote.requestId, quote]),
   );
@@ -163,6 +171,7 @@ export async function GET(request: Request) {
       verified: provider.verificationStatus === "verified",
       testProvider: provider.isTestProvider === "yes",
     },
+    myQuotes: submittedQuotes,
     assignedJobs: assignedJobs.filter(
       (job) => (provider.isTestProvider === "yes") === (job.isTestJob === "yes"),
     ).map((job) => {
