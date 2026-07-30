@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { customerRequests, providerApplications, providerQuotes } from "../../../db/schema";
+import { sendNewCustomerRequestAlert } from "../../../lib/email-notifications";
 import {
   deleteJobImage,
   ImageValidationError,
@@ -287,7 +288,9 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    return Response.json({ ok: true, accessToken, requestId: id }, { status: 201 });
+    await sendNewCustomerRequestAlert(id);
+
+  return Response.json({ ok: true, accessToken, requestId: id }, { status: 201 });
   } catch (error) {
     if (error instanceof ImageValidationError) {
       return Response.json({ error: error.message }, { status: 400 });

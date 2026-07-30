@@ -17,6 +17,7 @@ import {
   providerCredentialRequirementsAreSatisfied,
   requiredProviderCredentialRequirements,
 } from "./provider-credentials";
+import { sendAccountSecurityAlert } from "./email-notifications";
 import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   PROVIDER_POLICY_BUNDLE_VERSION,
@@ -40,8 +41,10 @@ const PASSWORD_MAX_LENGTH = 128;
 const PASSWORD_LOGIN_MAX_ATTEMPTS = 5;
 const PASSWORD_LOCKOUT_MS = 15 * 60 * 1000;
 const DUMMY_PASSWORD_SALT = "dHV2ZWxvei1kdW1teS1zYWx0";
-const SESSION_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
+const SESSION_LIFETIME_SECONDS = 12 * 60 * 60;
 const SESSION_LIFETIME_MS = SESSION_LIFETIME_SECONDS * 1000;
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const SESSION_TOUCH_INTERVAL_MS = 5 * 60 * 1000;
 const PRODUCTION_COOKIE_NAME = "__Host-tuveloz_session";
 const LOCAL_COOKIE_NAME = "tuveloz_session";
 const BLOCKED_PASSWORDS = new Set([
@@ -688,7 +691,14 @@ export async function completePasswordVerification(
     .where(eq(passwordVerificationCodes.id, challenge.id));
   await getDb().delete(authSessions).where(eq(authSessions.email, email));
   const session = await createAccountSession(email, role);
-  return session ? { ok: true as const, ...session } : { ok: false as const };
+  if (!session) return { ok: false as const };
+  await sendAccountSecurityAlert({
+    eventId: challenge.id,
+    email,
+    role,
+    action: purpose === "create" ? "account_created" : "password_reset",
+  });
+  return { ok: true as const, ...session };
 }
 
 export async function signInWithPassword(
@@ -813,8 +823,29 @@ export async function getAccountSession(request: Request) {
   const tokenHash = await hmacHex(`session:${token}`);
   const [session] = await getDb().select().from(authSessions)
     .where(eq(authSessions.tokenHash, tokenHash)).limit(1);
-  if (!session || parseStoredDate(session.expiresAt) <= Date.now() || !isAccountRole(session.role)) {
-    if (session) await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
+  const now = Date.now();
+  const expiresAt = session ? parseStoredDate(session.expiresAt) : Number.NaN;
+  const createdAt = session ? parseStoredDate(session.createdAt) : Number.NaN;
+  const lastSeenAt = session ? parseStoredDate(session.lastSeenAt) : Number.NaN;
+  const invalidTimestamps = !Number.isFinite(expiresAt)
+    || !Number.isFinite(createdAt)
+    || !Number.isFinite(lastSeenAt);
+  const absoluteExpired = session
+    ? now >= Math.min(expiresAt, createdAt + SESSION_LIFETIME_MS)
+    : true;
+  const idleExpired = session
+    ? now - lastSeenAt >= SESSION_IDLE_TIMEOUT_MS
+    : true;
+  if (
+    !session
+    || invalidTimestamps
+    || absoluteExpired
+    || idleExpired
+    || !isAccountRole(session.role)
+  ) {
+    if (session) {
+      await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
+    }
     return null;
   }
   const roles = await eligibleAccountRoles(session.email);
@@ -822,7 +853,19 @@ export async function getAccountSession(request: Request) {
     await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
     return null;
   }
-  return { ...session, role: session.role as AccountRole, availableRoles: roles };
+  let refreshedLastSeenAt = session.lastSeenAt;
+  if (now - lastSeenAt >= SESSION_TOUCH_INTERVAL_MS) {
+    refreshedLastSeenAt = new Date(now).toISOString();
+    await getDb().update(authSessions).set({
+      lastSeenAt: refreshedLastSeenAt,
+    }).where(eq(authSessions.id, session.id));
+  }
+  return {
+    ...session,
+    lastSeenAt: refreshedLastSeenAt,
+    role: session.role as AccountRole,
+    availableRoles: roles,
+  };
 }
 
 export async function switchAccountRole(request: Request, role: AccountRole) {

@@ -24,7 +24,7 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 30);
+  assert.equal(journal.entries.length, 31);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
@@ -1257,4 +1257,29 @@ test("guest request consent choices are optional, explicit, and recorded", async
   assert.ok(schemaSource.includes('text("remember_email_consent")'));
   assert.ok(schemaSource.includes('text("marketing_consent")'));
   assert.ok(schemaSource.includes('text("consent_recorded_at")'));
+});
+
+
+test("owner alerts, security notifications, and idle session expiry are wired", async () => {
+  const [requestRoute, accountAuth, passkeys, notifications, schema, migration] =
+    await Promise.all([
+      readFile(new URL("../app/api/requests/route.ts", import.meta.url), "utf8"),
+      readFile(new URL("../lib/account-auth.ts", import.meta.url), "utf8"),
+      readFile(new URL("../lib/passkeys.ts", import.meta.url), "utf8"),
+      readFile(new URL("../lib/email-notifications.ts", import.meta.url), "utf8"),
+      readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+      readFile(new URL("../drizzle/0030_email_notification_outbox.sql", import.meta.url), "utf8"),
+    ]);
+
+  assert.ok(requestRoute.includes("sendNewCustomerRequestAlert(id)"));
+  assert.ok(accountAuth.includes("SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000"));
+  assert.ok(accountAuth.includes("SESSION_LIFETIME_SECONDS = 12 * 60 * 60"));
+  assert.ok(accountAuth.includes("idleExpired"));
+  assert.ok(accountAuth.includes('"password_reset"'));
+  assert.ok(passkeys.includes('"passkey_added"'));
+  assert.ok(notifications.includes("Idempotency-Key"));
+  assert.ok(notifications.includes("emailNotificationOutbox"));
+  assert.ok(notifications.includes("/admin"));
+  assert.ok(schema.includes("email_notification_outbox"));
+  assert.ok(migration.includes("email_notification_outbox_event_key_unique"));
 });
