@@ -485,3 +485,26 @@ export const expansionInterests = sqliteTable(
     index("expansion_interests_audience_idx").on(table.audience),
   ],
 );
+
+
+export const emailNotificationOutbox = sqliteTable(
+  "email_notification_outbox",
+  {
+    id: text("id").primaryKey(),
+    eventKey: text("event_key").notNull(),
+    recipientEmail: text("recipient_email").notNull(),
+    subject: text("subject").notNull(),
+    textBody: text("text_body").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    lastError: text("last_error").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    sentAt: text("sent_at").notNull().default(""),
+  },
+  (table) => [
+    uniqueIndex("email_notification_outbox_event_key_unique").on(table.eventKey),
+    index("email_notification_outbox_status_created_idx").on(table.status, table.createdAt),
+    index("email_notification_outbox_recipient_idx").on(table.recipientEmail),
+  ],
+);
