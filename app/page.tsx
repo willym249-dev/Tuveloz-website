@@ -953,6 +953,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   </small>
                 </>
               )}
+              <a className="button secondary" href="/account?role=customer&mode=create">
+                Save these records in an account
+              </a>
+              <small>
+                After you verify the same email, your requests and quotes appear in your
+                customer workspace.
+              </small>
               <button type="button" onClick={() => setRequestSent(false)}>Post another job</button>
             </div>
           ) : (
@@ -1274,6 +1281,25 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   acknowledge the <a href="/privacy">Privacy Policy</a>.
                 </span>
               </label>
+              <label className="policy-consent optional-consent">
+                <input name="remember-email-consent" type="checkbox" value="yes" />
+                <span>
+                  Create a reusable guest profile so Tuveloz can match this request to a
+                  future account after I verify this email. <strong>Optional.</strong>
+                </span>
+              </label>
+              <label className="policy-consent optional-consent">
+                <input name="marketing-consent" type="checkbox" value="yes" />
+                <span>
+                  Email me occasional Tuveloz promotions and service updates. Optional;
+                  I can unsubscribe anytime.
+                </span>
+              </label>
+              <small>
+                We&apos;ll use your email to manage this request and send related updates.
+                Promotions are sent only if you opt in. Don&apos;t include payment details
+                or sensitive documents.
+              </small>
               {pendingSubmission === "request" ? (
                 <ConfirmAction
                   busy={requestBusy}
