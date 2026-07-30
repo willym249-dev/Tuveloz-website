@@ -24,6 +24,20 @@ function initialPaymentNotice() {
   return "";
 }
 
+async function fetchPaymentMethods() {
+  const response = await fetch("/api/stripe/customer/payment-methods", {
+    cache: "no-store",
+  });
+  const result = await response.json() as {
+    paymentMethods?: SavedPaymentMethod[];
+    error?: string;
+  };
+  if (!response.ok || !result.paymentMethods) {
+    throw new Error(result.error || "Unable to load payment details.");
+  }
+  return result.paymentMethods;
+}
+
 export function CustomerPaymentMethods() {
   const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
   const [busy, setBusy] = useState("");
@@ -32,25 +46,30 @@ export function CustomerPaymentMethods() {
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch("/api/stripe/customer/payment-methods", {
-        cache: "no-store",
-      });
-      const result = await response.json() as {
-        paymentMethods?: SavedPaymentMethod[];
-        error?: string;
-      };
-      if (!response.ok || !result.paymentMethods) {
-        throw new Error(result.error || "Unable to load payment details.");
-      }
-      setMethods(result.paymentMethods);
+      setMethods(await fetchPaymentMethods());
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to load payment details.");
     }
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let active = true;
+
+    void fetchPaymentMethods().then(
+      (paymentMethods) => {
+        if (active) setMethods(paymentMethods);
+      },
+      (reason) => {
+        if (active) {
+          setError(reason instanceof Error ? reason.message : "Unable to load payment details.");
+        }
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function addPaymentMethod() {
     setBusy("add");
