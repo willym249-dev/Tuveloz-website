@@ -13,6 +13,7 @@ import type {
 } from "@simplewebauthn/server";
 import { getDb } from "../db";
 import { passkeyCredentials } from "../db/schema";
+import { sendAccountSecurityAlert } from "./email-notifications";
 import {
   createAccountSession,
   getAccountSession,
@@ -299,6 +300,12 @@ export async function finishPasskeyRegistration(
       lastUsedAt: "",
     });
   }
+  await sendAccountSecurityAlert({
+    eventId: credential.id,
+    email: session.email,
+    role: session.role,
+    action: "passkey_added",
+  });
   return { ok: true as const };
 }
 
