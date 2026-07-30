@@ -772,6 +772,64 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(accountSource.includes("payments,"));
 });
 
+test("customer payment methods use Stripe-hosted setup without storing card secrets", async () => {
+  const [
+    customerSource,
+    componentSource,
+    routeSource,
+    checkoutSource,
+    customerHelperSource,
+    schemaSource,
+    migrationSource,
+  ] = await Promise.all([
+    readFile(new URL("../app/customer/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/customer-payment-methods.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/stripe/customer/payment-methods/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/stripe/checkout/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/stripe-customers.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+    readFile(new URL("../drizzle/0028_customer_payment_methods.sql", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(customerSource.includes("<CustomerPaymentMethods />"));
+  assert.ok(customerSource.includes('searchParams.get("view")'));
+  assert.ok(componentSource.includes("Adding a payment method does not charge it."));
+  assert.ok(componentSource.includes("Tuveloz never stores your full card number or CVC."));
+  assert.ok(componentSource.includes("•••• {method.last4}"));
+  assert.ok(componentSource.includes('method: "DELETE"'));
+
+  assert.ok(routeSource.includes("getAccountSession(request)"));
+  assert.ok(routeSource.includes('session?.role === "customer"'));
+  assert.ok(routeSource.includes("isSameOriginRequest(request)"));
+  assert.ok(routeSource.includes('mode: "setup"'));
+  assert.ok(routeSource.includes("customer: stripeCustomerId"));
+  assert.ok(routeSource.includes('allow_redisplay: "always"'));
+  assert.ok(routeSource.includes('type: "card",'));
+  assert.ok(routeSource.includes("paymentMethods.list"));
+  assert.ok(routeSource.includes("paymentMethods.detach"));
+  assert.ok(routeSource.includes('method.customer === "string"'));
+  assert.ok(routeSource.includes('"cache-control": "no-store"'));
+  const postSource = routeSource.slice(routeSource.indexOf("export async function POST"));
+  const deleteSource = routeSource.slice(routeSource.indexOf("export async function DELETE"));
+  assert.ok(postSource.indexOf("isSameOriginRequest(request)") < postSource.indexOf("customerSession(request)"));
+  assert.ok(deleteSource.indexOf("isSameOriginRequest(request)") < deleteSource.indexOf("request.json()"));
+
+  assert.ok(checkoutSource.includes("getOrCreateStripeCustomer"));
+  assert.ok(checkoutSource.includes("saved_payment_method_options"));
+  assert.ok(checkoutSource.includes('payment_method_save: "enabled"'));
+  assert.ok(checkoutSource.includes("customer: stripeCustomerId"));
+  assert.ok(customerHelperSource.includes("idempotencyKey"));
+  assert.ok(customerHelperSource.includes("stripeCustomerIdForEmail"));
+  assert.ok(schemaSource.includes("export const stripeCustomers = sqliteTable"));
+  assert.ok(migrationSource.includes("CREATE TABLE `stripe_customers`"));
+
+  for (const source of [customerHelperSource, schemaSource, migrationSource]) {
+    assert.ok(!source.includes("card_number"));
+    assert.ok(!source.includes("cardNumber"));
+    assert.ok(!source.includes("cvc"));
+  }
+});
+
 test("provider dashboard exposes focused, factual, provider-owned tools", async () => {
   const providerSource = await readFile(
     new URL("../app/provider-jobs/page.tsx", import.meta.url),

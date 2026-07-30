@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CustomerAccountTools } from "../components/customer-account-tools";
+import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
@@ -164,6 +165,19 @@ export default function CustomerPage() {
   const [activeView, setActiveView] = useState<CustomerView>("requests");
 
   useEffect(() => {
+    const requestedView = new URL(window.location.href).searchParams.get("view");
+    if (requestedView && [
+      "requests",
+      "quotes",
+      "active",
+      "messages",
+      "history",
+      "payments",
+      "saved",
+      "settings",
+    ].includes(requestedView)) {
+      setActiveView(requestedView as CustomerView);
+    }
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
       const result = await response.json();
       if (response.status === 401) {
@@ -294,6 +308,7 @@ export default function CustomerPage() {
               ) : activeView === "payments" ? (
                 <>
                   <p>Customer account: <strong>{account.email}</strong></p>
+                  <CustomerPaymentMethods />
                   {account.payments.length > 0 ? (
                     <div className="account-request-list">
                       {account.payments.map((payment) => (

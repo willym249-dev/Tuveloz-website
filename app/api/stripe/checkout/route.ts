@@ -18,6 +18,7 @@ import {
   siteUrlFor,
   stripeErrorResponse,
 } from "../../../../lib/stripe";
+import { getOrCreateStripeCustomer } from "../../../../lib/stripe-customers";
 import { publicPaymentSummary } from "../../../../lib/stripe-payments";
 import {
   CHECKOUT_POLICY_BUNDLE_VERSION,
@@ -103,7 +104,7 @@ async function acceptedQuoteForCustomer(
   if (!authorized) {
     const session = await getAccountSession(request);
     authorized = session?.role === "customer"
-      && session.email === selection.customerEmail;
+      && session.email.toLowerCase() === selection.customerEmail.toLowerCase();
   }
   return authorized ? selection : null;
 }
@@ -477,6 +478,11 @@ export async function POST(request: Request) {
       ...(finalQuoteId ? { tuveloz_quote_id: finalQuoteId } : {}),
       ...(finalProductId ? { tuveloz_product_id: finalProductId } : {}),
     };
+    const accountSession = await getAccountSession(request);
+    const stripeCustomerId = accountSession?.role === "customer"
+        && accountSession.email.toLowerCase() === customerEmail.toLowerCase()
+      ? await getOrCreateStripeCustomer(stripeClient, accountSession.email)
+      : "";
     const paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData =
       settlementStrategy === "destination_charge"
         ? {
@@ -504,7 +510,14 @@ export async function POST(request: Request) {
         metadata,
         mode: "payment",
         payment_method_types: ["card"],
-        customer_email: customerEmail,
+        ...(stripeCustomerId
+          ? {
+              customer: stripeCustomerId,
+              saved_payment_method_options: {
+                payment_method_save: "enabled" as const,
+              },
+            }
+          : { customer_email: customerEmail }),
         success_url: `${rootUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${rootUrl}/success?canceled=1`,
       },
