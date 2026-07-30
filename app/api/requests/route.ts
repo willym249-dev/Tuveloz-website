@@ -26,6 +26,12 @@ import {
   policyAccepted,
 } from "../../../lib/policies";
 
+const GUEST_CONSENT_VERSION = "guest-request-2026-07-30";
+const GUEST_PROFILE_CONSENT_TEXT =
+  "Create a reusable guest profile so Tuveloz can match this request to a future account after I verify this email.";
+const MARKETING_CONSENT_TEXT =
+  "Email me occasional Tuveloz promotions and service updates. Optional; I can unsubscribe anytime.";
+
 const ALLOWED_SERVICES = new Set<string>([
   ...CUSTOMER_JOB_SERVICE_OPTIONS,
   // Keep accepting existing launch-form values saved before multi-service requests.
@@ -64,6 +70,8 @@ export async function POST(request: Request) {
         details: formData.get("job-details"),
         rebookToken: formData.get("rebook-token"),
         termsAccepted: formData.get("terms-accepted"),
+        rememberEmailConsent: formData.get("remember-email-consent"),
+        marketingConsent: formData.get("marketing-consent"),
       };
       issuePhoto = formData.get("issue-photo");
     } else {
@@ -90,6 +98,8 @@ export async function POST(request: Request) {
     const details = clean(body.details, 1500);
     const rebookToken = clean(body.rebookToken, 120);
     const acceptedTerms = policyAccepted(body.termsAccepted);
+    const rememberEmailConsent = policyAccepted(body.rememberEmailConsent);
+    const marketingConsent = policyAccepted(body.marketingConsent);
 
     if (
       !name
@@ -236,6 +246,7 @@ export async function POST(request: Request) {
     const accessToken = crypto.randomUUID();
     const image = await validateJobImage(issuePhoto, false);
     const issueImageKey = image ? await storeJobImage(id, "issue", image) : "";
+    const recordedAt = new Date().toISOString();
     try {
       await getDb().insert(customerRequests).values({
         id,
@@ -261,8 +272,15 @@ export async function POST(request: Request) {
         accessToken,
         issueImageKey,
         issueImageType: image?.contentType ?? "",
-        termsAcceptedAt: new Date().toISOString(),
+        termsAcceptedAt: recordedAt,
         termsVersion: CUSTOMER_POLICY_BUNDLE_VERSION,
+        rememberEmailConsent: rememberEmailConsent ? "yes" : "no",
+        rememberEmailConsentText: GUEST_PROFILE_CONSENT_TEXT,
+        marketingConsent: marketingConsent ? "yes" : "no",
+        marketingConsentText: MARKETING_CONSENT_TEXT,
+        consentVersion: GUEST_CONSENT_VERSION,
+        consentSource: "post-a-job",
+        consentRecordedAt: recordedAt,
       });
     } catch (error) {
       if (issueImageKey) await deleteJobImage(issueImageKey);

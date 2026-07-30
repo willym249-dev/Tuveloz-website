@@ -33,6 +33,13 @@ export const customerRequests = sqliteTable(
     reminderLastAttemptAt: text("reminder_last_attempt_at").notNull().default(""),
     termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
     termsVersion: text("terms_version").notNull().default(""),
+    rememberEmailConsent: text("remember_email_consent").notNull().default("no"),
+    rememberEmailConsentText: text("remember_email_consent_text").notNull().default(""),
+    marketingConsent: text("marketing_consent").notNull().default("no"),
+    marketingConsentText: text("marketing_consent_text").notNull().default(""),
+    consentVersion: text("consent_version").notNull().default(""),
+    consentSource: text("consent_source").notNull().default(""),
+    consentRecordedAt: text("consent_recorded_at").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
