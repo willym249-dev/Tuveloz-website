@@ -204,6 +204,13 @@
       "when": 1785361200000,
       "tag": "0028_customer_payment_methods",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1785418105364,
+      "tag": "0029_guest_consent_records",
+      "breakpoints": true
     }
   ]
 }
