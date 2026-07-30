@@ -76,6 +76,17 @@ npm test
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete GitHub and Cloudflare setup.
 
+## Account safety and notifications
+
+- Every saved customer request queues an owner notification with the request ID
+  and a protected admin link. Customer details remain inside the owner dashboard.
+- Customers and verified providers receive security alerts after account creation,
+  password reset, and passkey registration.
+- Signed-in sessions expire after 30 minutes of inactivity and have a 12-hour
+  absolute limit. Active sessions are refreshed at most once every five minutes.
+- Email delivery failures are recorded in the database-backed notification outbox
+  and retried without duplicating the customer request.
+
 ## Important security notes
 
 - Never commit `.env`, `.dev.vars`, API tokens, or database exports.
