@@ -1228,3 +1228,33 @@ test("browser assets never expose private build paths or broken generated fonts"
   assert.ok(!layout.includes("next/font"));
   assert.ok(layout.includes('className="antialiased"'));
 });
+
+test("guest request consent choices are optional, explicit, and recorded", async () => {
+  const [pageSource, routeSource, schemaSource] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/requests/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../db/schema.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(pageSource.includes('name="remember-email-consent"'));
+  assert.ok(pageSource.includes('name="marketing-consent"'));
+  assert.ok(!pageSource.includes('required name="remember-email-consent"'));
+  assert.ok(!pageSource.includes('required name="marketing-consent"'));
+  assert.ok(pageSource.includes("Create a reusable guest profile"));
+  assert.ok(pageSource.includes("Email me occasional Tuveloz promotions"));
+  assert.ok(pageSource.includes("Promotions are sent only if you opt in."));
+  assert.ok(pageSource.includes("Save these records in an account"));
+  assert.ok(pageSource.includes("After you verify the same email"));
+
+  assert.ok(routeSource.includes('formData.get("remember-email-consent")'));
+  assert.ok(routeSource.includes('formData.get("marketing-consent")'));
+  assert.ok(routeSource.includes('rememberEmailConsent: rememberEmailConsent ? "yes" : "no"'));
+  assert.ok(routeSource.includes('marketingConsent: marketingConsent ? "yes" : "no"'));
+  assert.ok(routeSource.includes('consentSource: "post-a-job"'));
+  assert.ok(routeSource.includes("GUEST_PROFILE_CONSENT_TEXT"));
+  assert.ok(routeSource.includes("MARKETING_CONSENT_TEXT"));
+
+  assert.ok(schemaSource.includes('text("remember_email_consent")'));
+  assert.ok(schemaSource.includes('text("marketing_consent")'));
+  assert.ok(schemaSource.includes('text("consent_recorded_at")'));
+});
