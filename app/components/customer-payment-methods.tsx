@@ -31,7 +31,6 @@ export function CustomerPaymentMethods() {
   const [notice, setNotice] = useState(initialPaymentNotice);
 
   const load = useCallback(async () => {
-    setError("");
     try {
       const response = await fetch("/api/stripe/customer/payment-methods", {
         cache: "no-store",
