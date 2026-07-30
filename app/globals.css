@@ -9068,6 +9068,7 @@ footer > p,
 /* Customer account tools and accepted-job messaging */
 .job-messages-panel,
 .customer-settings-panel,
+.customer-payment-methods-panel,
 .saved-provider-panel {
   background: linear-gradient(145deg, rgba(7, 24, 45, 0.96), rgba(10, 31, 48, 0.96));
   border: 1px solid #36536b;
@@ -9096,6 +9097,56 @@ footer > p,
 .saved-provider-grid article > small {
   color: #91a4b4;
   line-height: 1.55;
+}
+
+.customer-payment-methods-panel {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.customer-payment-methods-heading {
+  align-items: start;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+}
+
+.customer-payment-methods-heading > div {
+  display: grid;
+  gap: 6px;
+}
+
+.customer-payment-methods-heading h3,
+.customer-payment-methods-heading p {
+  margin: 0;
+}
+
+.customer-payment-methods-heading p,
+.customer-payment-method-list small {
+  color: #91a4b4;
+  line-height: 1.55;
+}
+
+.customer-payment-method-list {
+  display: grid;
+  gap: 10px;
+}
+
+.customer-payment-method-list article {
+  align-items: center;
+  background: #07182d;
+  border: 1px solid #29475f;
+  border-radius: 14px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.customer-payment-method-list article > span {
+  display: grid;
+  gap: 4px;
 }
 
 .job-messages-layout {
@@ -9310,12 +9361,14 @@ footer > p,
 @media (max-width: 720px) {
   .job-messages-panel,
   .customer-settings-panel,
+  .customer-payment-methods-panel,
   .saved-provider-panel {
     border-radius: 16px;
     padding: 15px;
   }
 
   .job-messages-heading,
+  .customer-payment-methods-heading,
   .job-message-thread > header {
     align-items: stretch;
     flex-direction: column;
@@ -9323,6 +9376,16 @@ footer > p,
 
   .job-messages-heading .button {
     width: 100%;
+  }
+
+  .customer-payment-methods-heading .button,
+  .customer-payment-method-list .button {
+    width: 100%;
+  }
+
+  .customer-payment-method-list article {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .job-messages-layout {

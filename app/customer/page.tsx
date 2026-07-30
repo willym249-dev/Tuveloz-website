@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CustomerAccountTools } from "../components/customer-account-tools";
+import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
@@ -50,6 +51,16 @@ type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | 
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 const REQUEST_VIEWS = new Set<CustomerView>(["requests", "quotes", "active", "history"]);
+const CUSTOMER_VIEWS = new Set<CustomerView>([
+  "requests",
+  "quotes",
+  "active",
+  "messages",
+  "history",
+  "payments",
+  "saved",
+  "settings",
+]);
 
 const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   title: string;
@@ -157,11 +168,19 @@ function paymentStatusIsSettled(status: string) {
   ].includes(status);
 }
 
+function initialCustomerView(): CustomerView {
+  if (typeof window === "undefined") return "requests";
+  const requestedView = new URL(window.location.href).searchParams.get("view");
+  return requestedView && CUSTOMER_VIEWS.has(requestedView as CustomerView)
+    ? requestedView as CustomerView
+    : "requests";
+}
+
 export default function CustomerPage() {
   const [account, setAccount] = useState<CustomerAccount | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [activeView, setActiveView] = useState<CustomerView>("requests");
+  const [activeView, setActiveView] = useState<CustomerView>(initialCustomerView);
 
   useEffect(() => {
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
@@ -294,6 +313,7 @@ export default function CustomerPage() {
               ) : activeView === "payments" ? (
                 <>
                   <p>Customer account: <strong>{account.email}</strong></p>
+                  <CustomerPaymentMethods />
                   {account.payments.length > 0 ? (
                     <div className="account-request-list">
                       {account.payments.map((payment) => (

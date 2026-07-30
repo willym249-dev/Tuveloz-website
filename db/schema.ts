@@ -211,6 +211,22 @@ export const stripePayments = sqliteTable(
   ],
 );
 
+export const stripeCustomers = sqliteTable(
+  "stripe_customers",
+  {
+    customerEmail: text("customer_email").primaryKey(),
+    // Tuveloz stores only Stripe's Customer identifier. Card numbers, CVCs,
+    // billing credentials, and other sensitive payment data stay in Stripe.
+    stripeCustomerId: text("stripe_customer_id").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("stripe_customers_customer_id_unique").on(table.stripeCustomerId),
+    index("stripe_customers_updated_at_idx").on(table.updatedAt),
+  ],
+);
+
 export const loginCodes = sqliteTable(
   "login_codes",
   {
