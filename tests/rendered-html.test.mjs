@@ -24,7 +24,7 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 28);
+  assert.equal(journal.entries.length, 29);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
