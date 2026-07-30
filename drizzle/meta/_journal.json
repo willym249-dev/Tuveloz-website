@@ -211,6 +211,13 @@
       "when": 1785418105364,
       "tag": "0029_guest_consent_records",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1785420000000,
+      "tag": "0030_email_notification_outbox",
+      "breakpoints": true
     }
   ]
 }
