@@ -16,11 +16,19 @@ function brandLabel(brand: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function initialPaymentNotice() {
+  if (typeof window === "undefined") return "";
+  const status = new URL(window.location.href).searchParams.get("payment_details");
+  if (status === "added") return "Payment method saved securely by Stripe.";
+  if (status === "canceled") return "No payment method was added.";
+  return "";
+}
+
 export function CustomerPaymentMethods() {
   const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(initialPaymentNotice);
 
   const load = useCallback(async () => {
     setError("");
@@ -42,9 +50,6 @@ export function CustomerPaymentMethods() {
   }, []);
 
   useEffect(() => {
-    const status = new URL(window.location.href).searchParams.get("payment_details");
-    if (status === "added") setNotice("Payment method saved securely by Stripe.");
-    if (status === "canceled") setNotice("No payment method was added.");
     void load();
   }, [load]);
 

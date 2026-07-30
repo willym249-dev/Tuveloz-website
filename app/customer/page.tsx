@@ -51,6 +51,16 @@ type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | 
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
 const REQUEST_VIEWS = new Set<CustomerView>(["requests", "quotes", "active", "history"]);
+const CUSTOMER_VIEWS = new Set<CustomerView>([
+  "requests",
+  "quotes",
+  "active",
+  "messages",
+  "history",
+  "payments",
+  "saved",
+  "settings",
+]);
 
 const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   title: string;
@@ -158,26 +168,21 @@ function paymentStatusIsSettled(status: string) {
   ].includes(status);
 }
 
+function initialCustomerView(): CustomerView {
+  if (typeof window === "undefined") return "requests";
+  const requestedView = new URL(window.location.href).searchParams.get("view");
+  return requestedView && CUSTOMER_VIEWS.has(requestedView as CustomerView)
+    ? requestedView as CustomerView
+    : "requests";
+}
+
 export default function CustomerPage() {
   const [account, setAccount] = useState<CustomerAccount | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [activeView, setActiveView] = useState<CustomerView>("requests");
+  const [activeView, setActiveView] = useState<CustomerView>(initialCustomerView);
 
   useEffect(() => {
-    const requestedView = new URL(window.location.href).searchParams.get("view");
-    if (requestedView && [
-      "requests",
-      "quotes",
-      "active",
-      "messages",
-      "history",
-      "payments",
-      "saved",
-      "settings",
-    ].includes(requestedView)) {
-      setActiveView(requestedView as CustomerView);
-    }
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
       const result = await response.json();
       if (response.status === 401) {
