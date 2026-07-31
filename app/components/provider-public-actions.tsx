@@ -45,7 +45,6 @@ export function ProviderPublicActions() {
     : "";
 
   useEffect(() => {
-    setProvider(null);
     if (!slug) return;
     let active = true;
     const timer = window.setTimeout(() => {
@@ -62,7 +61,7 @@ export function ProviderPublicActions() {
     };
   }, [slug]);
 
-  if (!provider) return null;
+  if (!slug || !provider) return null;
   const appointmentService = provider.catalog[0]?.service || provider.services[0] || "";
   const appointmentHref = `/appointments?provider=${encodeURIComponent(provider.providerId)}&service=${encodeURIComponent(appointmentService)}`;
 
