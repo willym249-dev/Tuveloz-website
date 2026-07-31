@@ -32,8 +32,6 @@
     {"idx":27,"version":"6","when":1785344171423,"tag":"0027_verified_provider_credentials","breakpoints":true},
     {"idx":28,"version":"6","when":1785361200000,"tag":"0028_customer_payment_methods","breakpoints":true},
     {"idx":29,"version":"6","when":1785418105364,"tag":"0029_guest_consent_records","breakpoints":true},
-    {"idx":30,"version":"6","when":1785420000000,"tag":"0030_email_notification_outbox","breakpoints":true},
-    {"idx":31,"version":"6","when":1785468600000,"tag":"0031_service_area_settings","breakpoints":true},
-    {"idx":32,"version":"6","when":1785477600000,"tag":"0032_marketplace_tools","breakpoints":true}
+    {"idx":30,"version":"6","when":1785420000000,"tag":"0030_email_notification_outbox","breakpoints":true}
   ]
 }
