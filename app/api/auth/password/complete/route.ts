@@ -64,11 +64,14 @@ export async function POST(request: Request) {
         { status: 401, headers: { "cache-control": "no-store" } },
       );
     }
+    const destination = body.purpose === "create"
+      ? `/welcome?role=${encodeURIComponent(result.role)}`
+      : result.destination;
     const response = Response.json({
       ok: true,
       role: result.role,
       availableRoles: result.roles,
-      destination: result.destination,
+      destination,
     }, { headers: { "cache-control": "no-store" } });
     response.headers.append("set-cookie", sessionCookie(request, result.token));
     return response;
