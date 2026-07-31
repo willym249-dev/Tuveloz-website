@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AccountToolsDock } from "./components/account-tools-dock";
 import { SiteLanguageProvider } from "./components/site-language";
 import "./globals.css";
 
@@ -38,7 +39,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SiteLanguageProvider>{children}</SiteLanguageProvider>
+        <SiteLanguageProvider>
+          {children}
+          <AccountToolsDock />
+        </SiteLanguageProvider>
       </body>
     </html>
   );
