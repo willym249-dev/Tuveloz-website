@@ -27,6 +27,7 @@ import {
   serializeLocationOptions,
   SUPPORTED_LAUNCH_AREAS,
 } from "../../../lib/service-matching";
+import { pausedCustomerServices } from "../../../lib/service-safety-policy";
 import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   policyAccepted,
@@ -158,6 +159,15 @@ export async function POST(request: Request) {
     }
     if (services.some((service) => !ALLOWED_SERVICES.has(service))) {
       return Response.json({ error: "Choose only listed launch services." }, { status: 400 });
+    }
+    const pausedServices = pausedCustomerServices(services);
+    if (pausedServices.length > 0) {
+      return Response.json({
+        error: `${pausedServices.join(" + ")} is not available during the Tuveloz launch pilot. It requires a separate legal, safety, insurance, and operational review before activation.`,
+        code: "SERVICE_REQUIRES_SEPARATE_REVIEW",
+        pausedServices,
+        standardsUrl: "/service-standards",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
     }
     if (!PARTS_SOURCE_OPTIONS.includes(
       partsSource as (typeof PARTS_SOURCE_OPTIONS)[number],
