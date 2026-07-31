@@ -105,9 +105,9 @@ export default function TrackingPage() {
   }
 
   async function sendPosition(requestId: string, position: GeolocationPosition) {
-    const now = Date.now();
-    if (now - lastSentAtRef.current < 10_000) return;
-    lastSentAtRef.current = now;
+    const positionTime = position.timestamp;
+    if (positionTime - lastSentAtRef.current < 10_000) return;
+    lastSentAtRef.current = positionTime;
     await postTracking({
       action: "share",
       requestId,
