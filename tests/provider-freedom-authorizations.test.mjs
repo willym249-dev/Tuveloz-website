@@ -59,6 +59,8 @@ test("work-order API separates provider proposals from customer authorization", 
   assert.match(api, /isSameOriginRequest/);
   assert.doesNotMatch(api, /stripePayments/);
   assert.doesNotMatch(api, /payment_intent/);
+  assert.doesNotMatch(api, /service_address/);
+  assert.doesNotMatch(api, /serviceAddress/);
 });
 
 test("Job agreements UI lets providers state their own terms and customers decide", async () => {
