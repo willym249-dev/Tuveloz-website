@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy Policy"
       summary="What Tuveloz collects, why it is needed, who receives it, and the choices available to you."
-      updated="July 28, 2026"
+      updated="July 31, 2026"
     >
       <section>
         <h2>1. Scope and sources</h2>
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         <h2>2. Information we collect</h2>
         <ul>
           <li>Identifiers and account data, including name, email, role, password hash, session and sign-in records, language, and support messages.</li>
-          <li>Customer job data, including vehicle details or a VIN you choose to provide, requested services, general area, exact service address when needed, photos, quote selections, messages, status, and reviews.</li>
+          <li>Customer job data, including vehicle details or a VIN you choose to provide, requested services, general area, exact service address when needed, photos, condition records, quote selections, messages, status, and reviews.</li>
           <li>Provider data, including business name and location, service areas, service options, experience, insurance responses, legally applicable credential records, verification decisions, profile content, and Stripe connected-account identifiers.</li>
           <li>Transaction data, including displayed amounts, payment status, receipt email, refunds, disputes, transfer status, and Stripe transaction identifiers.</li>
           <li>Technical and security data needed to deliver the site, secure accounts, prevent abuse, investigate errors, and maintain audit records.</li>
@@ -115,19 +115,25 @@ export default function PrivacyPage() {
         <p>
           Subject to applicable law, you may ask Tuveloz to confirm whether it is
           processing your personal information; provide access or a portable
-          copy; correct inaccuracies; delete information; or identify categories
-          of third parties that received personal information. You may also opt
-          out if Tuveloz later begins selling information, using it for targeted
-          advertising, or using it for covered profiling.
+          copy; correct inaccuracies; delete information; limit certain uses; or
+          identify categories of third parties that received personal information.
+          You may also opt out if Tuveloz later begins selling information, using
+          it for targeted advertising, or using it for covered profiling.
         </p>
         <p>
-          Email <a href="mailto:hello@tuveloz.com?subject=Privacy%20Request">hello@tuveloz.com</a>{" "}
-          with the subject “Privacy Request.” We may verify your identity and
-          authority before acting. We will respond within the period required by
-          applicable law and explain any denial. You may appeal a denial by
-          replying with the subject “Privacy Appeal”; the appeal will be reviewed
-          by someone other than the original reviewer when practical. You do not
-          need to create a new account to submit a request.
+          Signed-in customers and providers can use the{" "}
+          <a href="/privacy-center">Tuveloz Privacy Center</a> to download an
+          account-data copy, correct profile information, manage optional email
+          choices, submit a verified request, see its status, withdraw an open
+          request, or appeal a completed or denied decision.
+        </p>
+        <p>
+          People who cannot sign in may email{" "}
+          <a href="mailto:hello@tuveloz.com?subject=Privacy%20Request">hello@tuveloz.com</a>{" "}
+          with the subject “Privacy Request.” We may verify identity and authority
+          before acting. We will respond within the period required by applicable
+          law and explain any denial. Privacy requests do not require payment, and
+          Tuveloz will not discriminate against someone for exercising an applicable right.
         </p>
       </section>
 
