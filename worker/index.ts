@@ -1,6 +1,7 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { processDueProviderReminders } from "../lib/request-reminders";
 
 interface Env {
@@ -87,7 +88,20 @@ const worker = {
       return securedResponse(response, url);
     }
 
-    return securedResponse(await handler.fetch(request, env, ctx), url);
+    const response = await handler.fetch(request, env, ctx);
+
+    // Database triggers can queue customer emails while an API action is being
+    // handled (for example: on my way, arrived, and completed). Flush after the
+    // route finishes so the newly queued event is attempted immediately.
+    if (env.DB && (request.method !== "GET" || acceptsHtml)) {
+      ctx.waitUntil(
+        flushPendingEmailNotifications(10).catch((error) => {
+          console.error("Unable to flush queued Tuveloz emails", error);
+        }),
+      );
+    }
+
+    return securedResponse(response, url);
   },
 };
 
