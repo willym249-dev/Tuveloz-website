@@ -42,9 +42,12 @@ export default function ProviderServiceAreaPage() {
   }, []);
 
   useEffect(() => {
-    void load().catch((reason) => {
-      setError(reason instanceof Error ? reason.message : "Unable to load service-area settings.");
-    });
+    const timer = window.setTimeout(() => {
+      void load().catch((reason) => {
+        setError(reason instanceof Error ? reason.message : "Unable to load service-area settings.");
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
