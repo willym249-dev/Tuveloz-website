@@ -14,13 +14,16 @@ deployment credentials, API keys, or production environment values.
 
 - Public Tuveloz website and service-request flow
 - Customer quote comparison and private request workspace
-- Passwordless customer and verified-provider sign-in with separate workspaces
+- Verified customer and provider accounts with password, passkey, and role-separated workspaces
 - Provider application, jobs, quotes, profiles, work gallery, and QR tools
+- Accepted-quote work authorizations and customer-approved change orders
+- Participant-only job condition, progress, parts, and completion evidence records
+- Signed-in Privacy Center with data export, communication choices, and verified privacy requests
 - Itemized 10% customer service fee stored with each provider quote
 - Stripe Connect V2 provider onboarding with live status read directly from Stripe
 - Platform products, hosted Checkout, signed webhooks, and a simple storefront
 - Destination Charges for storefront products and owner-released transfers for completed quote jobs
-- Owner dashboard and provider verification controls
+- Owner dashboard, customer profile oversight, provider verification, and privacy-request review controls
 - Cloudflare D1 schema and migrations
 - Cloudflare R2 image storage integration
 - Optional Resend email notifications
@@ -35,7 +38,7 @@ deployment credentials, API keys, or production environment values.
 - A Cloudflare D1 database
 - A Cloudflare R2 bucket
 - Cloudflare Images access for image optimization
-- A Resend account for passwordless sign-in and provider email alerts
+- A Resend account for account verification and marketplace email alerts
 - A Stripe sandbox account and Stripe CLI for local webhook testing
 
 ## Local setup
