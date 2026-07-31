@@ -29,8 +29,8 @@ function liveShare(job: TrackingJob) {
   const expires = job.expiresAt ? Date.parse(job.expiresAt) : 0;
   return job.requestStatus === "on my way"
     && job.shareStatus === "sharing"
-    && Number.isFinite(job.latitude)
-    && Number.isFinite(job.longitude)
+    && job.latitude !== null
+    && job.longitude !== null
     && expires > Date.now();
 }
 
