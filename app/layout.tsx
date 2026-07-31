@@ -41,11 +41,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={
-        CUSTOMER_JOB_POSTING_PAUSED
-          ? "antialiased customer-job-posting-paused"
-          : "antialiased"
-      }>
+      <body
+        className="antialiased"
+        data-customer-job-posting-paused={
+          CUSTOMER_JOB_POSTING_PAUSED ? "true" : undefined
+        }
+      >
         <SiteLanguageProvider>
           {CUSTOMER_JOB_POSTING_PAUSED && <JobPostingPauseNotice />}
           {children}
