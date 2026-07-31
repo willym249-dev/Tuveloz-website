@@ -182,7 +182,7 @@ export async function POST(request: Request) {
       const startsAt = normalizeDate(payload.startsAt);
       const note = text(payload.note, 800);
       const appointmentId = crypto.randomUUID();
-      let requestId = text(payload.requestId, 80);
+      const requestId = text(payload.requestId, 80);
       let providerId = "";
       let providerEmail = "";
       let providerName = "";
