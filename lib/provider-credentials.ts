@@ -78,6 +78,28 @@ const MARYLAND_INSPECTION_MECHANIC: ProviderCredentialRequirement = {
   verificationGuidance: "Confirm the mechanic is currently registered at the licensed inspection station for the applicable vehicle type. Use issuing-authority confirmation when the public lookup does not expose the mechanic record.",
 };
 
+const MARYLAND_LOCKSMITH_BUSINESS: ProviderCredentialRequirement = {
+  key: "maryland-locksmith-business-license",
+  label: "Maryland locksmith business license",
+  publicLabel: "Maryland locksmith business license checked",
+  jurisdiction: "Maryland",
+  issuingAuthority: "Maryland Department of Labor Locksmith Licensing Program",
+  legalBasisUrl: "https://labor.maryland.gov/license/locksmiths/",
+  officialLookupUrl: "https://www.labor.maryland.gov/pq/",
+  verificationGuidance: "Confirm the exact licensed business name, license number, current status, and expiration through Maryland's official licensing search. The public profile must show the licensed business name and license number when lockout service is advertised.",
+};
+
+const MARYLAND_LOCKSMITH_TECHNICIAN: ProviderCredentialRequirement = {
+  key: "maryland-locksmith-technician-registration",
+  label: "Maryland locksmith technician or employee registration",
+  publicLabel: "Maryland locksmith technician registration checked",
+  jurisdiction: "Maryland",
+  issuingAuthority: "Maryland Department of Labor Locksmith Licensing Program",
+  legalBasisUrl: "https://www.labor.maryland.gov/license/locksmiths/locklicfaqs.shtml",
+  officialLookupUrl: "https://www.labor.maryland.gov/pq/",
+  verificationGuidance: "Confirm that the individual who will perform hands-on lockout work is registered or approved under the verified locksmith business. Record only the official listing name or authority confirmation; do not collect or store fingerprint or criminal-history documents.",
+};
+
 export function requiredProviderCredentialRequirements(
   providerServices: string | string[],
   providerAreas: string | string[],
@@ -97,6 +119,13 @@ export function requiredProviderCredentialRequirements(
     requirements.push(
       MARYLAND_INSPECTION_STATION,
       MARYLAND_INSPECTION_MECHANIC,
+    );
+  }
+
+  if (flags.locksmithCredential) {
+    requirements.push(
+      MARYLAND_LOCKSMITH_BUSINESS,
+      MARYLAND_LOCKSMITH_TECHNICIAN,
     );
   }
 
