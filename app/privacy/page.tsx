@@ -147,6 +147,12 @@ export default function PrivacyPage() {
           guarantee absolute security. Report suspected unauthorized access
           promptly to <a href="mailto:hello@tuveloz.com?subject=Security%20Report">hello@tuveloz.com</a>.
         </p>
+        <p>
+          The public <a href="/system-status">Tuveloz System Status</a> reports
+          whether the application release, database connection, and required
+          operational schema are ready. It does not expose credentials, private
+          records, user counts, payment details, or internal security controls.
+        </p>
       </section>
 
       <section>
