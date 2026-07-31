@@ -40,15 +40,13 @@ export default function WelcomePage() {
             </>
           ) : (
             <>
-              <h2>Your new-account oil-change offer</h2>
+              <h2>Start with your customer workspace</h2>
               <p>
-                Your first qualifying oil-change request created after account signup is eligible
-                for no Tuveloz customer service fee. Provider labor, parts, taxes, disposal,
-                travel, and other provider charges are not waived.
+                Post a vehicle-service request when customer job posting is available, compare
+                independent-provider quotes, choose a provider, and follow appointments and job updates.
               </p>
               <div className="legal-actions">
                 <Link className="button primary" href="/post-job">Post a vehicle-service request</Link>
-                <Link className="button secondary" href="/first-oil-change">Read offer details</Link>
                 <Link className="button secondary" href="/customer">Open customer workspace</Link>
               </div>
             </>
