@@ -9,6 +9,11 @@ import {
   validateJobImage,
 } from "../../../lib/job-images";
 import {
+  CUSTOMER_JOB_POSTING_PAUSED,
+  CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
+  CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
+} from "../../../lib/launch-status";
+import {
   areaForZip,
   CUSTOMER_JOB_SERVICE_OPTIONS,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
@@ -49,7 +54,30 @@ function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function pausedCustomerRequestResponse() {
+  return Response.json(
+    {
+      error: CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
+      detail: CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
+      code: "CUSTOMER_JOB_POSTING_PAUSED",
+      customerAccountSignupAvailable: true,
+      providerSignupAvailable: true,
+    },
+    {
+      status: 503,
+      headers: {
+        "cache-control": "no-store",
+        "retry-after": "86400",
+      },
+    },
+  );
+}
+
 export async function POST(request: Request) {
+  if (CUSTOMER_JOB_POSTING_PAUSED) {
+    return pausedCustomerRequestResponse();
+  }
+
   try {
     const contentType = request.headers.get("content-type") ?? "";
     let body: Record<string, unknown>;
@@ -290,7 +318,7 @@ export async function POST(request: Request) {
 
     await sendNewCustomerRequestAlert(id);
 
-  return Response.json({ ok: true, accessToken, requestId: id }, { status: 201 });
+    return Response.json({ ok: true, accessToken, requestId: id }, { status: 201 });
   } catch (error) {
     if (error instanceof ImageValidationError) {
       return Response.json({ error: error.message }, { status: 400 });
