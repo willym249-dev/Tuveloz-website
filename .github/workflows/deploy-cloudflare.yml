@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: tuveloz-production-${{ github.event_name }}-${{ github.ref }}
@@ -125,6 +126,60 @@ jobs:
             throw new Error(
               `Cloudflare did not serve the exact healthy release ${expected}. ${lastResult}`,
             );
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Publish production deployment commit status
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          JOB_STATUS: ${{ job.status }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node <<'NODE'
+          const token = process.env.GH_TOKEN;
+          const repository = process.env.REPOSITORY;
+          const commit = process.env.COMMIT_SHA;
+          const jobStatus = process.env.JOB_STATUS;
+          const targetUrl = process.env.RUN_URL;
+          const state = jobStatus === "success"
+            ? "success"
+            : jobStatus === "cancelled"
+              ? "error"
+              : "failure";
+          const description = state === "success"
+            ? "Exact Cloudflare release and required D1 schema verified."
+            : "Production migration, deployment, or live verification failed.";
+
+          (async () => {
+            const response = await fetch(
+              `https://api.github.com/repos/${repository}/statuses/${commit}`,
+              {
+                method: "POST",
+                headers: {
+                  accept: "application/vnd.github+json",
+                  authorization: `Bearer ${token}`,
+                  "content-type": "application/json",
+                  "user-agent": "Tuveloz-Production-Deployment",
+                  "x-github-api-version": "2022-11-28",
+                },
+                body: JSON.stringify({
+                  state,
+                  context: "tuveloz/production-deployment",
+                  description,
+                  target_url: targetUrl,
+                }),
+              },
+            );
+            if (!response.ok) {
+              throw new Error(`GitHub status API returned ${response.status}: ${(await response.text()).slice(0, 800)}`);
+            }
+            console.log(`Published ${state} production status for ${commit}.`);
           })().catch((error) => {
             console.error(error);
             process.exit(1);

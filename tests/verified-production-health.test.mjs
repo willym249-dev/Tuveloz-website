@@ -39,6 +39,20 @@ test("production workflow stamps and verifies the exact deployed commit", async 
   assert.match(workflow, /Cloudflare did not serve the exact healthy release/);
 });
 
+test("production result is published as a signed commit status", async () => {
+  const workflow = await source(".github/workflows/deploy-cloudflare.yml");
+
+  assert.match(workflow, /statuses: write/);
+  assert.match(workflow, /Publish production deployment commit status/);
+  assert.match(workflow, /always\(\) && github\.event_name != 'pull_request'/);
+  assert.match(workflow, /GH_TOKEN: \$\{\{ github\.token \}\}/);
+  assert.match(workflow, /JOB_STATUS: \$\{\{ job\.status \}\}/);
+  assert.match(workflow, /tuveloz\/production-deployment/);
+  assert.match(workflow, /Exact Cloudflare release and required D1 schema verified/);
+  assert.match(workflow, /Production migration, deployment, or live verification failed/);
+  assert.match(workflow, /api\.github\.com\/repos\/\$\{repository\}\/statuses\/\$\{commit\}/);
+});
+
 test("public system status explains the operational and privacy boundary", async () => {
   const [page, privacy] = await Promise.all([
     source("app/system-status/page.tsx"),
