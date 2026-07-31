@@ -16,6 +16,7 @@ const requestRoute = await readFile(
 );
 
 test("customer signups stay open while new job requests and payments are paused", () => {
+  assert.match(launchStatus, /CUSTOMER_JOB_POSTING_PAUSED = true/);
   assert.match(
     launchStatus,
     /not accepting new job requests or customer payments yet/,
@@ -26,8 +27,14 @@ test("customer signups stay open while new job requests and payments are paused"
 });
 
 test("the request API rejects every new submission before reading customer data", () => {
-  assert.match(requestRoute, /CUSTOMER_JOB_POSTING_PAUSED/);
+  const pauseGateIndex = requestRoute.indexOf("if (CUSTOMER_JOB_POSTING_PAUSED)");
+  const multipartReadIndex = requestRoute.indexOf("request.formData()");
+  const jsonReadIndex = requestRoute.indexOf("request.json()");
+
+  assert.ok(pauseGateIndex >= 0);
+  assert.ok(multipartReadIndex > pauseGateIndex);
+  assert.ok(jsonReadIndex > pauseGateIndex);
+  assert.match(requestRoute, /return pausedCustomerRequestResponse\(\)/);
   assert.match(requestRoute, /status: 503/);
   assert.match(requestRoute, /cache-control/);
-  assert.doesNotMatch(requestRoute, /request\.formData\(\)|request\.json\(\)/);
 });
