@@ -48,8 +48,10 @@ test("the request API rejects every new submission before reading customer data"
 });
 
 test("the pause notice is visible sitewide and hides the homepage request form", () => {
-  assert.match(rootLayout, /customer-job-posting-paused/);
+  assert.match(rootLayout, /className="antialiased"/);
+  assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
+  assert.match(pauseNotice, /body\[data-customer-job-posting-paused=/);
   assert.match(pauseNotice, /\.public-site \.request-section/);
   assert.match(pauseNotice, /display: none !important/);
   assert.match(pauseNotice, /Create customer account/);
