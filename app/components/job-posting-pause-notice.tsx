@@ -8,7 +8,7 @@ export function JobPostingPauseNotice() {
   return (
     <>
       <style>{`
-        .customer-job-posting-paused .public-site .request-section {
+        body[data-customer-job-posting-paused="true"] .public-site .request-section {
           display: none !important;
         }
 
