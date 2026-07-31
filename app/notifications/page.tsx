@@ -18,11 +18,6 @@ type NotificationResponse = {
   email: string;
   notifications: NotificationItem[];
   unreadCount: number;
-  promotion: null | {
-    status: string;
-    requestId: string;
-    redeemedAt: string;
-  };
   error?: string;
 };
 
@@ -95,7 +90,7 @@ export default function NotificationsPage() {
         <div className="account-welcome">
           <span className="account-kicker">Account notifications</span>
           <h1>Updates that matter.</h1>
-          <p>Appointments, trip sharing, job progress, completion, account notices, and offers appear here.</p>
+          <p>Appointments, trip sharing, job progress, completion, and account notices appear here.</p>
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
         {!data && !error && <p className="admin-note">Loading notifications…</p>}
@@ -105,15 +100,6 @@ export default function NotificationsPage() {
               <div><span className="account-role">{data.email}</span><h2>Notifications</h2></div>
               <span className="account-count">{data.unreadCount}</span>
             </div>
-            {data.role === "customer" && data.promotion && (
-              <article className="account-request">
-                <span>
-                  <strong>First oil-change Tuveloz fee offer</strong>
-                  <small>Status: {data.promotion.status}. Only the Tuveloz customer service fee is waived; provider and other charges still apply.</small>
-                </span>
-                <Link href="/first-oil-change">Offer details</Link>
-              </article>
-            )}
             {data.notifications.length ? (
               <div className="account-request-list">
                 {data.notifications.map((item) => (
