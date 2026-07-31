@@ -70,15 +70,12 @@ async function responseData() {
          (SELECT count(*) FROM appointments WHERE status = 'requested') AS pendingAppointments,
          (SELECT count(*) FROM provider_submitted_credentials WHERE status = 'pending') AS pendingCredentials,
          (SELECT count(*) FROM job_location_shares
-           WHERE status = 'sharing' AND datetime(expires_at) > CURRENT_TIMESTAMP) AS activeLocationShares,
-         (SELECT count(*) FROM account_promotions
-           WHERE promotion_key = 'first-oil-change-fee-free' AND status = 'redeemed') AS redeemedOilChangeOffers`,
+           WHERE status = 'sharing' AND datetime(expires_at) > CURRENT_TIMESTAMP) AS activeLocationShares`,
     ).first<{
       activeCatalogItems: number;
       pendingAppointments: number;
       pendingCredentials: number;
       activeLocationShares: number;
-      redeemedOilChangeOffers: number;
     }>(),
   ]);
   return {
@@ -89,7 +86,6 @@ async function responseData() {
       pendingAppointments: 0,
       pendingCredentials: 0,
       activeLocationShares: 0,
-      redeemedOilChangeOffers: 0,
     },
   };
 }

@@ -189,8 +189,6 @@ export async function sendAccountSecurityAlert(input: {
       "",
       "Tuveloz is an online marketplace that connects customers with independent vehicle-service providers. You can request work, compare provider quotes, choose who you want, request appointments, and follow job updates in one account.",
       "",
-      "New-account offer: your first qualifying oil-change request created after your account is eligible for no Tuveloz customer service fee. The provider's labor, parts, taxes, disposal, travel, and any other provider charges are not waived. The offer is limited to one qualifying oil-change booking per account and applies automatically when eligible.",
-      "",
       `Post a vehicle-service request: ${siteUrl()}/post-job`,
       `Open your customer workspace: ${siteUrl()}/customer`,
       "",

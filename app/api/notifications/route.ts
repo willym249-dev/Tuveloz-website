@@ -15,12 +15,6 @@ type NotificationRow = {
   created_at: string;
 };
 
-type PromotionRow = {
-  status: string;
-  request_id: string;
-  redeemed_at: string;
-};
-
 async function accountSession(request: Request) {
   const session = await getAccountSession(request);
   return session?.role === "customer" || session?.role === "provider" ? session : null;
@@ -37,7 +31,7 @@ async function ensureWelcomeNotification(
     role,
     title: isCustomer ? "Thank you for joining Tuveloz" : "Welcome to your Tuveloz provider workspace",
     body: isCustomer
-      ? "Request vehicle work, compare independent providers and quotes, choose appointments, and follow job updates. Your first qualifying oil-change request after account creation is eligible for no Tuveloz customer service fee; provider charges still apply."
+      ? "Request vehicle work, compare independent providers and quotes, choose appointments, and follow job updates in one account."
       : "Add your approved services and provider-set prices, request appointments, manage availability, and share trip location only when you choose.",
     href: isCustomer ? "/post-job" : "/provider-services",
   });
@@ -63,17 +57,6 @@ export async function GET(request: Request) {
       LIMIT 60`,
   ).bind(session.email, session.role).all<NotificationRow>();
 
-  let promotion: PromotionRow | null = null;
-  if (session.role === "customer") {
-    promotion = await env.DB.prepare(
-      `SELECT status, request_id, redeemed_at
-         FROM account_promotions
-        WHERE lower(email) = lower(?)
-          AND promotion_key = 'first-oil-change-fee-free'
-        LIMIT 1`,
-    ).bind(session.email).first<PromotionRow>();
-  }
-
   const notifications = (notificationResult.results ?? []).map((item) => ({
     id: item.id,
     title: item.title,
@@ -87,11 +70,6 @@ export async function GET(request: Request) {
     email: session.email,
     notifications,
     unreadCount: notifications.filter((item) => !item.readAt).length,
-    promotion: promotion ? {
-      status: promotion.status,
-      requestId: promotion.request_id,
-      redeemedAt: promotion.redeemed_at,
-    } : null,
   }, { headers: { "cache-control": "private, no-store" } });
 }
 
