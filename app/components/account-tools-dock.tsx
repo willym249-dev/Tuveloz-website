@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type AccountSummary = {
   role?: "customer" | "provider";
 };
 
 export function AccountToolsDock() {
+  const pathname = usePathname();
   const [role, setRole] = useState<"customer" | "provider" | "">("");
   const [isOwner, setIsOwner] = useState(false);
 
@@ -46,7 +48,8 @@ export function AccountToolsDock() {
     };
   }, [role]);
 
-  if (!role && !isOwner) return null;
+  const ownerEntryAvailable = pathname === "/account";
+  if (!role && !isOwner && !ownerEntryAvailable) return null;
 
   const dockStyle = {
     position: "fixed" as const,
@@ -72,7 +75,11 @@ export function AccountToolsDock() {
   return (
     <details style={dockStyle}>
       <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-        {isOwner ? "Tuveloz account & admin tools" : "Tuveloz account tools"}
+        {isOwner
+          ? "Tuveloz account & admin tools"
+          : role
+            ? "Tuveloz account tools"
+            : "Tuveloz owner access"}
       </summary>
       <nav aria-label="Tuveloz account tools" style={{ display: "grid", gap: ".15rem", marginTop: ".55rem" }}>
         {role === "customer" && (
@@ -80,6 +87,8 @@ export function AccountToolsDock() {
             <Link href="/customer" style={linkStyle}>Customer workspace</Link>
             <Link href="/appointments" style={linkStyle}>Appointments</Link>
             <Link href="/tracking" style={linkStyle}>Provider tracking & job status</Link>
+            <Link href="/job-authorizations" style={linkStyle}>Job agreements</Link>
+            <Link href="/job-authorizations/documents" style={linkStyle}>Estimates, invoices & receipts</Link>
             <Link href="/notifications" style={linkStyle}>Notifications</Link>
             <Link href="/first-oil-change" style={linkStyle}>First oil-change offer</Link>
           </>
@@ -87,18 +96,30 @@ export function AccountToolsDock() {
         {role === "provider" && (
           <>
             <Link href="/provider-jobs" style={linkStyle}>Provider workspace</Link>
+            <Link href="/provider-jobs/toolkit" style={linkStyle}>Quote templates</Link>
             <Link href="/provider-services" style={linkStyle}>Services, prices & credentials</Link>
             <Link href="/provider-service-area" style={linkStyle}>Service area</Link>
             <Link href="/appointments" style={linkStyle}>Appointments</Link>
             <Link href="/tracking" style={linkStyle}>Share trip location</Link>
+            <Link href="/job-authorizations" style={linkStyle}>Job agreements & change orders</Link>
+            <Link href="/job-authorizations/documents" style={linkStyle}>Invoices & job documents</Link>
             <Link href="/notifications" style={linkStyle}>Notifications</Link>
           </>
         )}
-        {isOwner && (
+        {(isOwner || ownerEntryAvailable) && (
           <>
             <hr style={{ border: 0, borderTop: "1px solid rgba(255,255,255,.18)", width: "100%" }} />
-            <Link href="/admin" style={linkStyle}>Owner admin dashboard</Link>
-            <Link href="/admin/marketplace-tools" style={linkStyle}>Appointments & credential review</Link>
+            <Link href="/admin" style={linkStyle}>
+              {isOwner ? "Owner admin dashboard" : "Owner/admin sign in"}
+            </Link>
+            {isOwner && (
+              <Link href="/admin/marketplace-tools" style={linkStyle}>Appointments & credential review</Link>
+            )}
+            {!isOwner && ownerEntryAvailable && (
+              <small style={{ display: "block", padding: ".25rem .65rem", opacity: .78, lineHeight: 1.4 }}>
+                Admin access uses separate Cloudflare Access owner verification. A customer or provider sign-in does not grant admin rights.
+              </small>
+            )}
           </>
         )}
       </nav>
