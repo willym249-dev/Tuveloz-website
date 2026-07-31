@@ -11,6 +11,28 @@ export type AdminView =
   | "analytics"
   | "settings";
 
+export type OwnerCustomerProfile = {
+  profileComplete: boolean;
+  municipality: string;
+  zip: string;
+  serviceLocations: string[];
+  activeJobCount: number;
+  completedJobCount: number;
+  cancelledJobCount: number;
+  quotesReceivedCount: number;
+  acceptedQuoteCount: number;
+  savedProviderCount: number;
+  appointmentCount: number;
+  pendingAppointmentCount: number;
+  notificationCount: number;
+  unreadNotificationCount: number;
+  emailSentCount: number;
+  emailPendingCount: number;
+  emailFailedCount: number;
+  lastRequestAt: string;
+  profileUpdatedAt: string;
+};
+
 export type OwnerUser = {
   email: string;
   displayName: string;
@@ -26,6 +48,7 @@ export type OwnerUser = {
   requestCount: number;
   providerQuoteCount: number;
   paymentCount: number;
+  customerProfile: OwnerCustomerProfile;
 };
 
 export type OwnerPlatform = {
@@ -90,6 +113,17 @@ function readableDate(value: string) {
 
 function yesNo(value: boolean) {
   return value ? "Yes" : "No";
+}
+
+function valueOrNotSaved(value: string) {
+  return value || "Not saved";
+}
+
+function customerEmailStatus(profile: OwnerCustomerProfile) {
+  const parts = [`${profile.emailSentCount} sent`];
+  if (profile.emailPendingCount > 0) parts.push(`${profile.emailPendingCount} pending`);
+  if (profile.emailFailedCount > 0) parts.push(`${profile.emailFailedCount} failed`);
+  return parts.join(" · ");
 }
 
 export function OwnerControlCenter({
@@ -162,14 +196,15 @@ export function OwnerControlCenter({
           <div className="admin-section-heading">
             <div>
               <span className="kicker">Privacy-safe account directory</span>
-              <h2>User management</h2>
+              <h2>Customer profiles and user management</h2>
             </div>
             <strong>{users.length} verified sign-in {users.length === 1 ? "account" : "accounts"}</strong>
           </div>
           <p className="admin-section-copy">
-            This view never exposes passwords, password hashes, salts, verification codes,
-            session identifiers, or authentication tokens. Provider roles appear only after
-            Tuveloz approval and verification.
+            Customer cards combine the profile, service-area preference, requests,
+            appointments, saved providers, notifications, and email-delivery records
+            already stored by Tuveloz. Passwords, verification codes, session tokens,
+            full payment details, and exact service street addresses are never shown here.
           </p>
           {securityError ? (
             <p className="form-error" role="alert">{securityError}</p>
@@ -195,13 +230,102 @@ export function OwnerControlCenter({
                     <div><dt>Active sessions</dt><dd>{user.activeSessionCount}</dd></div>
                     <div><dt>Last activity</dt><dd>{readableDate(user.lastSeenAt)}</dd></div>
                     <div><dt>Job requests</dt><dd>{user.requestCount}</dd></div>
-                    <div><dt>Provider quotes</dt><dd>{user.providerQuoteCount}</dd></div>
+                    <div><dt>Quotes submitted as provider</dt><dd>{user.providerQuoteCount}</dd></div>
                     <div><dt>Payment records</dt><dd>{user.paymentCount}</dd></div>
                     <div><dt>Email verified</dt><dd>{readableDate(user.verifiedAt)}</dd></div>
                     <div><dt>Terms accepted</dt><dd>{readableDate(user.termsAcceptedAt)}</dd></div>
                     <div><dt>Terms version</dt><dd>{user.termsVersion || "Not recorded"}</dd></div>
                     <div><dt>Account created</dt><dd>{readableDate(user.createdAt)}</dd></div>
                   </dl>
+
+                  <div className="owner-policy-versions">
+                    <h3>Customer profile</h3>
+                    <div className="owner-role-list" aria-label="Customer profile status">
+                      <span>
+                        {user.customerProfile.profileComplete
+                          ? "Profile details saved"
+                          : "Profile still being completed"}
+                      </span>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>City or municipality</dt>
+                        <dd>{valueOrNotSaved(user.customerProfile.municipality)}</dd>
+                      </div>
+                      <div>
+                        <dt>ZIP code</dt>
+                        <dd>{valueOrNotSaved(user.customerProfile.zip)}</dd>
+                      </div>
+                      <div>
+                        <dt>Service preference</dt>
+                        <dd>
+                          {user.customerProfile.serviceLocations.length > 0
+                            ? user.customerProfile.serviceLocations.join(" · ")
+                            : "Not saved"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Last request</dt>
+                        <dd>{readableDate(user.customerProfile.lastRequestAt)}</dd>
+                      </div>
+                      <div>
+                        <dt>Active jobs</dt>
+                        <dd>{user.customerProfile.activeJobCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Completed jobs</dt>
+                        <dd>{user.customerProfile.completedJobCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Cancelled jobs</dt>
+                        <dd>{user.customerProfile.cancelledJobCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Quotes received</dt>
+                        <dd>{user.customerProfile.quotesReceivedCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Accepted quotes</dt>
+                        <dd>{user.customerProfile.acceptedQuoteCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Saved providers</dt>
+                        <dd>{user.customerProfile.savedProviderCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Appointments</dt>
+                        <dd>
+                          {user.customerProfile.appointmentCount}
+                          {user.customerProfile.pendingAppointmentCount > 0
+                            ? ` · ${user.customerProfile.pendingAppointmentCount} pending`
+                            : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Notifications</dt>
+                        <dd>
+                          {user.customerProfile.notificationCount}
+                          {user.customerProfile.unreadNotificationCount > 0
+                            ? ` · ${user.customerProfile.unreadNotificationCount} unread`
+                            : ""}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Customer emails</dt>
+                        <dd>{customerEmailStatus(user.customerProfile)}</dd>
+                      </div>
+                      <div>
+                        <dt>Profile updated</dt>
+                        <dd>{readableDate(user.customerProfile.profileUpdatedAt)}</dd>
+                      </div>
+                    </dl>
+                    <p className="admin-section-copy">
+                      Exact service street addresses are intentionally not shown in this
+                      directory. Open the relevant accepted job only when that address is
+                      needed for support or operations.
+                    </p>
+                  </div>
+
                   {user.activeSessionCount > 0 && pendingEmail !== user.email && (
                     <button
                       className="admin-secondary-action"
