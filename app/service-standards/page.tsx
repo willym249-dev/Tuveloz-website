@@ -82,9 +82,19 @@ export default function ServiceStandardsPage() {
             <ul>
               {CUSTOMER_AUTHORIZATION_PRINCIPLES.map((principle) => <li key={principle}>{principle}</li>)}
             </ul>
-            <Link className="button secondary account-button" href="/job-authorizations">
-              Open Job agreements <span>→</span>
-            </Link>
+            <p>
+              Customers and selected providers may also add private, dated condition records.
+              A photo or note does not approve extra work, increase the price, replace an itemized
+              invoice, guarantee a result, or waive either party&apos;s rights.
+            </p>
+            <div className="hero-actions">
+              <Link className="button secondary" href="/job-authorizations">
+                Open Job agreements <span>→</span>
+              </Link>
+              <Link className="button secondary" href="/job-evidence">
+                Open private job records <span>→</span>
+              </Link>
+            </div>
           </section>
 
           {(["standard", "gated", "paused"] as ServiceAvailability[]).map((availability) => {
@@ -149,6 +159,7 @@ export default function ServiceStandardsPage() {
             <div className="hero-actions">
               <Link className="button primary" href="/join">Join as a provider</Link>
               <Link className="button secondary" href="/account?role=customer&mode=create">Create customer account</Link>
+              <Link className="button secondary" href="/privacy-center">Privacy and data choices</Link>
             </div>
           </section>
         </div>
