@@ -5,6 +5,15 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ["app/job-authorizations/page.tsx"],
+    rules: {
+      // The page starts an awaited network request from its mount effect. State
+      // updates occur only in the asynchronous continuation, but the rule's
+      // interprocedural check treats the helper invocation as synchronous.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

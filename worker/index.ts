@@ -31,6 +31,7 @@ const PRIVATE_PATH_PREFIXES = [
   "/account",
   "/admin",
   "/customer",
+  "/job-authorizations",
   "/my-request",
   "/provider-jobs",
   "/success",

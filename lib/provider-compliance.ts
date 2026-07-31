@@ -4,6 +4,11 @@ import {
   PROVIDER_SERVICE_GROUPS,
   providerLegalAreas,
 } from "./service-matching";
+import {
+  providerServiceIsPaused,
+  providerServiceRequiresSpecialRules,
+  serviceSafetyPolicyFor,
+} from "./service-safety-policy";
 
 export type ProviderAssessmentAnswer = "yes" | "no" | "unsure" | "not-required";
 
@@ -29,6 +34,9 @@ export type ProviderLegalRequirementFlags = {
   washWaterCompliance: boolean;
   officialInspectionRestriction: boolean;
   removedTireRule: boolean;
+  locksmithCredential: boolean;
+  serviceSpecificRules: boolean;
+  pausedService: boolean;
 };
 
 export const emptyProviderSelfAssessment: ProviderSelfAssessment = {
@@ -53,6 +61,7 @@ const TIRE_SERVICE = "Spare-tire installation";
 const CAR_WASH_SERVICE = "Car washing with water";
 const LEGACY_CAR_WASH_SERVICE = "Car washing";
 const MOBILE_CAR_WASH_SERVICE = "Mobile car washing";
+const LOCKOUT_SERVICE = "Lockout assistance";
 
 const ESTABLISHED_REVIEWED_SERVICES = new Set([
   "Battery jump-starts",
@@ -215,6 +224,10 @@ export function getProviderLegalRequirementFlags(
       && services.some((service) => INDEPENDENT_INSPECTION_SERVICES.has(service)),
     removedTireRule: areas.length > 0
       && services.some((service) => TIRE_SERVICES.has(service)),
+    locksmithCredential: areas.length > 0 && services.includes(LOCKOUT_SERVICE),
+    serviceSpecificRules: areas.length > 0
+      && services.some((service) => providerServiceRequiresSpecialRules(service)),
+    pausedService: services.some((service) => providerServiceIsPaused(service)),
   };
 }
 
@@ -228,6 +241,11 @@ function evaluateService(
   const servesMontgomeryCounty = areas.includes(MONTGOMERY_COUNTY);
   const isMontgomeryRepairService = MONTGOMERY_REPAIR_SERVICES.has(service);
   const requiresCustomerPaperwork = servesMontgomeryCounty && isMontgomeryRepairService;
+  const safetyPolicy = serviceSafetyPolicyFor(service);
+
+  if (providerServiceIsPaused(service)) {
+    blockers.push(safetyPolicy.activationSummary);
+  }
 
   if (servesMontgomeryCounty && isMontgomeryRepairService) {
     if (assessment.businessRegistered === "no") {
@@ -275,6 +293,28 @@ function evaluateService(
         "Confirm the legally required commercial wash-water disposal process.",
       );
     }
+  }
+
+  if (service === LOCKOUT_SERVICE) {
+    reviews.push(
+      "Verify the active Maryland locksmith business license, the registration of the person performing the work, required insurance, and the per-job customer/vehicle authorization process.",
+    );
+  }
+
+  if (TIRE_SERVICES.has(service)) {
+    reviews.push(
+      "Confirm that a removed tire remains with the customer or follows a lawful approved disposal process.",
+    );
+  }
+
+  if (INDEPENDENT_INSPECTION_SERVICES.has(service)) {
+    reviews.push(
+      "Keep independent diagnostics separate from an official Maryland safety inspection unless the station and mechanic credentials are verified for that exact service.",
+    );
+  }
+
+  if (providerServiceRequiresSpecialRules(service)) {
+    reviews.push(safetyPolicy.activationSummary);
   }
 
   if (EXPANDED_SERVICE_REVIEW.has(service)) {
