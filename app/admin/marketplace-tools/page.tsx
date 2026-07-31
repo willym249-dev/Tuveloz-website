@@ -41,7 +41,6 @@ type AdminToolsResponse = {
     pendingAppointments: number;
     pendingCredentials: number;
     activeLocationShares: number;
-    redeemedOilChangeOffers: number;
   };
   error?: string;
 };
@@ -115,7 +114,7 @@ export default function AdminMarketplaceToolsPage() {
         <div className="account-welcome">
           <span className="account-kicker">Owner-only tools</span>
           <h1>Marketplace operations.</h1>
-          <p>Review provider-entered optional credentials and monitor appointment, promotion, catalog, and active location-sharing records.</p>
+          <p>Review provider-entered optional credentials and monitor appointments, catalog records, and active location sharing.</p>
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
         {notice && <p className="portal-success" role="status">{notice}</p>}
@@ -128,7 +127,6 @@ export default function AdminMarketplaceToolsPage() {
                 <div><span>Pending appointments</span><strong>{data.metrics.pendingAppointments}</strong></div>
                 <div><span>Pending credentials</span><strong>{data.metrics.pendingCredentials}</strong></div>
                 <div><span>Active location shares</span><strong>{data.metrics.activeLocationShares}</strong></div>
-                <div><span>Oil-change offers redeemed</span><strong>{data.metrics.redeemedOilChangeOffers}</strong></div>
               </div>
               <p className="records-disclaimer">
                 Live location records contain only the latest provider point, expire automatically,
