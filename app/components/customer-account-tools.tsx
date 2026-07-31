@@ -2,11 +2,18 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { parseProviderServices } from "../../lib/service-matching";
+import {
+  CUSTOMER_SERVICE_LOCATION_OPTIONS,
+  parseProviderServices,
+} from "../../lib/service-matching";
 
 type CustomerProfile = {
   email: string;
   displayName: string;
+  municipality: string;
+  zip: string;
+  serviceLocations: string[];
+  serviceAddress: string;
 };
 
 type CustomerProvider = {
@@ -28,6 +35,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
   const [saved, setSaved] = useState(false);
+  const [serviceLocations, setServiceLocations] = useState<string[]>([]);
 
   const load = useCallback(async () => {
     setError("");
@@ -36,6 +44,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
       const result = await response.json() as CustomerTools & { error?: string };
       if (!response.ok) throw new Error(result.error || "Unable to load customer settings.");
       setData(result);
+      setServiceLocations(result.profile.serviceLocations);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to load customer settings.");
     }
@@ -53,6 +62,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
     [data],
   );
   const available = data?.providerChoices.filter((provider) => !savedIds.has(provider.id)) ?? [];
+  const providerMayVisit = serviceLocations.includes(CUSTOMER_SERVICE_LOCATION_OPTIONS[0]);
 
   async function updateProvider(providerId: string, action: "save-provider" | "remove-provider") {
     setBusyId(providerId);
@@ -87,6 +97,10 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
         body: JSON.stringify({
           action: "save-profile",
           displayName: values.displayName,
+          municipality: values.municipality,
+          zip: values.zip,
+          serviceLocations,
+          serviceAddress: providerMayVisit ? values.serviceAddress : "",
         }),
       });
       const result = await response.json() as { profile?: CustomerProfile; error?: string };
@@ -94,6 +108,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
         throw new Error(result.error || "Unable to save your profile.");
       }
       setData((current) => current ? { ...current, profile: result.profile as CustomerProfile } : current);
+      setServiceLocations(result.profile.serviceLocations);
       setSaved(true);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save your profile.");
@@ -109,7 +124,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
       <div className="customer-settings-panel">
         {error && <p className="form-error" role="alert">{error}</p>}
         {data && (
-          <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}`} onSubmit={saveProfile}>
+          <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}-${data.profile.zip}`} onSubmit={saveProfile}>
             <label>
               Account email
               <input disabled readOnly value={data.profile.email} />
@@ -118,12 +133,49 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
             <label>
               Display name
               <input defaultValue={data.profile.displayName} maxLength={80} name="displayName" required />
-              <small>Saved to your customer profile. Existing job requests keep the name originally submitted.</small>
+              <small>Existing job requests keep the name originally submitted.</small>
             </label>
+            <div className="field-row">
+              <label>
+                City, town, or municipality
+                <input defaultValue={data.profile.municipality} maxLength={100} name="municipality" required placeholder="Example: Rockville" />
+              </label>
+              <label>
+                ZIP code
+                <input defaultValue={data.profile.zip} inputMode="numeric" maxLength={10} name="zip" required placeholder="20850" />
+              </label>
+            </div>
+            <fieldset className="area-fieldset location-fieldset">
+              <legend>Default service location</legend>
+              <p>Choose one or both. You can still change this on each job.</p>
+              <div className="area-options">
+                {CUSTOMER_SERVICE_LOCATION_OPTIONS.map((option) => (
+                  <label key={option}>
+                    <input
+                      checked={serviceLocations.includes(option)}
+                      onChange={(event) => setServiceLocations((current) => (
+                        event.target.checked
+                          ? [...current, option]
+                          : current.filter((item) => item !== option)
+                      ))}
+                      type="checkbox"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            {providerMayVisit && (
+              <label>
+                Default service address
+                <input defaultValue={data.profile.serviceAddress} maxLength={240} name="serviceAddress" required placeholder="Street address" />
+                <small>This stays private until you select a provider for a job.</small>
+              </label>
+            )}
             <button className="button primary" disabled={busyId === "profile"} type="submit">
-              {busyId === "profile" ? "Saving…" : "Save profile"}
+              {busyId === "profile" ? "Saving…" : "Save profile and service area"}
             </button>
-            {saved && <p className="portal-success">✓ Profile saved</p>}
+            {saved && <p className="portal-success">✓ Profile and service area saved</p>}
           </form>
         )}
         <div className="customer-security-note">
