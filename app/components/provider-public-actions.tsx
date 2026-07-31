@@ -13,6 +13,7 @@ type PublicProvider = {
     service: string;
     priceType: string;
     startingPriceCents: number;
+    maximumPriceCents: number;
     description: string;
     durationMinutes: number;
   }>;
@@ -28,11 +29,18 @@ type PublicProvider = {
 
 function priceLabel(item: PublicProvider["catalog"][number]) {
   if (item.priceType === "quote") return "Custom quote";
-  const amount = new Intl.NumberFormat(undefined, {
+  const formatter = new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: "USD",
-  }).format(item.startingPriceCents / 100);
+  });
+  const amount = formatter.format(item.startingPriceCents / 100);
   if (item.priceType === "starting_at") return `Starting at ${amount}`;
+  if (item.priceType === "range") {
+    const maximum = item.maximumPriceCents >= item.startingPriceCents
+      ? item.maximumPriceCents
+      : item.startingPriceCents;
+    return `${amount}–${formatter.format(maximum / 100)}`;
+  }
   if (item.priceType === "hourly") return `${amount} per hour`;
   return amount;
 }
@@ -95,7 +103,8 @@ export function ProviderPublicActions() {
           <p>This provider has not published standard prices. Request a quote for exact job pricing.</p>
         )}
         <small>
-          Provider-published prices may be starting estimates or standard rates. The customer must approve the final quote before work.
+          Provider-published prices may be starting estimates, fixed rates, typical ranges, or hourly rates.
+          The provider controls its pricing, and the customer must approve the final written quote before work.
         </small>
         <Link className="button primary" href={appointmentHref}>Request an appointment</Link>
         <Link className="button secondary" href="/post-job">Request a quote</Link>

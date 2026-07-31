@@ -7,14 +7,31 @@ const providerServiceRequirementsForJob: Record<string, string[][]> = {
     "Battery replacement",
     "Battery jump-starts",
   ]],
+  "Oil change": [[
+    "Oil change service",
+    "Mobile mechanical service",
+    "General auto repair",
+  ]],
+  "Minor repairs and maintenance": [[
+    "Minor repair and maintenance",
+    "Mobile mechanical service",
+    "General auto repair",
+  ]],
   "Flat tire or spare installation": [[
     "Mobile tire service",
     "Spare-tire installation",
     "Tire repair and replacement",
+    "Tire installation",
   ]],
   "Tire help": [[
     "Mobile tire service",
     "Spare-tire installation",
+    "Tire repair and replacement",
+    "Tire installation",
+  ]],
+  "Tire installation": [[
+    "Tire installation",
+    "Mobile tire service",
     "Tire repair and replacement",
   ]],
   "Mobile mechanic help": [[
@@ -30,8 +47,10 @@ const providerServiceRequirementsForJob: Record<string, string[][]> = {
     "Mobile tire service",
     "Spare-tire installation",
     "Tire repair and replacement",
+    "Tire installation",
   ]],
   "Lockout assistance": [["Lockout assistance"]],
+  "Towing service request": [["Towing service"]],
   "Fuel delivery": [["Fuel delivery"]],
   "Windshield chip repair": [["Windshield chip repair"]],
   "Headlight restoration": [["Headlight restoration"]],
@@ -50,6 +69,7 @@ const providerServiceRequirementsForJob: Record<string, string[][]> = {
   "Tire repair or replacement quote": [[
     "Tire repair and replacement",
     "Mobile tire service",
+    "Tire installation",
   ]],
   "Brake service quote": [["Brake service"]],
   "Transmission service quote": [["Transmission service"]],
@@ -166,6 +186,8 @@ export const PROVIDER_SERVICE_GROUPS: readonly ProviderServiceGroup[] = [
     descriptionEs: "Trabajo realizado en la ubicación del cliente.",
     options: [
       { value: "Mobile mechanical service", label: "Mobile mechanics", labelEs: "Mecánica móvil" },
+      { value: "Oil change service", label: "Oil changes", labelEs: "Cambios de aceite" },
+      { value: "Minor repair and maintenance", label: "Minor repairs and maintenance", labelEs: "Reparaciones menores y mantenimiento" },
       { value: "Mobile detailing", label: "Mobile detailing", labelEs: "Detallado móvil" },
       { value: "Mobile tire service", label: "Mobile tire service", labelEs: "Servicio móvil de llantas" },
       { value: "Battery replacement", label: "Battery replacement", labelEs: "Reemplazo de batería" },
@@ -212,6 +234,13 @@ export const PROVIDER_SERVICE_GROUPS: readonly ProviderServiceGroup[] = [
     options: [
       { value: "General auto repair", label: "Auto repair", labelEs: "Reparación de autos" },
       { value: "Tire repair and replacement", label: "Tire shop", labelEs: "Taller de llantas" },
+      {
+        value: "Tire installation",
+        label: "Tire installation",
+        labelEs: "Instalación de llantas",
+        note: "Activation requires tire-service approval and an approved removed-tire process.",
+        noteEs: "La activación requiere aprobación para servicio de llantas y un proceso aprobado para las llantas retiradas.",
+      },
       { value: "Brake service", label: "Brake service", labelEs: "Servicio de frenos" },
       { value: "Transmission service", label: "Transmission service", labelEs: "Servicio de transmisión" },
       { value: "Suspension and alignment", label: "Suspension and alignment", labelEs: "Suspensión y alineación" },
@@ -262,6 +291,13 @@ export const PROVIDER_SERVICE_GROUPS: readonly ProviderServiceGroup[] = [
       { value: "Hybrid and EV service", label: "Hybrid and EV service", labelEs: "Servicio de vehículos híbridos y eléctricos" },
       { value: "Classic car restoration", label: "Classic car restoration", labelEs: "Restauración de autos clásicos" },
       { value: "Detailing and ceramic coating", label: "Detailing and ceramic coating", labelEs: "Detallado y recubrimiento cerámico" },
+      {
+        value: "Towing service",
+        label: "Towing service — launch review required",
+        labelEs: "Servicio de grúa — requiere revisión antes del lanzamiento",
+        note: "Paused until Tuveloz completes a separate legal, insurance, dispatch, vehicle, driver, pricing, and incident-response review.",
+        noteEs: "Pausado hasta que Tuveloz complete una revisión separada legal, de seguros, despacho, vehículo, conductor, precios y respuesta a incidentes.",
+      },
     ],
   },
 ];
@@ -295,6 +331,8 @@ export const CUSTOMER_SERVICE_GROUPS: readonly CustomerServiceGroup[] = [
     description: "Services that can come to you.",
     options: [
       { value: "Mobile mechanic help", label: "Mobile mechanic" },
+      { value: "Oil change", label: "Oil change" },
+      { value: "Minor repairs and maintenance", label: "Minor repairs and maintenance" },
       { value: "Mobile detailing", label: "Mobile detailer" },
       { value: "Mobile tire service", label: "Mobile tire service" },
       { value: "Battery replacement or jump start", label: "Battery replacement or jump start" },
@@ -313,6 +351,7 @@ export const CUSTOMER_SERVICE_GROUPS: readonly CustomerServiceGroup[] = [
     options: [
       { value: "General auto repair quote", label: "Auto repair" },
       { value: "Tire repair or replacement quote", label: "Tire repair or replacement" },
+      { value: "Tire installation", label: "Tire installation" },
       { value: "Brake service quote", label: "Brake service" },
       { value: "Transmission service quote", label: "Transmission service" },
       { value: "Suspension or alignment quote", label: "Suspension or alignment" },
@@ -343,6 +382,7 @@ export const CUSTOMER_SERVICE_GROUPS: readonly CustomerServiceGroup[] = [
       { value: "Hybrid or EV service", label: "Hybrid or EV service" },
       { value: "Classic car restoration quote", label: "Classic car restoration" },
       { value: "Detailing or ceramic coating", label: "Detailing or ceramic coating" },
+      { value: "Towing service request", label: "Towing service — not available during launch" },
     ],
   },
 ];
@@ -374,6 +414,9 @@ export const QUOTE_PART_TYPE_OPTIONS = [
 
 const marketplacePartTerms: Record<string, string> = {
   "Battery or jump start": "replacement battery",
+  "Oil change": "engine oil oil filter drain plug washer",
+  "Minor repairs and maintenance": "replacement auto part maintenance part",
+  "Tire installation": "replacement tire tire valve stem",
   "Tire help": "replacement tire spare tire",
   "Flat tire or spare installation": "replacement tire spare tire",
   "Basic vehicle diagnostics": "replacement auto part",

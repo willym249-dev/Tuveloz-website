@@ -81,6 +81,8 @@ export const SERVICE_SAFETY_POLICIES: readonly ServiceSafetyPolicy[] = [
     providerServices: [
       "Mobile mechanical service",
       "General auto repair",
+      "Oil change service",
+      "Minor repair and maintenance",
       "Brake service",
       "Transmission service",
       "Suspension and alignment",
@@ -98,6 +100,8 @@ export const SERVICE_SAFETY_POLICIES: readonly ServiceSafetyPolicy[] = [
     customerServices: [
       "Mobile mechanic help",
       "General auto repair quote",
+      "Oil change",
+      "Minor repairs and maintenance",
       "Brake service quote",
       "Transmission service quote",
       "Suspension or alignment quote",
@@ -134,12 +138,14 @@ export const SERVICE_SAFETY_POLICIES: readonly ServiceSafetyPolicy[] = [
       "Spare-tire installation",
       "Mobile tire service",
       "Tire repair and replacement",
+      "Tire installation",
     ],
     customerServices: [
       "Flat tire or spare installation",
       "Tire help",
       "Mobile tire service",
       "Tire repair or replacement quote",
+      "Tire installation",
     ],
     activationSummary: "Requires tire-service approval plus a lawful removed-tire return or disposal process.",
     requiredChecks: [
@@ -289,6 +295,25 @@ export const SERVICE_SAFETY_POLICIES: readonly ServiceSafetyPolicy[] = [
     customerDisclosures: [
       "Only providers approved for the exact specialty service may quote the request.",
       "Tuveloz does not direct the repair method or certify the provider's technical result.",
+    ],
+  },
+  {
+    key: "towing-service",
+    title: "Vehicle towing",
+    availability: "paused",
+    riskTier: "high-risk",
+    providerServices: ["Towing service"],
+    customerServices: ["Towing service request"],
+    activationSummary: "Not available during the launch pilot pending a dedicated legal, insurance, driver-and-vehicle, dispatch, storage-fee, customer-authorization, and incident-response review.",
+    requiredChecks: [
+      "Service-area legal and operating-authority review",
+      "Tow-vehicle, driver, commercial-auto, cargo, and liability records appropriate to the service",
+      "Written dispatch, customer authorization, pricing, storage, release, damage-reporting, and incident-response process",
+      "Separate approval for every towing service area and operating model",
+    ],
+    customerDisclosures: [
+      "Vehicle towing is not currently available through Tuveloz.",
+      "Jump starts, tire help, and lockout assistance remain separate service categories with their own approval rules.",
     ],
   },
   {

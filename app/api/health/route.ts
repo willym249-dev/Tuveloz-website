@@ -12,6 +12,7 @@ const REQUIRED_TABLES = [
   "job_authorizations",
   "privacy_requests",
   "job_evidence_items",
+  "customer_service_reminders",
 ] as const;
 
 type TableRow = {

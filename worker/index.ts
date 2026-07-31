@@ -30,13 +30,19 @@ interface ExecutionContext {
 const PRIVATE_PATH_PREFIXES = [
   "/account",
   "/admin",
+  "/appointments",
   "/customer",
   "/job-authorizations",
   "/job-evidence",
   "/my-request",
+  "/notifications",
   "/privacy-center",
   "/provider-jobs",
+  "/provider-service-area",
+  "/provider-services",
+  "/service-reminders",
   "/success",
+  "/tracking",
   "/api/",
 ];
 

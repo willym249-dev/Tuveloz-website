@@ -57,6 +57,8 @@ export function AccountToolsDock() {
     bottom: "1rem",
     zIndex: 80,
     maxWidth: "min(22rem, calc(100vw - 2rem))",
+    maxHeight: "75vh",
+    overflow: "auto" as const,
     border: "1px solid rgba(255,255,255,.18)",
     borderRadius: "1rem",
     background: "rgba(7, 24, 45, .96)",
@@ -89,6 +91,7 @@ export function AccountToolsDock() {
             <Link href="/tracking" style={linkStyle}>Provider tracking & job status</Link>
             <Link href="/job-authorizations" style={linkStyle}>Job agreements</Link>
             <Link href="/job-authorizations/documents" style={linkStyle}>Estimates, invoices & receipts</Link>
+            <Link href="/service-reminders" style={linkStyle}>Service history & reminders</Link>
             <Link href="/notifications" style={linkStyle}>Notifications</Link>
           </>
         )}

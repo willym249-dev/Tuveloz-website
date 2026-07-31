@@ -9,6 +9,7 @@ type CatalogItem = {
   service: string;
   priceType: string;
   startingPriceCents: number;
+  maximumPriceCents: number;
   description: string;
   durationMinutes: number;
   active: string;
@@ -35,13 +36,23 @@ type ToolsResponse = {
   error?: string;
 };
 
-function priceLabel(item: CatalogItem) {
-  if (item.priceType === "quote") return "Custom quote";
-  const amount = new Intl.NumberFormat(undefined, {
+function currency(cents: number) {
+  return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: "USD",
-  }).format(item.startingPriceCents / 100);
+  }).format(cents / 100);
+}
+
+function priceLabel(item: CatalogItem) {
+  if (item.priceType === "quote") return "Custom quote";
+  const amount = currency(item.startingPriceCents);
   if (item.priceType === "starting_at") return `Starting at ${amount}`;
+  if (item.priceType === "range") {
+    const maximum = item.maximumPriceCents >= item.startingPriceCents
+      ? item.maximumPriceCents
+      : item.startingPriceCents;
+    return `${amount}–${currency(maximum)}`;
+  }
   if (item.priceType === "hourly") return `${amount} per hour`;
   return amount;
 }
@@ -101,10 +112,11 @@ export default function ProviderServicesPage() {
       service: values.service,
       priceType: values.priceType,
       startingPrice: values.startingPrice,
+      maximumPrice: values.maximumPrice,
       durationMinutes: values.durationMinutes,
       description: values.description,
       active: values.active === "on",
-    }, "Service and provider-set price saved.");
+    }, "Service and provider-set price information saved.");
     form.reset();
   }
 
@@ -120,7 +132,10 @@ export default function ProviderServicesPage() {
     <main className="account-shell">
       <header className="account-header">
         <Link className="brand" href="/"><BrandMark /><span>Tuveloz</span></Link>
-        <Link className="account-home-link" href="/provider-jobs">Provider workspace</Link>
+        <div className="account-header-actions">
+          <Link className="account-home-link" href="/provider-jobs/toolkit">Quote templates</Link>
+          <Link className="account-home-link" href="/provider-jobs">Provider workspace</Link>
+        </div>
       </header>
       <section className="account-main">
         <div className="account-welcome">
@@ -154,11 +169,20 @@ export default function ProviderServicesPage() {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Provider price ($)
-                  <input name="startingPrice" type="number" min="0" max="100000" step="0.01" placeholder="0.00" />
-                  <small>Leave at 0 when the service requires a custom quote. This is your provider price, not a promise that every job will cost the same.</small>
-                </label>
+                <div className="field-row">
+                  <label>
+                    Provider price or range minimum ($)
+                    <input name="startingPrice" type="number" min="0" max="100000" step="0.01" defaultValue="0" />
+                  </label>
+                  <label>
+                    Range maximum ($)
+                    <input name="maximumPrice" type="number" min="0" max="100000" step="0.01" defaultValue="0" />
+                  </label>
+                </div>
+                <small>
+                  This is your provider price information, not a promise that every vehicle or scope will cost the same.
+                  The maximum applies only to “Typical price range.” Leave both amounts at 0 for a custom quote.
+                </small>
                 <label>
                   Typical duration in minutes
                   <input name="durationMinutes" type="number" min="0" max="10080" step="5" placeholder="60" />
