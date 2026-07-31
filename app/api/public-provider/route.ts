@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
@@ -21,6 +22,24 @@ import {
   providerCredentialRequirementsAreSatisfied,
   requiredProviderCredentialRequirements,
 } from "../../../lib/provider-credentials";
+
+type CatalogRow = {
+  id: string;
+  service: string;
+  priceType: string;
+  startingPriceCents: number;
+  description: string;
+  durationMinutes: number;
+};
+
+type OptionalCredentialRow = {
+  id: string;
+  credentialName: string;
+  issuingAuthority: string;
+  jurisdiction: string;
+  expiresAt: string;
+  reviewNote: string;
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -96,25 +115,46 @@ export async function GET(request: Request) {
     }
   }
 
-  const gallery = await db.select({
-    id: providerGalleryItems.id,
-    caption: providerGalleryItems.caption,
-    service: providerGalleryItems.service,
-  }).from(providerGalleryItems)
-    .where(eq(providerGalleryItems.providerId, result.provider.id))
-    .orderBy(desc(providerGalleryItems.createdAt));
-  const reviews = await db.select({
-    id: jobReviews.id,
-    customerDisplayName: jobReviews.customerDisplayName,
-    service: jobReviews.service,
-    rating: jobReviews.rating,
-    comment: jobReviews.comment,
-  }).from(jobReviews)
-    .where(and(
-      eq(jobReviews.providerEmail, result.provider.email),
-      eq(jobReviews.status, "published"),
-    ))
-    .orderBy(desc(jobReviews.createdAt));
+  const [gallery, reviews, catalogResult, optionalCredentialResult] = await Promise.all([
+    db.select({
+      id: providerGalleryItems.id,
+      caption: providerGalleryItems.caption,
+      service: providerGalleryItems.service,
+    }).from(providerGalleryItems)
+      .where(eq(providerGalleryItems.providerId, result.provider.id))
+      .orderBy(desc(providerGalleryItems.createdAt)),
+    db.select({
+      id: jobReviews.id,
+      customerDisplayName: jobReviews.customerDisplayName,
+      service: jobReviews.service,
+      rating: jobReviews.rating,
+      comment: jobReviews.comment,
+    }).from(jobReviews)
+      .where(and(
+        eq(jobReviews.providerEmail, result.provider.email),
+        eq(jobReviews.status, "published"),
+      ))
+      .orderBy(desc(jobReviews.createdAt)),
+    env.DB.prepare(
+      `SELECT id, service, price_type AS priceType,
+              starting_price_cents AS startingPriceCents,
+              description, duration_minutes AS durationMinutes
+         FROM provider_catalog_items
+        WHERE provider_id = ? AND active = 'yes'
+        ORDER BY service ASC`,
+    ).bind(result.provider.id).all<CatalogRow>(),
+    env.DB.prepare(
+      `SELECT id, credential_name AS credentialName,
+              issuing_authority AS issuingAuthority,
+              jurisdiction, expires_at AS expiresAt,
+              review_note AS reviewNote
+         FROM provider_submitted_credentials
+        WHERE provider_id = ?
+          AND status = 'verified'
+          AND public_display = 'yes'
+        ORDER BY credential_name ASC`,
+    ).bind(result.provider.id).all<OptionalCredentialRow>(),
+  ]);
   const average = reviews.length
     ? Number((reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1))
     : 0;
@@ -136,6 +176,7 @@ export async function GET(request: Request) {
     ));
 
   return Response.json({
+    providerId: result.provider.id,
     profile: {
       id: result.profile.id,
       businessName: result.profile.businessName,
@@ -148,6 +189,8 @@ export async function GET(request: Request) {
       hasLogo: Boolean(result.profile.logoImageKey),
     },
     services: parseProviderServices(result.provider.approvedServices),
+    catalog: catalogResult.results,
+    optionalCredentials: optionalCredentialResult.results,
     areas: parseProviderAreas(result.provider.serviceArea),
     workLocations: parseProviderWorkLocations(result.provider.workLocations),
     businessMunicipality: result.provider.businessMunicipality,
