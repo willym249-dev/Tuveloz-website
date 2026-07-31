@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function source(path) {
@@ -7,9 +7,10 @@ async function source(path) {
 }
 
 test("manual Cloudflare migrations add service areas and marketplace tools", async () => {
-  const [serviceAreaMigration, marketplaceMigration] = await Promise.all([
+  const [serviceAreaMigration, marketplaceMigration, retirementMigration] = await Promise.all([
     source("drizzle/0031_service_area_settings.sql"),
     source("drizzle/0032_marketplace_tools.sql"),
+    source("drizzle/0036_retire_first_oil_change_promotion.sql"),
   ]);
 
   assert.ok(serviceAreaMigration.includes("account_service_area_settings"));
@@ -23,13 +24,16 @@ test("manual Cloudflare migrations add service areas and marketplace tools", asy
   ]) {
     assert.ok(marketplaceMigration.includes(`CREATE TABLE \`${table}\``));
   }
-  assert.ok(marketplaceMigration.includes("provider_quotes_first_oil_change_promo"));
-  assert.ok(marketplaceMigration.includes("customer_fee_rate_bps` = 0"));
-  assert.ok(marketplaceMigration.includes("customer_fee_cents` = '0'"));
   assert.ok(marketplaceMigration.includes("customer_requests_job_status_notifications"));
   assert.ok(marketplaceMigration.includes("Your vehicle is ready"));
   assert.ok(marketplaceMigration.includes("latitude` = NULL"));
   assert.ok(marketplaceMigration.includes("longitude` = NULL"));
+  assert.ok(retirementMigration.includes("DROP TRIGGER IF EXISTS `provider_quotes_first_oil_change_promo`"));
+  assert.ok(retirementMigration.includes("DROP TRIGGER IF EXISTS `account_credentials_first_oil_change_promo`"));
+  assert.ok(retirementMigration.includes("`status` = 'retired'"));
+  assert.ok(retirementMigration.includes("DELETE FROM `account_notifications`"));
+  assert.ok(!retirementMigration.includes("UPDATE `provider_quotes`"));
+  assert.ok(!retirementMigration.includes("UPDATE `stripe_payments`"));
 });
 
 test("providers control approved services prices and optional credential submissions", async () => {
@@ -100,7 +104,7 @@ test("owner tools stay protected and are discoverable only to the owner", async 
 
   assert.ok(layout.includes("<AccountToolsDock />"));
   assert.ok(dock.includes('fetch("/api/owner-access"'));
-  assert.ok(dock.includes("{isOwner && ("));
+  assert.ok(dock.includes("(isOwner || ownerEntryAvailable)"));
   assert.ok(dock.includes('href="/admin"'));
   assert.ok(dock.includes('href="/admin/marketplace-tools"'));
   assert.ok(adminApi.includes("await isVerifiedOwnerRequest(request)"));
@@ -109,23 +113,51 @@ test("owner tools stay protected and are discoverable only to the owner", async 
   assert.ok(adminPage.includes("Optional submissions"));
 });
 
-test("new accounts receive a welcome experience and first oil change offer", async () => {
-  const [welcomePage, offerPage, passwordComplete, emailNotifications, notificationsPage] = await Promise.all([
+test("new accounts keep the welcome experience without the retired oil-change promotion", async () => {
+  const [
+    welcomePage,
+    passwordComplete,
+    emailNotifications,
+    notificationsPage,
+    notificationsApi,
+    dock,
+    adminPage,
+    adminApi,
+  ] = await Promise.all([
     source("app/welcome/page.tsx"),
-    source("app/first-oil-change/page.tsx"),
     source("app/api/auth/password/complete/route.ts"),
     source("lib/email-notifications.ts"),
     source("app/notifications/page.tsx"),
+    source("app/api/notifications/route.ts"),
+    source("app/components/account-tools-dock.tsx"),
+    source("app/admin/marketplace-tools/page.tsx"),
+    source("app/api/admin/marketplace-tools/route.ts"),
   ]);
 
   assert.ok(passwordComplete.includes("/welcome?role="));
   assert.ok(welcomePage.includes("Thank you for joining Tuveloz."));
   assert.ok(welcomePage.includes("Tuveloz is an online marketplace"));
-  assert.ok(offerPage.includes("No Tuveloz service fee on your first qualifying oil change"));
-  assert.ok(offerPage.includes("provider&apos;s labor, oil, filter"));
+  assert.ok(welcomePage.includes("Start with your customer workspace"));
   assert.ok(emailNotifications.includes("Thank you for signing up with Tuveloz."));
   assert.ok(emailNotifications.includes("Thank you for joining Tuveloz as an independent provider."));
-  assert.ok(notificationsPage.includes("First oil-change Tuveloz fee offer"));
+
+  for (const currentSource of [
+    welcomePage,
+    emailNotifications,
+    notificationsPage,
+    notificationsApi,
+    dock,
+    adminPage,
+    adminApi,
+  ]) {
+    assert.ok(!currentSource.includes("first-oil-change"));
+    assert.ok(!currentSource.includes("first qualifying oil-change"));
+    assert.ok(!currentSource.includes("redeemedOilChangeOffers"));
+  }
+
+  await assert.rejects(
+    access(new URL("../app/first-oil-change/page.tsx", import.meta.url)),
+  );
 });
 
 test("service area and marketplace work do not change Stripe setup", async () => {
