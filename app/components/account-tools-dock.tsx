@@ -33,6 +33,19 @@ export function AccountToolsDock() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!role) return;
+    const deliver = () => {
+      void fetch("/api/notifications", { cache: "no-store" }).catch(() => undefined);
+    };
+    const timer = window.setTimeout(deliver, 0);
+    const interval = window.setInterval(deliver, 20_000);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(interval);
+    };
+  }, [role]);
+
   if (!role && !isOwner) return null;
 
   const dockStyle = {
