@@ -18,7 +18,7 @@ type QueuedNotification = {
 };
 
 const MAX_DELIVERY_ATTEMPTS = 5;
-const RETRY_BATCH_SIZE = 3;
+const RETRY_BATCH_SIZE = 5;
 
 function runtimeEnv() {
   return env as unknown as RuntimeEnv;
@@ -103,7 +103,8 @@ async function deliverEvent(eventKey: string) {
   }
 }
 
-async function retryOlderEvents(currentEventKey: string) {
+export async function flushPendingEmailNotifications(limit = RETRY_BATCH_SIZE) {
+  const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
   const rows = await getDb().select({
     eventKey: emailNotificationOutbox.eventKey,
   }).from(emailNotificationOutbox)
@@ -112,10 +113,8 @@ async function retryOlderEvents(currentEventKey: string) {
       lt(emailNotificationOutbox.attempts, MAX_DELIVERY_ATTEMPTS),
     ))
     .orderBy(emailNotificationOutbox.createdAt)
-    .limit(RETRY_BATCH_SIZE);
-  for (const row of rows) {
-    if (row.eventKey !== currentEventKey) await deliverEvent(row.eventKey);
-  }
+    .limit(safeLimit);
+  for (const row of rows) await deliverEvent(row.eventKey);
 }
 
 async function queueNotification(notification: QueuedNotification) {
@@ -143,10 +142,24 @@ async function queueNotification(notification: QueuedNotification) {
     });
 
     await deliverEvent(notification.eventKey);
-    await retryOlderEvents(notification.eventKey);
+    await flushPendingEmailNotifications();
   } catch (error) {
     console.error("Unable to queue or deliver Tuveloz email notification", error);
   }
+}
+
+export async function sendMarketplaceUpdateEmail(input: {
+  eventKey: string;
+  recipientEmail: string;
+  subject: string;
+  lines: string[];
+}) {
+  await queueNotification({
+    eventKey: `marketplace:${input.eventKey}`,
+    recipientEmail: input.recipientEmail,
+    subject: input.subject,
+    textBody: input.lines.join("\n"),
+  });
 }
 
 export async function sendNewCustomerRequestAlert(requestId: string) {
@@ -170,8 +183,44 @@ export async function sendAccountSecurityAlert(input: {
   role: "customer" | "provider";
   action: AccountSecurityAction;
 }) {
-  const labels: Record<AccountSecurityAction, string> = {
-    account_created: "Your Tuveloz password account was created",
+  if (input.action === "account_created") {
+    const customerLines = [
+      "Thank you for signing up with Tuveloz.",
+      "",
+      "Tuveloz is an online marketplace that connects customers with independent vehicle-service providers. You can request work, compare provider quotes, choose who you want, request appointments, and follow job updates in one account.",
+      "",
+      "New-account offer: your first qualifying oil-change request created after your account is eligible for no Tuveloz customer service fee. The provider's labor, parts, taxes, disposal, travel, and any other provider charges are not waived. The offer is limited to one qualifying oil-change booking per account and applies automatically when eligible.",
+      "",
+      `Post a vehicle-service request: ${siteUrl()}/post-job`,
+      `Open your customer workspace: ${siteUrl()}/customer`,
+      "",
+      "Tuveloz is a marketplace and does not itself perform vehicle services.",
+    ];
+    const providerLines = [
+      "Thank you for joining Tuveloz as an independent provider.",
+      "",
+      "Tuveloz helps independent mobile providers and shop-based businesses list approved services and provider-set prices, receive matching customer requests, request appointments, control availability, and manage job updates.",
+      "",
+      `Open your provider workspace: ${siteUrl()}/provider-jobs`,
+      `Add services and prices: ${siteUrl()}/provider-services`,
+      "",
+      "Optional credentials may be added for customer context. Any credential legally required for an approved service must still complete Tuveloz's separate official verification process before that service is activated.",
+    ];
+    await queueNotification({
+      eventKey: `security:account_created:${input.eventId}:${cleanEmail(input.email)}`,
+      recipientEmail: input.email,
+      subject: "Thank you for joining Tuveloz",
+      textBody: [
+        ...(input.role === "customer" ? customerLines : providerLines),
+        "",
+        `Security notice: a Tuveloz password account was created for this ${input.role} workspace at ${new Date().toISOString()}.`,
+        `If you did not create it, reset the password at ${siteUrl()}/account and contact Tuveloz support immediately.`,
+      ].join("\n"),
+    });
+    return;
+  }
+
+  const labels: Record<Exclude<AccountSecurityAction, "account_created">, string> = {
     password_reset: "Your Tuveloz password was reset",
     passkey_added: "A passkey (Face ID, Touch ID, or device lock) was added",
   };
