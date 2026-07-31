@@ -90,7 +90,6 @@ export function AccountToolsDock() {
             <Link href="/job-authorizations" style={linkStyle}>Job agreements</Link>
             <Link href="/job-authorizations/documents" style={linkStyle}>Estimates, invoices & receipts</Link>
             <Link href="/notifications" style={linkStyle}>Notifications</Link>
-            <Link href="/first-oil-change" style={linkStyle}>First oil-change offer</Link>
           </>
         )}
         {role === "provider" && (
