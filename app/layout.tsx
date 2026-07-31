@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { AccountToolsDock } from "./components/account-tools-dock";
+import { JobPostingPauseNotice } from "./components/job-posting-pause-notice";
 import { ProviderPublicActions } from "./components/provider-public-actions";
 import { SiteLanguageProvider } from "./components/site-language";
 import "./globals.css";
@@ -39,8 +41,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body
+        className="antialiased"
+        data-customer-job-posting-paused={
+          CUSTOMER_JOB_POSTING_PAUSED ? "true" : undefined
+        }
+      >
         <SiteLanguageProvider>
+          {CUSTOMER_JOB_POSTING_PAUSED && <JobPostingPauseNotice />}
           {children}
           <ProviderPublicActions />
           <AccountToolsDock />

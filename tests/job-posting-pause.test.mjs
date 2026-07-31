@@ -14,6 +14,14 @@ const requestRoute = await readFile(
   new URL("../app/api/requests/route.ts", import.meta.url),
   "utf8",
 );
+const rootLayout = await readFile(
+  new URL("../app/layout.tsx", import.meta.url),
+  "utf8",
+);
+const pauseNotice = await readFile(
+  new URL("../app/components/job-posting-pause-notice.tsx", import.meta.url),
+  "utf8",
+);
 
 test("customer signups stay open while new job requests and payments are paused", () => {
   assert.match(launchStatus, /CUSTOMER_JOB_POSTING_PAUSED = true/);
@@ -37,4 +45,15 @@ test("the request API rejects every new submission before reading customer data"
   assert.match(requestRoute, /return pausedCustomerRequestResponse\(\)/);
   assert.match(requestRoute, /status: 503/);
   assert.match(requestRoute, /cache-control/);
+});
+
+test("the pause notice is visible sitewide and hides the homepage request form", () => {
+  assert.match(rootLayout, /className="antialiased"/);
+  assert.match(rootLayout, /data-customer-job-posting-paused/);
+  assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
+  assert.match(pauseNotice, /body\[data-customer-job-posting-paused=/);
+  assert.match(pauseNotice, /\.public-site \.request-section/);
+  assert.match(pauseNotice, /display: none !important/);
+  assert.match(pauseNotice, /Create customer account/);
+  assert.match(pauseNotice, /Join as a provider/);
 });
