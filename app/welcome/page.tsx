@@ -20,8 +20,8 @@ export default function WelcomePage() {
           <h1>Thank you for joining Tuveloz.</h1>
           <p>
             {isProvider
-              ? "Your provider workspace helps you receive matching requests, set your own services and prices, request appointments, and manage customer updates."
-              : "Tuveloz helps you request vehicle work, compare independent providers and quotes, request appointments, and follow job updates in one place."}
+              ? "Your provider workspace is open for onboarding, evidence, profile, and service-readiness setup. Jobs, quotes, appointments, payments, and payouts open only after launch approval."
+              : "Your customer account is ready. New job requests, provider quotes, appointments, and payments are not open yet."}
           </p>
         </div>
         <section className="account-card">
@@ -42,12 +42,13 @@ export default function WelcomePage() {
             <>
               <h2>Start with your customer workspace</h2>
               <p>
-                Post a vehicle-service request when customer job posting is available, compare
-                independent-provider quotes, choose a provider, and follow appointments and job updates.
+                Keep your account information together now. After customer launch,
+                you will be able to request an enabled exact service, compare eligible
+                independent providers, and choose whether to proceed.
               </p>
               <div className="legal-actions">
-                <Link className="button primary" href="/post-job">Post a vehicle-service request</Link>
-                <Link className="button secondary" href="/customer">Open customer workspace</Link>
+                <Link className="button primary" href="/customer">Open customer workspace</Link>
+                <Link className="button secondary" href="/post-job">View customer launch status</Link>
               </div>
             </>
           )}

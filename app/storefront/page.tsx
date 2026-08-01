@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { customerPriceFor } from "../../lib/customer-fee";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -33,7 +34,40 @@ function dollars(cents: number) {
   }).format(cents / 100);
 }
 
-export default function StripeStorefrontPage() {
+function StorefrontClosedPage() {
+  return (
+    <main className="storefront-shell stripe-storefront">
+      <header className="storefront-header">
+        <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
+        <div className="portal-header-actions">
+          <Link className="portal-account-link" href="/account">Sign up / Sign in</Link>
+          <SiteLanguageButton />
+        </div>
+      </header>
+
+      <section className="stripe-storefront-hero">
+        <span className="kicker">Payments are closed</span>
+        <h1>Customer payments are not open yet.</h1>
+        <p>
+          Tuveloz is accepting customer account signups and provider applications
+          while we build a larger network of approved providers.
+        </p>
+        <p>
+          Products, prices, appointments, checkout forms, and payment links are
+          unavailable during provider onboarding. Creating an account or applying
+          as a provider does not post a job or create a charge.
+        </p>
+        <div className="portal-header-actions">
+          <Link className="button primary" href="/account">Create or open an account</Link>
+          <Link className="button secondary" href="/join">Apply as a provider</Link>
+          <Link className="button secondary" href="/payments">Read the payment policy</Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function LiveStripeStorefrontPage() {
   const [products, setProducts] = useState<StorefrontProduct[]>([]);
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
   const [email, setEmail] = useState("");
@@ -255,4 +289,10 @@ export default function StripeStorefrontPage() {
       </section>
     </main>
   );
+}
+
+export default function StripeStorefrontPage() {
+  return CUSTOMER_JOB_POSTING_PAUSED
+    ? <StorefrontClosedPage />
+    : <LiveStripeStorefrontPage />;
 }

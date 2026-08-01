@@ -72,37 +72,37 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   requests: {
     title: "My jobs",
     emptyTitle: "No requests yet",
-    emptyText: "Your vehicle-service requests will appear here.",
+    emptyText: "After customer launch, your vehicle-service requests will appear here.",
   },
   quotes: {
     title: "Quotes received",
     emptyTitle: "No quotes received yet",
-    emptyText: "Requests with provider quotes will appear here.",
+    emptyText: "After customer launch, requests with provider quotes will appear here.",
   },
   active: {
     title: "Active jobs",
     emptyTitle: "No active jobs",
-    emptyText: "Jobs begin appearing here after you accept a provider quote.",
+    emptyText: "After customer launch, jobs will appear here if you accept a provider quote.",
   },
   history: {
     title: "Job history",
     emptyTitle: "No completed jobs yet",
-    emptyText: "Completed and cancelled jobs will appear here.",
+    emptyText: "After customer launch, completed and cancelled jobs will appear here.",
   },
   messages: {
     title: "Messages",
     emptyTitle: "No job conversations yet",
-    emptyText: "Messages become available after a quote is accepted.",
+    emptyText: "After customer launch, messages become available when a quote is accepted.",
   },
   payments: {
     title: "Payments",
     emptyTitle: "No payments yet",
-    emptyText: "Real Tuveloz checkout records for this customer account will appear here.",
+    emptyText: "After payments launch, checkout records for this customer account will appear here.",
   },
   saved: {
     title: "Saved providers",
     emptyTitle: "No saved providers yet",
-    emptyText: "Providers from your quote history can be saved here.",
+    emptyText: "After customer launch, providers from your quote history can be saved here.",
   },
   settings: {
     title: "Profile & settings",
@@ -270,8 +270,8 @@ export default function CustomerPage() {
       <section className="account-main">
         <div className="account-welcome">
           <span className="account-kicker">Customer workspace</span>
-          <h1>Your jobs.</h1>
-          <p>View saved records and quotes. New customer requests remain closed during provider onboarding.</p>
+          <h1>Your customer account.</h1>
+          <p>Manage your account now. New customer requests and payments remain closed during provider onboarding.</p>
           {account && <small>Signed in as {account.email}</small>}
         </div>
 
@@ -412,9 +412,9 @@ export default function CustomerPage() {
               <summary>How customer privacy works</summary>
               <div className="workspace-tool-content">
                 <p>
-                  Providers see only the information needed to decide whether to
-                  quote. Your exact address and contact details are shared only
-                  with the provider you select.
+                  After customer launch, providers will see only the information
+                  needed to decide whether to quote. Your exact address and contact
+                  details will be shared only with the provider you select.
                 </p>
               </div>
             </details>

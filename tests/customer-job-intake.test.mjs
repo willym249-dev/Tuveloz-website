@@ -50,9 +50,9 @@ test("the review intake replaces broad categories with one exact service scope",
   assert.match(scope, /nonexistent or ambiguous DST wall time is rejected/);
   assert.match(scope, /does not authorize a repair, payment, added work/);
   assert.match(scope, /affirmative-separate-customer-privacy-checkbox/);
-  assert.match(homepage, /function legacyHomepageRequestFormEnabled\(\) \{\s*return false;/);
+  assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
   assert.match(homepage, /href="\/post-job"/);
-  assert.match(homepage, /The old multi-service homepage form is disabled/);
+  assert.match(homepage, /No job, provider contact,[\s\S]*booking, or payment is created now/);
 });
 
 test("new real requests fail before data reads and require immutable exact-scope acceptances", async () => {

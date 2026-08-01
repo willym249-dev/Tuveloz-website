@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { BrandMark } from "../components/tuveloz-icons";
 
 type Appointment = {
@@ -48,7 +49,36 @@ function dateLabel(value: string) {
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
 }
 
-export default function AppointmentsPage() {
+function AppointmentsClosedPage() {
+  return (
+    <main className="account-shell">
+      <header className="account-header">
+        <Link className="brand" href="/"><BrandMark /><span>Tuveloz</span></Link>
+        <Link className="account-home-link" href="/account">Account</Link>
+      </header>
+      <section className="account-main">
+        <div className="account-welcome">
+          <span className="account-kicker">Provider onboarding</span>
+          <h1>Appointments are not open yet.</h1>
+          <p>
+            Customer requests, provider matching, quotes, bookings, and appointments
+            remain closed while Tuveloz builds a larger approved-provider network.
+          </p>
+          <p>
+            Customer accounts and provider applications are open. Creating an account
+            or applying as a provider does not request service or schedule an appointment.
+          </p>
+          <div className="portal-header-actions">
+            <Link className="button primary" href="/account">Create or open an account</Link>
+            <Link className="button secondary" href="/join">Apply as a provider</Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function LiveAppointmentsPage() {
   const searchParams = useSearchParams();
   const initialProviderId = searchParams.get("provider") ?? "";
   const initialService = searchParams.get("service") ?? "";
@@ -290,4 +320,10 @@ export default function AppointmentsPage() {
       </section>
     </main>
   );
+}
+
+export default function AppointmentsPage() {
+  return CUSTOMER_JOB_POSTING_PAUSED
+    ? <AppointmentsClosedPage />
+    : <LiveAppointmentsPage />;
 }

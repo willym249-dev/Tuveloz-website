@@ -32,6 +32,7 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../lib/provider-policy-acceptance";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { MarketPriceLinks } from "./components/market-price-links";
 import VehicleSelector from "./components/vehicle-selector";
 import {
@@ -44,13 +45,6 @@ import {
   type TuvelozIconName,
 } from "./components/tuveloz-icons";
 import { ConfirmAction } from "./components/confirm-action";
-
-// The old homepage form accepted multiple broad service labels and older
-// clickwrap. It is permanently excluded from rendering; /post-job is the only
-// customer-intake review surface and uses the exact-service authorization flow.
-function legacyHomepageRequestFormEnabled() {
-  return false;
-}
 
 const services: Array<{
   icon: TuvelozIconName;
@@ -1150,16 +1144,27 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
       <section className="section request-section" id="request">
         <div className="request-copy">
-          <span className="kicker">New and growing</span>
+          <span className="kicker">
+            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "New and growing"}
+          </span>
           {view === "request" ? (
-            <h1>Post your job. We&apos;ll send it to providers who match.</h1>
+            <h1>
+              {CUSTOMER_JOB_POSTING_PAUSED
+                ? "Create your account now. Request service after launch."
+                : "Post your job. We'll send it to providers who match."}
+            </h1>
           ) : (
-            <h2>Post your job. We&apos;ll send it to providers who match.</h2>
+            <h2>
+              {CUSTOMER_JOB_POSTING_PAUSED
+                ? "Create your account now. Request service after launch."
+                : "Post your job. We'll send it to providers who match."}
+            </h2>
           )}
           <p>
-            Customer requests are currently closed. After launch approval, the
-            server—not a manual owner decision—will share an exact-service request
-            only with providers whose current eligibility records match it.
+            Customer requests, quotes, bookings, and payments are currently closed.
+            You can create a customer account now, and provider applications remain
+            open. After launch approval, the server will share an exact-service
+            request only with providers whose current eligibility records match it.
           </p>
           <div className="pilot-vision">
             <strong>Our vision</strong>
@@ -1176,29 +1181,33 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </ul>
         </div>
 
-        {!legacyHomepageRequestFormEnabled() && (
+        {CUSTOMER_JOB_POSTING_PAUSED ? (
           <div className="lead-form">
             <div className="form-heading">
-              <span>01</span>
+              <span>✓</span>
               <div>
-                <h3>Review the one exact-service intake</h3>
+                <h3>Prepare for launch without submitting a job</h3>
                 <p>
-                  The old multi-service homepage form is disabled. The dedicated
-                  review page uses one exact service code, a scheduled time,
-                  jurisdiction, immutable terms/privacy records, and server-side gates.
+                  Create your customer account to keep your information together and
+                  return when customer service requests open. No job, provider contact,
+                  booking, or payment is created now.
                 </p>
               </div>
             </div>
-            <Link className="button primary form-button" href="/post-job">
-              Open exact-service intake review <span>→</span>
-            </Link>
+            <div className="hero-actions">
+              <Link className="button primary" href="/account?role=customer&mode=create">
+                Create customer account <span>→</span>
+              </Link>
+              <Link className="button secondary" href="/join">
+                Apply as a provider
+              </Link>
+            </div>
             <small>
-              It is review-only. No customer job can be submitted while onboarding mode is active.
+              Customer account signup and provider applications are open. Customer
+              jobs and payments remain server-blocked.
             </small>
           </div>
-        )}
-
-        {legacyHomepageRequestFormEnabled() && (
+        ) : (
         <form
           className="lead-form"
           key={`${vehicleResetVersion}:${repeatBooking?.token ?? "new"}`}
@@ -2317,10 +2326,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">Future expansion</span>
           <h2>Bring Tuveloz to your area.</h2>
           <p>
-            Tuveloz currently operates only in Montgomery County, Maryland.
-            Customers and providers elsewhere in Maryland or Washington, DC can
-            request their area. We&apos;ll use combined demand to choose where to
-            launch next.
+            Tuveloz provider onboarding currently focuses on Montgomery County,
+            Maryland. Customers and providers elsewhere in Maryland or Washington,
+            DC can request their area. We&apos;ll use combined demand to choose where
+            to launch next.
           </p>
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
@@ -2553,7 +2562,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <Link href="/how-it-works">How it works</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
-          <a href="/storefront">Storefront</a>
+          <a href="/payments">Payment policy (not live)</a>
           <Link href={accountHref}>{accountLabel}</Link>
           <a href="/terms">Terms</a>
           <a href="/customer-agreement">Customer agreement</a>

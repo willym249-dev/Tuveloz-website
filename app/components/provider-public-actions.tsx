@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type PublicProvider = {
   providerId: string;
@@ -37,8 +38,39 @@ function priceLabel(item: PublicProvider["catalog"][number]) {
   return amount;
 }
 
-export function ProviderPublicActions() {
-  const pathname = usePathname();
+function ProviderPublicClosedActions() {
+  return (
+    <details style={{
+      position: "fixed",
+      left: "1rem",
+      bottom: "1rem",
+      zIndex: 79,
+      maxWidth: "min(25rem, calc(100vw - 2rem))",
+      maxHeight: "70vh",
+      overflow: "auto",
+      border: "1px solid rgba(255,255,255,.18)",
+      borderRadius: "1rem",
+      background: "rgba(7, 24, 45, .96)",
+      boxShadow: "0 1rem 3rem rgba(0,0,0,.3)",
+      color: "white",
+      padding: ".7rem .85rem",
+    }}>
+      <summary style={{ cursor: "pointer", fontWeight: 800 }}>
+        Requests and appointments are not open yet
+      </summary>
+      <div style={{ display: "grid", gap: ".75rem", marginTop: ".75rem" }}>
+        <p>
+          Provider profiles are available for onboarding and review. Customer jobs,
+          quotes, bookings, appointments, and payments remain closed.
+        </p>
+        <Link className="button primary" href="/account">Create or open an account</Link>
+        <Link className="button secondary" href="/join">Apply as a provider</Link>
+      </div>
+    </details>
+  );
+}
+
+function LiveProviderPublicActions({ pathname }: { pathname: string }) {
   const [provider, setProvider] = useState<PublicProvider | null>(null);
   const slug = pathname.startsWith("/providers/")
     ? decodeURIComponent(pathname.slice("/providers/".length).split("/")[0] ?? "")
@@ -118,4 +150,12 @@ export function ProviderPublicActions() {
       </div>
     </details>
   );
+}
+
+export function ProviderPublicActions() {
+  const pathname = usePathname();
+  if (!pathname.startsWith("/providers/")) return null;
+  return CUSTOMER_JOB_POSTING_PAUSED
+    ? <ProviderPublicClosedActions />
+    : <LiveProviderPublicActions pathname={pathname} />;
 }

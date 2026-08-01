@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type ConnectStatus = {
   accountId: string;
@@ -154,7 +155,7 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
             stores those details.
           </p>
         </div>
-        <Link className="button secondary" href="/storefront">View storefront</Link>
+        <Link className="button secondary" href="/payments">Payment launch status</Link>
       </div>
 
       {loading ? (
@@ -226,7 +227,17 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
                 </div>
               )}
 
-              {connect.status.readyToReceivePayments && (
+              {connect.status.readyToReceivePayments && CUSTOMER_JOB_POSTING_PAUSED && (
+                <div className="stripe-status-card">
+                  <strong>Storefront offerings open after customer launch</strong>
+                  <p>
+                    Your Stripe onboarding can remain ready, but product creation,
+                    customer checkout, and payouts are closed during provider onboarding.
+                  </p>
+                </div>
+              )}
+
+              {connect.status.readyToReceivePayments && !CUSTOMER_JOB_POSTING_PAUSED && (
                 <form className="stripe-product-form" onSubmit={createProduct}>
                   <div>
                     <span className="kicker">Platform product</span>

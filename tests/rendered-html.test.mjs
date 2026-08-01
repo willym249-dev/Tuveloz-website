@@ -100,7 +100,7 @@ test("build contains a simple, protected quote choice and factual private analyt
   assert.ok(contents.includes("Optional feedback shown only as combined totals"));
 });
 
-test("build prefers confirmed vehicle choices and never invents motor data", async () => {
+test("vehicle intake prefers confirmed choices and never invents motor data", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
@@ -110,17 +110,17 @@ test("build prefers confirmed vehicle choices and never invents motor data", asy
     "utf8",
   );
 
-  assert.ok(contents.includes("My make is not listed"));
-  assert.ok(contents.includes("My model is not listed"));
-  assert.ok(contents.includes("Start with the year, make, and model. Use the VIN lookup if needed."));
+  assert.ok(vehicleSelectorSource.includes("My make is not listed"));
+  assert.ok(vehicleSelectorSource.includes("My model is not listed"));
+  assert.ok(vehicleSelectorSource.includes("Start with the year, make, and model. Use the VIN lookup if needed."));
   assert.ok(vehicleSelectorSource.includes('useState<"search" | "vin">("search")'));
   assert.ok(vehicleSelectorSource.includes("Can&apos;t find your vehicle?"));
-  assert.ok(contents.includes("No confirmed motor / engine choice was returned."));
-  assert.ok(contents.includes("Tuveloz does not guess motor or engine details."));
-  assert.ok(contents.includes("customer entered; provider must verify"));
-  assert.ok(contents.includes("Motor/engine not provided"));
-  assert.ok(contents.includes("Choose an official option above or type the engine here"));
-  assert.ok(contents.includes("This typed value overrides the VIN or official choice"));
+  assert.ok(vehicleSelectorSource.includes("No confirmed motor / engine choice was returned."));
+  assert.ok(vehicleSelectorSource.includes("Tuveloz does not guess motor or engine details."));
+  assert.ok(vehicleSelectorSource.includes("customer entered; provider must verify"));
+  assert.ok(vehicleSelectorSource.includes("Motor/engine not provided"));
+  assert.ok(vehicleSelectorSource.includes("Choose an official option above or type the engine here"));
+  assert.ok(vehicleSelectorSource.includes("This typed value overrides the VIN or official choice"));
   assert.ok(contents.includes("Compare parts before you decide"));
   assert.ok(contents.includes("before choosing whether you or the provider should supply the parts"));
   assert.ok(contents.includes("Any special equipment or rental cost must be disclosed in the quote."));
@@ -177,15 +177,15 @@ test("build protects every important submission with a second confirmation", asy
   assert.ok(contents.includes("Go back"));
 });
 
-test("build limits active service to Montgomery County and collects expansion demand", async () => {
+test("build limits provider onboarding to Montgomery County and collects expansion demand", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Local vehicle-service marketplace"));
-  assert.ok(contents.includes("Operating now in Montgomery County, Maryland"));
-  assert.ok(contents.includes("Tuveloz currently operates only in Montgomery County, Maryland."));
+  assert.ok(contents.includes("Provider onboarding now in Montgomery County, Maryland"));
+  assert.ok(contents.includes("Tuveloz provider onboarding currently focuses on Montgomery County, Maryland."));
   assert.ok(contents.includes("Bring Tuveloz to your area."));
   assert.ok(contents.includes("Request my area"));
   assert.ok(contents.includes("Enter a Montgomery County ZIP code"));
@@ -522,7 +522,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   );
 
   assert.ok(customerSource.includes("Customer launch status"));
-  assert.ok(customerSource.includes("New customer requests remain closed during provider onboarding."));
+  assert.ok(customerSource.includes("New customer requests and payments remain closed during provider onboarding."));
   assert.ok(customerSource.includes("My jobs"));
   assert.ok(customerSource.includes("How customer privacy works"));
   assert.ok(customerSource.includes("workspace-tools"));
@@ -700,10 +700,10 @@ test("Stripe storefront and job payments preserve server-calculated marketplace 
     "utf8",
   );
 
-  assert.ok(contents.includes("Connected accounts"));
-  assert.ok(contents.includes("Available offerings"));
+  assert.ok(contents.includes("Customer payments are not open yet."));
+  assert.ok(contents.includes("Appointments are not open yet."));
   assert.ok(contents.includes("Onboard to collect payments"));
-  assert.ok(contents.includes("Create a storefront offering"));
+  assert.ok(contents.includes("Storefront offerings open after customer launch"));
   assert.ok(productsSource.includes("stripeClient.products.create"));
   assert.ok(productsSource.includes("default_price_data"));
   assert.ok(productsSource.includes("tuveloz_connected_account_id"));

@@ -8,10 +8,6 @@ export function JobPostingPauseNotice() {
   return (
     <>
       <style>{`
-        body[data-customer-job-posting-paused="true"] .public-site .request-section {
-          display: none !important;
-        }
-
         .tuveloz-launch-pause {
           position: relative;
           z-index: 90;

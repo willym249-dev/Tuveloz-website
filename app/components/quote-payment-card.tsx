@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type PaymentSummary = {
   id: string;
@@ -75,7 +76,7 @@ function dollars(value: string | number) {
   return `$${(Number(value) / 100).toFixed(2)}`;
 }
 
-export function QuotePaymentCard({
+function ActiveQuotePaymentCard({
   accessToken,
   quote,
 }: QuotePaymentCardProps) {
@@ -295,4 +296,26 @@ export function QuotePaymentCard({
       </small>
     </section>
   );
+}
+
+export function QuotePaymentCard(props: QuotePaymentCardProps) {
+  if (CUSTOMER_JOB_POSTING_PAUSED) {
+    return (
+      <section className="quote-payment-card">
+        <div>
+          <span className="portal-service">Customer payments are closed</span>
+          <h2>No payment is due through Tuveloz.</h2>
+          <p>
+            Checkout, charges, and provider payouts are disabled during provider
+            onboarding. This panel does not contact Stripe or create a payment.
+          </p>
+        </div>
+        <Link className="button secondary" href="/payments">
+          Read the payment launch policy
+        </Link>
+      </section>
+    );
+  }
+
+  return <ActiveQuotePaymentCard {...props} />;
 }

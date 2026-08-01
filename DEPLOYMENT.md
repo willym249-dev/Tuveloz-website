@@ -198,15 +198,23 @@ payout/external-account snapshots. Do not configure any of the three webhook
 destinations until this migration has been applied; the endpoints intentionally
 return an error instead of acknowledging an event they cannot durably record.
 
-## 8. Test and deploy
+## 8. Verify and deploy through GitHub
 
 ```bash
+npm ci
+npm run lint
 npm test
-npm run deploy
+npm run db:migrate:local
 ```
 
-The first command builds the production Worker and checks the key Tuveloz
-features. The second deploys the verified source through Cloudflare.
+Open a pull request into `main` and require the repository verification workflows
+to pass. Merge only the reviewed commit. A push to `main` runs the production
+workflow, applies remote migrations, deploys the Worker, and verifies that the
+exact commit and required schema are live.
+
+Do not use `npm run deploy` for a normal production release. It bypasses the
+GitHub commit stamp, exact-release health verification, and deployment status.
+Keep direct local deployment for a documented emergency procedure only.
 
 Before deployment, complete the full sandbox path: provider onboarding, product
 creation, storefront Checkout, accepted-quote Checkout, signed webhook delivery,
@@ -218,10 +226,11 @@ In Cloudflare, attach the public domain to the deployed Worker. Attach the
 protected admin hostname to the same Worker, then confirm its Access policy is
 active before opening the owner dashboard.
 
-## Optional GitHub Actions deployment
+## Required GitHub Actions deployment
 
-Create `.github/workflows/deploy.yml` only after adding these encrypted GitHub
-repository secrets:
+The repository includes `.github/workflows/verify.yml` and
+`.github/workflows/deploy-cloudflare.yml`. Add these encrypted GitHub repository
+secrets before enabling production deployment:
 
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`

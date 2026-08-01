@@ -427,7 +427,7 @@ export default function AccountPage() {
   }
 
   const workspaceDescription = role === "customer"
-    ? "Use the same email address you entered when posting a job."
+    ? "Create or sign in to your customer account. New job requests and payments are not open yet."
     : "Provider applicants can sign in to complete onboarding. Approved providers can also open their workspace here.";
 
   return (
@@ -447,7 +447,10 @@ export default function AccountPage() {
         <div className="account-welcome">
           <span className="account-kicker">Tuveloz sign in</span>
           <h1>Welcome to Tuveloz.</h1>
-          <p>Access your customer requests, provider application, or approved-provider workspace.</p>
+          <p>
+            Access your customer account or provider application. Customer job
+            tools remain closed during provider onboarding.
+          </p>
         </div>
 
         <section className="account-login-card" aria-busy={checking || busy}>
