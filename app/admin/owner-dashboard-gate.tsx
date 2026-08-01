@@ -44,6 +44,12 @@ const FAILURE_MESSAGES: Record<FailureCategory, string> = {
   temporary: "Owner data could not be loaded right now. No owner action was changed.",
 };
 
+const OWNER_DATA_FAILURE_SELECTOR = [
+  ".admin-intro > .form-error",
+  ".owner-users-section > .form-error",
+  ".owner-settings-section > .form-error",
+].join(",");
+
 function categoryFor(status: number, result: AccessStatus): FailureCategory {
   if (result.category) return result.category;
   if (result.code === "OWNER_SCHEMA_MIGRATION_REQUIRED") return "schema";
@@ -125,9 +131,9 @@ export function OwnerDashboardGate({ children }: { children: ReactNode }) {
     if (state.mode !== "ready") return;
     const detectFailure = () => {
       const failures = Array.from(
-        document.querySelectorAll<HTMLElement>(".admin-intro .form-error"),
+        document.querySelectorAll<HTMLElement>(OWNER_DATA_FAILURE_SELECTOR),
       );
-      setChildFailure(failures.some((item) => item.textContent?.trim()));
+      setChildFailure(failures.some((item) => Boolean(item.textContent?.trim())));
     };
     detectFailure();
     const observer = new MutationObserver(detectFailure);
