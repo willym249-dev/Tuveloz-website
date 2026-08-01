@@ -297,7 +297,7 @@ export default function RepairRecordsPage() {
                   <label>Replaced-parts handling<select defaultValue={text(job.authorization?.replacedPartsChoice || "return")} name="replacedPartsChoice" required>
                     <option value="return">Return replaced parts to customer</option><option value="customer_declined">Customer expressly declined return</option><option value="warranty_return">Part must be returned under warranty</option><option value="not_applicable">No replaced parts</option>
                   </select></label>
-                  <label>Itemized estimate lines (JSON)<textarea defaultValue={job.authorization?.lineItems?.length ? JSON.stringify(job.authorization.lineItems.map(({ id: _id, sortOrder: _sort, ...item }) => item), null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
+                  <label>Itemized estimate lines (JSON)<textarea defaultValue={job.authorization?.lineItems?.length ? JSON.stringify(job.authorization.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
                   <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify the provider information and itemized estimate are accurate. This checkbox is required when presenting the record.</span></label>
                   <div className="repair-record-actions">
                     <button disabled={busy} name="status" type="submit" value="draft">Save draft</button>
@@ -322,7 +322,7 @@ export default function RepairRecordsPage() {
                   <Field label="Mechanic names, initials, or numbers (comma-separated)" name="mechanicIdentifiers" defaultValue={(() => { try { return JSON.parse(text(job.invoice?.mechanicIdentifiers || "[]")).join(", "); } catch { return ""; } })()} />
                   <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.invoice?.providerRepresentativeName)} />
                   <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.invoice?.providerRepresentativeTitle)} />
-                  <label>Itemized final invoice lines (JSON)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems.map(({ id: _id, sortOrder: _sort, ...item }) => item), null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
+                  <label>Itemized final invoice lines (JSON)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
                   <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify the listed work and parts were needed and performed or supplied, and the vehicle was tested or test driven when needed. Required for final invoice.</span></label>
                   <div className="repair-record-actions">
                     <button disabled={busy} name="status" type="submit" value="draft">Save invoice draft</button>
@@ -357,7 +357,7 @@ export default function RepairRecordsPage() {
                       <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-authorization")}>
                         <p>{data.legalNotices.electronicSignatureNotice}</p>
                         <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I reviewed the complete written estimate, Customer's Rights section, notices, itemized scope, parts, charges, and provider identity. I authorize only this exact stored record.</span></label>
+                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I reviewed the complete written estimate, Customer&apos;s Rights section, notices, itemized scope, parts, charges, and provider identity. I authorize only this exact stored record.</span></label>
                         <button disabled={busy} type="submit">Sign and authorize this exact record</button>
                       </form>
                     )}
