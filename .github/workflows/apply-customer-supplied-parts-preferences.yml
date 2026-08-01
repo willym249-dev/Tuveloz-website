@@ -67,6 +67,19 @@ jobs:
           PY
           base64 --decode scripts/apply_labor_only_core.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_core.py
           base64 --decode scripts/apply_labor_only_ui.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_ui.py
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/apply_labor_only_ui.py")
+          text = path.read_text()
+          old_first = "'''          provider business. The accepted quote and messages\n"
+          new_first = "'''provider business. The accepted quote and messages\n"
+          old_second = "'''          provider business. The accepted labor-only quote and messages\n"
+          new_second = "'''provider business. The accepted labor-only quote and messages\n"
+          if text.count(old_first) != 1 or text.count(old_second) != 1:
+              raise SystemExit("Customer Agreement patch markers did not match exactly.")
+          path.write_text(text.replace(old_first, new_first, 1).replace(old_second, new_second, 1))
+          PY
           python -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
           python scripts/apply_labor_only_core.py
           python scripts/apply_labor_only_ui.py
