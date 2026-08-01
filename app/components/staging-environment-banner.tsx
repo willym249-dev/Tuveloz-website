@@ -1,21 +1,16 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { headers } from "next/headers";
 
 function isStagingHostname(hostname: string) {
-  const normalized = hostname.trim().toLowerCase();
+  const normalized = hostname.trim().toLowerCase().split(":")[0];
   return normalized === "staging.tuveloz.com"
     || (normalized.endsWith(".workers.dev") && normalized.includes("tuveloz-staging"));
 }
 
-export function StagingEnvironmentBanner() {
-  const [visible, setVisible] = useState(false);
+export async function StagingEnvironmentBanner() {
+  const requestHeaders = await headers();
+  const hostname = requestHeaders.get("host") ?? "";
 
-  useEffect(() => {
-    setVisible(isStagingHostname(window.location.hostname));
-  }, []);
-
-  if (!visible) return null;
+  if (!isStagingHostname(hostname)) return null;
 
   return (
     <aside
