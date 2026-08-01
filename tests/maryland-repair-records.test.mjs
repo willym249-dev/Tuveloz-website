@@ -83,7 +83,7 @@ test("customer sees the required rights immediately before the repair authorizat
   const page = await read("app/repair-records/page.tsx");
 
   const rights = page.indexOf("repair-customer-rights");
-  const signature = page.indexOf("sign-authorization");
+  const signature = page.indexOf("Sign and authorize this exact record");
   assert.ok(rights >= 0, "Customer's Rights block is missing");
   assert.ok(signature > rights, "Customer signature must follow the Customer's Rights block");
   assert.match(page, /Itemized estimate lines/);
