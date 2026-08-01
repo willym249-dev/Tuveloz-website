@@ -65,13 +65,14 @@ test("payment widgets do not contact Stripe while customer payments are closed",
 });
 
 test("account and private-request surfaces describe launch mode without active-job claims", async () => {
-  const [account, welcome, customer, request, homepage, howItWorks] = await Promise.all([
+  const [account, welcome, customer, request, homepage, howItWorks, providerProfile] = await Promise.all([
     source("app/account/page.tsx"),
     source("app/welcome/page.tsx"),
     source("app/customer/page.tsx"),
     source("app/my-request/page.tsx"),
     source("app/page.tsx"),
     source("app/how-it-works/page.tsx"),
+    source("app/providers/[slug]/page.tsx"),
   ]);
 
   assert.match(account, /New job requests and payments are not open yet/);
@@ -83,6 +84,10 @@ test("account and private-request surfaces describe launch mode without active-j
   assert.match(request, /CUSTOMER_JOB_POSTING_PAUSED && !job\?\.isTestJob/);
   assert.match(request, /No live customer request was opened/);
   assert.doesNotMatch(homepage, /href="\/storefront"/);
+  assert.match(account, /className="button secondary" href="\/join"/);
+  assert.doesNotMatch(account, /href="\/#providers"/);
+  assert.match(providerProfile, /className="button primary" href="\/post-job"/);
+  assert.doesNotMatch(providerProfile, /href="\/#request"/);
   assert.match(howItWorks, /After launch: request an available service/);
   assert.match(howItWorks, /After launch: compare quotes/);
   assert.match(howItWorks, /After launch: choose and track/);

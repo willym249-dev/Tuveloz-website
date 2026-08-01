@@ -185,7 +185,7 @@ export default function ProviderStorefrontPage() {
         <aside className="storefront-action-card">
           <span>Customer jobs remain closed.</span>
           <strong>Provider profiles are available for launch preparation only.</strong>
-          <Link className="button primary" href="/#request">Review the planned request flow →</Link>
+          <Link className="button primary" href="/post-job">Review the planned request flow →</Link>
           <small>No request, quote, payment, or payout can be submitted in onboarding-only mode.</small>
         </aside>
       </section>
