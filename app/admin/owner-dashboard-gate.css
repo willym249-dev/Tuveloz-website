@@ -135,7 +135,9 @@
   margin-top: 0;
 }
 
-.owner-dashboard-gate.has-child-failure .admin-intro > .form-error {
+.owner-dashboard-gate.has-child-failure .admin-intro > .form-error,
+.owner-dashboard-gate.has-child-failure .owner-users-section > .form-error,
+.owner-dashboard-gate.has-child-failure .owner-settings-section > .form-error {
   display: none;
 }
 
