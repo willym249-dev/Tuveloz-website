@@ -73,4 +73,17 @@ test("database migration independently enforces labor-only transactions", async 
   assert.match(migration, /NEW\.`other_fees_cents` <> 0/);
   assert.match(migration, /NEW\.`parts_committed_cents` <> 0/);
   assert.match(migration, /Customer-supplied repair parts may be recorded only at a zero Tuveloz amount/);
+
+  const statements = migration
+    .split("--> statement-breakpoint")
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+  assert.equal(statements.length, 43);
+  for (const statement of statements) {
+    assert.match(statement, /^(ALTER TABLE|DROP TRIGGER|CREATE TRIGGER)/);
+    if (statement.startsWith("CREATE TRIGGER")) {
+      assert.match(statement, /END;$/);
+      assert.equal(statement.match(/CREATE TRIGGER/g)?.length, 1);
+    }
+  }
 });

@@ -1,13 +1,14 @@
 ALTER TABLE `customer_requests`
   ADD `labor_only_parts_acknowledged_at` text NOT NULL DEFAULT '';
-
+--> statement-breakpoint
 ALTER TABLE `provider_quotes`
   ADD `labor_only_parts_confirmed_at` text NOT NULL DEFAULT '';
-
+--> statement-breakpoint
 ALTER TABLE `provider_profiles`
   ADD `customer_supplied_parts_policy` text NOT NULL DEFAULT 'Discuss before accepting';
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `customer_requests_labor_only_parts_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `customer_requests_labor_only_parts_insert`
 BEFORE INSERT ON `customer_requests`
 WHEN trim(NEW.`labor_only_parts_acknowledged_at`) = ''
@@ -26,8 +27,9 @@ OR NEW.`parts_preference` NOT IN (
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz customer requests must use the labor-only parts workflow');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `customer_requests_labor_only_parts_update`;
+--> statement-breakpoint
 CREATE TRIGGER `customer_requests_labor_only_parts_update`
 BEFORE UPDATE OF `parts_source`, `parts_preference`, `labor_only_parts_acknowledged_at` ON `customer_requests`
 WHEN trim(NEW.`labor_only_parts_acknowledged_at`) = ''
@@ -46,8 +48,9 @@ OR NEW.`parts_preference` NOT IN (
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz customer requests must use the labor-only parts workflow');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_quotes_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_quotes_labor_only_insert`
 BEFORE INSERT ON `provider_quotes`
 WHEN trim(NEW.`labor_only_parts_confirmed_at`) = ''
@@ -57,8 +60,9 @@ OR NEW.`part_type` NOT IN ('Customer supplied', 'No parts needed')
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz provider quotes must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_quotes_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_quotes_labor_only_update`
 BEFORE UPDATE OF `price_cents`, `labor_price_cents`, `parts_price_cents`, `part_type`, `labor_only_parts_confirmed_at`
 ON `provider_quotes`
@@ -69,8 +73,9 @@ OR NEW.`part_type` NOT IN ('Customer supplied', 'No parts needed')
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz provider quotes must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_profiles_customer_supplied_parts_policy_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_profiles_customer_supplied_parts_policy_insert`
 BEFORE INSERT ON `provider_profiles`
 WHEN NEW.`customer_supplied_parts_policy` NOT IN (
@@ -82,8 +87,9 @@ WHEN NEW.`customer_supplied_parts_policy` NOT IN (
 BEGIN
   SELECT RAISE(ABORT, 'Choose a listed customer-supplied-parts preference');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_profiles_customer_supplied_parts_policy_update`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_profiles_customer_supplied_parts_policy_update`
 BEFORE UPDATE OF `customer_supplied_parts_policy` ON `provider_profiles`
 WHEN NEW.`customer_supplied_parts_policy` NOT IN (
@@ -95,8 +101,9 @@ WHEN NEW.`customer_supplied_parts_policy` NOT IN (
 BEGIN
   SELECT RAISE(ABORT, 'Choose a listed customer-supplied-parts preference');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_authorizations_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `job_authorizations_labor_only_insert`
 BEFORE INSERT ON `job_authorizations`
 WHEN NEW.`parts_cents` <> 0
@@ -105,8 +112,9 @@ OR NEW.`total_cents` <> NEW.`labor_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz job authorizations must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_authorizations_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `job_authorizations_labor_only_update`
 BEFORE UPDATE OF `labor_cents`, `parts_cents`, `other_fees_cents`, `total_cents`
 ON `job_authorizations`
@@ -116,8 +124,9 @@ OR NEW.`total_cents` <> NEW.`labor_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz job authorizations must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_change_orders_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `job_change_orders_labor_only_insert`
 BEFORE INSERT ON `job_change_orders`
 WHEN CASE
@@ -132,8 +141,9 @@ END
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz change orders must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_change_orders_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `job_change_orders_labor_only_update`
 BEFORE UPDATE OF `price_breakdown` ON `job_change_orders`
 WHEN CASE
@@ -148,8 +158,9 @@ END
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz change orders must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_invoices_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_invoices_labor_only_insert`
 BEFORE INSERT ON `provider_invoices`
 WHEN NEW.`parts_amount_cents` <> 0
@@ -159,8 +170,9 @@ OR NEW.`total_amount_cents` <> NEW.`labor_amount_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz provider invoices must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_invoices_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_invoices_labor_only_update`
 BEFORE UPDATE OF `labor_amount_cents`, `parts_amount_cents`, `tax_amount_cents`, `other_amount_cents`, `total_amount_cents`
 ON `provider_invoices`
@@ -171,24 +183,27 @@ OR NEW.`total_amount_cents` <> NEW.`labor_amount_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz provider invoices must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_cancellations_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `job_cancellations_labor_only_insert`
 BEFORE INSERT ON `job_cancellations`
 WHEN NEW.`parts_committed_cents` <> 0
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz cancellations cannot include a provider parts claim');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `job_cancellations_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `job_cancellations_labor_only_update`
 BEFORE UPDATE OF `parts_committed_cents` ON `job_cancellations`
 WHEN NEW.`parts_committed_cents` <> 0
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz cancellations cannot include a provider parts claim');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `repair_authorizations_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `repair_authorizations_labor_only_insert`
 BEFORE INSERT ON `repair_authorization_records`
 WHEN NEW.`estimate_fee_cents` <> 0
@@ -200,8 +215,9 @@ OR NEW.`total_amount_cents` <> NEW.`labor_amount_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz repair authorizations must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `repair_authorizations_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `repair_authorizations_labor_only_update`
 BEFORE UPDATE OF `estimate_fee_cents`, `surcharge_cents`, `labor_amount_cents`, `parts_amount_cents`, `tax_amount_cents`, `other_amount_cents`, `total_amount_cents`
 ON `repair_authorization_records`
@@ -214,8 +230,9 @@ OR NEW.`total_amount_cents` <> NEW.`labor_amount_cents`
 BEGIN
   SELECT RAISE(ABORT, 'Tuveloz repair authorizations must be labor only');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `repair_authorization_items_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `repair_authorization_items_labor_only_insert`
 BEFORE INSERT ON `repair_authorization_items`
 WHEN NEW.`line_type` NOT IN ('labor', 'part')
@@ -223,8 +240,9 @@ OR (NEW.`line_type` = 'part' AND (NEW.`unit_amount_cents` <> 0 OR NEW.`line_amou
 BEGIN
   SELECT RAISE(ABORT, 'Customer-supplied repair parts may be recorded only at a zero Tuveloz amount');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `repair_authorization_items_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `repair_authorization_items_labor_only_update`
 BEFORE UPDATE OF `line_type`, `unit_amount_cents`, `line_amount_cents` ON `repair_authorization_items`
 WHEN NEW.`line_type` NOT IN ('labor', 'part')
@@ -232,8 +250,9 @@ OR (NEW.`line_type` = 'part' AND (NEW.`unit_amount_cents` <> 0 OR NEW.`line_amou
 BEGIN
   SELECT RAISE(ABORT, 'Customer-supplied repair parts may be recorded only at a zero Tuveloz amount');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_invoice_items_labor_only_insert`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_invoice_items_labor_only_insert`
 BEFORE INSERT ON `provider_invoice_items`
 WHEN NEW.`line_type` NOT IN ('labor', 'part')
@@ -241,8 +260,9 @@ OR (NEW.`line_type` = 'part' AND (NEW.`unit_amount_cents` <> 0 OR NEW.`line_amou
 BEGIN
   SELECT RAISE(ABORT, 'Customer-supplied invoice parts may be recorded only at a zero Tuveloz amount');
 END;
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS `provider_invoice_items_labor_only_update`;
+--> statement-breakpoint
 CREATE TRIGGER `provider_invoice_items_labor_only_update`
 BEFORE UPDATE OF `line_type`, `unit_amount_cents`, `line_amount_cents` ON `provider_invoice_items`
 WHEN NEW.`line_type` NOT IN ('labor', 'part')
@@ -250,3 +270,4 @@ OR (NEW.`line_type` = 'part' AND (NEW.`unit_amount_cents` <> 0 OR NEW.`line_amou
 BEGIN
   SELECT RAISE(ABORT, 'Customer-supplied invoice parts may be recorded only at a zero Tuveloz amount');
 END;
+--> statement-breakpoint
