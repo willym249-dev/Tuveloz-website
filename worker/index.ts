@@ -4,6 +4,7 @@ import handler from "vinext/server/app-router-entry";
 import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
+import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -103,6 +104,19 @@ function stagingAccessDenied(acceptsHtml: boolean) {
 }
 
 const worker = {
+  async scheduled(
+    _controller: ScheduledController,
+    _env: Env,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    ctx.waitUntil((async () => {
+      await processDueComplianceReminders();
+      await flushPendingEmailNotifications(20);
+    })().catch((error) => {
+      console.error("Unable to run TUVELOZ scheduled compliance delivery", error);
+    }));
+  },
+
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html") === true;

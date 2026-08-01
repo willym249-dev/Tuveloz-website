@@ -34,6 +34,8 @@ type CustomerPayment = {
   paidAt: string;
   refundAmountCents: number;
   refundedAt: string;
+  refundStatus: string;
+  refundUpdatedAt: string;
   disputeStatus: string;
   createdAt: string;
 };
@@ -150,6 +152,11 @@ function paymentStatusLabel(status: string) {
     paid_and_transferred: "Paid",
     refunded: "Refunded",
     partially_refunded: "Partially refunded",
+    refund_pending: "Refund pending",
+    refund_requires_action: "Refund needs action",
+    refund_failed_review: "Refund failed — under review",
+    refund_canceled_review: "Refund canceled — under review",
+    refund_status_review: "Refund under review",
     disputed: "Dispute open",
     dispute_won_review: "Dispute resolved",
     dispute_lost: "Dispute closed",
@@ -334,6 +341,14 @@ export default function CustomerPage() {
                               <small>
                                 Refund recorded: {formatMoney(payment.refundAmountCents, payment.currency)}
                                 {payment.refundedAt ? ` · ${shortDate(payment.refundedAt)}` : ""}
+                              </small>
+                            )}
+                            {payment.refundStatus && (
+                              <small>
+                                Refund status: {payment.refundStatus.replaceAll("_", " ")}
+                                {payment.refundUpdatedAt
+                                  ? ` · ${shortDate(payment.refundUpdatedAt)}`
+                                  : ""}
                               </small>
                             )}
                             {payment.disputeStatus && (

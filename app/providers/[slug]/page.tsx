@@ -159,7 +159,7 @@ export default function ProviderStorefrontPage() {
             <div className="storefront-eyebrow">
               {data.testProvider
                 ? <span className="test-badge">TEST PROFILE</span>
-                : <span className="verified-badge">✓ Eligibility reviewed</span>}
+                : <span className="verified-badge">✓ Listed-service records reviewed</span>}
               <span className="provider-mode-badge">
                 {providerModeForWorkLocations(workLocations)}
               </span>
@@ -171,16 +171,21 @@ export default function ProviderStorefrontPage() {
             <p>{profile.headline}</p>
             <div className="storefront-quick-facts">
               <span>{businessMunicipality}</span>
-              <span>{services.length} approved {services.length === 1 ? "service" : "services"}</span>
+              <span>{services.length} profile-listed {services.length === 1 ? "service" : "services"}</span>
               <span>{reviews.length ? `${average} ★ from ${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "New on Tuveloz"}</span>
             </div>
+            <small>
+              Business name, logo, headline, availability, experience, hours, service areas,
+              description, and gallery content are supplied by the provider unless specifically
+              labeled as a Tuveloz platform record.
+            </small>
           </div>
         </div>
         <aside className="storefront-action-card">
-          <span>Need vehicle help?</span>
-          <strong>Post one request and compare clear quotes.</strong>
-          <Link className="button primary" href="/#request">Request a quote →</Link>
-          <small>Contact details stay private until you select a quote.</small>
+          <span>Customer jobs remain closed.</span>
+          <strong>Provider profiles are available for launch preparation only.</strong>
+          <Link className="button primary" href="/#request">Review the planned request flow →</Link>
+          <small>No request, quote, payment, or payout can be submitted in onboarding-only mode.</small>
         </aside>
       </section>
 
@@ -188,26 +193,31 @@ export default function ProviderStorefrontPage() {
         <div className="storefront-confidence-heading">
           <div>
             <span className="kicker">Customer confidence</span>
-            <h2 id="customer-confidence-heading">Checked, specific information</h2>
+            <h2 id="customer-confidence-heading">Specific records, with clear limits</h2>
           </div>
-          <p>Tuveloz shows the exact review performed and actual completed-job activity.</p>
+          <p>
+            Tuveloz separates provider-supplied claims from dated platform records and
+            government-source checks when those records are available.
+          </p>
         </div>
         <div className="storefront-confidence-grid">
           <article>
             <TuvelozIcon name="overview" />
             <div>
-              <span>Government credential review</span>
+              <span>Government credential records</span>
               <strong>
                 {data.testProvider
                   ? "Test profile"
                   : data.credentialReview.noGovernmentCredentialTriggered
-                    ? "Not legally triggered"
-                    : `${data.credentialReview.credentials.length} current ${data.credentialReview.credentials.length === 1 ? "check" : "checks"}`}
+                    ? "No credential record displayed for this scope"
+                    : `${data.credentialReview.credentials.length} dated ${data.credentialReview.credentials.length === 1 ? "record" : "records"}`}
               </strong>
               <small>
-                {data.credentialReview.noGovernmentCredentialTriggered
-                  ? "The approved services and launch jurisdiction do not trigger a government credential."
-                  : "See the exact issuing authority and official source below."}
+                {data.testProvider
+                  ? "Fictional data for testing only."
+                  : data.credentialReview.noGovernmentCredentialTriggered
+                    ? "For only the listed services, work locations, and launch jurisdiction, Tuveloz's current rules matrix did not identify a government credential record to display. This is not a legal determination, and no check date is published for this result; confirm current requirements with the responsible government authority before work."
+                    : "See each issuing authority, Tuveloz check date, recorded expiration, and official lookup below."}
               </small>
             </div>
           </article>
@@ -216,13 +226,13 @@ export default function ProviderStorefrontPage() {
             <div>
               <span>Completed Tuveloz jobs</span>
               <strong>{data.confidence.completedJobs.toLocaleString()}</strong>
-              <small>Jobs finished through Tuveloz.</small>
+              <small>Completed-job records in Tuveloz; not a quality or safety guarantee.</small>
             </div>
           </article>
           <article>
             <TuvelozIcon name="reviews" />
             <div>
-              <span>Verified reviews</span>
+              <span>Reviews linked to completed Tuveloz jobs</span>
               <strong>{reviews.length ? average.toFixed(1) : "—"}</strong>
               <small>
                 {reviews.length
@@ -241,7 +251,9 @@ export default function ProviderStorefrontPage() {
           </article>
         </div>
         <p className="storefront-confidence-note">
-          Tuveloz does not estimate missing history. If information is unavailable, we say so.
+          Tuveloz does not estimate missing history. Records and evidence can become incomplete
+          or outdated and do not guarantee identity, licensing, insurance, skill, quality, safety,
+          lawful conduct, or future performance. Recheck official sources and use your own judgment.
         </p>
       </section>
 
@@ -250,11 +262,13 @@ export default function ProviderStorefrontPage() {
           <div className="storefront-section-heading">
             <div>
               <span className="kicker">Official sources</span>
-              <h2 id="credential-checks-heading">Government credentials checked</h2>
+              <h2 id="credential-checks-heading">Dated government-credential records</h2>
             </div>
             <p>
-              These are the specific current credentials required by the provider&apos;s approved
-              services and launch jurisdiction. Tuveloz does not use a blanket licensed-provider claim.
+              Each record is limited to the listed service, work mode, and jurisdiction. Tuveloz
+              checked the shown source on the displayed date; the provider and issuing authority
+              control current status. These records are not a blanket licensed-provider claim or a
+              guarantee of competence, quality, safety, insurance, or legal compliance.
             </p>
           </div>
           <div className="storefront-confidence-grid">
@@ -265,11 +279,12 @@ export default function ProviderStorefrontPage() {
                   <span>{credential.jurisdiction}</span>
                   <strong>{credential.label}</strong>
                   <small>
-                    Checked {new Date(credential.checkedAt).toLocaleDateString()} through{" "}
-                    {credential.issuingAuthority}.
+                    Tuveloz checked the {credential.issuingAuthority} source on{" "}
+                    {new Date(credential.checkedAt).toLocaleDateString()}.
                     {credential.expiresAt
-                      ? ` Current through ${new Date(`${credential.expiresAt}T00:00:00Z`).toLocaleDateString()}.`
-                      : ""}
+                      ? ` Recorded expiration: ${new Date(`${credential.expiresAt}T00:00:00Z`).toLocaleDateString()}.`
+                      : " No expiration date is displayed."}
+                    {" "}Status can change after the check; recheck the official lookup before work.
                   </small>
                   <span className="admin-link-actions">
                     <a href={credential.legalBasisUrl} target="_blank" rel="noreferrer">
@@ -295,8 +310,8 @@ export default function ProviderStorefrontPage() {
 
       <section className="storefront-section storefront-overview" id="overview">
         <div>
-          <span className="kicker">Overview</span>
-          <h2>About this provider</h2>
+          <span className="kicker">Provider-supplied profile</span>
+          <h2>About this provider, in their own words</h2>
           <p className="storefront-about">{profile.about}</p>
         </div>
         <dl className="storefront-facts">
@@ -314,15 +329,19 @@ export default function ProviderStorefrontPage() {
 
       <section className="storefront-section" id="services">
         <div className="storefront-section-heading">
-          <div><span className="kicker">Services</span><h2>Approved work</h2></div>
-          <p>These are the services Tuveloz has approved this provider to quote.</p>
+          <div><span className="kicker">Exact service scope</span><h2>Profile-listed services</h2></div>
+          <p>
+            These exact services are recorded on this profile for possible quote eligibility after
+            marketplace launch. A listing is not a guarantee of licensing, insurance, skill,
+            quality, safety, or lawful performance; review the dated records and official sources above.
+          </p>
         </div>
         <div className="storefront-service-grid">
           {services.map((service) => (
             <article key={service}>
               <TuvelozIcon name={serviceIcon(service)} />
               <strong>{service}</strong>
-              <span>Available for customer requests</span>
+              <span>Listed for launch review; customer requests are closed</span>
             </article>
           ))}
         </div>
@@ -335,7 +354,10 @@ export default function ProviderStorefrontPage() {
       <section className="storefront-section" id="work-gallery">
         <div className="storefront-section-heading">
           <div><span className="kicker">Work Gallery</span><h2>See the work</h2></div>
-          <p>Photos are selected and described by the provider.</p>
+          <p>
+            Photos and descriptions are supplied by the provider. Tuveloz has not independently
+            confirmed that they show this provider&apos;s work, results, or workmanship.
+          </p>
         </div>
         {gallery.length ? (
           <div className="storefront-gallery">
@@ -365,11 +387,11 @@ export default function ProviderStorefrontPage() {
 
       <section className="storefront-section" id="reviews">
         <div className="storefront-section-heading">
-          <div><span className="kicker">Reviews</span><h2>Completed-job feedback</h2></div>
+          <div><span className="kicker">Customer feedback</span><h2>Reviews linked to a completed Tuveloz job</h2></div>
           <div className="storefront-rating">
             <strong>{reviews.length ? average.toFixed(1) : "—"}</strong>
             <span>{reviews.length ? "★★★★★".slice(0, Math.round(average)) : "No reviews yet"}</span>
-            <small>{reviews.length} verified {reviews.length === 1 ? "review" : "reviews"}</small>
+            <small>{reviews.length} job-linked {reviews.length === 1 ? "review" : "reviews"}</small>
           </div>
         </div>
         {reviews.length ? (
@@ -392,11 +414,18 @@ export default function ProviderStorefrontPage() {
             <span>Only feedback from completed Tuveloz jobs appears here.</span>
           </div>
         )}
+        <p className="storefront-confidence-note">
+          A completed-job link confirms a Tuveloz job record. It does not verify every statement
+          in a review or guarantee repair quality, safety, or future performance.
+        </p>
       </section>
 
       <footer className="storefront-footer">
         <Link className="brand footer-brand" href="/"><BrandMark />Tuveloz</Link>
-        <p>Provider pages show approved services, provider-selected work photos, and verified completed-job reviews.</p>
+        <p>
+          Provider pages distinguish provider-supplied claims, profile-listed service scope,
+          dated credential records when available, and reviews linked to completed Tuveloz jobs.
+        </p>
       </footer>
     </main>
   );

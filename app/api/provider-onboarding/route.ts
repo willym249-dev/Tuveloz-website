@@ -16,6 +16,10 @@ import {
 } from "../../../lib/account-auth";
 import { recordProviderAuditEvent } from "../../../lib/provider-audit";
 import {
+  notifyProviderAppealReceived,
+  notifyProviderPrivacyRequestReceived,
+} from "../../../lib/provider-compliance-notifications";
+import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAcceptanceDocumentIsReleasedForEligibility,
   providerAgreementEvidenceText,
@@ -582,6 +586,10 @@ export async function POST(request: Request) {
         reasonCodes: [evidence.status],
         metadata: { evidenceId: evidence.id, reviewDecisionId: evidence.reviewDecisionId },
       });
+      await notifyProviderAppealReceived({
+        appealId,
+        email: account.provider.email,
+      });
       return Response.json({
         ok: true,
         message: "Appeal submitted. It will be reviewed by someone other than the original reviewer where practical; the service remains blocked meanwhile.",
@@ -646,6 +654,10 @@ export async function POST(request: Request) {
         outcome: "submitted",
         reasonCodes: [requestType],
         metadata: { scope: "provider_account_and_restricted_documents" },
+      });
+      await notifyProviderPrivacyRequestReceived({
+        requestId: rightsRequestId,
+        email: account.provider.email,
       });
       return Response.json({
         ok: true,

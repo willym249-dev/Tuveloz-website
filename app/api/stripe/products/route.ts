@@ -14,6 +14,7 @@ import {
 } from "../../../../lib/launch-status";
 import { runtimeMarketplaceActionAllowed } from "../../../../lib/runtime-marketplace-action";
 import { runtimeRealMarketplaceReleaseDecision } from "../../../../lib/runtime-launch-readiness";
+import { connectedAccountPayoutSafety } from "../../../../lib/stripe-connected-account-snapshots";
 
 function marketplacePausedResponse(action: MarketplaceAction) {
   return Response.json(
@@ -84,6 +85,9 @@ export async function GET() {
           stripeClient,
           provider.stripeAccountId!,
         ),
+        payoutSafety: await connectedAccountPayoutSafety(
+          provider.stripeAccountId!,
+        ),
       })),
     );
     const accounts = accountResults.map((result, index) => {
@@ -101,7 +105,8 @@ export async function GET() {
         providerId: provider.id,
         providerName: provider.name,
         accountReference: result.value.status.accountId.slice(-8),
-        readyToReceivePayments: result.value.status.readyToReceivePayments,
+        readyToReceivePayments: result.value.status.readyToReceivePayments
+          && result.value.payoutSafety.allowed,
         transferStatus: result.value.status.transferStatus,
       };
     });
@@ -221,6 +226,16 @@ export async function POST(request: Request) {
         { error: "Stripe onboarding is not complete enough to receive transfers yet." },
         { status: 409 },
       );
+    }
+    const payoutSafety = await connectedAccountPayoutSafety(
+      provider.stripeAccountId,
+    );
+    if (!payoutSafety.allowed) {
+      return Response.json({
+        error: payoutSafety.reasons[0],
+        code: "STRIPE_CONNECTED_ACCOUNT_PAYOUT_HOLD",
+        reasons: payoutSafety.reasons,
+      }, { status: 409, headers: { "cache-control": "no-store" } });
     }
 
     // No connected-account request option is passed here: the product and its

@@ -24,8 +24,18 @@ type AdminPayment = {
   releasedBy: string;
   refundAmountCents: number;
   refundedAt: string;
+  refundStatus: string;
+  refundUpdatedAt: string;
+  refundFailureReason: string;
   disputeStatus: string;
   disputeUpdatedAt: string;
+  connectedAccountSnapshotId: string | null;
+  payoutFailureHold: number | null;
+  payoutHoldReason: string | null;
+  externalAccountHold: number | null;
+  externalAccountHoldReason: string | null;
+  lastPayoutStatus: string | null;
+  lastExternalAccountStatus: string | null;
   createdAt: string;
 };
 
@@ -185,10 +195,41 @@ export function StripePaymentAdmin() {
                   {payment.refundedAt ? ` · ${payment.refundedAt}` : ""}
                 </p>
               )}
+              {payment.refundStatus && (
+                <p>
+                  Refund status: {payment.refundStatus.replaceAll("_", " ")}
+                  {payment.refundUpdatedAt ? ` · ${payment.refundUpdatedAt}` : ""}
+                  {payment.refundFailureReason
+                    ? ` · review reason: ${payment.refundFailureReason.replaceAll("_", " ")}`
+                    : ""}
+                </p>
+              )}
               {payment.disputeStatus && (
                 <p>
                   Dispute: {payment.disputeStatus.replaceAll("_", " ")}
                   {payment.disputeUpdatedAt ? ` · ${payment.disputeUpdatedAt}` : ""}
+                </p>
+              )}
+              {!payment.connectedAccountSnapshotId ? (
+                <p className="form-error">
+                  Provider payout hold: no signed Stripe payout-account snapshot.
+                </p>
+              ) : payment.payoutFailureHold || payment.externalAccountHold ? (
+                <p className="form-error">
+                  Provider payout hold: {[
+                    payment.payoutFailureHold ? payment.payoutHoldReason : "",
+                    payment.externalAccountHold ? payment.externalAccountHoldReason : "",
+                  ].filter(Boolean).join(" · ")}
+                </p>
+              ) : (
+                <p>
+                  Stripe payout account: clear
+                  {payment.lastPayoutStatus
+                    ? ` · last payout ${payment.lastPayoutStatus.replaceAll("_", " ")}`
+                    : ""}
+                  {payment.lastExternalAccountStatus
+                    ? ` · external account ${payment.lastExternalAccountStatus.replaceAll("_", " ")}`
+                    : ""}
                 </p>
               )}
 

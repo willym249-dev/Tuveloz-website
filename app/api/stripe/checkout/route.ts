@@ -2,10 +2,12 @@ import { and, desc, eq, exists } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../../../../db";
 import {
+  customerAgreementAcceptances,
   customerRequests,
   jobAuthorizationSnapshots,
   jobScopeVersions,
   providerApplications,
+  providerEvidenceSubmissions,
   providerQuotes,
   stripePayments,
 } from "../../../../db/schema";
@@ -14,6 +16,21 @@ import {
   isSameOriginRequest,
 } from "../../../../lib/account-auth";
 import { customerPriceFor } from "../../../../lib/customer-fee";
+import {
+  CUSTOMER_CHECKOUT_AGREEMENT_KEY,
+  CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+  CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
+  customerCheckoutAcceptanceText,
+  customerCheckoutAgreementEvidenceText,
+  customerCheckoutAgreementHash,
+  customerCheckoutScopeSnapshot,
+  type CustomerCheckoutAcceptanceScope,
+} from "../../../../lib/customer-checkout-acceptance";
+import {
+  customerAcceptanceDeviceContext,
+  requestIpAddress,
+} from "../../../../lib/customer-job-scope";
+import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../../lib/customer-policy-acceptance";
 import {
   getStripeClient,
   retrieveRecipientAccountStatus,
@@ -41,6 +58,11 @@ import {
   type StageEligibilityInput,
 } from "../../../../lib/provider-eligibility-engine";
 import { jobScopeFactsFromScopeDetails } from "../../../../lib/job-scope-facts";
+import { connectedAccountPayoutSafety } from "../../../../lib/stripe-connected-account-snapshots";
+import { verifiedProviderLegalIdentity } from "../../../../lib/provider-legal-identity";
+
+const PRIVATE_NO_STORE_HEADERS = { "cache-control": "private, no-store" };
+const REQUEST_ACCESS_TOKEN_HEADER = "x-tuveloz-request-token";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -51,7 +73,7 @@ function marketplacePausedResponse() {
     },
     {
       status: 503,
-      headers: { "cache-control": "no-store", "retry-after": "86400" },
+      headers: { ...PRIVATE_NO_STORE_HEADERS, "retry-after": "86400" },
     },
   );
 }
@@ -66,6 +88,11 @@ const PAID_PAYMENT_STATUSES = [
 const REVIEW_PAYMENT_STATUSES = [
   "refunded",
   "partially_refunded",
+  "refund_pending",
+  "refund_requires_action",
+  "refund_failed_review",
+  "refund_canceled_review",
+  "refund_status_review",
   "disputed",
   "dispute_won_review",
   "dispute_lost",
@@ -116,6 +143,22 @@ function authorizedScopePrice(value: string): AuthorizedScopePrice | null {
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+async function constantTimeTokenMatch(provided: string, expected: string) {
+  if (!provided || !expected) return false;
+  const encoder = new TextEncoder();
+  const [providedHash, expectedHash] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(provided)),
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+  ]);
+  const left = new Uint8Array(providedHash);
+  const right = new Uint8Array(expectedHash);
+  let difference = left.length ^ right.length;
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    difference |= (left[index] ?? 0) ^ (right[index] ?? 0);
+  }
+  return difference === 0;
 }
 
 function validEmail(value: string) {
@@ -205,42 +248,198 @@ async function latestQuotePayment(quoteId: string) {
   return payment;
 }
 
+type AcceptedQuoteSelection = NonNullable<
+  Awaited<ReturnType<typeof acceptedQuoteForCustomer>>
+>;
+
+type CheckoutScopeRecord = {
+  version: number;
+  serviceCodes: string;
+  scheduledFor: string;
+  priceBreakdown: string;
+  authorizationDecisionId: string;
+};
+
+async function checkoutAcceptanceScopeFor(
+  selection: AcceptedQuoteSelection,
+  scopeRecord: CheckoutScopeRecord,
+): Promise<CustomerCheckoutAcceptanceScope | null> {
+  const price = authorizedScopePrice(scopeRecord.priceBreakdown);
+  const serviceCodes = parseExactServiceCodes(scopeRecord.serviceCodes);
+  const performingPersonId = selection.assignedPersonId
+    || selection.performingPersonId;
+  const supervisorPersonId = selection.assignedSupervisorPersonId
+    || selection.supervisorPersonId;
+  const scheduledTime = Date.parse(scopeRecord.scheduledFor);
+  if (
+    !price
+    || serviceCodes.length === 0
+    || !scopeRecord.authorizationDecisionId
+    || !scopeRecord.scheduledFor
+    || !Number.isFinite(scheduledTime)
+    || !performingPersonId
+  ) return null;
+  const evidenceRows = await getDb().select().from(providerEvidenceSubmissions)
+    .where(and(
+      eq(providerEvidenceSubmissions.providerId, selection.providerApplicationId),
+      eq(providerEvidenceSubmissions.status, "accepted"),
+    ));
+  const legalIdentity = verifiedProviderLegalIdentity(
+    evidenceRows,
+    selection.providerApplicationId,
+    new Date(scheduledTime),
+  );
+  if (!legalIdentity) return null;
+  return {
+    requestId: selection.requestId,
+    quoteId: selection.quoteId,
+    scopeVersion: scopeRecord.version,
+    scopeAuthorizationDecisionId: scopeRecord.authorizationDecisionId,
+    providerApplicationId: selection.providerApplicationId,
+    providerLegalName: legalIdentity.legalBusinessName,
+    providerLegalIdentitySourceEvidenceId: legalIdentity.sourceEvidenceId,
+    providerLegalIdentityReviewDecisionId: legalIdentity.reviewDecisionId,
+    providerLegalIdentityVerifiedAt: legalIdentity.verifiedAt,
+    performingPersonId,
+    supervisorPersonId: supervisorPersonId || "none",
+    serviceCodes,
+    scheduledFor: scopeRecord.scheduledFor,
+    laborAmountCents: price.laborAmountCents,
+    partsAmountCents: price.partsAmountCents,
+    taxAmountCents: price.taxAmountCents,
+    otherAmountCents: price.otherAmountCents,
+    providerAmountCents: price.totalAmountCents,
+    customerFeeRateBps: price.customerFeeRateBps,
+    customerFeeCents: price.customerFeeCents,
+    customerTotalCents: price.customerTotalCents,
+  };
+}
+
+async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection) {
+  const [scopeRecord] = await getDb().select({
+    version: jobScopeVersions.version,
+    serviceCodes: jobScopeVersions.serviceCodes,
+    scheduledFor: jobScopeVersions.scheduledFor,
+    priceBreakdown: jobScopeVersions.priceBreakdown,
+    authorizationDecisionId: jobScopeVersions.authorizationDecisionId,
+  }).from(jobScopeVersions).where(and(
+    eq(jobScopeVersions.requestId, selection.requestId),
+    eq(jobScopeVersions.quoteId, selection.quoteId),
+  )).orderBy(desc(jobScopeVersions.version)).limit(1);
+  const scope = scopeRecord
+    ? await checkoutAcceptanceScopeFor(selection, scopeRecord)
+    : null;
+  if (!scope) return null;
+  return {
+    agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
+    agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+    agreementHash: await customerCheckoutAgreementHash(scope),
+    presentedText: customerCheckoutAcceptanceText(scope),
+    cancellationRefundSummary: CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
+    scope,
+  };
+}
+
 export async function GET(request: Request) {
   // Payment records and Stripe sessions are real financial objects. Test jobs
   // intentionally never create either. Keep authenticated/token-bound status
   // inspection available if launch readiness is later revoked so prior money
   // can still be reconciled; only payment-creating POST actions are gated.
   const searchParams = new URL(request.url).searchParams;
-  const sessionId = searchParams.get("sessionId") ?? "";
+  const sessionId = clean(searchParams.get("sessionId"), 255);
   if (sessionId) {
     const [payment] = await getDb().select().from(stripePayments)
       .where(eq(stripePayments.checkoutSessionId, sessionId))
       .limit(1);
     if (!payment) {
-      return Response.json({ error: "Payment session not found." }, { status: 404 });
+      return Response.json(
+        { error: "Payment session not found." },
+        { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+      );
     }
-    return Response.json({ payment: publicPaymentSummary(payment) });
+    const [customerRequest] = await getDb().select({
+      customerEmail: customerRequests.email,
+      accessToken: customerRequests.accessToken,
+    }).from(customerRequests)
+      .where(eq(customerRequests.id, payment.requestId))
+      .limit(1);
+    const accountSession = await getAccountSession(request);
+    const durableCustomerBindingMatches = payment.paymentType === "product"
+      ? !payment.requestId
+      : customerRequest?.customerEmail.toLowerCase()
+        === payment.customerEmail.toLowerCase();
+    const signedInCustomerMatches = accountSession?.role === "customer"
+      && accountSession.email.toLowerCase() === payment.customerEmail.toLowerCase()
+      && durableCustomerBindingMatches;
+    const privateRequestToken = clean(
+      request.headers.get(REQUEST_ACCESS_TOKEN_HEADER),
+      240,
+    );
+    const privateTokenMatches = payment.paymentType === "quote"
+      && customerRequest
+      && customerRequest.customerEmail.toLowerCase()
+        === payment.customerEmail.toLowerCase()
+      ? await constantTimeTokenMatch(privateRequestToken, customerRequest.accessToken)
+      : false;
+    if (!signedInCustomerMatches && !privateTokenMatches) {
+      // Do not reveal whether a supplied Stripe Session ID exists.
+      return Response.json(
+        { error: "Payment session not found." },
+        { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+      );
+    }
+    return Response.json(
+      { payment: publicPaymentSummary(payment) },
+      { headers: PRIVATE_NO_STORE_HEADERS },
+    );
   }
 
-  const quoteId = searchParams.get("quoteId") ?? "";
-  const token = searchParams.get("token") ?? "";
+  if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+    return marketplacePausedResponse();
+  }
+
+  const quoteId = clean(searchParams.get("quoteId"), 120);
+  const token = clean(request.headers.get(REQUEST_ACCESS_TOKEN_HEADER), 240);
   const selection = await acceptedQuoteForCustomer(request, quoteId, token);
   if (!selection) {
-    return Response.json({ error: "Accepted quote not found for this customer." }, { status: 404 });
+    return Response.json(
+      { error: "Accepted quote not found for this customer." },
+      { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+    );
   }
   if (selection.isTestJob === "yes") {
     return Response.json({
       checkoutAllowed: false,
       reason: "Test jobs never create real or sandbox payments.",
       payment: null,
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
+  }
+  if (!customerAcceptanceBundleIsReleasedForPurpose("checkout")) {
+    return Response.json({
+      checkoutAllowed: false,
+      reason: "Checkout remains closed until the customer and payment policies have an active, effective, hash-verified release.",
+      code: "CUSTOMER_POLICY_RELEASE_REQUIRED",
+      checkoutAcceptance: null,
+      payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
+  }
+  const checkoutAcceptance = await currentCheckoutAcceptance(selection);
+  if (!checkoutAcceptance) {
+    return Response.json({
+      checkoutAllowed: false,
+      reason: "The exact owner-reviewed provider legal identity, scope, schedule, performer, price, and payment authorization record is incomplete.",
+      code: "CHECKOUT_ACCEPTANCE_SCOPE_REQUIRED",
+      checkoutAcceptance: null,
+      payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
   if (!selection.connectedAccountId) {
     return Response.json({
       checkoutAllowed: false,
       reason: "The selected provider is still setting up Stripe payouts.",
+      checkoutAcceptance,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
 
   try {
@@ -249,15 +448,23 @@ export async function GET(request: Request) {
       stripeClient,
       selection.connectedAccountId,
     );
+    const payoutSafety = await connectedAccountPayoutSafety(
+      selection.connectedAccountId,
+    );
+    const checkoutAllowed = accountStatus.readyToReceivePayments
+      && payoutSafety.allowed;
     return Response.json({
-      checkoutAllowed: accountStatus.readyToReceivePayments,
-      reason: accountStatus.readyToReceivePayments
-        ? ""
-        : "The selected provider must finish Stripe onboarding before checkout.",
+      checkoutAllowed,
+      reason: !accountStatus.readyToReceivePayments
+        ? "The selected provider must finish Stripe onboarding before checkout."
+        : payoutSafety.reasons[0] ?? "",
+      checkoutAcceptance,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   } catch (error) {
-    return stripeErrorResponse(error, "Unable to check payment readiness.");
+    const response = stripeErrorResponse(error, "Unable to check payment readiness.");
+    response.headers.set("cache-control", PRIVATE_NO_STORE_HEADERS["cache-control"]);
+    return response;
   }
 }
 
@@ -268,6 +475,13 @@ export async function POST(request: Request) {
   if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
     return marketplacePausedResponse();
   }
+  if (!customerAcceptanceBundleIsReleasedForPurpose("checkout")) {
+    return Response.json({
+      error: "Checkout remains closed until every required customer and payment policy has an active, effective, hash-verified release.",
+      code: "CUSTOMER_POLICY_RELEASE_REQUIRED",
+      checkoutAllowed: false,
+    }, { status: 503, headers: { "cache-control": "no-store" } });
+  }
 
   const body = (await request.json()) as {
     productId?: unknown;
@@ -276,6 +490,9 @@ export async function POST(request: Request) {
     customerEmail?: unknown;
     quantity?: unknown;
     policyAccepted?: unknown;
+    checkoutAgreementKey?: unknown;
+    checkoutAgreementVersion?: unknown;
+    checkoutAgreementHash?: unknown;
   };
   const productId = clean(body.productId, 120);
   const quoteId = clean(body.quoteId, 120);
@@ -324,6 +541,8 @@ export async function POST(request: Request) {
     let customerTotalCents: number;
     let settlementStrategy: "destination_charge" | "separate_transfer";
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+    let checkoutAcceptanceScope: CustomerCheckoutAcceptanceScope | null = null;
+    let checkoutAcceptedByName = "";
 
     if (productId) {
       paymentType = "product";
@@ -374,6 +593,16 @@ export async function POST(request: Request) {
           { error: "This provider is not ready to receive Stripe payments." },
           { status: 409 },
         );
+      }
+      const payoutSafety = await connectedAccountPayoutSafety(
+        provider.stripeAccountId,
+      );
+      if (!payoutSafety.allowed) {
+        return Response.json({
+          error: payoutSafety.reasons[0],
+          code: "STRIPE_CONNECTED_ACCOUNT_PAYOUT_HOLD",
+          reasons: payoutSafety.reasons,
+        }, { status: 409, headers: { "cache-control": "no-store" } });
       }
 
       finalProductId = product.id;
@@ -515,6 +744,28 @@ export async function POST(request: Request) {
           code: "CHECKOUT_SCOPE_SNAPSHOT_MISMATCH",
         }, { status: 409, headers: { "cache-control": "no-store" } });
       }
+      checkoutAcceptanceScope = await checkoutAcceptanceScopeFor(selection, latestScope);
+      if (!checkoutAcceptanceScope) {
+        return Response.json({
+          error: "The exact checkout acceptance record, including an owner-reviewed provider legal identity, could not be generated from the current authorized scope.",
+          code: "CHECKOUT_ACCEPTANCE_SCOPE_REQUIRED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      const expectedCheckoutAgreementHash = await customerCheckoutAgreementHash(
+        checkoutAcceptanceScope,
+      );
+      if (
+        clean(body.checkoutAgreementKey, 100) !== CUSTOMER_CHECKOUT_AGREEMENT_KEY
+        || clean(body.checkoutAgreementVersion, 300) !== CUSTOMER_CHECKOUT_AGREEMENT_VERSION
+        || clean(body.checkoutAgreementHash, 64).toLowerCase()
+          !== expectedCheckoutAgreementHash
+      ) {
+        return Response.json({
+          error: "The provider, scope, price, refund terms, or customer policies changed. Review the exact checkout authorization again.",
+          code: "CHECKOUT_ACCEPTANCE_REFRESH_REQUIRED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      checkoutAcceptedByName = selection.customerName;
       const operationalHolds = await activeJobOperationHoldReasons(selection.requestId);
       if (operationalHolds.length) {
         return Response.json({
@@ -565,6 +816,16 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      const payoutSafety = await connectedAccountPayoutSafety(
+        selection.connectedAccountId,
+      );
+      if (!payoutSafety.allowed) {
+        return Response.json({
+          error: payoutSafety.reasons[0],
+          code: "STRIPE_CONNECTED_ACCOUNT_PAYOUT_HOLD",
+          reasons: payoutSafety.reasons,
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
 
       requestId = selection.requestId;
       finalQuoteId = selection.quoteId;
@@ -603,6 +864,64 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ];
+
+      const checkoutAgreementText = customerCheckoutAgreementEvidenceText(
+        checkoutAcceptanceScope,
+      );
+      const checkoutAgreementHash = await customerCheckoutAgreementHash(
+        checkoutAcceptanceScope,
+      );
+      const checkoutScopeSnapshot = customerCheckoutScopeSnapshot(
+        checkoutAcceptanceScope,
+      );
+      const acceptanceAccountSession = await getAccountSession(request);
+      const acceptanceSessionId = acceptanceAccountSession?.role === "customer"
+          && acceptanceAccountSession.email.toLowerCase()
+            === selection.customerEmail.toLowerCase()
+        ? acceptanceAccountSession.id
+        : crypto.randomUUID();
+      await getDb().insert(customerAgreementAcceptances).values({
+        id: crypto.randomUUID(),
+        customerEmail: selection.customerEmail,
+        requestId: selection.requestId,
+        quoteId: selection.quoteId,
+        scopeVersion: checkoutAcceptanceScope.scopeVersion,
+        scopeSnapshot: checkoutScopeSnapshot,
+        agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
+        agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+        agreementHash: checkoutAgreementHash,
+        agreementText: checkoutAgreementText,
+        acceptedByName: checkoutAcceptedByName,
+        acceptanceAction: "affirmative-exact-checkout-authorization-checkbox",
+        acceptedAt: now,
+        ipAddress: requestIpAddress(request),
+        sessionId: acceptanceSessionId,
+        deviceContext: customerAcceptanceDeviceContext(request),
+        createdAt: now,
+      }).onConflictDoNothing();
+      const [storedCheckoutAcceptance] = await getDb().select()
+        .from(customerAgreementAcceptances)
+        .where(and(
+          eq(customerAgreementAcceptances.requestId, selection.requestId),
+          eq(customerAgreementAcceptances.quoteId, selection.quoteId),
+          eq(customerAgreementAcceptances.scopeVersion, checkoutAcceptanceScope.scopeVersion),
+          eq(customerAgreementAcceptances.agreementKey, CUSTOMER_CHECKOUT_AGREEMENT_KEY),
+          eq(customerAgreementAcceptances.agreementVersion, CUSTOMER_CHECKOUT_AGREEMENT_VERSION),
+        ))
+        .limit(1);
+      if (
+        !storedCheckoutAcceptance
+        || storedCheckoutAcceptance.customerEmail !== selection.customerEmail
+        || storedCheckoutAcceptance.agreementHash !== checkoutAgreementHash
+        || storedCheckoutAcceptance.agreementText !== checkoutAgreementText
+        || storedCheckoutAcceptance.scopeSnapshot !== checkoutScopeSnapshot
+        || !storedCheckoutAcceptance.acceptedAt
+      ) {
+        return Response.json({
+          error: "The immutable checkout acceptance could not be recorded exactly. No payment session was opened.",
+          code: "CHECKOUT_ACCEPTANCE_RECORD_FAILED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
 
       const existing = await latestQuotePayment(selection.quoteId);
       if (

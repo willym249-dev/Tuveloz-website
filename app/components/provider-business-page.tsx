@@ -185,7 +185,11 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
       if (!response.ok) throw new Error(result.error || "Unable to save your business page.");
       if (!result.profile) throw new Error("The saved business page returned incomplete profile data.");
       applyResponse(result);
-      setNotice(profile.publicStatus === "published" ? "Business page saved and published." : "Draft saved.");
+      setNotice(result.profile.publicStatus === "pending_review"
+        ? "Profile saved and submitted for TUVELOZ content review. It stays private until approved."
+        : result.profile.publicStatus === "published"
+          ? "Business page saved. Its reviewed content remains public."
+          : "Private draft saved.");
     } catch (reason) {
       setError(profileErrorMessage(reason, "Unable to save your business page."));
     } finally {
@@ -297,7 +301,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
 
   if (loading) {
     const loadingLabel = focus === "reviews"
-      ? "Loading verified reviews…"
+      ? "Loading completed-job reviews…"
       : focus === "performance"
         ? "Loading private performance tools…"
         : "Loading your business profile…";
@@ -332,7 +336,11 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
           <p>You control the details. Tuveloz keeps every page clean, consistent, and professional.</p>
         </div>
         <div className={`page-status ${profile.publicStatus}`}>
-          <span>{profile.publicStatus === "published" ? "Public" : "Private draft"}</span>
+          <span>{profile.publicStatus === "published"
+            ? "Public · content reviewed"
+            : profile.publicStatus === "pending_review"
+              ? "Private · review pending"
+              : "Private draft"}</span>
           <strong>{data.reviewSummary.count ? `${data.reviewSummary.average} ★` : "New profile"}</strong>
         </div>
       </div>
@@ -371,11 +379,12 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
               </span>
               <span>{profile.availabilityStatus}</span>
               <span>{profile.yearsExperience || "Add experience"}</span>
-              <span>{data.services.length} approved {data.services.length === 1 ? "service" : "services"}</span>
+              <span>{data.services.length} currently listed {data.services.length === 1 ? "service" : "services"}</span>
               <span>{displayLocation}</span>
             </div>
             <p className="provider-profile-preview-note">
-              Customers will also see your approved services, provider-selected work photos, and verified reviews.
+              If approved for publication, customers see currently eligible service listings,
+              provider-supplied work photos, and reviews linked to completed Tuveloz jobs.
             </p>
           </div>
 
@@ -465,11 +474,11 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
           <div className="business-form-section publish-section">
             <div className="business-form-title">
               <span>03</span>
-              <div><strong>Page visibility</strong><small>You control when customers can see it</small></div>
+              <div><strong>Page visibility</strong><small>Publication requires TUVELOZ content review</small></div>
             </div>
             <label className="publish-choice">
               <input
-                checked={profile.publicStatus === "published"}
+                checked={profile.publicStatus !== "draft"}
                 disabled={!data.canPublish}
                 type="checkbox"
                 onChange={(event) => setField("publicStatus", event.target.checked ? "published" : "draft")}
@@ -477,24 +486,26 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
               <span>
                 <strong>Publish my business page</strong>
                 <small>{data.canPublish
-                  ? "Customers with your page link can view it."
-                  : "Test profiles stay private. Real approved providers can publish."}</small>
+                  ? profile.publicStatus === "pending_review"
+                    ? "Your current version stays private while TUVELOZ reviews provider-written claims and media."
+                    : "Submitting changes sends the exact profile version for review before customers can see it."
+                  : "Test profiles and profiles without current service eligibility stay private."}</small>
               </span>
             </label>
             {pendingAction === "profile" ? (
               <ConfirmAction
                 busy={busy === "profile"}
-                confirmLabel={profile.publicStatus === "published" ? "Confirm and publish" : "Confirm and save"}
+                confirmLabel={profile.publicStatus !== "draft" ? "Confirm review request" : "Confirm and save"}
                 confirmType="submit"
-                message={profile.publicStatus === "published"
-                  ? "These changes will appear on your public business page."
+                message={profile.publicStatus !== "draft"
+                  ? "These changes will stay private until TUVELOZ reviews and approves this exact profile version."
                   : "These changes will be saved to your private draft."}
                 onBack={() => setPendingAction("")}
-                title={profile.publicStatus === "published" ? "Publish these changes?" : "Save these changes?"}
+                title={profile.publicStatus !== "draft" ? "Submit this version for review?" : "Save these changes?"}
               />
             ) : (
               <button className="button primary" disabled={busy === "profile"} type="submit">
-                {busy === "profile" ? "Saving…" : profile.publicStatus === "published" ? "Save and publish" : "Save draft"}
+                {busy === "profile" ? "Saving…" : profile.publicStatus !== "draft" ? "Save and submit for review" : "Save draft"}
               </button>
             )}
           </div>
@@ -671,7 +682,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
                     </div>
                     <div>
                       <h3>{profile.businessName}</h3>
-                      <p>{profile.headline || `${data.services.length} approved vehicle services`}</p>
+                      <p>{profile.headline || `${data.services.length} currently listed vehicle services`}</p>
                     </div>
                     <small>{displayLocation}</small>
                     <footer>VEHICLE SERVICES. <strong>CUSTOMER CHOICE. PROVIDER FREEDOM.</strong></footer>
@@ -703,11 +714,11 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
       {focus === "reviews" && (
       <section className="storefront-section provider-private-reviews" id="provider-reviews">
         <div className="storefront-section-heading">
-          <div><span className="kicker">Reviews</span><h2>Verified customer feedback</h2></div>
+          <div><span className="kicker">Reviews</span><h2>Completed-job customer feedback</h2></div>
           <div className="storefront-rating">
             <strong>{data.reviews.length ? data.reviewSummary.average.toFixed(1) : "—"}</strong>
             <span>{data.reviews.length ? "★★★★★".slice(0, Math.round(data.reviewSummary.average)) : "No reviews yet"}</span>
-            <small>{data.reviews.length} verified {data.reviews.length === 1 ? "review" : "reviews"}</small>
+            <small>{data.reviews.length} completed-job {data.reviews.length === 1 ? "review" : "reviews"}</small>
           </div>
         </div>
         {data.reviews.length ? (
@@ -830,7 +841,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
 
       {focus === "profile" && (
       <div className="business-page-footer">
-        <p>Approved services and verified completed-job reviews are added automatically. Your email and exact addresses are never shown here.</p>
+        <p>Service listings come from current eligibility records. Reviews shown here are linked to completed Tuveloz jobs; the link does not verify every statement or guarantee work. Your email and exact addresses are never shown here.</p>
         {profile.publicStatus === "published" ? (
           <div>
             <a className="button secondary" href={publicUrl} target="_blank" rel="noreferrer">View public page</a>
@@ -857,7 +868,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
                 </div>
                 <div>
                   <h3>{profile.businessName}</h3>
-                  <p>{profile.headline || `${data.services.length} approved vehicle services`}</p>
+                  <p>{profile.headline || `${data.services.length} currently listed vehicle services`}</p>
                 </div>
                 <small>{displayLocation}</small>
                 <footer>VEHICLE SERVICES. <strong>CUSTOMER CHOICE. PROVIDER FREEDOM.</strong></footer>

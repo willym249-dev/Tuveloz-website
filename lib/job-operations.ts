@@ -24,6 +24,10 @@ import {
   parseJobScopeFacts,
   type JobScopeFacts,
 } from "./job-scope-facts";
+import {
+  PROVIDER_ARRIVAL_CONFIRMATION_VERSION,
+  providerArrivalConfirmationIsFresh,
+} from "./provider-arrival-confirmation";
 import { loadAuthorizedJobScopeFacts } from "./job-scope-records";
 import { isServiceCode, type ServiceCode } from "./provider-policy";
 
@@ -192,6 +196,7 @@ export async function evaluateAssignedJobStage(input: {
   scopeVersion?: number;
   candidateJobFacts?: unknown;
   arrivalJobFacts?: unknown;
+  arrivalConfirmed?: boolean;
   scheduledFor?: string;
   effectiveAt?: string;
 }): Promise<JobStageDecision> {
@@ -219,6 +224,7 @@ export async function evaluateAssignedJobStage(input: {
   }
 
   const scopeVersion = input.scopeVersion ?? context.scopeVersion;
+  const effectiveAt = input.effectiveAt ?? new Date().toISOString();
   const hasCandidateFacts = input.stage === "scope_change"
     && input.candidateJobFacts !== undefined;
   let jobFacts: JobScopeFacts | null;
@@ -268,8 +274,16 @@ export async function evaluateAssignedJobStage(input: {
       context.customerProviderDisclosureAcceptedAt,
     jobFacts,
     jobFactsSource,
+    jobFactsConfirmationVersion:
+      input.stage === "job_start" && input.arrivalConfirmed === true
+        ? PROVIDER_ARRIVAL_CONFIRMATION_VERSION
+        : "",
+    jobFactsConfirmedAt:
+      input.stage === "job_start" && input.arrivalConfirmed === true
+        ? effectiveAt
+        : "",
     jobFactsBindingReasons,
-    effectiveAt: input.effectiveAt ?? new Date().toISOString(),
+    effectiveAt,
     testOnly: context.isTestJob && context.isTestProvider,
     persist: input.persist !== false,
   });
@@ -365,6 +379,20 @@ async function factsFromBoundDecision(
     profile.stage !== stage
     || profile.jobFactsSource !== expectedSource
     || profile.jobFactsHash !== factsHash
+  ) return null;
+  if (
+    stage === "job_start"
+    && (
+      profile.jobFactsConfirmationVersion !== PROVIDER_ARRIVAL_CONFIRMATION_VERSION
+      || profile.jobFactsConfirmedByProviderId !== context.providerId
+      || profile.jobFactsConfirmedByPersonId !== context.personId
+      || !providerArrivalConfirmationIsFresh(
+        profile.jobFactsConfirmedAt,
+        profile.effectiveAt,
+        snapshot.decidedAt,
+        Date.parse(snapshot.decidedAt),
+      )
+    )
   ) return null;
   if (!compareArrivalJobScopeFacts(context.jobFacts, facts).allowed) return null;
   if (

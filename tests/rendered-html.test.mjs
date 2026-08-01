@@ -529,7 +529,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(providerSource.includes("provider-dashboard-nav"));
   assert.ok(providerBusinessSource.includes("Business tools could not load."));
   assert.ok(providerBusinessSource.includes("Try again"));
-  assert.ok(providerBusinessSource.includes("provider-selected work photos"));
+  assert.ok(providerBusinessSource.includes("provider-supplied work photos"));
   assert.ok(!providerBusinessSource.includes("real work photos"));
   assert.ok(providerSource.includes("Available jobs"));
   assert.ok(providerSource.includes("Business profile"));
@@ -889,7 +889,7 @@ test("provider dashboard exposes focused, factual, provider-owned tools", async 
   assert.ok(businessSource.includes('{focus === "profile" && ('));
   assert.ok(businessSource.includes('{focus === "reviews" && ('));
   assert.ok(businessSource.includes('{focus === "performance" && ('));
-  assert.ok(businessSource.includes("Verified customer feedback"));
+  assert.ok(businessSource.includes("Completed-job customer feedback"));
   assert.ok(businessSource.includes("Only feedback from completed Tuveloz jobs appears here."));
   assert.ok(profileApiSource.includes('eq(jobReviews.status, "published")'));
   assert.ok(profileApiSource.includes('"cache-control": "no-store"'));
@@ -1143,7 +1143,7 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(!controlSource.includes("Enable live payments"));
 });
 
-test("public claims keep credential checks while real provider auth requires exact v0.11 gates", async () => {
+test("public claims scope credential records while real provider auth requires exact v0.11 gates", async () => {
   const [
     requirementSource,
     schemaSource,
@@ -1198,9 +1198,15 @@ test("public claims keep credential checks while real provider auth requires exa
   assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
   assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
   assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
-  assert.ok(publicPageSource.includes("Government credentials checked"));
-  assert.ok(publicPageSource.includes("Not legally triggered"));
-  assert.ok(publicPageSource.includes("does not use a blanket licensed-provider claim"));
+  assert.ok(publicPageSource.includes("Dated government-credential records"));
+  assert.ok(publicPageSource.includes("No credential record displayed for this scope"));
+  assert.ok(publicPageSource.includes("not a blanket licensed-provider claim"));
+  assert.ok(publicPageSource.includes("Provider-supplied profile"));
+  assert.ok(publicPageSource.includes("Profile-listed services"));
+  assert.ok(publicPageSource.includes("Status can change after the check; recheck the official lookup before work."));
+  assert.ok(!publicPageSource.includes("Not legally triggered"));
+  assert.ok(!publicPageSource.includes("Approved work"));
+  assert.ok(!publicPageSource.includes("Verified reviews"));
   assert.ok(!publicPageSource.includes("✓ Tuveloz verified"));
   assert.ok(!publicPageSource.includes("Verified identity"));
 
@@ -1211,7 +1217,21 @@ test("public claims keep credential checks while real provider auth requires exa
   assert.ok(accountAuthSource.includes("profile.policyVersion !== POLICY_VERSION"));
 });
 
+test("public review and payout copy does not overstate platform verification", async () => {
+  const [homeSource, publicPageSource, paymentCardSource] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/quote-payment-card.tsx", import.meta.url), "utf8"),
+  ]);
 
+  assert.ok(homeSource.includes("Reviews linked to a completed Tuveloz job"));
+  assert.ok(homeSource.includes("does not independently verify"));
+  assert.ok(!homeSource.includes("Verified customer reviews"));
+  assert.ok(publicPageSource.includes("A completed-job link confirms a Tuveloz job record."));
+  assert.ok(publicPageSource.includes("supplied by the provider unless specifically"));
+  assert.ok(paymentCardSource.includes("administrative payment-control step only"));
+  assert.ok(paymentCardSource.includes("inspection, endorsement, or certification of repairs"));
+});
 
 test("owner Access identifiers survive every Cloudflare deployment", async () => {
   const [wranglerSource, ownerAuthSource, adminApiSource, adminPageSource] = await Promise.all([

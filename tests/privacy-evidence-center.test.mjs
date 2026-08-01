@@ -41,6 +41,22 @@ test("account export excludes authentication secrets and limits third-party disc
   assert.doesNotMatch(exportApi, /payment_intent_id AS/);
   assert.doesNotMatch(exportApi, /provider_email AS providerEmail/);
   assert.doesNotMatch(exportApi, /customer_email AS customerEmail/);
+  for (const providerRecord of [
+    "providerPathwayHistory",
+    "providerPersonnelRecords",
+    "providerAgreementAcceptanceHistory",
+    "providerEvidenceMetadata",
+    "providerEvidenceScanHistory",
+    "exactServiceEligibilityHistory",
+    "providerAppeals",
+    "providerAuditHistory",
+    "providerDataRightsRequests",
+  ]) {
+    assert.ok(exportApi.includes(providerRecord), `provider export omits ${providerRecord}`);
+  }
+  assert.doesNotMatch(exportApi, /storage_key AS/);
+  assert.doesNotMatch(exportApi, /document_hash AS/);
+  assert.doesNotMatch(exportApi, /identity_verification_reference AS/);
 });
 
 test("private job evidence is append-only, participant-only, and separate from payment authorization", async () => {

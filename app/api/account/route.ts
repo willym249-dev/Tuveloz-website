@@ -58,6 +58,8 @@ export async function GET(request: Request) {
         paidAt: stripePayments.paidAt,
         refundAmountCents: stripePayments.refundAmountCents,
         refundedAt: stripePayments.refundedAt,
+        refundStatus: stripePayments.refundStatus,
+        refundUpdatedAt: stripePayments.refundUpdatedAt,
         disputeStatus: stripePayments.disputeStatus,
         createdAt: stripePayments.createdAt,
       }).from(stripePayments)
