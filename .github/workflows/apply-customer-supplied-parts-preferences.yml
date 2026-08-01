@@ -23,7 +23,7 @@ permissions:
 
 concurrency:
   group: apply-customer-supplied-parts-preferences
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   apply-test-and-commit:
@@ -71,6 +71,22 @@ jobs:
           grep -q 'LABOR_ONLY_QUOTE_REQUIRED' app/api/jobs/route.ts
           grep -q 'scopePrice.partsAmountCents !== 0' app/api/stripe/checkout/route.ts
           grep -q 'provider_quotes_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
+
+      - name: Upload workspace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labor-only-debug-${{ github.run_attempt }}
+          path: |
+            app
+            lib
+            db
+            drizzle
+            tests
+            scripts
+            package.json
+            package-lock.json
+          retention-days: 1
 
       - name: Commit verified implementation
         shell: bash
