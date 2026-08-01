@@ -91,6 +91,13 @@ Leave `STRIPE_ALLOW_LIVE_MODE` set to `"false"` in `wrangler.jsonc` until the
 legal business owner has completed the live-account, compliance, refund,
 dispute, and provider-payout review.
 
+Customer and provider legal pages are released only through
+`config/policy-releases.json`. Draft entries must stay blank. Before changing
+an entry to `active`, approve the exact page, increment its policy version,
+record a unique release ID and effective time, and enter the SHA-256 of the
+page source after normalizing CRLF line endings to LF. The production test suite
+recomputes every active hash and blocks deployment if the page changed.
+
 ## 5. Configure Stripe webhooks
 
 Create three Stripe event destinations. Do not reuse signing secrets or mix

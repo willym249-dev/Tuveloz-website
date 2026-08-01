@@ -4,6 +4,7 @@ import {
   PRIVACY_VERSION,
   TERMS_VERSION,
 } from "./policies";
+import { policyDocumentRelease } from "./policy-release-manifest";
 
 export const CUSTOMER_POLICY_RELEASE_SCHEMA_VERSION = "1";
 
@@ -16,24 +17,11 @@ export const CUSTOMER_ACCEPTANCE_PURPOSES = [
 export type CustomerAcceptancePurpose =
   (typeof CUSTOMER_ACCEPTANCE_PURPOSES)[number];
 
-type CustomerDocumentRelease = {
-  releaseStatus: "draft" | "inactive" | "active" | "retired";
-  effectiveAt: string;
-  releaseId: string;
-  canonicalBodyHash: string;
-};
-
-const DRAFT_RELEASE: Readonly<CustomerDocumentRelease> = Object.freeze({
-  releaseStatus: "draft",
-  effectiveAt: "",
-  releaseId: "",
-  canonicalBodyHash: "",
-});
-
 // Customer-facing policies remain fail-closed until an authorized release
-// records the exact canonical page hash, an effective timestamp, and a unique
-// release identifier. Version labels by themselves are not proof that a draft
-// was approved or that the customer saw an effective contract.
+// records the exact normalized policy-page source hash, an effective timestamp,
+// and a unique release identifier. CI recomputes the hash before deployment.
+// Version labels by themselves are not proof that a draft was approved or that
+// the customer saw an effective contract.
 export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
   {
     key: "terms",
@@ -41,7 +29,7 @@ export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
     title: "Terms of Use",
     href: "/terms",
     purposes: CUSTOMER_ACCEPTANCE_PURPOSES,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("terms"),
   },
   {
     key: "customer_agreement",
@@ -49,7 +37,7 @@ export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
     title: "Customer Agreement",
     href: "/customer-agreement",
     purposes: CUSTOMER_ACCEPTANCE_PURPOSES,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("customer_agreement"),
   },
   {
     key: "privacy",
@@ -57,7 +45,7 @@ export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
     title: "Privacy Policy",
     href: "/privacy",
     purposes: ["request_scope"] as const,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("privacy"),
   },
   {
     key: "payment_policy",
@@ -65,7 +53,7 @@ export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
     title: "Payment, Cancellation and Refund Policy",
     href: "/payments",
     purposes: ["provider_selection", "checkout"] as const,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("payment_policy"),
   },
 ] as const;
 

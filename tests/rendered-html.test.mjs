@@ -529,7 +529,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(providerSource.includes("provider-dashboard-nav"));
   assert.ok(providerBusinessSource.includes("Business tools could not load."));
   assert.ok(providerBusinessSource.includes("Try again"));
-  assert.ok(providerBusinessSource.includes("provider-selected work photos"));
+  assert.ok(providerBusinessSource.includes("provider-supplied work photos"));
   assert.ok(!providerBusinessSource.includes("real work photos"));
   assert.ok(providerSource.includes("Available jobs"));
   assert.ok(providerSource.includes("Business profile"));
@@ -889,7 +889,7 @@ test("provider dashboard exposes focused, factual, provider-owned tools", async 
   assert.ok(businessSource.includes('{focus === "profile" && ('));
   assert.ok(businessSource.includes('{focus === "reviews" && ('));
   assert.ok(businessSource.includes('{focus === "performance" && ('));
-  assert.ok(businessSource.includes("Verified customer feedback"));
+  assert.ok(businessSource.includes("Completed-job customer feedback"));
   assert.ok(businessSource.includes("Only feedback from completed Tuveloz jobs appears here."));
   assert.ok(profileApiSource.includes('eq(jobReviews.status, "published")'));
   assert.ok(profileApiSource.includes('"cache-control": "no-store"'));

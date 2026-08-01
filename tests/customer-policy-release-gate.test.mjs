@@ -7,10 +7,16 @@ async function source(path) {
 }
 
 test("customer policies remain draft and require a complete hashed release", async () => {
-  const registry = await source("lib/customer-policy-acceptance.ts");
+  const [registry, manifest] = await Promise.all([
+    source("lib/customer-policy-acceptance.ts"),
+    source("config/policy-releases.json").then(JSON.parse),
+  ]);
 
-  assert.match(registry, /releaseStatus: "draft"/);
-  assert.match(registry, /canonicalBodyHash: ""/);
+  for (const release of Object.values(manifest)) {
+    assert.equal(release.releaseStatus, "draft");
+    assert.equal(release.canonicalBodyHash, "");
+  }
+  assert.match(registry, /policyDocumentRelease\("terms"\)/);
   assert.match(registry, /releaseStatus === "active"/);
   assert.match(registry, /SHA256_HEX\.test\(document\.canonicalBodyHash\)/);
   assert.match(registry, /effectiveAt <= asOf\.getTime\(\)/);

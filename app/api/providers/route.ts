@@ -2,6 +2,7 @@ import { and, desc, eq, ne } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   agreementAcceptances,
+  providerAuditEvents,
   providerApplications,
   providerPathwayProfiles,
   providerPersonnel,
@@ -10,7 +11,6 @@ import {
   cleanProviderSelfAssessment,
   providerAreasHaveReviewedCompliance,
 } from "../../../lib/provider-compliance";
-import { recordProviderAuditEvent } from "../../../lib/provider-audit";
 import { notifyProviderApplicationReceived } from "../../../lib/provider-compliance-notifications";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
@@ -244,7 +244,10 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const existing = await getDb().select({ id: providerApplications.id })
+    const existing = await getDb().select({
+      id: providerApplications.id,
+      status: providerApplications.status,
+    })
       .from(providerApplications)
       .where(and(
         eq(providerApplications.email, email),
@@ -253,10 +256,15 @@ export async function POST(request: Request) {
       .orderBy(desc(providerApplications.createdAt))
       .limit(1);
     if (existing[0]) {
+      await notifyProviderApplicationReceived({ providerId: existing[0].id, email });
       return Response.json({
-        error: "An application already exists for this email. Sign in to continue the provider onboarding checklist.",
+        ok: true,
+        existing: true,
+        applicationId: existing[0].id,
+        status: existing[0].status,
+        message: "Your application is already saved. Sign in to continue the provider onboarding checklist.",
         onboardingUrl: "/provider-onboarding",
-      }, { status: 409 });
+      }, { status: 200 });
     }
 
     const now = new Date().toISOString();
@@ -296,7 +304,7 @@ export async function POST(request: Request) {
     ]));
 
     const db = getDb();
-    await db.insert(providerApplications).values({
+    const applicationInsert = db.insert(providerApplications).values({
       id: providerId,
       name,
       email,
@@ -329,7 +337,7 @@ export async function POST(request: Request) {
             ? ["sponsor_or_employer_confirmation_required"]
             : []),
         ];
-    await db.insert(providerPathwayProfiles).values({
+    const pathwayInsert = db.insert(providerPathwayProfiles).values({
       id: crypto.randomUUID(),
       providerId,
       providerPersonId: personId,
@@ -342,7 +350,7 @@ export async function POST(request: Request) {
       createdAt: now,
       updatedAt: now,
     });
-    await db.insert(providerPersonnel).values({
+    const personnelInsert = db.insert(providerPersonnel).values({
       id: crypto.randomUUID(),
       providerId,
       personId,
@@ -362,9 +370,10 @@ export async function POST(request: Request) {
       policyBundleVersion: PROVIDER_POLICY_BUNDLE_VERSION,
       policyStatus: POLICY_STATUS,
     });
+    const acceptanceInserts = [];
     for (const document of PROVIDER_ACCEPTANCE_DOCUMENTS) {
       const agreementText = providerAgreementEvidenceText(document);
-      await db.insert(agreementAcceptances).values({
+      acceptanceInserts.push(db.insert(agreementAcceptances).values({
         id: crypto.randomUUID(),
         providerId,
         personId,
@@ -383,12 +392,24 @@ export async function POST(request: Request) {
         sessionId: acceptanceSessionId,
         deviceContext,
         createdAt: now,
-      });
+      }));
     }
 
-    await recordProviderAuditEvent({
+    const auditId = crypto.randomUUID();
+    const auditMetadata = {
+      applicationPathway,
+      providerLevel,
+      serviceCodes,
+      agreementVersions: Object.fromEntries(
+        PROVIDER_ACCEPTANCE_DOCUMENTS.map((document) => [document.key, document.version]),
+      ),
+    };
+    const normalizedAuditEvent = {
+      id: auditId,
       providerId,
       personId,
+      requestId: "",
+      serviceCode: "",
       jurisdiction: POLICY_JURISDICTION,
       eventType: "provider_application_submitted",
       entityType: "provider_application",
@@ -396,16 +417,50 @@ export async function POST(request: Request) {
       actorType: "applicant",
       actorId: email,
       outcome: "pending_review",
-      reasonCodes: holdReasonCodes,
-      metadata: {
-        applicationPathway,
-        providerLevel,
-        serviceCodes,
-        agreementVersions: Object.fromEntries(
-          PROVIDER_ACCEPTANCE_DOCUMENTS.map((document) => [document.key, document.version]),
-        ),
-      },
+      reasonCodes: [...holdReasonCodes],
+      metadata: auditMetadata,
+      policyVersion: POLICY_VERSION,
+      previousEventHash: "",
+      occurredAt: now,
+    };
+    const auditEventHash = await sha256Text(JSON.stringify(normalizedAuditEvent));
+    const auditInsert = db.insert(providerAuditEvents).values({
+      id: auditId,
+      providerId,
+      personId,
+      requestId: "",
+      serviceCode: "",
+      jurisdiction: POLICY_JURISDICTION,
+      eventType: "provider_application_submitted",
+      entityType: "provider_application",
+      entityId: providerId,
+      eventVersion: 1,
+      actorType: "applicant",
+      actorId: email,
+      outcome: "pending_review",
+      reasonCodes: JSON.stringify(holdReasonCodes),
+      metadata: JSON.stringify(auditMetadata),
+      policyVersion: POLICY_VERSION,
+      previousEventHash: "",
+      eventHash: auditEventHash,
+      occurredAt: now,
+      createdAt: now,
     });
+
+    // Cloudflare D1 executes a batch as one transaction. A failure in any
+    // required record rolls back the application row too, so a retry cannot be
+    // trapped behind a partially-created provider application.
+    await db.batch([
+      applicationInsert,
+      pathwayInsert,
+      personnelInsert,
+      ...acceptanceInserts,
+      auditInsert,
+    ] as const);
+
+    // Delivery is deliberately outside the transaction and the helper absorbs
+    // transport failures. Email must never decide whether the application was
+    // committed or cause a successfully committed applicant to retry writes.
     await notifyProviderApplicationReceived({ providerId, email });
 
     return Response.json({

@@ -15,8 +15,9 @@ test("a forged Cloudflare email header alone cannot reveal owner access", async 
   assert.match(route, /await isVerifiedOwnerRequest\(request\)/);
   assert.doesNotMatch(route, /\bisOwnerRequest\(request\)/);
   assert.match(ownerAuth, /request\.headers\.get\("cf-access-jwt-assertion"\)/);
-  assert.match(ownerAuth, /if \(!token\) \{\s*return \{ ok: false, reason: "access-token-missing" \};/);
-  assert.match(ownerAuth, /jwtVerify\(token,[\s\S]*issuer: teamDomain,[\s\S]*audience/);
+  assert.match(ownerAuth, /const access = accessTokenFrom\(request\)/);
+  assert.match(ownerAuth, /if \(!access\.token \|\| !access\.source\) \{\s*return \{ ok: false, reason: "access-token-missing" \};/);
+  assert.match(ownerAuth, /jwtVerify\(access\.token,[\s\S]*issuer: teamDomain,[\s\S]*audience/);
 });
 
 test("a forged Cloudflare email header alone cannot expose a private job image", async () => {

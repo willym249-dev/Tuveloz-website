@@ -11,6 +11,7 @@ import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import { parseProviderServices } from "../../../lib/service-matching";
+import { providerProfileHasCurrentContentApproval } from "../../../lib/provider-profile-claims";
 
 const NO_STORE_HEADERS = { "cache-control": "no-store" };
 
@@ -37,7 +38,7 @@ async function providerIsPublic(providerId: string) {
     );
     if (activeServiceCodes.size === 0) return false;
     const [result] = await getDb().select({
-      publicStatus: providerProfiles.publicStatus,
+      profile: providerProfiles,
       email: providerApplications.email,
       status: providerApplications.status,
       verificationStatus: providerApplications.verificationStatus,
@@ -51,11 +52,14 @@ async function providerIsPublic(providerId: string) {
       .limit(1);
     if (
       !result
-      || result.publicStatus !== "published"
+      || result.profile.publicStatus !== "published"
       || result.status !== "approved"
       || result.verificationStatus !== "verified"
       || result.isTestProvider !== "no"
     ) {
+      return false;
+    }
+    if (!(await providerProfileHasCurrentContentApproval(result.profile))) {
       return false;
     }
     const currentProvider = await providerAccountFor(result.email);

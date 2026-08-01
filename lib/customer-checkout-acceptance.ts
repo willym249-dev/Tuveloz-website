@@ -4,7 +4,7 @@ import { sha256Text } from "./provider-policy-acceptance";
 
 export const CUSTOMER_CHECKOUT_AGREEMENT_KEY = "customer_checkout_authorization";
 export const CUSTOMER_CHECKOUT_AGREEMENT_VERSION =
-  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:1`;
+  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:2`;
 
 export const CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY =
   "Payment does not authorize added work or a price increase. Cancellation, refund, dispute, and payout handling follows the displayed Payment, Cancellation and Refund Policy and applicable law. TUVELOZ does not certify the repair merely because payment or payout records are reviewed.";
@@ -16,6 +16,9 @@ export type CustomerCheckoutAcceptanceScope = {
   scopeAuthorizationDecisionId: string;
   providerApplicationId: string;
   providerLegalName: string;
+  providerLegalIdentitySourceEvidenceId: string;
+  providerLegalIdentityReviewDecisionId: string;
+  providerLegalIdentityVerifiedAt: string;
   performingPersonId: string;
   supervisorPersonId: string;
   serviceCodes: readonly string[];
@@ -49,8 +52,11 @@ export function customerCheckoutAcceptanceText(
 ) {
   return [
     `I agree to the Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy shown for quote ${scope.quoteId}, scope version ${scope.scopeVersion}.`,
-    `I authorize only the displayed provider amount ${dollars(scope.providerAmountCents)} (labor ${dollars(scope.laborAmountCents)}, parts ${dollars(scope.partsAmountCents)}, tax ${dollars(scope.taxAmountCents)}, other charges ${dollars(scope.otherAmountCents)}), TUVELOZ fee ${dollars(scope.customerFeeCents)}, and total ${dollars(scope.customerTotalCents)}.`,
-    `The selected provider business, ${scope.providerLegalName}, not TUVELOZ, performs the exact listed vehicle service.`,
+    `Provider legal identity: ${scope.providerLegalName}.`,
+    `Exact service codes: ${scope.serviceCodes.join(", ")}.`,
+    `Scheduled time: ${scope.scheduledFor}. Performing person ID: ${scope.performingPersonId}. Supervisor person ID: ${scope.supervisorPersonId || "none"}.`,
+    `Itemized price: labor ${dollars(scope.laborAmountCents)}; parts ${dollars(scope.partsAmountCents)}; tax ${dollars(scope.taxAmountCents)}; other charges ${dollars(scope.otherAmountCents)}; complete provider amount ${dollars(scope.providerAmountCents)}; TUVELOZ fee ${dollars(scope.customerFeeCents)}; customer total ${dollars(scope.customerTotalCents)}.`,
+    `The selected provider business, ${scope.providerLegalName}, not TUVELOZ, performs only those exact listed vehicle services.`,
     CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
     "I can save or download this exact acceptance record.",
   ].join(" ");

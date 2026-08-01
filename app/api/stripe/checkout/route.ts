@@ -7,6 +7,7 @@ import {
   jobAuthorizationSnapshots,
   jobScopeVersions,
   providerApplications,
+  providerEvidenceSubmissions,
   providerQuotes,
   stripePayments,
 } from "../../../../db/schema";
@@ -58,6 +59,10 @@ import {
 } from "../../../../lib/provider-eligibility-engine";
 import { jobScopeFactsFromScopeDetails } from "../../../../lib/job-scope-facts";
 import { connectedAccountPayoutSafety } from "../../../../lib/stripe-connected-account-snapshots";
+import { verifiedProviderLegalIdentity } from "../../../../lib/provider-legal-identity";
+
+const PRIVATE_NO_STORE_HEADERS = { "cache-control": "private, no-store" };
+const REQUEST_ACCESS_TOKEN_HEADER = "x-tuveloz-request-token";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -68,7 +73,7 @@ function marketplacePausedResponse() {
     },
     {
       status: 503,
-      headers: { "cache-control": "no-store", "retry-after": "86400" },
+      headers: { ...PRIVATE_NO_STORE_HEADERS, "retry-after": "86400" },
     },
   );
 }
@@ -140,6 +145,22 @@ function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+async function constantTimeTokenMatch(provided: string, expected: string) {
+  if (!provided || !expected) return false;
+  const encoder = new TextEncoder();
+  const [providedHash, expectedHash] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(provided)),
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+  ]);
+  const left = new Uint8Array(providedHash);
+  const right = new Uint8Array(expectedHash);
+  let difference = left.length ^ right.length;
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    difference |= (left[index] ?? 0) ^ (right[index] ?? 0);
+  }
+  return difference === 0;
+}
+
 function validEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -172,7 +193,6 @@ async function acceptedQuoteForCustomer(
     quoteAuthorizationDecisionId: providerQuotes.authorizationDecisionId,
     providerApplicationId: providerApplications.id,
     providerName: providerApplications.name,
-    providerSelfAssessment: providerApplications.providerSelfAssessment,
     connectedAccountId: providerApplications.stripeAccountId,
     providerStatus: providerApplications.status,
     providerVerificationStatus: providerApplications.verificationStatus,
@@ -240,44 +260,48 @@ type CheckoutScopeRecord = {
   authorizationDecisionId: string;
 };
 
-function providerLegalName(selection: AcceptedQuoteSelection) {
-  try {
-    const assessment = JSON.parse(selection.providerSelfAssessment || "{}") as {
-      onboarding?: { legalBusinessName?: unknown };
-    };
-    const legalName = clean(assessment.onboarding?.legalBusinessName, 180);
-    return legalName || selection.providerName;
-  } catch {
-    return selection.providerName;
-  }
-}
-
-function checkoutAcceptanceScopeFor(
+async function checkoutAcceptanceScopeFor(
   selection: AcceptedQuoteSelection,
   scopeRecord: CheckoutScopeRecord,
-): CustomerCheckoutAcceptanceScope | null {
+): Promise<CustomerCheckoutAcceptanceScope | null> {
   const price = authorizedScopePrice(scopeRecord.priceBreakdown);
   const serviceCodes = parseExactServiceCodes(scopeRecord.serviceCodes);
   const performingPersonId = selection.assignedPersonId
     || selection.performingPersonId;
   const supervisorPersonId = selection.assignedSupervisorPersonId
     || selection.supervisorPersonId;
+  const scheduledTime = Date.parse(scopeRecord.scheduledFor);
   if (
     !price
     || serviceCodes.length === 0
     || !scopeRecord.authorizationDecisionId
     || !scopeRecord.scheduledFor
+    || !Number.isFinite(scheduledTime)
     || !performingPersonId
   ) return null;
+  const evidenceRows = await getDb().select().from(providerEvidenceSubmissions)
+    .where(and(
+      eq(providerEvidenceSubmissions.providerId, selection.providerApplicationId),
+      eq(providerEvidenceSubmissions.status, "accepted"),
+    ));
+  const legalIdentity = verifiedProviderLegalIdentity(
+    evidenceRows,
+    selection.providerApplicationId,
+    new Date(scheduledTime),
+  );
+  if (!legalIdentity) return null;
   return {
     requestId: selection.requestId,
     quoteId: selection.quoteId,
     scopeVersion: scopeRecord.version,
     scopeAuthorizationDecisionId: scopeRecord.authorizationDecisionId,
     providerApplicationId: selection.providerApplicationId,
-    providerLegalName: providerLegalName(selection),
+    providerLegalName: legalIdentity.legalBusinessName,
+    providerLegalIdentitySourceEvidenceId: legalIdentity.sourceEvidenceId,
+    providerLegalIdentityReviewDecisionId: legalIdentity.reviewDecisionId,
+    providerLegalIdentityVerifiedAt: legalIdentity.verifiedAt,
     performingPersonId,
-    supervisorPersonId,
+    supervisorPersonId: supervisorPersonId || "none",
     serviceCodes,
     scheduledFor: scopeRecord.scheduledFor,
     laborAmountCents: price.laborAmountCents,
@@ -303,7 +327,7 @@ async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection) {
     eq(jobScopeVersions.quoteId, selection.quoteId),
   )).orderBy(desc(jobScopeVersions.version)).limit(1);
   const scope = scopeRecord
-    ? checkoutAcceptanceScopeFor(selection, scopeRecord)
+    ? await checkoutAcceptanceScopeFor(selection, scopeRecord)
     : null;
   if (!scope) return null;
   return {
@@ -322,29 +346,73 @@ export async function GET(request: Request) {
   // inspection available if launch readiness is later revoked so prior money
   // can still be reconciled; only payment-creating POST actions are gated.
   const searchParams = new URL(request.url).searchParams;
-  const sessionId = searchParams.get("sessionId") ?? "";
+  const sessionId = clean(searchParams.get("sessionId"), 255);
   if (sessionId) {
     const [payment] = await getDb().select().from(stripePayments)
       .where(eq(stripePayments.checkoutSessionId, sessionId))
       .limit(1);
     if (!payment) {
-      return Response.json({ error: "Payment session not found." }, { status: 404 });
+      return Response.json(
+        { error: "Payment session not found." },
+        { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+      );
     }
-    return Response.json({ payment: publicPaymentSummary(payment) });
+    const [customerRequest] = await getDb().select({
+      customerEmail: customerRequests.email,
+      accessToken: customerRequests.accessToken,
+    }).from(customerRequests)
+      .where(eq(customerRequests.id, payment.requestId))
+      .limit(1);
+    const accountSession = await getAccountSession(request);
+    const durableCustomerBindingMatches = payment.paymentType === "product"
+      ? !payment.requestId
+      : customerRequest?.customerEmail.toLowerCase()
+        === payment.customerEmail.toLowerCase();
+    const signedInCustomerMatches = accountSession?.role === "customer"
+      && accountSession.email.toLowerCase() === payment.customerEmail.toLowerCase()
+      && durableCustomerBindingMatches;
+    const privateRequestToken = clean(
+      request.headers.get(REQUEST_ACCESS_TOKEN_HEADER),
+      240,
+    );
+    const privateTokenMatches = payment.paymentType === "quote"
+      && customerRequest
+      && customerRequest.customerEmail.toLowerCase()
+        === payment.customerEmail.toLowerCase()
+      ? await constantTimeTokenMatch(privateRequestToken, customerRequest.accessToken)
+      : false;
+    if (!signedInCustomerMatches && !privateTokenMatches) {
+      // Do not reveal whether a supplied Stripe Session ID exists.
+      return Response.json(
+        { error: "Payment session not found." },
+        { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+      );
+    }
+    return Response.json(
+      { payment: publicPaymentSummary(payment) },
+      { headers: PRIVATE_NO_STORE_HEADERS },
+    );
   }
 
-  const quoteId = searchParams.get("quoteId") ?? "";
-  const token = searchParams.get("token") ?? "";
+  if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+    return marketplacePausedResponse();
+  }
+
+  const quoteId = clean(searchParams.get("quoteId"), 120);
+  const token = clean(request.headers.get(REQUEST_ACCESS_TOKEN_HEADER), 240);
   const selection = await acceptedQuoteForCustomer(request, quoteId, token);
   if (!selection) {
-    return Response.json({ error: "Accepted quote not found for this customer." }, { status: 404 });
+    return Response.json(
+      { error: "Accepted quote not found for this customer." },
+      { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
+    );
   }
   if (selection.isTestJob === "yes") {
     return Response.json({
       checkoutAllowed: false,
       reason: "Test jobs never create real or sandbox payments.",
       payment: null,
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
   if (!customerAcceptanceBundleIsReleasedForPurpose("checkout")) {
     return Response.json({
@@ -353,17 +421,17 @@ export async function GET(request: Request) {
       code: "CUSTOMER_POLICY_RELEASE_REQUIRED",
       checkoutAcceptance: null,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    }, { headers: { "cache-control": "no-store" } });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
   const checkoutAcceptance = await currentCheckoutAcceptance(selection);
   if (!checkoutAcceptance) {
     return Response.json({
       checkoutAllowed: false,
-      reason: "The exact provider, scope, price, and payment authorization record is incomplete.",
+      reason: "The exact owner-reviewed provider legal identity, scope, schedule, performer, price, and payment authorization record is incomplete.",
       code: "CHECKOUT_ACCEPTANCE_SCOPE_REQUIRED",
       checkoutAcceptance: null,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    }, { headers: { "cache-control": "no-store" } });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
   if (!selection.connectedAccountId) {
     return Response.json({
@@ -371,7 +439,7 @@ export async function GET(request: Request) {
       reason: "The selected provider is still setting up Stripe payouts.",
       checkoutAcceptance,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
 
   try {
@@ -392,9 +460,11 @@ export async function GET(request: Request) {
         : payoutSafety.reasons[0] ?? "",
       checkoutAcceptance,
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
-    });
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
   } catch (error) {
-    return stripeErrorResponse(error, "Unable to check payment readiness.");
+    const response = stripeErrorResponse(error, "Unable to check payment readiness.");
+    response.headers.set("cache-control", PRIVATE_NO_STORE_HEADERS["cache-control"]);
+    return response;
   }
 }
 
@@ -674,10 +744,10 @@ export async function POST(request: Request) {
           code: "CHECKOUT_SCOPE_SNAPSHOT_MISMATCH",
         }, { status: 409, headers: { "cache-control": "no-store" } });
       }
-      checkoutAcceptanceScope = checkoutAcceptanceScopeFor(selection, latestScope);
+      checkoutAcceptanceScope = await checkoutAcceptanceScopeFor(selection, latestScope);
       if (!checkoutAcceptanceScope) {
         return Response.json({
-          error: "The exact checkout acceptance record could not be generated from the current authorized scope.",
+          error: "The exact checkout acceptance record, including an owner-reviewed provider legal identity, could not be generated from the current authorized scope.",
           code: "CHECKOUT_ACCEPTANCE_SCOPE_REQUIRED",
         }, { status: 409, headers: { "cache-control": "no-store" } });
       }

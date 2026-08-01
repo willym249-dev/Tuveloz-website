@@ -1,0 +1,51 @@
+{
+  "terms": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/terms/page.tsx"
+  },
+  "customer_agreement": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/customer-agreement/page.tsx"
+  },
+  "provider_agreement": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/provider-agreement/page.tsx"
+  },
+  "privacy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/privacy/page.tsx"
+  },
+  "payment_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/payments/page.tsx"
+  },
+  "marketplace_conduct": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/marketplace-conduct/page.tsx"
+  },
+  "provisional_provider_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/provisional-provider-policy/page.tsx"
+  }
+}

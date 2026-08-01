@@ -23,6 +23,12 @@ import {
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
 import { notifyProviderEvidenceDecision } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
+import {
+  boundLegalBusinessIdentityReview,
+  evidenceScopeWithLegalBusinessIdentity,
+  evidenceScopeWithoutLegalBusinessIdentity,
+  isBusinessIdentityEvidenceRequirement,
+} from "../../../../lib/provider-legal-identity";
 import { ELIGIBILITY_RULES_VERSION } from "../../../../lib/provider-eligibility-engine";
 import { PLATFORM_SERVICE_ACTIVATION_RULES_VERSION } from "../../../../lib/platform-service-activation";
 import {
@@ -293,6 +299,7 @@ function latestScanMap(rows: readonly ScanRow[]) {
 }
 
 function safeEvidence(row: EvidenceRow, scan?: ScanRow) {
+  const legalIdentity = boundLegalBusinessIdentityReview(row);
   return {
     id: row.id,
     providerId: row.providerId,
@@ -312,6 +319,9 @@ function safeEvidence(row: EvidenceRow, scan?: ScanRow) {
     reviewDecisionId: row.reviewDecisionId,
     reasonCodes: safeJsonArray(row.reasonCodes),
     reviewNotes: row.reviewNotes,
+    businessIdentitySourceEligible:
+      isBusinessIdentityEvidenceRequirement(row.requirementKey),
+    verifiedLegalBusinessName: legalIdentity?.legalBusinessName ?? "",
     authenticityVerificationMethod: row.authenticityVerificationMethod,
     authenticityVerifiedBy: row.authenticityVerifiedBy,
     authenticityVerificationReference: row.authenticityVerificationReference,
@@ -1263,6 +1273,8 @@ export async function POST(request: Request) {
       const authenticitySourceUrl = clean(body.authenticitySourceUrl, 500);
       const authenticityVerifiedAt = clean(body.authenticityVerifiedAt, 10);
       const authenticityValidThrough = clean(body.authenticityValidThrough, 10);
+      const verifiedLegalBusinessName = clean(body.verifiedLegalBusinessName, 180);
+      const legalBusinessNameConfirmed = body.legalBusinessNameConfirmed === true;
       if (!evidenceId || !EVIDENCE_REVIEW_STATUSES.includes(status as EvidenceReviewStatus)) {
         return Response.json({ error: "Choose an evidence item and controlled review status." }, { status: 400 });
       }
@@ -1302,6 +1314,25 @@ export async function POST(request: Request) {
         return Response.json({ error: "This evidence requirement is not recognized by v0.11." }, { status: 409 });
       }
       const requirementKey = evidence.requirementKey as EvidenceRequirementCode;
+      const businessIdentitySourceEligible =
+        isBusinessIdentityEvidenceRequirement(requirementKey);
+      if (
+        !businessIdentitySourceEligible
+        && (verifiedLegalBusinessName || legalBusinessNameConfirmed)
+      ) {
+        return Response.json({
+          error: "A legal-business-name decision may be recorded only from qualifying business registration, license, or insurance evidence.",
+        }, { status: 400 });
+      }
+      if (
+        status === "accepted"
+        && businessIdentitySourceEligible
+        && (!verifiedLegalBusinessName || !legalBusinessNameConfirmed)
+      ) {
+        return Response.json({
+          error: "Enter the exact legal business name shown by the externally verified source and confirm the match before accepting this business evidence.",
+        }, { status: 400 });
+      }
       const [evidenceProvider, evidenceProfiles] = await Promise.all([
         db.select().from(providerApplications)
           .where(eq(providerApplications.id, evidence.providerId)).limit(1),
@@ -1382,8 +1413,18 @@ export async function POST(request: Request) {
       await expireOpenCheckoutSessionsForLaunchShutdown();
       const now = new Date().toISOString();
       const reviewDecisionId = crypto.randomUUID();
+      const evidenceScope = status === "accepted" && businessIdentitySourceEligible
+        ? evidenceScopeWithLegalBusinessIdentity(evidence.evidenceScope, {
+            legalBusinessName: verifiedLegalBusinessName,
+            evidenceSubmissionId: evidence.id,
+            reviewDecisionId,
+            verifiedAt: now,
+            verifiedBy: actorId,
+          })
+        : evidenceScopeWithoutLegalBusinessIdentity(evidence.evidenceScope);
       await db.update(providerEvidenceSubmissions).set({
         status,
+        evidenceScope,
         reviewedAt: now,
         reviewedBy: actorId,
         reviewDecisionId,
@@ -1416,6 +1457,11 @@ export async function POST(request: Request) {
         metadata: {
           reviewDecisionId,
           notes,
+          legalBusinessIdentityRecorded:
+            status === "accepted" && businessIdentitySourceEligible,
+          verifiedLegalBusinessName: status === "accepted" && businessIdentitySourceEligible
+            ? verifiedLegalBusinessName
+            : "",
           authenticityVerificationMethod: status === "accepted"
             ? authenticityVerificationMethod
             : "",

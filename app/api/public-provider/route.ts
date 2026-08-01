@@ -28,6 +28,7 @@ import {
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
+import { providerProfileHasCurrentContentApproval } from "../../../lib/provider-profile-claims";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -115,8 +116,11 @@ export async function GET(request: Request) {
   );
   const currentPublicServices = parseProviderServices(result.provider.approvedServices)
     .filter((serviceCode) => activePlatformServiceCodes.has(serviceCode));
+  const currentProfileContentApproved = result.profile.publicStatus === "published"
+    && await providerProfileHasCurrentContentApproval(result.profile);
   const publicAccess = (
     result.profile.publicStatus === "published"
+    && currentProfileContentApproved
     && result.provider.status === "approved"
     && result.provider.verificationStatus === "verified"
     && result.provider.isTestProvider === "no"

@@ -10,6 +10,9 @@ type PaymentSummary = {
   status: string;
 };
 
+const CHECKOUT_STATUS_TOKEN_KEY = "tuveloz:checkout-status-token";
+const REQUEST_ACCESS_TOKEN_HEADER = "x-tuveloz-request-token";
+
 export default function StripeSuccessPage() {
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
   const [checking, setChecking] = useState(true);
@@ -19,21 +22,31 @@ export default function StripeSuccessPage() {
     const searchParams = new URLSearchParams(window.location.search);
     const sessionId = searchParams.get("session_id") ?? "";
     const checkoutCanceled = searchParams.get("canceled") === "1";
+    const privateRequestToken = window.sessionStorage.getItem(CHECKOUT_STATUS_TOKEN_KEY) ?? "";
     let active = true;
 
     Promise.resolve().then(() => {
       if (!active) return;
       setCanceled(checkoutCanceled);
       if (!sessionId) setChecking(false);
+      if (checkoutCanceled) {
+        window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
+      }
     });
 
     if (sessionId) {
       fetch(`/api/stripe/checkout?sessionId=${encodeURIComponent(sessionId)}`, {
         cache: "no-store",
+        headers: privateRequestToken
+          ? { [REQUEST_ACCESS_TOKEN_HEADER]: privateRequestToken }
+          : undefined,
       })
         .then(async (response) => {
           const result = await response.json() as { payment?: PaymentSummary };
-          if (active && response.ok) setPayment(result.payment ?? null);
+          if (response.ok) {
+            window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
+            if (active) setPayment(result.payment ?? null);
+          }
         })
         .finally(() => {
           if (active) setChecking(false);

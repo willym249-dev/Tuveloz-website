@@ -404,7 +404,11 @@ export default function ProviderJobsPage() {
     }
   }
 
-  async function toggleTimer(job: AssignedJob, arrivalJobFacts?: JobScopeFacts) {
+  async function toggleTimer(
+    job: AssignedJob,
+    arrivalJobFacts?: JobScopeFacts,
+    arrivalConfirmed = false,
+  ) {
     setError("");
     setTimerJobId(job.id);
     try {
@@ -415,7 +419,7 @@ export default function ProviderJobsPage() {
           action: "toggle-timer",
           requestId: job.id,
           timerMode: job.timerStartedAt ? "stop" : "start",
-          ...(arrivalJobFacts ? { arrivalJobFacts } : {}),
+          ...(arrivalJobFacts ? { arrivalJobFacts, arrivalConfirmed } : {}),
         }),
       });
       const result = await response.json().catch(() => ({})) as {
@@ -480,7 +484,8 @@ export default function ProviderJobsPage() {
       safetyAttestations: values.getAll("arrival-safety")
         .map(String) as JobScopeFacts["safetyAttestations"],
     };
-    await toggleTimer(job, arrivalJobFacts);
+    const arrivalConfirmed = values.get("arrival-confirmed") === "on";
+    await toggleTimer(job, arrivalJobFacts, arrivalConfirmed);
   }
 
   async function signOut() {
@@ -929,6 +934,14 @@ export default function ProviderJobsPage() {
                               Reconfirm {attestation.replaceAll("_", " ")} now.
                             </label>
                           ))}
+                          <label className="policy-consent">
+                            <input name="arrival-confirmed" required type="checkbox" />
+                            <span>
+                              I am the assigned performing provider and personally rechecked these actual operation,
+                              location, vehicle, and safety facts now. If anything changes or becomes unsafe, I will
+                              stop work and request a newly authorized scope before continuing.
+                            </span>
+                          </label>
                           <button className="button primary" disabled={timerJobId === job.id} type="submit">
                             {timerJobId === job.id ? "Checking..." : "Validate arrival facts and start timer"}
                           </button>

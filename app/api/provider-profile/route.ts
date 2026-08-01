@@ -20,6 +20,10 @@ import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+import {
+  prohibitedProviderProfileClaims,
+  prohibitedProviderWrittenClaims,
+} from "../../../lib/provider-profile-claims";
 
 const AVAILABILITY_STATUSES = new Set(["Available now", "Busy", "Off duty"]);
 const MAX_GALLERY_ITEMS = 12;
@@ -148,8 +152,10 @@ function profileHealth(
   const improvements = checks
     .filter((check) => !check.complete)
     .map((check) => check.improvement);
-  if (canPublish && profile.publicStatus !== "published") {
-    improvements.unshift("Publish your profile when the details are ready.");
+  if (canPublish && profile.publicStatus === "pending_review") {
+    improvements.unshift("Your publication request is waiting for TUVELOZ content review.");
+  } else if (canPublish && profile.publicStatus !== "published") {
+    improvements.unshift("Submit your profile for content review when the details are ready.");
   }
   return {
     score: checks.reduce(
@@ -311,14 +317,29 @@ export async function POST(request: Request) {
     const availabilityStatus = clean(payload.availabilityStatus, 40);
     const availabilityNote = clean(payload.availabilityNote, 160);
     const businessHours = clean(payload.businessHours, 220);
-    const publicStatus = payload.publicStatus === "published" ? "published" : "draft";
+    const publicationRequested = payload.publicStatus === "published";
+    const existing = await profileFor(provider.id);
+    const publicClaimsChanged = !existing || [
+      existing.businessName !== businessName,
+      existing.headline !== headline,
+      existing.about !== about,
+      existing.yearsExperience !== yearsExperience,
+      existing.availabilityStatus !== availabilityStatus,
+      existing.availabilityNote !== availabilityNote,
+      existing.businessHours !== businessHours,
+    ].some(Boolean);
+    const publicStatus = publicationRequested
+      ? existing?.publicStatus === "published" && !publicClaimsChanged
+        ? "published"
+        : "pending_review"
+      : "draft";
     if (!businessName) {
       return Response.json({ error: "Add your public business name." }, { status: 400 });
     }
     if (!AVAILABILITY_STATUSES.has(availabilityStatus)) {
       return Response.json({ error: "Choose a listed availability status." }, { status: 400 });
     }
-    if (publicStatus === "published") {
+    if (publicationRequested) {
       if (provider.verificationStatus !== "verified" || provider.isTestProvider === "yes") {
         return Response.json(
           { error: "Only approved real providers can publish a public business page." },
@@ -330,6 +351,22 @@ export async function POST(request: Request) {
           { error: "Add a short headline and About description before publishing." },
           { status: 400, headers: NO_STORE_HEADERS },
         );
+      }
+      const prohibitedClaims = prohibitedProviderProfileClaims({
+        businessName,
+        headline,
+        about,
+        yearsExperience,
+        availabilityStatus,
+        availabilityNote,
+        businessHours,
+      });
+      if (prohibitedClaims.length) {
+        return Response.json({
+          error: "Provider-written profile copy cannot claim TUVELOZ approval, licensing, insurance, screening, certification, guarantees, warranties, or absolute safety. Remove those claims; dated evidence records are displayed separately after review.",
+          code: "PROVIDER_PROFILE_PROHIBITED_CLAIM",
+          prohibitedClaims,
+        }, { status: 409, headers: NO_STORE_HEADERS });
       }
       if (!(await providerPublicDiscoveryAllowed(provider))) {
         return Response.json(
@@ -344,7 +381,6 @@ export async function POST(request: Request) {
         );
       }
     }
-    const existing = await profileFor(provider.id);
     const now = new Date().toISOString();
     await db.insert(providerProfiles).values({
       id: existing?.id || crypto.randomUUID(),
@@ -396,6 +432,7 @@ export async function POST(request: Request) {
         await db.update(providerProfiles).set({
           logoImageKey: key,
           logoImageType: image.contentType,
+          publicStatus: profile.publicStatus === "draft" ? "draft" : "pending_review",
           updatedAt: new Date().toISOString(),
         }).where(eq(providerProfiles.id, profile.id));
       } catch (error) {
@@ -422,6 +459,14 @@ export async function POST(request: Request) {
       );
     }
     const caption = clean(payload.caption, 180);
+    const prohibitedCaptionClaims = prohibitedProviderWrittenClaims([caption]);
+    if (prohibitedCaptionClaims.length) {
+      return Response.json({
+        error: "Gallery captions cannot claim TUVELOZ approval, licensing, insurance, screening, certification, guarantees, warranties, or absolute safety.",
+        code: "PROVIDER_PROFILE_PROHIBITED_CLAIM",
+        prohibitedClaims: prohibitedCaptionClaims,
+      }, { status: 409, headers: NO_STORE_HEADERS });
+    }
     const service = clean(payload.service, 100);
     const approvedServices = parseProviderServices(provider.approvedServices);
     if (service && !approvedServices.includes(service)) {
@@ -429,14 +474,20 @@ export async function POST(request: Request) {
     }
     const key = await storeProviderImage(provider.id, "gallery", image);
     try {
-      await db.insert(providerGalleryItems).values({
-        id: crypto.randomUUID(),
-        providerId: provider.id,
-        imageKey: key,
-        imageType: image.contentType,
-        caption,
-        service,
-      });
+      await db.batch([
+        db.insert(providerGalleryItems).values({
+          id: crypto.randomUUID(),
+          providerId: provider.id,
+          imageKey: key,
+          imageType: image.contentType,
+          caption,
+          service,
+        }),
+        db.update(providerProfiles).set({
+          publicStatus: profile.publicStatus === "draft" ? "draft" : "pending_review",
+          updatedAt: new Date().toISOString(),
+        }).where(eq(providerProfiles.id, profile.id)),
+      ] as const);
     } catch (error) {
       await deleteProviderImage(key);
       throw error;
@@ -451,7 +502,14 @@ export async function POST(request: Request) {
       eq(providerGalleryItems.providerId, provider.id),
     )).limit(1);
     if (!item) return Response.json({ error: "Gallery photo not found." }, { status: 404 });
-    await db.delete(providerGalleryItems).where(eq(providerGalleryItems.id, item.id));
+    const profile = await ensureProfile(provider);
+    await db.batch([
+      db.delete(providerGalleryItems).where(eq(providerGalleryItems.id, item.id)),
+      db.update(providerProfiles).set({
+        publicStatus: profile.publicStatus === "draft" ? "draft" : "pending_review",
+        updatedAt: new Date().toISOString(),
+      }).where(eq(providerProfiles.id, profile.id)),
+    ] as const);
     try {
       await deleteProviderImage(item.imageKey);
     } catch (error) {

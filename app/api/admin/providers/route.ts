@@ -1,6 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { providerApplications } from "../../../../db/schema";
+import {
+  providerApplications,
+  providerGalleryItems,
+  providerProfiles,
+} from "../../../../db/schema";
 import {
   parseProviderServices,
   serializeProviderServices,
@@ -12,6 +16,13 @@ import {
 import { isSameOriginRequest } from "../../../../lib/account-auth";
 import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
+import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
+import {
+  prohibitedProviderProfileClaims,
+  prohibitedProviderWrittenClaims,
+  providerProfileClaimsFingerprint,
+  PROVIDER_PROFILE_REVIEW_EVENT,
+} from "../../../../lib/provider-profile-claims";
 const CHECKLIST_KEYS = [
   "businessIdentity",
   "serviceExperience",
@@ -46,6 +57,8 @@ export async function POST(request: Request) {
     status?: string;
     checklist?: unknown;
     approvedServices?: unknown;
+    profileReviewDecision?: string;
+    profileReviewNotes?: string;
   };
   if (!body.id) {
     return Response.json({ error: "Invalid provider update." }, { status: 400 });
@@ -55,6 +68,93 @@ export async function POST(request: Request) {
     .where(eq(providerApplications.id, body.id)).limit(1);
   if (!provider) {
     return Response.json({ error: "Provider application not found." }, { status: 404 });
+  }
+
+  if (body.action === "review-profile") {
+    const decision = body.profileReviewDecision === "approve"
+      ? "approve"
+      : body.profileReviewDecision === "reject"
+        ? "reject"
+        : "";
+    if (!decision) {
+      return Response.json({ error: "Choose approve or reject for this profile review." }, { status: 400 });
+    }
+    const [profile] = await db.select().from(providerProfiles)
+      .where(eq(providerProfiles.providerId, provider.id)).limit(1);
+    if (!profile) {
+      return Response.json({ error: "Provider profile not found." }, { status: 404 });
+    }
+    if (profile.publicStatus !== "pending_review") {
+      return Response.json({
+        error: "Only the current pending profile version can be reviewed.",
+        code: "PROFILE_REVIEW_STATE_CHANGED",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+    const gallery = await db.select({
+      id: providerGalleryItems.id,
+      caption: providerGalleryItems.caption,
+      service: providerGalleryItems.service,
+      imageKey: providerGalleryItems.imageKey,
+    }).from(providerGalleryItems)
+      .where(eq(providerGalleryItems.providerId, provider.id));
+    const prohibitedClaims = [
+      ...prohibitedProviderProfileClaims(profile),
+      ...prohibitedProviderWrittenClaims(gallery.map((item) => item.caption)),
+    ];
+    if (decision === "approve" && prohibitedClaims.length) {
+      return Response.json({
+        error: "This profile contains provider-written claims that cannot be approved for publication. Reject it with correction instructions.",
+        code: "PROVIDER_PROFILE_PROHIBITED_CLAIM",
+        prohibitedClaims: [...new Set(prohibitedClaims)],
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+    const contentFingerprint = await providerProfileClaimsFingerprint(profile, gallery);
+    const reviewNotes = typeof body.profileReviewNotes === "string"
+      ? body.profileReviewNotes.trim().slice(0, 1000)
+      : "";
+    if (decision === "reject" && !reviewNotes) {
+      return Response.json({
+        error: "Add correction instructions before rejecting provider profile content.",
+      }, { status: 400, headers: { "cache-control": "no-store" } });
+    }
+    await recordProviderAuditEvent({
+      providerId: provider.id,
+      eventType: PROVIDER_PROFILE_REVIEW_EVENT,
+      entityType: "provider_profile",
+      entityId: profile.id,
+      actorType: "owner",
+      actorId: "verified-owner",
+      outcome: decision === "approve" ? "approved" : "rejected",
+      reasonCodes: decision === "approve"
+        ? ["provider_written_claims_reviewed"]
+        : ["provider_profile_corrections_required"],
+      metadata: {
+        contentFingerprint,
+        reviewNotes,
+        reviewedProfileUpdatedAt: profile.updatedAt,
+        galleryItemIds: gallery.map((item) => item.id).sort(),
+      },
+    });
+    const updated = await db.update(providerProfiles).set({
+      publicStatus: decision === "approve" ? "published" : "draft",
+      updatedAt: new Date().toISOString(),
+    }).where(and(
+      eq(providerProfiles.id, profile.id),
+      eq(providerProfiles.publicStatus, "pending_review"),
+      eq(providerProfiles.updatedAt, profile.updatedAt),
+    )).returning({ id: providerProfiles.id });
+    if (!updated.length) {
+      return Response.json({
+        error: "The provider changed this profile during review. Review the new version before publishing.",
+        code: "PROFILE_REVIEW_STATE_CHANGED",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+    return Response.json({
+      ok: true,
+      profileId: profile.id,
+      publicStatus: decision === "approve" ? "published" : "draft",
+      contentFingerprint,
+    }, { headers: { "cache-control": "no-store" } });
   }
 
   if (body.action === "save-credential" || body.action === "verify") {

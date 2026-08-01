@@ -19,6 +19,20 @@ type CheckoutAcceptance = {
   agreementHash: string;
   presentedText: string;
   cancellationRefundSummary: string;
+  scope: {
+    providerLegalName: string;
+    serviceCodes: string[];
+    scheduledFor: string;
+    performingPersonId: string;
+    supervisorPersonId: string;
+    laborAmountCents: number;
+    partsAmountCents: number;
+    taxAmountCents: number;
+    otherAmountCents: number;
+    providerAmountCents: number;
+    customerFeeCents: number;
+    customerTotalCents: number;
+  };
 };
 
 type QuotePaymentCardProps = {
@@ -55,6 +69,8 @@ const REVIEW_STATUSES = new Set([
   "dispute_lost",
 ]);
 
+const CHECKOUT_STATUS_TOKEN_KEY = "tuveloz:checkout-status-token";
+
 function dollars(value: string | number) {
   return `$${(Number(value) / 100).toFixed(2)}`;
 }
@@ -80,11 +96,13 @@ export function QuotePaymentCard({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const query = new URLSearchParams({
-      quoteId: quote.id,
-      token: accessToken,
-    });
-    fetch(`/api/stripe/checkout?${query}`, { cache: "no-store" })
+    const query = new URLSearchParams({ quoteId: quote.id });
+    fetch(`/api/stripe/checkout?${query}`, {
+      cache: "no-store",
+      headers: accessToken
+        ? { "x-tuveloz-request-token": accessToken }
+        : undefined,
+    })
       .then(async (response) => {
         const result = await response.json() as {
           checkoutAllowed?: boolean;
@@ -130,6 +148,11 @@ export function QuotePaymentCard({
       if (!response.ok || !result.url) {
         if (result.payment) setPayment(result.payment);
         throw new Error(result.error || "Unable to open Stripe Checkout.");
+      }
+      if (accessToken) {
+        window.sessionStorage.setItem(CHECKOUT_STATUS_TOKEN_KEY, accessToken);
+      } else {
+        window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
       }
       window.location.assign(result.url);
     } catch (failure) {
@@ -204,6 +227,20 @@ export function QuotePaymentCard({
           {error && <p className="form-error" role="alert">{error}</p>}
           {checkoutAcceptance ? (
             <>
+              <dl className="quote-breakdown" aria-label="Exact checkout authorization">
+                <div><dt>Provider legal identity</dt><dd>{checkoutAcceptance.scope.providerLegalName}</dd></div>
+                <div><dt>Exact service codes</dt><dd>{checkoutAcceptance.scope.serviceCodes.join(", ")}</dd></div>
+                <div><dt>Scheduled time</dt><dd>{checkoutAcceptance.scope.scheduledFor}</dd></div>
+                <div><dt>Performing person ID</dt><dd>{checkoutAcceptance.scope.performingPersonId}</dd></div>
+                <div><dt>Supervisor person ID</dt><dd>{checkoutAcceptance.scope.supervisorPersonId || "none"}</dd></div>
+                <div><dt>Labor</dt><dd>{dollars(checkoutAcceptance.scope.laborAmountCents)}</dd></div>
+                <div><dt>Parts</dt><dd>{dollars(checkoutAcceptance.scope.partsAmountCents)}</dd></div>
+                <div><dt>Tax</dt><dd>{dollars(checkoutAcceptance.scope.taxAmountCents)}</dd></div>
+                <div><dt>Other charges</dt><dd>{dollars(checkoutAcceptance.scope.otherAmountCents)}</dd></div>
+                <div><dt>Complete provider amount</dt><dd>{dollars(checkoutAcceptance.scope.providerAmountCents)}</dd></div>
+                <div><dt>Tuveloz service fee</dt><dd>{dollars(checkoutAcceptance.scope.customerFeeCents)}</dd></div>
+                <div className="total"><dt>Customer total</dt><dd>{dollars(checkoutAcceptance.scope.customerTotalCents)}</dd></div>
+              </dl>
               <p className="admin-note">
                 <strong>Cancellation and refund summary:</strong>{" "}
                 {checkoutAcceptance.cancellationRefundSummary}

@@ -372,6 +372,7 @@ export async function POST(request: Request) {
           providerEmail: provider.email,
           stage: "job_start",
           arrivalJobFacts: body.arrivalJobFacts,
+          arrivalConfirmed: body.arrivalConfirmed === true,
           effectiveAt: now,
         });
         if (!stageDecision.allowed || !stageDecision.result?.decisionId) {
@@ -491,17 +492,19 @@ export async function POST(request: Request) {
     }
     let jobStartDecisionId = existingRecord?.jobStartDecisionId || "";
     if (workStatus === "in progress") {
-      const existingStartIsCurrent = await jobAuthorizationDecisionMatchesContext(
-        operationContext,
-        jobStartDecisionId,
-        "job_start",
-      );
+      const existingStartIsCurrent = existingRecord?.workStatus === "in progress"
+        && await jobAuthorizationDecisionMatchesContext(
+          operationContext,
+          jobStartDecisionId,
+          "job_start",
+        );
       if (!existingStartIsCurrent) {
         const startDecision = await evaluateAssignedJobStage({
           requestId,
           providerEmail: provider.email,
           stage: "job_start",
           arrivalJobFacts: body.arrivalJobFacts,
+          arrivalConfirmed: body.arrivalConfirmed === true,
           effectiveAt: now,
         });
         if (!startDecision.allowed || !startDecision.result?.decisionId) {

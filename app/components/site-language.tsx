@@ -438,7 +438,7 @@ const spanishText: Record<string, string> = {
   "No reviews yet": "Aún no hay reseñas",
   "No completed-job reviews yet.": "Aún no hay reseñas de trabajos completados.",
   "Only feedback from completed Tuveloz jobs appears here.": "Aquí solo aparecen comentarios de trabajos completados en Tuveloz.",
-  "Provider pages show approved services, provider-selected work photos, and verified completed-job reviews.": "Las páginas de proveedores muestran servicios aprobados, fotos seleccionadas por el proveedor y reseñas verificadas de trabajos completados.",
+  "Provider pages show currently eligible service listings, provider-supplied work photos, and completed-job reviews.": "Las páginas de proveedores muestran servicios actualmente elegibles, fotos proporcionadas por el proveedor y reseñas de trabajos completados.",
   "Private coaching": "Orientación privada",
   "Profile health": "Estado del perfil",
   "Live customer preview": "Vista previa para clientes",
@@ -447,7 +447,7 @@ const spanishText: Record<string, string> = {
   "Add a clear one-line description of your vehicle services.": "Agregue una descripción clara y breve de sus servicios para vehículos.",
   "Add experience": "Agregue experiencia",
   "Local service area": "Área de servicio local",
-  "Customers will also see your approved services, real work photos, and verified reviews.": "Los clientes también verán sus servicios aprobados, fotos reales de trabajos y reseñas verificadas.",
+  "If approved for publication, customers see currently eligible service listings, provider-supplied work photos, and reviews linked to completed Tuveloz jobs.": "Si se aprueba su publicación, los clientes verán los servicios actualmente elegibles, fotos proporcionadas por el proveedor y reseñas vinculadas a trabajos completados en Tuveloz.",
   "Printable business cards": "Tarjetas de presentación imprimibles",
   "Your unique QR is added automatically": "Su QR único se agrega automáticamente",
   "SCAN MY PAGE": "ESCANEE MI PÁGINA",
@@ -622,12 +622,10 @@ const attributeStates = new WeakMap<Element, Map<string, TextState>>();
 function translatedPattern(value: string) {
   let match = value.match(/^(\d+) completed-job (review|reviews)$/);
   if (match) return `${match[1]} ${match[2] === "review" ? "reseña" : "reseñas"} de trabajos completados`;
-  match = value.match(/^(\d+) verified (review|reviews)$/);
-  if (match) return `${match[1]} ${match[2] === "review" ? "reseña verificada" : "reseñas verificadas"}`;
-  match = value.match(/^(\d+) approved (service|services)$/);
-  if (match) return `${match[1]} ${match[2] === "service" ? "servicio aprobado" : "servicios aprobados"}`;
-  match = value.match(/^(\d+) approved vehicle services$/);
-  if (match) return `${match[1]} servicios aprobados para vehículos`;
+  match = value.match(/^(\d+) currently listed (service|services)$/);
+  if (match) return `${match[1]} ${match[2] === "service" ? "servicio actualmente publicado" : "servicios actualmente publicados"}`;
+  match = value.match(/^(\d+) currently listed vehicle services$/);
+  if (match) return `${match[1]} servicios para vehículos actualmente publicados`;
   return value;
 }
 
