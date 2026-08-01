@@ -32,6 +32,14 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
 
+      - name: Integrate current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Tuveloz Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git merge --no-edit origin/main
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -91,17 +99,6 @@ jobs:
           python scripts/apply_labor_only_core.py
           python scripts/apply_labor_only_ui.py
           python scripts/apply_labor_only_hardening.py
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("tests/customer-supplied-parts-preferences.test.mjs")
-          text = path.read_text()
-          old = r"partsSource:\s*partsSource"
-          new = r"partsSource:\s*CUSTOMER_SUPPLIED_PARTS_SOURCE"
-          if text.count(old) != 1:
-              raise SystemExit("Labor-only request API test marker did not match exactly.")
-          path.write_text(text.replace(old, new, 1))
-          PY
 
       - name: Install dependencies
         run: npm ci
