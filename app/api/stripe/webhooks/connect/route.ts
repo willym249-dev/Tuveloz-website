@@ -81,6 +81,12 @@ export async function POST(request: Request) {
     });
     claimId = claim.id;
     if (!claim.shouldProcess) {
+      if (claim.busy) {
+        return Response.json(
+          { error: "This Stripe event is already being processed; retry it." },
+          { status: 503, headers: { "retry-after": "5" } },
+        );
+      }
       return Response.json({ received: true, duplicate: true });
     }
 

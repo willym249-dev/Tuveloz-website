@@ -1513,6 +1513,14 @@ export async function POST(request: Request) {
       const ageVerificationReference = clean(body.ageVerificationReference, 300);
       const ageVerificationCheckedAt = clean(body.ageVerificationCheckedAt, 10);
       const ageVerificationValidThrough = clean(body.ageVerificationValidThrough, 10);
+      if (
+        identityVerificationProvider.toLowerCase() === "stripe_identity"
+        || ageVerificationProvider.toLowerCase() === "stripe_identity"
+      ) {
+        return Response.json({
+          error: "stripe_identity is reserved for the signed automated Stripe webhook. Use the actual independent external provider name for a manual review.",
+        }, { status: 400 });
+      }
       const externalVerificationRecord = {
         identityVerificationProvider,
         identityVerificationReference,

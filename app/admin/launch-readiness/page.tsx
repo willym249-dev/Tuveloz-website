@@ -257,6 +257,64 @@ export default function LaunchReadinessPage() {
 
       {data && (
         <>
+          <section className="admin-section" id="maryland-provider-pathway-workplan">
+            <div className="admin-section-heading">
+              <div>
+                <h2>Montgomery County provider-pathway workplan</h2>
+                <p className="admin-section-copy">
+                  These are launch holds, not optional suggestions. They do not enable services,
+                  jobs, payments, or payouts, and they do not guarantee that Tuveloz has no liability.
+                </p>
+                <p className="admin-section-copy">
+                  Official sources: {" "}
+                  <a
+                    href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    County OCP registration guidance
+                  </a>
+                  {" · "}
+                  <a
+                    href="https://www.montgomerycountymd.gov/OCP/Resources/Files/Licensing_Forms/ch_31a_02152011.pdf"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    County Code Chapter 31A
+                  </a>
+                </p>
+              </div>
+              <strong>all customer work remains disabled</strong>
+            </div>
+            <div className="admin-grid">
+              <article className="admin-card">
+                <div className="admin-card-top"><span>County baseline</span><strong>blocked</strong></div>
+                <h3>No unregistered simple-repair lane</h3>
+                <p>Mobile repair and maintenance businesses need current Montgomery County OCP registration.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Learning account</span><strong>no jobs</strong></div>
+                <h3>Learning means application interest only</h3>
+                <p>No customer work, training, employment, job assignment, payment, or payout is available through this account.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Independent owner-operator</span><strong>blocked</strong></div>
+                <h3>Verify the actual business and exact coverage</h3>
+                <p>Require a real provider business, current OCP registration, and broker-confirmed coverage for every exact service before activation.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Trainee employee</span><strong>blocked</strong></div>
+                <h3>A separately registered business must be provider of record</h3>
+                <p>Trainees can only be employees of that business and remain unavailable until provider-of-record, insurance, workers&apos; compensation, supervision, assignment, and payout controls are implemented.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Specialty work</span><strong>blocked</strong></div>
+                <h3>Apply the additional exact-service gates</h3>
+                <p>Specialty services remain unavailable until every applicable license, permit, agency, location, environmental, insurance, and workflow requirement is verified.</p>
+              </article>
+            </div>
+          </section>
+
           <section className="admin-section" id="current-safety-position">
             <div className="admin-section-heading">
               <div>

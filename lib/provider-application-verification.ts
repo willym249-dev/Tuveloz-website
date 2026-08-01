@@ -181,6 +181,10 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   const sponsorContactTitle = clean(body.sponsorContactTitle, 100);
   const signerName = clean(body.signerName, 120);
   const signerTitle = clean(body.signerTitle, 100);
+  const performingPersonFirstName = clean(body.performingPersonFirstName, 80);
+  const performingPersonLastName = clean(body.performingPersonLastName, 80);
+  const performingPersonIdentityAcknowledged =
+    body.performingPersonIdentityAcknowledged === true;
   const experience = clean(body.experience, 1000);
   const rulesReviewed = body.rulesReviewed === true;
   const adultAcknowledged = body.adultAcknowledged === true;
@@ -189,9 +193,18 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   const acceptedTerms = body.termsBundleAccepted === true;
   const privacyAcknowledged = body.privacyAcknowledged === true;
 
-  if (!name || !email || !applicationPathway || !signerName || !signerTitle) {
+  if (
+    !name
+    || !email
+    || !applicationPathway
+    || !signerName
+    || !signerTitle
+    || !performingPersonFirstName
+    || !performingPersonLastName
+    || !performingPersonIdentityAcknowledged
+  ) {
     throw new ProviderApplicationValidationError(
-      "Complete the applicant, pathway, and signer fields.",
+      "Complete the applicant, pathway, performing-person identity, and signer fields.",
     );
   }
   if (!isEmail(email)) {
@@ -284,7 +297,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   }
 
   return {
-    format: "tuveloz_provider_application_payload_v1" as const,
+    format: "tuveloz_provider_application_payload_v2" as const,
     name,
     email,
     preferredLanguage,
@@ -310,6 +323,8 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     sponsorContactTitle,
     signerName,
     signerTitle,
+    performingPersonFirstName,
+    performingPersonLastName,
     experience,
     providerSelfAssessment: cleanProviderSelfAssessment(body.providerSelfAssessment),
     acknowledgements: {
@@ -318,6 +333,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
       employmentResponsibilityAcknowledged: true as const,
       termsBundleAccepted: true as const,
       privacyAcknowledged: true as const,
+      performingPersonIdentityAcknowledged: true as const,
     },
     policy: {
       policyVersion: POLICY_VERSION,

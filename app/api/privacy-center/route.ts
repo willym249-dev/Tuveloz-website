@@ -1,10 +1,18 @@
 import { env } from "cloudflare:workers";
-import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import {
+  getPrivacyAccountSession,
+  providerApplicationOwnershipFor,
+} from "../../../lib/account-auth";
 import {
   sendMarketplaceUpdateEmail,
 } from "../../../lib/email-notifications";
 import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import {
+  parsePrivacyScope,
+  privacyAccountAccessFor,
+  type PrivacyScope,
+} from "../../../lib/privacy-account-access";
 
 type AccountRole = "customer" | "provider";
 type PrivacyRequestType =
@@ -59,14 +67,11 @@ function cleanEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
-async function signedInAccount(request: Request) {
-  const session = await getAccountSession(request);
+async function signedInAccount(request: Request, requestedScope?: PrivacyScope) {
+  const session = await getPrivacyAccountSession(request);
   if (!session || (session.role !== "customer" && session.role !== "provider")) return null;
-  if (session.role === "provider" && !(await providerAccountFor(session.email))) return null;
-  return {
-    email: cleanEmail(session.email),
-    role: session.role as AccountRole,
-  };
+  const application = await providerApplicationOwnershipFor(session.email);
+  return privacyAccountAccessFor(session, application, requestedScope);
 }
 
 async function ensurePreferences(email: string, role: AccountRole) {
@@ -78,7 +83,11 @@ async function ensurePreferences(email: string, role: AccountRole) {
   ).bind(email, role).run();
 }
 
-async function responseData(email: string, role: AccountRole) {
+async function responseData(
+  email: string,
+  role: AccountRole,
+  availablePrivacyScopes: PrivacyScope[],
+) {
   await ensurePreferences(email, role);
   const [preferences, requestsResult] = await Promise.all([
     env.DB.prepare(
@@ -111,6 +120,7 @@ async function responseData(email: string, role: AccountRole) {
   return {
     role,
     email,
+    availablePrivacyScopes,
     preferences: {
       marketingEmail: preferences?.marketingEmail === "yes",
       productUpdateEmail: preferences?.productUpdateEmail === "yes",
@@ -121,8 +131,10 @@ async function responseData(email: string, role: AccountRole) {
     },
     requests: requestsResult.results ?? [],
     immediateTools: {
-      dataExport: "/api/privacy-center/export",
-      profileCorrection: role === "customer" ? "/customer?view=settings" : "/provider-jobs",
+      dataExport: `/api/privacy-center/export?scope=${role}`,
+      profileCorrection: role === "customer"
+        ? "/customer?view=settings"
+        : "/privacy-center?scope=provider#privacy-request",
     },
     notices: [
       "Essential account-security, payment, appointment, authorization, and active-job messages remain enabled because they help protect the account and complete requested marketplace activity.",
@@ -133,7 +145,14 @@ async function responseData(email: string, role: AccountRole) {
 }
 
 export async function GET(request: Request) {
-  const account = await signedInAccount(request);
+  const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
+  if (requestedScope === null) {
+    return Response.json(
+      { error: "Choose either customer or provider privacy data." },
+      { status: 400, headers: { "cache-control": "private, no-store" } },
+    );
+  }
+  const account = await signedInAccount(request, requestedScope);
   if (!account) {
     return Response.json(
       { error: "Sign in to your Tuveloz account to use the privacy center." },
@@ -141,7 +160,7 @@ export async function GET(request: Request) {
     );
   }
   return Response.json(
-    await responseData(account.email, account.role),
+    await responseData(account.email, account.role, account.availablePrivacyScopes),
     { headers: { "cache-control": "private, no-store" } },
   );
 }
@@ -150,7 +169,14 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "This privacy action must come from Tuveloz." }, { status: 403 });
   }
-  const account = await signedInAccount(request);
+  const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
+  if (requestedScope === null) {
+    return Response.json(
+      { error: "Choose either customer or provider privacy data." },
+      { status: 400 },
+    );
+  }
+  const account = await signedInAccount(request, requestedScope);
   if (!account) {
     return Response.json({ error: "Sign in to manage privacy choices." }, { status: 401 });
   }
@@ -177,7 +203,11 @@ export async function POST(request: Request) {
       ).run();
       return Response.json({
         ok: true,
-        ...(await responseData(account.email, account.role)),
+        ...(await responseData(
+          account.email,
+          account.role,
+          account.availablePrivacyScopes,
+        )),
       });
     }
 
@@ -200,7 +230,11 @@ export async function POST(request: Request) {
       }
       return Response.json({
         ok: true,
-        ...(await responseData(account.email, account.role)),
+        ...(await responseData(
+          account.email,
+          account.role,
+          account.availablePrivacyScopes,
+        )),
       });
     }
 
@@ -330,7 +364,11 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       requestId: id,
-      ...(await responseData(account.email, account.role)),
+      ...(await responseData(
+        account.email,
+        account.role,
+        account.availablePrivacyScopes,
+      )),
     }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to update privacy choices.";

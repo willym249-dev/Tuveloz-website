@@ -1,5 +1,13 @@
 import { env } from "cloudflare:workers";
-import { getAccountSession, providerAccountFor } from "../../../../lib/account-auth";
+import {
+  getPrivacyAccountSession,
+  providerApplicationOwnershipFor,
+} from "../../../../lib/account-auth";
+import {
+  parsePrivacyScope,
+  privacyAccountAccessFor,
+  type PrivacyScope,
+} from "../../../../lib/privacy-account-access";
 
 type AccountRole = "customer" | "provider";
 
@@ -12,15 +20,11 @@ type AccountRecord = {
   updatedAt: string;
 };
 
-function cleanEmail(value: string) {
-  return value.trim().toLowerCase();
-}
-
-async function signedInAccount(request: Request) {
-  const session = await getAccountSession(request);
+async function signedInAccount(request: Request, requestedScope?: PrivacyScope) {
+  const session = await getPrivacyAccountSession(request);
   if (!session || (session.role !== "customer" && session.role !== "provider")) return null;
-  if (session.role === "provider" && !(await providerAccountFor(session.email))) return null;
-  return { email: cleanEmail(session.email), role: session.role as AccountRole };
+  const application = await providerApplicationOwnershipFor(session.email);
+  return privacyAccountAccessFor(session, application, requestedScope);
 }
 
 async function rows<T>(sql: string, values: unknown[] = []) {
@@ -306,6 +310,7 @@ async function providerOnboardingExport(providerId: string) {
   const [
     pathwayProfiles,
     personnel,
+    identityVerificationHistory,
     agreementHistory,
     providerEvidence,
     evidenceScanHistory,
@@ -343,6 +348,20 @@ async function providerOnboardingExport(providerId: string) {
               created_at AS createdAt, updated_at AS updatedAt
          FROM provider_personnel WHERE provider_id = ?
         ORDER BY roster_version DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId,
+              application_submission_evidence_id AS applicationSubmissionEvidenceId,
+              certification_version AS certificationVersion,
+              attempt_number AS attemptNumber,
+              stripe_status AS stripeStatus, decision_status AS decisionStatus,
+              failure_code AS failureCode, livemode,
+              consented_at AS consentedAt, checked_at AS checkedAt,
+              verified_at AS verifiedAt, redacted_at AS redactedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_identity_verification_sessions WHERE provider_id = ?
+        ORDER BY attempt_number DESC`,
       [providerId],
     ),
     rows(
@@ -438,6 +457,7 @@ async function providerOnboardingExport(providerId: string) {
   return {
     providerPathwayHistory: pathwayProfiles,
     providerPersonnelRecords: personnel,
+    providerIdentityVerificationHistory: identityVerificationHistory,
     providerAgreementAcceptanceHistory: agreementHistory,
     providerEvidenceMetadata: providerEvidence,
     providerEvidenceScanHistory: evidenceScanHistory,
@@ -448,10 +468,7 @@ async function providerOnboardingExport(providerId: string) {
   };
 }
 
-async function providerExport(email: string) {
-  const provider = await providerAccountFor(email);
-  if (!provider) return {};
-  const providerId = provider.id;
+async function providerExport(email: string, providerId: string) {
   const [
     application,
     profile,
@@ -667,7 +684,14 @@ async function providerExport(email: string) {
 }
 
 export async function GET(request: Request) {
-  const account = await signedInAccount(request);
+  const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
+  if (requestedScope === null) {
+    return Response.json(
+      { error: "Choose either customer or provider privacy data." },
+      { status: 400, headers: { "cache-control": "private, no-store" } },
+    );
+  }
+  const account = await signedInAccount(request, requestedScope);
   if (!account) {
     return Response.json(
       { error: "Sign in to export your Tuveloz account data." },
@@ -680,7 +704,7 @@ export async function GET(request: Request) {
       commonExport(account.email, account.role),
       account.role === "customer"
         ? customerExport(account.email)
-        : providerExport(account.email),
+        : providerExport(account.email, account.providerId),
     ]);
     const exportDocument = {
       generatedAt: new Date().toISOString(),

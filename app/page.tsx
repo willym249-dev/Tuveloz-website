@@ -601,6 +601,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       legalResponsibility: legalRequirementsAccepted && employmentResponsibilityAcknowledged,
       signerName: values["signer-name"],
       signerTitle: values["signer-title"],
+      performingPersonFirstName: values["performing-person-first-name"],
+      performingPersonLastName: values["performing-person-last-name"],
+      performingPersonIdentityAcknowledged:
+        formData.get("performing-person-identity-acknowledged") === "yes",
       adultAcknowledged,
       employmentWorkAuthorizationResponsibilityAcknowledged: employmentResponsibilityAcknowledged,
       termsBundleAccepted,
@@ -1720,6 +1724,38 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     Policy {POLICY_VERSION} · {POLICY_JURISDICTION} · {POLICY_STATUS}
                   </small>
                 </div>
+                <div className="legal-requirement-note" aria-label="Montgomery County provider pathway rules">
+                  <strong>Montgomery County has no unregistered simple-repair lane.</strong>
+                  <small>
+                    A mobile repair or maintenance business must hold the County OCP registration.
+                    A learning account has no customer work. An independent owner-operator needs a real
+                    business, current OCP registration, and broker-confirmed coverage for each exact service.
+                  </small>
+                  <small>
+                    A trainee may qualify only as an employee of a separately registered provider business,
+                    and remains unavailable until Tuveloz implements the provider-of-record, insurance,
+                    workers&apos; compensation, and supervision workflow. Specialty work has additional
+                    license, permit, insurance, and exact-service gates.
+                  </small>
+                  <small>
+                    Official sources: {" "}
+                    <a
+                      href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Montgomery County OCP registration guidance
+                    </a>
+                    {" · "}
+                    <a
+                      href="https://www.montgomerycountymd.gov/OCP/Resources/Files/Licensing_Forms/ch_31a_02152011.pdf"
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      County Code Chapter 31A
+                    </a>
+                  </small>
+                </div>
                 <fieldset className="area-fieldset">
                   <legend>1. Choose your provider pathway</legend>
                   <p>Select the choice that describes the real relationship. It does not grant job access.</p>
@@ -2175,7 +2211,42 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   </section>
                 ) : null}
                 <fieldset className="area-fieldset">
-                  <legend>Authorized signature and acknowledgments</legend>
+                  <legend>Performing person, authorized signature, and acknowledgments</legend>
+                  <label>
+                    Performing person&apos;s legal first name
+                    <input
+                      autoComplete="given-name"
+                      required
+                      name="performing-person-first-name"
+                      placeholder="First name exactly as shown on ID"
+                    />
+                  </label>
+                  <label>
+                    Performing person&apos;s legal last name
+                    <input
+                      autoComplete="family-name"
+                      required
+                      name="performing-person-last-name"
+                      placeholder="Last name exactly as shown on ID"
+                    />
+                    <small>
+                      This names the individual tied to this provider-person record. It may be
+                      different from the business name or authorized signer and must match the ID
+                      used in the separate Stripe Identity check.
+                    </small>
+                  </label>
+                  <label className="policy-consent">
+                    <input
+                      required
+                      name="performing-person-identity-acknowledged"
+                      type="checkbox"
+                      value="yes"
+                    />
+                    <span>
+                      I certify that this is the legal name of the actual person tied to this
+                      application who may perform services. This does not grant job access.
+                    </span>
+                  </label>
                   <label>
                     Typed signer name
                     <input required name="signer-name" placeholder="Full legal name" />
