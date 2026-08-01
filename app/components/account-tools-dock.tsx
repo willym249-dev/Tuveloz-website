@@ -71,9 +71,14 @@ export function AccountToolsDock() {
           {isOwner ? "Open Owner Control Center" : "Continue to secure owner sign in"}
         </Link>
         {isOwner && (
-          <Link href="/admin/marketplace-tools" style={linkStyle}>
-            Marketplace operations
-          </Link>
+          <>
+            <Link href="/admin/marketplace-tools" style={linkStyle}>
+              Marketplace operations
+            </Link>
+            <Link href="/admin/test-lab" style={linkStyle}>
+              Open Test Lab
+            </Link>
+          </>
         )}
         {!isOwner && ownerEntryAvailable && (
           <small style={{ display: "block", padding: ".25rem .65rem", opacity: .78, lineHeight: 1.4 }}>
