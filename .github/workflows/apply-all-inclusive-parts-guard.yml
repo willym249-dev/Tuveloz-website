@@ -1,9 +1,6 @@
 name: Apply all-inclusive parts guard
 
 on:
-  push:
-    branches:
-      - agent/all-inclusive-parts-guard
   pull_request:
     branches:
       - main
@@ -19,7 +16,7 @@ permissions:
 
 concurrency:
   group: apply-all-inclusive-parts-guard
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   apply-and-validate:
@@ -59,7 +56,7 @@ jobs:
           rm scripts/apply-all-inclusive-parts-legal-preface.py
           rm scripts/apply-all-inclusive-parts-legal.py
           rm .github/workflows/apply-all-inclusive-parts-guard.yml
-          git config user.name "github-actions[bot]"
+          git config user.name "github-actions[bot]]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
