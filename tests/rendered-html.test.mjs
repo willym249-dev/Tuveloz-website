@@ -121,9 +121,10 @@ test("build prefers confirmed vehicle choices and never invents motor data", asy
   assert.ok(contents.includes("Motor/engine not provided"));
   assert.ok(contents.includes("Choose an official option above or type the engine here"));
   assert.ok(contents.includes("This typed value overrides the VIN or official choice"));
-  assert.ok(contents.includes("Compare parts before you decide"));
-  assert.ok(contents.includes("before choosing whether you or the provider should supply the parts"));
-  assert.ok(contents.includes("Any special equipment or rental cost must be disclosed in the quote."));
+  assert.ok(contents.includes("OEM and aftermarket are communication preferences only"));
+  assert.ok(contents.includes("They do not add a parts charge to Tuveloz"));
+  assert.ok(contents.includes("customer purchases separately"));
+  assert.ok(contents.includes("Any required parts must be purchased separately by the customer and cannot be included in a Tuveloz quote or payment."));
 });
 
 test("build contains global language, optional budget details, repeat booking, and honest price guidance", async () => {
@@ -142,17 +143,17 @@ test("build contains global language, optional budget details, repeat booking, a
   assert.ok(contents.includes("at least 3 real, non-test, completed"));
 });
 
-test("build itemizes provider-supplied parts separately from labor", async () => {
+test("build keeps OEM and aftermarket as communication-only preferences", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("If the provider supplies parts, the quote will show separate labor"));
-  assert.ok(contents.includes("Labor ($)"));
-  assert.ok(contents.includes("Parts price ($)"));
-  assert.ok(contents.includes("laborPriceCents"));
-  assert.ok(contents.includes("partsPriceCents"));
+  assert.ok(contents.includes("Parts arrangement for this labor-only request"));
+  assert.ok(contents.includes("OEM and aftermarket are communication preferences only"));
+  assert.ok(contents.includes("I confirm this quote is for labor only"));
+  assert.ok(!contents.includes("If the provider supplies parts, the quote will show separate labor"));
+  assert.ok(!contents.includes("Parts price ($)"));
 });
 
 test("build protects every important submission with a second confirmation", async () => {
@@ -897,7 +898,7 @@ test("provider dashboard exposes focused, factual, provider-owned tools", async 
 
   assert.ok(providerSource.includes("Accepted-job availability"));
   assert.ok(providerSource.includes("Only quotes submitted from this provider account appear here."));
-  assert.ok(providerSource.includes("Customer sees"));
+  assert.ok(providerSource.includes("customer-visible status"));
   assert.ok(providerSource.includes("type ProviderView ="));
   assert.ok(providerSource.includes('aria-pressed={activeView === "available"}'));
   assert.ok(providerSource.includes('onClick={() => setActiveView("schedule")}'));

@@ -30,6 +30,7 @@ import {
 import {
   CURRENT_LAUNCH_AREA,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
+  PARTS_COMMUNICATION_NOTICE,
   PARTS_PREFERENCE_OPTIONS,
   PARTS_SOURCE_OPTIONS,
 } from "../../lib/service-matching";
@@ -243,7 +244,7 @@ export default async function PostJobPage() {
           </details>
 
           <fieldset className="area-fieldset">
-            <legend>Who supplies any needed parts?</legend>
+            <legend>Parts arrangement for this labor-only request</legend>
             <div className="area-options parts-source-options">
               {PARTS_SOURCE_OPTIONS.map((option) => (
                 <label key={option}>
@@ -252,15 +253,34 @@ export default async function PostJobPage() {
                 </label>
               ))}
             </div>
+            <small className="parts-equipment-note">{PARTS_COMMUNICATION_NOTICE}</small>
           </fieldset>
 
           <label>
-            Parts preference
+            Customer-supplied parts preference
             <select defaultValue="No preference" name="parts-preference" required>
               {PARTS_PREFERENCE_OPTIONS.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
+            <small>
+              OEM and aftermarket are communication preferences only. They do not add
+              a part, parts price, reimbursement, tax, or purchase to this request.
+            </small>
+          </label>
+
+          <label className="policy-consent">
+            <input
+              name="labor-only-parts-acknowledged"
+              required
+              type="checkbox"
+              value="yes"
+            />
+            <span>
+              I understand that every quote and payment through Tuveloz is for labor
+              only. I will purchase any required parts separately, and the provider
+              cannot include provider-supplied parts or a parts charge in Tuveloz.
+            </span>
           </label>
 
           <fieldset className="area-fieldset">

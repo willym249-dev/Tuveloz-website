@@ -13,8 +13,9 @@ import {
   providerMatchesArea,
   providerMatchesJob,
   providerMatchesServiceLocation,
+  isLaborOnlyPartsSource,
   parseProviderServices,
-  QUOTE_PART_TYPE_OPTIONS,
+  quotePartTypeForLaborOnlySource,
 } from "../../../lib/service-matching";
 import {
   deleteJobImage,
@@ -787,23 +788,28 @@ export async function POST(request: Request) {
 
   const availability = clean(body.availability, 200);
   const message = clean(body.message, 800);
-  let partType = clean(body.partType, 40);
+  const laborOnlyConfirmed = (
+    body.laborOnlyConfirmed === true
+    || body.laborOnlyConfirmed === "yes"
+    || body.laborOnlyConfirmed === "on"
+  );
   const laborPrice = Number(body.laborPrice ?? body.price);
-  const partsPrice = Number(body.partsPrice ?? 0);
-  const price = laborPrice + partsPrice;
+  const submittedPartsPrice = Number(body.partsPrice ?? 0);
   if (
     !availability
     || !message
+    || !laborOnlyConfirmed
     || !Number.isFinite(laborPrice)
-    || !Number.isFinite(partsPrice)
-    || laborPrice < 0
-    || partsPrice < 0
-    || price <= 0
+    || !Number.isFinite(submittedPartsPrice)
+    || laborPrice <= 0
+    || submittedPartsPrice !== 0
   ) {
     return Response.json({
-      error: "Enter valid labor and parts amounts, with a total greater than $0.",
+      error: "Enter a valid labor-only amount, confirm the labor-only quote, and remove every parts charge.",
+      code: "LABOR_ONLY_QUOTE_REQUIRED",
     }, { status: 400 });
   }
+  const price = laborPrice;
 
   if (job.status !== "approved") {
     return Response.json({ error: "This job is no longer accepting quotes." }, { status: 409 });
@@ -854,39 +860,13 @@ export async function POST(request: Request) {
       error: "This job’s service-location choice does not match your provider settings.",
     }, { status: 403 });
   }
-  if (job.partsSource === "I have the parts — labor only") {
-    if (partsPrice > 0) {
-      return Response.json({
-        error: "This customer is supplying the parts, so the parts amount must be $0.",
-      }, { status: 400 });
-    }
-    partType = "Customer supplied";
-  } else {
-    if (!QUOTE_PART_TYPE_OPTIONS.includes(
-      partType as (typeof QUOTE_PART_TYPE_OPTIONS)[number],
-    )) {
-      return Response.json({ error: "Choose the part type included in this quote." }, { status: 400 });
-    }
-    if (
-      (job.partsPreference === "OEM" || job.partsPreference === "Aftermarket")
-      && partType !== job.partsPreference
-      && partType !== "No parts needed"
-    ) {
-      return Response.json({
-        error: `This customer requested ${job.partsPreference} parts.`,
-      }, { status: 400 });
-    }
-    if (partType === "No parts needed" && partsPrice !== 0) {
-      return Response.json({
-        error: "Choose a $0 parts price when no parts are needed.",
-      }, { status: 400 });
-    }
-    if (partType !== "No parts needed" && partsPrice <= 0) {
-      return Response.json({
-        error: "Enter the price for the selected part type.",
-      }, { status: 400 });
-    }
+  if (!isLaborOnlyPartsSource(job.partsSource)) {
+    return Response.json({
+      error: "This request is not eligible for Tuveloz's labor-only quote workflow.",
+      code: "LABOR_ONLY_REQUEST_REQUIRED",
+    }, { status: 409 });
   }
+  const partType = quotePartTypeForLaborOnlySource(job.partsSource);
   const [existingQuote] = await db.select({ id: providerQuotes.id }).from(providerQuotes)
     .where(and(
       eq(providerQuotes.requestId, requestId),
@@ -957,7 +937,8 @@ export async function POST(request: Request) {
       supervisorPersonId: "",
       priceCents: String(customerPrice.providerQuoteCents),
       laborPriceCents: String(Math.round(laborPrice * 100)),
-      partsPriceCents: String(Math.round(partsPrice * 100)),
+      partsPriceCents: "0",
+      laborOnlyPartsConfirmedAt: new Date().toISOString(),
       customerFeeRateBps: customerPrice.customerFeeRateBps,
       customerFeeCents: String(customerPrice.customerFeeCents),
       customerTotalCents: String(customerPrice.customerTotalCents),

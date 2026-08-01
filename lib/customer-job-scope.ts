@@ -19,7 +19,7 @@ export const CUSTOMER_REQUEST_AGREEMENT_KEY = "customer_request_scope";
 export const CUSTOMER_REQUEST_AGREEMENT_VERSION = [
   `terms:${TERMS_VERSION}`,
   `customer:${CUSTOMER_AGREEMENT_VERSION}`,
-  "request-scope:2",
+  "request-scope:3",
 ].join("|");
 export const CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY =
   "customer_request_privacy_acknowledgment";
@@ -31,11 +31,11 @@ export const CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION = [
   `terms:${TERMS_VERSION}`,
   `customer:${CUSTOMER_AGREEMENT_VERSION}`,
   `payments:${PAYMENT_POLICY_VERSION}`,
-  "provider-quote-selection:2",
+  "provider-quote-selection:3",
 ].join("|");
 
 export const CUSTOMER_REQUEST_ACCEPTANCE_TEXT =
-  "I am 18 or older and authorized to request service for this vehicle and location. I agree to the linked Terms of Use and Customer Agreement. I certify that the exact operation, excluded operations, address, property authority, vehicle condition, driveability, high-voltage status, and safety attestations above are accurate. This acceptance authorizes TUVELOZ to store and route only that exact submitted scope; it does not authorize a repair, payment, added work, substitute part, price increase, or provider selection. TUVELOZ operates the marketplace and does not perform the vehicle service.";
+  "I am 18 or older and authorized to request service for this vehicle and location. I agree to the linked Terms of Use and Customer Agreement. I certify that the exact operation, excluded operations, address, property authority, vehicle condition, driveability, high-voltage status, and safety attestations above are accurate. I understand that every Tuveloz quote and payment is for labor only; OEM or aftermarket selections are communication preferences for parts I purchase separately, and no provider-supplied parts, parts reimbursement, or parts charge may be included. This acceptance authorizes TUVELOZ to store and route only that exact submitted scope; it does not authorize a repair, payment, added work, substitute part, price increase, or provider selection. TUVELOZ operates the marketplace and does not perform the vehicle service.";
 export const CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT =
   "I separately acknowledge that I reviewed the Privacy Policy and understand how TUVELOZ handles the customer, vehicle, location, request, photo, communications, and service records submitted for this request.";
 
@@ -402,6 +402,7 @@ export function customerProviderSelectionAcceptanceText(
     `I select ${scope.quote.providerName} and its disclosed performing person (${scope.quote.performingPersonDisplay}) for only the exact service code ${serviceLabel} and operation ${operationCodes}.`,
     `The authorized location is ${scope.request.jobFacts.location.address} (${scope.request.jobFacts.location.type}), with the stored property, vehicle-condition, excluded-operation, and safety attestations unchanged.`,
     `I accept quote ${scope.quote.quoteId} for a displayed customer total of $${amount}, scheduled for ${scope.quote.scheduledFor}.`,
+    "I confirm that the accepted provider amount is labor only. Any OEM or aftermarket preference concerns a part I purchase separately; no provider-supplied parts, parts reimbursement, parts tax, or other parts charge is included.",
     "I agree to the linked Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy.",
     "Accepting this quote creates a direct service agreement with the selected provider business. TUVELOZ operates the marketplace and does not perform the vehicle service.",
     "No added work, substitute part, price increase, different performing person, or changed schedule is authorized by this acceptance; each material change requires a new recorded approval.",

@@ -111,7 +111,7 @@ test("Job agreements UI lets providers state their own terms and customers decid
     source("worker/index.ts"),
   ]);
 
-  assert.match(page, /Set your own scope, price, timing, and warranty/);
+  assert.match(page, /Set your own labor scope, labor price, timing, and workmanship warranty/);
   assert.match(page, /Accept written authorization/);
   assert.match(page, /Decline/);
   assert.match(page, /does not make Tuveloz the vehicle-service provider/);

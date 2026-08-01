@@ -291,8 +291,8 @@ export default function RepairRecordsPage() {
                       <option disabled value="">Choose one</option><option value="clock_hour">Clock hour</option><option value="flat_rate_manual">Industry flat-rate manual</option><option value="other_flat_rate">Other disclosed flat-rate measure</option>
                     </select></label>
                     <Field label="Estimated completion date/time" name="estimatedCompletionAt" defaultValue={text(job.authorization?.estimatedCompletionAt).slice(0, 16)} type="datetime-local" required={false} />
-                    <Field label="Estimate fee (cents; 0 if none)" name="estimateFeeCents" defaultValue={Number(job.authorization?.estimateFeeCents || 0)} type="number" />
-                    <Field label="Surcharge (cents; 0 if none)" name="surchargeCents" defaultValue={Number(job.authorization?.surchargeCents || 0)} type="number" />
+                    <input name="estimateFeeCents" type="hidden" value="0" />
+                    <input name="surchargeCents" type="hidden" value="0" />
                     <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.authorization?.providerRepresentativeName)} />
                     <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.authorization?.providerRepresentativeTitle)} />
                   </div>
@@ -300,11 +300,12 @@ export default function RepairRecordsPage() {
                   <label>Provider diagnosis<textarea defaultValue={text(job.authorization?.providerDiagnosis)} name="providerDiagnosis" required rows={4} /></label>
                   <label>Complete labor billing disclosure<textarea defaultValue={text(job.authorization?.laborDisclosure)} name="laborDisclosure" required rows={3} /></label>
                   <label>Completion disclosure when a date cannot be determined<textarea defaultValue={text(job.authorization?.completionDisclosure)} name="completionDisclosure" rows={2} /></label>
-                  <label>Surcharge description when a surcharge applies<textarea defaultValue={text(job.authorization?.surchargeDescription)} name="surchargeDescription" rows={2} /></label>
+                  <input name="surchargeDescription" type="hidden" value="" />
+                  <p className="admin-note">Tuveloz repair records are labor only. Optional customer-supplied-part lines must show a zero amount; separate fees, surcharges, parts, tax, sublet, and other charges are blocked.</p>
                   <label>Replaced-parts handling<select defaultValue={text(job.authorization?.replacedPartsChoice || "return")} name="replacedPartsChoice" required>
                     <option value="return">Return replaced parts to customer</option><option value="customer_declined">Customer expressly declined return</option><option value="warranty_return">Part must be returned under warranty</option><option value="not_applicable">No replaced parts</option>
                   </select></label>
-                  <label>Itemized estimate lines (JSON)<textarea defaultValue={job.authorization?.lineItems?.length ? JSON.stringify(job.authorization.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
+                  <label>Labor lines and optional customer-supplied-part descriptions (JSON; part amounts must be 0)<textarea defaultValue={job.authorization?.lineItems?.length ? JSON.stringify(job.authorization.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
                   <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify the provider information and itemized estimate are accurate. This checkbox is required when presenting the record.</span></label>
                   <div className="repair-record-actions">
                     <button disabled={busy} name="status" type="submit" value="draft">Save draft</button>
@@ -329,8 +330,8 @@ export default function RepairRecordsPage() {
                   <Field label="Mechanic names, initials, or numbers (comma-separated)" name="mechanicIdentifiers" defaultValue={(() => { try { return JSON.parse(text(job.invoice?.mechanicIdentifiers || "[]")).join(", "); } catch { return ""; } })()} />
                   <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.invoice?.providerRepresentativeName)} />
                   <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.invoice?.providerRepresentativeTitle)} />
-                  <label>Itemized final invoice lines (JSON)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
-                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify that all labor performed and parts replaced were necessary to perform the repairs described on this invoice. I also certify that this vehicle has been tested or test driven when needed and that the mechanic&apos;s work was performed satisfactorily. Required for final invoice.</span></label>
+                  <label>Final labor lines and optional customer-supplied-part descriptions (JSON; part amounts must be 0)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
+                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify that the labor performed and any customer-supplied parts identified at a zero Tuveloz amount were necessary for the work described on this invoice. I also certify that the vehicle was tested when needed and the work was performed satisfactorily. Required for final invoice.</span></label>
                   <div className="repair-record-actions">
                     <button disabled={busy} name="status" type="submit" value="draft">Save invoice draft</button>
                     <button disabled={busy} name="status" type="submit" value="final">Issue immutable final provider invoice</button>
@@ -364,7 +365,7 @@ export default function RepairRecordsPage() {
                       <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-authorization")}>
                         <p>{data.legalNotices.electronicSignatureNotice}</p>
                         <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this authorization electronically and receive and retain the exact electronic record through my secure Tuveloz account. I reviewed the complete written estimate, Customer&apos;s Rights section, notices, itemized scope, parts, charges, and provider identity. I authorize only this exact stored record.</span></label>
+                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this authorization electronically and receive and retain the exact electronic record through my secure Tuveloz account. I reviewed the complete written labor estimate, Customer&apos;s Rights section, notices, itemized scope, any customer-supplied-part descriptions, labor charge, and provider identity. I authorize only this exact stored record and no parts charge.</span></label>
                         <button disabled={busy} type="submit">Sign and authorize this exact record</button>
                       </form>
                     )}

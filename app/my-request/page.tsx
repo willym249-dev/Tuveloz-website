@@ -10,7 +10,7 @@ import {
   parseCustomerServiceLocations,
   parseJobServices,
   parseProviderWorkLocations,
-  PARTS_SOURCE_OPTIONS,
+  PARTS_COMMUNICATION_NOTICE,
 } from "../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../lib/quote-feedback";
 
@@ -245,10 +245,10 @@ export default function MyRequestPage() {
           <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
         )}
         {job && (
-          <p>
-            Parts: {job.partsSource}
-            {job.partsSource !== PARTS_SOURCE_OPTIONS[0] ? ` · ${job.partsPreference}` : ""}
-          </p>
+          <>
+            <p>Parts arrangement: {job.partsSource} · Preference: {job.partsPreference}</p>
+            <p className="admin-note">{PARTS_COMMUNICATION_NOTICE}</p>
+          </>
         )}
         {job?.preferredProviderName && (
           <p>Requested again with: {job.preferredProviderName}</p>
@@ -304,17 +304,9 @@ export default function MyRequestPage() {
               </p>
             )}
             <dl className="quote-breakdown">
-              <div><dt>Labor</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
-              {job?.partsSource !== PARTS_SOURCE_OPTIONS[0] && (
-                <div>
-                  <dt>
-                    Parts
-                    {quote.partType === "Not specified" ? "" : ` (${quote.partType})`}
-                  </dt>
-                  <dd>${(Number(quote.partsPriceCents) / 100).toFixed(2)}</dd>
-                </div>
-              )}
-              <div><dt>Provider quote subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+              <div><dt>Provider labor</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
+              <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
+              <div><dt>Provider labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
                 <dt>Tuveloz service fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>

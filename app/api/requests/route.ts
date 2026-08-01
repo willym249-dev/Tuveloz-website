@@ -48,8 +48,10 @@ import {
   areaForZip,
   CURRENT_LAUNCH_AREA,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
+  isLaborOnlyPartsSource,
+  normalizeLaborOnlyPartsSource,
+  NO_PARTS_NEEDED_SOURCE,
   PARTS_PREFERENCE_OPTIONS,
-  PARTS_SOURCE_OPTIONS,
   providerMatchesArea,
   providerMatchesServiceLocation,
   serializeLocationOptions,
@@ -146,6 +148,7 @@ export async function POST(request: Request) {
         scheduledTimeZone: formData.get("scheduled-time-zone"),
         partsSource: formData.get("parts-source"),
         partsPreference: formData.get("parts-preference"),
+        laborOnlyPartsAcknowledged: formData.get("labor-only-parts-acknowledged"),
         serviceLocations: formData.getAll("service-location"),
         serviceAddress: formData.get("service-address"),
         requestedOperations: formData.getAll("requested-operation"),
@@ -189,8 +192,12 @@ export async function POST(request: Request) {
     const jurisdiction = clean(body.jurisdiction, 100);
     const scheduledTimeZone = clean(body.scheduledTimeZone, 80) || "America/New_York";
     const scheduledFor = normalizeScheduledFor(body.scheduledFor, scheduledTimeZone);
-    const partsSource = clean(body.partsSource, 80);
-    const partsPreference = clean(body.partsPreference, 80);
+    const submittedPartsSource = clean(body.partsSource, 100);
+    const partsSource = normalizeLaborOnlyPartsSource(submittedPartsSource);
+    let partsPreference = clean(body.partsPreference, 80);
+    const laborOnlyPartsAcknowledged = policyAccepted(
+      body.laborOnlyPartsAcknowledged,
+    );
     const submittedLocations = Array.isArray(body.serviceLocations)
       ? body.serviceLocations
       : [body.serviceLocation ?? body.serviceLocations];
@@ -324,15 +331,27 @@ export async function POST(request: Request) {
         "ROADSIDE_LOCATION_FACTS_REQUIRED",
       );
     }
-    if (!PARTS_SOURCE_OPTIONS.includes(
-      partsSource as (typeof PARTS_SOURCE_OPTIONS)[number],
-    )) {
-      return customerValidationError("Choose who will supply any needed parts.");
+    if (!partsSource || !isLaborOnlyPartsSource(partsSource)) {
+      return customerValidationError(
+        "Tuveloz accepts labor-only requests. Choose no parts needed, customer-supplied parts, or discuss whether the customer must buy parts separately.",
+        "LABOR_ONLY_PARTS_SOURCE_REQUIRED",
+      );
     }
     if (!PARTS_PREFERENCE_OPTIONS.includes(
       partsPreference as (typeof PARTS_PREFERENCE_OPTIONS)[number],
     )) {
-      return customerValidationError("Choose a listed parts preference.");
+      return customerValidationError(
+        "Choose a listed customer-supplied-parts preference.",
+      );
+    }
+    if (!laborOnlyPartsAcknowledged) {
+      return customerValidationError(
+        "Confirm that Tuveloz quotes and payments cannot include provider-supplied parts or any parts charge.",
+        "LABOR_ONLY_PARTS_ACKNOWLEDGMENT_REQUIRED",
+      );
+    }
+    if (partsSource === NO_PARTS_NEEDED_SOURCE) {
+      partsPreference = "No preference";
     }
     if (
       serviceLocations.length !== 1
@@ -514,6 +533,7 @@ export async function POST(request: Request) {
         jurisdiction: automaticDecision.jurisdiction,
         partsSource,
         partsPreference,
+        laborOnlyPartsAcknowledgedAt: recordedAt,
         budgetRange: "Not provided",
         serviceLocations: serializedLocations,
         serviceAddress,

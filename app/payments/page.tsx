@@ -6,7 +6,7 @@ export default function PaymentsPage() {
       eyebrow="Money"
       title="Payment, Cancellation, and Refund Policy"
       summary="An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -31,17 +31,21 @@ export default function PaymentsPage() {
           provider&apos;s quoted subtotal. If that pricing and payment flow receive
           final approval, the customer must see the provider subtotal, separate
           Tuveloz fee, and total conspicuously before choosing whether to proceed.
-          Tuveloz must not add work or parts to an accepted quote, and a scope or
-          price change requires the customer&apos;s express approval before any
-          additional charge.
+          Tuveloz must not add work to an accepted quote. Every provider amount
+          processed through Tuveloz is labor only; provider-supplied parts, parts
+          reimbursement, parts tax, and other parts charges are prohibited. A labor
+          scope or labor-price change requires the customer&apos;s express approval before
+          any additional charge.
         </p>
       </section>
 
       <section>
         <h2>2. Provider pricing and proposed Tuveloz fee</h2>
         <p>
-          Provider businesses set their own labor and parts quotes. The proposed
-          product design separately tracks the accepted provider subtotal and a
+          Provider businesses set their own labor-only quotes. Any required part
+          is purchased separately by the customer and is not included in the
+          provider subtotal. The proposed product design separately tracks the accepted
+          provider labor subtotal and a
           10% customer service fee for marketplace and transaction support. The
           percentage, transfer calculation, adjustments, and accounting treatment
           remain subject to documented compliance with applicable law and final
@@ -67,8 +71,9 @@ export default function PaymentsPage() {
           must be resolved under applicable law with final CPA or tax-adviser,
           processor, insurance, and operational review. If payments are
           enabled, the selected provider business remains the party that accepts
-          and performs the vehicle-service agreement, supplies listed parts, and
-          honors any provider warranty it expressly offers. Nothing in this draft
+          and performs the vehicle-service agreement and honors any workmanship
+          warranty it expressly offers. Tuveloz does not process payment for parts;
+          any part is separately purchased by the customer. Nothing in this draft
           decides a non-waivable warranty right or responsibility.
         </p>
         <p>
@@ -121,8 +126,8 @@ export default function PaymentsPage() {
         </p>
         <ul>
           <li>The proposed rule would provide a full refund of the amount paid for the service if the provider cancels, does not appear, or cannot perform the accepted service.</li>
-          <li>The proposed rule would provide a full refund if the customer cancels before work begins and before approved parts are ordered.</li>
-          <li>If authorized work has begun or approved parts were ordered, the refund may exclude documented, reasonable, nonrecoverable parts costs and the value of authorized work already completed, but only to the extent allowed by law.</li>
+          <li>The proposed rule would provide a full refund if the customer cancels before authorized labor begins.</li>
+          <li>If authorized labor has begun, the refund may exclude the documented value of authorized labor already completed, but only to the extent allowed by law. Tuveloz does not collect or refund separately purchased customer parts.</li>
           <li>A provider may stop work because of an unsafe or unlawful location, missing authorization, or materially inaccurate job information. Any charge or refund will depend on documented authorized work and costs, applicable law, and the records available.</li>
         </ul>
         <p>

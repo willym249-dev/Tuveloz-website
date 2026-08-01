@@ -154,8 +154,8 @@ export default function JobAuthorizationsPage() {
           title: values.title,
           description: values.description,
           laborAmount: values.laborAmount,
-          partsAmount: values.partsAmount,
-          otherFeesAmount: values.otherFeesAmount,
+          partsAmount: 0,
+          otherFeesAmount: 0,
           estimatedCompletionAt: values.estimatedCompletionAt,
           diagnosticOnly: values.diagnosticOnly === "yes",
           workmanshipWarranty: values.workmanshipWarranty,
@@ -350,8 +350,9 @@ export default function JobAuthorizationsPage() {
                     <summary>Create a detailed work order or change order</summary>
                     <div className="workspace-tool-content">
                       <p>
-                        Set your own scope, price, timing, and warranty. Tuveloz does not set
-                        provider prices or direct how lawful work must be performed.
+                        Set your own labor scope, labor price, timing, and workmanship warranty.
+                        Tuveloz does not set provider labor prices or direct how lawful work must
+                        be performed. Parts and other charges cannot be added through Tuveloz.
                       </p>
                       <form onSubmit={(event) => createAuthorization(event, job.requestId)}>
                         <label>
@@ -371,7 +372,7 @@ export default function JobAuthorizationsPage() {
                           Exact work or diagnostic scope
                           <textarea
                             name="description"
-                            placeholder="Describe what is included, what is excluded, parts assumptions, and why the change is being proposed."
+                            placeholder="Describe the labor included, exclusions, customer-supplied-part assumptions, and why the change is being proposed. Do not include a parts price."
                             required
                             rows={5}
                           />
@@ -380,14 +381,11 @@ export default function JobAuthorizationsPage() {
                           Labor amount
                           <input min="0" name="laborAmount" required step="0.01" type="number" />
                         </label>
-                        <label>
-                          Parts amount
-                          <input defaultValue="0" min="0" name="partsAmount" required step="0.01" type="number" />
-                        </label>
-                        <label>
-                          Other disclosed fees
-                          <input defaultValue="0" min="0" name="otherFeesAmount" required step="0.01" type="number" />
-                        </label>
+                        <div className="fixed-launch-area">
+                          <span>Parts and other charges through Tuveloz</span>
+                          <strong>$0.00</strong>
+                          <small>Any needed part must be purchased separately by the customer.</small>
+                        </div>
                         <label>
                           Estimated completion, optional
                           <input name="estimatedCompletionAt" type="datetime-local" />
@@ -411,7 +409,7 @@ export default function JobAuthorizationsPage() {
                           Parts or manufacturer warranty
                           <textarea
                             name="partsWarranty"
-                            placeholder="State the parts warranty, manufacturer terms, customer-supplied-part limit, or that no new parts are included."
+                            placeholder="State any limitation for customer-supplied parts or any manufacturer terms the customer should review. This does not add a parts charge."
                             rows={3}
                           />
                         </label>
@@ -451,7 +449,7 @@ export default function JobAuthorizationsPage() {
                             {authorizationLabel(authorization.authorizationType)} · {money(authorization.totalCents)} · {readableDate(authorization.createdAt)}
                           </small>
                           <small>
-                            Labor {money(authorization.laborCents)} · Parts {money(authorization.partsCents)} · Other fees {money(authorization.otherFeesCents)}
+                            Labor {money(authorization.laborCents)} · Parts through Tuveloz {money(authorization.partsCents)} · Other charges {money(authorization.otherFeesCents)}
                           </small>
                           <p>{authorization.description}</p>
                           {authorization.diagnosticOnly && (

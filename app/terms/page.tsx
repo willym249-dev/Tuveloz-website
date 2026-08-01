@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="An operational review draft for using Tuveloz and its two-sided vehicle-service marketplace."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -81,8 +81,11 @@ export default function TermsPage() {
         <p>
           When a customer accepts a provider&apos;s quote, the customer and
           provider form a separate service agreement with each other. That
-          agreement includes the accepted scope, price, parts, location, timing,
-          messages, and any lawful changes they later approve. The provider is
+          agreement includes the accepted labor scope, labor price, location,
+          timing, messages, and any lawful labor-only changes they later approve.
+          OEM or aftermarket selections are communication preferences for parts
+          the customer purchases separately; they are not a Tuveloz part sale or
+          payment. The provider is
           responsible for the service and the customer is responsible for the
           promises the customer makes to the provider.
         </p>
@@ -143,11 +146,15 @@ export default function TermsPage() {
       <section>
         <h2>6. Quotes, changes, records, and warranties</h2>
         <p>
-          Providers set their own quotes and must describe labor, parts, material
-          assumptions, timing, and added costs clearly. Work or price outside the
-          accepted quote requires the customer&apos;s approval. Provider businesses
-          must satisfy the estimate, authorization, invoice, disclosure, repair
-          record, parts, warranty, and disposal duties applicable to their work.
+          Providers set their own labor quotes and must describe the labor scope,
+          customer-supplied-part assumptions, timing, exclusions, and labor price
+          clearly. Tuveloz quotes, change orders, invoices used for platform payment,
+          and checkout cannot include provider-supplied parts, parts reimbursement,
+          parts tax, or another parts charge. Any required part must be purchased
+          separately by the customer. Work or labor price outside the accepted quote
+          requires the customer&apos;s approval. Provider businesses remain responsible
+          for repair records, workmanship, and duties applicable to installing a
+          customer-supplied part.
         </p>
         <p>
           Service records should identify who offers any express service or parts
