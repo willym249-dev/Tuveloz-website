@@ -16,6 +16,12 @@ test("Maryland repair notices and line-item validation are source-bound", async 
   assert.match(source, /National Highway Traffic Safety Administration/);
   assert.match(source, /repair facility may not be responsible for damage/);
   assert.match(source, /written estimate for every Montgomery County repair or maintenance job/);
+  assert.match(source, /Electronic transaction consent/);
+  assert.match(source, /agree to conduct this specific repair authorization or invoice transaction electronically/);
+  assert.match(source, /You may refuse to conduct this or a future transaction electronically/);
+  assert.match(source, /secure Tuveloz account/);
+  assert.match(source, /All labor performed and parts replaced were necessary/);
+  assert.match(source, /mechanic's work was performed satisfactorily/);
   assert.match(source, /lineAmountCents !== quantity \* unitAmountCents/);
   assert.match(source, /lineType === "part" && \(!partNumber/);
   assert.match(source, /used/);
