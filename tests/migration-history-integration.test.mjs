@@ -6,7 +6,7 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 const readJson = async (path) => JSON.parse(await read(path));
 
-test("migration journal preserves upstream order before renumbered provider controls", async () => {
+test("migration journal preserves upstream order before renumbered provider and repair controls", async () => {
   const journal = await readJson("drizzle/meta/_journal.json");
   const expectedTail = [
     "0031_service_area_settings",
@@ -20,6 +20,9 @@ test("migration journal preserves upstream order before renumbered provider cont
     "0039_typical_baron_zemo",
     "0040_living_gressill",
     "0041_real_only_accepted_quote_authorizations",
+    "0042_maryland_repair_records",
+    "0043_signed_repair_record_gates",
+    "0044_final_provider_invoice_legal_fields_immutable",
   ];
   const tail = journal.entries.slice(31);
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PolicyPage } from "../components/policy-page";
 import { JobOperationsConsole } from "./job-operations-console";
 
@@ -7,8 +8,20 @@ export default function JobOperationsPage() {
       eyebrow="Job controls"
       title="Change, Cancellation, Incident, Invoice, and Payment Review"
       summary="The operational workflow TUVELOZ is building for review before any real customer job or payment is enabled."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
+      <section>
+        <h2>Maryland authorization and provider invoice records</h2>
+        <p>
+          The separate repair-record workspace tests the provider written estimate,
+          the Customer&apos;s Rights block immediately before customer signature,
+          separately approved changes, the itemized final provider invoice,
+          provider and customer signatures, delivery of the customer copy, and
+          retention of the provider copy.
+        </p>
+        <p><Link className="button secondary" href="/repair-records">Open Maryland repair-document test workflow</Link></p>
+      </section>
+
       <JobOperationsConsole />
 
       <section>

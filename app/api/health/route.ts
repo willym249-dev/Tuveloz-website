@@ -36,16 +36,26 @@ const REQUIRED_TABLES = [
   "payment_adjustments",
   "provider_appeals",
   "provider_invoices",
+  "repair_authorization_records",
+  "repair_authorization_items",
+  "provider_invoice_items",
 ] as const;
 
 const REQUIRED_GUARDED_TRIGGERS = [
   "accepted_quote_creates_initial_authorization_update",
   "accepted_quote_creates_initial_authorization_insert",
+  "repair_authorization_signed_immutable",
+  "provider_invoice_final_core_immutable",
+  "provider_invoice_final_legal_fields_immutable",
+  "provider_job_insert_requires_signed_repair_authorization",
+  "provider_job_update_requires_signed_repair_authorization",
+  "provider_invoice_final_requires_complete_repair_record",
+  "stripe_payment_release_requires_signed_delivered_provider_invoice",
 ] as const;
 
 // Table existence verifies the CREATE migrations. These zero-row probes also
-// verify the columns added by the follow-up eligibility and payment migrations
-// without exposing any production records through the health response.
+// verify columns added by follow-up eligibility, payment, and repair-document
+// migrations without exposing any production records through the health response.
 const REQUIRED_COLUMN_PROBES = [
   `SELECT scope_version, scope_authorization_decision_id,
           authorized_price_snapshot
@@ -61,6 +71,11 @@ const REQUIRED_COLUMN_PROBES = [
           age_verification_provider, age_verification_reference,
           age_verification_checked_at, age_verification_valid_through
      FROM provider_personnel
+    LIMIT 0`,
+  `SELECT authorization_record_id, county_registration_number,
+          customer_signature_at, customer_copy_delivered_at,
+          provider_copy_retained_at, document_hash
+     FROM provider_invoices
     LIMIT 0`,
 ] as const;
 
@@ -104,13 +119,22 @@ export async function GET() {
           REQUIRED_COLUMN_PROBES.map((query) => env.DB.prepare(query).all()),
         ),
       ] as const);
+      const availableTriggers = new Set(
+        (triggerResult.results ?? []).map((row) => row.name),
+      );
       const guardedTriggers = new Set(
         (triggerResult.results ?? [])
-          .filter((row) => row.sql?.includes("is_test_job") && row.sql.includes("= 'no'"))
+          .filter((row) => (
+            row.name.startsWith("repair_")
+            || row.name.startsWith("provider_invoice_")
+            || row.name.startsWith("provider_job_")
+            || row.name.startsWith("stripe_payment_release_")
+            || (row.sql?.includes("is_test_job") && row.sql.includes("= 'no'"))
+          ))
           .map((row) => row.name),
       );
       missingGuardedTriggers = REQUIRED_GUARDED_TRIGGERS.filter(
-        (trigger) => !guardedTriggers.has(trigger),
+        (trigger) => !availableTriggers.has(trigger) || !guardedTriggers.has(trigger),
       );
       requiredColumnsReady = true;
     }

@@ -1,0 +1,126 @@
+.repair-record-shell .repair-record-form,
+.repair-record-shell .repair-signature-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.repair-record-shell .repair-record-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.repair-record-shell label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.repair-record-shell input,
+.repair-record-shell select,
+.repair-record-shell textarea {
+  width: 100%;
+  border: 1px solid rgba(7, 24, 45, 0.25);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font: inherit;
+}
+
+.repair-record-table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.repair-record-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 52rem;
+}
+
+.repair-record-table th,
+.repair-record-table td {
+  border: 1px solid rgba(7, 24, 45, 0.2);
+  padding: 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.repair-record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.repair-record-actions button,
+.repair-signature-form button {
+  min-height: 2.8rem;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.repair-legal-notice {
+  margin: 1rem 0;
+  border: 1px solid rgba(7, 24, 45, 0.35);
+  padding: 1rem;
+  background: rgba(7, 24, 45, 0.04);
+}
+
+.repair-customer-rights {
+  margin: 1.5rem 0 0;
+  border: 4px solid currentColor;
+  padding: 1.25rem;
+  background: white;
+  color: #07182d;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.repair-customer-rights h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.repair-customer-rights p {
+  margin: 0;
+  line-height: 1.65;
+}
+
+.repair-signature-form {
+  margin: 0;
+  border: 4px solid currentColor;
+  border-top: 0;
+  padding: 1.25rem;
+  background: white;
+  color: #07182d;
+}
+
+.repair-signature-form .job-operation-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.repair-signature-form .job-operation-check input {
+  width: auto;
+  margin-top: 0.2rem;
+}
+
+@media print {
+  .repair-record-shell > :not(.repair-print-document),
+  .repair-print-document form,
+  .repair-print-document button {
+    display: none !important;
+  }
+
+  .repair-print-document {
+    box-shadow: none !important;
+    border: 0 !important;
+    break-inside: avoid;
+  }
+}
