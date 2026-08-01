@@ -178,6 +178,98 @@ export const providerApplications = sqliteTable(
   ],
 );
 
+/**
+ * One normalized email may own only one non-declined provider application.
+ * This separate claim table can be safely backfilled even when legacy data
+ * contains duplicate active applications: the migration deterministically
+ * claims the oldest record and leaves all legacy rows available for review.
+ */
+export const providerApplicationEmailClaims = sqliteTable(
+  "provider_application_email_claims",
+  {
+    normalizedEmail: text("normalized_email").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    challengeId: text("challenge_id").notNull().default(""),
+    consumptionNonce: text("consumption_nonce").notNull().default(""),
+    claimedAt: text("claimed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_application_email_claims_provider_unique")
+      .on(table.providerId),
+  ],
+);
+
+export const providerApplicationChallenges = sqliteTable(
+  "provider_application_challenges",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    payloadHash: text("payload_hash").notNull(),
+    codeHash: text("code_hash").notNull(),
+    sourceHash: text("source_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    verifiedAt: text("verified_at").notNull().default(""),
+    usedAt: text("used_at").notNull().default(""),
+    consumptionNonce: text("consumption_nonce").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("provider_application_challenges_email_created_idx")
+      .on(table.email, table.createdAt),
+    index("provider_application_challenges_expires_idx").on(table.expiresAt),
+    index("provider_application_challenges_source_created_idx")
+      .on(table.sourceHash, table.createdAt),
+    uniqueIndex("provider_application_challenges_consumption_nonce_unique")
+      .on(table.consumptionNonce)
+      .where(sql`${table.consumptionNonce} <> ''`),
+  ],
+);
+
+/**
+ * Immutable evidence for the normalized application and legal-document
+ * manifest confirmed by an email challenge. OTP cleanup never removes it.
+ */
+export const providerApplicationSubmissionEvidence = sqliteTable(
+  "provider_application_submission_evidence",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    normalizedEmail: text("normalized_email").notNull(),
+    challengeId: text("challenge_id").notNull(),
+    consumptionNonce: text("consumption_nonce").notNull(),
+    normalizedSnapshot: text("normalized_snapshot").notNull(),
+    payloadHash: text("payload_hash").notNull(),
+    acceptedDocumentManifest: text("accepted_document_manifest").notNull(),
+    verifiedAt: text("verified_at").notNull(),
+    consumedAt: text("consumed_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_application_submission_evidence_challenge_unique")
+      .on(table.challengeId),
+    uniqueIndex("provider_application_submission_evidence_nonce_unique")
+      .on(table.consumptionNonce),
+    index("provider_application_submission_evidence_provider_idx")
+      .on(table.providerId, table.createdAt),
+  ],
+);
+
+export const publicWriteRateLimits = sqliteTable(
+  "public_write_rate_limits",
+  {
+    action: text("action").notNull(),
+    keyHash: text("key_hash").notNull(),
+    windowStartedAt: integer("window_started_at").notNull(),
+    requestCount: integer("request_count").notNull().default(0),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.action, table.keyHash] }),
+    index("public_write_rate_limits_updated_idx").on(table.updatedAt),
+  ],
+);
+
 export const providerCredentialVerifications = sqliteTable(
   "provider_credential_verifications",
   {
@@ -805,6 +897,9 @@ export const agreementAcceptances = sqliteTable(
     ipAddress: text("ip_address").notNull().default(""),
     sessionId: text("session_id").notNull().default(""),
     deviceContext: text("device_context").notNull().default("{}"),
+    providerApplicationSubmissionEvidenceId: text(
+      "provider_application_submission_evidence_id",
+    ).notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
@@ -820,6 +915,8 @@ export const agreementAcceptances = sqliteTable(
     index("agreement_acceptances_person_time_idx").on(table.personId, table.acceptedAt),
     index("agreement_acceptances_key_version_idx")
       .on(table.agreementKey, table.agreementVersion),
+    index("agreement_acceptances_provider_application_submission_idx")
+      .on(table.providerApplicationSubmissionEvidenceId),
   ],
 );
 

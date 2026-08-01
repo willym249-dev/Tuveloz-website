@@ -152,6 +152,7 @@ export function providerAgreementEvidenceText(
       status: document.releaseStatus,
       effectiveAt: document.effectiveAt,
       releaseId: document.releaseId,
+      reviewBodyHash: document.reviewBodyHash,
       canonicalBodyHash: document.canonicalBodyHash,
     },
   });

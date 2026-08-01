@@ -28,14 +28,18 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
 
 test("provider applications create pathways, people, and immutable agreement evidence", async () => {
   const route = await read("../app/api/providers/route.ts");
+  const verification = await read("../lib/provider-application-verification.ts");
   const acceptance = await read("../lib/provider-policy-acceptance.ts");
-  assert.ok(route.includes('serviceCodes.includes("general_auto_repair")'));
-  assert.ok(route.includes("allowedLevelForApplication"));
+  assert.ok(verification.includes('serviceCodes.includes("general_auto_repair")'));
+  assert.ok(verification.includes("allowedLevelForApplication"));
   assert.ok(route.includes("providerPathwayProfiles"));
   assert.ok(route.includes("providerPersonnel"));
   assert.ok(route.includes("agreementAcceptances"));
-  assert.ok(route.includes("agreementHash: await sha256Text(agreementText)"));
-  assert.ok(route.includes("privacyAcknowledged"));
+  assert.ok(route.includes("agreementHash: documentBinding.finalAgreementHash"));
+  assert.ok(verification.includes("finalAgreementHash: await sha256Text(agreementText)"));
+  assert.ok(route.includes("providerApplicationSubmissionEvidence"));
+  assert.ok(route.includes("acceptanceEvidenceId: verified.challenge.id"));
+  assert.ok(verification.includes("privacyAcknowledged"));
   assert.ok(route.includes("sponsor_or_employer_confirmation_required"));
   assert.ok(acceptance.includes("PROVIDER_TERMS_ACCEPTANCE_TEXT"));
   assert.ok(acceptance.includes("PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT"));

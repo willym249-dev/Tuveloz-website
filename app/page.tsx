@@ -271,6 +271,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [requestError, setRequestError] = useState("");
   const [vehicleResetVersion, setVehicleResetVersion] = useState(0);
   const [applicationError, setApplicationError] = useState("");
+  const [applicationChallengeId, setApplicationChallengeId] = useState("");
+  const [applicationVerificationCode, setApplicationVerificationCode] = useState("");
+  const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
@@ -602,9 +605,47 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       employmentWorkAuthorizationResponsibilityAcknowledged: employmentResponsibilityAcknowledged,
       termsBundleAccepted,
       privacyAcknowledged,
-      termsAccepted: termsBundleAccepted,
       providerSelfAssessment: providerAssessment,
     };
+
+    if (!isRequest && applicationChallengeId) {
+      if (!pendingApplicationPayload || !/^\d{6}$/.test(applicationVerificationCode)) {
+        setApplicationError("Enter the 6-digit code sent to the application email.");
+        return;
+      }
+      setApplicationBusy(true);
+      setApplicationError("");
+      try {
+        const response = await fetch("/api/providers", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            ...pendingApplicationPayload,
+            challengeId: applicationChallengeId,
+            verificationCode: applicationVerificationCode,
+          }),
+        });
+        const result = (await response.json()) as { error?: string };
+        if (!response.ok) throw new Error(result.error || "Please try again.");
+        form.reset();
+        setPendingSubmission("");
+        setApplicationChallengeId("");
+        setApplicationVerificationCode("");
+        setPendingApplicationPayload(null);
+        setSelectedProviderServices([]);
+        setSelectedProviderAreas([CURRENT_LAUNCH_AREA]);
+        setSelectedProviderWorkLocations([]);
+        setProviderPathwayChoice("learning_account");
+        setProviderAssessment(emptyProviderSelfAssessment);
+        setApplicationSent(true);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Please try again.";
+        setApplicationError(message);
+      } finally {
+        setApplicationBusy(false);
+      }
+      return;
+    }
 
     if (pendingSubmission !== type) {
       if (isRequest) setRequestError("");
@@ -624,16 +665,20 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     try {
       const response = isRequest
         ? await fetch("/api/requests", { method: "POST", body: formData })
-        : await fetch("/api/providers", {
+        : await fetch("/api/providers/challenge", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(payload),
           });
-      const result = (await response.json()) as { error?: string; accessToken?: string };
+      const result = (await response.json()) as {
+        error?: string;
+        accessToken?: string;
+        challengeId?: string;
+      };
       if (!response.ok) throw new Error(result.error || "Please try again.");
-      form.reset();
       setPendingSubmission("");
       if (isRequest) {
+        form.reset();
         setSelectedCustomerServices([]);
         setSelectedCustomerVehicle("");
         setPartsSource("Either is okay");
@@ -646,12 +691,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         setRequestSent(true);
       }
       else {
-        setSelectedProviderServices([]);
-        setSelectedProviderAreas([CURRENT_LAUNCH_AREA]);
-        setSelectedProviderWorkLocations([]);
-        setProviderPathwayChoice("learning_account");
-        setProviderAssessment(emptyProviderSelfAssessment);
-        setApplicationSent(true);
+        if (!result.challengeId) {
+          throw new Error("A verification code could not be prepared. Please try again.");
+        }
+        setPendingApplicationPayload(payload);
+        setApplicationChallengeId(result.challengeId);
+        setApplicationVerificationCode("");
       }
     } catch (error) {
       setPendingSubmission("");
@@ -661,6 +706,29 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     } finally {
       if (isRequest) setRequestBusy(false);
       else setApplicationBusy(false);
+    }
+  }
+
+  async function resendProviderApplicationCode() {
+    if (!pendingApplicationPayload) return;
+    setApplicationBusy(true);
+    setApplicationError("");
+    try {
+      const response = await fetch("/api/providers/challenge", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(pendingApplicationPayload),
+      });
+      const result = (await response.json()) as { error?: string; challengeId?: string };
+      if (!response.ok || !result.challengeId) {
+        throw new Error(result.error || "A new code could not be requested.");
+      }
+      setApplicationChallengeId(result.challengeId);
+      setApplicationVerificationCode("");
+    } catch (error) {
+      setApplicationError(error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setApplicationBusy(false);
     }
   }
 
@@ -1583,7 +1651,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
             <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
               <div className="eligibility-guide-heading">
-                <span id="provider-guide-title">7-STEP PROVIDER GUIDE</span>
+                <span id="provider-guide-title">8-STEP PROVIDER GUIDE</span>
               </div>
               <ol>
                 <li>Choose the account pathway that matches your real working relationship.</li>
@@ -1592,7 +1660,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <li>Tell us where the business operates and how future service could occur.</li>
                 <li>Review the service-specific legal and evidence requirements.</li>
                 <li>Type the authorized signer&apos;s name and complete each acknowledgment.</li>
-                <li>Submit for review. No customer-job access begins until written activation.</li>
+                <li>Request the one-time code sent to the application email.</li>
+                <li>Enter the code to prove email control and continue. A new application is created only if none exists for that email; existing application changes happen after sign-in.</li>
               </ol>
               <div className="legal-requirement-note" aria-label="Service status legend">
                 <strong>Service status legend</strong>
@@ -1605,21 +1674,28 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
           <form
             className="provider-form"
-            onChange={() => pendingSubmission === "application" && setPendingSubmission("")}
+            onChange={() => {
+              if (pendingSubmission === "application") setPendingSubmission("");
+              if (applicationChallengeId) {
+                setApplicationChallengeId("");
+                setApplicationVerificationCode("");
+                setPendingApplicationPayload(null);
+              }
+            }}
             onSubmit={(event) => handleSubmit(event, "application")}
           >
             {applicationSent ? (
               <div className="success-message provider-success" role="status">
                 <span>✓</span>
-                <h3>{providerFormIsSpanish ? "Solicitud guardada." : "Application saved."}</h3>
+                <h3>{providerFormIsSpanish ? "Verificación completa." : "Verification complete."}</h3>
                 <p>{providerFormIsSpanish
-                  ? "Cree su cuenta de proveedor con el mismo correo para cargar documentos y seguir la revisión."
-                  : "Create your provider account with the same email to upload documents and follow the exact-service review checklist."}</p>
+                  ? "Si no existía una solicitud para este correo, se creó una nueva. Inicie sesión para verla o continuarla; los cambios a una solicitud existente no se guardaron en este formulario público."
+                  : "If no application existed for this email, a new one was created. Sign in with the same email to view or continue it. Changes to an existing application were not saved by this public form."}</p>
                 <Link className="button primary" href="/account?role=provider">
                   {providerFormIsSpanish ? "Continuar con la verificación" : "Continue provider verification"}
                 </Link>
                 <button type="button" onClick={() => setApplicationSent(false)}>
-                  {providerFormIsSpanish ? "Enviar otra respuesta" : "Submit another response"}
+                  {providerFormIsSpanish ? "Iniciar otra verificación" : "Start another verification"}
                 </button>
               </div>
             ) : (
@@ -2146,25 +2222,83 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     Review the <a href="/privacy">Privacy Policy</a>.
                   </span>
                 </label>
-                {pendingSubmission === "application" ? (
+                {applicationChallengeId ? (
+                  <section
+                    className="legal-requirement-note"
+                    aria-labelledby="provider-email-code-title"
+                    onChange={(event) => event.stopPropagation()}
+                  >
+                    <strong id="provider-email-code-title">
+                      Step 2 of 2: confirm the application email
+                    </strong>
+                    <small>
+                      Enter the 6-digit code sent to the email above. The code expires in 10 minutes.
+                      This proves email control only; it does not verify identity, age, authority,
+                      business registration, licensing, insurance, qualifications, or job eligibility.
+                    </small>
+                    <label>
+                      6-digit verification code
+                      <input
+                        autoComplete="one-time-code"
+                        inputMode="numeric"
+                        maxLength={6}
+                        name="provider-verification-code"
+                        onChange={(event) => setApplicationVerificationCode(
+                          event.target.value.replace(/\D/g, "").slice(0, 6),
+                        )}
+                        pattern="[0-9]{6}"
+                        placeholder="000000"
+                        required
+                        value={applicationVerificationCode}
+                      />
+                    </label>
+                    <button
+                      className="button lime form-button"
+                      disabled={applicationBusy || applicationVerificationCode.length !== 6}
+                      type="submit"
+                    >
+                      {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                    </button>
+                    <button
+                      className="button secondary form-button"
+                      disabled={applicationBusy}
+                      onClick={resendProviderApplicationCode}
+                      type="button"
+                    >
+                      Send the code again
+                    </button>
+                    <button
+                      className="button secondary form-button"
+                      disabled={applicationBusy}
+                      onClick={() => {
+                        setApplicationChallengeId("");
+                        setApplicationVerificationCode("");
+                        setPendingApplicationPayload(null);
+                      }}
+                      type="button"
+                    >
+                      Edit application
+                    </button>
+                  </section>
+                ) : pendingSubmission === "application" ? (
                   <ConfirmAction
                     backLabel={providerFormIsSpanish ? "Regresar" : "Go back"}
                     busy={applicationBusy}
-                    busyLabel={providerFormIsSpanish ? "Enviando…" : "Submitting…"}
-                    confirmLabel={providerFormIsSpanish ? "Confirmar y solicitar" : "Confirm and apply"}
+                    busyLabel={providerFormIsSpanish ? "Enviando…" : "Sending…"}
+                    confirmLabel={providerFormIsSpanish ? "Confirmar y enviar codigo" : "Confirm and send code"}
                     confirmStyle="lime"
                     confirmType="submit"
                     message={providerFormIsSpanish
-                      ? "Revise la información anterior. La solicitud no se enviará hasta que confirme."
-                      : "Review the information above. The application is not sent until you confirm."}
+                      ? "Revise la información anterior. TUVELOZ enviará un código. Solo se crea una solicitud nueva si no existe otra para este correo; los cambios a una solicitud existente se hacen después de iniciar sesión."
+                      : "Review the information above. TUVELOZ will email a one-time code. Verification creates a new application only if none exists for this email; changes to an existing application happen after sign-in."}
                     onBack={() => setPendingSubmission("")}
-                    title={providerFormIsSpanish ? "¿Enviar esta solicitud?" : "Submit this application?"}
+                    title={providerFormIsSpanish ? "¿Continuar con la verificación?" : "Continue with email verification?"}
                   />
                 ) : (
                   <button className="button lime form-button" type="submit" disabled={applicationBusy}>
                     {applicationBusy
-                      ? (providerFormIsSpanish ? "Guardando…" : "Saving…")
-                      : (providerFormIsSpanish ? "Solicitar ingreso" : "Apply to join")} <span>→</span>
+                      ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
+                      : (providerFormIsSpanish ? "Solicitar ingreso" : "Start application")} <span>→</span>
                   </button>
                 )}
                 {applicationError && <p className="form-error" role="alert">{applicationError}</p>}

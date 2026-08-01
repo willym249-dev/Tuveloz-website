@@ -5,6 +5,7 @@ import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
+import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -109,12 +110,18 @@ const worker = {
     _env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    ctx.waitUntil((async () => {
-      await processDueComplianceReminders();
-      await flushPendingEmailNotifications(20);
-    })().catch((error) => {
-      console.error("Unable to run TUVELOZ scheduled compliance delivery", error);
-    }));
+    const scheduledTask = (label: string, task: () => Promise<unknown>) => (
+      task().catch((error) => {
+        console.error(`Unable to run scheduled ${label}`, error);
+      })
+    );
+    ctx.waitUntil(Promise.allSettled([
+      scheduledTask("compliance reminders", () => processDueComplianceReminders()),
+      scheduledTask("provider application verification cleanup", () => (
+        cleanupProviderApplicationVerificationState()
+      )),
+      scheduledTask("email notification delivery", () => flushPendingEmailNotifications(20)),
+    ]).then(() => undefined));
   },
 
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

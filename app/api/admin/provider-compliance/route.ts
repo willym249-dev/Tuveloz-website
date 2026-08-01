@@ -21,7 +21,10 @@ import {
   requiredOfficialLegalSourceReferences,
 } from "../../../../lib/legal-compliance-evidence";
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
-import { notifyProviderEvidenceDecision } from "../../../../lib/provider-compliance-notifications";
+import {
+  notifyProviderEvidenceDecision,
+  notifyProviderEvidenceScanBlocked,
+} from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
 import {
   boundLegalBusinessIdentityReview,
@@ -1197,6 +1200,14 @@ export async function POST(request: Request) {
       if (providerId && evidence.providerId !== providerId) {
         return Response.json({ error: "Evidence submission does not belong to this provider." }, { status: 409 });
       }
+      const [scanProviderRecord] = await db.select({
+        email: providerApplications.email,
+      }).from(providerApplications)
+        .where(eq(providerApplications.id, evidence.providerId))
+        .limit(1);
+      if (!scanProviderRecord?.email) {
+        return Response.json({ error: "The provider application for this evidence was not found." }, { status: 409 });
+      }
       // This non-clean result can revoke evidence that an open Checkout
       // Session depended on. Persist the local payment quarantine first.
       await expireOpenCheckoutSessionsForLaunchShutdown();
@@ -1247,10 +1258,10 @@ export async function POST(request: Request) {
       });
       const recalculatedProvider = await recalculateProvider(evidence.providerId, actorId);
       await expireOpenCheckoutSessionsForLaunchShutdown();
-      await notifyProviderEvidenceDecision({
+      await notifyProviderEvidenceScanBlocked({
         evidenceId: evidence.id,
-        email: evidenceProvider[0].email,
-        status,
+        email: scanProviderRecord.email,
+        scanStatus,
       });
       return Response.json({
         ok: true,
@@ -1477,6 +1488,11 @@ export async function POST(request: Request) {
       });
       const recalculatedProvider = await recalculateProvider(evidence.providerId, actorId);
       await expireOpenCheckoutSessionsForLaunchShutdown();
+      await notifyProviderEvidenceDecision({
+        evidenceId: evidence.id,
+        email: evidenceProvider[0].email,
+        status,
+      });
       return Response.json({
         ok: true,
         message: "Evidence review saved. Eligibility was recalculated without granting blanket approval.",

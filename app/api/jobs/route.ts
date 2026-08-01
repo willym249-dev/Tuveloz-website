@@ -52,6 +52,10 @@ import {
   loadAuthorizedJobScopeFacts,
   loadCurrentAcceptedCustomerRequestScope,
 } from "../../../lib/job-scope-records";
+import {
+  isJobStatusTransitionTarget,
+  jobStatusTransitionSuccessPayload,
+} from "../../../lib/job-status-transition";
 
 function marketplacePausedResponse(action: MarketplaceAction) {
   return Response.json(
@@ -575,6 +579,9 @@ export async function POST(request: Request) {
 
   if (body.action === "update-status") {
     const nextStatus = clean(body.status, 40);
+    if (!isJobStatusTransitionTarget(nextStatus)) {
+      return Response.json({ error: "Choose a valid next job status." }, { status: 400 });
+    }
     const [acceptedQuote] = await db.select({ id: providerQuotes.id }).from(providerQuotes)
       .where(and(
         eq(providerQuotes.requestId, requestId),
@@ -622,9 +629,9 @@ export async function POST(request: Request) {
     if (!operationContext) {
       return Response.json({ error: "The accepted assignment context is missing." }, { status: 409 });
     }
-    let stageDecision: Awaited<ReturnType<typeof evaluateAssignedJobStage>> | null = null;
+    let completionAuthorizationDecisionId = "";
     if (nextStatus === "completed") {
-      stageDecision = await evaluateAssignedJobStage({
+      const stageDecision = await evaluateAssignedJobStage({
         requestId,
         providerEmail: provider.email,
         stage: "completion",
@@ -637,6 +644,7 @@ export async function POST(request: Request) {
           reasons: stageDecision.result?.reasons ?? [],
         }, { status: stageDecision.status, headers: { "cache-control": "no-store" } });
       }
+      completionAuthorizationDecisionId = stageDecision.result.decisionId;
       const [actualStart] = await db.select({
         decisionId: providerJobRecords.jobStartDecisionId,
       }).from(providerJobRecords).where(and(
@@ -705,14 +713,14 @@ export async function POST(request: Request) {
         id: jobRecord?.id || await jobRecordIdFor(requestId, provider.email),
         requestId,
         providerEmail: provider.email,
-        completionDecisionId: stageDecision?.result?.decisionId || "",
+        completionDecisionId: completionAuthorizationDecisionId,
         workStatus: "completed",
         trackedSeconds: completedTrackedSeconds,
         updatedAt: completedAt,
       }).onConflictDoUpdate({
         target: [providerJobRecords.requestId, providerJobRecords.providerEmail],
         set: {
-          completionDecisionId: stageDecision?.result?.decisionId || "",
+          completionDecisionId: completionAuthorizationDecisionId,
           workStatus: "completed",
           timerStartedAt: "",
           trackedSeconds: completedTrackedSeconds,
@@ -725,7 +733,7 @@ export async function POST(request: Request) {
       // changes, incidents, claims, refunds, disputes, reserves, and a fresh
       // payout-stage eligibility decision before any transfer is attempted.
     }
-    await appendJobLifecycleEvent({
+    const lifecycleEvent = await appendJobLifecycleEvent({
       requestId,
       quoteId: operationContext.quoteId,
       providerId: provider.id,
@@ -737,14 +745,21 @@ export async function POST(request: Request) {
       fromStatus: assignedJob.status,
       toStatus: nextStatus,
       scopeVersion: operationContext.scopeVersion,
-      authorizationSnapshotId: stageDecision?.result?.decisionId || "",
+      ...(completionAuthorizationDecisionId
+        ? { authorizationSnapshotId: completionAuthorizationDecisionId }
+        : {}),
     });
-    return Response.json({
-      ok: true,
-      status: nextStatus,
-      decisionId: stageDecision.result.decisionId,
-      ...(completedTrackedSeconds === undefined ? {} : { trackedSeconds: completedTrackedSeconds }),
-    });
+    return Response.json(nextStatus === "completed"
+      ? jobStatusTransitionSuccessPayload({
+          status: "completed",
+          lifecycleEventId: lifecycleEvent.eventId,
+          authorizationDecisionId: completionAuthorizationDecisionId,
+          trackedSeconds: completedTrackedSeconds ?? 0,
+        })
+      : jobStatusTransitionSuccessPayload({
+          status: nextStatus,
+          lifecycleEventId: lifecycleEvent.eventId,
+        }));
   }
 
   const [job] = await db.select({
