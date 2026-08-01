@@ -17,6 +17,7 @@ on:
       - .github/workflows/apply-customer-supplied-parts-preferences.yml
       - scripts/apply_labor_only_core.py.gz.b64
       - scripts/apply_labor_only_ui.py.gz.b64
+      - scripts/apply_labor_only_hardening.py.gz.b64.part.*
 
 permissions:
   contents: write
@@ -46,6 +47,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          cat scripts/apply_labor_only_hardening.py.gz.b64.part.* > scripts/apply_labor_only_hardening.py.gz.b64
           python - <<'PY'
           from hashlib import sha256
           from pathlib import Path
@@ -64,9 +66,18 @@ jobs:
           if sha256(ui.encode()).hexdigest() != expected_ui:
               raise SystemExit("UI labor-only payload checksum did not match.")
           ui_path.write_text(ui)
+
+          hardening_path = Path("scripts/apply_labor_only_hardening.py.gz.b64")
+          hardening = hardening_path.read_text().strip()
+          expected_hardening = "6c7f672528f8e68bf862e9a8fc71a6ace6fd328ff453f6fa1501721b415236ec"
+          if sha256(hardening.encode()).hexdigest() != expected_hardening:
+              raise SystemExit("Operational hardening payload checksum did not match.")
+          hardening_path.write_text(hardening)
           PY
           base64 --decode scripts/apply_labor_only_core.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_core.py
           base64 --decode scripts/apply_labor_only_ui.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_ui.py
+          base64 --decode scripts/apply_labor_only_hardening.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_hardening.py
+          echo "717d42a2f09bd991b61c6a7a4cf7bd34ab4a41c8fc80e289136ed043a5a42efa  scripts/apply_labor_only_hardening.py" | sha256sum -c -
           python - <<'PY'
           from pathlib import Path
 
@@ -80,9 +91,10 @@ jobs:
               raise SystemExit("Customer Agreement patch markers did not match exactly.")
           path.write_text(text.replace(old_first, new_first, 1).replace(old_second, new_second, 1))
           PY
-          python -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
+          python -W error::SyntaxWarning -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py scripts/apply_labor_only_hardening.py
           python scripts/apply_labor_only_core.py
           python scripts/apply_labor_only_ui.py
+          python scripts/apply_labor_only_hardening.py
 
       - name: Install dependencies
         run: npm ci
@@ -93,16 +105,24 @@ jobs:
       - name: Build and test
         run: npm test
 
-      - name: Confirm labor-only transactional wording
+      - name: Confirm labor-only transactional enforcement
         shell: bash
         run: |
           set -euo pipefail
           ! grep -R 'MarketPriceLinks' app/page.tsx app/provider-jobs/page.tsx
-          ! grep -R 'Provider supplies parts' app/post-job/page.tsx app/provider-jobs/page.tsx app/my-request/page.tsx app/components/quote-payment-card.tsx lib/service-matching.ts
-          ! grep -R 'Parts price ($)' app/provider-jobs/page.tsx
+          ! grep -R 'Provider supplies parts' app lib
+          ! grep -R 'If the provider supplies parts' app lib
+          ! grep -R 'Parts price ($)' app lib
+          ! grep -F '\nDROP TRIGGER' drizzle/0045_customer_supplied_parts_preferences.sql
           grep -q 'LABOR_ONLY_QUOTE_REQUIRED' app/api/jobs/route.ts
           grep -q 'scopePrice.partsAmountCents !== 0' app/api/stripe/checkout/route.ts
+          grep -q 'LABOR_ONLY_CHANGE_ORDER_REQUIRED' app/api/job-operations/route.ts
+          grep -q 'LABOR_ONLY_CANCELLATION_REQUIRED' app/api/job-operations/route.ts
+          grep -q 'LABOR_ONLY_INVOICE_REQUIRED' app/api/job-operations/route.ts
+          grep -q 'LABOR_ONLY_REPAIR_RECORD_REQUIRED' app/api/repair-records/route.ts
           grep -q 'provider_quotes_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
+          grep -q 'job_change_orders_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
+          grep -q 'repair_authorization_items_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
 
       - name: Upload workspace on failure
         if: failure()
@@ -124,8 +144,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
-          rm -f scripts/apply_labor_only_core.py.gz.b64 scripts/apply_labor_only_ui.py.gz.b64
+          rm -f scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py scripts/apply_labor_only_hardening.py
+          rm -f scripts/apply_labor_only_core.py.gz.b64 scripts/apply_labor_only_ui.py.gz.b64 scripts/apply_labor_only_hardening.py.gz.b64
+          rm -f scripts/apply_labor_only_hardening.py.gz.b64.part.*
           rm -f .github/workflows/apply-customer-supplied-parts-preferences.yml
           git config user.name 'Tuveloz Automation'
           git config user.email 'actions@users.noreply.github.com'
