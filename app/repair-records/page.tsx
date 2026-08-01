@@ -135,6 +135,11 @@ function Field({ label, name, defaultValue = "", type = "text", required = true 
   return <label>{label}<input defaultValue={defaultValue} name={name} required={required} type={type} /></label>;
 }
 
+function selectedSubmitValue(event: FormEvent<HTMLFormElement>) {
+  const submitter = (event.nativeEvent as SubmitEvent).submitter;
+  return submitter instanceof HTMLButtonElement ? submitter.value : "draft";
+}
+
 export default function RepairRecordsPage() {
   const [data, setData] = useState<RepairData | null>(null);
   const [selectedId, setSelectedId] = useState("");
@@ -206,6 +211,7 @@ export default function RepairRecordsPage() {
   async function submitAuthorization(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = valuesFromForm(event.currentTarget);
+    values.status = selectedSubmitValue(event);
     try {
       values.lineItems = JSON.parse(String(values.lineItems || "[]"));
     } catch {
@@ -217,6 +223,7 @@ export default function RepairRecordsPage() {
   async function submitInvoice(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = valuesFromForm(event.currentTarget);
+    values.status = selectedSubmitValue(event);
     try {
       values.lineItems = JSON.parse(String(values.lineItems || "[]"));
     } catch {
