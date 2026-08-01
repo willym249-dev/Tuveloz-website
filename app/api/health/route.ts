@@ -46,6 +46,10 @@ const REQUIRED_GUARDED_TRIGGERS = [
   "accepted_quote_creates_initial_authorization_insert",
   "repair_authorization_signed_immutable",
   "provider_invoice_final_core_immutable",
+  "provider_job_insert_requires_signed_repair_authorization",
+  "provider_job_update_requires_signed_repair_authorization",
+  "provider_invoice_final_requires_complete_repair_record",
+  "stripe_payment_release_requires_signed_delivered_provider_invoice",
 ] as const;
 
 // Table existence verifies the CREATE migrations. These zero-row probes also
@@ -122,6 +126,8 @@ export async function GET() {
           .filter((row) => (
             row.name.startsWith("repair_")
             || row.name.startsWith("provider_invoice_")
+            || row.name.startsWith("provider_job_")
+            || row.name.startsWith("stripe_payment_release_")
             || (row.sql?.includes("is_test_job") && row.sql.includes("= 'no'"))
           ))
           .map((row) => row.name),
