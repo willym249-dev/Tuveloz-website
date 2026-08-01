@@ -1,4 +1,4 @@
-name: Inspect Tuveloz AI mobile source
+name: Inspect Tuveloz AI routing
 
 on:
   pull_request:
@@ -10,78 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  inspect-public-source:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Capture public HTML and first-party assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ai-inspection/assets
-          curl --fail --location --silent --show-error \
-            --dump-header ai-inspection/headers.txt \
-            --output ai-inspection/index.html \
-            https://ai.tuveloz.com/
-          python3 - <<'PY'
-          from html.parser import HTMLParser
-          from pathlib import Path
-          from urllib.parse import urljoin, urlparse
-          from urllib.request import Request, urlopen
-          import hashlib
-          import json
-
-          base = "https://ai.tuveloz.com/"
-          html = Path("ai-inspection/index.html").read_text(errors="replace")
-
-          class Parser(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.urls = []
-              def handle_starttag(self, tag, attrs):
-                  values = dict(attrs)
-                  if tag == "link" and values.get("href"):
-                      self.urls.append(values["href"])
-                  if tag == "script" and values.get("src"):
-                      self.urls.append(values["src"])
-
-          parser = Parser()
-          parser.feed(html)
-          records = []
-          for raw in parser.urls:
-              absolute = urljoin(base, raw)
-              parsed = urlparse(absolute)
-              if parsed.hostname != "ai.tuveloz.com":
-                  continue
-              if not parsed.path.lower().endswith((".css", ".js", ".mjs")):
-                  continue
-              suffix = Path(parsed.path).suffix or ".txt"
-              name = hashlib.sha256(absolute.encode()).hexdigest()[:16] + suffix
-              target = Path("ai-inspection/assets") / name
-              record = {"url": absolute, "file": str(target)}
-              try:
-                  request = Request(absolute, headers={"User-Agent": "Tuveloz-mobile-inspection/1.0"})
-                  with urlopen(request, timeout=20) as response:
-                      target.write_bytes(response.read())
-                      record["status"] = response.status
-                      record["content_type"] = response.headers.get("content-type", "")
-              except Exception as exc:
-                  record["error"] = str(exc)
-              records.append(record)
-
-          Path("ai-inspection/assets.json").write_text(json.dumps(records, indent=2))
-          PY
-          grep -RniE "A clearer next step|Immediate danger|Tuveloz AI|guided vehicle support|safe-area|viewport|@media" ai-inspection > ai-inspection/matches.txt || true
-
-      - name: Upload inspection bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: tuveloz-ai-public-source
-          path: ai-inspection
-          if-no-files-found: error
-          retention-days: 1
-
-  inspect-cloudflare-routing:
+  inspect-routing:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
@@ -89,41 +18,52 @@ jobs:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - name: Resolve the Worker or Pages project serving ai.tuveloz.com
+      - name: Resolve ai.tuveloz.com ownership and origin
         shell: bash
         run: |
           set -euo pipefail
           test -n "${CF_API_TOKEN:-}" || { echo "Cloudflare token unavailable"; exit 2; }
           test -n "${CF_ACCOUNT_ID:-}" || { echo "Cloudflare account unavailable"; exit 2; }
-          mkdir -p cloudflare-inspection
+          mkdir -p routing-inspection
           auth=(-H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json")
 
           curl --fail --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts" \
-            | jq '{success, result: [.result[] | {id, created_on, modified_on}]}' \
-            > cloudflare-inspection/worker-scripts.json
+            "https://api.cloudflare.com/client/v4/zones?name=tuveloz.com&status=active" \
+            | jq '{success, result: [.result[] | {id, name, status, account: {id: .account.id, name: .account.name}}]}' \
+            > routing-inspection/zones.json
+
+          zone_id="$(jq -r '.result[0].id // empty' routing-inspection/zones.json)"
+          test -n "$zone_id" || { echo "Tuveloz zone unavailable"; exit 3; }
+
+          curl --fail --silent --show-error "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records?name=ai.tuveloz.com" \
+            | jq '{success, result: [.result[] | {id, type, name, content, proxied, ttl, comment, tags}]}' \
+            > routing-inspection/ai-dns-records.json
+
+          curl --silent --show-error "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/zones/${zone_id}/custom_hostnames?hostname=ai.tuveloz.com" \
+            | jq '{success, result: [.result[]? | {id, hostname, status, ssl: {status: .ssl.status, method: .ssl.method, type: .ssl.type}}]}' \
+            > routing-inspection/ai-custom-hostnames.json || true
 
           curl --fail --silent --show-error "${auth[@]}" \
             "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/domains" \
-            | jq '{success, result: [.result[] | {id, hostname, service, environment, zone_id}]}' \
-            > cloudflare-inspection/worker-domains.json
+            | jq '{success, result: [.result[] | {hostname, service, environment, zone_id}]}' \
+            > routing-inspection/worker-domains.json
 
           curl --fail --silent --show-error "${auth[@]}" \
             "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
-            | jq '{success, result: [.result[] | {name, subdomain, domains, production_branch, created_on, latest_deployment: (.latest_deployment | {id, url, environment, created_on, deployment_trigger})}]}' \
-            > cloudflare-inspection/pages-projects.json
+            | jq '{success, result: [.result[] | {name, subdomain, domains, production_branch}]}' \
+            > routing-inspection/pages-projects.json
 
-          jq -n \
-            --slurpfile workers cloudflare-inspection/worker-scripts.json \
-            --slurpfile domains cloudflare-inspection/worker-domains.json \
-            --slurpfile pages cloudflare-inspection/pages-projects.json \
-            '{workers: $workers[0], domains: $domains[0], pages: $pages[0]}' \
-            > cloudflare-inspection/summary.json
+          dig +noall +answer ai.tuveloz.com A ai.tuveloz.com AAAA ai.tuveloz.com CNAME \
+            > routing-inspection/public-dns.txt || true
+          curl --fail --location --silent --show-error --head https://ai.tuveloz.com/ \
+            > routing-inspection/public-headers.txt
 
-      - name: Upload Cloudflare routing inventory
+      - name: Upload routing inventory
         uses: actions/upload-artifact@v4
         with:
-          name: tuveloz-ai-cloudflare-routing
-          path: cloudflare-inspection
+          name: tuveloz-ai-routing-origin
+          path: routing-inspection
           if-no-files-found: error
           retention-days: 1
