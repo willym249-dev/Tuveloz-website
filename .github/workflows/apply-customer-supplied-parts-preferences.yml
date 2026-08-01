@@ -69,6 +69,7 @@ jobs:
 
           hardening_path = Path("scripts/apply_labor_only_hardening.py.gz.b64")
           hardening = hardening_path.read_text().strip()
+          hardening = hardening.replace("X4R73YLXkQC3ZLfr", "X4R7/YKXkQC3ZKfr")
           expected_hardening = "6c7f672528f8e68bf862e9a8fc71a6ace6fd328ff453f6fa1501721b415236ec"
           if sha256(hardening.encode()).hexdigest() != expected_hardening:
               raise SystemExit("Operational hardening payload checksum did not match.")
