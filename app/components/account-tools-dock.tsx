@@ -36,7 +36,8 @@ export function AccountToolsDock() {
   }, []);
 
   const ownerEntryAvailable = pathname === "/account";
-  if (!isOwner && !ownerEntryAvailable) return null;
+  const ownerControlVisible = isOwner || ownerEntryAvailable;
+  if (!ownerControlVisible) return null;
 
   const dockStyle = {
     position: "fixed" as const,
