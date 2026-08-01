@@ -1,0 +1,82 @@
+name: Inspect Tuveloz AI mobile source
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/diagnose-ai-site.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Capture public HTML and first-party assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ai-inspection/assets
+          curl --fail --location --silent --show-error \
+            --dump-header ai-inspection/headers.txt \
+            --output ai-inspection/index.html \
+            https://ai.tuveloz.com/
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urljoin, urlparse
+          from urllib.request import Request, urlopen
+          import hashlib
+          import json
+
+          base = "https://ai.tuveloz.com/"
+          html = Path("ai-inspection/index.html").read_text(errors="replace")
+
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.urls = []
+              def handle_starttag(self, tag, attrs):
+                  values = dict(attrs)
+                  if tag == "link" and values.get("href"):
+                      self.urls.append(values["href"])
+                  if tag == "script" and values.get("src"):
+                      self.urls.append(values["src"])
+
+          parser = Parser()
+          parser.feed(html)
+          records = []
+          for raw in parser.urls:
+              absolute = urljoin(base, raw)
+              parsed = urlparse(absolute)
+              if parsed.hostname != "ai.tuveloz.com":
+                  continue
+              if not parsed.path.lower().endswith((".css", ".js", ".mjs")):
+                  continue
+              suffix = Path(parsed.path).suffix or ".txt"
+              name = hashlib.sha256(absolute.encode()).hexdigest()[:16] + suffix
+              target = Path("ai-inspection/assets") / name
+              record = {"url": absolute, "file": str(target)}
+              try:
+                  request = Request(absolute, headers={"User-Agent": "Tuveloz-mobile-inspection/1.0"})
+                  with urlopen(request, timeout=20) as response:
+                      target.write_bytes(response.read())
+                      record["status"] = response.status
+                      record["content_type"] = response.headers.get("content-type", "")
+              except Exception as exc:
+                  record["error"] = str(exc)
+              records.append(record)
+
+          Path("ai-inspection/assets.json").write_text(json.dumps(records, indent=2))
+          PY
+          grep -RniE "A clearer next step|Immediate danger|Tuveloz AI|guided vehicle support|safe-area|viewport|@media" ai-inspection > ai-inspection/matches.txt || true
+
+      - name: Upload inspection bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: tuveloz-ai-public-source
+          path: ai-inspection
+          if-no-files-found: error
+          retention-days: 1
