@@ -129,9 +129,8 @@ export default async function PostJobPage() {
           <input name="launch-area" type="hidden" value={CURRENT_LAUNCH_AREA} />
           <div className="field-row">
             <div className="fixed-launch-area">
-              <span>Exact launch jurisdiction</span>
+              <span>Current service area</span>
               <strong>{CURRENT_LAUNCH_AREA}</strong>
-              <small>Policy code: {POLICY_JURISDICTION}</small>
             </div>
             <label>
               City, town, or municipality
