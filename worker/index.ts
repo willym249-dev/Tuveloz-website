@@ -38,6 +38,7 @@ const PRIVATE_PATH_PREFIXES = [
   "/my-request",
   "/privacy-center",
   "/provider-jobs",
+  "/repair-records",
   "/success",
   "/api/",
 ];
