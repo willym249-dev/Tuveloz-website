@@ -4,6 +4,7 @@ import { AccountToolsDock } from "./components/account-tools-dock";
 import { JobPostingPauseNotice } from "./components/job-posting-pause-notice";
 import { ProviderPublicActions } from "./components/provider-public-actions";
 import { SiteLanguageProvider } from "./components/site-language";
+import { StagingEnvironmentBanner } from "./components/staging-environment-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -48,6 +49,7 @@ export default function RootLayout({
         }
       >
         <SiteLanguageProvider>
+          <StagingEnvironmentBanner />
           {CUSTOMER_JOB_POSTING_PAUSED && <JobPostingPauseNotice />}
           {children}
           <ProviderPublicActions />
