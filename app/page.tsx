@@ -856,7 +856,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
-          <a href="https://ai.tuveloz.com/" onClick={() => setMenuOpen(false)}>Tuveloz AI</a>
           <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
