@@ -13,6 +13,7 @@ on:
       - scripts/apply_labor_only_core.py.gz.b64
       - scripts/apply_labor_only_ui.py.gz.b64
       - scripts/apply_labor_only_hardening.py.gz.b64.part.*
+      - scripts/modernize_labor_only_patch.py
 
 permissions:
   contents: write
@@ -95,6 +96,7 @@ jobs:
               raise SystemExit("Customer Agreement patch markers did not match exactly.")
           path.write_text(text.replace(old_first, new_first, 1).replace(old_second, new_second, 1))
           PY
+          python scripts/modernize_labor_only_patch.py
           python -W error::SyntaxWarning -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py scripts/apply_labor_only_hardening.py
           python scripts/apply_labor_only_core.py
           python scripts/apply_labor_only_ui.py
@@ -179,16 +181,16 @@ jobs:
           ! grep -R 'Provider supplies parts' app lib
           ! grep -R 'If the provider supplies parts' app lib
           ! grep -R 'Parts price ($)' app lib
-          ! grep -F '\nDROP TRIGGER' drizzle/0045_customer_supplied_parts_preferences.sql
+          ! grep -F '\nDROP TRIGGER' drizzle/0047_customer_supplied_parts_preferences.sql
           grep -q 'LABOR_ONLY_QUOTE_REQUIRED' app/api/jobs/route.ts
           grep -q 'scopePrice.partsAmountCents !== 0' app/api/stripe/checkout/route.ts
           grep -q 'LABOR_ONLY_CHANGE_ORDER_REQUIRED' app/api/job-operations/route.ts
           grep -q 'LABOR_ONLY_CANCELLATION_REQUIRED' app/api/job-operations/route.ts
           grep -q 'LABOR_ONLY_INVOICE_REQUIRED' app/api/job-operations/route.ts
           grep -q 'LABOR_ONLY_REPAIR_RECORD_REQUIRED' app/api/repair-records/route.ts
-          grep -q 'provider_quotes_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
-          grep -q 'job_change_orders_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
-          grep -q 'repair_authorization_items_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
+          grep -q 'provider_quotes_labor_only_insert' drizzle/0047_customer_supplied_parts_preferences.sql
+          grep -q 'job_change_orders_labor_only_insert' drizzle/0047_customer_supplied_parts_preferences.sql
+          grep -q 'repair_authorization_items_labor_only_insert' drizzle/0047_customer_supplied_parts_preferences.sql
           grep -q 'Parts charged through Tuveloz' app/components/quote-payment-card.tsx
           grep -q 'part amounts must be 0' app/repair-records/page.tsx
           grep -q 'customer-visible status' app/provider-jobs/page.tsx
@@ -213,7 +215,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py scripts/apply_labor_only_hardening.py
+          rm -f scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py scripts/apply_labor_only_hardening.py scripts/modernize_labor_only_patch.py
           rm -f scripts/apply_labor_only_core.py.gz.b64 scripts/apply_labor_only_ui.py.gz.b64 scripts/apply_labor_only_hardening.py.gz.b64
           rm -f scripts/apply_labor_only_hardening.py.gz.b64.part.*
           rm -f .github/workflows/apply-customer-supplied-parts-preferences.yml
