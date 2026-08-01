@@ -1,4 +1,4 @@
-name: Inspect Tuveloz AI routing
+name: Inspect Tuveloz AI mobile rendering
 
 on:
   pull_request:
@@ -10,60 +10,42 @@ permissions:
   contents: read
 
 jobs:
-  inspect-routing:
+  inspect-mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: production
-    env:
-      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - name: Resolve ai.tuveloz.com ownership and origin
+      - name: Capture public DNS and response headers
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${CF_API_TOKEN:-}" || { echo "Cloudflare token unavailable"; exit 2; }
-          test -n "${CF_ACCOUNT_ID:-}" || { echo "Cloudflare account unavailable"; exit 2; }
-          mkdir -p routing-inspection
-          auth=(-H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json")
-
-          curl --fail --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/zones?name=tuveloz.com&status=active" \
-            | jq '{success, result: [.result[] | {id, name, status, account: {id: .account.id, name: .account.name}}]}' \
-            > routing-inspection/zones.json
-
-          zone_id="$(jq -r '.result[0].id // empty' routing-inspection/zones.json)"
-          test -n "$zone_id" || { echo "Tuveloz zone unavailable"; exit 3; }
-
-          curl --fail --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/zones/${zone_id}/dns_records?name=ai.tuveloz.com" \
-            | jq '{success, result: [.result[] | {id, type, name, content, proxied, ttl, comment, tags}]}' \
-            > routing-inspection/ai-dns-records.json
-
-          curl --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/zones/${zone_id}/custom_hostnames?hostname=ai.tuveloz.com" \
-            | jq '{success, result: [.result[]? | {id, hostname, status, ssl: {status: .ssl.status, method: .ssl.method, type: .ssl.type}}]}' \
-            > routing-inspection/ai-custom-hostnames.json || true
-
-          curl --fail --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/domains" \
-            | jq '{success, result: [.result[] | {hostname, service, environment, zone_id}]}' \
-            > routing-inspection/worker-domains.json
-
-          curl --fail --silent --show-error "${auth[@]}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
-            | jq '{success, result: [.result[] | {name, subdomain, domains, production_branch}]}' \
-            > routing-inspection/pages-projects.json
-
+          mkdir -p mobile-inspection
           dig +noall +answer ai.tuveloz.com A ai.tuveloz.com AAAA ai.tuveloz.com CNAME \
-            > routing-inspection/public-dns.txt || true
+            > mobile-inspection/public-dns.txt || true
           curl --fail --location --silent --show-error --head https://ai.tuveloz.com/ \
-            > routing-inspection/public-headers.txt
+            > mobile-inspection/public-headers.txt
 
-      - name: Upload routing inventory
+      - name: Capture 430px mobile screenshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          browser="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$browser" || { echo "No Chromium browser is available"; exit 2; }
+          "$browser" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --hide-scrollbars \
+            --window-size=430,1800 \
+            --force-device-scale-factor=1 \
+            --run-all-compositor-stages-before-draw \
+            --virtual-time-budget=8000 \
+            --screenshot=mobile-inspection/ai-tuveloz-mobile.png \
+            https://ai.tuveloz.com/
+
+      - name: Upload mobile inspection
         uses: actions/upload-artifact@v4
         with:
-          name: tuveloz-ai-routing-origin
-          path: routing-inspection
+          name: tuveloz-ai-mobile-render
+          path: mobile-inspection
           if-no-files-found: error
           retention-days: 1
