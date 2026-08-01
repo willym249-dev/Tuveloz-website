@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint, test, and build
+    name: Lint, test, build, and migrate
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -37,6 +37,11 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Apply every migration to a fresh local D1 database
+        run: |
+          rm -rf .wrangler/state
+          npm run db:migrate:local
 
       - name: Build
         run: npm run build
