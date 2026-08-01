@@ -27,6 +27,7 @@ import {
 } from "../../../lib/provider-verification-evidence";
 import {
   getStripeIdentityClient,
+  getStripeIdentityVerificationFlowId,
   siteUrlFor,
   stripeErrorResponse,
   stripeIdentityModeMatchesProvider,
@@ -342,10 +343,9 @@ async function createAttempt(
 
   const stripe = getStripeIdentityClient();
   const created = await stripe.identity.verificationSessions.create({
-    type: "document",
+    verification_flow: getStripeIdentityVerificationFlowId(),
     client_reference_id: row.id,
     provided_details: { email: account.provider.email },
-    options: { document: { require_id_number: false, require_matching_selfie: true } },
     metadata: {
       tuveloz_provider_id: account.provider.id,
       tuveloz_person_id: personId,
