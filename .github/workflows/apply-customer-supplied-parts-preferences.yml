@@ -1,0 +1,74 @@
+name: Apply customer-supplied parts preferences
+
+on:
+  push:
+    branches:
+      - agent/customer-supplied-parts-preferences
+    paths:
+      - .github/workflows/apply-customer-supplied-parts-preferences.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-customer-supplied-parts-preferences
+  cancel-in-progress: false
+
+jobs:
+  apply-test-and-commit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Decode and apply labor-only patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode scripts/apply_labor_only_core.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_core.py
+          base64 --decode scripts/apply_labor_only_ui.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_ui.py
+          python -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
+          python scripts/apply_labor_only_core.py
+          python scripts/apply_labor_only_ui.py
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build and test
+        run: npm test
+
+      - name: Confirm labor-only transactional wording
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -R 'MarketPriceLinks' app/page.tsx app/provider-jobs/page.tsx
+          ! grep -R 'Provider supplies parts' app/post-job/page.tsx app/provider-jobs/page.tsx app/my-request/page.tsx app/components/quote-payment-card.tsx lib/service-matching.ts
+          ! grep -R 'Parts price ($)' app/provider-jobs/page.tsx
+          grep -q 'LABOR_ONLY_QUOTE_REQUIRED' app/api/jobs/route.ts
+          grep -q 'scopePrice.partsAmountCents !== 0' app/api/stripe/checkout/route.ts
+          grep -q 'provider_quotes_labor_only_insert' drizzle/0045_customer_supplied_parts_preferences.sql
+
+      - name: Commit verified implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
+          rm -f scripts/apply_labor_only_core.py.gz.b64 scripts/apply_labor_only_ui.py.gz.b64
+          rm -f .github/workflows/apply-customer-supplied-parts-preferences.yml
+          git config user.name 'Tuveloz Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'Enforce labor-only OEM and aftermarket preferences'
+          git push origin HEAD:agent/customer-supplied-parts-preferences
