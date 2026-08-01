@@ -5,15 +5,15 @@ export default function HowItWorksPage() {
     <PublicInfoPage
       kicker="How it works"
       title="The planned marketplace flow."
-      intro="Provider onboarding and evidence review are open. The customer workflow below remains disabled until exact services and launch controls receive the required written approvals."
+      intro="Provider onboarding and evidence review are open. The customer experience below will remain unavailable until each service and every launch requirement receive written approval."
       sections={[
         {
-          title: "1. Request an enabled exact service",
-          text: "After launch, the customer will choose only an exact service code enabled for the location and describe the vehicle, timing, and parts preference.",
+          title: "1. Request an available service",
+          text: "After launch, the customer will choose a service available in their location and describe the vehicle, preferred timing, and parts preference.",
         },
         {
-          title: "2. The server checks eligibility",
-          text: "The system will share a request only with providers whose exact service, performing person, evidence, agreements, work area, date, and any supervision requirements pass.",
+          title: "2. Tuveloz checks eligibility",
+          text: "Tuveloz will share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards.",
         },
         {
           title: "3. Providers remain separate businesses",
@@ -25,7 +25,7 @@ export default function HowItWorksPage() {
         },
         {
           title: "5. Choose and track",
-          text: "The customer will choose a quote and accept the disclosed provider and performing person. Every later job and payment stage must pass the server gate again.",
+          text: "The customer will choose a quote and accept the disclosed provider and assigned worker. Tuveloz will check eligibility again at each later job and payment stage.",
         },
       ]}
     />

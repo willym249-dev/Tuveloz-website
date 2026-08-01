@@ -43,7 +43,7 @@ export default function ServiceStandardsPage() {
         </Link>
         <div className="account-header-actions">
           <SiteLanguageButton />
-          <Link className="account-home-link" href="/account">Sign up / Sign in</Link>
+          <Link className="account-home-link" href="/account">Sign up or sign in</Link>
         </div>
       </header>
 

@@ -87,7 +87,7 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   history: {
     title: "Job history",
     emptyTitle: "No completed jobs yet",
-    emptyText: "Completed and cancelled jobs will appear here.",
+    emptyText: "Completed and canceled jobs will appear here.",
   },
   messages: {
     title: "Messages",

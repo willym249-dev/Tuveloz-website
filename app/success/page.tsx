@@ -62,7 +62,7 @@ export default function StripeSuccessPage() {
     <main className="payment-result-shell">
       <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
       <section>
-        <span className="kicker">{canceled ? "Checkout canceled" : "Stripe Checkout"}</span>
+        <span className="kicker">{canceled ? "Checkout canceled" : "Payment status"}</span>
         <h1>{canceled ? "No payment was completed." : "Thanks—your payment is being confirmed."}</h1>
         {payment ? (
           <p>
@@ -72,10 +72,10 @@ export default function StripeSuccessPage() {
         ) : (
           <p>
             {checking
-              ? "Checking the signed Stripe webhook result…"
+              ? "Confirming your payment…"
               : canceled
                 ? "You can return whenever you are ready."
-                : "Stripe may take a moment to deliver the signed confirmation webhook."}
+                : "We are still waiting for confirmation. This usually takes only a moment."}
           </p>
         )}
         <div>

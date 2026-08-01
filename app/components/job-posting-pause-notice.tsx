@@ -91,7 +91,7 @@ export function JobPostingPauseNotice() {
           <span>{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
           <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
         </div>
-        <nav aria-label="Available Tuveloz signup options" className="tuveloz-launch-pause-actions">
+        <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
           <Link href="/account?role=customer&mode=create">Create customer account</Link>
           <Link href="/join">Join as a provider</Link>
         </nav>

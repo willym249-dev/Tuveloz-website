@@ -16,8 +16,8 @@ export default function FaqPage() {
           text: "No. TUVELOZ does not employ, train, sponsor, assign, or supervise providers, mechanics, trainees, or provider-business employees. A separate provider business must handle its own hiring, payroll, training, supervision, insurance, and job assignment. Applicant-only accounts receive no training or jobs.",
         },
         {
-          title: "Does posting a request cost money?",
-          text: "Customer requests and payments are not open yet. Before a future launch, the final fee and tax treatment must be approved and every charge and refund term must be shown before payment.",
+          title: "Will submitting a request cost money?",
+          text: "Customer service requests and payments are not yet available. Before launch, Tuveloz must approve the final fee and tax treatment and show every charge and refund term before payment.",
         },
         {
           title: "Who sets the provider price?",
@@ -28,8 +28,8 @@ export default function FaqPage() {
           text: "Do not assume an umbrella license or 'fully verified' status. TUVELOZ will show the exact evidence checked for a specific service, person, location, and date. Insurance, registration, competency, supervision, or other evidence may apply even where there is no universal mechanic license.",
         },
         {
-          title: "Where is Tuveloz operating?",
-          text: "Provider onboarding is focused on Montgomery County, Maryland. Real customer jobs and payments are not open in any area yet. Customers and providers can request future areas from the Learn page.",
+          title: "Where is Tuveloz launching?",
+          text: "Provider onboarding is focused on Montgomery County, Maryland. Customer service requests and payments are not yet available in any area. Customers and providers can request future launch areas on the About page.",
         },
         {
           title: "How do I access my tools?",

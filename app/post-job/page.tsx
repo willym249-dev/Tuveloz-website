@@ -58,27 +58,26 @@ export default async function PostJobPage() {
         <div className="account-header-actions">
           <SiteLanguageButton />
           <Link className="account-home-link" href="/account">
-            Sign up / Sign in
+            Sign up or sign in
           </Link>
         </div>
       </header>
 
       <section className="account-main">
         <div className="account-welcome">
-          <span className="account-kicker">Customer intake review</span>
-          <h1>New job requests are temporarily paused.</h1>
+          <span className="account-kicker">Customer launch preview</span>
+          <h1>Customer service requests are not yet available.</h1>
           <p>
-            The full planned intake is shown below so the workflow can be reviewed
-            together. {CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}
+            The planned request form is shown below for review. {CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}
           </p>
-          <small>Review the complete exact-service request below.</small>
+          <small>Preview the complete service-request form below.</small>
         </div>
 
         <section className="account-card" style={{ marginTop: 32, minHeight: 0 }}>
           <div className="account-card-heading">
             <div>
-              <span className="account-role">No real submission</span>
-              <h2>Provider onboarding remains separate from jobs.</h2>
+              <span className="account-role">Preview only</span>
+              <h2>Creating an account does not submit a request.</h2>
             </div>
           </div>
           <p>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</p>
@@ -99,8 +98,8 @@ export default async function PostJobPage() {
           <div className="form-heading">
             <span>01</span>
             <div>
-              <h2>Customer and exact job scope</h2>
-              <p>Review-only while every real customer-job action is server-blocked.</p>
+              <h2>Customer and service details</h2>
+              <p>Preview only. This form cannot submit a live service request.</p>
             </div>
           </div>
 
@@ -164,9 +163,9 @@ export default async function PostJobPage() {
           <input name="scheduled-time-zone" type="hidden" value="America/New_York" />
 
           <label>
-            One exact service code
+            Choose one specific service
             <select name="service-code" required defaultValue="">
-              <option disabled value="">No exact service is activated yet</option>
+              <option disabled value="">No services are available yet</option>
               {exactServices.map((service) => {
                 const available = service.launchState === "enabled" && service.customerVisible;
                 return (
@@ -177,8 +176,8 @@ export default async function PostJobPage() {
               })}
             </select>
             <small>
-              Broad categories such as “general auto repair” are prohibited. Each
-              added service must use its own approved code and customer authorization.
+              Each request must name one approved service. Broad categories such as
+              “general auto repair” are not accepted.
             </small>
           </label>
 
@@ -430,8 +429,8 @@ export default async function PostJobPage() {
             Request posting is not open
           </button>
           <p className="admin-note">
-            The server rejects real submissions before reading customer data. This
-            review form does not create a job, offer employment, promise work, or charge anyone.
+            This preview cannot create a service request, offer employment, promise
+            work, or charge anyone.
           </p>
         </form>
 

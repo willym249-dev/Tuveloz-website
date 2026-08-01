@@ -4,13 +4,13 @@ export default function SafetyPage() {
   return (
     <PublicInfoPage
       kicker="Safety & trust"
-      title="Exact checks before any future job begins."
-      intro="Provider onboarding is open, but all real services and job stages are currently blocked. TUVELOZ is implementing exact-service evidence checks, limited information sharing, clear quotes, and role-specific access."
+      title="Service-specific checks before any future job begins."
+      intro="Provider onboarding is open, but customer service requests and jobs are not yet available. Tuveloz is implementing service-specific evidence checks, limited information sharing, clear quotes, and role-specific access."
       sections={[
         {
-          title: "Account review is not blanket job approval",
-          text: "TUVELOZ reviews each exact service, performing person, location, date, evidence set, current agreement, and any supervision requirement. A label identifies the specific evidence checked; it is not a guarantee of safety, quality, or outcome.",
-          points: ["Exact services only", "Person- and location-specific checks", "Expired evidence blocks dependent work"],
+          title: "Every job requires its own checks",
+          text: "Tuveloz reviews the requested service, assigned worker, location, date, evidence, current agreements, and any supervision requirement. Each label identifies the evidence checked; it does not guarantee safety, quality, or results.",
+          points: ["Service-specific review", "Person- and location-specific checks", "Expired evidence prevents job access"],
         },
         {
           title: "Customer privacy",

@@ -14,6 +14,81 @@ const LANGUAGE_KEY = "tuveloz-language";
 const LANGUAGE_EVENT = "tuveloz-language-change";
 
 const spanishText: Record<string, string> = {
+  "Customer launch update": "Actualización del lanzamiento para clientes",
+  "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.": "Tuveloz aún no acepta solicitudes de servicio ni pagos de clientes. Primero estamos incorporando y revisando negocios proveedores locales para que los clientes tengan buenas opciones cuando abra el mercado.",
+  "Customer and provider accounts are available now. Creating an account does not submit a service request or charge you.": "Las cuentas de clientes y proveedores ya están disponibles. Crear una cuenta no envía una solicitud de servicio ni genera ningún cargo.",
+  "Create customer account": "Crear una cuenta de cliente",
+  "Learn about Tuveloz": "Conozca Tuveloz",
+  "Customer launch status": "Estado del lanzamiento para clientes",
+  "Safety & trust": "Seguridad y confianza",
+  "Launch status": "Estado del lanzamiento",
+  "Tuveloz home": "Página principal de Tuveloz",
+  "Sign up or sign in": "Registrarse / entrar",
+  "Provider onboarding is open": "La incorporación de proveedores está abierta",
+  "Tuveloz is building a local marketplace for vehicle services. Provider applications and evidence review are open. Customer service requests and payments are not yet available, so providers cannot accept jobs through Tuveloz yet.": "Tuveloz está creando un mercado local de servicios para vehículos. Las solicitudes de proveedores y la revisión de documentos están abiertas. Las solicitudes de servicio y los pagos de clientes aún no están disponibles, por lo que los proveedores todavía no pueden aceptar trabajos a través de Tuveloz.",
+  "See customer launch status": "Ver el estado del lanzamiento para clientes",
+  "Try Tuveloz AI": "Probar Tuveloz AI",
+  "Now onboarding providers in Montgomery County, Maryland": "Ahora incorporamos proveedores en el Condado de Montgomery, Maryland",
+  "Planned provider match": "Coincidencia prevista con un proveedor",
+  "Concept preview—not a live job": "Vista conceptual; no es un trabajo activo",
+  "Quote preview": "Vista previa de cotización",
+  "Available after customer launch": "Disponible después del lanzamiento para clientes",
+  "Launch area": "Área de lanzamiento",
+  "are not yet available": "aún no están disponibles",
+  "Service activation": "Activación del servicio",
+  "requires approval": "requiere aprobación",
+  "Provider applications": "Las solicitudes de proveedores",
+  "are open now": "ya están abiertas",
+  "Available now · Tuveloz AI": "Disponible ahora · Tuveloz AI",
+  "A clearer way to describe what your vehicle needs.": "Una forma más clara de describir lo que necesita su vehículo.",
+  "Get bilingual, safety-first guidance that helps you organize observations and prepare for future service requests. It does not diagnose, dispatch help, guarantee pricing, or choose a provider.": "Reciba orientación bilingüe centrada en la seguridad para organizar sus observaciones y prepararse para futuras solicitudes de servicio. No diagnostica, envía ayuda, garantiza precios ni elige un proveedor.",
+  "Open Tuveloz AI": "Abrir Tuveloz AI",
+  "After launch, customers will be able to request approved services, compare eligible providers and quotes, and choose what works best. Service requests are not yet available.": "Después del lanzamiento, los clientes podrán solicitar servicios aprobados, comparar proveedores elegibles y cotizaciones, y elegir la mejor opción. Las solicitudes de servicio aún no están disponibles.",
+  "Check customer launch status": "Consultar el estado del lanzamiento para clientes",
+  "Mobile mechanics, service-truck operators, and shop-based providers can apply now, select specific services for review, and upload the required evidence. Job access begins only after the provider and each selected service pass every required review.": "Los mecánicos móviles, los operadores de vehículos de servicio y los proveedores con taller pueden solicitar ahora, seleccionar servicios específicos para revisión y cargar los documentos requeridos. El acceso a trabajos comienza solo después de que el proveedor y cada servicio seleccionado aprueben todas las revisiones requeridas.",
+  "These services are planned and are not yet available. Each one must complete Tuveloz's launch review before it can open to customers.": "Estos servicios están planificados y aún no están disponibles. Cada uno debe completar la revisión de lanzamiento de Tuveloz antes de ofrecerse a los clientes.",
+  "Planned service · View launch status": "Servicio planificado · Ver el estado del lanzamiento",
+  "Planned quote workflow": "Proceso de cotización planificado",
+  "Cosmetic-repair quotes are not yet available.": "Las cotizaciones de reparación estética aún no están disponibles.",
+  "This service will remain unavailable until its requirements, provider evidence, and launch approvals are complete.": "Este servicio permanecerá no disponible hasta que se completen sus requisitos, los documentos del proveedor y las aprobaciones de lanzamiento.",
+  "View launch status": "Ver el estado del lanzamiento",
+  "Join the provider network": "Unirse a la red de proveedores",
+  "Provider applications are open. Customer service requests are not yet available.": "Las solicitudes de proveedores están abiertas. Las solicitudes de servicio para clientes aún no están disponibles.",
+  "Provider onboarding is open in Montgomery County, Maryland.": "La incorporación de proveedores está abierta en el Condado de Montgomery, Maryland.",
+  "Open main menu": "Abrir el menú principal",
+  "Close main menu": "Cerrar el menú principal",
+  "Main navigation": "Navegación principal",
+  "Current Tuveloz launch status": "Estado actual del lanzamiento de Tuveloz",
+  "Preview of the planned Tuveloz service-request experience": "Vista previa de la experiencia planificada de solicitudes de servicio de Tuveloz",
+  "Available Tuveloz account options": "Opciones de cuenta disponibles en Tuveloz",
+  "Sign in to Tuveloz": "Inicie sesión en Tuveloz",
+  "Sign in as a customer": "Inicie sesión como cliente",
+  "Sign in as a provider": "Inicie sesión como proveedor",
+  "Finish signing in": "Finalizar el inicio de sesión",
+  "Back to password sign-in": "Volver al inicio con contraseña",
+  "Owner/admin sign-in": "Inicio de sesión de propietario o administrador",
+  "Continue to secure owner sign-in": "Continuar al inicio de sesión seguro del propietario",
+  "Completed and canceled jobs will appear here.": "Los trabajos completados y cancelados aparecerán aquí.",
+  "Appointment request canceled.": "Solicitud de cita cancelada.",
+  "Service locations:": "Ubicaciones del servicio:",
+  "You passed on this quote": "Descartó esta cotización",
+  "Payment status": "Estado del pago",
+  "Confirming your payment…": "Confirmando su pago…",
+  "We are still waiting for confirmation. This usually takes only a moment.": "Aún esperamos la confirmación. Normalmente tarda solo un momento.",
+  "Build your provider profile": "Cree su perfil de proveedor",
+  "View customer launch status": "Ver el estado del lanzamiento para clientes",
+  "Customer launch preview": "Vista previa del lanzamiento para clientes",
+  "Customer service requests are not yet available.": "Las solicitudes de servicio para clientes aún no están disponibles.",
+  "The planned request form is shown below for review.": "El formulario de solicitud planificado se muestra abajo para su revisión.",
+  "Preview the complete service-request form below.": "Consulte abajo la vista previa del formulario completo de solicitud de servicio.",
+  "Preview only": "Solo vista previa",
+  "Creating an account does not submit a request.": "Crear una cuenta no envía una solicitud.",
+  "Customer and service details": "Datos del cliente y del servicio",
+  "Preview only. This form cannot submit a live service request.": "Solo vista previa. Este formulario no puede enviar una solicitud de servicio activa.",
+  "Choose one specific service": "Elija un servicio específico",
+  "No services are available yet": "Aún no hay servicios disponibles",
+  "Each request must name one approved service. Broad categories such as “general auto repair” are not accepted.": "Cada solicitud debe indicar un servicio aprobado. No se aceptan categorías amplias como “reparación general de automóviles”.",
+  "This preview cannot create a service request, offer employment, promise work, or charge anyone.": "Esta vista previa no puede crear una solicitud de servicio, ofrecer empleo, prometer trabajo ni cobrar a nadie.",
   "Services": "Servicios",
   "How it works": "Cómo funciona",
   "Reviews": "Reseñas",
@@ -533,7 +608,6 @@ const spanishText: Record<string, string> = {
   "Keep every private link to yourself. Anyone with the link can open that workspace.": "Mantenga cada enlace privado solo para usted. Cualquier persona con el enlace puede abrir ese espacio.",
   "Save this private link. It opens your request details and quotes.": "Guarde este enlace privado. Abre los detalles y las cotizaciones de su solicitud.",
   "Sign in": "Iniciar sesión",
-  "Sign up / Sign in": "Crear cuenta / Iniciar sesión",
   "Customer account": "Cuenta de cliente",
   "Provider account": "Cuenta de proveedor",
   "Account": "Cuenta",
@@ -577,7 +651,7 @@ const spanishText: Record<string, string> = {
   "Review quotes, follow job progress, and start your next vehicle-service request.": "Revise cotizaciones, siga el progreso del trabajo e inicie su próxima solicitud de servicio.",
   "Switch": "Cambiar",
   "Sign out": "Cerrar sesión",
-  "Customer requests": "Solicitudes del cliente",
+  "Customer requests": "Las solicitudes de servicio",
   "My jobs": "Mis trabajos",
   "No requests yet": "Aún no hay solicitudes",
   "Your vehicle-service requests will appear here.": "Sus solicitudes de servicio aparecerán aquí.",
@@ -627,11 +701,11 @@ function translatedPattern(value: string) {
   return value;
 }
 
-function translatedValue(source: string, attribute = false) {
+function translatedValue(source: string, attribute?: "placeholder" | "title" | "aria-label") {
   const match = source.match(/^(\s*)([\s\S]*?)(\s*)$/);
   if (!match) return source;
   const [, before, core, after] = match;
-  const dictionary = attribute ? spanishPlaceholders : spanishText;
+  const dictionary = attribute === "placeholder" ? spanishPlaceholders : spanishText;
   return `${before}${dictionary[core] ?? translatedPattern(core)}${after}`;
 }
 
@@ -663,7 +737,9 @@ function translateAttribute(element: Element, attribute: string, language: SiteL
   const source = previous && (current === previous.applied || current === previous.source)
     ? previous.source
     : current;
-  const applied = language === "es" ? translatedValue(source, true) : source;
+  const applied = language === "es"
+    ? translatedValue(source, attribute as "placeholder" | "title" | "aria-label")
+    : source;
   states.set(attribute, { source, applied });
   attributeStates.set(element, states);
   if (current !== applied) element.setAttribute(attribute, applied);
@@ -721,8 +797,8 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.title = language === "es"
-      ? "Tuveloz | Ayuda vehicular local"
-      : "Tuveloz | Simple, Local Vehicle Help";
+      ? "Tuveloz | Opciones para clientes. Libertad para proveedores."
+      : "Tuveloz | Customer Choice. Provider Freedom.";
     translateInterface(document.body, language);
     const observer = new MutationObserver(() => {
       window.queueMicrotask(() => translateInterface(document.body, language));

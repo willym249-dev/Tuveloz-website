@@ -1,10 +1,10 @@
 export const CUSTOMER_JOB_POSTING_PAUSED = true;
 
 export const CUSTOMER_JOB_POSTING_PAUSED_MESSAGE =
-  "Sorry, Tuveloz is not accepting new job requests or customer payments yet. We are building a larger network of approved providers so customers have enough choices before service requests open.";
+  "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.";
 
 export const CUSTOMER_JOB_POSTING_PAUSED_DETAIL =
-  "Customer and provider account signups remain open. Creating an account does not post a job or charge you.";
+  "Customer and provider accounts are available now. Creating an account does not submit a service request or charge you.";
 
 /**
  * One server-enforced marketplace mode covers every route that can create or
