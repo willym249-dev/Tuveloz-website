@@ -15,10 +15,18 @@ import {
 } from "../../../lib/owner-api-response";
 import { verifyOwnerRequest } from "../../../lib/owner-auth";
 
+const ADMIN_NO_STORE_HEADERS = {
+  ...OWNER_NO_STORE_HEADERS,
+  "cache-control": "no-store",
+} as const;
+
 export async function GET(request: Request) {
   const verification = await verifyOwnerRequest(request);
   if (!verification.ok) {
-    return ownerVerificationFailureResponse(verification);
+    return ownerVerificationFailureResponse({
+      ok: false,
+      reason: verification.reason,
+    });
   }
 
   try {
@@ -56,7 +64,7 @@ export async function GET(request: Request) {
     });
     return Response.json(
       { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion },
-      { headers: OWNER_NO_STORE_HEADERS },
+      { headers: ADMIN_NO_STORE_HEADERS },
     );
   } catch (error) {
     return ownerDataFailureResponse(error, "primary data load");
