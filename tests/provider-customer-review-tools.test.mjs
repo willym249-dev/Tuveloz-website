@@ -26,12 +26,14 @@ test("job documents exclude unaccepted records and distinguish invoices from rec
   assert.doesNotMatch(source, /checkout_created|checkout_creating|payment_failed/);
 });
 
-test("account tools expose the requested tools and a separate owner-admin entry", async () => {
+test("owner entry stays separate while role tools remain inside their workspaces", async () => {
   const source = await read("app/components/account-tools-dock.tsx");
 
-  assert.match(source, /href="\/provider-jobs\/toolkit"/);
-  assert.match(source, /href="\/job-authorizations\/documents"/);
+  assert.doesNotMatch(source, /href="\/provider-jobs\/toolkit"/);
+  assert.doesNotMatch(source, /href="\/job-authorizations\/documents"/);
   assert.match(source, /Owner\/admin sign in/);
-  assert.match(source, /A customer or provider sign-in does not grant admin rights/);
+  assert.match(source, /Customer and provider accounts cannot grant owner access/);
   assert.match(source, /pathname === "\/account"/);
+  assert.match(source, /href="\/admin"/);
+  assert.match(source, /href="\/admin\/marketplace-tools"/);
 });
