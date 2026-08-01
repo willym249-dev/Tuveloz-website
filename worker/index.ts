@@ -6,6 +6,8 @@ import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
 import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
+import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
+import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -120,7 +122,13 @@ const worker = {
       scheduledTask("provider application verification cleanup", () => (
         cleanupProviderApplicationVerificationState()
       )),
+      scheduledTask("superseded Stripe Identity session cleanup", () => (
+        cleanupSupersededStripeIdentitySessions(5)
+      )),
       scheduledTask("email notification delivery", () => flushPendingEmailNotifications(20)),
+      scheduledTask("quarantined provider evidence scans", () => (
+        processPendingCloudmersiveEvidenceScans()
+      )),
     ]).then(() => undefined));
   },
 

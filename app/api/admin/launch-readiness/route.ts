@@ -48,6 +48,8 @@ import { isSameOriginRequest } from "../../../../lib/request-security";
 import { runtimeLaunchReadiness } from "../../../../lib/runtime-launch-readiness";
 import {
   STRIPE_LIVE_MODE_ENABLED,
+  stripeIdentityConfigurationReady,
+  stripeIdentityKeyIsLive,
   stripeLiveModeEnabled,
 } from "../../../../lib/stripe";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
@@ -252,11 +254,14 @@ async function readinessPayload() {
   const accountAuthConfigured = runtimeText(runtime, "AUTH_CODE_SECRET").length >= 32;
   const privateEvidenceBucketBound = Boolean(runtime.BUCKET);
   const evidenceScanProvider = runtimeText(runtime, "EVIDENCE_SCAN_PROVIDER");
+  const cloudmersiveApiKeyConfigured = Boolean(runtimeText(runtime, "CLOUDMERSIVE_API_KEY"));
   const authenticatedScannerConfigured = Boolean(
     evidenceScanProvider
     && evidenceScanProvider !== "unconfigured"
-    && runtimeText(runtime, "EVIDENCE_SCAN_WEBHOOK_SECRET").length >= 32,
+    && runtimeText(runtime, "EVIDENCE_SCAN_WEBHOOK_SECRET").length >= 32
+    && (evidenceScanProvider !== "cloudmersive" || cloudmersiveApiKeyConfigured),
   );
+  const evidenceScannerCanary = canonicalRuntimeReadiness.evidenceScannerCanary;
   const stripeKey = runtimeText(runtime, "STRIPE_SECRET_KEY");
   const stripeConfigured = Boolean(stripeKey);
   const stripeMode = stripeKey.startsWith("sk_live_")
@@ -267,6 +272,13 @@ async function readinessPayload() {
   const liveStripeRequested = runtimeText(runtime, "STRIPE_ALLOW_LIVE_MODE") === "true";
   const liveStripeAllowed = stripeLiveModeEnabled();
   const identityVerificationProviders = configuredExternalIdentityVerificationProviders();
+  const stripeIdentityConfigurationPresent = identityVerificationProviders.includes("stripe_identity")
+    && stripeIdentityConfigurationReady()
+    && stripeIdentityKeyIsLive();
+  const manualIdentityAlternativeConfigured = identityVerificationProviders.some((provider) => (
+    provider !== "stripe_identity"
+  ));
+  const stripeIdentityCanary = canonicalRuntimeReadiness.identityCanaries.stripe;
   const runtimeCheckPassed = (key: string) => (
     !canonicalFailureKeys.has(`internal:${key}`)
   );
@@ -316,12 +328,18 @@ async function readinessPayload() {
     },
     {
       key: "authenticated_evidence_scanner",
-      title: "Authenticated evidence-scanner callback is configured",
+      title: "Cloudmersive scanner passed a guarded operational canary",
       stage: "provider_onboarding",
       passed: runtimeCheckPassed("authenticated_evidence_scanner"),
-      detail: authenticatedScannerConfigured
-        ? `Signed scanner results are restricted to the configured ${evidenceScanProvider} provider. A real end-to-end file scan still must be tested.`
-        : "Configure EVIDENCE_SCAN_PROVIDER and a 32+ character EVIDENCE_SCAN_WEBHOOK_SECRET. Owners cannot mark a file clean manually.",
+      detail: evidenceScannerCanary.evidencePassed
+        ? `A recent Cloudmersive terminal response completed the guarded pending-request and audit path at ${evidenceScannerCanary.verifiedAt}; D1 canary record: ${evidenceScannerCanary.evidenceId}.`
+        : authenticatedScannerConfigured && evidenceScanProvider === "cloudmersive"
+          ? "Cloudmersive settings are present, but D1 has no recent vendor terminal result with its consumed pending request and exact authenticated-scanner audit event. Configuration alone does not pass this gate."
+        : evidenceScanProvider === "cloudmersive" && !cloudmersiveApiKeyConfigured
+          ? "Cloudmersive is selected, but CLOUDMERSIVE_API_KEY is missing. Files remain quarantined and pending."
+          : evidenceScanProvider && evidenceScanProvider !== "unconfigured"
+            ? `The ${evidenceScanProvider} provider setting has no supported guarded operational canary. Files remain quarantined and readiness remains blocked.`
+            : "Configure Cloudmersive, its API key, and a 32+ character EVIDENCE_SCAN_WEBHOOK_SECRET. Owners cannot mark a file clean manually.",
     },
     {
       key: "approved_identity_verification_provider",
@@ -331,6 +349,26 @@ async function readinessPayload() {
       detail: identityVerificationProviders.length > 0
         ? `${identityVerificationProviders.length} approved external identity-verification provider(s) are configured.`
         : "Configure at least one approved external identity-verification provider before provider activation.",
+    },
+    {
+      key: "stripe_identity_automation",
+      title: "Live Stripe Identity owner-operator flow passed an end-to-end canary",
+      stage: "provider_onboarding",
+      passed: runtimeCheckPassed("stripe_identity_automation"),
+      detail: stripeIdentityCanary.evidencePassed
+        ? `A current live-mode Stripe Identity verification completed through the guarded webhook path at ${stripeIdentityCanary.verifiedAt}; D1 canary record: ${stripeIdentityCanary.evidenceId}.`
+        : stripeIdentityConfigurationPresent
+          ? "The dedicated live key, webhook secret, and provider setting are configured, but D1 has no current approved live-mode session that still matches its guard-stamped active personnel record. Configuration alone does not pass this gate."
+        : "Configure stripe_identity, a dedicated rk_live_ Identity key, and its dedicated whsec_ webhook secret before real owner-operator verification.",
+    },
+    {
+      key: "manual_identity_alternative",
+      title: "A non-Stripe identity alternative has independent vendor proof",
+      stage: "provider_onboarding",
+      passed: runtimeCheckPassed("manual_identity_alternative"),
+      detail: manualIdentityAlternativeConfigured
+        ? "A non-Stripe provider name and owner-reviewed references may support an individual application, but they are not independent vendor proof and cannot pass this operational gate. No allowlisted non-Stripe vendor-proof adapter is implemented."
+        : "No allowlisted independently verifiable non-Stripe vendor-proof adapter is implemented. Owner-entered or manual references cannot pass this operational gate.",
     },
     {
       key: "transaction_safety_switches",
@@ -418,6 +456,20 @@ async function readinessPayload() {
         actionHref: "/admin/provider-compliance",
       };
     }
+    if (key === "stripe_identity_automation") {
+      return {
+        responsibleRole: "TUVELOZ owner + Stripe Identity deployment reviewer",
+        nextAction: "Complete one authorized live owner-operator Identity canary and confirm that the signed webhook created a current approved D1 session and guard-stamped personnel record.",
+        actionHref: "/provider-onboarding",
+      };
+    }
+    if (key === "manual_identity_alternative") {
+      return {
+        responsibleRole: "TUVELOZ owner + approved non-Stripe identity provider",
+        nextAction: "Integrate an allowlisted independently verifiable non-Stripe vendor, retain guarded vendor proof, and obtain privacy and security approval before enabling this gate.",
+        actionHref: "/admin/provider-compliance",
+      };
+    }
     if (key === "active_policy_catalog" || key === "current_written_service_activation") {
       return {
         responsibleRole: "TUVELOZ owner + required legal or licensing source + insurance reviewer",
@@ -453,7 +505,7 @@ async function readinessPayload() {
       account_auth: "Configure a production account-authentication secret of at least 32 characters.",
       email_delivery: "Configure transactional email and complete a real delivery and failure-handling test.",
       private_evidence_storage: "Bind and verify private evidence storage, access policy, backup, and deletion behavior.",
-      authenticated_evidence_scanner: "Connect and test the signed external malware-scanner callback end to end.",
+      authenticated_evidence_scanner: "Complete a real Cloudmersive scan and confirm its terminal D1 result, consumed pending request, and authenticated-scanner audit event.",
     };
     return {
       responsibleRole: "TUVELOZ owner + deployment or security reviewer",

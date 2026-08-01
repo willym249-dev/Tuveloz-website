@@ -64,11 +64,56 @@ export function getStripeClient() {
   });
 }
 
+export function stripeIdentityConfigurationReady() {
+  const runtime = runtimeEnvironment();
+  const providers = (runtime.IDENTITY_VERIFICATION_PROVIDERS ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase());
+  const key = runtime.STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "";
+  const webhookSecret = runtime.STRIPE_IDENTITY_WEBHOOK_SECRET?.trim() ?? "";
+  return providers.includes("stripe_identity")
+    && /^rk_(?:test|live)_/.test(key)
+    && webhookSecret.startsWith("whsec_");
+}
+
+/**
+ * Identity is isolated from payment release. A live or restricted Stripe key
+ * may verify applicants while the code-controlled money switches stay off;
+ * this client is exported only for Stripe Identity operations.
+ */
+export function getStripeIdentityClient() {
+  if (!stripeIdentityConfigurationReady()) {
+    throw new StripeConfigurationError(
+      "Stripe Identity is unavailable until stripe_identity and its API and webhook secrets are configured.",
+    );
+  }
+  const secretKey = requiredRuntimeValue("STRIPE_IDENTITY_SECRET_KEY");
+  return new Stripe(secretKey, {
+    httpClient: Stripe.createFetchHttpClient(),
+    appInfo: {
+      name: "Tuveloz Identity",
+      version: "0.1.0",
+      url: "https://tuveloz.com",
+    },
+  });
+}
+
+export function stripeIdentityKeyIsLive() {
+  const key = runtimeEnvironment().STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "";
+  return /^rk_live_/.test(key);
+}
+
+export function stripeIdentityModeMatchesProvider(isTestProvider: string) {
+  return stripeIdentityConfigurationReady()
+    && stripeIdentityKeyIsLive() === (isTestProvider !== "yes");
+}
+
 export function getStripeWebhookSecret(
   name:
     | "STRIPE_CONNECT_WEBHOOK_SECRET"
     | "STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET"
-    | "STRIPE_PAYMENT_WEBHOOK_SECRET",
+    | "STRIPE_PAYMENT_WEBHOOK_SECRET"
+    | "STRIPE_IDENTITY_WEBHOOK_SECRET",
 ) {
   return requiredRuntimeValue(name);
 }

@@ -74,6 +74,8 @@ export function evidenceAuthenticityIsCurrent(
 }
 
 export type ExternalIdentityAgeRecord = {
+  identityVerifiedAt?: unknown;
+  ageVerifiedAt?: unknown;
   identityVerificationProvider?: unknown;
   identityVerificationReference?: unknown;
   identityVerificationCheckedAt?: unknown;
@@ -83,6 +85,23 @@ export type ExternalIdentityAgeRecord = {
   ageVerificationCheckedAt?: unknown;
   ageVerificationValidThrough?: unknown;
 };
+
+export function externalIdentityAgeVerificationHasData(
+  record: ExternalIdentityAgeRecord,
+) {
+  return [
+    record.identityVerifiedAt,
+    record.ageVerifiedAt,
+    record.identityVerificationProvider,
+    record.identityVerificationReference,
+    record.identityVerificationCheckedAt,
+    record.identityVerificationValidThrough,
+    record.ageVerificationProvider,
+    record.ageVerificationReference,
+    record.ageVerificationCheckedAt,
+    record.ageVerificationValidThrough,
+  ].some((value) => text(value).length > 0);
+}
 
 const PROHIBITED_EXTERNAL_PROVIDER_NAMES = new Set([
   "me",
@@ -156,4 +175,53 @@ export function externalIdentityAgeVerificationIsCurrent(
     && ageValidThrough !== null
     && identityValidThrough >= through.getTime()
     && ageValidThrough >= through.getTime();
+}
+
+/**
+ * Returns true only for a complete, configured non-Stripe verification whose
+ * identity and adult-status terms have both ended. Partial, mixed-provider,
+ * malformed, future-dated, or still-current records require owner review and
+ * may not be silently replaced with a new biometric collection.
+ */
+export function expiredConfiguredManualIdentityAgeVerificationCanBeReplaced(
+  record: ExternalIdentityAgeRecord,
+  through: Date,
+  now = Date.now(),
+) {
+  const approvedProviders = configuredExternalIdentityVerificationProviders();
+  const identityProvider = text(record.identityVerificationProvider).toLowerCase();
+  const ageProvider = text(record.ageVerificationProvider).toLowerCase();
+  const identityReference = text(record.identityVerificationReference);
+  const ageReference = text(record.ageVerificationReference);
+  const identityVerifiedAt = dateValue(text(record.identityVerifiedAt));
+  const ageVerifiedAt = dateValue(text(record.ageVerifiedAt));
+  const identityCheckedAt = dateValue(text(record.identityVerificationCheckedAt));
+  const ageCheckedAt = dateValue(text(record.ageVerificationCheckedAt));
+  const identityValidThrough = dateValue(
+    text(record.identityVerificationValidThrough),
+    true,
+  );
+  const ageValidThrough = dateValue(text(record.ageVerificationValidThrough), true);
+  return identityProvider !== "stripe_identity"
+    && ageProvider !== "stripe_identity"
+    && externalProviderNameIsValid(identityProvider, approvedProviders)
+    && externalProviderNameIsValid(ageProvider, approvedProviders)
+    && identityReference.length >= 8
+    && ageReference.length >= 8
+    && identityVerifiedAt !== null
+    && ageVerifiedAt !== null
+    && identityVerifiedAt <= now
+    && ageVerifiedAt <= now
+    && identityCheckedAt !== null
+    && ageCheckedAt !== null
+    && identityVerifiedAt !== null
+    && ageVerifiedAt !== null
+    && identityVerifiedAt <= now
+    && ageVerifiedAt <= now
+    && identityCheckedAt <= now
+    && ageCheckedAt <= now
+    && identityValidThrough !== null
+    && ageValidThrough !== null
+    && identityValidThrough < through.getTime()
+    && ageValidThrough < through.getTime();
 }

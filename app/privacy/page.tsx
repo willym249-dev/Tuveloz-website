@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy Policy"
       summary="What Tuveloz collects, why it is needed, who receives it, and the choices available to you."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>1. Scope and sources</h2>
@@ -25,14 +25,29 @@ export default function PrivacyPage() {
         <ul>
           <li>Identifiers and account data, including name, email, role, password hash, session and sign-in records, language, and support messages.</li>
           <li>Customer job data, including vehicle details or a VIN you choose to provide, requested services, general area, exact service address when needed, photos, condition records, quote selections, messages, status, and reviews.</li>
-          <li>Provider data, including business name and location, service areas, service options, experience, insurance responses, legally applicable credential records, verification decisions, profile content, and Stripe connected-account identifiers.</li>
+          <li>Provider data, including business name and location, performing-person name, service areas, service options, experience, insurance responses, legally applicable credential records, identity-verification status and references, verification decisions, profile content, and Stripe connected-account identifiers.</li>
           <li>Transaction data, including displayed amounts, payment status, receipt email, refunds, disputes, transfer status, and Stripe transaction identifiers.</li>
           <li>Technical and security data needed to deliver the site, secure accounts, prevent abuse, investigate errors, and maintain audit records.</li>
         </ul>
         <p>
           Stripe collects payment-card, identity, payout, tax, and bank
-          information on Stripe-hosted pages. Tuveloz does not receive or store
-          complete card or bank-account numbers.
+          information on Stripe-hosted pages. A Stripe Identity document-and-selfie
+          check captures images of a government-issued photo ID and the person&apos;s
+          face, extracts identity information such as name and date of birth, and
+          uses biometric comparison to determine whether the selfie matches the ID.
+          Stripe asks for its own consent in the hosted flow and handles that data
+          under Stripe&apos;s privacy terms. Tuveloz does not receive or store complete
+          card or bank-account numbers.
+        </p>
+        <p>
+          Tuveloz&apos;s application processes the verified name and date of birth in
+          memory only to compare the named performing person and confirm adult
+          status. Tuveloz stores the Stripe session or report reference, decision,
+          check date, and validity date, but not the verified name, date of birth, ID
+          number, document image, selfie, or biometric identifier. Authorized
+          Tuveloz administrators may be able to access identity information in the
+          restricted Stripe Dashboard when reasonably necessary for verification,
+          fraud or security review, a privacy request, or a legal obligation.
         </p>
       </section>
 
@@ -77,8 +92,9 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Service providers and other disclosures</h2>
         <ul>
-          <li>Stripe processes checkout, connected accounts, transfers, refunds, disputes, and payment risk.</li>
+          <li>Stripe processes checkout, connected accounts, transfers, refunds, disputes, payment risk, and hosted provider identity document-and-selfie verification.</li>
           <li>Cloudflare provides hosting, security, database, and private image-storage services.</li>
+          <li>Cloudmersive receives a quarantined provider-evidence file solely to scan it for malware and unsafe file content before Tuveloz permits review or download.</li>
           <li>Resend provides transactional email delivery.</li>
           <li>Professional advisers may receive information when reasonably necessary for accounting, insurance, security, or legal work and subject to appropriate duties.</li>
           <li>Information may be disclosed to comply with law, valid legal process, payment-network rules, or a good-faith need to protect users, rights, property, or platform security.</li>
@@ -108,6 +124,15 @@ export default function PrivacyPage() {
           open. We delete or de-identify information when it is no longer
           reasonably needed, unless law permits or requires retention.
         </p>
+        <p>
+          Stripe controls its retention of identity images, extracted identity
+          data, and biometric identifiers under Stripe&apos;s privacy terms and the
+          choices Stripe presents in its hosted flow. Tuveloz may ask Stripe to
+          redact an eligible verification session when the information is no
+          longer needed, subject to fraud, security, dispute, and legal-retention
+          requirements. A limited Tuveloz verification and audit reference may be
+          retained for those purposes even after Stripe-hosted data is redacted.
+        </p>
       </section>
 
       <section>
@@ -134,6 +159,16 @@ export default function PrivacyPage() {
           before acting. We will respond within the period required by applicable
           law and explain any denial. Privacy requests do not require payment, and
           Tuveloz will not discriminate against someone for exercising an applicable right.
+        </p>
+        <p>
+          A provider who does not want to use a selfie or other biometric identity
+          check may contact{" "}
+          <a href="mailto:hello@tuveloz.com?subject=Alternative%20Identity%20Verification">
+            hello@tuveloz.com
+          </a>{" "}
+          before starting Stripe Identity to request an available non-biometric
+          external verification method. Requesting an alternative does not grant
+          job access or waive identity, age, credential, or service requirements.
         </p>
       </section>
 

@@ -148,10 +148,11 @@ test("owner compliance operations are record-only and fail closed", async () => 
 });
 
 test("private evidence requires an authenticated clean latest scan in every authorization layer", async () => {
-  const [adminRoute, providerRoute, scannerRoute, engine, page] = await Promise.all([
+  const [adminRoute, providerRoute, scannerRoute, scanRecorder, engine, page] = await Promise.all([
     read("../app/api/admin/provider-compliance/route.ts"),
     read("../app/api/provider-evidence/route.ts"),
     read("../app/api/internal/evidence-scan-result/route.ts"),
+    read("../lib/evidence-scan-result-recorder.ts"),
     read("../lib/provider-eligibility-engine.ts"),
     read("../app/admin/provider-compliance/page.tsx"),
   ]);
@@ -164,10 +165,11 @@ test("private evidence requires an authenticated clean latest scan in every auth
   assert.match(scannerRoute, /x-tuveloz-scan-signature/);
   assert.match(scannerRoute, /constantTimeEqual/);
   assert.match(scannerRoute, /scanRequestId/);
-  assert.match(scannerRoute, /eq\(evidenceFileScans\.status, "pending"\)/);
-  assert.match(scannerRoute, /status: "result_received"/);
-  assert.match(scannerRoute, /evidence\.documentHash\.toLowerCase\(\) !== fileHash/);
-  assert.match(scannerRoute, /evidenceAutomaticallyAccepted: false/);
+  assert.match(scannerRoute, /recordAuthenticatedEvidenceScanResult/);
+  assert.match(scanRecorder, /eq\(evidenceFileScans\.status, "pending"\)/);
+  assert.match(scanRecorder, /status: "result_received"/);
+  assert.match(scanRecorder, /evidence\.documentHash\.toLowerCase\(\) !== fileHash/);
+  assert.match(scanRecorder, /evidenceAutomaticallyAccepted: false/);
   assert.match(providerRoute, /blocked_until_clean_scan/);
   assert.match(engine, /evidence_malware_scan_not_clean/);
   assert.match(engine, /latestScanByEvidence\.get\(item\.id\)\?\.status === "clean"/);

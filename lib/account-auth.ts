@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   accountCredentials,
@@ -379,6 +379,24 @@ export async function providerApplicationFor(email: string) {
     .where(and(
       eq(providerApplications.email, email),
       ne(providerApplications.status, "declined"),
+    ))
+    .orderBy(desc(providerApplications.createdAt))
+    .limit(1);
+  return provider ?? null;
+}
+
+/**
+ * Ownership lookup for privacy access only. Unlike marketplace-account
+ * lookup, this intentionally includes pending, blocked, and declined
+ * applications so an adverse onboarding decision cannot remove data rights.
+ */
+export async function providerApplicationOwnershipFor(email: string) {
+  const normalizedEmail = normalizeAccountEmail(email);
+  if (!normalizedEmail) return null;
+  const [provider] = await getDb().select().from(providerApplications)
+    .where(eq(
+      sql<string>`lower(trim(${providerApplications.email}))`,
+      normalizedEmail,
     ))
     .orderBy(desc(providerApplications.createdAt))
     .limit(1);
@@ -907,7 +925,7 @@ export async function verifyPasswordSignIn(
   return session ? { ok: true as const, ...session } : { ok: false as const };
 }
 
-export async function getAccountSession(request: Request) {
+async function authenticatedStoredAccountSession(request: Request) {
   const token = sessionTokenFrom(request);
   if (!token) return null;
   const tokenHash = await hmacHex(`session:${token}`);
@@ -938,11 +956,6 @@ export async function getAccountSession(request: Request) {
     }
     return null;
   }
-  const roles = await eligibleAccountRoles(session.email);
-  if (!roles.includes(session.role)) {
-    await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
-    return null;
-  }
   let refreshedLastSeenAt = session.lastSeenAt;
   if (now - lastSeenAt >= SESSION_TOUCH_INTERVAL_MS) {
     refreshedLastSeenAt = new Date(now).toISOString();
@@ -954,6 +967,43 @@ export async function getAccountSession(request: Request) {
     ...session,
     lastSeenAt: refreshedLastSeenAt,
     role: session.role as AccountRole,
+  };
+}
+
+export async function getAccountSession(request: Request) {
+  const session = await authenticatedStoredAccountSession(request);
+  if (!session) return null;
+  const roles = await eligibleAccountRoles(session.email);
+  if (!roles.includes(session.role)) {
+    await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
+    return null;
+  }
+  return {
+    ...session,
+    availableRoles: roles,
+  };
+}
+
+/**
+ * Authenticates an existing account session for privacy-rights routes. A
+ * provider application owner keeps privacy access after an onboarding denial
+ * or block, while normal marketplace routes continue using getAccountSession
+ * and its provider-eligibility checks.
+ */
+export async function getPrivacyAccountSession(request: Request) {
+  const session = await authenticatedStoredAccountSession(request);
+  if (!session) return null;
+  const roles = await eligibleAccountRoles(session.email);
+  if (session.role === "provider" && !roles.includes("provider")) {
+    const application = await providerApplicationOwnershipFor(session.email);
+    if (application) roles.push("provider");
+  }
+  if (!roles.includes(session.role)) {
+    await getDb().delete(authSessions).where(eq(authSessions.id, session.id));
+    return null;
+  }
+  return {
+    ...session,
     availableRoles: roles,
   };
 }

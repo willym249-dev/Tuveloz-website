@@ -19,6 +19,7 @@ const REQUIRED_TABLES = [
   "provider_audit_events",
   "provider_pathway_profiles",
   "provider_personnel",
+  "provider_identity_verification_sessions",
   "provider_evidence_submissions",
   "agreement_acceptances",
   "provider_service_eligibility",
@@ -53,6 +54,16 @@ const REQUIRED_GUARDED_TRIGGERS = [
   "provider_job_update_requires_signed_repair_authorization",
   "provider_invoice_final_requires_complete_repair_record",
   "stripe_payment_release_requires_signed_delivered_provider_invoice",
+  "provider_identity_verification_insert_guard",
+  "provider_identity_verification_binding_immutable",
+  "provider_identity_verification_terminal_immutable",
+  "provider_identity_verification_approval_requires_personnel_reference",
+  "provider_identity_verification_approval_stamps_personnel",
+  "provider_personnel_identity_revocation_blocks_provider",
+  "provider_application_identity_reverification_on_amendment",
+  "provider_personnel_stripe_identity_guard_insert",
+  "provider_personnel_stripe_identity_binding_immutable",
+  "provider_personnel_stripe_identity_guard_update",
 ] as const;
 
 // Table existence verifies the CREATE migrations. These zero-row probes also
@@ -78,6 +89,14 @@ const REQUIRED_COLUMN_PROBES = [
           age_verification_provider, age_verification_reference,
           age_verification_checked_at, age_verification_valid_through
      FROM provider_personnel
+    LIMIT 0`,
+  `SELECT application_submission_evidence_id, person_name_source_type,
+          person_name_source_id, account_session_hash, certification_version,
+          attempt_number, stripe_verification_session_id,
+          stripe_verification_report_id, stripe_status, decision_status,
+          livemode, consented_at, checked_at, verified_at, redacted_at,
+          last_stripe_event_id, last_stripe_event_created
+     FROM provider_identity_verification_sessions
     LIMIT 0`,
   `SELECT authorization_record_id, county_registration_number,
           customer_signature_at, customer_copy_delivered_at,
@@ -135,6 +154,10 @@ export async function GET() {
             row.name.startsWith("repair_")
             || row.name.startsWith("provider_invoice_")
             || row.name.startsWith("provider_job_")
+            || row.name.startsWith("provider_identity_verification_")
+            || row.name.startsWith("provider_application_identity_reverification_")
+            || row.name.startsWith("provider_personnel_identity_revocation_")
+            || row.name.startsWith("provider_personnel_stripe_identity_")
             || row.name.startsWith("stripe_payment_release_")
             || (row.sql?.includes("is_test_job") && row.sql.includes("= 'no'"))
           ))

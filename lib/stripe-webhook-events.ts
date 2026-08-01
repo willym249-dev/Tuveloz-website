@@ -5,7 +5,8 @@ import { stripeWebhookEvents } from "../db/schema";
 export type StripeWebhookEndpoint =
   | "payments"
   | "connect_thin"
-  | "connected_account_snapshot";
+  | "connected_account_snapshot"
+  | "identity";
 
 const WEBHOOK_PROCESSING_LEASE_MS = 5 * 60 * 1000;
 
@@ -22,6 +23,7 @@ export type StripeWebhookClaim = {
   id: string;
   shouldProcess: boolean;
   duplicate: boolean;
+  busy: boolean;
 };
 
 /**
@@ -55,7 +57,7 @@ export async function claimStripeWebhookEvent(
     id: stripeWebhookEvents.id,
   });
   if (inserted) {
-    return { id, shouldProcess: true, duplicate: false };
+    return { id, shouldProcess: true, duplicate: false, busy: false };
   }
 
   const [existing] = await db.select({
@@ -65,7 +67,7 @@ export async function claimStripeWebhookEvent(
     throw new Error("Stripe webhook receipt could not be claimed.");
   }
   if (existing.status === "processed" || existing.status === "ignored") {
-    return { id, shouldProcess: false, duplicate: true };
+    return { id, shouldProcess: false, duplicate: true, busy: false };
   }
 
   const staleAt = new Date(now.getTime() - WEBHOOK_PROCESSING_LEASE_MS).toISOString();
@@ -89,6 +91,7 @@ export async function claimStripeWebhookEvent(
     id,
     shouldProcess: Boolean(reclaimed),
     duplicate: !reclaimed,
+    busy: !reclaimed,
   };
 }
 
