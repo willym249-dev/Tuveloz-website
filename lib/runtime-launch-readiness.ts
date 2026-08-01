@@ -10,6 +10,10 @@ import {
   type StoredLaunchGateDecision,
 } from "./launch-readiness";
 import { MARKETPLACE_MODE } from "./launch-status";
+import {
+  allPolicyDocumentReleases,
+  policyDocumentReleaseIsActive,
+} from "./policy-release-manifest";
 import { currentPlatformServiceActivations } from "./platform-service-activation";
 import { POLICY_STATUS, SERVICES } from "./provider-policy";
 import { configuredExternalIdentityVerificationProviders } from "./provider-verification-evidence";
@@ -105,6 +109,11 @@ function runtimeStableInternalChecks(): RuntimeInternalCheck[] {
           service.launchState === "enabled" && service.customerVisible
         )),
     },
+    ...allPolicyDocumentReleases().map((release) => ({
+      key: `policy_release_${release.key}`,
+      stage: "transaction_pilot" as const,
+      passed: policyDocumentReleaseIsActive(release),
+    })),
   ];
 }
 

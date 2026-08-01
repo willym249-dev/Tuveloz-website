@@ -3,10 +3,12 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import {
   evidenceFileScans,
+  providerApplications,
   providerEvidenceSubmissions,
   providerServiceEligibility,
 } from "../../../../db/schema";
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
+import { notifyProviderEvidenceScanBlocked } from "../../../../lib/provider-compliance-notifications";
 import { sha256Text } from "../../../../lib/provider-policy-acceptance";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
 
@@ -149,11 +151,90 @@ export async function POST(request: Request) {
 
   const db = getDb();
   const scanId = await sha256Text(`scanner-result:${provider}:${resultId}`);
-  const [existingResult] = await db.select({ id: evidenceFileScans.id })
+  const [existingResult] = await db.select({
+    id: evidenceFileScans.id,
+    evidenceSubmissionId: evidenceFileScans.evidenceSubmissionId,
+    providerId: evidenceFileScans.providerId,
+    scanProvider: evidenceFileScans.scanProvider,
+    status: evidenceFileScans.status,
+    fileHash: evidenceFileScans.fileHash,
+  })
     .from(evidenceFileScans)
     .where(eq(evidenceFileScans.id, scanId))
     .limit(1);
   if (existingResult) {
+    if (
+      existingResult.evidenceSubmissionId !== evidenceId
+      || existingResult.scanProvider !== provider
+      || existingResult.status !== status
+      || existingResult.fileHash.toLowerCase() !== fileHash
+    ) {
+      return Response.json(
+        { error: "This scanner result ID was already recorded with different result fields." },
+        { status: 409, headers: NO_STORE },
+      );
+    }
+    if (existingResult.status !== "clean") {
+      const [existingEvidence] = await db.select()
+        .from(providerEvidenceSubmissions)
+        .where(eq(providerEvidenceSubmissions.id, existingResult.evidenceSubmissionId))
+        .limit(1);
+      if (
+        !existingEvidence
+        || existingEvidence.providerId !== existingResult.providerId
+        || existingEvidence.documentHash.toLowerCase() !== existingResult.fileHash.toLowerCase()
+      ) {
+        return Response.json(
+          { error: "The recorded non-clean result no longer matches its evidence record." },
+          { status: 409, headers: NO_STORE },
+        );
+      }
+
+      // A prior attempt may have persisted the result immediately before a
+      // later block or notification write failed. Reassert every fail-closed
+      // mutation on replay before acknowledging the signed result.
+      await expireOpenCheckoutSessionsForLaunchShutdown();
+      const replayedAt = new Date().toISOString();
+      await db.update(providerEvidenceSubmissions).set({
+        status: "needs_correction",
+        reasonCodes: JSON.stringify([`malware_scan_${existingResult.status}`]),
+        reviewNotes: "The authenticated scanner's latest result is not clean. This evidence remains blocked.",
+        updatedAt: replayedAt,
+      }).where(and(
+        eq(providerEvidenceSubmissions.id, existingEvidence.id),
+        eq(providerEvidenceSubmissions.status, "accepted"),
+      ));
+      await db.update(providerServiceEligibility).set({
+        eligibilityState: "blocked",
+        reasonCodes: JSON.stringify(["evidence_malware_scan_not_clean"]),
+        validThrough: "",
+        nextExpirationAt: "",
+        calculatedAt: replayedAt,
+        updatedAt: replayedAt,
+      }).where(and(
+        eq(providerServiceEligibility.providerId, existingEvidence.providerId),
+        eq(providerServiceEligibility.serviceCode, existingEvidence.serviceCode),
+        eq(providerServiceEligibility.jurisdiction, existingEvidence.jurisdiction),
+      ));
+
+      const [existingProvider] = await db.select({
+        email: providerApplications.email,
+      }).from(providerApplications)
+        .where(eq(providerApplications.id, existingResult.providerId))
+        .limit(1);
+      if (!existingProvider?.email) {
+        return Response.json(
+          { error: "The provider application for this recorded evidence result was not found." },
+          { status: 409, headers: NO_STORE },
+        );
+      }
+      await notifyProviderEvidenceScanBlocked({
+        evidenceId: existingResult.evidenceSubmissionId,
+        email: existingProvider.email,
+        scanStatus: existingResult.status,
+        notificationId: existingResult.id,
+      });
+    }
     return Response.json(
       { ok: true, alreadyRecorded: true },
       { headers: NO_STORE },
@@ -170,6 +251,17 @@ export async function POST(request: Request) {
   ) {
     return Response.json(
       { error: "The scanner result does not match a current stored evidence file and hash." },
+      { status: 409, headers: NO_STORE },
+    );
+  }
+  const [evidenceProvider] = await db.select({
+    email: providerApplications.email,
+  }).from(providerApplications)
+    .where(eq(providerApplications.id, evidence.providerId))
+    .limit(1);
+  if (!evidenceProvider?.email) {
+    return Response.json(
+      { error: "The provider application for this evidence was not found." },
       { status: 409, headers: NO_STORE },
     );
   }
@@ -278,6 +370,12 @@ export async function POST(request: Request) {
 
   if (status !== "clean") {
     await expireOpenCheckoutSessionsForLaunchShutdown();
+    await notifyProviderEvidenceScanBlocked({
+      evidenceId: evidence.id,
+      email: evidenceProvider.email,
+      scanStatus: status,
+      notificationId: scanId,
+    });
   }
   return Response.json({
     ok: true,

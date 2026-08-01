@@ -253,8 +253,8 @@ export function QuotePaymentCard({
                 />
                 <span>
                   {checkoutAcceptance.presentedText}{" "}
-                  <Link href="/terms">Terms of Use</Link>{" Â· "}
-                  <Link href="/customer-agreement">Customer Agreement</Link>{" Â· "}
+                  <Link href="/terms">Terms of Use</Link>{" · "}
+                  <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
                   <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
                 </span>
               </label>

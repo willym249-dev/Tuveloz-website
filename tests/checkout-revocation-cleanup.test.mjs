@@ -25,9 +25,12 @@ test("a non-clean authenticated scan quarantines open checkouts before recording
     "expireOpenCheckoutSessionsForLaunchShutdown()",
     cleanupGuard,
   );
-  const claim = route.indexOf("const claimed = await db.update(evidenceFileScans)");
-  const resultInsert = route.indexOf("await db.insert(evidenceFileScans).values");
-  const evidenceRevocation = route.indexOf("await db.update(providerEvidenceSubmissions).set");
+  const claim = route.indexOf("const claimed = await db.update(evidenceFileScans)", cleanupGuard);
+  const resultInsert = route.indexOf("await db.insert(evidenceFileScans).values", cleanupGuard);
+  const evidenceRevocation = route.indexOf(
+    "await db.update(providerEvidenceSubmissions).set",
+    cleanupGuard,
+  );
   const afterCleanup = route.lastIndexOf("expireOpenCheckoutSessionsForLaunchShutdown()");
 
   assert.ok(cleanupGuard >= 0, "non-clean scan path must be explicit");

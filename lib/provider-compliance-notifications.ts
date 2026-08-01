@@ -135,6 +135,63 @@ export async function notifyProviderEvidenceDecision(input: {
   ]);
 }
 
+export async function notifyProviderEvidenceScanBlocked(input: {
+  evidenceId: string;
+  email: string;
+  scanStatus: string;
+  notificationId?: string;
+}) {
+  const email = input.email.trim().toLowerCase();
+  if (!email) throw new Error("A provider email is required for a scan-block notification.");
+
+  // Unlike ordinary informational notices, this alert follows a fail-closed
+  // security mutation. Persist both protected-account and email delivery
+  // intents atomically and let persistence errors reach the scanner so its
+  // signed callback is retried. The event keys make every replay idempotent.
+  const eventKey = `provider-evidence:scan-blocked:${input.notificationId ?? `${input.evidenceId}:${input.scanStatus}`}`;
+  const emailEventKey = `marketplace:${eventKey}`;
+  const title = "Evidence file needs attention";
+  const body = "The external security scan did not clear this evidence file. The file and every dependent service remain blocked. Sign in to review the protected status and upload a replacement when available.";
+  const href = "/provider-onboarding";
+  const subject = "TUVELOZ evidence file needs attention";
+  const emailLines = [
+    "The external security scan did not clear one of your evidence files.",
+    "The file and every dependent service remain blocked. Uploading a replacement does not activate a service.",
+    `Review the protected status: ${siteUrl()}${href}`,
+  ];
+  const now = new Date().toISOString();
+
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO account_notifications
+         (id, event_key, email, role, title, body, href, created_at)
+       VALUES (?, ?, ?, 'provider', ?, ?, ?, ?)`,
+    ).bind(crypto.randomUUID(), eventKey, email, title, body, href, now),
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO email_notification_outbox
+         (id, event_key, recipient_email, subject, text_body, status, attempts, last_error, created_at, updated_at, sent_at)
+       VALUES (?, ?, ?, ?, ?, 'pending', 0, '', ?, ?, '')`,
+    ).bind(
+      crypto.randomUUID(),
+      emailEventKey,
+      email,
+      subject,
+      emailLines.join("\n"),
+      now,
+      now,
+    ),
+  ]);
+
+  // The durable row now exists. Reuse the normal delivery path for an
+  // immediate attempt; delivery errors remain recorded for the outbox worker.
+  await sendMarketplaceUpdateEmail({
+    eventKey,
+    recipientEmail: email,
+    subject,
+    lines: emailLines,
+  });
+}
+
 export async function notifyProviderAppealReceived(input: {
   appealId: string;
   email: string;

@@ -14,6 +14,14 @@ test("every active policy release is bound to the exact deployed page source", a
   for (const [key, release] of Object.entries(manifest)) {
     assert.ok(allowedStatuses.has(release.releaseStatus), `${key} has an invalid status`);
     assert.match(release.sourceFile, /^app\/[a-z0-9-]+\/page\.tsx$/);
+    assert.match(release.reviewBodyHash, /^[a-f0-9]{64}$/i);
+    const normalizedSource = (await read(release.sourceFile)).replaceAll("\r\n", "\n");
+    const actualHash = createHash("sha256").update(normalizedSource).digest("hex");
+    assert.equal(
+      release.reviewBodyHash.toLowerCase(),
+      actualHash,
+      `${key} review hash does not match ${release.sourceFile}`,
+    );
 
     if (release.releaseStatus !== "active") {
       if (release.releaseStatus === "draft") {
@@ -29,8 +37,6 @@ test("every active policy release is bound to the exact deployed page source", a
     assert.ok(Number.isFinite(Date.parse(release.effectiveAt)), `${key} needs an effective date`);
     assert.match(release.canonicalBodyHash, /^[a-f0-9]{64}$/i);
 
-    const normalizedSource = (await read(release.sourceFile)).replaceAll("\r\n", "\n");
-    const actualHash = createHash("sha256").update(normalizedSource).digest("hex");
     assert.equal(
       release.canonicalBodyHash.toLowerCase(),
       actualHash,
@@ -59,4 +65,5 @@ test("customer and provider gates use the one shared release manifest", async ()
   }
   assert.doesNotMatch(customerGate, /DRAFT_RELEASE/);
   assert.doesNotMatch(providerGate, /DRAFT_RELEASE/);
+  assert.match(providerGate, /reviewBodyHash: document\.reviewBodyHash/);
 });
