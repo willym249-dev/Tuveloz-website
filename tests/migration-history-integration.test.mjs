@@ -22,6 +22,7 @@ test("migration journal preserves upstream order before renumbered provider and 
     "0041_real_only_accepted_quote_authorizations",
     "0042_maryland_repair_records",
     "0043_signed_repair_record_gates",
+    "0044_final_provider_invoice_legal_fields_immutable",
   ];
   const tail = journal.entries.slice(31);
 
