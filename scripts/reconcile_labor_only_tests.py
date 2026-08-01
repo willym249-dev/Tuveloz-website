@@ -1,3 +1,5 @@
+from hashlib import sha256
+import json
 from pathlib import Path
 
 
@@ -44,8 +46,38 @@ replace_once(
 )
 replace_once(
     "tests/rendered-html.test.mjs",
+    "  assert.ok(contents.includes(\"Any special equipment or rental cost must be disclosed in the quote.\"));",
+    "  assert.ok(contents.includes(\"Any required parts must be purchased separately by the customer and cannot be included in a Tuveloz quote or payment.\"));",
+)
+replace_once(
+    "tests/rendered-html.test.mjs",
     "  assert.ok(providerSource.includes(\"Customer sees\"));",
     "  assert.ok(providerSource.includes(\"customer-visible status\"));",
 )
 
-print("Reconciled regression tests with the labor-only model.")
+# The labor-only update changes four draft policy documents. Bind each draft
+# review record to the exact updated source without activating it or inventing
+# an effective date. An already-active document must go through a separate
+# release/version process rather than silently changing underneath its release.
+manifest_path = Path("config/policy-releases.json")
+manifest = json.loads(manifest_path.read_text())
+changed_policy_keys = (
+    "terms",
+    "customer_agreement",
+    "provider_agreement",
+    "payment_policy",
+)
+for key in changed_policy_keys:
+    release = manifest[key]
+    if release["releaseStatus"] != "draft":
+        raise SystemExit(
+            f"{key} is {release['releaseStatus']}; do not rewrite an existing policy release in place"
+        )
+    source = Path(release["sourceFile"]).read_text().replace("\r\n", "\n")
+    release["reviewBodyHash"] = sha256(source.encode()).hexdigest()
+    release["effectiveAt"] = ""
+    release["releaseId"] = ""
+    release["canonicalBodyHash"] = ""
+manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
+
+print("Reconciled labor-only tests and bound updated draft policy review hashes.")
