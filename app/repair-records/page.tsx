@@ -330,7 +330,7 @@ export default function RepairRecordsPage() {
                   <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.invoice?.providerRepresentativeName)} />
                   <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.invoice?.providerRepresentativeTitle)} />
                   <label>Itemized final invoice lines (JSON)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
-                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify the listed work and parts were needed and performed or supplied, and the vehicle was tested or test driven when needed. Required for final invoice.</span></label>
+                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify that all labor performed and parts replaced were necessary to perform the repairs described on this invoice. I also certify that this vehicle has been tested or test driven when needed and that the mechanic&apos;s work was performed satisfactorily. Required for final invoice.</span></label>
                   <div className="repair-record-actions">
                     <button disabled={busy} name="status" type="submit" value="draft">Save invoice draft</button>
                     <button disabled={busy} name="status" type="submit" value="final">Issue immutable final provider invoice</button>
@@ -364,7 +364,7 @@ export default function RepairRecordsPage() {
                       <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-authorization")}>
                         <p>{data.legalNotices.electronicSignatureNotice}</p>
                         <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I reviewed the complete written estimate, Customer&apos;s Rights section, notices, itemized scope, parts, charges, and provider identity. I authorize only this exact stored record.</span></label>
+                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this authorization electronically and receive and retain the exact electronic record through my secure Tuveloz account. I reviewed the complete written estimate, Customer&apos;s Rights section, notices, itemized scope, parts, charges, and provider identity. I authorize only this exact stored record.</span></label>
                         <button disabled={busy} type="submit">Sign and authorize this exact record</button>
                       </form>
                     )}
@@ -395,7 +395,7 @@ export default function RepairRecordsPage() {
                       <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-invoice")}>
                         <p>{data.legalNotices.electronicSignatureNotice}</p>
                         <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I sign this exact provider invoice to record receipt. This does not waive a complaint, warranty claim, refund right, or any other non-waivable right.</span></label>
+                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this invoice-signature and copy-delivery transaction electronically and receive and retain the exact electronic record through my secure Tuveloz account. I sign this exact provider invoice to record receipt. This does not waive a complaint, warranty claim, refund right, or any other non-waivable right.</span></label>
                         <button disabled={busy} type="submit">Sign invoice and receive secure copy</button>
                       </form>
                     )}
