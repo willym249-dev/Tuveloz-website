@@ -23,10 +23,11 @@ test("Maryland repair notices and line-item validation are source-bound", async 
   assert.match(source, /reconditioned/);
 });
 
-test("migration creates immutable authorization, itemized invoice, signature, delivery, and retention records", async () => {
-  const [migration, gates] = await Promise.all([
+test("migrations create immutable authorization, itemized invoice, signature, delivery, and retention records", async () => {
+  const [migration, gates, finalFields] = await Promise.all([
     read("drizzle/0042_maryland_repair_records.sql"),
     read("drizzle/0043_signed_repair_record_gates.sql"),
+    read("drizzle/0044_final_provider_invoice_legal_fields_immutable.sql"),
   ]);
 
   assert.match(migration, /CREATE TABLE `repair_authorization_records`/);
@@ -60,6 +61,26 @@ test("migration creates immutable authorization, itemized invoice, signature, de
   assert.match(gates, /stripe_payment_release_requires_signed_delivered_provider_invoice/);
   assert.match(gates, /customer_copy_delivered_at/);
   assert.match(gates, /provider_copy_retained_at/);
+
+  assert.match(finalFields, /provider_invoice_final_legal_fields_immutable/);
+  for (const protectedField of [
+    "authorization_record_id",
+    "provider_business_name",
+    "county_registration_number",
+    "customer_name",
+    "vehicle_make_model",
+    "customer_instructions",
+    "provider_diagnosis",
+    "labor_billing_method",
+    "mechanic_identifiers",
+    "provider_signed_at",
+    "warranty_work_statement",
+    "manufacturer_notice",
+    "responsibility_notice",
+  ]) {
+    assert.match(finalFields, new RegExp(protectedField));
+  }
+  assert.match(finalFields, /Final provider invoice legal fields are immutable/);
 });
 
 test("repair-record API is participant-only, test-only, same-origin, and cannot move money", async () => {
@@ -107,18 +128,24 @@ test("customer sees conspicuous rights immediately before the exact repair autho
   assert.match(styles, /border-top: 0/);
 });
 
-test("production health verifies the new repair-document schema and controls", async () => {
-  const health = await read("app/api/health/route.ts");
-  const operations = await read("app/job-operations/page.tsx");
+test("production health and Worker verify the repair-document schema and private controls", async () => {
+  const [health, operations, worker] = await Promise.all([
+    read("app/api/health/route.ts"),
+    read("app/job-operations/page.tsx"),
+    read("worker/index.ts"),
+  ]);
 
   assert.match(health, /repair_authorization_records/);
   assert.match(health, /repair_authorization_items/);
   assert.match(health, /provider_invoice_items/);
   assert.match(health, /customer_copy_delivered_at/);
   assert.match(health, /repair_authorization_signed_immutable/);
+  assert.match(health, /provider_invoice_final_legal_fields_immutable/);
   assert.match(health, /provider_job_insert_requires_signed_repair_authorization/);
   assert.match(health, /provider_invoice_final_requires_complete_repair_record/);
   assert.match(health, /stripe_payment_release_requires_signed_delivered_provider_invoice/);
   assert.match(operations, /href="\/repair-records"/);
   assert.match(operations, /Open Maryland repair-document test workflow/);
+  assert.match(worker, /"\/repair-records"/);
+  assert.match(worker, /Cache-Control", "private, no-store/);
 });
