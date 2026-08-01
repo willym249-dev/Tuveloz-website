@@ -132,7 +132,7 @@ test("0047 declares every atomic Stripe Identity guard required by health", asyn
     "provider_personnel_stripe_identity_binding_immutable",
     "provider_personnel_stripe_identity_guard_update",
   ]) {
-    assert.match(migration, new RegExp(`CREATE TRIGGER .${trigger}.`));
+    assert.match(migration, new RegExp(`CREATE\\s+TRIGGER\\s+(?:\`|")?${trigger}\\b(?:\`|")?`));
     assert.match(health, new RegExp(`.${trigger}.`));
   }
   assert.match(migration, /stripe-identity-owner-operator-consent-2026-08-01-v1/);

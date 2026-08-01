@@ -140,6 +140,21 @@ function bindManualIdentityEvidence(db) {
   `);
 }
 
+test("0047 keeps trigger guards compatible with the remote D1 statement parser", async () => {
+  const migration = await readFile(migrationUrl, "utf8");
+  const wranglerRemoteQuery = `${migration}\nINSERT INTO "d1_migrations" (name)\nvalues ('0047_perfect_orphan.sql');`;
+
+  assert.doesNotMatch(migration, /SELECT\s+CASE\s+WHEN[\s\S]*?RAISE\s*\(/i);
+  assert.equal(
+    (migration.match(/SELECT RAISE\(ABORT, '[^']+'\) WHERE/g) ?? []).length,
+    6,
+  );
+  assert.ok(
+    Buffer.byteLength(wranglerRemoteQuery, "utf8") < 20 * 1024,
+    "0047 plus Wrangler's migration-ledger INSERT must stay below the remote D1 query budget",
+  );
+});
+
 test("0047 atomically binds an approved Stripe Identity result to the latest owner", async () => {
   const db = await guardedDatabase();
   seedOwner(db);
@@ -212,6 +227,13 @@ test("0047 atomically binds an approved Stripe Identity result to the latest own
 test("0047 rejects stale applications, duplicate active attempts, and direct Stripe-label spoofing", async () => {
   const db = await guardedDatabase();
   seedOwner(db);
+  db.exec("DELETE FROM provider_application_submission_evidence WHERE provider_id='provider-1'");
+  assert.throws(() => insertAttempt(db), /latest independent owner-operator binding/);
+  db.prepare(`
+    INSERT INTO provider_application_submission_evidence
+      (id, provider_id, normalized_snapshot, created_at)
+    VALUES ('evidence-1', 'provider-1', ?, '2026-08-01T10:00:00.000Z')
+  `).run(applicationSnapshot());
   db.exec("UPDATE provider_personnel SET status='suspended' WHERE id='personnel-1'");
   assert.throws(() => insertAttempt(db), /latest independent owner-operator binding/);
   db.exec("UPDATE provider_personnel SET status='pending' WHERE id='personnel-1'");
