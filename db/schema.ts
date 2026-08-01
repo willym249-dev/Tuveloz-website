@@ -23,9 +23,12 @@ export const customerRequests = sqliteTable(
     vehicle: text("vehicle").notNull(),
     service: text("service").notNull(),
     serviceCodes: text("service_codes").notNull().default("[]"),
-    partsSource: text("parts_source").notNull().default("Either is okay"),
+    partsSource: text("parts_source").notNull().default("Not sure whether parts are needed — discuss with provider"),
     partsPreference: text("parts_preference").notNull().default("No preference"),
-    budgetRange: text("budget_range").notNull().default("I'm flexible"),
+    laborOnlyPartsAcknowledgedAt: text("labor_only_parts_acknowledged_at")
+      .notNull()
+      .default(""),
+    budgetRange: text("budget_range").notNull().default("Not provided"),
     serviceLocations: text("service_locations").notNull().default("Provider comes to me"),
     serviceAddress: text("service_address").notNull().default(""),
     details: text("details").notNull(),
@@ -86,10 +89,13 @@ export const providerQuotes = sqliteTable(
     priceCents: text("price_cents").notNull(),
     laborPriceCents: text("labor_price_cents").notNull().default("0"),
     partsPriceCents: text("parts_price_cents").notNull().default("0"),
+    laborOnlyPartsConfirmedAt: text("labor_only_parts_confirmed_at")
+      .notNull()
+      .default(""),
     customerFeeRateBps: integer("customer_fee_rate_bps").notNull().default(1000),
     customerFeeCents: text("customer_fee_cents").notNull().default("0"),
     customerTotalCents: text("customer_total_cents").notNull().default("0"),
-    partType: text("part_type").notNull().default("Not specified"),
+    partType: text("part_type").notNull().default("Customer supplied"),
     availability: text("availability").notNull(),
     scheduledFor: text("scheduled_for").notNull().default(""),
     message: text("message").notNull(),
@@ -565,6 +571,9 @@ export const providerProfiles = sqliteTable(
     availabilityStatus: text("availability_status").notNull().default("Available now"),
     availabilityNote: text("availability_note").notNull().default(""),
     businessHours: text("business_hours").notNull().default(""),
+    customerSuppliedPartsPolicy: text("customer_supplied_parts_policy")
+      .notNull()
+      .default("Discuss before accepting"),
     logoImageKey: text("logo_image_key").notNull().default(""),
     logoImageType: text("logo_image_type").notNull().default(""),
     publicStatus: text("public_status").notNull().default("draft"),

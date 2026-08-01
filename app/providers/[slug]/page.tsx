@@ -22,6 +22,7 @@ type StorefrontData = {
     availabilityStatus: string;
     availabilityNote: string;
     businessHours: string;
+    customerSuppliedPartsPolicy: string;
     hasLogo: boolean;
   };
   services: string[];
@@ -324,6 +325,10 @@ export default function ProviderStorefrontPage() {
             <div><dt>Typical hours</dt><dd>{profile.businessHours}</dd></div>
           )}
           <div><dt>Meeting options</dt><dd>{workLocations.join(" · ")}</dd></div>
+          <div>
+            <dt>Customer-supplied parts</dt>
+            <dd>{profile.customerSuppliedPartsPolicy}</dd>
+          </div>
         </dl>
       </section>
 
@@ -331,9 +336,10 @@ export default function ProviderStorefrontPage() {
         <div className="storefront-section-heading">
           <div><span className="kicker">Exact service scope</span><h2>Profile-listed services</h2></div>
           <p>
-            These exact services are recorded on this profile for possible quote eligibility after
-            marketplace launch. A listing is not a guarantee of licensing, insurance, skill,
-            quality, safety, or lawful performance; review the dated records and official sources above.
+            These exact services are recorded on this profile for possible labor-quote eligibility after
+            marketplace launch. Any required parts are purchased separately by the customer. A listing is
+            not a guarantee of licensing, insurance, skill, quality, safety, or lawful performance; review
+            the dated records and official sources above.
           </p>
         </div>
         <div className="storefront-service-grid">

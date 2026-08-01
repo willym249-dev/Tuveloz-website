@@ -189,7 +189,7 @@ function cleanEmail(value: string) {
 function amountCents(value: unknown) {
   const amount = typeof value === "number" ? value : Number(String(value ?? "").trim());
   if (!Number.isFinite(amount) || amount < 0) {
-    throw new Error("Enter valid non-negative labor, parts, and other-fee amounts.");
+    throw new Error("Enter a valid non-negative labor amount.");
   }
   const cents = Math.round(amount * 100);
   if (cents > MAX_AMOUNT_CENTS) {
@@ -443,7 +443,13 @@ async function createAuthorization(request: Request, payload: Record<string, unk
       error: error instanceof Error ? error.message : "Check the authorization amounts and date.",
     }, { status: 400 });
   }
-  const totalCents = laborCents + partsCents + otherFeesCents;
+  if (partsCents !== 0 || otherFeesCents !== 0) {
+    return Response.json({
+      error: "Tuveloz work orders and change orders are labor only. Remove parts and other-fee amounts.",
+      code: "LABOR_ONLY_AUTHORIZATION_REQUIRED",
+    }, { status: 400 });
+  }
+  const totalCents = laborCents;
   if (totalCents > MAX_AMOUNT_CENTS) {
     return Response.json({ error: "The combined amount is above the supported marketplace record limit." }, { status: 400 });
   }

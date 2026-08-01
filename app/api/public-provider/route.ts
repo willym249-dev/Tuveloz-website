@@ -222,6 +222,7 @@ export async function GET(request: Request) {
       availabilityStatus: result.profile.availabilityStatus,
       availabilityNote: result.profile.availabilityNote,
       businessHours: result.profile.businessHours,
+      customerSuppliedPartsPolicy: result.profile.customerSuppliedPartsPolicy,
       hasLogo: Boolean(result.profile.logoImageKey),
     },
     services: servingPublicProfile

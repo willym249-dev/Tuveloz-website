@@ -13,6 +13,7 @@ import {
   CUSTOMER_SERVICE_GROUPS,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
   parseCustomerServiceLocations,
+  PARTS_COMMUNICATION_NOTICE,
   PARTS_PREFERENCE_OPTIONS,
   PARTS_SOURCE_OPTIONS,
   PROVIDER_WORK_LOCATION_OPTIONS,
@@ -32,7 +33,6 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../lib/provider-policy-acceptance";
-import { MarketPriceLinks } from "./components/market-price-links";
 import VehicleSelector from "./components/vehicle-selector";
 import {
   SiteLanguageButton,
@@ -287,8 +287,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [reviews, setReviews] = useState<PublicReview[]>([]);
   const [reviewSummary, setReviewSummary] = useState({ average: 0, count: 0 });
   const [selectedCustomerServices, setSelectedCustomerServices] = useState<string[]>([]);
-  const [selectedCustomerVehicle, setSelectedCustomerVehicle] = useState("");
-  const [partsSource, setPartsSource] = useState("Either is okay");
+  const [, setSelectedCustomerVehicle] = useState("");
+  const [partsSource, setPartsSource] = useState(PARTS_SOURCE_OPTIONS[2]);
   const [partsPreference, setPartsPreference] = useState("No preference");
   const [selectedCustomerLocations, setSelectedCustomerLocations] = useState<string[]>([]);
   const [priceGuidance, setPriceGuidance] = useState<PriceGuidanceItem[]>([]);
@@ -685,7 +685,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         form.reset();
         setSelectedCustomerServices([]);
         setSelectedCustomerVehicle("");
-        setPartsSource("Either is okay");
+        setPartsSource(PARTS_SOURCE_OPTIONS[2]);
         setPartsPreference("No preference");
         setSelectedCustomerLocations([]);
         setRepeatBooking(null);
@@ -1440,16 +1440,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   </p>
                 </section>
               )}
-              {selectedCustomerVehicle && selectedCustomerServices.length > 0 && (
-                <MarketPriceLinks
-                  context="decision"
-                  preference={partsPreference}
-                  service={selectedCustomerServices.join(" | ")}
-                  vehicle={selectedCustomerVehicle}
-                />
-              )}
               <fieldset className="area-fieldset">
-                <legend>Who should supply any needed parts?</legend>
+                <legend>Parts arrangement for this labor-only request</legend>
                 <div className="area-options parts-source-options">
                   {PARTS_SOURCE_OPTIONS.map((option) => (
                     <label key={option}>
@@ -1465,38 +1457,39 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     </label>
                   ))}
                 </div>
-                <small className="parts-equipment-note">
-                  Providers bring the tools and equipment needed for the job. Any special
-                  equipment or rental cost must be disclosed in the quote.
-                </small>
+                <small className="parts-equipment-note">{PARTS_COMMUNICATION_NOTICE}</small>
               </fieldset>
-              {partsSource !== PARTS_SOURCE_OPTIONS[0] && (
-                <label>
-                  <span className="field-label-with-help">
-                    Parts preference
-                    <LegalHelp
-                      label="What do OEM, aftermarket, and best value mean?"
-                      text="OEM means a part made for the vehicle brand. Aftermarket means a compatible part made by another company and may cost less. Best value lets the provider recommend a suitable balance of price and quality. No preference means you are open to either."
-                    />
-                  </span>
-                  <select
-                    name="parts-preference"
-                    value={partsPreference}
-                    onChange={(event) => setPartsPreference(event.target.value)}
-                  >
-                    {PARTS_PREFERENCE_OPTIONS.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </select>
-                  <small>
-                    If the provider supplies parts, the quote will show separate labor
-                    and parts charges before you choose.
-                  </small>
-                </label>
-              )}
-              {partsSource === PARTS_SOURCE_OPTIONS[0] && (
-                <input name="parts-preference" type="hidden" value="No preference" />
-              )}
+              <label>
+                <span className="field-label-with-help">
+                  Customer-supplied parts preference
+                  <LegalHelp
+                    label="What do OEM and aftermarket mean here?"
+                    text="OEM and aftermarket are communication preferences for a part the customer purchases separately. Tuveloz does not sell, source, verify, reimburse, or process payment for the part."
+                  />
+                </span>
+                <select
+                  name="parts-preference"
+                  value={partsPreference}
+                  onChange={(event) => setPartsPreference(event.target.value)}
+                >
+                  {PARTS_PREFERENCE_OPTIONS.map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="policy-consent">
+                <input
+                  name="labor-only-parts-acknowledged"
+                  required
+                  type="checkbox"
+                  value="yes"
+                />
+                <span>
+                  I understand that Tuveloz quotes and payments are labor only. Any
+                  required part must be purchased separately by me and cannot be
+                  included as a provider-supplied part or parts charge.
+                </span>
+              </label>
               <fieldset className="area-fieldset location-fieldset">
                 <legend>Where can the service happen?</legend>
                 <p>Choose one or both.</p>

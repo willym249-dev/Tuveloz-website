@@ -51,6 +51,7 @@ import { POLICY_VERSION } from "../../../lib/provider-policy";
 import { QUOTE_DECLINE_REASON_VALUES } from "../../../lib/quote-feedback";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import {
+  isLaborOnlyPartsSource,
   providerMatchesArea,
   providerMatchesServiceLocation,
 } from "../../../lib/service-matching";
@@ -178,14 +179,17 @@ function selectionScopeFor(
     || !Number.isSafeInteger(quote.customerFeeRateBps)
     || quote.customerFeeRateBps < 0
     || quote.customerFeeRateBps > 10_000
-    || laborPriceCents + partsPriceCents !== providerSubtotalCents
+    || !isLaborOnlyPartsSource(job.partsSource)
+    || partsPriceCents !== 0
+    || laborPriceCents !== providerSubtotalCents
+    || !["Customer supplied", "No parts needed"].includes(quote.partType)
     || providerSubtotalCents + storedFeeCents !== storedTotalCents
     || storedFeeCents !== price.customerFeeCents
     || storedTotalCents !== price.customerTotalCents
   ) {
     return {
       scope: null,
-      reason: "This quote does not contain one consistent immutable labor, parts, fee, and total breakdown.",
+      reason: "This quote is not a labor-only Tuveloz quote with a zero parts amount.",
     };
   }
   const performingPersonDisplay = `${quote.providerName} — verified owner-operator`;

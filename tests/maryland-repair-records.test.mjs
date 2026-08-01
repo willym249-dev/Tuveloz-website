@@ -120,14 +120,15 @@ test("customer sees conspicuous rights immediately before the exact repair autho
   assert.match(page, /selectedSubmitValue/);
   assert.match(page, /SubmitEvent/);
   assert.match(page, /values\.status = selectedSubmitValue\(event\)/);
-  assert.match(page, /Itemized estimate lines/);
+  assert.match(page, /Labor lines and optional customer-supplied-part descriptions/);
+  assert.match(page, /part amounts must be 0/);
   assert.match(page, /Montgomery County registration number/);
   assert.match(page, /Customer instructions or description of symptoms/);
   assert.match(page, /Provider diagnosis/);
   assert.match(page, /Mechanic names, initials, or numbers/);
   assert.match(page, /separately agree to conduct this authorization electronically/);
   assert.match(page, /invoice-signature and copy-delivery transaction electronically/);
-  assert.match(page, /mechanic&apos;s work was performed satisfactorily/);
+  assert.match(page, /work was performed satisfactorily/);
   assert.match(page, /Sign invoice and receive secure copy/);
   assert.match(page, /Payment was not automatically released/);
   assert.match(layout, /repair-records\.css/);

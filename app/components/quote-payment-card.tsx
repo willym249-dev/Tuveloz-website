@@ -79,11 +79,9 @@ export function QuotePaymentCard({
   accessToken,
   quote,
 }: QuotePaymentCardProps) {
-  const taxAndOtherCents = Math.max(
-    0,
-    Number(quote.priceCents)
-      - Number(quote.laborPriceCents)
-      - Number(quote.partsPriceCents),
+  const laborOnlyQuote = (
+    Number(quote.partsPriceCents) === 0
+    && Number(quote.priceCents) === Number(quote.laborPriceCents)
   );
   const [checkoutAllowed, setCheckoutAllowed] = useState(false);
   const [reason, setReason] = useState("");
@@ -125,6 +123,10 @@ export function QuotePaymentCard({
   }, [accessToken, quote.id]);
 
   async function openCheckout() {
+    if (!laborOnlyQuote) {
+      setError("Checkout is blocked because this quote is not labor only.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -189,9 +191,8 @@ export function QuotePaymentCard({
       </div>
       <dl className="quote-breakdown">
         <div><dt>Provider labor</dt><dd>{dollars(quote.laborPriceCents)}</dd></div>
-        <div><dt>Provider parts</dt><dd>{dollars(quote.partsPriceCents)}</dd></div>
-        <div><dt>Authorized tax and other charges</dt><dd>{dollars(taxAndOtherCents)}</dd></div>
-        <div><dt>Complete authorized provider amount</dt><dd>{dollars(quote.priceCents)}</dd></div>
+        <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
+        <div><dt>Complete authorized labor amount</dt><dd>{dollars(quote.priceCents)}</dd></div>
         <div>
           <dt>Tuveloz service fee ({quote.customerFeeRateBps / 100}%)</dt>
           <dd>{dollars(quote.customerFeeCents)}</dd>
@@ -224,6 +225,11 @@ export function QuotePaymentCard({
       ) : (
         <>
           {reason && <p className="admin-note">{reason}</p>}
+          {!laborOnlyQuote && (
+            <p className="form-error" role="alert">
+              Checkout is blocked because the stored quote contains a parts or non-labor amount.
+            </p>
+          )}
           {error && <p className="form-error" role="alert">{error}</p>}
           {checkoutAcceptance ? (
             <>
@@ -252,6 +258,8 @@ export function QuotePaymentCard({
                   type="checkbox"
                 />
                 <span>
+                  I confirm this payment includes vehicle-service labor only and no
+                  provider-supplied parts, parts reimbursement, parts tax, or parts charge.{" "}
                   {checkoutAcceptance.presentedText}{" "}
                   <Link href="/terms">Terms of Use</Link>{" · "}
                   <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
@@ -270,7 +278,7 @@ export function QuotePaymentCard({
           )}
           <button
             className="button primary"
-            disabled={!checkoutAllowed || !checkoutAcceptance || !acceptedPaymentPolicy || busy}
+            disabled={!checkoutAllowed || !checkoutAcceptance || !laborOnlyQuote || !acceptedPaymentPolicy || busy}
             onClick={openCheckout}
             type="button"
           >
