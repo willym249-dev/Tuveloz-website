@@ -10,6 +10,7 @@ import {
   customerRequestPrivacyAgreementHash,
 } from "../../lib/customer-job-scope";
 import {
+  CUSTOMER_JOB_POSTING_PAUSED,
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
   CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
 } from "../../lib/launch-status";
@@ -44,6 +45,59 @@ const exactServiceFactRequirements = exactServices.map((service) => ({
 }));
 
 export default async function PostJobPage() {
+  if (CUSTOMER_JOB_POSTING_PAUSED) {
+    return (
+      <main className="account-shell">
+        <header className="account-header">
+          <Link className="brand" href="/" aria-label="Tuveloz home">
+            <BrandMark />
+            <span>Tuveloz</span>
+          </Link>
+          <div className="account-header-actions">
+            <SiteLanguageButton />
+            <Link className="account-home-link" href="/account">
+              Sign up / Sign in
+            </Link>
+          </div>
+        </header>
+
+        <section className="account-main">
+          <div className="account-welcome">
+            <span className="account-kicker">Customer launch status</span>
+            <h1>Customer accounts are open. Job requests are not.</h1>
+            <p>{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</p>
+            <small>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</small>
+          </div>
+
+          <section className="account-card" style={{ marginTop: 32, minHeight: 0 }}>
+            <div className="account-card-heading">
+              <div>
+                <span className="account-role">Available now</span>
+                <h2>Prepare for launch without entering job details.</h2>
+              </div>
+            </div>
+            <p>
+              Create a customer account, apply as an independent provider, or use
+              Tuveloz AI for bilingual guidance. Nothing on this page submits a
+              request, contacts a provider, books service, or processes a payment.
+            </p>
+            <div className="hero-actions" style={{ marginTop: 24 }}>
+              <Link className="button primary" href="/account?role=customer&mode=create">
+                Create customer account <span>→</span>
+              </Link>
+              <Link className="button secondary" href="/join">
+                Apply as an independent provider
+              </Link>
+              <a className="button ai" href="https://ai.tuveloz.com/">
+                Open Tuveloz AI
+              </a>
+            </div>
+          </section>
+        </section>
+      </main>
+    );
+  }
+
   const [acceptanceHash, privacyHash] = await Promise.all([
     customerRequestAgreementHash(),
     customerRequestPrivacyAgreementHash(),

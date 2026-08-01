@@ -9,6 +9,8 @@ test("public health endpoint reports release and required schema without private
 
   assert.match(api, /DEPLOYMENT_COMMIT/);
   assert.match(api, /DEPLOYMENT_BUILT_AT/);
+  assert.match(api, /MARKETPLACE_MODE/);
+  assert.match(api, /CUSTOMER_JOB_POSTING_PAUSED/);
   assert.match(api, /sqlite_master/);
   assert.match(api, /account_credentials/);
   assert.match(api, /customer_requests/);
@@ -25,6 +27,11 @@ test("public health endpoint reports release and required schema without private
   assert.match(api, /missingGuardedTriggers/);
   assert.match(api, /row\.sql\?\.includes\("is_test_job"\)/);
   assert.match(api, /"cache-control": "no-store, max-age=0"/);
+  assert.match(api, /customerAccounts: "open"/);
+  assert.match(api, /providerApplications: "open"/);
+  assert.match(api, /const realTransactionsClosed = CUSTOMER_JOB_POSTING_PAUSED/);
+  assert.match(api, /customerJobRequests: realTransactionsClosed \? "closed" : "open"/);
+  assert.match(api, /customerPayments: realTransactionsClosed \? "closed" : "open"/);
   assert.match(api, /does not expose credentials, private records, user counts, payment details, or internal security controls/);
   assert.doesNotMatch(api, /SELECT \*/);
 });
@@ -38,10 +45,16 @@ test("production workflow stamps and verifies the exact deployed commit", async 
   assert.match(workflow, /npm run db:migrate:remote/);
   assert.match(workflow, /npm run deploy/);
   assert.match(workflow, /Verify exact live release and database readiness/);
+  assert.match(workflow, /github\.event_name != 'workflow_dispatch' \|\| github\.ref == 'refs\/heads\/main'/);
   assert.match(workflow, /EXPECTED_COMMIT: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /payload\?\.release\?\.commit === expected/);
   assert.match(workflow, /payload\?\.checks\?\.database === "ready"/);
   assert.match(workflow, /payload\?\.checks\?\.schema === "ready"/);
+  assert.match(workflow, /payload\?\.launch\?\.mode === "onboarding_only"/);
+  assert.match(workflow, /payload\?\.launch\?\.customerAccounts === "open"/);
+  assert.match(workflow, /payload\?\.launch\?\.providerApplications === "open"/);
+  assert.match(workflow, /payload\?\.launch\?\.customerJobRequests === "closed"/);
+  assert.match(workflow, /payload\?\.launch\?\.customerPayments === "closed"/);
   assert.match(workflow, /payload\.missingTables\.length === 0/);
   assert.match(workflow, /payload\.missingGuardedTriggers\.length === 0/);
   assert.match(workflow, /Cloudflare did not serve the exact healthy release/);

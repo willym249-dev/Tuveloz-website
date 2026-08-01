@@ -15,7 +15,7 @@ const REQUEST_ACCESS_TOKEN_HEADER = "x-tuveloz-request-token";
 
 export default function StripeSuccessPage() {
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false);
   const [canceled, setCanceled] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function StripeSuccessPage() {
     Promise.resolve().then(() => {
       if (!active) return;
       setCanceled(checkoutCanceled);
-      if (!sessionId) setChecking(false);
+      if (sessionId) setChecking(true);
       if (checkoutCanceled) {
         window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
       }
@@ -43,11 +43,12 @@ export default function StripeSuccessPage() {
       })
         .then(async (response) => {
           const result = await response.json() as { payment?: PaymentSummary };
-          if (response.ok) {
+          if (response.ok && result.payment) {
             window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
-            if (active) setPayment(result.payment ?? null);
+            if (active) setPayment(result.payment);
           }
         })
+        .catch(() => undefined)
         .finally(() => {
           if (active) setChecking(false);
         });
@@ -62,8 +63,24 @@ export default function StripeSuccessPage() {
     <main className="payment-result-shell">
       <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
       <section>
-        <span className="kicker">{canceled ? "Checkout canceled" : "Payment status"}</span>
-        <h1>{canceled ? "No payment was completed." : "Thanks—your payment is being confirmed."}</h1>
+        <span className="kicker">
+          {payment
+            ? "Verified payment record"
+            : checking
+              ? "Payment status"
+              : canceled
+                ? "Checkout canceled"
+                : "Payments are closed"}
+        </span>
+        <h1>
+          {payment
+            ? "Your payment record is available."
+            : checking
+              ? "Checking a prior payment record."
+              : canceled
+                ? "No payment was completed."
+                : "Customer payments are not open yet."}
+        </h1>
         {payment ? (
           <p>
             {payment.productName} · ${(payment.customerTotalCents / 100).toFixed(2)}
@@ -74,13 +91,14 @@ export default function StripeSuccessPage() {
             {checking
               ? "Confirming your payment…"
               : canceled
-                ? "You can return whenever you are ready."
-                : "We are still waiting for confirmation. This usually takes only a moment."}
+                ? "Customer checkout remains closed during provider onboarding."
+                : "Tuveloz is accepting account signups and provider applications, but customer checkout and payment links remain unavailable."}
           </p>
         )}
         <div>
           <Link className="button primary" href="/customer">Customer account</Link>
-          <Link className="button secondary" href="/storefront">Storefront</Link>
+          <Link className="button secondary" href="/payments">Payment policy</Link>
+          <Link className="button secondary" href="/join">Apply as a provider</Link>
         </div>
       </section>
     </main>

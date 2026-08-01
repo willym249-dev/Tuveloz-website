@@ -20,6 +20,7 @@ concurrency:
 jobs:
   deploy:
     name: Test, migrate, and deploy
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
@@ -107,6 +108,11 @@ jobs:
                   && payload?.checks?.application === "ready"
                   && payload?.checks?.database === "ready"
                   && payload?.checks?.schema === "ready"
+                  && payload?.launch?.mode === "onboarding_only"
+                  && payload?.launch?.customerAccounts === "open"
+                  && payload?.launch?.providerApplications === "open"
+                  && payload?.launch?.customerJobRequests === "closed"
+                  && payload?.launch?.customerPayments === "closed"
                   && Array.isArray(payload?.missingTables)
                   && payload.missingTables.length === 0
                   && Array.isArray(payload?.missingGuardedTriggers)

@@ -27,7 +27,14 @@ export type MarketplaceAction =
 
 const CUSTOMER_JOB_POSTING_PAUSE_ACTIONS: ReadonlySet<MarketplaceAction> = new Set([
   "request",
+  "discovery",
+  "quote",
+  "booking",
+  "appointment",
   "checkout",
+  "job_start",
+  "scope_change",
+  "completion",
   "payout",
 ]);
 

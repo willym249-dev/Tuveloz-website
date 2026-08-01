@@ -41,16 +41,32 @@ test("the central marketplace mode is default closed except for persisted test f
   assert.match(runtimeGate, /current_written_service_activation/);
   assert.match(runtimeGate, /stripe_live_configuration/);
   assert.match(runtimeAction, /if \(options\.testOnly === true\)/);
+  assert.match(runtimeAction, /customerJobPostingPauseBlocks\(action\)/);
+  assert.ok(
+    runtimeAction.indexOf("customerJobPostingPauseBlocks(action)")
+      < runtimeAction.indexOf("runtimeRealMarketplaceReleaseIsApproved()"),
+  );
   assert.match(runtimeAction, /runtimeRealMarketplaceReleaseIsApproved\(\)/);
 });
 
-test("the customer-job pause independently blocks request, checkout, and payout", async () => {
+test("the customer-job pause independently blocks every real marketplace action", async () => {
   const {
     customerJobPostingPauseBlocks,
     marketplaceActionAllowed,
   } = await import("../lib/launch-status.ts");
 
-  for (const action of ["request", "checkout", "payout"]) {
+  for (const action of [
+    "request",
+    "discovery",
+    "quote",
+    "booking",
+    "appointment",
+    "checkout",
+    "job_start",
+    "scope_change",
+    "completion",
+    "payout",
+  ]) {
     assert.equal(customerJobPostingPauseBlocks(action), true, action);
     assert.equal(
       marketplaceActionAllowed(action, { runtimeReleaseApproved: true }),
@@ -58,7 +74,6 @@ test("the customer-job pause independently blocks request, checkout, and payout"
       action,
     );
   }
-  assert.equal(customerJobPostingPauseBlocks("booking"), false);
   assert.equal(
     marketplaceActionAllowed("checkout", { testOnly: true }),
     true,
@@ -198,4 +213,47 @@ test("provider alerts and adjacent job operations cannot wake real marketplace w
   assert.match(publicProvider, /servingPublicProfile = publicAccess && publicDiscoveryAllowed/);
   assert.match(tracking, /if \(action === "stop"\)/);
   assert.match(tracking, /return Response\.json\(\{ ok: true, sharing: false \}\)/);
+});
+
+test("public input cannot manufacture a test-fixture exemption", async () => {
+  const routes = await Promise.all([
+    source("app/api/requests/route.ts"),
+    source("app/api/jobs/route.ts"),
+    source("app/api/customer-quotes/route.ts"),
+    source("app/api/appointments/route.ts"),
+    source("app/api/stripe/checkout/route.ts"),
+  ]);
+
+  for (const route of routes) {
+    assert.doesNotMatch(route, /body\.(?:testOnly|isTestJob|isTestProvider)/);
+    assert.doesNotMatch(
+      route,
+      /searchParams\.get\(["'](?:testOnly|isTestJob|isTestProvider)["']\)/,
+    );
+  }
+});
+
+test("launch mode leaves customer accounts and provider applications open", async () => {
+  const [accountAuth, passwordRequest, passwordComplete, challenge, providers] =
+    await Promise.all([
+      source("lib/account-auth.ts"),
+      source("app/api/auth/password/request/route.ts"),
+      source("app/api/auth/password/complete/route.ts"),
+      source("app/api/providers/challenge/route.ts"),
+      source("app/api/providers/route.ts"),
+    ]);
+
+  assert.match(accountAuth, /role === "customer" \|\| roles\.includes\(role\)/);
+  assert.match(accountAuth, /insert\(accountCredentials\)/);
+  assert.match(passwordRequest, /requestPasswordVerification/);
+  assert.match(passwordComplete, /completePasswordVerification/);
+  assert.match(providers, /verifyProviderApplicationChallenge/);
+  assert.match(providers, /insert\(providerApplications\)/);
+
+  for (const route of [passwordRequest, passwordComplete, challenge, providers]) {
+    assert.doesNotMatch(
+      route,
+      /CUSTOMER_JOB_POSTING_PAUSED|runtimeMarketplaceActionAllowed/,
+    );
+  }
 });

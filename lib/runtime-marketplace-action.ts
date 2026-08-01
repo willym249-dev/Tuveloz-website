@@ -1,4 +1,6 @@
 import {
+  customerJobPostingPauseBlocks,
+  MARKETPLACE_MODE,
   marketplaceActionAllowed,
   type MarketplaceAction,
 } from "./launch-status";
@@ -16,6 +18,12 @@ export async function runtimeMarketplaceActionAllowed(
 ) {
   if (options.testOnly === true) {
     return marketplaceActionAllowed(action, { testOnly: true });
+  }
+  if (
+    customerJobPostingPauseBlocks(action)
+    || String(MARKETPLACE_MODE) !== "live"
+  ) {
+    return false;
   }
   return marketplaceActionAllowed(action, {
     runtimeReleaseApproved: await runtimeRealMarketplaceReleaseIsApproved(),

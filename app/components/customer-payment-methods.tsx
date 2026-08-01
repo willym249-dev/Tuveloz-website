@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type SavedPaymentMethod = {
   id: string;
@@ -38,7 +39,7 @@ async function fetchPaymentMethods() {
   return result.paymentMethods;
 }
 
-export function CustomerPaymentMethods() {
+function ActiveCustomerPaymentMethods() {
   const [methods, setMethods] = useState<SavedPaymentMethod[]>([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -163,4 +164,24 @@ export function CustomerPaymentMethods() {
       )}
     </section>
   );
+}
+
+export function CustomerPaymentMethods() {
+  if (CUSTOMER_JOB_POSTING_PAUSED) {
+    return (
+      <section className="customer-payment-methods-panel" aria-labelledby="payment-details-heading">
+        <div className="customer-payment-methods-heading">
+          <div>
+            <h3 id="payment-details-heading">Payment setup is closed</h3>
+            <p>
+              You do not need a payment method to create or keep a customer
+              account. Customer checkout will open only after launch approval.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return <ActiveCustomerPaymentMethods />;
 }

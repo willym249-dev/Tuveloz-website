@@ -3,6 +3,10 @@ import {
   DEPLOYMENT_BUILT_AT,
   DEPLOYMENT_COMMIT,
 } from "../../../lib/deployment-release";
+import {
+  CUSTOMER_JOB_POSTING_PAUSED,
+  MARKETPLACE_MODE,
+} from "../../../lib/launch-status";
 
 const REQUIRED_TABLES = [
   "account_credentials",
@@ -116,6 +120,8 @@ type TriggerRow = {
 
 export async function GET() {
   const checkedAt = new Date().toISOString();
+  const realTransactionsClosed = CUSTOMER_JOB_POSTING_PAUSED
+    || String(MARKETPLACE_MODE) !== "live";
   let databaseReady = false;
   let requiredColumnsReady = false;
   let missingTables: string[] = [...REQUIRED_TABLES];
@@ -190,6 +196,13 @@ export async function GET() {
         application: "ready",
         database: databaseReady ? "ready" : "unavailable",
         schema: schemaReady ? "ready" : "migration-required",
+      },
+      launch: {
+        mode: MARKETPLACE_MODE,
+        customerAccounts: "open",
+        providerApplications: "open",
+        customerJobRequests: realTransactionsClosed ? "closed" : "open",
+        customerPayments: realTransactionsClosed ? "closed" : "open",
       },
       missingTables,
       missingGuardedTriggers,

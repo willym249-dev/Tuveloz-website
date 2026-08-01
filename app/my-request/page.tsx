@@ -13,6 +13,7 @@ import {
   PARTS_COMMUNICATION_NOTICE,
 } from "../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../lib/quote-feedback";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type Quote = {
   id: string;
@@ -219,6 +220,40 @@ export default function MyRequestPage() {
     }
     setReview(result.review);
     setConfirmingReview(false);
+  }
+
+  if (CUSTOMER_JOB_POSTING_PAUSED && !job?.isTestJob) {
+    return (
+      <main className="portal-shell">
+        <header className="portal-header">
+          <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
+          <span>Customer launch status</span>
+          <div className="portal-header-actions">
+            <Link className="portal-account-link" href="/customer">Customer account</Link>
+            <SiteLanguageButton />
+          </div>
+        </header>
+        <section className="portal-intro">
+          <span className="kicker">Provider onboarding mode</span>
+          <h1>Customer requests and quote decisions are not open yet.</h1>
+          <p>
+            You can create and manage a customer account now. No request, quote
+            selection, booking, provider contact, or payment is available on this page.
+          </p>
+        </section>
+        <section className="portal-empty">
+          <strong>No live customer request was opened.</strong>
+          <p>
+            Isolated owner test records remain visibly labeled and never create
+            real service or payments.
+          </p>
+          <div className="hero-actions">
+            <Link className="button primary" href="/customer">Open customer account</Link>
+            <Link className="button secondary" href="/post-job">View launch status</Link>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (

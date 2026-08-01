@@ -10,6 +10,10 @@ const postJobPage = await readFile(
   new URL("../app/post-job/page.tsx", import.meta.url),
   "utf8",
 );
+const homepage = await readFile(
+  new URL("../app/page.tsx", import.meta.url),
+  "utf8",
+);
 const requestRoute = await readFile(
   new URL("../app/api/requests/route.ts", import.meta.url),
   "utf8",
@@ -32,6 +36,16 @@ test("customer signups stay open while new job requests and payments are paused"
   assert.match(postJobPage, /Customer service requests are not yet available/);
   assert.match(postJobPage, /account\?role=customer&mode=create/);
   assert.match(postJobPage, /href="\/join"/);
+  assert.match(postJobPage, /Customer accounts are open\. Job requests are not\./);
+  assert.match(postJobPage, /Nothing on this page submits a[\s\S]*request, contacts a provider, books service, or processes a payment/);
+  assert.ok(
+    postJobPage.indexOf("if (CUSTOMER_JOB_POSTING_PAUSED)")
+      < postJobPage.indexOf("customerRequestAgreementHash()"),
+  );
+  assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
+  assert.match(homepage, /Prepare for launch without submitting a job/);
+  assert.match(homepage, /Create customer account/);
+  assert.match(homepage, /Apply as a provider/);
 });
 
 test("the request API rejects every new submission before reading customer data", () => {
@@ -47,13 +61,11 @@ test("the request API rejects every new submission before reading customer data"
   assert.match(requestRoute, /cache-control/);
 });
 
-test("the pause notice is visible sitewide and hides the homepage request form", () => {
+test("the pause notice is visible sitewide and the homepage uses an explicit launch branch", () => {
   assert.match(rootLayout, /className="antialiased"/);
   assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
-  assert.match(pauseNotice, /body\[data-customer-job-posting-paused=/);
-  assert.match(pauseNotice, /\.public-site \.request-section/);
-  assert.match(pauseNotice, /display: none !important/);
+  assert.doesNotMatch(pauseNotice, /display: none !important/);
   assert.match(pauseNotice, /Create customer account/);
   assert.match(pauseNotice, /Join as a provider/);
 });
