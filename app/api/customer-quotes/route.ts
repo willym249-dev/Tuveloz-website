@@ -53,6 +53,13 @@ import {
   providerMatchesArea,
   providerMatchesServiceLocation,
 } from "../../../lib/service-matching";
+import {
+  PARTS_BILLING_TERMS_VERSION,
+  customerPartsDisclosure,
+  partQualityFromStoredPartType,
+  partsBillingLabel,
+  partsBillingModelFromStoredPartType,
+} from "../../../lib/parts-billing";
 
 function marketplacePausedResponse(action: MarketplaceAction) {
   return Response.json(
@@ -170,6 +177,17 @@ function selectionScopeFor(
   const providerSubtotalCents = Number(quote.priceCents);
   const storedFeeCents = Number(quote.customerFeeCents);
   const storedTotalCents = Number(quote.customerTotalCents);
+  const storedPartsModel = partsBillingModelFromStoredPartType(
+    quote.partType,
+    quote.partsPriceCents,
+  );
+  if (storedPartsModel === "legacy_itemized" || storedPartsModel === "legacy_unclassified") {
+    return {
+      scope: null,
+      reason: "This quote uses a retired or unclassified parts flow. The provider must submit a new quote using one current service price.",
+    };
+  }
+  const partQuality = partQualityFromStoredPartType(quote.partType);
   if (
     ![laborPriceCents, partsPriceCents, providerSubtotalCents, storedFeeCents, storedTotalCents]
       .every((value) => Number.isSafeInteger(value) && value >= 0)
@@ -177,14 +195,15 @@ function selectionScopeFor(
     || !Number.isSafeInteger(quote.customerFeeRateBps)
     || quote.customerFeeRateBps < 0
     || quote.customerFeeRateBps > 10_000
-    || laborPriceCents + partsPriceCents !== providerSubtotalCents
+    || partsPriceCents !== 0
+    || laborPriceCents !== providerSubtotalCents
     || providerSubtotalCents + storedFeeCents !== storedTotalCents
     || storedFeeCents !== price.customerFeeCents
     || storedTotalCents !== price.customerTotalCents
   ) {
     return {
       scope: null,
-      reason: "This quote does not contain one consistent immutable labor, parts, fee, and total breakdown.",
+      reason: "This quote does not contain one consistent immutable service price, zero separate parts amount, fee, and total.",
     };
   }
   const performingPersonDisplay = `${quote.providerName} — verified owner-operator`;
@@ -209,6 +228,9 @@ function selectionScopeFor(
         customerFeeCents: String(price.customerFeeCents),
         customerTotalCents: String(price.customerTotalCents),
         partType: quote.partType,
+        partsBillingModel: storedPartsModel,
+        partsBillingLabel: partsBillingLabel(storedPartsModel, partQuality),
+        partsTermsVersion: PARTS_BILLING_TERMS_VERSION,
         availability: quote.availability,
         message: quote.message,
       },
@@ -354,6 +376,11 @@ export async function GET(request: Request) {
     const usesLegacyTotal = Number(quote.laborPriceCents) + Number(quote.partsPriceCents) === 0
       && Number(quote.priceCents) > 0;
     const customerPrice = storedCustomerPrice(quote);
+    const presentedPartsModel = partsBillingModelFromStoredPartType(
+      quote.partType,
+      quote.partsPriceCents,
+    );
+    const presentedPartQuality = partQualityFromStoredPartType(quote.partType);
     const provider = providerDetails.get(quote.providerEmail);
     const presentation = await selectionPresentation(
       job,
@@ -369,6 +396,12 @@ export async function GET(request: Request) {
       customerFeeRateBps: customerPrice.customerFeeRateBps,
       customerFeeCents: String(customerPrice.customerFeeCents),
       customerTotalCents: String(customerPrice.customerTotalCents),
+      partsBillingModel: presentedPartsModel,
+      partsBillingLabel: partsBillingLabel(presentedPartsModel, presentedPartQuality),
+      partsTermsVersion: presentedPartsModel === "legacy_itemized"
+        || presentedPartsModel === "legacy_unclassified"
+        ? ""
+        : PARTS_BILLING_TERMS_VERSION,
       ratingAverage: ratings.has(quote.providerEmail)
         ? Number(((ratings.get(quote.providerEmail)?.total ?? 0) / (ratings.get(quote.providerEmail)?.count ?? 1)).toFixed(1))
         : 0,
@@ -660,6 +693,13 @@ export async function POST(request: Request) {
     quoteMessage: selection.scope.quote.message,
     availability: selection.scope.quote.availability,
     partType: selection.scope.quote.partType,
+    partsBillingModel: selection.scope.quote.partsBillingModel,
+    partsBillingLabel: selection.scope.quote.partsBillingLabel,
+    partsTermsVersion: selection.scope.quote.partsTermsVersion,
+    partsDisclosure: customerPartsDisclosure(
+      selection.scope.quote.partsBillingModel,
+      partQualityFromStoredPartType(selection.scope.quote.partType),
+    ),
     jobFacts: selection.scope.request.jobFacts,
   });
   const basePriceBreakdown = JSON.stringify({
@@ -704,7 +744,7 @@ export async function POST(request: Request) {
           scheduledFor: selection.scope.quote.scheduledFor,
           scopeDetails: baseScopeDetails,
           priceBreakdown: basePriceBreakdown,
-          partsResponsibility: selection.scope.request.partsSource,
+          partsResponsibility: selection.scope.quote.partsBillingLabel,
           changeReason: "initial_customer_quote_selection",
           createdByProviderId: activeProvider.id,
           createdByPersonId: quote.performingPersonId,

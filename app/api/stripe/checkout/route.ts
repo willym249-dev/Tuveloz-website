@@ -41,6 +41,12 @@ import {
   type StageEligibilityInput,
 } from "../../../../lib/provider-eligibility-engine";
 import { jobScopeFactsFromScopeDetails } from "../../../../lib/job-scope-facts";
+import {
+  PARTS_BILLING_TERMS_VERSION,
+  partQualityFromStoredPartType,
+  partsBillingLabel,
+  partsBillingModelFromStoredPartType,
+} from "../../../../lib/parts-billing";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -139,6 +145,9 @@ async function acceptedQuoteForCustomer(
     quoteId: providerQuotes.id,
     quoteStatus: providerQuotes.status,
     providerAmount: providerQuotes.priceCents,
+    laborPriceCents: providerQuotes.laborPriceCents,
+    partsPriceCents: providerQuotes.partsPriceCents,
+    partType: providerQuotes.partType,
     customerFeeRateBps: providerQuotes.customerFeeRateBps,
     customerFeeCents: providerQuotes.customerFeeCents,
     customerTotalCents: providerQuotes.customerTotalCents,
@@ -235,6 +244,22 @@ export async function GET(request: Request) {
       payment: null,
     });
   }
+  const partsModel = partsBillingModelFromStoredPartType(
+    selection.partType,
+    selection.partsPriceCents,
+  );
+  if (
+    partsModel === "legacy_itemized"
+    || partsModel === "legacy_unclassified"
+    || Number(selection.partsPriceCents) !== 0
+    || Number(selection.laborPriceCents) !== Number(selection.providerAmount)
+  ) {
+    return Response.json({
+      checkoutAllowed: false,
+      reason: "This quote uses the retired itemized-parts flow. Ask the provider for a new one-price quote before paying.",
+      payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
+    });
+  }
   if (!selection.connectedAccountId) {
     return Response.json({
       checkoutAllowed: false,
@@ -323,6 +348,8 @@ export async function POST(request: Request) {
     let applicationFeeCents: number;
     let customerTotalCents: number;
     let settlementStrategy: "destination_charge" | "separate_transfer";
+    let partsBillingModel = "";
+    let partsBillingDescription = "";
     let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
 
     if (productId) {
@@ -420,6 +447,26 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      const selectedPartsModel = partsBillingModelFromStoredPartType(
+        selection.partType,
+        selection.partsPriceCents,
+      );
+      if (
+        selectedPartsModel === "legacy_itemized"
+        || selectedPartsModel === "legacy_unclassified"
+        || Number(selection.partsPriceCents) !== 0
+        || Number(selection.laborPriceCents) !== Number(selection.providerAmount)
+      ) {
+        return Response.json({
+          error: "This quote uses the retired itemized-parts flow. A new one-price quote is required before checkout.",
+          code: "CURRENT_PARTS_BILLING_REQUIRED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      partsBillingModel = selectedPartsModel;
+      partsBillingDescription = partsBillingLabel(
+        selectedPartsModel,
+        partQualityFromStoredPartType(selection.partType),
+      );
       if (
         !selection.connectedAccountId
         || selection.providerStatus !== "approved"
@@ -586,7 +633,7 @@ export async function POST(request: Request) {
             unit_amount: providerAmountCents,
             product_data: {
               name: productName,
-              description: `Provider quote from ${selection.providerName}`,
+              description: `Provider quote from ${selection.providerName}. ${partsBillingDescription}`,
             },
           },
           quantity: 1,
@@ -744,6 +791,12 @@ export async function POST(request: Request) {
       ...(paymentScopeVersion ? { tuveloz_scope_version: String(paymentScopeVersion) } : {}),
       ...(scopeAuthorizationDecisionId
         ? { tuveloz_scope_authorization_id: scopeAuthorizationDecisionId }
+        : {}),
+      ...(partsBillingModel
+        ? {
+            tuveloz_parts_billing_model: partsBillingModel,
+            tuveloz_parts_terms_version: PARTS_BILLING_TERMS_VERSION,
+          }
         : {}),
       ...(finalProductId ? { tuveloz_product_id: finalProductId } : {}),
     };

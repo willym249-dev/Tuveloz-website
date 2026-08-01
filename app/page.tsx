@@ -1393,8 +1393,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     ))}
                   </select>
                   <small>
-                    If the provider supplies parts, the quote will show separate labor
-                    and parts charges before you choose.
+                    If the provider supplies parts, the quote will show the included
+                    items and one all-inclusive provider service price before you choose.
                   </small>
                 </label>
               )}

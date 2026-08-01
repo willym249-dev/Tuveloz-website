@@ -21,6 +21,8 @@ type QuotePaymentCardProps = {
     priceCents: string;
     laborPriceCents: string;
     partsPriceCents: string;
+    partsBillingModel: string;
+    partsBillingLabel: string;
     customerFeeRateBps: number;
     customerFeeCents: string;
     customerTotalCents: string;
@@ -50,12 +52,11 @@ export function QuotePaymentCard({
   accessToken,
   quote,
 }: QuotePaymentCardProps) {
-  const taxAndOtherCents = Math.max(
-    0,
-    Number(quote.priceCents)
-      - Number(quote.laborPriceCents)
-      - Number(quote.partsPriceCents),
-  );
+  const usesCurrentPartsModel = [
+    "customer_supplied",
+    "provider_all_inclusive",
+    "no_parts_needed",
+  ].includes(quote.partsBillingModel);
   const [checkoutAllowed, setCheckoutAllowed] = useState(false);
   const [reason, setReason] = useState("");
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
@@ -128,10 +129,15 @@ export function QuotePaymentCard({
         </p>
       </div>
       <dl className="quote-breakdown">
-        <div><dt>Provider labor</dt><dd>{dollars(quote.laborPriceCents)}</dd></div>
-        <div><dt>Provider parts</dt><dd>{dollars(quote.partsPriceCents)}</dd></div>
-        <div><dt>Authorized tax and other charges</dt><dd>{dollars(taxAndOtherCents)}</dd></div>
-        <div><dt>Complete authorized provider amount</dt><dd>{dollars(quote.priceCents)}</dd></div>
+        <div><dt>Parts arrangement</dt><dd>{quote.partsBillingLabel}</dd></div>
+        {usesCurrentPartsModel ? (
+          <div><dt>Provider service price</dt><dd>{dollars(quote.priceCents)}</dd></div>
+        ) : (
+          <>
+            <div><dt>Legacy provider labor</dt><dd>{dollars(quote.laborPriceCents)}</dd></div>
+            <div><dt>Legacy separately itemized parts</dt><dd>{dollars(quote.partsPriceCents)}</dd></div>
+          </>
+        )}
         <div>
           <dt>Tuveloz service fee ({quote.customerFeeRateBps / 100}%)</dt>
           <dd>{dollars(quote.customerFeeCents)}</dd>
@@ -172,7 +178,7 @@ export function QuotePaymentCard({
               type="checkbox"
             />
             <span>
-              I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
+              I am 18 or older, accept the displayed “{quote.partsBillingLabel}” arrangement and exact total, and agree to the <Link href="/terms">Terms</Link>,{" "}
               <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
               <Link href="/payments">Payment Policy</Link>.
             </span>

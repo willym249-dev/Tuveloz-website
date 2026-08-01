@@ -142,17 +142,17 @@ test("build contains global language, optional budget details, repeat booking, a
   assert.ok(contents.includes("at least 3 real, non-test, completed"));
 });
 
-test("build itemizes provider-supplied parts separately from labor", async () => {
+test("build enforces one all-inclusive provider service price with no separate goods charge", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("If the provider supplies parts, the quote will show separate labor"));
-  assert.ok(contents.includes("Labor ($)"));
-  assert.ok(contents.includes("Parts price ($)"));
-  assert.ok(contents.includes("laborPriceCents"));
-  assert.ok(contents.includes("partsPriceCents"));
+  assert.ok(contents.includes("one all-inclusive provider service price"));
+  assert.ok(contents.includes("One provider service price ($)"));
+  assert.ok(contents.includes("Provider supplies parts in one all-inclusive repair price"));
+  assert.ok(contents.includes("Do not enter a separate parts, materials, reimbursement, core, or tire amount."));
+  assert.ok(contents.includes("provider_all_inclusive"));
 });
 
 test("build protects every important submission with a second confirmation", async () => {

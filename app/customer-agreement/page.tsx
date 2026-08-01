@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -97,6 +97,16 @@ export default function CustomerAgreementPage() {
           express warranty in the service records. Implied or statutory warranty
           rights and duties remain governed by applicable law.
         </p>
+        <p>
+          Each selectable quote must state one of the current parts arrangements:
+          you supply all required parts; no new parts are needed; or the provider
+          supplies the described parts and materials within one all-inclusive
+          repair-service price. Under the provider-supplied option, no separate
+          parts, materials, reimbursement, parts-markup, core-charge, tire-fee,
+          or other goods amount is authorized through Tuveloz. You must approve a
+          new recorded quote or change before any added work, substitute part, or
+          price increase is charged.
+        </p>
       </section>
 
       <section>
@@ -106,9 +116,12 @@ export default function CustomerAgreementPage() {
           configuration proposes a customer service fee equal to 10% of the
           provider subtotal, subject to documented compliance with applicable
           law and final CPA or tax-adviser, payment-processor, insurance, and
-          operational approval. If that pricing is adopted, the provider
-          subtotal, separate fee, and total must be displayed conspicuously before
-          you choose whether to authorize checkout. The{" "}
+          operational approval. If that pricing is adopted, the provider&apos;s
+          one service price, exact parts arrangement, separate Tuveloz fee, and
+          total must be displayed conspicuously before you choose whether to
+          authorize checkout. A provider may not use a second Tuveloz payment,
+          cash request, reimbursement request, or off-platform collection to add
+          a separate parts charge to the accepted one-price arrangement. The{" "}
           <a href="/payments">Payment, Cancellation, and Refund Policy</a> explains
           the proposed payment administration and customer protections.
         </p>

@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="An operational review draft for using Tuveloz and its two-sided vehicle-service marketplace."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -143,11 +143,24 @@ export default function TermsPage() {
       <section>
         <h2>6. Quotes, changes, records, and warranties</h2>
         <p>
-          Providers set their own quotes and must describe labor, parts, material
-          assumptions, timing, and added costs clearly. Work or price outside the
-          accepted quote requires the customer&apos;s approval. Provider businesses
-          must satisfy the estimate, authorization, invoice, disclosure, repair
-          record, parts, warranty, and disposal duties applicable to their work.
+          Providers set their own quotes and must describe the exact service,
+          parts arrangement, included items, assumptions, timing, exclusions,
+          and provider warranty clearly. Work, a substitute part, a separate
+          goods charge, or a price outside the accepted quote requires a new
+          customer authorization. Provider businesses must satisfy the estimate,
+          authorization, invoice, disclosure, repair-record, parts, warranty,
+          tax, and disposal duties applicable to their work.
+        </p>
+        <p>
+          Under the currently permitted parts flow, a quote may use customer-supplied
+          parts, no new parts, or provider-supplied parts and materials included in
+          one all-inclusive lump-sum repair-service price. The provider may identify
+          the included part name, brand, quality, number, supplier, and warranty but
+          may not assign a separate parts, materials, reimbursement, parts-markup,
+          core-charge, tire-fee, or other goods amount through Tuveloz. Separately
+          itemized parts sales, over-the-counter sales, new-tire sales, fuel sales,
+          core-charge transactions, and fabrication transactions remain disabled
+          unless Tuveloz deliberately activates a compliant flow for them.
         </p>
         <p>
           Service records should identify who offers any express service or parts
@@ -175,9 +188,12 @@ export default function TermsPage() {
           Any enabled payment authorization, transfer, cancellation, refund,
           dispute, or chargeback process will also be governed by the{" "}
           <a href="/payments">Payment, Cancellation, and Refund Policy</a>.
-          Operating a payment flow would not make Tuveloz the vehicle-service
-          provider, and it would not remove any payment-related duty that law
-          places directly on Tuveloz.
+          For a provider-supplied-parts lump-sum repair, the provider must pay or
+          accrue applicable sales or use tax when acquiring the parts and supplies
+          used in that repair and may not use a resale exemption for those items
+          under this billing method. Operating a payment flow would not make
+          Tuveloz the vehicle-service provider, and it would not remove any
+          payment-related duty that law places directly on Tuveloz.
         </p>
       </section>
 

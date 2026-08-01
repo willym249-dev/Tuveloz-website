@@ -6,7 +6,7 @@ export default function PaymentsPage() {
       eyebrow="Money"
       title="Payment, Cancellation, and Refund Policy"
       summary="An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -29,25 +29,38 @@ export default function PaymentsPage() {
           Customer requests and checkout are not yet open. The current product
           configuration proposes a customer service fee equal to 10% of the
           provider&apos;s quoted subtotal. If that pricing and payment flow receive
-          final approval, the customer must see the provider subtotal, separate
-          Tuveloz fee, and total conspicuously before choosing whether to proceed.
-          Tuveloz must not add work or parts to an accepted quote, and a scope or
-          price change requires the customer&apos;s express approval before any
-          additional charge.
+          final approval, the customer must see the provider&apos;s one service
+          price, exact parts arrangement, separate Tuveloz fee, and total
+          conspicuously before choosing whether to proceed. Tuveloz must not add
+          work, a substitute part, a separate goods charge, or a price to an
+          accepted quote, and every material scope or price change requires the
+          customer&apos;s express recorded approval before any additional charge.
         </p>
       </section>
 
       <section>
         <h2>2. Provider pricing and proposed Tuveloz fee</h2>
         <p>
-          Provider businesses set their own labor and parts quotes. The proposed
-          product design separately tracks the accepted provider subtotal and a
-          10% customer service fee for marketplace and transaction support. The
+          Provider businesses set their own service prices. The current guarded
+          product design permits customer-supplied parts, no new parts, or
+          provider-supplied parts and materials included in one all-inclusive
+          lump-sum repair-service price. It does not permit a separate parts,
+          materials, reimbursement, parts-markup, core-charge, tire-fee, or other
+          goods line. The accepted provider service price is tracked separately
+          from the proposed 10% customer service fee for marketplace and
+          transaction support.
+        </p>
+        <p>
+          A provider using the all-inclusive method may obtain parts at retail or
+          wholesale, but must pay or accrue applicable sales or use tax on the
+          parts and supplies purchased for the lump-sum repair, must not use a
+          resale exemption for those items, and must retain supplier records.
+          Separately itemized parts sales remain disabled until Tuveloz has an
+          approved registration, tax-calculation, collection, withholding,
+          reporting, refund, and remittance process for that flow. The fee
           percentage, transfer calculation, adjustments, and accounting treatment
           remain subject to documented compliance with applicable law and final
           CPA or tax-adviser, processor, insurance, and operational approval.
-          Product configuration alone does not establish a legal or tax
-          characterization or promise a particular provider payout.
         </p>
       </section>
 
@@ -65,11 +78,13 @@ export default function PaymentsPage() {
           themselves determine who is merchant of record, who owes a tax, whether
           anyone acts as an agent, or which legal duties apply. Those questions
           must be resolved under applicable law with final CPA or tax-adviser,
-          processor, insurance, and operational review. If payments are
-          enabled, the selected provider business remains the party that accepts
-          and performs the vehicle-service agreement, supplies listed parts, and
-          honors any provider warranty it expressly offers. Nothing in this draft
-          decides a non-waivable warranty right or responsibility.
+          processor, insurance, and operational review.
+          If payments are enabled, the selected provider business remains
+          the party that accepts and performs the vehicle-service agreement,
+          acquires and supplies listed parts, pays or accrues the parts-purchase
+          tax required under the selected billing method, preserves supplier
+          records, and honors any provider warranty it expressly offers. Nothing
+          in this draft decides a non-waivable warranty right or responsibility.
         </p>
         <p>
           Stripe&apos;s own terms and privacy policy also apply to its services.
@@ -171,10 +186,14 @@ export default function PaymentsPage() {
           report, withhold, or pay a particular tax. Tuveloz will obtain final
           CPA or qualified tax-adviser guidance, document the applicable legal
           requirements, and configure the payment and reporting flow to match
-          the responsibilities imposed by law. Provider
-          businesses remain responsible for accurate business records and for
-          duties the law places on them. Customers and providers should keep
-          their quote, approval, invoice, receipt, and service records.
+          the responsibilities imposed by law.
+          Provider businesses remain responsible for accurate business,
+          supplier, tax, warranty, and service records and for duties the law
+          places on them. For an all-inclusive provider-parts repair, the stored
+          record must preserve the parts arrangement, included-item description,
+          provider certifications, one service price, customer acceptance, and
+          supplier receipt reference. Customers and providers should keep their
+          quote, approval, invoice, receipt, and service records.
         </p>
       </section>
 

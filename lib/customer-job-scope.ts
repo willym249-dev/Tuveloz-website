@@ -12,6 +12,7 @@ import {
 } from "./job-scope-facts";
 import { isServiceCode, type ServiceCode } from "./provider-policy";
 import { sha256Text } from "./provider-policy-acceptance";
+import type { PartsBillingModel } from "./parts-billing";
 
 export const CUSTOMER_REQUEST_SCOPE_VERSION = 1;
 export const CUSTOMER_REQUEST_AGREEMENT_KEY = "customer_request_scope";
@@ -30,7 +31,7 @@ export const CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION = [
   `terms:${TERMS_VERSION}`,
   `customer:${CUSTOMER_AGREEMENT_VERSION}`,
   `payments:${PAYMENT_POLICY_VERSION}`,
-  "provider-quote-selection:2",
+  "provider-quote-selection:3",
 ].join("|");
 
 export const CUSTOMER_REQUEST_ACCEPTANCE_TEXT =
@@ -79,6 +80,9 @@ export type CustomerQuoteSelectionScope = {
     customerFeeCents: string;
     customerTotalCents: string;
     partType: string;
+    partsBillingModel: PartsBillingModel;
+    partsBillingLabel: string;
+    partsTermsVersion: string;
     availability: string;
     message: string;
   };
@@ -352,6 +356,9 @@ export function customerQuoteSelectionScopeSnapshot(
       customerFeeCents: scope.quote.customerFeeCents,
       customerTotalCents: scope.quote.customerTotalCents,
       partType: scope.quote.partType,
+      partsBillingModel: scope.quote.partsBillingModel,
+      partsBillingLabel: scope.quote.partsBillingLabel,
+      partsTermsVersion: scope.quote.partsTermsVersion,
       availability: scope.quote.availability,
       message: scope.quote.message,
     },
@@ -395,13 +402,19 @@ export function customerProviderSelectionAcceptanceText(
   const operationCodes = scope.request.jobFacts.requestedOperations
     .map((operation) => operation.operationCode)
     .join(", ");
+  const partsAcceptance = scope.quote.partsBillingModel === "provider_all_inclusive"
+    ? "Provider-supplied parts and materials described in the quote are included in one all-inclusive repair-service price. No separate parts, materials, reimbursement, parts-markup, core-charge, tire-fee, or other goods amount is authorized through Tuveloz."
+    : scope.quote.partsBillingModel === "customer_supplied"
+      ? "The customer supplies all required parts. No provider-supplied part, fluid, material, reimbursement, or other good is included in the Tuveloz service price."
+      : "No new part, fluid, material, reimbursement, or other good is included in the Tuveloz service price.";
   return [
     `I select ${scope.quote.providerName} and its disclosed performing person (${scope.quote.performingPersonDisplay}) for only the exact service code ${serviceLabel} and operation ${operationCodes}.`,
     `The authorized location is ${scope.request.jobFacts.location.address} (${scope.request.jobFacts.location.type}), with the stored property, vehicle-condition, excluded-operation, and safety attestations unchanged.`,
     `I accept quote ${scope.quote.quoteId} for a displayed customer total of $${amount}, scheduled for ${scope.quote.scheduledFor}.`,
+    `Parts arrangement: ${scope.quote.partsBillingLabel}. ${partsAcceptance} Parts billing terms version ${scope.quote.partsTermsVersion}.`,
     "I agree to the linked Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy.",
     "Accepting this quote creates a direct service agreement with the selected provider business. TUVELOZ operates the marketplace and does not perform the vehicle service.",
-    "No added work, substitute part, price increase, different performing person, or changed schedule is authorized by this acceptance; each material change requires a new recorded approval.",
+    "No added work, substitute part, separate parts charge, price increase, different performing person, or changed schedule is authorized by this acceptance; each material change requires a new recorded approval.",
   ].join(" ");
 }
 

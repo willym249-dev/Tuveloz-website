@@ -6,7 +6,7 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers • Operational review draft"
       title="Provider Agreement"
       summary="An operational review draft for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>1. Draft status and related policies</h2>
@@ -182,12 +182,31 @@ export default function ProviderAgreementPage() {
         <h2>8. Quotes and direct customer contracts</h2>
         <p>
           The provider business sets or approves each quote and must clearly state
-          the enabled service code, labor, parts and part type, assumptions,
-          exclusions, timing, taxes, other lawful charges, and provider warranty.
+          the enabled service code, one provider service price, parts arrangement,
+          included items, assumptions, exclusions, timing, and provider warranty.
           Customer acceptance forms a direct service agreement with the provider
-          business. Added work, a substituted part, a different person, or a
-          price change requires the provider business&apos;s approval and the
-          customer&apos;s documented authorization when applicable.
+          business. Added work, a substituted part, a different person, a separate
+          goods charge, or a price change requires the provider business&apos;s approval
+          and the customer&apos;s documented authorization when applicable.
+        </p>
+        <p>
+          A provider may buy parts from a retail or wholesale supplier and may
+          include sourcing cost and profit in its one all-inclusive repair-service
+          price. When the provider supplies parts under this lump-sum method, the
+          provider must pay or accrue all applicable sales or use tax on the parts
+          and supplies it purchases for the job and must not use a resale certificate
+          or resale exemption for those items. The provider must retain supplier
+          invoices or receipts and provide relevant proof to Tuveloz when reasonably
+          required for a tax, payment, customer, warranty, or audit review.
+        </p>
+        <p>
+          The provider may describe the included part name, brand, quality, part
+          number, supplier, and warranty, but it may not enter or collect a separate
+          parts, materials, reimbursement, parts-markup, core-charge, tire-fee, or
+          other goods amount through Tuveloz. Separately itemized parts sales,
+          over-the-counter parts, new-tire sales, fuel sales, core-charge transactions,
+          and fabrication transactions are disabled until Tuveloz activates a
+          separately reviewed and compliant flow.
         </p>
         <p>
           The performing person must stop when the requested work differs from the
@@ -233,8 +252,11 @@ export default function ProviderAgreementPage() {
           chargeback, fraud, legal restraint, payment-network requirement,
           duplicate or incorrect payment, or material failure to provide the
           accepted service, subject to applicable law and the payment policy.
-          Payment administration does not shift invoicing, warranty, payroll, or
-          service responsibility away from the provider business.
+          Payment administration does not shift invoicing, warranty, payroll,
+          parts-purchase tax, recordkeeping, or service responsibility away from
+          the provider business. The provider must not redirect a customer to a
+          second payment link, cash reimbursement, message-based collection, or
+          off-platform charge to evade the accepted one-price parts arrangement.
         </p>
       </section>
 

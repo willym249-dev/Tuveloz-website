@@ -26,6 +26,9 @@ type Quote = {
   customerFeeCents: string;
   customerTotalCents: string;
   partType: string;
+  partsBillingModel: string;
+  partsBillingLabel: string;
+  partsTermsVersion: string;
   availability: string;
   message: string;
   status: string;
@@ -304,17 +307,8 @@ export default function MyRequestPage() {
               </p>
             )}
             <dl className="quote-breakdown">
-              <div><dt>Labor</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
-              {job?.partsSource !== PARTS_SOURCE_OPTIONS[0] && (
-                <div>
-                  <dt>
-                    Parts
-                    {quote.partType === "Not specified" ? "" : ` (${quote.partType})`}
-                  </dt>
-                  <dd>${(Number(quote.partsPriceCents) / 100).toFixed(2)}</dd>
-                </div>
-              )}
-              <div><dt>Provider quote subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+              <div><dt>Parts arrangement</dt><dd>{quote.partsBillingLabel}</dd></div>
+              <div><dt>Provider service price</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
                 <dt>Tuveloz service fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
@@ -324,6 +318,15 @@ export default function MyRequestPage() {
                 <dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd>
               </div>
             </dl>
+            <p className="approval-note">
+              {quote.partsBillingModel === "provider_all_inclusive"
+                ? "The provider-supplied parts and materials described below are included in the one provider service price. No separate parts charge is authorized through Tuveloz."
+                : quote.partsBillingModel === "customer_supplied"
+                  ? "You supply all required parts. No provider-supplied parts are included in the Tuveloz payment."
+                  : quote.partsBillingModel === "no_parts_needed"
+                    ? "No new parts or materials are included in this quote."
+                    : "This legacy quote cannot be selected until the provider replaces it with the current one-price format."}
+            </p>
             <div className="quote-summary">
               <span>What this quote includes</span>
               <p>{quote.message}</p>

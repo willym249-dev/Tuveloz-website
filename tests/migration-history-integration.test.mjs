@@ -20,6 +20,7 @@ test("migration journal preserves upstream order before renumbered provider cont
     "0039_typical_baron_zemo",
     "0040_living_gressill",
     "0041_real_only_accepted_quote_authorizations",
+    "0042_all_inclusive_parts_guard",
   ];
   const tail = journal.entries.slice(31);
 

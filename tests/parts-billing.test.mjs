@@ -85,6 +85,6 @@ test("quote API and policy pages contain the operational safeguards", async () =
   assert.match(quoteApi, /providerPartsTaxConfirmed/);
   assert.match(providerAgreement, /retail or wholesale supplier/);
   assert.match(providerAgreement, /must not use a resale certificate/);
-  assert.match(payments, /one all-inclusive lump-sum repair-service price/);
+  assert.match(payments, /one all-inclusive\s+lump-sum repair-service price/);
   assert.match(payments, /Separately itemized parts sales remain disabled/);
 });

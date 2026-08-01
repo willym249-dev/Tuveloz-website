@@ -14,8 +14,15 @@ import {
   providerMatchesJob,
   providerMatchesServiceLocation,
   parseProviderServices,
-  QUOTE_PART_TYPE_OPTIONS,
 } from "../../../lib/service-matching";
+import {
+  PARTS_BILLING_TERMS_VERSION,
+  allInclusivePartsAllowedForServiceCodes,
+  composeQuoteMessage,
+  isAllInclusivePartQuality,
+  isPartsBillingModel,
+  storedPartTypeFor,
+} from "../../../lib/parts-billing";
 import {
   deleteJobImage,
   ImageValidationError,
@@ -48,6 +55,7 @@ import {
 } from "../../../lib/provider-eligibility-engine";
 import { isServiceCode } from "../../../lib/provider-policy";
 import { CUSTOMER_REQUEST_SCOPE_VERSION } from "../../../lib/customer-job-scope";
+import { policyAccepted } from "../../../lib/policies";
 import {
   loadAuthorizedJobScopeFacts,
   loadCurrentAcceptedCustomerRequestScope,
@@ -768,22 +776,33 @@ export async function POST(request: Request) {
   }
 
   const availability = clean(body.availability, 200);
-  const message = clean(body.message, 800);
-  let partType = clean(body.partType, 40);
-  const laborPrice = Number(body.laborPrice ?? body.price);
-  const partsPrice = Number(body.partsPrice ?? 0);
-  const price = laborPrice + partsPrice;
+  const providerMessage = clean(body.message, 800);
+  const partsBillingModel = clean(body.partsBillingModel, 80);
+  const requestedPartQuality = clean(body.partQuality, 40);
+  const partsDescription = clean(body.partsDescription, 600);
+  const servicePrice = Number(body.servicePrice ?? body.laborPrice ?? body.price);
+  const submittedPartsPrice = Number(body.partsPrice ?? 0);
+  const providerPartsTermsAccepted = policyAccepted(body.providerPartsTermsAccepted);
+  const providerPartsTaxConfirmed = policyAccepted(body.providerPartsTaxConfirmed);
   if (
     !availability
-    || !message
-    || !Number.isFinite(laborPrice)
-    || !Number.isFinite(partsPrice)
-    || laborPrice < 0
-    || partsPrice < 0
-    || price <= 0
+    || !providerMessage
+    || !Number.isFinite(servicePrice)
+    || servicePrice <= 0
+    || servicePrice > 1_000_000
+    || !Number.isFinite(submittedPartsPrice)
+    || submittedPartsPrice !== 0
   ) {
     return Response.json({
-      error: "Enter valid labor and parts amounts, with a total greater than $0.",
+      error: "Enter one valid provider service price. Separate parts or materials amounts are disabled.",
+    }, { status: 400 });
+  }
+  if (!isPartsBillingModel(partsBillingModel)) {
+    return Response.json({ error: "Choose a valid parts arrangement." }, { status: 400 });
+  }
+  if (!providerPartsTermsAccepted) {
+    return Response.json({
+      error: "Confirm the selected parts arrangement and no-separate-goods-charge rule.",
     }, { status: 400 });
   }
 
@@ -836,39 +855,55 @@ export async function POST(request: Request) {
       error: "This job’s service-location choice does not match your provider settings.",
     }, { status: 403 });
   }
-  if (job.partsSource === "I have the parts — labor only") {
-    if (partsPrice > 0) {
+  let selectedPartQuality: "OEM" | "Aftermarket" | "" = "";
+  if (partsBillingModel === "provider_all_inclusive") {
+    if (job.partsSource === "I have the parts — labor only") {
       return Response.json({
-        error: "This customer is supplying the parts, so the parts amount must be $0.",
+        error: "This customer is supplying the parts. Provider-supplied parts cannot be added to this quote.",
       }, { status: 400 });
     }
-    partType = "Customer supplied";
-  } else {
-    if (!QUOTE_PART_TYPE_OPTIONS.includes(
-      partType as (typeof QUOTE_PART_TYPE_OPTIONS)[number],
-    )) {
-      return Response.json({ error: "Choose the part type included in this quote." }, { status: 400 });
+    if (!allInclusivePartsAllowedForServiceCodes(serviceCodes)) {
+      return Response.json({
+        error: "The all-inclusive parts method is unavailable for this service because separate tire, fuel, towing, lockout, inspection, or other special rules may apply.",
+        code: "SPECIAL_PARTS_FLOW_REQUIRED",
+      }, { status: 409 });
+    }
+    if (!isAllInclusivePartQuality(requestedPartQuality)) {
+      return Response.json({ error: "Choose OEM or aftermarket for provider-supplied parts." }, { status: 400 });
     }
     if (
       (job.partsPreference === "OEM" || job.partsPreference === "Aftermarket")
-      && partType !== job.partsPreference
-      && partType !== "No parts needed"
+      && requestedPartQuality !== job.partsPreference
     ) {
       return Response.json({
         error: `This customer requested ${job.partsPreference} parts.`,
       }, { status: 400 });
     }
-    if (partType === "No parts needed" && partsPrice !== 0) {
+    if (!partsDescription) {
       return Response.json({
-        error: "Choose a $0 parts price when no parts are needed.",
+        error: "List the parts and materials included in the one service price without listing separate prices.",
       }, { status: 400 });
     }
-    if (partType !== "No parts needed" && partsPrice <= 0) {
+    if (!providerPartsTaxConfirmed) {
       return Response.json({
-        error: "Enter the price for the selected part type.",
+        error: "Confirm your responsibility for applicable sales or use tax on parts and supplies used in this lump-sum repair.",
+      }, { status: 400 });
+    }
+    selectedPartQuality = requestedPartQuality;
+  } else if (partsBillingModel === "customer_supplied") {
+    if (job.partsSource === "Provider supplies parts") {
+      return Response.json({
+        error: "The customer requested provider-supplied parts. Ask the customer to update the request before quoting customer-supplied parts.",
       }, { status: 400 });
     }
   }
+  const partType = storedPartTypeFor(partsBillingModel, selectedPartQuality);
+  const message = composeQuoteMessage({
+    model: partsBillingModel,
+    quality: selectedPartQuality,
+    partsDescription,
+    providerMessage,
+  }).slice(0, 2200);
   const [existingQuote] = await db.select({ id: providerQuotes.id }).from(providerQuotes)
     .where(and(
       eq(providerQuotes.requestId, requestId),
@@ -927,7 +962,8 @@ export async function POST(request: Request) {
     }, { status: 409, headers: { "cache-control": "no-store" } });
   }
 
-  const customerPrice = customerPriceFor(Math.round(price * 100));
+  const servicePriceCents = Math.round(servicePrice * 100);
+  const customerPrice = customerPriceFor(servicePriceCents);
   try {
     await db.insert(providerQuotes).values({
       id: quoteId,
@@ -938,8 +974,8 @@ export async function POST(request: Request) {
       performingPersonId,
       supervisorPersonId: "",
       priceCents: String(customerPrice.providerQuoteCents),
-      laborPriceCents: String(Math.round(laborPrice * 100)),
-      partsPriceCents: String(Math.round(partsPrice * 100)),
+      laborPriceCents: String(customerPrice.providerQuoteCents),
+      partsPriceCents: "0",
       customerFeeRateBps: customerPrice.customerFeeRateBps,
       customerFeeCents: String(customerPrice.customerFeeCents),
       customerTotalCents: String(customerPrice.customerTotalCents),
@@ -972,7 +1008,17 @@ export async function POST(request: Request) {
     toStatus: job.status,
     scopeVersion,
     authorizationSnapshotId: eligibility.decisionId,
-    details: { serviceCodes, scheduledFor: job.scheduledFor, performingPersonId },
+    details: {
+      serviceCodes,
+      scheduledFor: job.scheduledFor,
+      performingPersonId,
+      partsBillingModel,
+      partType,
+      partsDescription,
+      partsBillingTermsVersion: PARTS_BILLING_TERMS_VERSION,
+      noSeparateGoodsChargeConfirmed: providerPartsTermsAccepted,
+      providerTaxResponsibilityConfirmed: providerPartsTaxConfirmed,
+    },
   });
   return Response.json({ ok: true }, { status: 201 });
 }
