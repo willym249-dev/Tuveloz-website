@@ -94,7 +94,8 @@ test("public onboarding and the owner workplan state the Montgomery County pathw
 
   for (const source of [home, page]) {
     assert.match(source, /no unregistered simple-repair lane/i);
-    assert.match(source, /ch_31a_02152011\.pdf/);
+    assert.match(source, /codelibrary\.amlegal\.com\/codes\/montgomerycounty\/latest\/montgomeryco_md\/0-0-0-138743/);
+    assert.doesNotMatch(source, /ch_31a_02152011\.pdf/);
     assert.match(source, /motor-vehicle-repair-maintenance-towing/);
   }
   assert.match(home, /A learning account has no customer work/);
