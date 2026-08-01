@@ -23,7 +23,7 @@ test("identity policy requires an exact normalized signer name and age 18", () =
   assert.equal(verifiedDobIsAdult(null, asOf), false);
 });
 
-test("provider session creation is signed-in, same-origin, consented, bound, and selfie-backed", async () => {
+test("provider session creation is signed-in, same-origin, consented, bound, and uses the reviewed reusable flow", async () => {
   const [route, stripe, schema] = await Promise.all([
     read("app/api/provider-identity-verification/route.ts"),
     read("lib/stripe.ts"),
@@ -41,9 +41,9 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(route, /immutablePerformingPersonName\(evidence\.normalizedSnapshot\)/);
   assert.match(route, /relationshipPath !== "independent_startup"/);
   assert.match(route, /MAX_ATTEMPTS_PER_DAY = 3/);
-  assert.match(route, /type: "document"/);
-  assert.match(route, /require_matching_selfie: true/);
-  assert.match(route, /require_id_number: false/);
+  assert.match(route, /verification_flow: getStripeIdentityVerificationFlowId\(\)/);
+  assert.doesNotMatch(route, /type: "document"/);
+  assert.doesNotMatch(route, /options: \{ document:/);
   assert.match(route, /tuveloz_application_evidence_id/);
   assert.match(route, /externalIdentityAgeVerificationIsCurrent\(person, now\)/);
   assert.match(route, /expiredConfiguredManualIdentityAgeVerificationCanBeReplaced\(person, now\)/);
@@ -83,7 +83,11 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(stripe, /providers\.includes\("stripe_identity"\)/);
   assert.match(stripe, /STRIPE_IDENTITY_WEBHOOK_SECRET/);
   assert.match(stripe, /STRIPE_IDENTITY_SECRET_KEY/);
-  assert.match(stripe, /\^rk_\(\?:test\|live\)_/);
+  assert.match(stripe, /STRIPE_IDENTITY_VERIFICATION_FLOW_ID/);
+  assert.match(stripe, /STRIPE_IDENTITY_LIVE_MODE_ENABLED = false as const/);
+  assert.match(stripe, /STRIPE_IDENTITY_ALLOW_LIVE_MODE/);
+  assert.match(stripe, /value\.startsWith\("rk_test_"\)/);
+  assert.match(stripe, /value\.startsWith\("rk_live_"\)/);
   assert.match(stripe, /getStripeIdentityClient/);
   assert.match(schema, /provider_identity_verification_sessions/);
   for (const prohibited of ["verified_name", "date_of_birth", "dob", "id_number", "document_image", "selfie_image"]) {
@@ -110,6 +114,17 @@ test("identity webhook uses a separate signature, retrieves outputs, and fails c
   assert.match(recorder, /verifiedDobIsAdult\(outputs\.dob, checkedAt\)/);
   assert.match(recorder, /verifiedIdentityNameMatches\(/);
   assert.match(recorder, /providerModeMatches\(row, session\.livemode\)/);
+  assert.match(recorder, /session\.type === "verification_flow"/);
+  assert.match(recorder, /session\.verification_flow === getStripeIdentityVerificationFlowId\(\)/);
+  assert.match(recorder, /require_live_capture === true/);
+  assert.match(recorder, /require_matching_selfie === true/);
+  assert.match(recorder, /require_id_number !== true/);
+  for (const documentType of ["driving_license", "id_card", "passport"]) {
+    assert.ok(recorder.includes(`allowedDocumentTypes.includes("${documentType}")`), documentType);
+  }
+  assert.match(recorder, /session\.options\?\.id_number === undefined/);
+  assert.match(recorder, /session\.options\?\.email\?\.require_verification !== true/);
+  assert.match(recorder, /session\.options\?\.phone\?\.require_verification !== true/);
   assert.match(recorder, /name_mismatch/);
   assert.match(recorder, /underage_or_invalid_dob/);
   assert.match(recorder, /decisionStatus: "approved"/);
