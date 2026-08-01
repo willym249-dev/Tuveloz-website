@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -124,7 +125,10 @@ export function OwnerDashboardGate({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void checkAccess();
+    const timer = window.setTimeout(() => {
+      void checkAccess();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [checkAccess]);
 
   useEffect(() => {
@@ -135,14 +139,17 @@ export function OwnerDashboardGate({ children }: { children: ReactNode }) {
       );
       setChildFailure(failures.some((item) => Boolean(item.textContent?.trim())));
     };
-    detectFailure();
+    const timer = window.setTimeout(detectFailure, 0);
     const observer = new MutationObserver(detectFailure);
     observer.observe(document.body, {
       childList: true,
       characterData: true,
       subtree: true,
     });
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(timer);
+      observer.disconnect();
+    };
   }, [state.mode]);
 
   if (state.mode === "checking") {
@@ -177,7 +184,7 @@ export function OwnerDashboardGate({ children }: { children: ReactNode }) {
                 Owner sign in again
               </button>
             )}
-            <a href="/">Return to Tuveloz</a>
+            <Link href="/">Return to Tuveloz</Link>
           </div>
           <small>
             Customer and provider passwords, sessions, or role selections never satisfy Owner Access.
