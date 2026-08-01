@@ -1,11 +1,11 @@
-import { isVerifiedOwnerRequest } from "../../../../../../lib/owner-auth";
-import { isSameOriginRequest } from "../../../../../../lib/request-security";
+import { isVerifiedOwnerRequest } from "../../../../../lib/owner-auth";
+import { isSameOriginRequest } from "../../../../../lib/request-security";
 import {
   createTuvelozAiRequestDraft,
   TuvelozAiConfigurationError,
   TuvelozAiUpstreamError,
   tuvelozAiEnabled,
-} from "../../../../../../lib/tuveloz-ai";
+} from "../../../../../lib/tuveloz-ai";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
