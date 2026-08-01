@@ -301,6 +301,18 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(authSource.includes('{ name: "HMAC", hash: "SHA-256" }'));
 });
 
+test("homepage prominently links to Tuveloz AI with clear boundaries", async () => {
+  const homeSource = await readFile(
+    new URL("../app/page.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.ok(homeSource.includes('href="https://ai.tuveloz.com/"'));
+  assert.ok(homeSource.includes("A clearer way to describe what your vehicle needs."));
+  assert.ok(homeSource.includes("It does not diagnose, dispatch"));
+  assert.ok(homeSource.includes("guarantee pricing, or choose a provider."));
+});
+
 test("passkeys are optional, verified on the server, and never store biometric data", async () => {
   const [
     accountSource,
