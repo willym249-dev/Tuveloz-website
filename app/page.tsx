@@ -788,6 +788,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
+          <a href="https://ai.tuveloz.com/" onClick={() => setMenuOpen(false)}>Tuveloz AI</a>
           <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
@@ -837,6 +838,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <Link className="button secondary" href="/join">
               Join as a provider
             </Link>
+            <a className="button ai" href="https://ai.tuveloz.com/">
+              Try Tuveloz AI <span>✦</span>
+            </a>
           </div>
           <div className="hero-launch-note">
             <strong>Provider onboarding now in Montgomery County, Maryland</strong>
@@ -893,6 +897,23 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <span><b>Exact services</b> default blocked</span>
         <span><b>Apply</b> for provider review</span>
       </section>
+
+      {view === "home" && (
+        <section className="ai-home-card" aria-labelledby="tuveloz-ai-heading">
+          <div className="ai-home-copy">
+            <span className="kicker">Available now · Tuveloz AI</span>
+            <h2 id="tuveloz-ai-heading">A clearer way to describe what your vehicle needs.</h2>
+            <p>
+              Get bilingual, safety-first guidance that helps you organize observations
+              and prepare for future service requests. It does not diagnose, dispatch
+              help, guarantee pricing, or choose a provider.
+            </p>
+          </div>
+          <a className="button ai" href="https://ai.tuveloz.com/">
+            Open Tuveloz AI <span>→</span>
+          </a>
+        </section>
+      )}
 
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
@@ -2393,6 +2414,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
+          <a href="https://ai.tuveloz.com/">Tuveloz AI</a>
           <Link href="/post-job">Customer launch status</Link>
           <Link href="/join">Join as a provider</Link>
           <Link href="/how-it-works">How it works</Link>
