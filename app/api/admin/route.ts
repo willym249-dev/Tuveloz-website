@@ -8,24 +8,17 @@ import {
   providerCredentialVerifications,
   providerQuotes,
 } from "../../../db/schema";
+import {
+  OWNER_NO_STORE_HEADERS,
+  ownerDataFailureResponse,
+  ownerVerificationFailureResponse,
+} from "../../../lib/owner-api-response";
 import { verifyOwnerRequest } from "../../../lib/owner-auth";
 
 export async function GET(request: Request) {
   const verification = await verifyOwnerRequest(request);
   if (!verification.ok) {
-    const configurationMissing = verification.reason === "owner-config-missing";
-    return Response.json(
-      {
-        error: configurationMissing
-          ? "Owner access is not fully configured on this deployment."
-          : "Cloudflare could not verify this owner session. Sign in with hello@tuveloz.com.",
-        reason: verification.reason,
-      },
-      {
-        status: configurationMissing ? 503 : 403,
-        headers: { "cache-control": "no-store" },
-      },
-    );
+    return ownerVerificationFailureResponse(verification);
   }
 
   try {
@@ -63,10 +56,9 @@ export async function GET(request: Request) {
     });
     return Response.json(
       { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion },
-      { headers: { "cache-control": "no-store" } },
+      { headers: OWNER_NO_STORE_HEADERS },
     );
   } catch (error) {
-    console.error("Unable to load admin dashboard", error);
-    return Response.json({ error: "Unable to load submissions." }, { status: 500 });
+    return ownerDataFailureResponse(error, "primary data load");
   }
 }
