@@ -1,11 +1,6 @@
 name: Apply customer-supplied parts preferences
 
 on:
-  push:
-    branches:
-      - agent/customer-supplied-parts-preferences
-    paths:
-      - .github/workflows/apply-customer-supplied-parts-preferences.yml
   pull_request:
     branches:
       - main
@@ -23,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: apply-customer-supplied-parts-preferences
+  group: apply-customer-supplied-parts-preferences-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
