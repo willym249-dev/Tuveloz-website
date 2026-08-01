@@ -4,59 +4,46 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-type AccountSummary = {
-  role?: "customer" | "provider";
-};
-
+/**
+ * Owner access stays separate from customer and provider navigation.
+ *
+ * Customer and provider workspaces already contain their own role-specific tools,
+ * so this global floating control is intentionally hidden from ordinary signed-in
+ * users. It appears only on the account page as an owner sign-in entry or after
+ * Cloudflare Access has verified the owner session.
+ */
 export function AccountToolsDock() {
   const pathname = usePathname();
-  const [role, setRole] = useState<"customer" | "provider" | "">("");
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     let active = true;
     const timer = window.setTimeout(() => {
-      void Promise.all([
-        fetch("/api/account", { cache: "no-store" })
-          .then(async (response) => response.ok ? await response.json() as AccountSummary : {}),
-        fetch("/api/owner-access", { cache: "no-store" })
-          .then(async (response) => response.ok ? await response.json() as { isOwner?: boolean } : {}),
-      ]).then(([account, owner]) => {
-        if (!active) return;
-        setRole(account.role === "customer" || account.role === "provider" ? account.role : "");
-        setIsOwner(owner.isOwner === true);
-      }).catch(() => {
-        // Public visitors simply do not see private account shortcuts.
-      });
+      void fetch("/api/owner-access", { cache: "no-store" })
+        .then(async (response) => response.ok ? await response.json() as { isOwner?: boolean } : {})
+        .then((owner) => {
+          if (active) setIsOwner(owner.isOwner === true);
+        })
+        .catch(() => {
+          // Public visitors and ordinary accounts do not see owner controls.
+        });
     }, 0);
+
     return () => {
       active = false;
       window.clearTimeout(timer);
     };
   }, []);
 
-  useEffect(() => {
-    if (!role) return;
-    const deliver = () => {
-      void fetch("/api/notifications", { cache: "no-store" }).catch(() => undefined);
-    };
-    const timer = window.setTimeout(deliver, 0);
-    const interval = window.setInterval(deliver, 20_000);
-    return () => {
-      window.clearTimeout(timer);
-      window.clearInterval(interval);
-    };
-  }, [role]);
-
   const ownerEntryAvailable = pathname === "/account";
-  if (!role && !isOwner && !ownerEntryAvailable) return null;
+  if (!isOwner && !ownerEntryAvailable) return null;
 
   const dockStyle = {
     position: "fixed" as const,
     right: "1rem",
     bottom: "1rem",
     zIndex: 80,
-    maxWidth: "min(22rem, calc(100vw - 2rem))",
+    maxWidth: "min(18rem, calc(100vw - 2rem))",
     border: "1px solid rgba(255,255,255,.18)",
     borderRadius: "1rem",
     background: "rgba(7, 24, 45, .96)",
@@ -64,6 +51,7 @@ export function AccountToolsDock() {
     color: "white",
     padding: ".7rem .85rem",
   };
+
   const linkStyle = {
     display: "block",
     padding: ".55rem .65rem",
@@ -75,51 +63,21 @@ export function AccountToolsDock() {
   return (
     <details style={dockStyle}>
       <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-        {isOwner
-          ? "Tuveloz account & admin tools"
-          : role
-            ? "Tuveloz account tools"
-            : "Tuveloz owner access"}
+        {isOwner ? "Owner Tools" : "Owner/admin sign in"}
       </summary>
-      <nav aria-label="Tuveloz account tools" style={{ display: "grid", gap: ".15rem", marginTop: ".55rem" }}>
-        {role === "customer" && (
-          <>
-            <Link href="/customer" style={linkStyle}>Customer workspace</Link>
-            <Link href="/appointments" style={linkStyle}>Appointments</Link>
-            <Link href="/tracking" style={linkStyle}>Provider tracking & job status</Link>
-            <Link href="/job-authorizations" style={linkStyle}>Job agreements</Link>
-            <Link href="/job-authorizations/documents" style={linkStyle}>Estimates, invoices & receipts</Link>
-            <Link href="/notifications" style={linkStyle}>Notifications</Link>
-          </>
+      <nav aria-label="Tuveloz owner tools" style={{ display: "grid", gap: ".15rem", marginTop: ".55rem" }}>
+        <Link href="/admin" style={linkStyle}>
+          {isOwner ? "Open Owner Control Center" : "Continue to secure owner sign in"}
+        </Link>
+        {isOwner && (
+          <Link href="/admin/marketplace-tools" style={linkStyle}>
+            Marketplace operations
+          </Link>
         )}
-        {role === "provider" && (
-          <>
-            <Link href="/provider-jobs" style={linkStyle}>Provider workspace</Link>
-            <Link href="/provider-jobs/toolkit" style={linkStyle}>Quote templates</Link>
-            <Link href="/provider-services" style={linkStyle}>Services, prices & credentials</Link>
-            <Link href="/provider-service-area" style={linkStyle}>Service area</Link>
-            <Link href="/appointments" style={linkStyle}>Appointments</Link>
-            <Link href="/tracking" style={linkStyle}>Share trip location</Link>
-            <Link href="/job-authorizations" style={linkStyle}>Job agreements & change orders</Link>
-            <Link href="/job-authorizations/documents" style={linkStyle}>Invoices & job documents</Link>
-            <Link href="/notifications" style={linkStyle}>Notifications</Link>
-          </>
-        )}
-        {(isOwner || ownerEntryAvailable) && (
-          <>
-            <hr style={{ border: 0, borderTop: "1px solid rgba(255,255,255,.18)", width: "100%" }} />
-            <Link href="/admin" style={linkStyle}>
-              {isOwner ? "Owner admin dashboard" : "Owner/admin sign in"}
-            </Link>
-            {isOwner && (
-              <Link href="/admin/marketplace-tools" style={linkStyle}>Appointments & credential review</Link>
-            )}
-            {!isOwner && ownerEntryAvailable && (
-              <small style={{ display: "block", padding: ".25rem .65rem", opacity: .78, lineHeight: 1.4 }}>
-                Admin access uses separate Cloudflare Access owner verification. A customer or provider sign-in does not grant admin rights.
-              </small>
-            )}
-          </>
+        {!isOwner && ownerEntryAvailable && (
+          <small style={{ display: "block", padding: ".25rem .65rem", opacity: .78, lineHeight: 1.4 }}>
+            Cloudflare Access verifies the owner separately. Customer and provider accounts cannot grant owner access.
+          </small>
         )}
       </nav>
     </details>
