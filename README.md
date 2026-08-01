@@ -24,6 +24,7 @@ deployment credentials, API keys, or production environment values.
 - Platform products, hosted Checkout, signed webhooks, and a simple storefront
 - Destination Charges for storefront products and owner-released transfers for completed quote jobs
 - Owner dashboard, customer profile oversight, provider verification, and privacy-request review controls
+- Owner-only Tuveloz AI request-drafting test lab, disabled by default and unable to submit jobs or payments
 - Cloudflare D1 schema and migrations
 - Cloudflare R2 image storage integration
 - Optional Resend email notifications
@@ -94,6 +95,10 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete GitHub and Cloudflare setup.
 
 - Never commit `.env`, `.dev.vars`, API tokens, or database exports.
 - Keep `AUTH_CODE_SECRET` private and use at least 32 random characters.
+- Keep `TUVELOZ_AI_ENABLED=false` until the owner-only test is ready, store
+  `OPENAI_API_KEY` only as a Cloudflare secret, and never expose it to browser code.
+- The initial Tuveloz AI feature creates review-only drafts. It does not diagnose,
+  submit jobs, contact providers, select providers, set prices, or process payments.
 - Sign-in codes are stored only as keyed hashes, expire after 10 minutes, and
   are limited to five verification attempts.
 - Provider account sessions are granted only to approved, verified, non-test
