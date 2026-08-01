@@ -5,7 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { JobMessages } from "../components/job-messages";
-import { MarketPriceLinks } from "../components/market-price-links";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
 import { StripeConnectPanel } from "../components/stripe-connect-panel";
@@ -15,9 +14,8 @@ import {
   parseJobServices,
   parseProviderServices,
   parseProviderWorkLocations,
-  PARTS_SOURCE_OPTIONS,
+  PARTS_COMMUNICATION_NOTICE,
   providerModeForWorkLocations,
-  QUOTE_PART_TYPE_OPTIONS,
 } from "../../lib/service-matching";
 import {
   JOB_HIGH_VOLTAGE_STATUS_VALUES,
@@ -101,10 +99,9 @@ type Provider = {
 type PendingQuote = {
   requestId: string;
   laborPrice: string;
-  partsPrice: string;
-  partType: string;
   availability: string;
   message: string;
+  laborOnlyConfirmed: boolean;
 };
 type PendingStatus = {
   requestId: string;
@@ -129,24 +126,6 @@ const nextStatus: Record<string, { value: string; label: string }> = {
   "arrived": { value: "completed", label: "Mark job completed" },
 };
 
-function PartTypeHelp() {
-  return (
-    <details className="legal-help">
-      <summary aria-label="What do the part types mean?">?</summary>
-      <span>
-        OEM means a part made for the vehicle brand. Aftermarket means a compatible
-        part made by another company. Choose “No parts needed” only when the quote
-        includes labor without a new part.
-      </span>
-    </details>
-  );
-}
-
-function defaultPartType(preference: string) {
-  return preference === "OEM" || preference === "Aftermarket"
-    ? preference
-    : "Aftermarket";
-}
 
 function requestAgeLabel(createdAt: string, now: number | null) {
   if (!now) return "Recently posted";
@@ -265,10 +244,9 @@ export default function ProviderJobsPage() {
     setPendingQuote({
       requestId,
       laborPrice: String(values.laborPrice ?? ""),
-      partsPrice: String(values.partsPrice ?? "0"),
-      partType: String(values.partType ?? "Customer supplied"),
       availability: String(values.availability ?? ""),
       message: String(values.message ?? ""),
+      laborOnlyConfirmed: values.laborOnlyConfirmed === "yes",
     });
   }
 
@@ -536,10 +514,6 @@ export default function ProviderJobsPage() {
     (total, job) => total + Number(job.laborPriceCents),
     0,
   );
-  const completedPartsCents = completedJobs.reduce(
-    (total, job) => total + Number(job.partsPriceCents),
-    0,
-  );
   const trackedSecondsTotal = assignedJobs.reduce(
     (total, job) => total + trackedSecondsNow(job, now),
     0,
@@ -727,21 +701,13 @@ export default function ProviderJobsPage() {
                     <p>{job.vehicle} · {job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
                     <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
                     <p>
-                      Parts: {job.partsSource}
-                      {job.partsSource !== PARTS_SOURCE_OPTIONS[0] ? ` · ${job.partsPreference}` : ""}
+                      Parts arrangement: {job.partsSource} · Preference: {job.partsPreference}
                     </p>
+                    <p className="admin-note">{PARTS_COMMUNICATION_NOTICE}</p>
                     <dl className="quote-breakdown compact">
-                      <div><dt>Labor</dt><dd>${(Number(job.laborPriceCents) / 100).toFixed(2)}</dd></div>
-                      {job.partsSource !== PARTS_SOURCE_OPTIONS[0] && (
-                        <div>
-                          <dt>
-                            Parts
-                            {job.partType === "Not specified" ? "" : ` (${job.partType})`}
-                          </dt>
-                          <dd>${(Number(job.partsPriceCents) / 100).toFixed(2)}</dd>
-                        </div>
-                      )}
-                      <div className="total"><dt>Total</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
+                      <div><dt>Labor-only provider amount</dt><dd>${(Number(job.laborPriceCents) / 100).toFixed(2)}</dd></div>
+                      <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
+                      <div className="total"><dt>Provider labor subtotal</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
                     </dl>
                     <blockquote>{job.details}</blockquote>
                     {job.hasIssueImage && (
@@ -841,13 +807,14 @@ export default function ProviderJobsPage() {
                           />
                         </label>
                         <label>
-                          Parts and receipt notes
+                          Customer-supplied parts notes
                           <textarea
                             name="partsNotes"
                             rows={2}
                             defaultValue={job.partsNotes}
-                            placeholder="Part name, brand, number, supplier, or receipt reference"
+                            placeholder="Customer-supplied part name, brand, number, fitment note, or customer receipt reference"
                           />
+                          <small>This private record does not add a parts charge to the Tuveloz payment.</small>
                         </label>
                         {pendingRecordId === job.id ? (
                           <ConfirmAction
@@ -1047,10 +1014,10 @@ export default function ProviderJobsPage() {
                   <h2>{parseJobServices(quote.service).join(" + ")}</h2>
                   <p>{quote.vehicle} · {quote.launchArea || `ZIP ${quote.zip}`} · {quote.municipality}</p>
                   <dl className="quote-breakdown compact">
-                    <div><dt>Labor</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Parts ({quote.partType})</dt><dd>${(Number(quote.partsPriceCents) / 100).toFixed(2)}</dd></div>
-                    <div className="total"><dt>Your subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Customer sees</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Labor-only amount</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
+                    <div className="total"><dt>Your labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer total with Tuveloz fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <p><strong>Availability:</strong> {quote.availability}</p>
                   <blockquote>{quote.message}</blockquote>
@@ -1082,9 +1049,9 @@ export default function ProviderJobsPage() {
                   <h2>{parseJobServices(job.service).join(" + ")}</h2>
                   <p>{job.vehicle} · {job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
                   <dl className="quote-breakdown compact">
-                    <div><dt>Labor</dt><dd>${(Number(job.laborPriceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Parts</dt><dd>${(Number(job.partsPriceCents) / 100).toFixed(2)}</dd></div>
-                    <div className="total"><dt>Accepted quote subtotal</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Labor-only amount</dt><dd>${(Number(job.laborPriceCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
+                    <div className="total"><dt>Accepted labor subtotal</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <div className="completed-record">
                     <span>Actual time <strong>{durationLabel(trackedSecondsNow(job, now))}</strong></span>
@@ -1113,9 +1080,9 @@ export default function ProviderJobsPage() {
             <p>Completed job value is the sum of accepted quote subtotals for jobs marked completed. It is not a Stripe payout or transfer status.</p>
           </div>
           <div className="earnings-grid">
-            <div><span>Completed job value</span><strong>${(completedJobValueCents / 100).toFixed(2)}</strong></div>
+            <div><span>Completed labor value</span><strong>${(completedJobValueCents / 100).toFixed(2)}</strong></div>
             <div><span>Labor</span><strong>${(completedLaborCents / 100).toFixed(2)}</strong></div>
-            <div><span>Parts</span><strong>${(completedPartsCents / 100).toFixed(2)}</strong></div>
+            <div><span>Parts charged through Tuveloz</span><strong>$0.00</strong></div>
             <div><span>Actual time</span><strong>{durationLabel(trackedSecondsTotal)}</strong></div>
             <div><span>Billable time</span><strong>{durationLabel(billableMinutesTotal * 60)}</strong></div>
           </div>
@@ -1164,16 +1131,9 @@ export default function ProviderJobsPage() {
             <p>{job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
             <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
             <p>
-              Parts: {job.partsSource}
-              {job.partsSource !== PARTS_SOURCE_OPTIONS[0] ? ` · ${job.partsPreference}` : ""}
+              Parts arrangement: {job.partsSource} · Preference: {job.partsPreference}
             </p>
-            {job.partsSource !== PARTS_SOURCE_OPTIONS[0] && (
-              <MarketPriceLinks
-                vehicle={job.vehicle}
-                service={job.service}
-                preference={job.partsPreference}
-              />
-            )}
+            <p className="admin-note">{PARTS_COMMUNICATION_NOTICE}</p>
             <blockquote>{job.details}</blockquote>
             {job.hasIssueImage && (
               <figure className="job-photo">
@@ -1190,7 +1150,7 @@ export default function ProviderJobsPage() {
                 <form onSubmit={(event) => reviewQuote(event, job.id)}>
                   <div className="quote-breakdown-fields">
                     <label>
-                      Labor ($)
+                      Labor-only amount ($)
                       <input
                         disabled={pendingQuote?.requestId === job.id}
                         required
@@ -1201,55 +1161,35 @@ export default function ProviderJobsPage() {
                         placeholder="0.00"
                       />
                     </label>
-                    {job.partsSource === PARTS_SOURCE_OPTIONS[0] ? (
-                      <>
-                        <input name="partsPrice" type="hidden" value="0" />
-                        <input name="partType" type="hidden" value="Customer supplied" />
-                      </>
-                    ) : (
-                      <>
-                        <label>
-                          <span className="field-label-with-help">
-                            Part type
-                            <PartTypeHelp />
-                          </span>
-                          <select
-                            defaultValue={defaultPartType(job.partsPreference)}
-                            disabled={pendingQuote?.requestId === job.id}
-                            name="partType"
-                            required
-                          >
-                            {QUOTE_PART_TYPE_OPTIONS.map((option) => (
-                              <option key={option}>{option}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label>
-                          Parts price ($)
-                          <input
-                            defaultValue="0"
-                            disabled={pendingQuote?.requestId === job.id}
-                            required
-                            name="partsPrice"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                          />
-                        </label>
-                      </>
-                    )}
+                    <div className="fixed-launch-area">
+                      <span>Parts charged through Tuveloz</span>
+                      <strong>$0.00</strong>
+                    </div>
                   </div>
                   <input disabled={pendingQuote?.requestId === job.id} required name="availability" placeholder="Availability, e.g. Saturday 10–2" />
-                  <textarea disabled={pendingQuote?.requestId === job.id} required name="message" rows={3} placeholder="Explain what the labor and parts amounts include." />
+                  <textarea disabled={pendingQuote?.requestId === job.id} required name="message" rows={3} placeholder="Explain the labor included, exclusions, timing, and any customer-supplied-part assumptions. Do not include a parts price." />
+                  <label className="policy-consent">
+                    <input
+                      disabled={pendingQuote?.requestId === job.id}
+                      name="laborOnlyConfirmed"
+                      required
+                      type="checkbox"
+                      value="yes"
+                    />
+                    <span>
+                      I confirm this quote is for labor only. It contains no provider-supplied
+                      part, parts reimbursement, parts tax, or other parts charge.
+                    </span>
+                  </label>
                   {pendingQuote?.requestId !== job.id && <button className="button primary" type="submit">Review quote →</button>}
                 </form>
                 {pendingQuote?.requestId === job.id && (
                   <div className="quote-confirm action-confirm" role="group" aria-label="Confirm quote submission">
                     <strong>Submit this quote?</strong>
                     <p>
-                      Labor ${(Number(pendingQuote.laborPrice) || 0).toFixed(2)} + {pendingQuote.partType.toLowerCase()} ${(Number(pendingQuote.partsPrice) || 0).toFixed(2)}
-                      {" "}makes a ${(Number(pendingQuote.laborPrice || 0) + Number(pendingQuote.partsPrice || 0)).toFixed(2)} total.
-                      Availability: “{pendingQuote.availability}.” Please confirm the details are correct.
+                      Labor-only amount ${(Number(pendingQuote.laborPrice) || 0).toFixed(2)}.
+                      Parts charged through Tuveloz: $0.00. Availability: “{pendingQuote.availability}.”
+                      Please confirm the labor scope and details are correct.
                     </p>
                     <div>
                       <button

@@ -12,7 +12,10 @@ import {
   storeProviderImage,
   validateProviderImage,
 } from "../../../lib/provider-media";
-import { parseProviderServices } from "../../../lib/service-matching";
+import {
+  CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS,
+  parseProviderServices,
+} from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../../lib/quote-feedback";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { marketplacePausedMessage } from "../../../lib/launch-status";
@@ -88,6 +91,7 @@ async function ensureProfile(
     availabilityStatus: "Available now",
     availabilityNote: "",
     businessHours: "",
+    customerSuppliedPartsPolicy: "Discuss before accepting",
     logoImageKey: "",
     logoImageType: "",
     publicStatus: "draft",
@@ -227,6 +231,7 @@ async function responseData(
     availabilityStatus: "Available now",
     availabilityNote: "",
     businessHours: "",
+    customerSuppliedPartsPolicy: "Discuss before accepting",
     publicStatus: "draft",
     hasLogo: false,
   };
@@ -240,6 +245,7 @@ async function responseData(
     availabilityStatus: storedProfile.availabilityStatus,
     availabilityNote: storedProfile.availabilityNote,
     businessHours: storedProfile.businessHours,
+    customerSuppliedPartsPolicy: storedProfile.customerSuppliedPartsPolicy,
     publicStatus: storedProfile.publicStatus,
     hasLogo: Boolean(storedProfile.logoImageKey),
   } : defaultProfile;
@@ -317,6 +323,10 @@ export async function POST(request: Request) {
     const availabilityStatus = clean(payload.availabilityStatus, 40);
     const availabilityNote = clean(payload.availabilityNote, 160);
     const businessHours = clean(payload.businessHours, 220);
+    const customerSuppliedPartsPolicy = clean(
+      payload.customerSuppliedPartsPolicy,
+      40,
+    );
     const publicationRequested = payload.publicStatus === "published";
     const existing = await profileFor(provider.id);
     const publicClaimsChanged = !existing || [
@@ -327,6 +337,7 @@ export async function POST(request: Request) {
       existing.availabilityStatus !== availabilityStatus,
       existing.availabilityNote !== availabilityNote,
       existing.businessHours !== businessHours,
+      existing.customerSuppliedPartsPolicy !== customerSuppliedPartsPolicy,
     ].some(Boolean);
     const publicStatus = publicationRequested
       ? existing?.publicStatus === "published" && !publicClaimsChanged
@@ -338,6 +349,16 @@ export async function POST(request: Request) {
     }
     if (!AVAILABILITY_STATUSES.has(availabilityStatus)) {
       return Response.json({ error: "Choose a listed availability status." }, { status: 400 });
+    }
+    if (!CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS.includes(
+      customerSuppliedPartsPolicy as (
+        typeof CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS
+      )[number],
+    )) {
+      return Response.json(
+        { error: "Choose a listed customer-supplied-parts preference." },
+        { status: 400 },
+      );
     }
     if (publicationRequested) {
       if (provider.verificationStatus !== "verified" || provider.isTestProvider === "yes") {
@@ -393,6 +414,7 @@ export async function POST(request: Request) {
       availabilityStatus,
       availabilityNote,
       businessHours,
+      customerSuppliedPartsPolicy,
       logoImageKey: existing?.logoImageKey || "",
       logoImageType: existing?.logoImageType || "",
       publicStatus,
@@ -408,6 +430,7 @@ export async function POST(request: Request) {
         availabilityStatus,
         availabilityNote,
         businessHours,
+        customerSuppliedPartsPolicy,
         publicStatus,
         updatedAt: now,
       },

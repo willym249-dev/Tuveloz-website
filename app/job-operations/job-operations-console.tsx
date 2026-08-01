@@ -215,10 +215,7 @@ function OperationForm({
 }
 
 const amountFields: Field[] = [
-  { name: "laborAmountCents", label: "Labor amount (cents)", type: "number", min: 0, required: true },
-  { name: "partsAmountCents", label: "Parts amount (cents)", type: "number", min: 0, required: true },
-  { name: "taxAmountCents", label: "Tax amount (cents)", type: "number", min: 0, required: true },
-  { name: "otherAmountCents", label: "Other amount (cents)", type: "number", min: 0, required: true },
+  { name: "laborAmountCents", label: "Labor-only amount (cents)", type: "number", min: 0, required: true },
 ];
 
 export function JobOperationsConsole() {
@@ -352,7 +349,7 @@ export function JobOperationsConsole() {
                     { name: "prohibitedOperationsAttestedAbsent", label: "Attest every prohibited operation or condition is absent (exact codes, comma-separated)", type: "comma-list", required: true, placeholder: currentProhibitedOperations.join(", ") },
                     { name: "scopeDescription", label: "Complete changed scope", type: "textarea", required: true },
                     { name: "reason", label: "Reason for change", type: "textarea", required: true },
-                    { name: "partsResponsibility", label: "Who supplies and owns the parts", required: true },
+                    { name: "partsResponsibility", label: "Parts arrangement", defaultValue: "Customer supplies any needed parts separately", required: true },
                     { name: "scheduledFor", label: "Customer-approved changed work time (blank keeps current schedule)", type: "datetime-local" },
                     { name: "jobLocationType", label: "Exact work-location type", type: "select", required: true, options: [...JOB_LOCATION_TYPE_OPTIONS] },
                     { name: "serviceAddress", label: "Exact service address or roadside position", required: true },
@@ -374,9 +371,9 @@ export function JobOperationsConsole() {
                   fields={[
                     { name: "status", label: "Invoice status", type: "select", required: true, options: [{ label: "Draft", value: "draft" }, { label: "Final", value: "final" }] },
                     ...amountFields,
-                    { name: "totalAmountCents", label: "Total amount (cents; must equal all items)", type: "number", min: 0, required: true },
+                    { name: "totalAmountCents", label: "Total (cents; must equal the labor-only amount)", type: "number", min: 0, required: true },
                     { name: "workSummary", label: "Work summary", type: "textarea", required: true },
-                    { name: "partsDescription", label: "Parts description", type: "textarea" },
+                    { name: "partsDescription", label: "Customer-supplied parts installed (description only; no price)", type: "textarea" },
                     { name: "returnedPartsChoice", label: "Returned-parts treatment", type: "select", required: true, options: [{ label: "Returned", value: "returned" }, { label: "Customer declined", value: "customer_declined" }, { label: "Not applicable", value: "not_applicable" }] },
                     { name: "warrantyProvider", label: "Warranty source", type: "select", required: true, options: [{ label: "Provider business", value: "provider_business" }, { label: "Manufacturer", value: "manufacturer" }, { label: "No written warranty disclosed", value: "none_disclosed" }] },
                     { name: "warrantyTerms", label: "Specific warranty terms or no-warranty disclosure", type: "textarea", required: true },
@@ -401,7 +398,6 @@ export function JobOperationsConsole() {
                     ] },
                     { name: "reason", label: "What happened", type: "textarea", required: true },
                     { name: "providerTravelStarted", label: "Provider travel had started", type: "checkbox" },
-                    { name: "partsCommittedCents", label: "Claimed committed parts (provider only, cents)", type: "number", min: 0, defaultValue: 0 },
                     { name: "workPerformedCents", label: "Claimed authorized work performed (provider only, cents)", type: "number", min: 0, defaultValue: 0 },
                   ]}
                   warning="This stops work for review. It does not calculate or send a refund."
@@ -583,7 +579,7 @@ export function JobOperationsConsole() {
           </section>
 
           <RecordSection title="Cancellations and no-shows" records={data.cancellations} empty="No cancellation or no-show record exists.">
-            {(item) => <><h3>{words(item.cancellationType)}</h3><p><strong>Status:</strong> {words(item.status)} / <strong>Reported by:</strong> {words(item.requestedByRole)} / <strong>Notice:</strong> {words(item.noticeHours)} hours</p><p>{words(item.reason)}</p><p>Parts claimed: {money(item.partsCommittedCents)} / authorized work claimed: {money(item.workPerformedCents)} / proposed refund: {money(item.proposedRefundCents)} / retained: {money(item.retainedAmountCents)}</p>{item.decisionReason && <p><strong>Decision:</strong> {words(item.decisionReason)}</p>}</>}
+            {(item) => <><h3>{words(item.cancellationType)}</h3><p><strong>Status:</strong> {words(item.status)} / <strong>Reported by:</strong> {words(item.requestedByRole)} / <strong>Notice:</strong> {words(item.noticeHours)} hours</p><p>{words(item.reason)}</p><p>Parts through Tuveloz: {money(item.partsCommittedCents)} / authorized labor claimed: {money(item.workPerformedCents)} / proposed refund: {money(item.proposedRefundCents)} / retained: {money(item.retainedAmountCents)}</p>{item.decisionReason && <p><strong>Decision:</strong> {words(item.decisionReason)}</p>}</>}
           </RecordSection>
 
           <RecordSection title="Incidents, claims, and stop-work" records={data.incidents} empty="No incident or claim record exists.">
@@ -595,7 +591,7 @@ export function JobOperationsConsole() {
           </RecordSection>
 
           <RecordSection title="Provider invoices and warranty" records={data.invoices} empty="No provider invoice exists.">
-            {(item) => <><h3>{words(item.invoiceNumber)} / {words(item.status)}</h3><p>Labor {money(item.laborAmountCents)} / parts {money(item.partsAmountCents)} / tax {money(item.taxAmountCents)} / other {money(item.otherAmountCents)} / <strong>total {money(item.totalAmountCents)}</strong></p><p>{words(item.workSummary)}</p><p><strong>Parts:</strong> {words(item.partsDescription)} / {words(item.returnedPartsChoice)}</p><p><strong>Warranty:</strong> {words(item.warrantyProvider)} -- {words(item.warrantyTerms)}</p></>}
+            {(item) => <><h3>{words(item.invoiceNumber)} / {words(item.status)}</h3><p>Labor {money(item.laborAmountCents)} / parts through Tuveloz {money(item.partsAmountCents)} / tax {money(item.taxAmountCents)} / other {money(item.otherAmountCents)} / <strong>total {money(item.totalAmountCents)}</strong></p><p>{words(item.workSummary)}</p><p><strong>Parts:</strong> {words(item.partsDescription)} / {words(item.returnedPartsChoice)}</p><p><strong>Warranty:</strong> {words(item.warrantyProvider)} -- {words(item.warrantyTerms)}</p></>}
           </RecordSection>
 
           <RecordSection title="Refunds, reserves, and disputes" records={data.paymentAdjustments} empty="No payment adjustment or hold exists.">

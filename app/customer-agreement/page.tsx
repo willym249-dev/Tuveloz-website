@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -63,10 +63,11 @@ export default function CustomerAgreementPage() {
         </p>
         <p>
           Accepting a quote creates a direct service agreement between you and
-          the responsible provider business. The accepted quote and messages
+          the responsible provider business. The accepted labor-only quote and messages
           define the work. The provider business controls any approved employee
-          or sponsored-trainee assignment. No added work, substitute part, or
-          price increase is approved unless you agree. This direct agreement
+          or sponsored-trainee assignment. OEM or aftermarket selections only
+          communicate your preference for a part you purchase separately. No added
+          work or labor-price increase is approved unless you agree. This direct agreement
           does not waive any non-waivable duty that law places on Tuveloz.
         </p>
         <p>
@@ -93,9 +94,11 @@ export default function CustomerAgreementPage() {
           A diagnosis or pre-purchase opinion may be limited by what can
           reasonably be observed and tested at the location. It is not an
           official state inspection unless an authorized provider expressly says
-          so. The provider business should identify parts and who offers any
-          express warranty in the service records. Implied or statutory warranty
-          rights and duties remain governed by applicable law.
+          so. Tuveloz does not sell, source, verify, reimburse, or process payment
+          for parts. You must purchase any required part separately. The provider
+          should identify the customer-supplied part and any applicable workmanship
+          limitation in the service records. Implied or statutory warranty rights
+          and duties remain governed by applicable law.
         </p>
       </section>
 

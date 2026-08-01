@@ -6,7 +6,7 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers • Operational review draft"
       title="Provider Agreement"
       summary="An operational review draft for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="July 31, 2026"
+      updated="August 1, 2026"
     >
       <section>
         <h2>1. Draft status and related policies</h2>
@@ -38,9 +38,10 @@ export default function ProviderAgreementPage() {
           Tuveloz operates marketplace, payment, eligibility, record, and
           support features. The provider business that appears on the accepted
           quote is the vehicle-service provider and contracts directly with the
-          customer. It is responsible for its services, personnel, tools, parts,
-          estimates, authorizations, invoices, taxes, insurance, workmanship,
-          safety practices, records, and provider warranties.
+          customer. It is responsible for its services, personnel, tools, handling
+          of customer-supplied parts, estimates, authorizations, service records,
+          taxes imposed on it outside the Tuveloz labor-only transaction, insurance,
+          workmanship, safety practices, records, and provider warranties.
         </p>
         <p>
           Tuveloz does not become the vehicle-service provider or the employer of
@@ -61,8 +62,8 @@ export default function ProviderAgreementPage() {
           and must satisfy the business registration, tax, payout, insurance,
           competency, location, and exact-service requirements in the approved
           matrix. The owner-operator controls lawful methods, tools, scheduling,
-          pricing, and whether to pursue a request, subject to the accepted quote
-          and platform safety rules.
+          labor pricing, and whether to pursue a request, subject to the accepted
+          labor-only quote and platform safety rules.
         </p>
         <h3>Sponsored trainee employee</h3>
         <p>
@@ -132,9 +133,10 @@ export default function ProviderAgreementPage() {
         <h2>6. Provider-business control of each job</h2>
         <p>
           The provider business decides whether to pursue a request, sets or
-          approves the quote, accepts the customer contract, assigns the
-          performing person, sets lawful work methods, supplies or approves tools
-          and parts, controls scheduling, and determines the supervision required
+          approves the labor-only quote, accepts the customer contract, assigns the
+          performing person, sets lawful work methods, supplies or approves tools,
+          confirms whether it is willing to install the customer&apos;s separately
+          purchased part, controls scheduling, and determines the supervision required
           by the approved service procedure. Tuveloz may enforce platform gates
           but does not assign or supervise a sponsored trainee on the provider
           business&apos;s behalf.
@@ -181,13 +183,16 @@ export default function ProviderAgreementPage() {
       <section>
         <h2>8. Quotes and direct customer contracts</h2>
         <p>
-          The provider business sets or approves each quote and must clearly state
-          the enabled service code, labor, parts and part type, assumptions,
-          exclusions, timing, taxes, other lawful charges, and provider warranty.
-          Customer acceptance forms a direct service agreement with the provider
-          business. Added work, a substituted part, a different person, or a
-          price change requires the provider business&apos;s approval and the
-          customer&apos;s documented authorization when applicable.
+          The provider business sets or approves each labor-only quote and must
+          clearly state the enabled service code, labor scope, customer-supplied-part
+          assumptions, exclusions, timing, labor price, and workmanship warranty.
+          A provider may not include provider-supplied parts, parts reimbursement,
+          parts tax, or another parts charge in a Tuveloz quote, change order,
+          invoice used for platform payment, or payment request. Customer acceptance
+          forms a direct service agreement with the provider business. Added work,
+          a different performing person, or a labor-price change requires the
+          provider business&apos;s approval and the customer&apos;s documented authorization
+          when applicable.
         </p>
         <p>
           The performing person must stop when the requested work differs from the

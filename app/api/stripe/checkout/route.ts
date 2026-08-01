@@ -16,6 +16,7 @@ import {
   isSameOriginRequest,
 } from "../../../../lib/account-auth";
 import { customerPriceFor } from "../../../../lib/customer-fee";
+import { isLaborOnlyPartsSource } from "../../../../lib/service-matching";
 import {
   CUSTOMER_CHECKOUT_AGREEMENT_KEY,
   CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
@@ -213,6 +214,7 @@ async function acceptedQuoteForCustomer(
       customerRequests.customerProviderDisclosureAcceptedAt,
     service: customerRequests.service,
     vehicle: customerRequests.vehicle,
+    partsSource: customerRequests.partsSource,
   }).from(providerQuotes)
     .innerJoin(
       customerRequests,
@@ -697,6 +699,11 @@ export async function POST(request: Request) {
         || latestScope.scheduledFor !== selection.requestScheduledFor
         || !scopePrice
         || !jobFacts
+        || !isLaborOnlyPartsSource(selection.partsSource)
+        || scopePrice.partsAmountCents !== 0
+        || scopePrice.taxAmountCents !== 0
+        || scopePrice.otherAmountCents !== 0
+        || scopePrice.laborAmountCents !== scopePrice.totalAmountCents
         || Number(selection.providerAmount) !== scopePrice.totalAmountCents
         || Number(selection.customerFeeCents) !== scopePrice.customerFeeCents
         || Number(selection.customerTotalCents) !== scopePrice.customerTotalCents
@@ -847,7 +854,7 @@ export async function POST(request: Request) {
             unit_amount: providerAmountCents,
             product_data: {
               name: productName,
-              description: `Provider quote from ${selection.providerName}`,
+              description: `Labor-only provider quote from ${selection.providerName}`,
             },
           },
           quantity: 1,

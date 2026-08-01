@@ -495,6 +495,10 @@ function completePriceBreakdown(value: string): CompletePriceBreakdown | null {
     fields.some((field) => !Number.isInteger(numbers[field]) || numbers[field] < 0)
     || numbers.totalAmountCents <= 0
     || numbers.totalAmountCents > MAX_JOB_AMOUNT_CENTS
+    || numbers.partsAmountCents !== 0
+    || numbers.taxAmountCents !== 0
+    || numbers.otherAmountCents !== 0
+    || numbers.totalAmountCents !== numbers.laborAmountCents
     || numbers.laborAmountCents + numbers.partsAmountCents
       + numbers.taxAmountCents + numbers.otherAmountCents !== numbers.totalAmountCents
   ) return null;
@@ -510,13 +514,7 @@ function completePriceBreakdown(value: string): CompletePriceBreakdown | null {
 }
 
 function priceTotal(value: string) {
-  try {
-    const parsed = JSON.parse(value) as Record<string, unknown>;
-    const amount = Number(parsed.totalAmountCents);
-    return Number.isInteger(amount) && amount >= 0 ? amount : null;
-  } catch {
-    return null;
-  }
+  return completePriceBreakdown(value)?.totalAmountCents ?? null;
 }
 
 async function authorizedJobTotal(context: AssignedJobOperationContext) {
@@ -714,27 +712,32 @@ export async function POST(request: Request) {
     const serviceCodes = validatedServiceCodes(body.serviceCodes);
     const reason = clean(body.reason, 1000);
     const scopeDescription = clean(body.scopeDescription, 2500);
-    const partsResponsibility = clean(body.partsResponsibility, 120);
+    const partsResponsibility = "Customer supplies any needed parts separately";
     const requestedSchedule = clean(body.scheduledFor, 80);
     const scheduledFor = requestedSchedule
       ? normalizeScheduledFor(requestedSchedule)
       : context.scheduledFor;
     const laborAmountCents = integerCents(body.laborAmountCents);
-    const partsAmountCents = integerCents(body.partsAmountCents);
-    const taxAmountCents = integerCents(body.taxAmountCents);
-    const otherAmountCents = integerCents(body.otherAmountCents);
+    const partsAmountCents = integerCents(body.partsAmountCents ?? 0);
+    const taxAmountCents = integerCents(body.taxAmountCents ?? 0);
+    const otherAmountCents = integerCents(body.otherAmountCents ?? 0);
     if (
       !serviceCodes
       || reason.length < 5
       || scopeDescription.length < 5
-      || !partsResponsibility
       || !scheduledFor
       || laborAmountCents === null
       || partsAmountCents === null
       || taxAmountCents === null
       || otherAmountCents === null
     ) {
-      return response({ error: "Enter exact services, the full changed scope, reason, parts responsibility, and valid cent amounts." }, 400);
+      return response({ error: "Enter exact services, the full changed labor scope, reason, schedule, and a valid labor amount." }, 400);
+    }
+    if (partsAmountCents !== 0 || taxAmountCents !== 0 || otherAmountCents !== 0) {
+      return response({
+        error: "A Tuveloz change order may change labor only. Provider-supplied parts, parts reimbursement, parts tax, and other charges cannot be included.",
+        code: "LABOR_ONLY_CHANGE_ORDER_REQUIRED",
+      }, 400);
     }
     if (
       requestedSchedule
@@ -753,7 +756,7 @@ export async function POST(request: Request) {
       }, 400);
     }
     const jobFacts = jobFactsCheck.facts;
-    const totalAmountCents = laborAmountCents + partsAmountCents + taxAmountCents + otherAmountCents;
+    const totalAmountCents = laborAmountCents;
     if (totalAmountCents <= 0 || totalAmountCents > MAX_JOB_AMOUNT_CENTS) {
       return response({ error: "The complete changed-scope total is invalid." }, 400);
     }
@@ -1095,7 +1098,7 @@ export async function POST(request: Request) {
         serviceCodes: JSON.stringify(serviceCodes),
         priceCents: String(prices.totalAmountCents),
         laborPriceCents: String(prices.laborAmountCents),
-        partsPriceCents: String(prices.partsAmountCents),
+        partsPriceCents: "0",
         customerFeeRateBps: prices.customerFeeRateBps,
         customerFeeCents: String(prices.customerFeeCents),
         customerTotalCents: String(prices.customerTotalCents),
@@ -1245,9 +1248,14 @@ export async function POST(request: Request) {
         inArray(jobCancellations.status, OPEN_CANCELLATION_STATUSES),
       )).limit(1);
     if (existing.length) return response({ error: "A cancellation or no-show review is already open." }, 409);
-    const partsCommittedCents = actor.role === "provider"
-      ? integerCents(body.partsCommittedCents) ?? 0
-      : 0;
+    const submittedPartsCommittedCents = integerCents(body.partsCommittedCents ?? 0);
+    if (submittedPartsCommittedCents === null || submittedPartsCommittedCents !== 0) {
+      return response({
+        error: "A cancellation request cannot claim provider-supplied parts or parts reimbursement through Tuveloz.",
+        code: "LABOR_ONLY_CANCELLATION_REQUIRED",
+      }, 400);
+    }
+    const partsCommittedCents = 0;
     const workPerformedCents = actor.role === "provider"
       ? integerCents(body.workPerformedCents) ?? 0
       : 0;
@@ -1388,14 +1396,20 @@ export async function POST(request: Request) {
     if (roleError) return roleError;
     const status = clean(body.status, 20);
     const laborAmountCents = integerCents(body.laborAmountCents);
-    const partsAmountCents = integerCents(body.partsAmountCents);
-    const taxAmountCents = integerCents(body.taxAmountCents);
-    const otherAmountCents = integerCents(body.otherAmountCents);
-    const statedTotal = integerCents(body.totalAmountCents);
+    const partsAmountCents = integerCents(body.partsAmountCents ?? 0);
+    const taxAmountCents = integerCents(body.taxAmountCents ?? 0);
+    const otherAmountCents = integerCents(body.otherAmountCents ?? 0);
+    const statedTotal = integerCents(body.totalAmountCents ?? laborAmountCents ?? 0);
     const workSummary = clean(body.workSummary, 2400);
     const warrantyProvider = clean(body.warrantyProvider, 60);
     const warrantyTerms = clean(body.warrantyTerms, 1600);
     const returnedPartsChoice = clean(body.returnedPartsChoice, 60);
+    if (partsAmountCents !== 0 || taxAmountCents !== 0 || otherAmountCents !== 0) {
+      return response({
+        error: "A Tuveloz provider invoice may contain labor only. Customer-supplied parts may be described, but no parts, tax, reimbursement, or other charge may be added.",
+        code: "LABOR_ONLY_INVOICE_REQUIRED",
+      }, 400);
+    }
     if (
       !["draft", "final"].includes(status)
       || laborAmountCents === null
@@ -1409,7 +1423,7 @@ export async function POST(request: Request) {
       || warrantyTerms.length < 5
       || !["returned", "customer_declined", "not_applicable"].includes(returnedPartsChoice)
     ) {
-      return response({ error: "Enter an itemized invoice whose total adds up, a work summary, returned-parts choice, and specific warranty terms (including when no warranty is offered)." }, 400);
+      return response({ error: "Enter a labor-only invoice whose total equals the labor amount, a work summary, customer-supplied-parts description when applicable, returned-parts choice, and specific warranty terms." }, 400);
     }
     const blocks = await openOperationalBlocks(requestId);
     if (status === "final" && (blocks.incidents.length || blocks.cancellations.length || blocks.changes.length)) {
@@ -1456,9 +1470,9 @@ export async function POST(request: Request) {
       invoiceNumber,
       serviceCodes: JSON.stringify(context.serviceCodes),
       laborAmountCents,
-      partsAmountCents,
-      taxAmountCents,
-      otherAmountCents,
+      partsAmountCents: 0,
+      taxAmountCents: 0,
+      otherAmountCents: 0,
       totalAmountCents: statedTotal,
       partsDescription: clean(body.partsDescription, 1600),
       returnedPartsChoice,

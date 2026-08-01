@@ -353,50 +353,71 @@ export const CUSTOMER_JOB_SERVICE_OPTIONS: readonly string[] = (
   ))
 );
 
+export const CUSTOMER_SUPPLIED_PARTS_SOURCE =
+  "Customer supplies any needed parts — labor only";
+export const LEGACY_CUSTOMER_SUPPLIED_PARTS_SOURCE =
+  "I have the parts — labor only";
+export const NO_PARTS_NEEDED_SOURCE = "No parts needed — labor only";
+export const PARTS_DISCUSSION_SOURCE =
+  "Not sure whether parts are needed — discuss with provider";
+
 export const PARTS_SOURCE_OPTIONS = [
-  "I have the parts — labor only",
-  "Provider supplies parts",
-  "Either is okay",
+  CUSTOMER_SUPPLIED_PARTS_SOURCE,
+  NO_PARTS_NEEDED_SOURCE,
+  PARTS_DISCUSSION_SOURCE,
 ] as const;
 
 export const PARTS_PREFERENCE_OPTIONS = [
-  "Best value",
   "OEM",
   "Aftermarket",
   "No preference",
+  "Discuss with provider",
 ] as const;
 
-export const QUOTE_PART_TYPE_OPTIONS = [
+export const CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS = [
   "OEM",
   "Aftermarket",
+  "Either",
+  "Discuss before accepting",
+] as const;
+
+export const PARTS_COMMUNICATION_NOTICE =
+  "Parts preferences are provided only to help customers and providers communicate. Tuveloz does not sell, source, list, verify, or process payment for vehicle parts. Any required parts must be purchased separately by the customer and cannot be included in a Tuveloz quote or payment.";
+
+export const QUOTE_PART_TYPE_OPTIONS = [
+  "Customer supplied",
   "No parts needed",
 ] as const;
 
-const marketplacePartTerms: Record<string, string> = {
-  "Battery or jump start": "replacement battery",
-  "Tire help": "replacement tire spare tire",
-  "Flat tire or spare installation": "replacement tire spare tire",
-  "Basic vehicle diagnostics": "replacement auto part",
-  "Minor dent repair quote": "body repair part",
-  "Scratch or paintwork quote": "body repair part",
-  "Window tint installation quote": "window tint kit",
-  "Rain guard / vent visor installation": "vehicle fit rain guard vent visor window deflector",
-  "Vehicle sunshade installation": "vehicle fit removable retractable sunshade",
-  "Waterless exterior wash": "waterless car wash supplies",
-  "Exterior car wash with water": "car wash supplies",
-  "Interior detailing": "interior detailing supplies",
-};
+export function normalizeLaborOnlyPartsSource(value: string) {
+  const normalized = value.trim();
+  if (
+    normalized === CUSTOMER_SUPPLIED_PARTS_SOURCE
+    || normalized === LEGACY_CUSTOMER_SUPPLIED_PARTS_SOURCE
+  ) {
+    return CUSTOMER_SUPPLIED_PARTS_SOURCE;
+  }
+  if (normalized === NO_PARTS_NEEDED_SOURCE) return NO_PARTS_NEEDED_SOURCE;
+  if (normalized === PARTS_DISCUSSION_SOURCE) return PARTS_DISCUSSION_SOURCE;
+  return "";
+}
 
-export function marketplacePartsSearchUrl(
-  vehicle: string,
-  jobServices: string,
-  partType: "OEM" | "Aftermarket",
-) {
-  const partTerms = parseJobServices(jobServices)
-    .map((service) => marketplacePartTerms[service] ?? "replacement auto part")
-    .join(" ");
-  const query = `${vehicle} ${partType} ${partTerms}`.trim();
-  return `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}`;
+export function isLaborOnlyPartsSource(value: string) {
+  return Boolean(normalizeLaborOnlyPartsSource(value));
+}
+
+export function customerSuppliedPartsPreferenceApplies(value: string) {
+  const normalized = normalizeLaborOnlyPartsSource(value);
+  return (
+    normalized === CUSTOMER_SUPPLIED_PARTS_SOURCE
+    || normalized === PARTS_DISCUSSION_SOURCE
+  );
+}
+
+export function quotePartTypeForLaborOnlySource(value: string) {
+  return normalizeLaborOnlyPartsSource(value) === NO_PARTS_NEEDED_SOURCE
+    ? "No parts needed"
+    : "Customer supplied";
 }
 
 export function parseProviderServices(providerServices: string) {

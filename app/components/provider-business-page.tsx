@@ -5,7 +5,11 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { ConfirmAction } from "./confirm-action";
 import { BrandMark, TuvelozIcon } from "./tuveloz-icons";
-import { providerModeForWorkLocations } from "../../lib/service-matching";
+import {
+  CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS,
+  PARTS_COMMUNICATION_NOTICE,
+  providerModeForWorkLocations,
+} from "../../lib/service-matching";
 
 type Profile = {
   id: string;
@@ -17,6 +21,7 @@ type Profile = {
   availabilityStatus: string;
   availabilityNote: string;
   businessHours: string;
+  customerSuppliedPartsPolicy: string;
   publicStatus: string;
   hasLogo: boolean;
 };
@@ -75,6 +80,7 @@ const emptyProfile: Profile = {
   availabilityStatus: "Available now",
   availabilityNote: "",
   businessHours: "",
+  customerSuppliedPartsPolicy: "Discuss before accepting",
   publicStatus: "draft",
   hasLogo: false,
 };
@@ -380,6 +386,7 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
               <span>{profile.availabilityStatus}</span>
               <span>{profile.yearsExperience || "Add experience"}</span>
               <span>{data.services.length} currently listed {data.services.length === 1 ? "service" : "services"}</span>
+              <span>Customer-supplied parts: {profile.customerSuppliedPartsPolicy}</span>
               <span>{displayLocation}</span>
             </div>
             <p className="provider-profile-preview-note">
@@ -471,9 +478,28 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
             </label>
           </div>
 
-          <div className="business-form-section publish-section">
+          <div className="business-form-section">
             <div className="business-form-title">
               <span>03</span>
+              <div><strong>Customer-supplied parts preference</strong><small>Communication only</small></div>
+            </div>
+            <label>
+              Customer-supplied parts you are willing to install
+              <select
+                value={profile.customerSuppliedPartsPolicy}
+                onChange={(event) => setField("customerSuppliedPartsPolicy", event.target.value)}
+              >
+                {CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              <small>{PARTS_COMMUNICATION_NOTICE}</small>
+            </label>
+          </div>
+
+          <div className="business-form-section publish-section">
+            <div className="business-form-title">
+              <span>04</span>
               <div><strong>Page visibility</strong><small>Publication requires TUVELOZ content review</small></div>
             </div>
             <label className="publish-choice">

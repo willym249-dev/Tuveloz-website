@@ -142,7 +142,10 @@ test("checkout and payment records consume the latest authorized scope and full 
   assert.match(paymentHelper, /local scope binding is no longer current/);
   assert.match(schema, /authorizedPriceSnapshot/);
   assert.match(migration, /authorized_price_snapshot/);
-  assert.match(card, /Authorized tax and other charges/);
+  assert.match(card, /Provider labor/);
+  assert.match(card, /Parts charged through Tuveloz/);
+  assert.match(card, /Complete authorized labor amount/);
+  assert.doesNotMatch(card, /Authorized tax and other charges/);
   assert.match(card, /Authorized job scope version/);
 });
 

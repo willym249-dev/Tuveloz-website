@@ -177,6 +177,17 @@ function cleanEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
+function laborOnlyRepairItems(items: readonly RepairLineItem[]) {
+  return items.every((item) => (
+    item.lineType === "labor"
+    || (
+      item.lineType === "part"
+      && item.unitAmountCents === 0
+      && item.lineAmountCents === 0
+    )
+  ));
+}
+
 function integer(value: unknown, minimum = 0, maximum = MAX_TEXT_AMOUNT) {
   const number = Number(value);
   return Number.isSafeInteger(number) && number >= minimum && number <= maximum
@@ -513,7 +524,13 @@ async function saveAuthorization(
   }
 
   const lineItems = parseRepairLineItems(payload.lineItems);
-  if (!lineItems) return response({ error: "Enter valid itemized labor, parts, tax, sublet, and other estimate lines." }, 400);
+  if (!lineItems) return response({ error: "Enter valid labor lines and optional customer-supplied-part descriptions." }, 400);
+  if (!laborOnlyRepairItems(lineItems)) {
+    return response({
+      error: "This Tuveloz record is labor only. A customer-supplied part may be identified with a zero amount, but no parts, tax, sublet, reimbursement, or other charge may be included.",
+      code: "LABOR_ONLY_REPAIR_RECORD_REQUIRED",
+    }, 400);
+  }
   const totals = repairLineItemTotals(lineItems);
   if (totals.totalAmountCents <= 0 || totals.totalAmountCents !== Number(job.quotePriceCents)) {
     return response({ error: "The written estimate total must exactly match the currently accepted provider quote." }, 409);
@@ -562,15 +579,17 @@ async function saveAuthorization(
     || !laborDisclosure
     || (!estimatedCompletionAt && !completionDisclosure)
     || estimateFeeCents === null
+    || estimateFeeCents !== 0
     || surchargeCents === null
-    || (surchargeCents > 0 && !surchargeDescription)
+    || surchargeCents !== 0
+    || surchargeDescription
     || !["return", "customer_declined", "warranty_return", "not_applicable"].includes(replacedPartsChoice)
     || !providerRepresentativeName
     || !providerRepresentativeTitle
     || (status === "presented" && payload.providerCertified !== true)
   ) {
     return response({
-      error: "Complete the provider, customer, vehicle, diagnosis, labor-disclosure, completion, charge, parts-return, and provider-signature fields before presenting the authorization.",
+      error: "Complete the provider, customer, vehicle, diagnosis, labor disclosure, completion, customer-supplied-parts record, and provider-signature fields. Separate estimate fees and surcharges cannot be charged through Tuveloz.",
     }, 400);
   }
 
@@ -802,7 +821,13 @@ async function saveInvoice(
     return response({ error: "A final invoice is immutable. Later issues must use the incident, dispute, or correction process." }, 409);
   }
   const lineItems = parseRepairLineItems(payload.lineItems);
-  if (!lineItems) return response({ error: "Enter valid itemized invoice lines for every service, labor charge, part, tax, sublet charge, and other charge." }, 400);
+  if (!lineItems) return response({ error: "Enter valid labor lines and optional customer-supplied-part descriptions." }, 400);
+  if (!laborOnlyRepairItems(lineItems)) {
+    return response({
+      error: "This Tuveloz invoice is labor only. A customer-supplied part may be identified with a zero amount, but no parts, tax, sublet, reimbursement, or other charge may be included.",
+      code: "LABOR_ONLY_REPAIR_RECORD_REQUIRED",
+    }, 400);
+  }
   const totals = repairLineItemTotals(lineItems);
   if (totals.totalAmountCents !== authorization.totalAmountCents) {
     return response({ error: "The final provider invoice total must exactly match the customer-signed authorized provider amount." }, 409);
