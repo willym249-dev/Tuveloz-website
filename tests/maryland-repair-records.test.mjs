@@ -125,6 +125,9 @@ test("customer sees conspicuous rights immediately before the exact repair autho
   assert.match(page, /Customer instructions or description of symptoms/);
   assert.match(page, /Provider diagnosis/);
   assert.match(page, /Mechanic names, initials, or numbers/);
+  assert.match(page, /separately agree to conduct this authorization electronically/);
+  assert.match(page, /invoice-signature and copy-delivery transaction electronically/);
+  assert.match(page, /mechanic&apos;s work was performed satisfactorily/);
   assert.match(page, /Sign invoice and receive secure copy/);
   assert.match(page, /Payment was not automatically released/);
   assert.match(layout, /repair-records\.css/);
