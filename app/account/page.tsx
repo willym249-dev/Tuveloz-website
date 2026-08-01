@@ -738,14 +738,30 @@ export default function AccountPage() {
                   />
                   <span>
                     I am 18 or older and agree to the{" "}
-                    <Link href="/terms" target="_blank">Terms</Link> and{" "}
                     <Link
+                      aria-label="Terms (opens in a new tab)"
+                      href="/terms"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Terms
+                    </Link> and{" "}
+                    <Link
+                      aria-label={`${role === "provider" ? "Provider Agreement" : "Customer Agreement"} (opens in a new tab)`}
                       href={role === "provider" ? "/provider-agreement" : "/customer-agreement"}
+                      rel="noopener noreferrer"
                       target="_blank"
                     >
                       {role === "provider" ? "Provider Agreement" : "Customer Agreement"}
                     </Link>, and acknowledge the{" "}
-                    <Link href="/privacy" target="_blank">Privacy Policy</Link>.
+                    <Link
+                      aria-label="Privacy Policy (opens in a new tab)"
+                      href="/privacy"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Privacy Policy
+                    </Link>.
                   </span>
                 </label>
               )}
@@ -890,7 +906,7 @@ export default function AccountPage() {
 
         <div className="account-login-help">
           <p>New provider? Verification starts with an application.</p>
-          <Link className="button secondary" href="/#providers">
+          <Link className="button secondary" href="/join">
             Apply to join <span>→</span>
           </Link>
         </div>

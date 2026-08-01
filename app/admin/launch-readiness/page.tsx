@@ -276,7 +276,7 @@ export default function LaunchReadinessPage() {
                   </a>
                   {" · "}
                   <a
-                    href="https://www.montgomerycountymd.gov/OCP/Resources/Files/Licensing_Forms/ch_31a_02152011.pdf"
+                    href="https://codelibrary.amlegal.com/codes/montgomerycounty/latest/montgomeryco_md/0-0-0-138743"
                     rel="noreferrer"
                     target="_blank"
                   >
