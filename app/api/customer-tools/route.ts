@@ -255,7 +255,7 @@ export async function POST(request: Request) {
         const eligible = await customerProviderChoices(session.email);
         if (!eligible.some((provider) => provider.id === providerId)) {
           return Response.json(
-            { error: "Only verified providers from your Tuveloz quotes can be saved." },
+            { error: "Only providers from your Tuveloz quote history can be saved." },
             { status: 403, headers: { "cache-control": "no-store" } },
           );
         }

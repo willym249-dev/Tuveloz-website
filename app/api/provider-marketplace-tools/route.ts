@@ -2,6 +2,23 @@ import { env } from "cloudflare:workers";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { parseProviderServices } from "../../../lib/service-matching";
+import {
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("quote"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 const PRICE_TYPES = new Set(["starting_at", "fixed", "hourly", "quote"]);
 
@@ -62,7 +79,7 @@ export async function GET(request: Request) {
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
@@ -77,7 +94,7 @@ export async function POST(request: Request) {
   }
   const provider = await activeProvider(request);
   if (!provider) {
-    return Response.json({ error: "Sign in to your verified provider workspace." }, { status: 401 });
+    return Response.json({ error: "Sign in to your active provider workspace." }, { status: 401 });
   }
 
   try {
@@ -85,6 +102,11 @@ export async function POST(request: Request) {
     const action = text(payload.action, 40);
 
     if (action === "save-catalog-item") {
+      if (!(await runtimeMarketplaceActionAllowed("quote", {
+        testOnly: provider.isTestProvider === "yes",
+      }))) {
+        return marketplacePausedResponse();
+      }
       const approvedServices = parseProviderServices(provider.approvedServices);
       const service = text(payload.service, 120);
       const priceType = text(payload.priceType, 30);
@@ -133,6 +155,11 @@ export async function POST(request: Request) {
     }
 
     if (action === "remove-catalog-item") {
+      if (!(await runtimeMarketplaceActionAllowed("quote", {
+        testOnly: provider.isTestProvider === "yes",
+      }))) {
+        return marketplacePausedResponse();
+      }
       const id = text(payload.id, 80);
       await env.DB.prepare(
         "DELETE FROM provider_catalog_items WHERE id = ? AND provider_id = ?",

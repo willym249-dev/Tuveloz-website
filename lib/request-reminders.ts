@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { customerRequests, providerQuotes } from "../db/schema";
 import { sendMatchingProviderReminder } from "./provider-alerts";
+import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 
 const REMINDER_DELAY_MS = 30 * 60 * 1000;
 const RETRY_DELAY_MS = 15 * 60 * 1000;
@@ -20,6 +21,9 @@ function timestamp(value: string) {
 export async function processDueProviderReminders(
   now = new Date(),
 ): Promise<ReminderSweepResult> {
+  if (!(await runtimeMarketplaceActionAllowed("discovery"))) {
+    return { due: 0, attempted: 0, sent: 0 };
+  }
   const db = getDb();
   const jobs = await db.select().from(customerRequests).where(and(
     eq(customerRequests.status, "approved"),

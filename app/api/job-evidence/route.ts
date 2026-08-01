@@ -25,6 +25,7 @@ type AcceptedJobRow = {
   customerEmail: string;
   providerName: string;
   providerEmail: string;
+  isTestJob: string;
 };
 
 type EvidenceRow = {
@@ -85,12 +86,19 @@ async function acceptedJobs(role: AccountRole, email: string) {
             request.name AS customerName,
             lower(request.email) AS customerEmail,
             quote.provider_name AS providerName,
-            lower(quote.provider_email) AS providerEmail
+            lower(quote.provider_email) AS providerEmail,
+            request.is_test_job AS isTestJob
        FROM customer_requests request
        INNER JOIN provider_quotes quote
          ON quote.request_id = request.id
         AND quote.status = 'accepted'
       WHERE ${condition}
+        AND EXISTS (
+          SELECT 1
+            FROM provider_applications provider
+           WHERE lower(provider.email) = lower(quote.provider_email)
+             AND provider.is_test_provider = request.is_test_job
+        )
         AND request.status NOT IN ('cancelled','canceled')
       ORDER BY datetime(request.created_at) DESC
       LIMIT 100`,
@@ -172,13 +180,20 @@ async function participantJob(role: AccountRole, email: string, requestId: strin
             request.name AS customerName,
             lower(request.email) AS customerEmail,
             quote.provider_name AS providerName,
-            lower(quote.provider_email) AS providerEmail
+            lower(quote.provider_email) AS providerEmail,
+            request.is_test_job AS isTestJob
        FROM customer_requests request
        INNER JOIN provider_quotes quote
          ON quote.request_id = request.id
         AND quote.status = 'accepted'
       WHERE request.id = ?
         AND ${condition}
+        AND EXISTS (
+          SELECT 1
+            FROM provider_applications provider
+           WHERE lower(provider.email) = lower(quote.provider_email)
+             AND provider.is_test_provider = request.is_test_job
+        )
         AND request.status NOT IN ('cancelled','canceled')
       LIMIT 1`,
   ).bind(requestId, email).first<AcceptedJobRow>();
@@ -308,14 +323,16 @@ export async function POST(request: Request) {
 
     const recipientRole: AccountRole = account.role === "customer" ? "provider" : "customer";
     const recipientEmail = account.role === "customer" ? job.providerEmail : job.customerEmail;
-    await notifyMarketplaceAccount({
-      eventKey: `job-evidence:${id}:${recipientRole}`,
+    if (job.isTestJob !== "yes") {
+      await notifyMarketplaceAccount({
+        eventKey: `job-evidence:${id}:${recipientRole}`,
       email: recipientEmail,
       role: recipientRole,
       title: "New private job condition record",
       body: `${account.role === "provider" ? job.providerName : job.customerName} added a private ${evidenceType.replaceAll("-", " ")} record for ${job.service}.`,
       href: "/job-evidence",
-    });
+      });
+    }
 
     return Response.json({
       ok: true,

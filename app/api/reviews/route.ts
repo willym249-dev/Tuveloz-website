@@ -1,6 +1,31 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { customerRequests, jobReviews, providerApplications, providerQuotes } from "../../../db/schema";
+import { marketplacePausedMessage } from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+
+const NO_STORE_HEADERS = { "cache-control": "no-store" };
+
+function noStoreJson(body: unknown, status = 200) {
+  return Response.json(body, { status, headers: NO_STORE_HEADERS });
+}
+
+async function publicReviewsAreAvailable() {
+  try {
+    return await runtimeMarketplaceActionAllowed("discovery");
+  } catch {
+    return false;
+  }
+}
+
+function marketplacePausedResponse() {
+  return noStoreJson({
+    error: marketplacePausedMessage("discovery"),
+    code: "MARKETPLACE_ONBOARDING_ONLY",
+    reviews: [],
+    summary: { average: 0, count: 0 },
+  }, 503);
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -14,6 +39,9 @@ function publicCustomerName(name: string) {
 }
 
 export async function GET() {
+  if (!(await publicReviewsAreAvailable())) {
+    return marketplacePausedResponse();
+  }
   const publishedReviews = await getDb().select({
     id: jobReviews.id,
     providerName: jobReviews.providerName,
@@ -53,7 +81,7 @@ export async function GET() {
   const publicReviews = publishedReviews.filter(
     (review) => !testProviderEmails.has(review.providerEmail),
   );
-  return Response.json({
+  return noStoreJson({
     reviews: publicReviews.slice(0, 12).map((review) => {
       const { providerEmail, ...publicReview } = review;
       return {
@@ -73,6 +101,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await publicReviewsAreAvailable())) {
+    return marketplacePausedResponse();
+  }
   const body = (await request.json()) as {
     token?: string;
     rating?: number;
@@ -82,23 +113,23 @@ export async function POST(request: Request) {
   const rating = Number(body.rating);
   const comment = clean(body.comment, 800);
   if (!token) {
-    return Response.json({ error: "Use your private request link to leave a review." }, { status: 403 });
+    return noStoreJson({ error: "Use your private request link to leave a review." }, 403);
   }
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return Response.json({ error: "Choose a rating from 1 to 5 stars." }, { status: 400 });
+    return noStoreJson({ error: "Choose a rating from 1 to 5 stars." }, 400);
   }
   if (comment.length < 3) {
-    return Response.json({ error: "Add a short comment about your experience." }, { status: 400 });
+    return noStoreJson({ error: "Add a short comment about your experience." }, 400);
   }
 
   const db = getDb();
   const [job] = await db.select().from(customerRequests)
     .where(eq(customerRequests.accessToken, token)).limit(1);
   if (!job) {
-    return Response.json({ error: "Private request link not found." }, { status: 404 });
+    return noStoreJson({ error: "Private request link not found." }, 404);
   }
   if (job.status !== "completed") {
-    return Response.json({ error: "Reviews are available after the job is completed." }, { status: 409 });
+    return noStoreJson({ error: "Reviews are available after the job is completed." }, 409);
   }
   const [acceptedQuote] = await db.select({
     providerName: providerQuotes.providerName,
@@ -108,12 +139,12 @@ export async function POST(request: Request) {
     eq(providerQuotes.status, "accepted"),
   )).limit(1);
   if (!acceptedQuote) {
-    return Response.json({ error: "The selected provider could not be verified." }, { status: 409 });
+    return noStoreJson({ error: "The selected provider could not be verified." }, 409);
   }
   const [existingReview] = await db.select({ id: jobReviews.id }).from(jobReviews)
     .where(eq(jobReviews.requestId, job.id)).limit(1);
   if (existingReview) {
-    return Response.json({ error: "A review was already published for this job." }, { status: 409 });
+    return noStoreJson({ error: "A review was already published for this job." }, 409);
   }
 
   const review = {
@@ -133,11 +164,11 @@ export async function POST(request: Request) {
     const [duplicate] = await db.select({ id: jobReviews.id }).from(jobReviews)
       .where(eq(jobReviews.requestId, job.id)).limit(1);
     if (duplicate) {
-      return Response.json({ error: "A review was already published for this job." }, { status: 409 });
+      return noStoreJson({ error: "A review was already published for this job." }, 409);
     }
     throw error;
   }
-  return Response.json({
+  return noStoreJson({
     ok: true,
     review: {
       id: review.id,
@@ -147,5 +178,5 @@ export async function POST(request: Request) {
       rating: review.rating,
       comment: review.comment,
     },
-  }, { status: 201 });
+  }, 201);
 }

@@ -2,6 +2,23 @@ import { env } from "cloudflare:workers";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import {
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("job_start"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 type TrackingJob = {
   requestId: string;
@@ -76,10 +93,11 @@ async function responseData(request: Request) {
           AND lower(quote.provider_email) = lower(?)
           AND quote.status = 'accepted'
          LEFT JOIN job_location_shares share ON share.request_id = request.id
-        WHERE request.status IN ('quote accepted','on my way','arrived','completed')
-        ORDER BY datetime(request.created_at) DESC
-        LIMIT 50`,
-    ).bind(provider.email).all<TrackingJob>();
+         WHERE request.status IN ('quote accepted','on my way','arrived','completed')
+           AND request.is_test_job = ?
+         ORDER BY datetime(request.created_at) DESC
+         LIMIT 50`,
+    ).bind(provider.email, provider.isTestProvider).all<TrackingJob>();
     return {
       role: "provider" as const,
       email: session.email,
@@ -117,6 +135,21 @@ async function responseData(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const session = await getAccountSession(request);
+  if (!session) {
+    return Response.json(
+      { error: "Sign in to use Tuveloz trip tracking." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
+  }
+  const provider = session.role === "provider"
+    ? await providerAccountFor(session.email)
+    : null;
+  if (!(await runtimeMarketplaceActionAllowed("job_start", {
+    testOnly: provider?.isTestProvider === "yes",
+  }))) {
+    return marketplacePausedResponse();
+  }
   const data = await responseData(request);
   if (!data) {
     return Response.json(
@@ -136,7 +169,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Only the selected provider can share trip location." }, { status: 401 });
   }
   const provider = await providerAccountFor(session.email);
-  if (!provider) return Response.json({ error: "Verified provider access is required." }, { status: 403 });
+  if (!provider) return Response.json({ error: "An active provider account is required." }, { status: 403 });
 
   try {
     const payload = await request.json() as Record<string, unknown>;
@@ -146,7 +179,7 @@ export async function POST(request: Request) {
     const job = await env.DB.prepare(
       `SELECT request.id AS requestId, request.status AS requestStatus,
               request.email AS customerEmail, request.name AS customerName,
-              request.vehicle, request.service,
+              request.vehicle, request.service, request.is_test_job AS isTestJob,
               quote.provider_name AS providerName
          FROM customer_requests request
          INNER JOIN provider_quotes quote
@@ -162,6 +195,7 @@ export async function POST(request: Request) {
       vehicle: string;
       service: string;
       providerName: string;
+      isTestJob: string;
     }>();
     if (!job) throw new Error("Only the selected provider can share location for this job.");
 
@@ -181,10 +215,20 @@ export async function POST(request: Request) {
         body: "The provider stopped sharing a live trip location. Your job status remains available in Tuveloz.",
         href: `/my-request?request=${encodeURIComponent(requestId)}`,
       });
-      return Response.json({ ok: true, ...(await responseData(request)) });
+      if (await runtimeMarketplaceActionAllowed("job_start", {
+        testOnly: provider.isTestProvider === "yes" && job.isTestJob === "yes",
+      })) {
+        return Response.json({ ok: true, ...(await responseData(request)) });
+      }
+      return Response.json({ ok: true, sharing: false });
     }
 
     if (action !== "share") throw new Error("Choose start sharing or stop sharing.");
+    if (!(await runtimeMarketplaceActionAllowed("job_start", {
+      testOnly: provider.isTestProvider === "yes" && job.isTestJob === "yes",
+    }))) {
+      return marketplacePausedResponse();
+    }
     if (payload.permissionAccepted !== true) {
       throw new Error("Confirm that you choose to share your current location for this trip.");
     }

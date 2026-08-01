@@ -1,7 +1,8 @@
-import { eq, or } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../db";
-import { customerRequests, stripePayments } from "../db/schema";
+import { stripePayments } from "../db/schema";
+import { getStripeClient } from "./stripe";
 
 export function stripeObjectId(
   value: string | { id: string } | null | undefined,
@@ -14,6 +15,114 @@ function destinationTransferId(charge: Stripe.Charge | null) {
   return typeof charge.transfer === "string"
     ? charge.transfer
     : charge.transfer.id;
+}
+
+export async function expireOpenCheckoutSessionsForLaunchShutdown() {
+  const db = getDb();
+  const result = {
+    examined: 0,
+    expired: 0,
+    alreadyFinal: 0,
+    failed: 0,
+  };
+  let stripeClient: Stripe | null = null;
+  let stripeUnavailable = false;
+  let cursor = "";
+
+  while (true) {
+    const openPayments = await db.select({
+      id: stripePayments.id,
+      checkoutSessionId: stripePayments.checkoutSessionId,
+    }).from(stripePayments)
+      .where(cursor
+        ? and(
+            inArray(stripePayments.status, [
+              "checkout_creating",
+              "checkout_open",
+              "checkout_release_recheck",
+              "checkout_expiration_unconfirmed",
+            ]),
+            gt(stripePayments.id, cursor),
+          )
+        : inArray(stripePayments.status, [
+            "checkout_creating",
+            "checkout_open",
+            "checkout_release_recheck",
+            "checkout_expiration_unconfirmed",
+          ]))
+      .orderBy(asc(stripePayments.id))
+      .limit(100);
+    if (openPayments.length === 0) break;
+
+    result.examined += openPayments.length;
+
+    for (const payment of openPayments) {
+      cursor = payment.id;
+      const quarantined = await db.update(stripePayments).set({
+        status: "checkout_expiration_unconfirmed",
+        updatedAt: new Date().toISOString(),
+      }).where(and(
+        eq(stripePayments.id, payment.id),
+        inArray(stripePayments.status, [
+          "checkout_creating",
+          "checkout_open",
+          "checkout_release_recheck",
+          "checkout_expiration_unconfirmed",
+        ]),
+      )).returning({ id: stripePayments.id });
+      if (!quarantined.length) {
+        result.alreadyFinal += 1;
+        continue;
+      }
+      if (!payment.checkoutSessionId) {
+        result.failed += 1;
+        continue;
+      }
+      if (!stripeClient && !stripeUnavailable) {
+        try {
+          stripeClient = getStripeClient();
+        } catch (error) {
+          stripeUnavailable = true;
+          console.error("Unable to initialize Stripe for launch-shutdown cleanup", error);
+        }
+      }
+      if (!stripeClient) {
+        result.failed += 1;
+        continue;
+      }
+      try {
+        const session = await stripeClient.checkout.sessions.retrieve(
+          payment.checkoutSessionId,
+        );
+        if (session.status === "open") {
+          await stripeClient.checkout.sessions.expire(session.id);
+        }
+        if (session.status === "open" || session.status === "expired") {
+          await db.update(stripePayments).set({
+            status: "checkout_expired_launch_readiness",
+            updatedAt: new Date().toISOString(),
+          }).where(and(
+            eq(stripePayments.id, payment.id),
+            eq(stripePayments.status, "checkout_expiration_unconfirmed"),
+          ));
+          result.expired += 1;
+        } else {
+          // A completed Session remains open locally until the normal Stripe
+          // reconciliation path verifies its payment state and exact scope.
+          result.alreadyFinal += 1;
+        }
+      } catch (error) {
+        result.failed += 1;
+        console.error("Unable to expire Checkout Session after launch shutdown", {
+          paymentId: payment.id,
+          error,
+        });
+      }
+    }
+
+    if (openPayments.length < 100) break;
+  }
+  return result;
 }
 
 /**
@@ -40,6 +149,30 @@ export async function recordPaidCheckoutSession(
     console.warn("Ignoring a Checkout Session with an unknown payment record", {
       sessionId: session.id,
       paymentRecordId,
+    });
+    return;
+  }
+
+  const launchReadinessHold = payment.status === "checkout_release_recheck"
+    || payment.status === "checkout_expiration_unconfirmed";
+  if (
+    (payment.status !== "checkout_open" && !launchReadinessHold)
+    || payment.checkoutSessionId !== session.id
+    || (
+      payment.paymentType === "quote"
+      && (
+        session.metadata?.tuveloz_request_id !== payment.requestId
+        || session.metadata?.tuveloz_quote_id !== payment.quoteId
+        || session.metadata?.tuveloz_scope_version !== String(payment.scopeVersion)
+        || session.metadata?.tuveloz_scope_authorization_id
+          !== payment.scopeAuthorizationDecisionId
+      )
+    )
+  ) {
+    console.warn("Ignoring a paid Checkout Session whose local scope binding is no longer current", {
+      paymentRecordId,
+      sessionId: session.id,
+      localStatus: payment.status,
     });
     return;
   }
@@ -94,24 +227,18 @@ export async function recordPaidCheckoutSession(
     return;
   }
 
-  let nextStatus = payment.refundAmountCents > 0 || payment.disputeStatus
-    ? payment.status
-    : payment.settlementStrategy === "destination_charge"
-      ? "paid_and_transferred"
-      : "paid_pending_completion";
+  const nextStatus = launchReadinessHold
+    ? "paid_launch_readiness_hold"
+    : payment.refundAmountCents > 0 || payment.disputeStatus
+      ? payment.status
+      : payment.settlementStrategy === "destination_charge"
+        ? "paid_and_transferred"
+        : "paid_pending_completion";
 
-  if (
-    !payment.disputeStatus
-    && payment.refundAmountCents === 0
-    && payment.requestId
-    && payment.settlementStrategy === "separate_transfer"
-  ) {
-    const [job] = await getDb().select({ status: customerRequests.status })
-      .from(customerRequests)
-      .where(eq(customerRequests.id, payment.requestId))
-      .limit(1);
-    if (job?.status === "completed") nextStatus = "ready_for_release";
-  }
+  // A completion status never makes money releasable by itself. Separate
+  // transfers remain pending until the release endpoint rechecks stage
+  // eligibility, invoice/authorization parity, incidents, cancellations,
+  // refunds, disputes, reserves, and the provider timer.
 
   const now = new Date().toISOString();
   await getDb().update(stripePayments).set({
@@ -134,6 +261,8 @@ export async function recordPaidCheckoutSession(
 const CHECKOUT_FAILURE_MUTABLE_STATUSES = new Set([
   "checkout_creating",
   "checkout_open",
+  "checkout_release_recheck",
+  "checkout_expiration_unconfirmed",
 ]);
 
 export async function recordCheckoutSessionStatus(
@@ -244,6 +373,7 @@ export function publicPaymentSummary(
   return {
     id: payment.id,
     paymentType: payment.paymentType,
+    scopeVersion: payment.scopeVersion,
     productName: payment.productName,
     currency: payment.currency,
     quantity: payment.quantity,

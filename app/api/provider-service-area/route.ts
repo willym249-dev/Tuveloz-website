@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }

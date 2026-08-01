@@ -43,7 +43,7 @@ export function PublicInfoPage({
         </button>
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
-          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Post a job</Link>
+          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>
@@ -52,7 +52,7 @@ export function PublicInfoPage({
         <div className="header-actions">
           <SiteLanguageButton />
           <Link className="header-sign-in" href="/account">Sign in</Link>
-          <Link className="header-cta" href="/post-job">Post a job</Link>
+          <Link className="header-cta" href="/post-job">Launch status</Link>
         </div>
       </header>
 
@@ -79,9 +79,9 @@ export function PublicInfoPage({
       </section>
 
       <section className="public-info-actions">
-        <h2>Ready for the next step?</h2>
+        <h2>Provider applications are open; customer jobs are not open yet.</h2>
         <div>
-          <Link className="button primary" href="/post-job">Post a job <span>→</span></Link>
+          <Link className="button primary" href="/post-job">Check customer launch status <span>→</span></Link>
           <Link className="button secondary" href="/join">Join as a provider</Link>
         </div>
       </section>
@@ -98,12 +98,17 @@ export function PublicInfoPage({
           <Link href="/faq">FAQ</Link>
           <Link href="/account">Sign in</Link>
           <Link href="/terms">Terms</Link>
+          <Link href="/provider-agreement">Provider agreement</Link>
+          <Link href="/marketplace-conduct">Marketplace conduct</Link>
+          <Link href="/provisional-provider-policy">Provider pathways</Link>
+          <Link href="/payments">Payments</Link>
+          <Link href="/job-operations">Job controls</Link>
           <Link href="/privacy">Privacy</Link>
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
         </div>
         <div className="footer-bottom">
           <span>© 2026 Tuveloz. All rights reserved.</span>
-          <span>Operating now in Montgomery County, Maryland.</span>
+          <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
       </footer>
     </main>

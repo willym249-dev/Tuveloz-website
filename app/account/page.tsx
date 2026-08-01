@@ -65,10 +65,10 @@ export default function AccountPage() {
     }
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
       if (!response.ok) return;
-      const result = (await response.json()) as { role?: Role };
+      const result = (await response.json()) as { role?: Role; destination?: string };
       if (result.role) {
         window.location.replace(
-          result.role === "customer" ? "/customer" : "/provider-jobs",
+          result.destination || (result.role === "customer" ? "/customer" : "/provider-onboarding"),
         );
       }
     }).catch(() => {
@@ -428,7 +428,7 @@ export default function AccountPage() {
 
   const workspaceDescription = role === "customer"
     ? "Use the same email address you entered when posting a job."
-    : "Provider sign-in is available only after Tuveloz approves and verifies your account.";
+    : "Provider applicants can sign in to complete onboarding. Approved providers can also open their workspace here.";
 
   return (
     <main className="account-shell">
@@ -447,7 +447,7 @@ export default function AccountPage() {
         <div className="account-welcome">
           <span className="account-kicker">Tuveloz sign in</span>
           <h1>Welcome to Tuveloz.</h1>
-          <p>Access your customer requests or verified-provider workspace.</p>
+          <p>Access your customer requests, provider application, or approved-provider workspace.</p>
         </div>
 
         <section className="account-login-card" aria-busy={checking || busy}>
@@ -499,7 +499,7 @@ export default function AccountPage() {
               onClick={() => chooseRole("provider")}
               type="button"
             >
-              Verified provider
+              Provider applicant / provider
             </button>
           </div>
 

@@ -62,7 +62,7 @@ export type OwnerVerificationFailure =
   | "owner-email-mismatch";
 
 export type OwnerVerificationResult =
-  | { ok: true }
+  | { ok: true; email: string }
   | { ok: false; reason: OwnerVerificationFailure };
 
 export async function verifyOwnerRequest(
@@ -100,7 +100,7 @@ export async function verifyOwnerRequest(
     ) {
       return { ok: false, reason: "owner-email-mismatch" };
     }
-    return { ok: true };
+    return { ok: true, email: tokenEmail };
   } catch {
     console.error("Cloudflare Access owner-token verification failed");
     return { ok: false, reason: "access-token-invalid" };

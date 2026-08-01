@@ -4,6 +4,29 @@ import { customerRequests, jobMessages, providerQuotes } from "../../../db/schem
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { parseJobServices } from "../../../lib/service-matching";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import {
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("job_start"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
+
+async function sessionUsesIsolatedTestFixtures(session: AccountSession) {
+  if (session.role !== "provider") return false;
+  const provider = await providerAccountFor(session.email);
+  return provider?.isTestProvider === "yes";
+}
 
 type AccountSession = NonNullable<Awaited<ReturnType<typeof getAccountSession>>>;
 
@@ -88,7 +111,10 @@ async function conversationsFor(session: AccountSession): Promise<Conversation[]
     name: customerRequests.name,
     email: customerRequests.email,
   }).from(customerRequests)
-    .where(inArray(customerRequests.id, acceptedQuotes.map((quote) => quote.requestId)));
+    .where(and(
+      inArray(customerRequests.id, acceptedQuotes.map((quote) => quote.requestId)),
+      eq(customerRequests.isTestJob, provider.isTestProvider),
+    ));
   const requestById = new Map(requests.map((item) => [item.id, item]));
   return acceptedQuotes.flatMap((quote) => {
     const job = requestById.get(quote.requestId);
@@ -113,6 +139,11 @@ export async function GET(request: Request) {
         { error: "Sign in to view job messages." },
         { status: 401, headers: { "cache-control": "no-store" } },
       );
+    }
+    if (!(await runtimeMarketplaceActionAllowed("job_start", {
+      testOnly: await sessionUsesIsolatedTestFixtures(session),
+    }))) {
+      return marketplacePausedResponse();
     }
     const conversations = await conversationsFor(session);
     if (conversations.length === 0) {
@@ -174,6 +205,11 @@ export async function POST(request: Request) {
         { error: "Sign in to send a job message." },
         { status: 401, headers: { "cache-control": "no-store" } },
       );
+    }
+    if (!(await runtimeMarketplaceActionAllowed("job_start", {
+      testOnly: await sessionUsesIsolatedTestFixtures(session),
+    }))) {
+      return marketplacePausedResponse();
     }
     const payload = await request.json() as { requestId?: unknown; body?: unknown };
     const requestId = String(payload.requestId ?? "").trim().slice(0, 100);

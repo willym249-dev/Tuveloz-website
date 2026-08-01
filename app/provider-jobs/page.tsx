@@ -19,6 +19,19 @@ import {
   providerModeForWorkLocations,
   QUOTE_PART_TYPE_OPTIONS,
 } from "../../lib/service-matching";
+import {
+  JOB_HIGH_VOLTAGE_STATUS_VALUES,
+  JOB_LOCATION_TYPE_OPTIONS,
+  JOB_PROPERTY_PERMISSION_VALUES,
+  JOB_SCOPE_FACTS_VERSION,
+  JOB_VEHICLE_DRIVEABILITY_VALUES,
+  JOB_VEHICLE_STATE_VALUES,
+  type JobScopeFacts,
+} from "../../lib/job-scope-facts";
+import { CUSTOMER_JOB_POSTING_PAUSED, MARKETPLACE_MODE } from "../../lib/launch-status";
+
+const MARKETPLACE_IS_ONBOARDING_ONLY = CUSTOMER_JOB_POSTING_PAUSED
+  || String(MARKETPLACE_MODE) !== "live";
 
 type Job = {
   id: string;
@@ -73,6 +86,7 @@ type AssignedJob = Job & {
   billableMinutes: number;
   workNotes: string;
   partsNotes: string;
+  jobFacts: JobScopeFacts | null;
 };
 type Provider = {
   name: string;
@@ -205,7 +219,7 @@ export default function ProviderJobsPage() {
           return;
         }
         if (!accountResponse.ok) {
-          throw new Error(account.error || "Unable to load your verified provider account.");
+          throw new Error(account.error || "Unable to load your provider account.");
         }
         if (account.role !== "provider") {
           window.location.replace("/customer");
@@ -390,7 +404,7 @@ export default function ProviderJobsPage() {
     }
   }
 
-  async function toggleTimer(job: AssignedJob) {
+  async function toggleTimer(job: AssignedJob, arrivalJobFacts?: JobScopeFacts) {
     setError("");
     setTimerJobId(job.id);
     try {
@@ -401,6 +415,7 @@ export default function ProviderJobsPage() {
           action: "toggle-timer",
           requestId: job.id,
           timerMode: job.timerStartedAt ? "stop" : "start",
+          ...(arrivalJobFacts ? { arrivalJobFacts } : {}),
         }),
       });
       const result = await response.json().catch(() => ({})) as {
@@ -426,6 +441,46 @@ export default function ProviderJobsPage() {
     } finally {
       setTimerJobId("");
     }
+  }
+
+  async function startTimerFromArrival(
+    event: FormEvent<HTMLFormElement>,
+    job: AssignedJob,
+  ) {
+    event.preventDefault();
+    if (!job.jobFacts) {
+      setError("The accepted structured job scope is missing; work cannot start.");
+      return;
+    }
+    const values = new FormData(event.currentTarget);
+    const arrivalJobFacts: JobScopeFacts = {
+      version: JOB_SCOPE_FACTS_VERSION,
+      requestedOperations: job.jobFacts.requestedOperations.filter((operation) => (
+        values.getAll("arrival-operation").includes(
+          `${operation.serviceCode}:${operation.operationCode}`,
+        )
+      )),
+      prohibitedOperationsAttestedAbsent: values.getAll("arrival-prohibited")
+        .map(String),
+      location: {
+        type: String(values.get("arrival-location-type")) as JobScopeFacts["location"]["type"],
+        address: String(values.get("arrival-address")),
+        municipality: String(values.get("arrival-municipality")),
+        county: String(values.get("arrival-county")) as JobScopeFacts["location"]["county"],
+        state: String(values.get("arrival-state")) as JobScopeFacts["location"]["state"],
+        postalCode: String(values.get("arrival-postal-code")),
+        jurisdiction: String(values.get("arrival-jurisdiction")) as JobScopeFacts["location"]["jurisdiction"],
+        propertyPermission: String(values.get("arrival-property-permission")) as JobScopeFacts["location"]["propertyPermission"],
+      },
+      vehicle: {
+        driveability: String(values.get("arrival-driveability")) as JobScopeFacts["vehicle"]["driveability"],
+        state: String(values.get("arrival-vehicle-state")) as JobScopeFacts["vehicle"]["state"],
+        highVoltageStatus: String(values.get("arrival-high-voltage")) as JobScopeFacts["vehicle"]["highVoltageStatus"],
+      },
+      safetyAttestations: values.getAll("arrival-safety")
+        .map(String) as JobScopeFacts["safetyAttestations"],
+    };
+    await toggleTimer(job, arrivalJobFacts);
   }
 
   async function signOut() {
@@ -517,9 +572,15 @@ export default function ProviderJobsPage() {
         </div>
       </header>
       <section className="portal-intro">
-        <span className="kicker">Matched job alerts</span>
-        <h1>{provider ? `Jobs matched for ${provider.name}.` : "Your provider workspace."}</h1>
-        {provider?.verified && <span className="verified-badge provider-workspace-badge">✓ Tuveloz verified</span>}
+        <span className="kicker">
+          {MARKETPLACE_IS_ONBOARDING_ONLY ? "Provider onboarding" : "Matched job alerts"}
+        </span>
+        <h1>{provider ? `Provider workspace for ${provider.name}.` : "Your provider workspace."}</h1>
+        {provider?.verified && (
+          <span className="verified-badge provider-workspace-badge">
+            ✓ Account verification status recorded — no service or job access
+          </span>
+        )}
         {provider && (
           <span className="provider-mode-badge provider-workspace-badge">
             {providerModeForWorkLocations(provider.workLocations)}
@@ -527,8 +588,9 @@ export default function ProviderJobsPage() {
         )}
         {provider?.testProvider && <span className="test-badge provider-workspace-badge">TEST PROVIDER · FICTIONAL</span>}
         <p>
-          {provider ? "See active work and matched requests below. " : ""}
-          Customer contact details appear only after your quote is selected.
+          {MARKETPLACE_IS_ONBOARDING_ONLY && !provider?.testProvider
+            ? "TUVELOZ is accepting provider applications and evidence only. Real job alerts, quotes, appointments, work, and payments are disabled."
+            : "Customer contact details appear only after your quote is selected."}
         </p>
         {provider && (
           <details className="workspace-overview-details">
@@ -543,8 +605,9 @@ export default function ProviderJobsPage() {
               </p>
               {!provider.testProvider && (
                 <p className="provider-fee-note">
-                  Your quote remains your full subtotal. Tuveloz adds a separate
-                  10% service fee to the customer&apos;s total.
+                  Your quote remains the provider subtotal. The current test
+                  configuration proposes a separate 10% TUVELOZ customer fee;
+                  final pricing and tax treatment remain under mandatory legal and CPA or tax-adviser review.
                 </p>
               )}
               {provider.testProvider && (
@@ -562,7 +625,10 @@ export default function ProviderJobsPage() {
             onClick={() => setActiveView("available")}
             type="button"
           >
-            <TuvelozIcon name="open-jobs" />Available jobs <span>{openJobs.length}</span>
+            <TuvelozIcon name="open-jobs" />
+            {MARKETPLACE_IS_ONBOARDING_ONLY && !provider?.testProvider
+              ? "Job access closed"
+              : "Available jobs"} <span>{openJobs.length}</span>
           </button>
           <button aria-pressed={activeView === "quotes"} className={activeView === "quotes" ? "is-active" : ""} onClick={() => setActiveView("quotes")} type="button">
             My quotes <span>{myQuotes.length}</span>
@@ -723,18 +789,18 @@ export default function ProviderJobsPage() {
                           <div className="time-tracker">
                             <span>Actual time worked</span>
                             <strong>{durationLabel(trackedSecondsNow(job, now))}</strong>
-                            <button
-                              className={`button ${job.timerStartedAt ? "timer-stop" : "secondary"}`}
-                              disabled={timerJobId === job.id}
-                              onClick={() => toggleTimer(job)}
-                              type="button"
-                            >
-                              {timerJobId === job.id
-                                ? "Saving…"
-                                : job.timerStartedAt
-                                  ? "Stop timer"
-                                  : "Start timer"}
-                            </button>
+                            {job.timerStartedAt ? (
+                              <button
+                                className="button timer-stop"
+                                disabled={timerJobId === job.id}
+                                onClick={() => toggleTimer(job)}
+                                type="button"
+                              >
+                                {timerJobId === job.id ? "Saving…" : "Stop timer"}
+                              </button>
+                            ) : (
+                              <small>Complete the fresh arrival check below to start work.</small>
+                            )}
                           </div>
                           <label>
                             Adjust actual hours
@@ -794,6 +860,83 @@ export default function ProviderJobsPage() {
                         )}
                         {sent === `record-${job.id}` && <small className="record-saved">✓ Job record saved</small>}
                       </form>
+                      {!job.timerStartedAt && job.jobFacts && (
+                        <form className="job-record-form" onSubmit={(event) => startTimerFromArrival(event, job)}>
+                          <strong>Fresh provider arrival-safety check</strong>
+                          <p className="approval-note">
+                            Confirm the actual facts now. Stored customer facts alone cannot authorize work start.
+                          </p>
+                          {job.jobFacts.requestedOperations.map((operation) => (
+                            <label key={`${operation.serviceCode}:${operation.operationCode}`}>
+                              <input name="arrival-operation" required type="checkbox" value={`${operation.serviceCode}:${operation.operationCode}`} />
+                              Actual operation: {operation.serviceCode} / {operation.operationCode}
+                            </label>
+                          ))}
+                          {job.jobFacts.prohibitedOperationsAttestedAbsent.map((operation) => (
+                            <label key={operation}>
+                              <input name="arrival-prohibited" required type="checkbox" value={operation} />
+                              Confirm {operation} remains absent at arrival.
+                            </label>
+                          ))}
+                          <div className="job-record-grid">
+                            <label>
+                              Actual location type
+                              <select name="arrival-location-type" required defaultValue={job.jobFacts.location.type}>
+                                {JOB_LOCATION_TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              Property authority now
+                              <select name="arrival-property-permission" required defaultValue={job.jobFacts.location.propertyPermission}>
+                                {JOB_PROPERTY_PERMISSION_VALUES.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+                              </select>
+                            </label>
+                          </div>
+                          <label>Exact arrival address<input name="arrival-address" required defaultValue={job.jobFacts.location.address} /></label>
+                          <div className="job-record-grid">
+                            <label>Municipality<input name="arrival-municipality" required defaultValue={job.jobFacts.location.municipality} /></label>
+                            <label>ZIP<input name="arrival-postal-code" required defaultValue={job.jobFacts.location.postalCode} /></label>
+                            <label>County<input name="arrival-county" readOnly value={job.jobFacts.location.county} /></label>
+                            <label>State<input name="arrival-state" readOnly value={job.jobFacts.location.state} /></label>
+                          </div>
+                          <input name="arrival-jurisdiction" type="hidden" value={job.jobFacts.location.jurisdiction} />
+                          <div className="job-record-grid">
+                            <label>
+                              Driveability now
+                              <select name="arrival-driveability" required defaultValue="">
+                                <option disabled value="">Choose at arrival</option>
+                                {JOB_VEHICLE_DRIVEABILITY_VALUES.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              Vehicle state now
+                              <select name="arrival-vehicle-state" required defaultValue="">
+                                <option disabled value="">Choose at arrival</option>
+                                {JOB_VEHICLE_STATE_VALUES.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              High-voltage status now
+                              <select name="arrival-high-voltage" required defaultValue="">
+                                <option disabled value="">Choose at arrival</option>
+                                {JOB_HIGH_VOLTAGE_STATUS_VALUES.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+                              </select>
+                            </label>
+                          </div>
+                          {job.jobFacts.safetyAttestations.map((attestation) => (
+                            <label key={attestation}>
+                              <input name="arrival-safety" required type="checkbox" value={attestation} />
+                              Reconfirm {attestation.replaceAll("_", " ")} now.
+                            </label>
+                          ))}
+                          <button className="button primary" disabled={timerJobId === job.id} type="submit">
+                            {timerJobId === job.id ? "Checking..." : "Validate arrival facts and start timer"}
+                          </button>
+                        </form>
+                      )}
+                      {!job.timerStartedAt && !job.jobFacts && (
+                        <p className="portal-error">Structured accepted job facts are missing. Work start is blocked.</p>
+                      )}
                     </details>
                     <ol className="job-progress" aria-label="Job progress">
                       {["Quote accepted", "On my way", "Arrived", "Completed"].map((step) => (
@@ -974,8 +1117,21 @@ export default function ProviderJobsPage() {
       )}
       {workspaceReady && activeView === "available" && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">
-          <div><span className="kicker">Matched alerts</span><h2>Available jobs</h2></div>
-          <p>These approved requests match your services, job areas, and meeting options.</p>
+          <div>
+            <span className="kicker">
+              {MARKETPLACE_IS_ONBOARDING_ONLY && !provider?.testProvider ? "Onboarding only" : "Matched alerts"}
+            </span>
+            <h2>
+              {MARKETPLACE_IS_ONBOARDING_ONLY && !provider?.testProvider
+                ? "Real job access is closed"
+                : "Available jobs"}
+            </h2>
+          </div>
+          <p>
+            {MARKETPLACE_IS_ONBOARDING_ONLY && !provider?.testProvider
+              ? "Complete your application and evidence review. Approval does not activate any job or service while the marketplace remains closed."
+              : "These approved requests match your services, job areas, and meeting options."}
+          </p>
         </div>
       )}
       {activeView === "available" && (

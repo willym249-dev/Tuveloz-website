@@ -4,14 +4,16 @@ import {
   customerRequests,
   providerApplications,
   providerJobRecords,
+  providerPathwayProfiles,
+  providerPersonnel,
   providerQuotes,
-  stripePayments,
 } from "../../../db/schema";
 import {
   effectiveProviderServices,
   providerMatchesArea,
   providerMatchesJob,
   providerMatchesServiceLocation,
+  parseProviderServices,
   QUOTE_PART_TYPE_OPTIONS,
 } from "../../../lib/service-matching";
 import {
@@ -21,8 +23,48 @@ import {
   validateJobImage,
 } from "../../../lib/job-images";
 import { customerPriceFor } from "../../../lib/customer-fee";
-import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import {
+  getAccountSession,
+  providerAccountFor,
+  testProviderAccountFor,
+} from "../../../lib/account-auth";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import {
+  marketplacePausedMessage,
+  type MarketplaceAction,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+import {
+  activeJobOperationHoldReasons,
+  assignedJobOperationContext,
+  appendJobLifecycleEvent,
+  evaluateAssignedJobStage,
+  jobAuthorizationDecisionMatchesContext,
+  parseExactServiceCodes,
+} from "../../../lib/job-operations";
+import {
+  eligibilityErrorMessage,
+  evaluateStageEligibility,
+} from "../../../lib/provider-eligibility-engine";
+import { isServiceCode } from "../../../lib/provider-policy";
+import { CUSTOMER_REQUEST_SCOPE_VERSION } from "../../../lib/customer-job-scope";
+import {
+  loadAuthorizedJobScopeFacts,
+  loadCurrentAcceptedCustomerRequestScope,
+} from "../../../lib/job-scope-records";
+
+function marketplacePausedResponse(action: MarketplaceAction) {
+  return Response.json(
+    {
+      error: marketplacePausedMessage(action),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -55,7 +97,8 @@ function providerAccessIsActive(provider: typeof providerApplications.$inferSele
 async function providerForSession(request: Request) {
   const session = await getAccountSession(request);
   if (!session || session.role !== "provider") return null;
-  const provider = await providerAccountFor(session.email);
+  const provider = await providerAccountFor(session.email)
+    || await testProviderAccountFor(session.email);
   return provider && providerAccessIsActive(provider) ? provider : null;
 }
 
@@ -63,9 +106,14 @@ export async function GET(request: Request) {
   const provider = await providerForSession(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
+  }
+  if (!(await runtimeMarketplaceActionAllowed("discovery", {
+    testOnly: provider.isTestProvider === "yes",
+  }))) {
+    return marketplacePausedResponse("discovery");
   }
   const approvedServiceSet = effectiveProviderServices(
     provider.service,
@@ -89,11 +137,15 @@ export async function GET(request: Request) {
       availability: providerQuotes.availability,
       message: providerQuotes.message,
       status: providerQuotes.status,
+      isTestJob: customerRequests.isTestJob,
       createdAt: providerQuotes.createdAt,
     })
     .from(providerQuotes)
     .innerJoin(customerRequests, eq(providerQuotes.requestId, customerRequests.id))
-    .where(eq(providerQuotes.providerEmail, provider.email))
+    .where(and(
+      eq(providerQuotes.providerEmail, provider.email),
+      eq(customerRequests.isTestJob, provider.isTestProvider),
+    ))
     .orderBy(desc(providerQuotes.createdAt));
   const quoteByRequestId = new Map(
     submittedQuotes.map((quote) => [quote.requestId, quote]),
@@ -118,7 +170,10 @@ export async function GET(request: Request) {
       createdAt: customerRequests.createdAt,
     })
     .from(customerRequests)
-    .where(eq(customerRequests.status, "approved"))
+    .where(and(
+      eq(customerRequests.status, "approved"),
+      eq(customerRequests.isTestJob, provider.isTestProvider),
+    ))
     .orderBy(desc(customerRequests.createdAt))
     .limit(50);
   const assignedJobs = await getDb()
@@ -153,6 +208,9 @@ export async function GET(request: Request) {
       billableMinutes: providerJobRecords.billableMinutes,
       workNotes: providerJobRecords.workNotes,
       partsNotes: providerJobRecords.partsNotes,
+      jobStartDecisionId: providerJobRecords.jobStartDecisionId,
+      completionDecisionId: providerJobRecords.completionDecisionId,
+      scopeVersion: providerQuotes.scopeVersion,
     })
     .from(customerRequests)
     .innerJoin(providerQuotes, and(
@@ -164,9 +222,38 @@ export async function GET(request: Request) {
       eq(providerJobRecords.requestId, customerRequests.id),
       eq(providerJobRecords.providerEmail, provider.email),
     ))
-    .where(inArray(customerRequests.status, ["quote accepted", "on my way", "arrived", "completed"]))
+    .where(and(
+      inArray(customerRequests.status, ["quote accepted", "on my way", "arrived", "completed"]),
+      eq(customerRequests.isTestJob, provider.isTestProvider),
+    ))
     .orderBy(desc(customerRequests.createdAt))
     .limit(50);
+  const exposedAssignedJobs = await Promise.all(assignedJobs.filter(
+    (job) => (provider.isTestProvider === "yes") === (job.isTestJob === "yes"),
+  ).map(async (job) => {
+    const jobFacts = await loadAuthorizedJobScopeFacts(job.id, job.scopeVersion);
+    const usesLegacyTotal = Number(job.laborPriceCents) + Number(job.partsPriceCents) === 0
+      && Number(job.priceCents) > 0;
+    return {
+      ...job,
+      jobFacts,
+      repeatCustomer: Boolean(job.preferredProviderEmail),
+      preferredProviderEmail: undefined,
+      laborPriceCents: usesLegacyTotal ? job.priceCents : job.laborPriceCents,
+      workStatus: job.status === "completed" ? "completed" : (job.workStatus || "scheduled"),
+      timerStartedAt: job.timerStartedAt || "",
+      trackedSeconds: job.trackedSeconds || 0,
+      billableMinutes: job.billableMinutes || 0,
+      workNotes: job.workNotes || "",
+      partsNotes: job.partsNotes || "",
+      jobStartDecisionId: job.jobStartDecisionId || "",
+      completionDecisionId: job.completionDecisionId || "",
+      hasIssueImage: Boolean(job.issueImageKey),
+      hasCompletionImage: Boolean(job.completionImageKey),
+      issueImageKey: undefined,
+      completionImageKey: undefined,
+    };
+  }));
   return Response.json({
     provider: {
       name: provider.name,
@@ -179,28 +266,7 @@ export async function GET(request: Request) {
       testProvider: provider.isTestProvider === "yes",
     },
     myQuotes: submittedQuotes,
-    assignedJobs: assignedJobs.filter(
-      (job) => (provider.isTestProvider === "yes") === (job.isTestJob === "yes"),
-    ).map((job) => {
-      const usesLegacyTotal = Number(job.laborPriceCents) + Number(job.partsPriceCents) === 0
-        && Number(job.priceCents) > 0;
-      return {
-        ...job,
-        repeatCustomer: Boolean(job.preferredProviderEmail),
-        preferredProviderEmail: undefined,
-        laborPriceCents: usesLegacyTotal ? job.priceCents : job.laborPriceCents,
-        workStatus: job.status === "completed" ? "completed" : (job.workStatus || "scheduled"),
-        timerStartedAt: job.timerStartedAt || "",
-        trackedSeconds: job.trackedSeconds || 0,
-        billableMinutes: job.billableMinutes || 0,
-        workNotes: job.workNotes || "",
-        partsNotes: job.partsNotes || "",
-        hasIssueImage: Boolean(job.issueImageKey),
-        hasCompletionImage: Boolean(job.completionImageKey),
-        issueImageKey: undefined,
-        completionImageKey: undefined,
-      };
-    }),
+    assignedJobs: exposedAssignedJobs,
     jobs: jobs.filter((job) => (
       providerMatchesJob(approvedServiceSet, job.service)
       && providerMatchesArea(provider.serviceArea, job.launchArea || job.zip)
@@ -229,7 +295,7 @@ export async function POST(request: Request) {
   const provider = await providerForSession(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
@@ -268,6 +334,12 @@ export async function POST(request: Request) {
     if ((provider.isTestProvider === "yes") !== (assignedJob.isTestJob === "yes")) {
       return Response.json({ error: "This provider cannot manage that job type." }, { status: 403 });
     }
+    const recordAction: MarketplaceAction = "job_start";
+    if (!(await runtimeMarketplaceActionAllowed(recordAction, {
+      testOnly: provider.isTestProvider === "yes" && assignedJob.isTestJob === "yes",
+    }))) {
+      return marketplacePausedResponse(recordAction);
+    }
 
     const [existingRecord] = await db.select().from(providerJobRecords)
       .where(and(
@@ -287,18 +359,60 @@ export async function POST(request: Request) {
         if (existingRecord?.timerStartedAt) {
           return Response.json({ error: "The timer is already running." }, { status: 409 });
         }
+        const operationHolds = await activeJobOperationHoldReasons(requestId);
+        if (operationHolds.length) {
+          return Response.json({
+            error: "Resolve the incident, cancellation, or pending customer change authorization before work resumes.",
+            code: "JOB_OPERATION_HOLD",
+            reasons: operationHolds,
+          }, { status: 409, headers: { "cache-control": "no-store" } });
+        }
+        const stageDecision = await evaluateAssignedJobStage({
+          requestId,
+          providerEmail: provider.email,
+          stage: "job_start",
+          arrivalJobFacts: body.arrivalJobFacts,
+          effectiveAt: now,
+        });
+        if (!stageDecision.allowed || !stageDecision.result?.decisionId) {
+          return Response.json({
+            error: stageDecision.error,
+            code: "JOB_START_NOT_AUTHORIZED",
+            reasons: stageDecision.result?.reasons ?? [],
+          }, { status: stageDecision.status, headers: { "cache-control": "no-store" } });
+        }
         await db.insert(providerJobRecords).values({
           id: recordId,
           requestId,
           providerEmail: provider.email,
+          jobStartDecisionId: stageDecision.result.decisionId,
+          workStatus: "in progress",
           timerStartedAt: now,
           updatedAt: now,
         }).onConflictDoUpdate({
           target: [providerJobRecords.requestId, providerJobRecords.providerEmail],
-          set: { timerStartedAt: now, updatedAt: now },
+          set: {
+            jobStartDecisionId: stageDecision.result.decisionId,
+            workStatus: "in progress",
+            timerStartedAt: now,
+            updatedAt: now,
+          },
+        });
+        await appendJobLifecycleEvent({
+          requestId,
+          quoteId: stageDecision.context?.quoteId,
+          providerId: provider.id,
+          actorRole: "provider",
+          actorId: provider.email,
+          eventType: "job_timer_started",
+          fromStatus: existingRecord?.workStatus || "scheduled",
+          toStatus: "in progress",
+          scopeVersion: stageDecision.context?.scopeVersion,
+          authorizationSnapshotId: stageDecision.result.decisionId,
         });
         return Response.json({
           ok: true,
+          decisionId: stageDecision.result.decisionId,
           timerStartedAt: now,
           trackedSeconds: existingRecord?.trackedSeconds || 0,
         });
@@ -317,9 +431,35 @@ export async function POST(request: Request) {
           trackedSeconds,
           updatedAt: now,
         }).where(eq(providerJobRecords.id, existingRecord.id));
+        await appendJobLifecycleEvent({
+          requestId,
+          providerId: provider.id,
+          actorRole: "provider",
+          actorId: provider.email,
+          eventType: "job_timer_stopped",
+          fromStatus: existingRecord.workStatus,
+          toStatus: existingRecord.workStatus,
+          details: { trackedSeconds },
+        });
         return Response.json({ ok: true, timerStartedAt: "", trackedSeconds });
       }
       return Response.json({ error: "Choose whether to start or stop the timer." }, { status: 400 });
+    }
+
+    if (assignedJob.status === "completed") {
+      return Response.json(
+        { error: "Completed job records are immutable. Use the incident or refund workflow for later issues." },
+        { status: 409 },
+      );
+    }
+
+    const operationHolds = await activeJobOperationHoldReasons(requestId);
+    if (operationHolds.length) {
+      return Response.json({
+        error: "This job record cannot advance while an incident, cancellation, or customer change authorization is unresolved.",
+        code: "JOB_OPERATION_HOLD",
+        reasons: operationHolds,
+      }, { status: 409, headers: { "cache-control": "no-store" } });
     }
 
     const allowedWorkStatuses = ["scheduled", "in progress", "waiting for parts"];
@@ -342,6 +482,38 @@ export async function POST(request: Request) {
     ) {
       return Response.json({ error: "Check the job status and time amounts." }, { status: 400 });
     }
+    const operationContext = await assignedJobOperationContext(
+      requestId,
+      provider.email,
+    );
+    if (!operationContext) {
+      return Response.json({ error: "The accepted assignment context is missing." }, { status: 409 });
+    }
+    let jobStartDecisionId = existingRecord?.jobStartDecisionId || "";
+    if (workStatus === "in progress") {
+      const existingStartIsCurrent = await jobAuthorizationDecisionMatchesContext(
+        operationContext,
+        jobStartDecisionId,
+        "job_start",
+      );
+      if (!existingStartIsCurrent) {
+        const startDecision = await evaluateAssignedJobStage({
+          requestId,
+          providerEmail: provider.email,
+          stage: "job_start",
+          arrivalJobFacts: body.arrivalJobFacts,
+          effectiveAt: now,
+        });
+        if (!startDecision.allowed || !startDecision.result?.decisionId) {
+          return Response.json({
+            error: startDecision.error,
+            code: "FRESH_ARRIVAL_JOB_FACTS_REQUIRED",
+            reasons: startDecision.result?.reasons ?? [],
+          }, { status: startDecision.status, headers: { "cache-control": "no-store" } });
+        }
+        jobStartDecisionId = startDecision.result.decisionId;
+      }
+    }
     const trackedSeconds = existingRecord?.timerStartedAt
       ? existingRecord.trackedSeconds
       : Math.round(actualMinutes * 60);
@@ -349,6 +521,7 @@ export async function POST(request: Request) {
       id: recordId,
       requestId,
       providerEmail: provider.email,
+      jobStartDecisionId,
       workStatus,
       trackedSeconds,
       billableMinutes: Math.round(billableMinutes),
@@ -358,6 +531,7 @@ export async function POST(request: Request) {
     }).onConflictDoUpdate({
       target: [providerJobRecords.requestId, providerJobRecords.providerEmail],
       set: {
+        jobStartDecisionId,
         workStatus,
         trackedSeconds,
         billableMinutes: Math.round(billableMinutes),
@@ -366,9 +540,26 @@ export async function POST(request: Request) {
         updatedAt: now,
       },
     });
+    await appendJobLifecycleEvent({
+      requestId,
+      quoteId: operationContext.quoteId,
+      providerId: provider.id,
+      actorRole: "provider",
+      actorId: provider.email,
+      eventType: "job_record_saved",
+      fromStatus: existingRecord?.workStatus || "scheduled",
+      toStatus: workStatus,
+      scopeVersion: operationContext.scopeVersion,
+      authorizationSnapshotId: jobStartDecisionId,
+      details: {
+        trackedSeconds,
+        billableMinutes: Math.round(billableMinutes),
+      },
+    });
     return Response.json({
       ok: true,
       record: {
+        jobStartDecisionId,
         workStatus,
         timerStartedAt: existingRecord?.timerStartedAt || "",
         trackedSeconds,
@@ -400,6 +591,14 @@ export async function POST(request: Request) {
     if ((provider.isTestProvider === "yes") !== (assignedJob.isTestJob === "yes")) {
       return Response.json({ error: "This provider cannot update that job type." }, { status: 403 });
     }
+    const statusAction: MarketplaceAction = nextStatus === "completed"
+      ? "completion"
+      : "job_start";
+    if (!(await runtimeMarketplaceActionAllowed(statusAction, {
+      testOnly: provider.isTestProvider === "yes" && assignedJob.isTestJob === "yes",
+    }))) {
+      return marketplacePausedResponse(statusAction);
+    }
     const transitions: Record<string, string> = {
       "quote accepted": "on my way",
       "on my way": "arrived",
@@ -407,6 +606,50 @@ export async function POST(request: Request) {
     };
     if (transitions[assignedJob.status] !== nextStatus) {
       return Response.json({ error: "This job status cannot be changed that way." }, { status: 409 });
+    }
+    const operationHolds = await activeJobOperationHoldReasons(requestId);
+    if (operationHolds.length) {
+      return Response.json({
+        error: "This job cannot advance while an incident, cancellation, or customer change authorization is unresolved.",
+        code: "JOB_OPERATION_HOLD",
+        reasons: operationHolds,
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+    const operationContext = await assignedJobOperationContext(requestId, provider.email);
+    if (!operationContext) {
+      return Response.json({ error: "The accepted assignment context is missing." }, { status: 409 });
+    }
+    let stageDecision: Awaited<ReturnType<typeof evaluateAssignedJobStage>> | null = null;
+    if (nextStatus === "completed") {
+      stageDecision = await evaluateAssignedJobStage({
+        requestId,
+        providerEmail: provider.email,
+        stage: "completion",
+        effectiveAt: new Date().toISOString(),
+      });
+      if (!stageDecision.allowed || !stageDecision.result?.decisionId) {
+        return Response.json({
+          error: stageDecision.error,
+          code: "JOB_COMPLETION_NOT_AUTHORIZED",
+          reasons: stageDecision.result?.reasons ?? [],
+        }, { status: stageDecision.status, headers: { "cache-control": "no-store" } });
+      }
+      const [actualStart] = await db.select({
+        decisionId: providerJobRecords.jobStartDecisionId,
+      }).from(providerJobRecords).where(and(
+        eq(providerJobRecords.requestId, requestId),
+        eq(providerJobRecords.providerEmail, provider.email),
+      )).limit(1);
+      if (!await jobAuthorizationDecisionMatchesContext(
+        operationContext,
+        actualStart?.decisionId || "",
+        "job_start",
+      )) {
+        return Response.json({
+          error: "Completion requires a recorded actual work start authorized for the current scope, schedule, assignment, and exact job facts.",
+          code: "CURRENT_ACTUAL_JOB_START_REQUIRED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
     }
     let completionImageKey = "";
     let completionImageType = "";
@@ -459,12 +702,14 @@ export async function POST(request: Request) {
         id: jobRecord?.id || await jobRecordIdFor(requestId, provider.email),
         requestId,
         providerEmail: provider.email,
+        completionDecisionId: stageDecision?.result?.decisionId || "",
         workStatus: "completed",
         trackedSeconds: completedTrackedSeconds,
         updatedAt: completedAt,
       }).onConflictDoUpdate({
         target: [providerJobRecords.requestId, providerJobRecords.providerEmail],
         set: {
+          completionDecisionId: stageDecision?.result?.decisionId || "",
           workStatus: "completed",
           timerStartedAt: "",
           trackedSeconds: completedTrackedSeconds,
@@ -472,22 +717,54 @@ export async function POST(request: Request) {
         },
       });
 
-      // A paid quote uses separate charges and transfers. Completion makes the
-      // provider amount eligible for the owner's explicit release; it does not
-      // transfer funds from a provider-controlled status button.
-      await db.update(stripePayments).set({
-        status: "ready_for_release",
-        updatedAt: completedAt,
-      }).where(and(
-        eq(stripePayments.requestId, requestId),
-        eq(stripePayments.status, "paid_pending_completion"),
-      ));
+      // Completion alone never changes a financial record to releasable. The
+      // owner payout gate separately verifies the final invoice, authorized
+      // changes, incidents, claims, refunds, disputes, reserves, and a fresh
+      // payout-stage eligibility decision before any transfer is attempted.
     }
+    await appendJobLifecycleEvent({
+      requestId,
+      quoteId: operationContext.quoteId,
+      providerId: provider.id,
+      actorRole: "provider",
+      actorId: provider.email,
+      eventType: nextStatus === "completed"
+        ? "job_completed"
+        : "job_status_advanced",
+      fromStatus: assignedJob.status,
+      toStatus: nextStatus,
+      scopeVersion: operationContext.scopeVersion,
+      authorizationSnapshotId: stageDecision?.result?.decisionId || "",
+    });
     return Response.json({
       ok: true,
       status: nextStatus,
+      decisionId: stageDecision.result.decisionId,
       ...(completedTrackedSeconds === undefined ? {} : { trackedSeconds: completedTrackedSeconds }),
     });
+  }
+
+  const [job] = await db.select({
+    id: customerRequests.id,
+    status: customerRequests.status,
+    service: customerRequests.service,
+    serviceCodes: customerRequests.serviceCodes,
+    jurisdiction: customerRequests.jurisdiction,
+    scheduledFor: customerRequests.scheduledFor,
+    partsSource: customerRequests.partsSource,
+    partsPreference: customerRequests.partsPreference,
+    zip: customerRequests.zip,
+    launchArea: customerRequests.launchArea,
+    serviceLocations: customerRequests.serviceLocations,
+    serviceAddress: customerRequests.serviceAddress,
+    isTestJob: customerRequests.isTestJob,
+  }).from(customerRequests)
+    .where(eq(customerRequests.id, requestId)).limit(1);
+  if (!job) return Response.json({ error: "Job request not found." }, { status: 404 });
+  if (!(await runtimeMarketplaceActionAllowed("quote", {
+    testOnly: provider.isTestProvider === "yes" && job.isTestJob === "yes",
+  }))) {
+    return marketplacePausedResponse("quote");
   }
 
   const availability = clean(body.availability, 200);
@@ -510,30 +787,46 @@ export async function POST(request: Request) {
     }, { status: 400 });
   }
 
-  const [job] = await db.select({
-    id: customerRequests.id,
-    status: customerRequests.status,
-    service: customerRequests.service,
-    partsSource: customerRequests.partsSource,
-    partsPreference: customerRequests.partsPreference,
-    zip: customerRequests.zip,
-    launchArea: customerRequests.launchArea,
-    serviceLocations: customerRequests.serviceLocations,
-    isTestJob: customerRequests.isTestJob,
-  }).from(customerRequests)
-    .where(eq(customerRequests.id, requestId)).limit(1);
-  if (!job) return Response.json({ error: "Job request not found." }, { status: 404 });
   if (job.status !== "approved") {
     return Response.json({ error: "This job is no longer accepting quotes." }, { status: 409 });
   }
   if ((provider.isTestProvider === "yes") !== (job.isTestJob === "yes")) {
     return Response.json({ error: "Test providers can only quote test jobs." }, { status: 403 });
   }
-  if (!providerMatchesJob(
-    effectiveProviderServices(provider.service, provider.approvedServices, provider.isTestProvider),
-    job.service,
-  )) {
-    return Response.json({ error: "This job does not match your approved service." }, { status: 403 });
+  const serviceCodes = parseExactServiceCodes(job.serviceCodes);
+  const approvedExactServices = new Set(
+    parseProviderServices(provider.approvedServices).filter(isServiceCode),
+  );
+  if (
+    serviceCodes.length !== 1
+    || serviceCodes[0] === "general_auto_repair"
+    || !approvedExactServices.has(serviceCodes[0])
+  ) {
+    return Response.json({
+      error: "This quote is not bound to one exact service currently approved for this provider.",
+      code: "EXACT_SERVICE_QUOTE_REQUIRED",
+    }, { status: 403 });
+  }
+  if (!job.jurisdiction || !job.scheduledFor || !Number.isFinite(Date.parse(job.scheduledFor))) {
+    return Response.json({
+      error: "This request has no valid jurisdiction and scheduled work time.",
+      code: "STRUCTURED_JOB_SCHEDULE_REQUIRED",
+    }, { status: 409 });
+  }
+  const acceptedRequestScope = await loadCurrentAcceptedCustomerRequestScope(requestId);
+  if (
+    !acceptedRequestScope
+    || acceptedRequestScope.serviceCodes.length !== 1
+    || acceptedRequestScope.serviceCodes[0] !== serviceCodes[0]
+    || acceptedRequestScope.jurisdiction !== job.jurisdiction
+    || acceptedRequestScope.scheduledFor !== job.scheduledFor
+    || acceptedRequestScope.serviceLocations !== job.serviceLocations
+    || acceptedRequestScope.serviceAddress !== job.serviceAddress
+  ) {
+    return Response.json({
+      error: "This request is not bound to current immutable operation, location, vehicle, and safety facts.",
+      code: "IMMUTABLE_JOB_FACTS_REQUIRED",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
   }
   if (!providerMatchesArea(provider.serviceArea, job.launchArea || job.zip)) {
     return Response.json({ error: "This job is outside your approved service area." }, { status: 403 });
@@ -585,13 +878,65 @@ export async function POST(request: Request) {
     return Response.json({ error: "You already submitted a quote for this job." }, { status: 409 });
   }
 
+  const [pathway] = await db.select().from(providerPathwayProfiles)
+    .where(and(
+      eq(providerPathwayProfiles.providerId, provider.id),
+      eq(providerPathwayProfiles.status, "active"),
+    ))
+    .orderBy(desc(providerPathwayProfiles.pathwayVersion))
+    .limit(1);
+  const performingPersonId = pathway?.providerPersonId || "";
+  const [performer] = performingPersonId
+    ? await db.select().from(providerPersonnel).where(and(
+        eq(providerPersonnel.providerId, provider.id),
+        eq(providerPersonnel.personId, performingPersonId),
+        eq(providerPersonnel.status, "active"),
+      )).limit(1)
+    : [];
+  if (!pathway || !performer || !performingPersonId) {
+    return Response.json({
+      error: "An active, verified performing person must be bound to this provider before quoting.",
+      code: "PERFORMING_PERSON_REQUIRED",
+    }, { status: 409 });
+  }
+
+  const quoteId = await quoteIdFor(requestId, provider.email);
+  const scopeVersion = CUSTOMER_REQUEST_SCOPE_VERSION;
+  const eligibility = await evaluateStageEligibility({
+    stage: "quote",
+    providerId: provider.id,
+    personId: performingPersonId,
+    supervisorPersonId: "",
+    serviceCodes,
+    jurisdiction: job.jurisdiction,
+    scheduledFor: job.scheduledFor,
+    requestId,
+    quoteId,
+    scopeVersion,
+    assignmentVersion: 0,
+    jobFacts: acceptedRequestScope.jobFacts,
+    effectiveAt: new Date().toISOString(),
+    testOnly: provider.isTestProvider === "yes" && job.isTestJob === "yes",
+    persist: true,
+  });
+  if (!eligibility.allowed || !eligibility.decisionId) {
+    return Response.json({
+      error: eligibilityErrorMessage(eligibility),
+      code: "QUOTE_ELIGIBILITY_DENIED",
+      reasons: eligibility.reasons,
+    }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
+
   const customerPrice = customerPriceFor(Math.round(price * 100));
   try {
     await db.insert(providerQuotes).values({
-      id: await quoteIdFor(requestId, provider.email),
+      id: quoteId,
       requestId,
+      serviceCodes: JSON.stringify(serviceCodes),
       providerName: provider.name,
       providerEmail: provider.email,
+      performingPersonId,
+      supervisorPersonId: "",
       priceCents: String(customerPrice.providerQuoteCents),
       laborPriceCents: String(Math.round(laborPrice * 100)),
       partsPriceCents: String(Math.round(partsPrice * 100)),
@@ -600,7 +945,10 @@ export async function POST(request: Request) {
       customerTotalCents: String(customerPrice.customerTotalCents),
       partType,
       availability,
+      scheduledFor: job.scheduledFor,
       message,
+      scopeVersion,
+      authorizationDecisionId: eligibility.decisionId,
     });
   } catch (error) {
     const [duplicateQuote] = await db.select({ id: providerQuotes.id }).from(providerQuotes)
@@ -613,5 +961,18 @@ export async function POST(request: Request) {
     }
     throw error;
   }
+  await appendJobLifecycleEvent({
+    requestId,
+    quoteId,
+    providerId: provider.id,
+    actorRole: "provider",
+    actorId: provider.email,
+    eventType: "exact_service_quote_submitted",
+    fromStatus: job.status,
+    toStatus: job.status,
+    scopeVersion,
+    authorizationSnapshotId: eligibility.decisionId,
+    details: { serviceCodes, scheduledFor: job.scheduledFor, performingPersonId },
+  });
   return Response.json({ ok: true }, { status: 201 });
 }

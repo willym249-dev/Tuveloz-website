@@ -1,5 +1,13 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const customerRequests = sqliteTable(
   "customer_requests",
@@ -9,16 +17,19 @@ export const customerRequests = sqliteTable(
     email: text("email").notNull(),
     zip: text("zip").notNull(),
     launchArea: text("launch_area").notNull().default(""),
+    jurisdiction: text("jurisdiction").notNull().default(""),
     municipality: text("municipality").notNull().default(""),
     isTestJob: text("is_test_job").notNull().default("no"),
     vehicle: text("vehicle").notNull(),
     service: text("service").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
     partsSource: text("parts_source").notNull().default("Either is okay"),
     partsPreference: text("parts_preference").notNull().default("No preference"),
     budgetRange: text("budget_range").notNull().default("I'm flexible"),
     serviceLocations: text("service_locations").notNull().default("Provider comes to me"),
     serviceAddress: text("service_address").notNull().default(""),
     details: text("details").notNull(),
+    scheduledFor: text("scheduled_for").notNull().default(""),
     preferredProviderEmail: text("preferred_provider_email").notNull().default(""),
     preferredProviderName: text("preferred_provider_name").notNull().default(""),
     repeatOfRequestId: text("repeat_of_request_id").notNull().default(""),
@@ -28,9 +39,16 @@ export const customerRequests = sqliteTable(
     completionImageKey: text("completion_image_key").notNull().default(""),
     completionImageType: text("completion_image_type").notNull().default(""),
     status: text("status").notNull().default("new"),
+    assignedPersonId: text("assigned_person_id").notNull().default(""),
+    assignedSupervisorPersonId: text("assigned_supervisor_person_id").notNull().default(""),
+    assignmentVersion: integer("assignment_version").notNull().default(0),
     approvedAt: text("approved_at").notNull().default(""),
     reminderSentAt: text("reminder_sent_at").notNull().default(""),
     reminderLastAttemptAt: text("reminder_last_attempt_at").notNull().default(""),
+    policyVersion: text("policy_version").notNull().default(""),
+    customerProviderDisclosureAcceptedAt: text("customer_provider_disclosure_accepted_at")
+      .notNull()
+      .default(""),
     termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
     termsVersion: text("terms_version").notNull().default(""),
     rememberEmailConsent: text("remember_email_consent").notNull().default("no"),
@@ -47,6 +65,11 @@ export const customerRequests = sqliteTable(
     index("customer_requests_status_idx").on(table.status),
     index("customer_requests_email_idx").on(table.email),
     index("customer_requests_preferred_provider_idx").on(table.preferredProviderEmail),
+    index("customer_requests_jurisdiction_status_idx").on(table.jurisdiction, table.status),
+    index("customer_requests_scheduled_for_idx").on(table.scheduledFor),
+    index("customer_requests_assigned_person_idx").on(table.assignedPersonId),
+    index("customer_requests_assigned_supervisor_idx")
+      .on(table.assignedSupervisorPersonId),
   ],
 );
 
@@ -55,8 +78,11 @@ export const providerQuotes = sqliteTable(
   {
     id: text("id").primaryKey(),
     requestId: text("request_id").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
     providerName: text("provider_name").notNull(),
     providerEmail: text("provider_email").notNull(),
+    performingPersonId: text("performing_person_id").notNull().default(""),
+    supervisorPersonId: text("supervisor_person_id").notNull().default(""),
     priceCents: text("price_cents").notNull(),
     laborPriceCents: text("labor_price_cents").notNull().default("0"),
     partsPriceCents: text("parts_price_cents").notNull().default("0"),
@@ -65,7 +91,10 @@ export const providerQuotes = sqliteTable(
     customerTotalCents: text("customer_total_cents").notNull().default("0"),
     partType: text("part_type").notNull().default("Not specified"),
     availability: text("availability").notNull(),
+    scheduledFor: text("scheduled_for").notNull().default(""),
     message: text("message").notNull(),
+    scopeVersion: integer("scope_version").notNull().default(0),
+    authorizationDecisionId: text("authorization_decision_id").notNull().default(""),
     status: text("status").notNull().default("submitted"),
     declineReason: text("decline_reason").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -73,6 +102,10 @@ export const providerQuotes = sqliteTable(
   (table) => [
     index("provider_quotes_request_id_idx").on(table.requestId),
     index("provider_quotes_created_at_idx").on(table.createdAt),
+    index("provider_quotes_performing_person_idx").on(table.performingPersonId),
+    index("provider_quotes_supervisor_person_idx").on(table.supervisorPersonId),
+    index("provider_quotes_scheduled_for_idx").on(table.scheduledFor),
+    index("provider_quotes_authorization_decision_idx").on(table.authorizationDecisionId),
   ],
 );
 
@@ -82,6 +115,8 @@ export const providerJobRecords = sqliteTable(
     id: text("id").primaryKey(),
     requestId: text("request_id").notNull(),
     providerEmail: text("provider_email").notNull(),
+    jobStartDecisionId: text("job_start_decision_id").notNull().default(""),
+    completionDecisionId: text("completion_decision_id").notNull().default(""),
     workStatus: text("work_status").notNull().default("scheduled"),
     timerStartedAt: text("timer_started_at").notNull().default(""),
     trackedSeconds: integer("tracked_seconds").notNull().default(0),
@@ -95,6 +130,8 @@ export const providerJobRecords = sqliteTable(
       .on(table.requestId, table.providerEmail),
     index("provider_job_records_provider_email_idx").on(table.providerEmail),
     index("provider_job_records_updated_at_idx").on(table.updatedAt),
+    index("provider_job_records_start_decision_idx").on(table.jobStartDecisionId),
+    index("provider_job_records_completion_decision_idx").on(table.completionDecisionId),
   ],
 );
 
@@ -178,6 +215,13 @@ export const stripePayments = sqliteTable(
     paymentType: text("payment_type").notNull(),
     requestId: text("request_id"),
     quoteId: text("quote_id"),
+    scopeVersion: integer("scope_version").notNull().default(0),
+    scopeAuthorizationDecisionId: text("scope_authorization_decision_id")
+      .notNull()
+      .default(""),
+    authorizedPriceSnapshot: text("authorized_price_snapshot")
+      .notNull()
+      .default("{}"),
     stripeProductId: text("stripe_product_id"),
     stripePriceId: text("stripe_price_id"),
     productName: text("product_name").notNull(),
@@ -211,6 +255,8 @@ export const stripePayments = sqliteTable(
   (table) => [
     index("stripe_payments_request_id_idx").on(table.requestId),
     index("stripe_payments_quote_id_idx").on(table.quoteId),
+    index("stripe_payments_scope_authorization_idx")
+      .on(table.scopeAuthorizationDecisionId),
     index("stripe_payments_provider_idx").on(table.providerApplicationId),
     index("stripe_payments_status_idx").on(table.status),
     uniqueIndex("stripe_payments_checkout_session_unique").on(table.checkoutSessionId),
@@ -506,5 +552,1019 @@ export const emailNotificationOutbox = sqliteTable(
     uniqueIndex("email_notification_outbox_event_key_unique").on(table.eventKey),
     index("email_notification_outbox_status_created_idx").on(table.status, table.createdAt),
     index("email_notification_outbox_recipient_idx").on(table.recipientEmail),
+  ],
+);
+
+export const providerPathwayProfiles = sqliteTable(
+  "provider_pathway_profiles",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    providerPersonId: text("provider_person_id").notNull().default(""),
+    relationshipPath: text("relationship_path").notNull(),
+    providerLevel: text("provider_level").notNull(),
+    sponsoringProviderId: text("sponsoring_provider_id").notNull().default(""),
+    registrationHolderId: text("registration_holder_id").notNull().default(""),
+    pathwayVersion: integer("pathway_version").notNull().default(1),
+    status: text("status").notNull().default("pending"),
+    policyVersion: text("policy_version").notNull(),
+    holdReasonCodes: text("hold_reason_codes").notNull().default("[]"),
+    noEmployeeAttestedAt: text("no_employee_attested_at").notNull().default(""),
+    noEmployeeAttestationExpiresAt: text("no_employee_attestation_expires_at")
+      .notNull()
+      .default(""),
+    effectiveAt: text("effective_at").notNull().default(""),
+    validThrough: text("valid_through").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_pathway_profiles_provider_version_unique")
+      .on(table.providerId, table.pathwayVersion),
+    index("provider_pathway_profiles_provider_status_idx")
+      .on(table.providerId, table.status),
+    index("provider_pathway_profiles_person_idx").on(table.providerPersonId),
+    index("provider_pathway_profiles_sponsor_status_idx")
+      .on(table.sponsoringProviderId, table.status),
+    index("provider_pathway_profiles_valid_through_idx").on(table.validThrough),
+  ],
+);
+
+export const providerPersonnel = sqliteTable(
+  "provider_personnel",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull(),
+    relationshipType: text("relationship_type").notNull(),
+    personnelRole: text("personnel_role").notNull().default("technician"),
+    providerLevel: text("provider_level").notNull().default(""),
+    rosterVersion: integer("roster_version").notNull().default(1),
+    status: text("status").notNull().default("pending"),
+    identityVerifiedAt: text("identity_verified_at").notNull().default(""),
+    ageVerifiedAt: text("age_verified_at").notNull().default(""),
+    identityVerificationProvider: text("identity_verification_provider")
+      .notNull()
+      .default(""),
+    identityVerificationReference: text("identity_verification_reference")
+      .notNull()
+      .default(""),
+    identityVerificationCheckedAt: text("identity_verification_checked_at")
+      .notNull()
+      .default(""),
+    identityVerificationValidThrough: text("identity_verification_valid_through")
+      .notNull()
+      .default(""),
+    ageVerificationProvider: text("age_verification_provider")
+      .notNull()
+      .default(""),
+    ageVerificationReference: text("age_verification_reference")
+      .notNull()
+      .default(""),
+    ageVerificationCheckedAt: text("age_verification_checked_at")
+      .notNull()
+      .default(""),
+    ageVerificationValidThrough: text("age_verification_valid_through")
+      .notNull()
+      .default(""),
+    employmentStartedAt: text("employment_started_at").notNull().default(""),
+    employmentEndedAt: text("employment_ended_at").notNull().default(""),
+    // The sponsoring employer retains any I-9 or work-authorization documents.
+    // TUVELOZ stores only attestation timestamps and never SSNs or document numbers.
+    employerAttestedAt: text("employer_attested_at").notNull().default(""),
+    workAuthorizationAttestedAt: text("work_authorization_attested_at")
+      .notNull()
+      .default(""),
+    lawfulPayAttestedAt: text("lawful_pay_attested_at").notNull().default(""),
+    employerAttestedByPersonId: text("employer_attested_by_person_id")
+      .notNull()
+      .default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_personnel_provider_person_roster_version_unique")
+      .on(table.providerId, table.personId, table.rosterVersion),
+    index("provider_personnel_provider_status_idx").on(table.providerId, table.status),
+    index("provider_personnel_provider_person_status_idx")
+      .on(table.providerId, table.personId, table.status),
+    index("provider_personnel_person_status_idx").on(table.personId, table.status),
+    index("provider_personnel_employment_end_idx").on(table.employmentEndedAt),
+  ],
+);
+
+export const providerEvidenceSubmissions = sqliteTable(
+  "provider_evidence_submissions",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    requirementKey: text("requirement_key").notNull(),
+    serviceCode: text("service_code").notNull().default(""),
+    jurisdiction: text("jurisdiction").notNull(),
+    evidenceType: text("evidence_type").notNull(),
+    evidenceScope: text("evidence_scope").notNull().default("{}"),
+    // Restricted evidence storage is for approved business, credential, and
+    // insurance evidence only—not SSNs or work-authorization documents.
+    storageKey: text("storage_key").notNull().default(""),
+    contentType: text("content_type").notNull().default(""),
+    documentHash: text("document_hash").notNull().default(""),
+    issuer: text("issuer").notNull().default(""),
+    sourceUrl: text("source_url").notNull().default(""),
+    effectiveAt: text("effective_at").notNull().default(""),
+    expiresAt: text("expires_at").notNull().default(""),
+    status: text("status").notNull().default("pending"),
+    submittedAt: text("submitted_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    reviewedAt: text("reviewed_at").notNull().default(""),
+    reviewedBy: text("reviewed_by").notNull().default(""),
+    reviewDecisionId: text("review_decision_id").notNull().default(""),
+    reasonCodes: text("reason_codes").notNull().default("[]"),
+    reviewNotes: text("review_notes").notNull().default(""),
+    authenticityVerificationMethod: text("authenticity_verification_method")
+      .notNull()
+      .default(""),
+    authenticityVerifiedBy: text("authenticity_verified_by")
+      .notNull()
+      .default(""),
+    authenticityVerificationReference: text("authenticity_verification_reference")
+      .notNull()
+      .default(""),
+    authenticitySourceUrl: text("authenticity_source_url").notNull().default(""),
+    authenticityVerifiedAt: text("authenticity_verified_at").notNull().default(""),
+    authenticityValidThrough: text("authenticity_valid_through").notNull().default(""),
+    supersedesEvidenceId: text("supersedes_evidence_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("provider_evidence_provider_requirement_status_idx")
+      .on(table.providerId, table.requirementKey, table.status),
+    index("provider_evidence_person_service_jurisdiction_idx")
+      .on(table.personId, table.serviceCode, table.jurisdiction),
+    index("provider_evidence_expiration_idx").on(table.expiresAt),
+    index("provider_evidence_review_decision_idx").on(table.reviewDecisionId),
+    index("provider_evidence_supersedes_idx").on(table.supersedesEvidenceId),
+  ],
+);
+
+export const agreementAcceptances = sqliteTable(
+  "agreement_acceptances",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    jurisdiction: text("jurisdiction").notNull().default(""),
+    agreementKey: text("agreement_key").notNull(),
+    agreementVersion: text("agreement_version").notNull(),
+    agreementHash: text("agreement_hash").notNull(),
+    agreementText: text("agreement_text").notNull(),
+    acceptedByName: text("accepted_by_name").notNull(),
+    acceptedByTitle: text("accepted_by_title").notNull().default(""),
+    acceptanceAction: text("acceptance_action").notNull().default("affirmative-checkbox"),
+    acceptedAt: text("accepted_at").notNull(),
+    ipAddress: text("ip_address").notNull().default(""),
+    sessionId: text("session_id").notNull().default(""),
+    deviceContext: text("device_context").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("agreement_acceptances_provider_person_jurisdiction_key_version_unique")
+      .on(
+        table.providerId,
+        table.personId,
+        table.jurisdiction,
+        table.agreementKey,
+        table.agreementVersion,
+      ),
+    index("agreement_acceptances_provider_time_idx").on(table.providerId, table.acceptedAt),
+    index("agreement_acceptances_person_time_idx").on(table.personId, table.acceptedAt),
+    index("agreement_acceptances_key_version_idx")
+      .on(table.agreementKey, table.agreementVersion),
+  ],
+);
+
+export const providerServiceEligibility = sqliteTable(
+  "provider_service_eligibility",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    serviceCode: text("service_code").notNull(),
+    jurisdiction: text("jurisdiction").notNull(),
+    relationshipPath: text("relationship_path").notNull(),
+    providerLevel: text("provider_level").notNull(),
+    eligibilityState: text("eligibility_state").notNull().default("blocked"),
+    reasonCodes: text("reason_codes").notNull().default("[]"),
+    requirementVersions: text("requirement_versions").notNull().default("{}"),
+    evidenceDecisionIds: text("evidence_decision_ids").notNull().default("[]"),
+    rulesEngineVersion: text("rules_engine_version").notNull(),
+    policyVersion: text("policy_version").notNull(),
+    calculatedAt: text("calculated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    validThrough: text("valid_through").notNull().default(""),
+    nextExpirationAt: text("next_expiration_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_service_eligibility_provider_person_service_jurisdiction_unique")
+      .on(table.providerId, table.personId, table.serviceCode, table.jurisdiction),
+    index("provider_service_eligibility_provider_state_idx")
+      .on(table.providerId, table.eligibilityState),
+    index("provider_service_eligibility_person_state_idx")
+      .on(table.personId, table.eligibilityState),
+    index("provider_service_eligibility_service_jurisdiction_state_idx")
+      .on(table.serviceCode, table.jurisdiction, table.eligibilityState),
+    index("provider_service_eligibility_valid_through_idx").on(table.validThrough),
+  ],
+);
+
+export const serviceActivationDecisions = sqliteTable(
+  "service_activation_decisions",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    serviceCode: text("service_code").notNull(),
+    jurisdiction: text("jurisdiction").notNull(),
+    stage: text("stage").notNull(),
+    decisionVersion: integer("decision_version").notNull().default(1),
+    decision: text("decision").notNull(),
+    eligibilityId: text("eligibility_id").notNull().default(""),
+    reasonCodes: text("reason_codes").notNull().default("[]"),
+    requirementVersions: text("requirement_versions").notNull().default("{}"),
+    evidenceDecisionIds: text("evidence_decision_ids").notNull().default("[]"),
+    jobContext: text("job_context").notNull().default("{}"),
+    policyVersion: text("policy_version").notNull(),
+    rulesEngineVersion: text("rules_engine_version").notNull(),
+    decisionSource: text("decision_source").notNull().default("rules-engine"),
+    decidedBy: text("decided_by").notNull().default("system"),
+    decidedAt: text("decided_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    validThrough: text("valid_through").notNull().default(""),
+    supersedesDecisionId: text("supersedes_decision_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("service_activation_provider_person_service_jurisdiction_stage_version_unique")
+      .on(
+        table.providerId,
+        table.personId,
+        table.serviceCode,
+        table.jurisdiction,
+        table.stage,
+        table.decisionVersion,
+      ),
+    index("service_activation_lookup_idx")
+      .on(table.providerId, table.personId, table.serviceCode, table.jurisdiction, table.stage),
+    index("service_activation_eligibility_idx").on(table.eligibilityId),
+    index("service_activation_decided_at_idx").on(table.decidedAt),
+    index("service_activation_valid_through_idx").on(table.validThrough),
+  ],
+);
+
+export const jobScopeVersions = sqliteTable(
+  "job_scope_versions",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    version: integer("version").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
+    jurisdiction: text("jurisdiction").notNull(),
+    scheduledFor: text("scheduled_for").notNull().default(""),
+    scopeDetails: text("scope_details").notNull().default("{}"),
+    priceBreakdown: text("price_breakdown").notNull().default("{}"),
+    partsResponsibility: text("parts_responsibility").notNull().default(""),
+    changeReason: text("change_reason").notNull().default(""),
+    createdByProviderId: text("created_by_provider_id").notNull().default(""),
+    createdByPersonId: text("created_by_person_id").notNull().default(""),
+    providerApprovedAt: text("provider_approved_at").notNull().default(""),
+    customerAuthorizedAt: text("customer_authorized_at").notNull().default(""),
+    authorizationDecisionId: text("authorization_decision_id").notNull().default(""),
+    supersedesScopeVersionId: text("supersedes_scope_version_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_scope_versions_request_version_unique").on(table.requestId, table.version),
+    index("job_scope_versions_quote_idx").on(table.quoteId),
+    index("job_scope_versions_authorization_decision_idx").on(table.authorizationDecisionId),
+    index("job_scope_versions_scheduled_for_idx").on(table.scheduledFor),
+    index("job_scope_versions_created_at_idx").on(table.createdAt),
+  ],
+);
+
+export const supervisionCheckpoints = sqliteTable(
+  "supervision_checkpoints",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    scopeVersion: integer("scope_version").notNull(),
+    providerId: text("provider_id").notNull(),
+    performingPersonId: text("performing_person_id").notNull(),
+    supervisorPersonId: text("supervisor_person_id").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
+    jurisdiction: text("jurisdiction").notNull(),
+    checkpointType: text("checkpoint_type").notNull(),
+    checkpointSequence: integer("checkpoint_sequence").notNull().default(1),
+    supervisionLevel: text("supervision_level").notNull(),
+    performingPersonCheckedInAt: text("performing_person_checked_in_at")
+      .notNull()
+      .default(""),
+    supervisorCheckedInAt: text("supervisor_checked_in_at").notNull().default(""),
+    locationResult: text("location_result").notNull().default(""),
+    coLocationResult: text("co_location_result").notNull().default(""),
+    abilityToInterveneAttestedAt: text("ability_to_intervene_attested_at")
+      .notNull()
+      .default(""),
+    supervisorAttestedAt: text("supervisor_attested_at").notNull().default(""),
+    checkpointData: text("checkpoint_data").notNull().default("{}"),
+    notes: text("notes").notNull().default(""),
+    occurredAt: text("occurred_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("supervision_checkpoints_request_scope_type_sequence_unique")
+      .on(table.requestId, table.scopeVersion, table.checkpointType, table.checkpointSequence),
+    index("supervision_checkpoints_provider_request_idx")
+      .on(table.providerId, table.requestId),
+    index("supervision_checkpoints_performing_person_idx").on(table.performingPersonId),
+    index("supervision_checkpoints_supervisor_idx").on(table.supervisorPersonId),
+    index("supervision_checkpoints_occurred_at_idx").on(table.occurredAt),
+  ],
+);
+
+export const jobAuthorizationSnapshots = sqliteTable(
+  "job_authorization_snapshots",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    stage: text("stage").notNull(),
+    scopeVersion: integer("scope_version").notNull(),
+    assignmentVersion: integer("assignment_version").notNull().default(0),
+    decisionVersion: integer("decision_version").notNull().default(1),
+    providerId: text("provider_id").notNull(),
+    performingPersonId: text("performing_person_id").notNull(),
+    supervisorPersonId: text("supervisor_person_id").notNull().default(""),
+    serviceCodes: text("service_codes").notNull().default("[]"),
+    jurisdiction: text("jurisdiction").notNull(),
+    scheduledFor: text("scheduled_for").notNull().default(""),
+    decision: text("decision").notNull(),
+    reasonCodes: text("reason_codes").notNull().default("[]"),
+    eligibilitySnapshotIds: text("eligibility_snapshot_ids").notNull().default("[]"),
+    serviceActivationDecisionIds: text("service_activation_decision_ids")
+      .notNull()
+      .default("[]"),
+    evidenceDecisionIds: text("evidence_decision_ids").notNull().default("[]"),
+    supervisionCheckpointIds: text("supervision_checkpoint_ids").notNull().default("[]"),
+    agreementVersions: text("agreement_versions").notNull().default("{}"),
+    insuranceCoverageDeterminationId: text("insurance_coverage_determination_id")
+      .notNull()
+      .default(""),
+    locationRuleResult: text("location_rule_result").notNull().default(""),
+    scopeCheckResult: text("scope_check_result").notNull().default(""),
+    jobControlProfile: text("job_control_profile").notNull().default("{}"),
+    customerProviderDisclosureAcceptedAt: text("customer_provider_disclosure_accepted_at")
+      .notNull()
+      .default(""),
+    policyVersion: text("policy_version").notNull(),
+    rulesEngineVersion: text("rules_engine_version").notNull(),
+    decidedAt: text("decided_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    validThrough: text("valid_through").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_authorization_request_stage_scope_assignment_decision_unique")
+      .on(
+        table.requestId,
+        table.stage,
+        table.scopeVersion,
+        table.assignmentVersion,
+        table.decisionVersion,
+      ),
+    index("job_authorization_provider_stage_idx").on(table.providerId, table.stage),
+    index("job_authorization_performer_schedule_idx")
+      .on(table.performingPersonId, table.scheduledFor),
+    index("job_authorization_supervisor_idx").on(table.supervisorPersonId),
+    index("job_authorization_decision_validity_idx")
+      .on(table.decision, table.validThrough),
+    index("job_authorization_quote_idx").on(table.quoteId),
+  ],
+);
+
+export const providerAuditEvents = sqliteTable(
+  "provider_audit_events",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    requestId: text("request_id").notNull().default(""),
+    serviceCode: text("service_code").notNull().default(""),
+    jurisdiction: text("jurisdiction").notNull().default(""),
+    eventType: text("event_type").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    eventVersion: integer("event_version").notNull().default(1),
+    actorType: text("actor_type").notNull(),
+    actorId: text("actor_id").notNull(),
+    outcome: text("outcome").notNull(),
+    reasonCodes: text("reason_codes").notNull().default("[]"),
+    metadata: text("metadata").notNull().default("{}"),
+    policyVersion: text("policy_version").notNull().default(""),
+    previousEventHash: text("previous_event_hash").notNull().default(""),
+    eventHash: text("event_hash").notNull(),
+    occurredAt: text("occurred_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_audit_events_event_hash_unique").on(table.eventHash),
+    index("provider_audit_events_provider_time_idx").on(table.providerId, table.occurredAt),
+    index("provider_audit_events_person_time_idx").on(table.personId, table.occurredAt),
+    index("provider_audit_events_request_time_idx").on(table.requestId, table.occurredAt),
+    index("provider_audit_events_entity_idx").on(table.entityType, table.entityId),
+    index("provider_audit_events_type_time_idx").on(table.eventType, table.occurredAt),
+    index("provider_audit_events_service_jurisdiction_idx")
+      .on(table.serviceCode, table.jurisdiction),
+  ],
+);
+
+export const providerAppeals = sqliteTable(
+  "provider_appeals",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    evidenceSubmissionId: text("evidence_submission_id").notNull().default(""),
+    serviceCode: text("service_code").notNull().default(""),
+    appealType: text("appeal_type").notNull(),
+    reason: text("reason").notNull(),
+    supportingEvidenceIds: text("supporting_evidence_ids").notNull().default("[]"),
+    status: text("status").notNull().default("submitted"),
+    submittedByEmail: text("submitted_by_email").notNull(),
+    submittedAt: text("submitted_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    dueAt: text("due_at").notNull().default(""),
+    reviewedBy: text("reviewed_by").notNull().default(""),
+    reviewedAt: text("reviewed_at").notNull().default(""),
+    decision: text("decision").notNull().default(""),
+    decisionReason: text("decision_reason").notNull().default(""),
+    resolutionNotes: text("resolution_notes").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("provider_appeals_provider_status_idx").on(table.providerId, table.status),
+    index("provider_appeals_evidence_idx").on(table.evidenceSubmissionId),
+    index("provider_appeals_service_idx").on(table.serviceCode),
+    index("provider_appeals_status_due_idx").on(table.status, table.dueAt),
+  ],
+);
+
+export const dataRightsRequests = sqliteTable(
+  "data_rights_requests",
+  {
+    id: text("id").primaryKey(),
+    requesterEmail: text("requester_email").notNull(),
+    requesterRole: text("requester_role").notNull(),
+    providerId: text("provider_id").notNull().default(""),
+    requestType: text("request_type").notNull(),
+    scope: text("scope").notNull().default("account_and_documents"),
+    details: text("details").notNull().default(""),
+    identityVerificationStatus: text("identity_verification_status")
+      .notNull()
+      .default("account_session_verified"),
+    status: text("status").notNull().default("submitted"),
+    receivedAt: text("received_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    dueAt: text("due_at").notNull().default(""),
+    legalHold: text("legal_hold").notNull().default("no"),
+    resolvedAt: text("resolved_at").notNull().default(""),
+    resolvedBy: text("resolved_by").notNull().default(""),
+    responseSummary: text("response_summary").notNull().default(""),
+    deletionCompletedAt: text("deletion_completed_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("data_rights_requester_time_idx").on(table.requesterEmail, table.receivedAt),
+    index("data_rights_provider_status_idx").on(table.providerId, table.status),
+    index("data_rights_status_due_idx").on(table.status, table.dueAt),
+    index("data_rights_type_status_idx").on(table.requestType, table.status),
+  ],
+);
+
+export const complianceReminders = sqliteTable(
+  "compliance_reminders",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    evidenceSubmissionId: text("evidence_submission_id").notNull().default(""),
+    serviceCode: text("service_code").notNull().default(""),
+    reminderType: text("reminder_type").notNull(),
+    dueAt: text("due_at").notNull(),
+    channel: text("channel").notNull().default("email"),
+    recipientEmail: text("recipient_email").notNull(),
+    status: text("status").notNull().default("scheduled"),
+    scheduledAt: text("scheduled_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    sentAt: text("sent_at").notNull().default(""),
+    lastAttemptAt: text("last_attempt_at").notNull().default(""),
+    attempts: integer("attempts").notNull().default(0),
+    eventKey: text("event_key").notNull(),
+    metadata: text("metadata").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("compliance_reminders_event_key_unique").on(table.eventKey),
+    index("compliance_reminders_provider_due_idx").on(table.providerId, table.dueAt),
+    index("compliance_reminders_status_due_idx").on(table.status, table.dueAt),
+    index("compliance_reminders_evidence_idx").on(table.evidenceSubmissionId),
+  ],
+);
+
+export const evidenceFileScans = sqliteTable(
+  "evidence_file_scans",
+  {
+    id: text("id").primaryKey(),
+    evidenceSubmissionId: text("evidence_submission_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    scanProvider: text("scan_provider").notNull().default("manual_external_review"),
+    scanEngineVersion: text("scan_engine_version").notNull().default(""),
+    status: text("status").notNull().default("pending"),
+    threatName: text("threat_name").notNull().default(""),
+    fileHash: text("file_hash").notNull(),
+    requestedAt: text("requested_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    completedAt: text("completed_at").notNull().default(""),
+    reviewedBy: text("reviewed_by").notNull().default(""),
+    reviewNotes: text("review_notes").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("evidence_file_scans_evidence_status_idx")
+      .on(table.evidenceSubmissionId, table.status),
+    index("evidence_file_scans_provider_status_idx").on(table.providerId, table.status),
+    index("evidence_file_scans_requested_at_idx").on(table.requestedAt),
+  ],
+);
+
+export const customerAgreementAcceptances = sqliteTable(
+  "customer_agreement_acceptances",
+  {
+    id: text("id").primaryKey(),
+    customerEmail: text("customer_email").notNull(),
+    requestId: text("request_id").notNull().default(""),
+    quoteId: text("quote_id").notNull().default(""),
+    scopeVersion: integer("scope_version").notNull().default(0),
+    scopeSnapshot: text("scope_snapshot").notNull().default("{}"),
+    agreementKey: text("agreement_key").notNull(),
+    agreementVersion: text("agreement_version").notNull(),
+    agreementHash: text("agreement_hash").notNull(),
+    agreementText: text("agreement_text").notNull(),
+    acceptedByName: text("accepted_by_name").notNull(),
+    acceptanceAction: text("acceptance_action").notNull().default("affirmative-checkbox"),
+    acceptedAt: text("accepted_at").notNull(),
+    ipAddress: text("ip_address").notNull().default(""),
+    sessionId: text("session_id").notNull().default(""),
+    deviceContext: text("device_context").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("customer_agreement_request_quote_key_version_scope_unique")
+      .on(
+        table.requestId,
+        table.quoteId,
+        table.agreementKey,
+        table.agreementVersion,
+        table.scopeVersion,
+      ),
+    index("customer_agreement_customer_time_idx").on(table.customerEmail, table.acceptedAt),
+    index("customer_agreement_request_idx").on(table.requestId),
+    index("customer_agreement_quote_idx").on(table.quoteId),
+  ],
+);
+
+export const jobLifecycleEvents = sqliteTable(
+  "job_lifecycle_events",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    providerId: text("provider_id").notNull().default(""),
+    actorRole: text("actor_role").notNull(),
+    actorId: text("actor_id").notNull(),
+    eventType: text("event_type").notNull(),
+    fromStatus: text("from_status").notNull().default(""),
+    toStatus: text("to_status").notNull().default(""),
+    scopeVersion: integer("scope_version").notNull().default(0),
+    authorizationSnapshotId: text("authorization_snapshot_id").notNull().default(""),
+    reasonCode: text("reason_code").notNull().default(""),
+    details: text("details").notNull().default("{}"),
+    previousEventHash: text("previous_event_hash").notNull().default(""),
+    eventHash: text("event_hash").notNull(),
+    occurredAt: text("occurred_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_lifecycle_events_hash_unique").on(table.eventHash),
+    index("job_lifecycle_request_time_idx").on(table.requestId, table.occurredAt),
+    index("job_lifecycle_provider_time_idx").on(table.providerId, table.occurredAt),
+    index("job_lifecycle_type_time_idx").on(table.eventType, table.occurredAt),
+  ],
+);
+
+export const jobCancellations = sqliteTable(
+  "job_cancellations",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    requestedByRole: text("requested_by_role").notNull(),
+    requestedByEmail: text("requested_by_email").notNull(),
+    cancellationType: text("cancellation_type").notNull(),
+    reason: text("reason").notNull(),
+    status: text("status").notNull().default("submitted"),
+    scheduledFor: text("scheduled_for").notNull().default(""),
+    requestedAt: text("requested_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    noticeHours: integer("notice_hours").notNull().default(0),
+    providerTravelStarted: text("provider_travel_started").notNull().default("no"),
+    partsCommittedCents: integer("parts_committed_cents").notNull().default(0),
+    workPerformedCents: integer("work_performed_cents").notNull().default(0),
+    proposedRefundCents: integer("proposed_refund_cents").notNull().default(0),
+    retainedAmountCents: integer("retained_amount_cents").notNull().default(0),
+    decisionBy: text("decision_by").notNull().default(""),
+    decisionAt: text("decision_at").notNull().default(""),
+    decisionReason: text("decision_reason").notNull().default(""),
+    paymentAdjustmentId: text("payment_adjustment_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_cancellations_request_status_idx").on(table.requestId, table.status),
+    index("job_cancellations_requested_at_idx").on(table.requestedAt),
+    index("job_cancellations_type_status_idx").on(table.cancellationType, table.status),
+  ],
+);
+
+export const jobIncidents = sqliteTable(
+  "job_incidents",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    providerId: text("provider_id").notNull().default(""),
+    reporterRole: text("reporter_role").notNull(),
+    reporterEmail: text("reporter_email").notNull(),
+    incidentType: text("incident_type").notNull(),
+    severity: text("severity").notNull(),
+    summary: text("summary").notNull(),
+    occurredAt: text("occurred_at").notNull(),
+    locationSummary: text("location_summary").notNull().default(""),
+    injuryReported: text("injury_reported").notNull().default("no"),
+    propertyDamageReported: text("property_damage_reported").notNull().default("no"),
+    emergencyServicesContacted: text("emergency_services_contacted").notNull().default("no"),
+    workStoppedAt: text("work_stopped_at").notNull().default(""),
+    insurerNotifiedAt: text("insurer_notified_at").notNull().default(""),
+    evidenceReferences: text("evidence_references").notNull().default("[]"),
+    status: text("status").notNull().default("open"),
+    holdPayments: text("hold_payments").notNull().default("yes"),
+    assignedTo: text("assigned_to").notNull().default(""),
+    resolution: text("resolution").notNull().default(""),
+    resolvedAt: text("resolved_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_incidents_request_status_idx").on(table.requestId, table.status),
+    index("job_incidents_provider_status_idx").on(table.providerId, table.status),
+    index("job_incidents_severity_status_idx").on(table.severity, table.status),
+    index("job_incidents_occurred_at_idx").on(table.occurredAt),
+  ],
+);
+
+export const jobChangeOrders = sqliteTable(
+  "job_change_orders",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    priorScopeVersion: integer("prior_scope_version").notNull(),
+    proposedScopeVersion: integer("proposed_scope_version").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
+    scopeDetails: text("scope_details").notNull().default("{}"),
+    priceBreakdown: text("price_breakdown").notNull().default("{}"),
+    reason: text("reason").notNull(),
+    requestedByProviderId: text("requested_by_provider_id").notNull(),
+    requestedByPersonId: text("requested_by_person_id").notNull().default(""),
+    status: text("status").notNull().default("pending_customer"),
+    providerApprovedAt: text("provider_approved_at").notNull().default(""),
+    customerAuthorizedAt: text("customer_authorized_at").notNull().default(""),
+    customerDeclinedAt: text("customer_declined_at").notNull().default(""),
+    authorizationSnapshotId: text("authorization_snapshot_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_change_orders_request_scope_unique")
+      .on(table.requestId, table.proposedScopeVersion),
+    index("job_change_orders_request_status_idx").on(table.requestId, table.status),
+    index("job_change_orders_provider_status_idx")
+      .on(table.requestedByProviderId, table.status),
+  ],
+);
+
+export const providerInvoices = sqliteTable(
+  "provider_invoices",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    providerId: text("provider_id").notNull(),
+    invoiceNumber: text("invoice_number").notNull(),
+    scopeVersion: integer("scope_version").notNull(),
+    serviceCodes: text("service_codes").notNull().default("[]"),
+    laborAmountCents: integer("labor_amount_cents").notNull().default(0),
+    partsAmountCents: integer("parts_amount_cents").notNull().default(0),
+    taxAmountCents: integer("tax_amount_cents").notNull().default(0),
+    otherAmountCents: integer("other_amount_cents").notNull().default(0),
+    totalAmountCents: integer("total_amount_cents").notNull().default(0),
+    partsDescription: text("parts_description").notNull().default(""),
+    returnedPartsChoice: text("returned_parts_choice").notNull().default("not_recorded"),
+    warrantyProvider: text("warranty_provider").notNull().default("provider_business"),
+    warrantyTerms: text("warranty_terms").notNull().default(""),
+    workSummary: text("work_summary").notNull(),
+    status: text("status").notNull().default("draft"),
+    issuedAt: text("issued_at").notNull().default(""),
+    customerViewedAt: text("customer_viewed_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_invoices_provider_number_unique")
+      .on(table.providerId, table.invoiceNumber),
+    uniqueIndex("provider_invoices_request_scope_unique")
+      .on(table.requestId, table.scopeVersion),
+    index("provider_invoices_request_status_idx").on(table.requestId, table.status),
+    index("provider_invoices_provider_status_idx").on(table.providerId, table.status),
+  ],
+);
+
+export const paymentAdjustments = sqliteTable(
+  "payment_adjustments",
+  {
+    id: text("id").primaryKey(),
+    paymentId: text("payment_id").notNull().default(""),
+    requestId: text("request_id").notNull(),
+    quoteId: text("quote_id").notNull().default(""),
+    adjustmentType: text("adjustment_type").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull().default("usd"),
+    status: text("status").notNull().default("requested"),
+    reasonCode: text("reason_code").notNull(),
+    details: text("details").notNull().default("{}"),
+    requestedByRole: text("requested_by_role").notNull(),
+    requestedById: text("requested_by_id").notNull(),
+    requestedAt: text("requested_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    decidedBy: text("decided_by").notNull().default(""),
+    decidedAt: text("decided_at").notNull().default(""),
+    providerImpactCents: integer("provider_impact_cents").notNull().default(0),
+    customerImpactCents: integer("customer_impact_cents").notNull().default(0),
+    stripeRefundId: text("stripe_refund_id").notNull().default(""),
+    stripeDisputeId: text("stripe_dispute_id").notNull().default(""),
+    transferReversalId: text("transfer_reversal_id").notNull().default(""),
+    idempotencyKey: text("idempotency_key").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("payment_adjustments_idempotency_unique").on(table.idempotencyKey),
+    index("payment_adjustments_request_status_idx").on(table.requestId, table.status),
+    index("payment_adjustments_payment_idx").on(table.paymentId),
+    index("payment_adjustments_type_status_idx").on(table.adjustmentType, table.status),
+  ],
+);
+
+export const launchGateDecisions = sqliteTable(
+  "launch_gate_decisions",
+  {
+    id: text("id").primaryKey(),
+    gateKey: text("gate_key").notNull(),
+    gateVersion: integer("gate_version").notNull().default(1),
+    category: text("category").notNull(),
+    serviceCode: text("service_code").notNull().default(""),
+    jurisdiction: text("jurisdiction").notNull().default(""),
+    status: text("status").notNull().default("pending"),
+    required: text("required").notNull().default("yes"),
+    evidenceReference: text("evidence_reference").notNull().default(""),
+    approvedBy: text("approved_by").notNull().default(""),
+    approvedAt: text("approved_at").notNull().default(""),
+    validThrough: text("valid_through").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    decidedBy: text("decided_by").notNull().default(""),
+    supersedesDecisionId: text("supersedes_decision_id").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("launch_gate_key_version_unique").on(table.gateKey, table.gateVersion),
+    index("launch_gate_category_status_idx").on(table.category, table.status),
+    index("launch_gate_service_jurisdiction_status_idx")
+      .on(table.serviceCode, table.jurisdiction, table.status),
+    index("launch_gate_valid_through_idx").on(table.validThrough),
+  ],
+);
+
+// These tables originated as hand-authored production migrations (0033-0035).
+// Keeping them in the Drizzle schema prevents future generated migrations from
+// treating the deployed tables as schema drift.
+export const jobAuthorizations = sqliteTable(
+  "job_authorizations",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    sourceQuoteId: text("source_quote_id").notNull().default(""),
+    providerEmail: text("provider_email").notNull(),
+    providerName: text("provider_name").notNull(),
+    customerEmail: text("customer_email").notNull(),
+    authorizationType: text("authorization_type").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    laborCents: integer("labor_cents").notNull().default(0),
+    partsCents: integer("parts_cents").notNull().default(0),
+    otherFeesCents: integer("other_fees_cents").notNull().default(0),
+    totalCents: integer("total_cents").notNull().default(0),
+    estimatedCompletionAt: text("estimated_completion_at").notNull().default(""),
+    diagnosticOnly: text("diagnostic_only").notNull().default("no"),
+    workmanshipWarranty: text("workmanship_warranty").notNull().default(""),
+    partsWarranty: text("parts_warranty").notNull().default(""),
+    replacedPartsReturn: text("replaced_parts_return").notNull().default("not-requested"),
+    status: text("status").notNull().default("pending"),
+    providerTermsVersion: text("provider_terms_version").notNull().default(""),
+    customerTermsVersion: text("customer_terms_version").notNull().default(""),
+    supersedesAuthorizationId: text("supersedes_authorization_id").notNull().default(""),
+    responseNote: text("response_note").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    respondedAt: text("responded_at").notNull().default(""),
+    withdrawnAt: text("withdrawn_at").notNull().default(""),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_authorizations_request_created_idx").on(table.requestId, table.createdAt),
+    index("job_authorizations_provider_status_idx").on(table.providerEmail, table.status),
+    index("job_authorizations_customer_status_idx").on(table.customerEmail, table.status),
+    uniqueIndex("job_authorizations_source_quote_unique")
+      .on(table.sourceQuoteId)
+      .where(sql`${table.sourceQuoteId} <> ''`),
+    check(
+      "job_authorizations_authorization_type_check",
+      sql`${table.authorizationType} in ('accepted-quote', 'work-order', 'change-order', 'diagnostic-follow-up', 'scope-update')`,
+    ),
+    check(
+      "job_authorizations_status_check",
+      sql`${table.status} in ('pending', 'accepted', 'declined', 'withdrawn', 'superseded')`,
+    ),
+    check(
+      "job_authorizations_diagnostic_only_check",
+      sql`${table.diagnosticOnly} in ('yes', 'no')`,
+    ),
+    check(
+      "job_authorizations_replaced_parts_return_check",
+      sql`${table.replacedPartsReturn} in ('requested', 'not-requested', 'not-applicable')`,
+    ),
+    check("job_authorizations_labor_cents_check", sql`${table.laborCents} >= 0`),
+    check("job_authorizations_parts_cents_check", sql`${table.partsCents} >= 0`),
+    check("job_authorizations_other_fees_cents_check", sql`${table.otherFeesCents} >= 0`),
+    check(
+      "job_authorizations_total_cents_check",
+      sql`${table.totalCents} = ${table.laborCents} + ${table.partsCents} + ${table.otherFeesCents}`,
+    ),
+  ],
+);
+
+export const jobAuthorizationEvents = sqliteTable(
+  "job_authorization_events",
+  {
+    id: text("id").primaryKey(),
+    authorizationId: text("authorization_id").notNull(),
+    requestId: text("request_id").notNull(),
+    actorEmail: text("actor_email").notNull(),
+    actorRole: text("actor_role").notNull(),
+    action: text("action").notNull(),
+    note: text("note").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_authorization_events_authorization_idx")
+      .on(table.authorizationId, table.createdAt),
+    index("job_authorization_events_request_idx").on(table.requestId, table.createdAt),
+    check(
+      "job_authorization_events_actor_role_check",
+      sql`${table.actorRole} in ('customer', 'provider', 'system')`,
+    ),
+  ],
+);
+
+export const accountCommunicationPreferences = sqliteTable(
+  "account_communication_preferences",
+  {
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    marketingEmail: text("marketing_email").notNull().default("no"),
+    productUpdateEmail: text("product_update_email").notNull().default("no"),
+    optionalReminderEmail: text("optional_reminder_email").notNull().default("yes"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.email, table.role] }),
+    index("account_communication_preferences_updated_idx").on(table.updatedAt),
+    check(
+      "account_communication_preferences_role_check",
+      sql`${table.role} in ('customer', 'provider')`,
+    ),
+    check(
+      "account_communication_preferences_marketing_email_check",
+      sql`${table.marketingEmail} in ('yes', 'no')`,
+    ),
+    check(
+      "account_communication_preferences_product_update_email_check",
+      sql`${table.productUpdateEmail} in ('yes', 'no')`,
+    ),
+    check(
+      "account_communication_preferences_optional_reminder_email_check",
+      sql`${table.optionalReminderEmail} in ('yes', 'no')`,
+    ),
+  ],
+);
+
+export const privacyRequests = sqliteTable(
+  "privacy_requests",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    requestType: text("request_type").notNull(),
+    relatedRequestId: text("related_request_id").notNull().default(""),
+    details: text("details").notNull().default(""),
+    status: text("status").notNull().default("submitted"),
+    identitySource: text("identity_source").notNull().default("signed-in-account"),
+    resolutionNote: text("resolution_note").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    resolvedAt: text("resolved_at").notNull().default(""),
+  },
+  (table) => [
+    index("privacy_requests_account_created_idx").on(table.email, table.role, table.createdAt),
+    index("privacy_requests_status_created_idx").on(table.status, table.createdAt),
+    uniqueIndex("privacy_requests_one_active_type_unique")
+      .on(table.email, table.role, table.requestType)
+      .where(sql`${table.status} in ('submitted', 'in-review')`),
+    check("privacy_requests_role_check", sql`${table.role} in ('customer', 'provider')`),
+    check(
+      "privacy_requests_request_type_check",
+      sql`${table.requestType} in ('access', 'correction', 'account-closure', 'limit-processing', 'opt-out', 'appeal')`,
+    ),
+    check(
+      "privacy_requests_status_check",
+      sql`${table.status} in ('submitted', 'in-review', 'completed', 'denied', 'withdrawn')`,
+    ),
+    check(
+      "privacy_requests_identity_source_check",
+      sql`${table.identitySource} in ('signed-in-account', 'support-verified')`,
+    ),
+  ],
+);
+
+export const jobEvidenceItems = sqliteTable(
+  "job_evidence_items",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    providerEmail: text("provider_email").notNull(),
+    customerEmail: text("customer_email").notNull(),
+    uploadedByEmail: text("uploaded_by_email").notNull(),
+    uploadedByRole: text("uploaded_by_role").notNull(),
+    evidenceType: text("evidence_type").notNull(),
+    imageKey: text("image_key").notNull().default(""),
+    imageType: text("image_type").notNull().default(""),
+    note: text("note").notNull().default(""),
+    odometerMiles: integer("odometer_miles").notNull().default(0),
+    technicianName: text("technician_name").notNull().default(""),
+    recordVersion: text("record_version").notNull().default("job-evidence-2026-07-31"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_evidence_items_request_created_idx").on(table.requestId, table.createdAt),
+    index("job_evidence_items_customer_idx").on(table.customerEmail, table.createdAt),
+    index("job_evidence_items_provider_idx").on(table.providerEmail, table.createdAt),
+    check(
+      "job_evidence_items_uploaded_by_role_check",
+      sql`${table.uploadedByRole} in ('customer', 'provider')`,
+    ),
+    check(
+      "job_evidence_items_evidence_type_check",
+      sql`${table.evidenceType} in ('customer-condition', 'provider-before-work', 'progress', 'receipt-note', 'completion-note')`,
+    ),
+    check("job_evidence_items_odometer_miles_check", sql`${table.odometerMiles} >= 0`),
+    check(
+      "job_evidence_items_content_check",
+      sql`trim(${table.imageKey}) <> '' or trim(${table.note}) <> ''`,
+    ),
   ],
 );

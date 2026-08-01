@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../db";
 import { stripeCustomers } from "../db/schema";
+import { StripeConfigurationError } from "./stripe";
+import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 
 function normalizedEmail(email: string) {
   return email.trim().toLowerCase();
@@ -47,6 +49,11 @@ export async function getOrCreateStripeCustomer(
   // If Stripe accepted a prior request but the database write failed, this
   // stable key returns the same Customer instead of creating a duplicate.
   const digest = await stableEmailDigest(customerEmail);
+  if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+    throw new StripeConfigurationError(
+      "Customer payment setup is disabled until every runtime launch-readiness gate is current.",
+    );
+  }
   const customer = await stripeClient.customers.create(
     {
       email: customerEmail,

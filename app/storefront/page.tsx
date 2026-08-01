@@ -149,10 +149,11 @@ export default function StripeStorefrontPage() {
 
       <section className="stripe-storefront-hero">
         <span className="kicker">Stripe storefront</span>
-        <h1>Book a fixed-price provider offering.</h1>
+        <h1>Customer storefront payments are not open yet.</h1>
         <p>
-          Prices come from connected Tuveloz providers. Stripe hosts payment,
-          and the 10% Tuveloz customer service fee is shown before checkout.
+          The current test configuration uses provider-set prices and proposes a
+          separate 10% TUVELOZ fee. Final fees, tax treatment, settlement roles,
+          and refund terms require approval and conspicuous checkout disclosure.
         </p>
         <label>
           Receipt email

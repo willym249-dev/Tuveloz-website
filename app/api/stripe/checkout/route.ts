@@ -1,8 +1,10 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, exists } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../../../../db";
 import {
   customerRequests,
+  jobAuthorizationSnapshots,
+  jobScopeVersions,
   providerApplications,
   providerQuotes,
   stripePayments,
@@ -24,6 +26,35 @@ import {
   CHECKOUT_POLICY_BUNDLE_VERSION,
   policyAccepted,
 } from "../../../../lib/policies";
+import {
+  marketplacePausedMessage,
+} from "../../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../../lib/runtime-marketplace-action";
+import { runtimeRealMarketplaceReleaseDecision } from "../../../../lib/runtime-launch-readiness";
+import {
+  activeJobOperationHoldReasons,
+  parseExactServiceCodes,
+} from "../../../../lib/job-operations";
+import {
+  eligibilityErrorMessage,
+  evaluateStageEligibility,
+  type StageEligibilityInput,
+} from "../../../../lib/provider-eligibility-engine";
+import { jobScopeFactsFromScopeDetails } from "../../../../lib/job-scope-facts";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("checkout"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+      checkoutAllowed: false,
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 const PAID_PAYMENT_STATUSES = [
   "paid_pending_completion",
@@ -39,6 +70,49 @@ const REVIEW_PAYMENT_STATUSES = [
   "dispute_won_review",
   "dispute_lost",
 ] as const;
+
+type AuthorizedScopePrice = {
+  laborAmountCents: number;
+  partsAmountCents: number;
+  taxAmountCents: number;
+  otherAmountCents: number;
+  totalAmountCents: number;
+  customerFeeRateBps: number;
+  customerFeeCents: number;
+  customerTotalCents: number;
+};
+
+function authorizedScopePrice(value: string): AuthorizedScopePrice | null {
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>;
+    const result = {
+      laborAmountCents: Number(parsed.laborAmountCents),
+      partsAmountCents: Number(parsed.partsAmountCents),
+      taxAmountCents: Number(parsed.taxAmountCents),
+      otherAmountCents: Number(parsed.otherAmountCents),
+      totalAmountCents: Number(parsed.totalAmountCents),
+      customerFeeRateBps: Number(parsed.customerFeeRateBps),
+      customerFeeCents: Number(parsed.customerFeeCents),
+      customerTotalCents: Number(parsed.customerTotalCents),
+    };
+    if (
+      Object.values(result).some((item) => !Number.isInteger(item) || item < 0)
+      || result.totalAmountCents <= 0
+      || result.laborAmountCents + result.partsAmountCents
+        + result.taxAmountCents + result.otherAmountCents !== result.totalAmountCents
+    ) return null;
+    const expected = customerPriceFor(
+      result.totalAmountCents,
+      result.customerFeeRateBps,
+    );
+    return expected.customerFeeCents === result.customerFeeCents
+        && expected.customerTotalCents === result.customerTotalCents
+      ? result
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -68,6 +142,12 @@ async function acceptedQuoteForCustomer(
     customerFeeRateBps: providerQuotes.customerFeeRateBps,
     customerFeeCents: providerQuotes.customerFeeCents,
     customerTotalCents: providerQuotes.customerTotalCents,
+    quoteServiceCodes: providerQuotes.serviceCodes,
+    performingPersonId: providerQuotes.performingPersonId,
+    supervisorPersonId: providerQuotes.supervisorPersonId,
+    quoteScheduledFor: providerQuotes.scheduledFor,
+    scopeVersion: providerQuotes.scopeVersion,
+    quoteAuthorizationDecisionId: providerQuotes.authorizationDecisionId,
     providerApplicationId: providerApplications.id,
     providerName: providerApplications.name,
     connectedAccountId: providerApplications.stripeAccountId,
@@ -80,6 +160,14 @@ async function acceptedQuoteForCustomer(
     customerEmail: customerRequests.email,
     customerName: customerRequests.name,
     isTestJob: customerRequests.isTestJob,
+    requestServiceCodes: customerRequests.serviceCodes,
+    jurisdiction: customerRequests.jurisdiction,
+    requestScheduledFor: customerRequests.scheduledFor,
+    assignedPersonId: customerRequests.assignedPersonId,
+    assignedSupervisorPersonId: customerRequests.assignedSupervisorPersonId,
+    assignmentVersion: customerRequests.assignmentVersion,
+    customerProviderDisclosureAcceptedAt:
+      customerRequests.customerProviderDisclosureAcceptedAt,
     service: customerRequests.service,
     vehicle: customerRequests.vehicle,
   }).from(providerQuotes)
@@ -118,6 +206,10 @@ async function latestQuotePayment(quoteId: string) {
 }
 
 export async function GET(request: Request) {
+  // Payment records and Stripe sessions are real financial objects. Test jobs
+  // intentionally never create either. Keep authenticated/token-bound status
+  // inspection available if launch readiness is later revoked so prior money
+  // can still be reconciled; only payment-creating POST actions are gated.
   const searchParams = new URL(request.url).searchParams;
   const sessionId = searchParams.get("sessionId") ?? "";
   if (sessionId) {
@@ -173,6 +265,9 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Cross-origin checkout requests are not allowed." }, { status: 403 });
   }
+  if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+    return marketplacePausedResponse();
+  }
 
   const body = (await request.json()) as {
     productId?: unknown;
@@ -190,6 +285,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (productId) {
+    return Response.json({
+      error: "Standalone product checkout is disabled. A future payment must be tied to one accepted exact-service job scope, provider, performing person, schedule, and customer authorization.",
+      code: "UNSCOPED_PRODUCT_CHECKOUT_DISABLED",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
   if (!policyAccepted(body.policyAccepted)) {
     return Response.json(
       { error: "You must be 18 or older and accept the Terms, Customer Agreement, and Payment Policy before checkout." },
@@ -205,6 +306,11 @@ export async function POST(request: Request) {
     let paymentType: "product" | "quote";
     let requestId: string | null = null;
     let finalQuoteId: string | null = null;
+    let paymentScopeVersion = 0;
+    let scopeAuthorizationDecisionId = "";
+    let authorizedPriceSnapshot = "{}";
+    let checkoutEligibilityValidThrough = "";
+    let bookingEligibilityRecheckInput: StageEligibilityInput | null = null;
     let finalProductId: string | null = null;
     let priceId: string | null = null;
     let productName: string;
@@ -325,6 +431,130 @@ export async function POST(request: Request) {
           { status: 409 },
         );
       }
+      const [latestScope] = await getDb().select({
+        id: jobScopeVersions.id,
+        version: jobScopeVersions.version,
+        serviceCodes: jobScopeVersions.serviceCodes,
+        scheduledFor: jobScopeVersions.scheduledFor,
+        scopeDetails: jobScopeVersions.scopeDetails,
+        priceBreakdown: jobScopeVersions.priceBreakdown,
+        customerAuthorizedAt: jobScopeVersions.customerAuthorizedAt,
+        authorizationDecisionId: jobScopeVersions.authorizationDecisionId,
+      }).from(jobScopeVersions)
+        .where(and(
+          eq(jobScopeVersions.requestId, selection.requestId),
+          eq(jobScopeVersions.quoteId, selection.quoteId),
+        ))
+        .orderBy(desc(jobScopeVersions.version))
+        .limit(1);
+      const serviceCodes = parseExactServiceCodes(latestScope?.serviceCodes || "");
+      const scopePrice = latestScope
+        ? authorizedScopePrice(latestScope.priceBreakdown)
+        : null;
+      const jobFacts = latestScope
+        ? jobScopeFactsFromScopeDetails(latestScope.scopeDetails)
+        : null;
+      const performingPersonId = selection.assignedPersonId
+        || selection.performingPersonId;
+      const supervisorPersonId = selection.assignedSupervisorPersonId
+        || selection.supervisorPersonId;
+      const scheduledFor = latestScope?.scheduledFor || "";
+      if (
+        !latestScope
+        || latestScope.version !== selection.scopeVersion
+        || latestScope.authorizationDecisionId !== selection.quoteAuthorizationDecisionId
+        || !latestScope.customerAuthorizedAt
+        || latestScope.scheduledFor !== selection.quoteScheduledFor
+        || latestScope.scheduledFor !== selection.requestScheduledFor
+        || !scopePrice
+        || !jobFacts
+        || Number(selection.providerAmount) !== scopePrice.totalAmountCents
+        || Number(selection.customerFeeCents) !== scopePrice.customerFeeCents
+        || Number(selection.customerTotalCents) !== scopePrice.customerTotalCents
+        || !selection.quoteAuthorizationDecisionId
+        || !performingPersonId
+        || !scheduledFor
+        || serviceCodes.length === 0
+      ) {
+        return Response.json({
+          error: "The accepted quote does not exactly match its latest customer-authorized scope, schedule, performer, and complete price snapshot.",
+          code: "CHECKOUT_SCOPE_AUTHORIZATION_MISSING",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      const [storedScopeDecision] = await getDb().select({
+        stage: jobAuthorizationSnapshots.stage,
+        decision: jobAuthorizationSnapshots.decision,
+        requestId: jobAuthorizationSnapshots.requestId,
+        quoteId: jobAuthorizationSnapshots.quoteId,
+        providerId: jobAuthorizationSnapshots.providerId,
+        performingPersonId: jobAuthorizationSnapshots.performingPersonId,
+        serviceCodes: jobAuthorizationSnapshots.serviceCodes,
+        scheduledFor: jobAuthorizationSnapshots.scheduledFor,
+        scopeVersion: jobAuthorizationSnapshots.scopeVersion,
+        assignmentVersion: jobAuthorizationSnapshots.assignmentVersion,
+      }).from(jobAuthorizationSnapshots)
+        .where(eq(
+          jobAuthorizationSnapshots.id,
+          selection.quoteAuthorizationDecisionId,
+        ))
+        .limit(1);
+      if (
+        storedScopeDecision?.stage !== (latestScope.version === 1 ? "booking" : "scope_change")
+        || storedScopeDecision.decision !== "allow"
+        || storedScopeDecision.requestId !== selection.requestId
+        || storedScopeDecision.quoteId !== selection.quoteId
+        || storedScopeDecision.providerId !== selection.providerApplicationId
+        || storedScopeDecision.performingPersonId !== performingPersonId
+        || JSON.stringify(parseExactServiceCodes(storedScopeDecision.serviceCodes)) !== JSON.stringify(serviceCodes)
+        || storedScopeDecision.scheduledFor !== scheduledFor
+        || storedScopeDecision.scopeVersion !== latestScope.version
+        || storedScopeDecision.assignmentVersion !== selection.assignmentVersion
+      ) {
+        return Response.json({
+          error: "The accepted quote is not bound to its latest customer-authorized scope decision.",
+          code: "CHECKOUT_SCOPE_SNAPSHOT_MISMATCH",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      const operationalHolds = await activeJobOperationHoldReasons(selection.requestId);
+      if (operationalHolds.length) {
+        return Response.json({
+          error: "Checkout is held while a job incident, cancellation, or scope authorization is unresolved.",
+          code: "CHECKOUT_OPERATIONAL_HOLD",
+          reasons: operationalHolds,
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      const bookingEligibilityInput: StageEligibilityInput = {
+        stage: "booking",
+        providerId: selection.providerApplicationId,
+        personId: performingPersonId,
+        supervisorPersonId,
+        serviceCodes,
+        jurisdiction: selection.jurisdiction,
+        scheduledFor,
+        requestId: selection.requestId,
+        quoteId: selection.quoteId,
+        scopeVersion: latestScope.version,
+        assignmentVersion: selection.assignmentVersion,
+        customerProviderDisclosureAcceptedAt:
+          selection.customerProviderDisclosureAcceptedAt,
+        jobFacts,
+        effectiveAt: now,
+        testOnly: false,
+        persist: true,
+      };
+      const bookingEligibility = await evaluateStageEligibility(bookingEligibilityInput);
+      if (!bookingEligibility.allowed || !bookingEligibility.decisionId) {
+        return Response.json({
+          error: eligibilityErrorMessage(bookingEligibility),
+          code: "CHECKOUT_BOOKING_ELIGIBILITY_DENIED",
+          reasons: bookingEligibility.reasons,
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      checkoutEligibilityValidThrough = bookingEligibility.validThrough;
+      bookingEligibilityRecheckInput = {
+        ...bookingEligibilityInput,
+        persist: false,
+      };
       const accountStatus = await retrieveRecipientAccountStatus(
         stripeClient,
         selection.connectedAccountId,
@@ -336,7 +566,61 @@ export async function POST(request: Request) {
         );
       }
 
+      requestId = selection.requestId;
+      finalQuoteId = selection.quoteId;
+      paymentScopeVersion = latestScope.version;
+      scopeAuthorizationDecisionId = latestScope.authorizationDecisionId;
+      authorizedPriceSnapshot = latestScope.priceBreakdown;
+      productName = `${selection.service} -- ${selection.vehicle}`;
+      providerApplicationId = selection.providerApplicationId;
+      connectedAccountId = selection.connectedAccountId;
+      customerEmail = selection.customerEmail;
+      providerAmountCents = scopePrice.totalAmountCents;
+      applicationFeeCents = scopePrice.customerFeeCents;
+      customerTotalCents = scopePrice.customerTotalCents;
+      settlementStrategy = "separate_transfer";
+      lineItems = [
+        {
+          price_data: {
+            currency,
+            unit_amount: providerAmountCents,
+            product_data: {
+              name: productName,
+              description: `Provider quote from ${selection.providerName}`,
+            },
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency,
+            unit_amount: applicationFeeCents,
+            product_data: {
+              name: "Tuveloz customer service fee",
+              description: `${scopePrice.customerFeeRateBps / 100}% marketplace service fee`,
+            },
+          },
+          quantity: 1,
+        },
+      ];
+
       const existing = await latestQuotePayment(selection.quoteId);
+      if (
+        existing
+        && (
+          existing.providerAmountCents !== providerAmountCents
+          || existing.applicationFeeCents !== applicationFeeCents
+          || existing.customerTotalCents !== customerTotalCents
+          || existing.scopeVersion !== paymentScopeVersion
+          || existing.scopeAuthorizationDecisionId !== scopeAuthorizationDecisionId
+          || existing.authorizedPriceSnapshot !== authorizedPriceSnapshot
+        )
+      ) {
+        return Response.json({
+          error: "The authorized scope or price changed after this payment snapshot was created. The old Checkout Session cannot be reused.",
+          code: "CHECKOUT_PAYMENT_SCOPE_SNAPSHOT_MISMATCH",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
       if (existing && PAID_PAYMENT_STATUSES.includes(
         existing.status as (typeof PAID_PAYMENT_STATUSES)[number],
       )) {
@@ -367,7 +651,25 @@ export async function POST(request: Request) {
         const checkoutSession = await stripeClient.checkout.sessions.retrieve(
           existing.checkoutSessionId,
         );
+        if (
+          checkoutSession.livemode
+          || checkoutSession.metadata?.tuveloz_payment_record_id !== existing.id
+          || checkoutSession.metadata?.tuveloz_request_id !== selection.requestId
+          || checkoutSession.metadata?.tuveloz_quote_id !== selection.quoteId
+          || checkoutSession.metadata?.tuveloz_scope_version
+            !== String(paymentScopeVersion)
+          || checkoutSession.metadata?.tuveloz_scope_authorization_id
+            !== scopeAuthorizationDecisionId
+        ) {
+          return Response.json({
+            error: "The existing Checkout Session is not bound to the current test-mode job authorization and cannot be reused.",
+            code: "CHECKOUT_SESSION_BINDING_MISMATCH",
+          }, { status: 409, headers: { "cache-control": "no-store" } });
+        }
         if (checkoutSession.status === "open" && checkoutSession.url) {
+          if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+            return marketplacePausedResponse();
+          }
           await getDb().update(stripePayments).set({
             policyAcceptedAt: now,
             policyVersion: CHECKOUT_POLICY_BUNDLE_VERSION,
@@ -376,55 +678,15 @@ export async function POST(request: Request) {
           return Response.json({ url: checkoutSession.url, reused: true });
         }
       }
-      if (existing?.status === "checkout_creating") paymentId = existing.id;
-
-      requestId = selection.requestId;
-      finalQuoteId = selection.quoteId;
-      productName = `${selection.service} — ${selection.vehicle}`;
-      providerApplicationId = selection.providerApplicationId;
-      connectedAccountId = selection.connectedAccountId;
-      customerEmail = selection.customerEmail;
-      providerAmountCents = Number(selection.providerAmount);
-      const storedFee = Number(selection.customerFeeCents);
-      const storedTotal = Number(selection.customerTotalCents);
-      const totals = Number.isInteger(storedFee)
-          && Number.isInteger(storedTotal)
-          && storedTotal === providerAmountCents + storedFee
-        ? {
-            customerFeeCents: storedFee,
-            customerTotalCents: storedTotal,
-          }
-        : customerPriceFor(
-            providerAmountCents,
-            selection.customerFeeRateBps,
-          );
-      applicationFeeCents = totals.customerFeeCents;
-      customerTotalCents = totals.customerTotalCents;
-      settlementStrategy = "separate_transfer";
-      lineItems = [
-        {
-          price_data: {
-            currency,
-            unit_amount: providerAmountCents,
-            product_data: {
-              name: productName,
-              description: `Provider quote from ${selection.providerName}`,
-            },
-          },
-          quantity: 1,
-        },
-        {
-          price_data: {
-            currency,
-            unit_amount: applicationFeeCents,
-            product_data: {
-              name: "Tuveloz customer service fee",
-              description: "10% marketplace service fee",
-            },
-          },
-          quantity: 1,
-        },
-      ];
+      if (existing?.status === "checkout_expiration_unconfirmed") {
+        return Response.json({
+          error: "A prior Checkout Session could not be confirmed expired. TUVELOZ will not create or return another payment link until that session is reconciled.",
+          code: "CHECKOUT_EXPIRATION_UNCONFIRMED",
+        }, { status: 409, headers: { "cache-control": "no-store" } });
+      }
+      if (existing && ["checkout_creating", "checkout_release_recheck"].includes(existing.status)) {
+        paymentId = existing.id;
+      }
     }
 
     const transferGroup = `tuveloz_${paymentId}`;
@@ -441,6 +703,9 @@ export async function POST(request: Request) {
         paymentType,
         requestId,
         quoteId: finalQuoteId,
+        scopeVersion: paymentScopeVersion,
+        scopeAuthorizationDecisionId,
+        authorizedPriceSnapshot,
         stripeProductId: finalProductId,
         stripePriceId: priceId,
         productName,
@@ -468,7 +733,7 @@ export async function POST(request: Request) {
       }).where(eq(stripePayments.id, paymentId));
     }
 
-    const metadata = {
+    const metadata: Record<string, string> = {
       tuveloz_payment_record_id: paymentId,
       tuveloz_payment_type: paymentType,
       tuveloz_provider_application_id: providerApplicationId,
@@ -476,6 +741,10 @@ export async function POST(request: Request) {
       tuveloz_policy_version: CHECKOUT_POLICY_BUNDLE_VERSION,
       ...(requestId ? { tuveloz_request_id: requestId } : {}),
       ...(finalQuoteId ? { tuveloz_quote_id: finalQuoteId } : {}),
+      ...(paymentScopeVersion ? { tuveloz_scope_version: String(paymentScopeVersion) } : {}),
+      ...(scopeAuthorizationDecisionId
+        ? { tuveloz_scope_authorization_id: scopeAuthorizationDecisionId }
+        : {}),
       ...(finalProductId ? { tuveloz_product_id: finalProductId } : {}),
     };
     const accountSession = await getAccountSession(request);
@@ -503,12 +772,57 @@ export async function POST(request: Request) {
             metadata,
           };
 
+    const releaseDecision = await runtimeRealMarketplaceReleaseDecision();
+    if (!releaseDecision.approved) {
+      return marketplacePausedResponse();
+    }
+    metadata.tuveloz_launch_onboarding_ids =
+      releaseDecision.providerOnboardingDecisionIds.join(",").slice(0, 500);
+    metadata.tuveloz_launch_pilot_ids =
+      releaseDecision.transactionPilotDecisionIds.join(",").slice(0, 500);
+    metadata.tuveloz_service_activation_ids =
+      releaseDecision.serviceActivationDecisionIds.join(",").slice(0, 500);
+    metadata.tuveloz_launch_checked_at = releaseDecision.checkedAt;
+    metadata.tuveloz_launch_valid_through = releaseDecision.validThrough;
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const eligibilityExpiry = Date.parse(
+      checkoutEligibilityValidThrough.includes("T")
+        ? checkoutEligibilityValidThrough
+        : `${checkoutEligibilityValidThrough}T23:59:59.999Z`,
+    );
+    const launchExpiry = Date.parse(
+      releaseDecision.validThrough.includes("T")
+        ? releaseDecision.validThrough
+        : `${releaseDecision.validThrough}T23:59:59.999Z`,
+    );
+    const minimumCheckoutExpiry = nowSeconds + (31 * 60);
+    if (
+      !checkoutEligibilityValidThrough
+      || !Number.isFinite(eligibilityExpiry)
+      || !releaseDecision.validThrough
+      || !Number.isFinite(launchExpiry)
+      || Math.floor(eligibilityExpiry / 1000) < minimumCheckoutExpiry
+      || Math.floor(launchExpiry / 1000) < minimumCheckoutExpiry
+    ) {
+      return Response.json({
+        error: "Current provider, service, insurance, or legal eligibility does not remain valid long enough to open a payment session.",
+        code: "CHECKOUT_ELIGIBILITY_WINDOW_TOO_SHORT",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+    const checkoutExpiresAt = Math.min(
+      Math.floor(eligibilityExpiry / 1000),
+      Math.floor(launchExpiry / 1000),
+      nowSeconds + (24 * 60 * 60),
+    );
+
     const checkoutSession = await stripeClient.checkout.sessions.create(
       {
         line_items: lineItems,
         payment_intent_data: paymentIntentData,
         metadata,
         mode: "payment",
+        expires_at: checkoutExpiresAt,
         payment_method_types: ["card"],
         ...(stripeCustomerId
           ? {
@@ -529,11 +843,208 @@ export async function POST(request: Request) {
       throw new Error("Stripe returned a Checkout Session without a hosted URL.");
     }
 
-    await getDb().update(stripePayments).set({
+    const trackedSession = await getDb().update(stripePayments).set({
       checkoutSessionId: checkoutSession.id,
+      status: "checkout_release_recheck",
+      updatedAt: new Date().toISOString(),
+    }).where(and(
+      eq(stripePayments.id, paymentId),
+      eq(stripePayments.status, "checkout_creating"),
+    )).returning({ id: stripePayments.id });
+    if (!trackedSession.length) {
+      if (checkoutSession.status === "open") {
+        await stripeClient.checkout.sessions.expire(checkoutSession.id);
+      }
+      return Response.json({
+        error: "Checkout state changed while Stripe was creating the payment session. No payment link was returned.",
+        code: "CHECKOUT_TRACKING_CHANGED_DURING_CREATION",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+
+    // Provider-, person-, evidence-, agreement-, insurance-, and service-level
+    // eligibility can change independently of the global launch decision.
+    // Re-evaluate after Stripe creates the Session and before returning its URL.
+    const postCreateBookingEligibility = bookingEligibilityRecheckInput
+      ? await evaluateStageEligibility({
+          ...bookingEligibilityRecheckInput,
+          effectiveAt: new Date().toISOString(),
+          persist: false,
+        })
+      : null;
+    const postCreateEligibilityValidThrough =
+      postCreateBookingEligibility?.validThrough ?? "";
+    const postCreateEligibilityExpiry = Date.parse(
+      postCreateEligibilityValidThrough.includes("T")
+        ? postCreateEligibilityValidThrough
+        : `${postCreateEligibilityValidThrough}T23:59:59.999Z`,
+    );
+    if (
+      !postCreateBookingEligibility?.allowed
+      || !Number.isFinite(postCreateEligibilityExpiry)
+      || Math.floor(postCreateEligibilityExpiry / 1000) < checkoutExpiresAt
+    ) {
+      try {
+        if (checkoutSession.status === "open") {
+          const expired = await stripeClient.checkout.sessions.expire(checkoutSession.id);
+          if (expired.status !== "expired") {
+            throw new Error("Stripe did not confirm Checkout expiration.");
+          }
+        } else if (checkoutSession.status !== "expired") {
+          throw new Error("The eligibility-stale Checkout Session cannot be expired safely.");
+        }
+        await getDb().update(stripePayments).set({
+          status: "checkout_expired_eligibility_changed",
+          updatedAt: new Date().toISOString(),
+        }).where(and(
+          eq(stripePayments.id, paymentId),
+          eq(stripePayments.status, "checkout_release_recheck"),
+        ));
+      } catch (expirationError) {
+        await getDb().update(stripePayments).set({
+          status: "checkout_expiration_unconfirmed",
+          updatedAt: new Date().toISOString(),
+        }).where(and(
+          eq(stripePayments.id, paymentId),
+          eq(stripePayments.status, "checkout_release_recheck"),
+        ));
+        console.error(
+          "Unable to confirm Checkout expiration after provider eligibility changed",
+          expirationError,
+        );
+        return Response.json({
+          error: "Provider or service eligibility changed while Checkout was being created, and expiration could not be confirmed. No payment link was returned.",
+          code: "CHECKOUT_ELIGIBILITY_EXPIRATION_UNCONFIRMED",
+        }, { status: 502, headers: { "cache-control": "no-store" } });
+      }
+      return Response.json({
+        error: "Provider or service eligibility changed while Checkout was being created. The payment session was expired and no link was returned.",
+        code: "CHECKOUT_ELIGIBILITY_CHANGED_DURING_CREATION",
+        reasons: postCreateBookingEligibility?.reasons ?? [],
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
+
+    const postCreateReleaseDecision = await runtimeRealMarketplaceReleaseDecision();
+    const releaseBindingChanged = (
+      postCreateReleaseDecision.providerOnboardingDecisionIds.join(",")
+        !== releaseDecision.providerOnboardingDecisionIds.join(",")
+      || postCreateReleaseDecision.transactionPilotDecisionIds.join(",")
+        !== releaseDecision.transactionPilotDecisionIds.join(",")
+      || postCreateReleaseDecision.serviceActivationDecisionIds.join(",")
+        !== releaseDecision.serviceActivationDecisionIds.join(",")
+      || postCreateReleaseDecision.validThrough !== releaseDecision.validThrough
+    );
+    if (!postCreateReleaseDecision.approved || releaseBindingChanged) {
+      try {
+        if (checkoutSession.status === "open") {
+          const expired = await stripeClient.checkout.sessions.expire(checkoutSession.id);
+          if (expired.status !== "expired") {
+            throw new Error("Stripe did not confirm Checkout expiration.");
+          }
+        } else if (checkoutSession.status !== "expired") {
+          throw new Error("The newly created Checkout Session cannot be expired safely.");
+        }
+        await getDb().update(stripePayments).set({
+          status: "checkout_expired_launch_readiness",
+          updatedAt: new Date().toISOString(),
+        }).where(and(
+          eq(stripePayments.id, paymentId),
+          eq(stripePayments.status, "checkout_release_recheck"),
+        ));
+      } catch (expirationError) {
+        await getDb().update(stripePayments).set({
+          status: "checkout_expiration_unconfirmed",
+          updatedAt: new Date().toISOString(),
+        }).where(and(
+          eq(stripePayments.id, paymentId),
+          eq(stripePayments.status, "checkout_release_recheck"),
+        ));
+        console.error("Unable to confirm Checkout expiration after launch readiness changed", expirationError);
+        return Response.json({
+          error: "Launch readiness changed while Checkout was being created, and expiration could not be confirmed. No payment link was returned.",
+          code: "CHECKOUT_LAUNCH_EXPIRATION_UNCONFIRMED",
+        }, { status: 502, headers: { "cache-control": "no-store" } });
+      }
+      return marketplacePausedResponse();
+    }
+
+    const openedPayment = await getDb().update(stripePayments).set({
       status: "checkout_open",
       updatedAt: new Date().toISOString(),
-    }).where(eq(stripePayments.id, paymentId));
+    }).where(and(
+      eq(stripePayments.id, paymentId),
+      eq(stripePayments.status, "checkout_release_recheck"),
+      eq(stripePayments.requestId, requestId),
+      eq(stripePayments.quoteId, finalQuoteId),
+      eq(stripePayments.scopeVersion, paymentScopeVersion),
+      eq(
+        stripePayments.scopeAuthorizationDecisionId,
+        scopeAuthorizationDecisionId,
+      ),
+      eq(stripePayments.authorizedPriceSnapshot, authorizedPriceSnapshot),
+      exists(
+        getDb().select({ id: jobScopeVersions.id }).from(jobScopeVersions)
+          .where(and(
+            eq(jobScopeVersions.requestId, requestId || ""),
+            eq(jobScopeVersions.quoteId, finalQuoteId || ""),
+            eq(jobScopeVersions.version, paymentScopeVersion),
+            eq(
+              jobScopeVersions.authorizationDecisionId,
+              scopeAuthorizationDecisionId,
+            ),
+            eq(jobScopeVersions.priceBreakdown, authorizedPriceSnapshot),
+          )),
+      ),
+      exists(
+        getDb().select({ id: providerQuotes.id }).from(providerQuotes)
+          .where(and(
+            eq(providerQuotes.id, finalQuoteId || ""),
+            eq(providerQuotes.requestId, requestId || ""),
+            eq(providerQuotes.status, "accepted"),
+            eq(providerQuotes.scopeVersion, paymentScopeVersion),
+            eq(
+              providerQuotes.authorizationDecisionId,
+              scopeAuthorizationDecisionId,
+            ),
+            eq(providerQuotes.priceCents, String(providerAmountCents)),
+            eq(providerQuotes.customerFeeCents, String(applicationFeeCents)),
+            eq(providerQuotes.customerTotalCents, String(customerTotalCents)),
+          )),
+      ),
+    )).returning({ id: stripePayments.id });
+    if (!openedPayment.length) {
+      try {
+        if (checkoutSession.status === "open") {
+          const expired = await stripeClient.checkout.sessions.expire(
+            checkoutSession.id,
+          );
+          if (expired.status !== "expired") {
+            throw new Error("Stripe did not confirm Checkout expiration.");
+          }
+        } else if (checkoutSession.status !== "expired") {
+          throw new Error("The superseded Checkout Session cannot be expired safely.");
+        }
+      } catch (expirationError) {
+        console.error(
+          "Unable to expire a Checkout Session superseded during creation",
+          expirationError,
+        );
+        return Response.json({
+          error: "The job scope changed while Checkout was being created, and expiration of the superseded session could not be confirmed. No Checkout URL was returned.",
+          code: "SUPERSEDED_CHECKOUT_EXPIRATION_UNCONFIRMED",
+        }, { status: 502, headers: { "cache-control": "no-store" } });
+      }
+      await getDb().update(stripePayments).set({
+        status: "checkout_invalidated_scope_change",
+        updatedAt: new Date().toISOString(),
+      }).where(and(
+        eq(stripePayments.id, paymentId),
+        eq(stripePayments.status, "checkout_release_recheck"),
+      ));
+      return Response.json({
+        error: "The authorized job scope or price changed while Checkout was being created. The old session expired; request a new Checkout Session for the current authorization.",
+        code: "CHECKOUT_SCOPE_CHANGED_DURING_CREATION",
+      }, { status: 409, headers: { "cache-control": "no-store" } });
+    }
     return Response.json({ url: checkoutSession.url });
   } catch (error) {
     return stripeErrorResponse(error, "Unable to create the Stripe Checkout session.");

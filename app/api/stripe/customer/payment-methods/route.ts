@@ -12,11 +12,23 @@ import {
   siteUrlFor,
   stripeErrorResponse,
 } from "../../../../../lib/stripe";
+import {
+  marketplacePausedMessage,
+} from "../../../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../../../lib/runtime-marketplace-action";
+import { runtimeRealMarketplaceReleaseDecision } from "../../../../../lib/runtime-launch-readiness";
 
 const NO_STORE_HEADERS = { "cache-control": "no-store" };
 
 function response(data: unknown, status = 200) {
   return Response.json(data, { status, headers: NO_STORE_HEADERS });
+}
+
+function paymentSetupPausedResponse() {
+  return response({
+    error: marketplacePausedMessage("checkout"),
+    code: "MARKETPLACE_ONBOARDING_ONLY",
+  }, 503);
 }
 
 async function customerSession(request: Request) {
@@ -71,6 +83,9 @@ export async function POST(request: Request) {
   }
   const session = await customerSession(request);
   if (!session) return response({ error: "Customer sign-in required." }, 401);
+  if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+    return paymentSetupPausedResponse();
+  }
 
   try {
     const stripeClient = getStripeClient();
@@ -78,6 +93,10 @@ export async function POST(request: Request) {
       stripeClient,
       session.email,
     );
+    const releaseDecision = await runtimeRealMarketplaceReleaseDecision();
+    if (!releaseDecision.approved) {
+      return paymentSetupPausedResponse();
+    }
     const rootUrl = siteUrlFor(request);
     const checkoutSession = await stripeClient.checkout.sessions.create(
       {
@@ -92,6 +111,11 @@ export async function POST(request: Request) {
           description: "Payment method saved from the Tuveloz customer workspace",
           metadata: {
             tuveloz_customer_account: "true",
+            tuveloz_launch_onboarding_ids:
+              releaseDecision.providerOnboardingDecisionIds.join(",").slice(0, 500),
+            tuveloz_launch_pilot_ids:
+              releaseDecision.transactionPilotDecisionIds.join(",").slice(0, 500),
+            tuveloz_launch_checked_at: releaseDecision.checkedAt,
           },
         },
         success_url: `${rootUrl}/customer?view=payments&payment_details=added`,

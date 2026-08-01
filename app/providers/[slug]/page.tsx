@@ -133,7 +133,7 @@ export default function ProviderStorefrontPage() {
       <header className="storefront-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <SiteLanguageButton />
-        <Link className="button primary" href="/#request">Post a job</Link>
+        <Link className="button primary" href="/post-job">Customer jobs closed</Link>
       </header>
       {data.privatePreview && (
         <div className="storefront-preview-banner">

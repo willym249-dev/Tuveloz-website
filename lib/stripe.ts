@@ -1,9 +1,21 @@
 import { env } from "cloudflare:workers";
 import Stripe from "stripe";
+import { MARKETPLACE_MODE } from "./launch-status";
 
 type RuntimeEnvironment = Record<string, string | undefined>;
 
 export class StripeConfigurationError extends Error {}
+
+// This is intentionally a code-controlled release gate. An environment value
+// alone cannot turn on live money movement while the deployed marketplace is
+// still onboarding-only.
+export const STRIPE_LIVE_MODE_ENABLED = false as const;
+
+export function stripeLiveModeEnabled() {
+  return Boolean(STRIPE_LIVE_MODE_ENABLED)
+    && String(MARKETPLACE_MODE) === "live"
+    && runtimeEnvironment().STRIPE_ALLOW_LIVE_MODE === "true";
+}
 
 function runtimeEnvironment() {
   return env as unknown as RuntimeEnvironment;
@@ -34,10 +46,10 @@ export function getStripeClient() {
   // business, compliance, dispute, and refund review is complete.
   if (
     secretKey.startsWith("sk_live_")
-    && runtimeEnvironment().STRIPE_ALLOW_LIVE_MODE !== "true"
+    && !stripeLiveModeEnabled()
   ) {
     throw new StripeConfigurationError(
-      "A live Stripe key was provided while live mode is disabled. Use a sandbox sk_test_ key, or have the legal owner explicitly set STRIPE_ALLOW_LIVE_MODE=true after launch review.",
+      "A live Stripe key was provided while live mode is code-disabled. Use a sandbox sk_test_ key; an environment variable cannot enable live payments before a reviewed marketplace release.",
     );
   }
 

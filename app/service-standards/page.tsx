@@ -5,6 +5,7 @@ import {
   SERVICE_SAFETY_POLICIES,
   type ServiceAvailability,
 } from "../../lib/service-safety-policy";
+import { CUSTOMER_JOB_POSTING_PAUSED, MARKETPLACE_MODE } from "../../lib/launch-status";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -14,14 +15,14 @@ const availabilityCopy: Record<ServiceAvailability, {
   description: string;
 }> = {
   standard: {
-    label: "Launch service",
-    heading: "Available after ordinary service approval",
-    description: "These categories can operate after the provider is approved for the exact service, area, customer-document process, and applicable registration or insurance requirements.",
+    label: "Planning category",
+    heading: "Potential standard-review services",
+    description: "These are planning classifications, not active Tuveloz services. A future release could activate an exact service only after the provider, area, customer-document process, and applicable registration and insurance requirements are approved.",
   },
   gated: {
-    label: "Extra gate",
-    heading: "Available only after service-specific review",
-    description: "These categories remain available without controlling provider prices or schedules, but Tuveloz activates them only after the exact legal, safety, credential, or environmental checks are completed.",
+    label: "Extra-review planning category",
+    heading: "Would require service-specific review",
+    description: "These are not currently available. Tuveloz could activate an exact category in a future release only after the applicable legal, safety, credential, insurance, and environmental checks are completed.",
   },
   paused: {
     label: "Not available",
@@ -31,6 +32,8 @@ const availabilityCopy: Record<ServiceAvailability, {
 };
 
 export default function ServiceStandardsPage() {
+  const marketplaceIsOnboardingOnly = CUSTOMER_JOB_POSTING_PAUSED || String(MARKETPLACE_MODE) !== "live";
+
   return (
     <main className="account-shell">
       <header className="account-header">
@@ -49,10 +52,17 @@ export default function ServiceStandardsPage() {
           <span className="account-kicker">Freedom with specific safety gates</span>
           <h1>Tuveloz service standards.</h1>
           <p>
-            Providers remain independent businesses. Tuveloz approves services individually,
-            records customer authorization, and pauses only categories that need a separate
-            legal, credential, safety, insurance, or environmental framework.
+            Providers remain independent businesses. For any future transaction launch, Tuveloz
+            would approve each exact service individually, record customer authorization, and
+            require the applicable legal, credential, safety, insurance, and environmental gates.
           </p>
+          {marketplaceIsOnboardingOnly && (
+            <p className="admin-note">
+              Current status: provider onboarding only. All real services, customer job requests,
+              quotes, bookings, appointments, and payments are disabled. The categories below
+              explain possible future review levels; they do not show live availability.
+            </p>
+          )}
         </div>
 
         <div className="account-grid">
@@ -134,8 +144,8 @@ export default function ServiceStandardsPage() {
                           </div>
                         </details>
                       </span>
-                      <span className={`account-status ${availability === "standard" ? "is-active" : ""}`}>
-                        {availability}
+                      <span className="account-status">
+                        {availability === "standard" ? "planning" : availability}
                       </span>
                     </article>
                   ))}

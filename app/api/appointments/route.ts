@@ -1,8 +1,28 @@
 import { env } from "cloudflare:workers";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { parseExactServiceCodes } from "../../../lib/customer-job-scope";
 import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { parseProviderServices } from "../../../lib/service-matching";
+import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
+import { isServiceCode, POLICY_JURISDICTION } from "../../../lib/provider-policy";
+import {
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("appointment"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 type AppointmentRow = {
   id: string;
@@ -25,8 +45,8 @@ type AppointmentRow = {
 
 type PublicProviderRow = {
   id: string;
+  email: string;
   name: string;
-  approvedServices: string;
 };
 
 type RequestOptionRow = {
@@ -119,18 +139,15 @@ async function responseData(request: Request) {
     };
   }
 
-  const [appointments, providersResult, requestOptionsResult] = await Promise.all([
+  const [appointments, providersResult, requestOptionsResult, activePlatformServiceCodes] = await Promise.all([
     appointmentRows("lower(customer_email)", session.email.toLowerCase()),
     env.DB.prepare(
       `SELECT provider.id,
-              COALESCE(NULLIF(profile.business_name, ''), provider.name) AS name,
-              provider.approved_services AS approvedServices
+              provider.email,
+              COALESCE(NULLIF(profile.business_name, ''), provider.name) AS name
          FROM provider_applications provider
          INNER JOIN provider_profiles profile ON profile.provider_id = provider.id
-        WHERE provider.status = 'approved'
-          AND provider.verification_status = 'verified'
-          AND provider.is_test_provider = 'no'
-          AND profile.public_status = 'published'
+        WHERE profile.public_status = 'published'
         ORDER BY name ASC
         LIMIT 200`,
     ).all<PublicProviderRow>(),
@@ -142,21 +159,47 @@ async function responseData(request: Request) {
         ORDER BY datetime(created_at) DESC
         LIMIT 100`,
     ).bind(session.email).all<RequestOptionRow>(),
+    currentPlatformActiveServiceCodes(POLICY_JURISDICTION),
   ]);
+  const currentProviders = await Promise.all(providersResult.results.map(async (provider) => ({
+    provider,
+    currentAccount: await providerAccountFor(provider.email),
+  })));
   return {
     role: "customer" as const,
     email: session.email,
     appointments,
     requestOptions: requestOptionsResult.results,
-    providers: providersResult.results.map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      services: parseProviderServices(provider.approvedServices),
-    })),
+    providers: currentProviders.flatMap(({ provider, currentAccount }) => {
+      if (!currentAccount || currentAccount.id !== provider.id) return [];
+      const services = parseProviderServices(currentAccount.approvedServices)
+        .filter((serviceCode) => (
+          isServiceCode(serviceCode)
+          && serviceCode !== "general_auto_repair"
+          && activePlatformServiceCodes.has(serviceCode)
+        ));
+      return services.length > 0 ? [{
+        id: provider.id,
+        name: provider.name,
+        services,
+      }] : [];
+    }),
   };
 }
 
 export async function GET(request: Request) {
+  const session = await getAccountSession(request);
+  if (!session) {
+    return Response.json(
+      { error: "Sign in to request or manage appointments." },
+      { status: 401, headers: { "cache-control": "no-store" } },
+    );
+  }
+  // The legacy appointment rows do not carry a server-owned test-fixture flag,
+  // so this route cannot safely offer a client-selected test bypass.
+  if (!(await runtimeMarketplaceActionAllowed("appointment"))) {
+    return marketplacePausedResponse();
+  }
   const data = await responseData(request);
   if (!data) {
     return Response.json(
@@ -173,6 +216,9 @@ export async function POST(request: Request) {
   }
   const session = await getAccountSession(request);
   if (!session) return Response.json({ error: "Sign in to manage appointments." }, { status: 401 });
+  if (!(await runtimeMarketplaceActionAllowed("appointment"))) {
+    return marketplacePausedResponse();
+  }
 
   try {
     const payload = await request.json() as Record<string, unknown>;
@@ -192,7 +238,7 @@ export async function POST(request: Request) {
 
       if (session.role === "provider") {
         const provider = await providerAccountFor(session.email);
-        if (!provider) throw new Error("Verified provider access is required.");
+        if (!provider) throw new Error("An active provider account is required.");
         if (!requestId) throw new Error("Choose an accepted customer job.");
         const acceptedJob = await env.DB.prepare(
           `SELECT request.name AS customerName, request.email AS customerEmail,
@@ -220,34 +266,62 @@ export async function POST(request: Request) {
         service = acceptedJob.service;
       } else {
         providerId = text(payload.providerId, 80);
-        if (!providerId || !service) throw new Error("Choose a provider and service.");
+        if (
+          !providerId
+          || !isServiceCode(service)
+          || service === "general_auto_repair"
+        ) {
+          throw new Error("Choose a provider and one exact service.");
+        }
+        let appointmentJurisdiction = POLICY_JURISDICTION;
+        if (requestId) {
+          const ownedRequest = await env.DB.prepare(
+            `SELECT id, service_codes AS serviceCodes, jurisdiction
+               FROM customer_requests
+              WHERE id = ? AND lower(email) = lower(?) LIMIT 1`,
+          ).bind(requestId, session.email).first<{
+            id: string;
+            serviceCodes: string;
+            jurisdiction: string;
+          }>();
+          if (!ownedRequest) throw new Error("That customer request does not belong to this account.");
+          const requestServiceCodes = parseExactServiceCodes(ownedRequest.serviceCodes);
+          if (
+            requestServiceCodes.length !== 1
+            || requestServiceCodes[0] !== service
+            || ownedRequest.jurisdiction !== POLICY_JURISDICTION
+          ) {
+            throw new Error("That request does not match the selected exact service and jurisdiction.");
+          }
+          appointmentJurisdiction = ownedRequest.jurisdiction;
+        }
         const provider = await env.DB.prepare(
           `SELECT provider.email, provider.name,
-                  COALESCE(NULLIF(profile.business_name, ''), provider.name) AS publicName,
-                  provider.approved_services AS approvedServices
+                  COALESCE(NULLIF(profile.business_name, ''), provider.name) AS publicName
              FROM provider_applications provider
              INNER JOIN provider_profiles profile ON profile.provider_id = provider.id
             WHERE provider.id = ?
-              AND provider.status = 'approved'
-              AND provider.verification_status = 'verified'
-              AND provider.is_test_provider = 'no'
               AND profile.public_status = 'published'
             LIMIT 1`,
         ).bind(providerId).first<{
           email: string;
           name: string;
           publicName: string;
-          approvedServices: string;
         }>();
-        if (!provider || !parseProviderServices(provider.approvedServices).includes(service)) {
+        const currentProvider = provider
+          ? await providerAccountFor(provider.email)
+          : null;
+        const activePlatformServiceCodes = await currentPlatformActiveServiceCodes(
+          appointmentJurisdiction,
+        );
+        if (
+          !provider
+          || !currentProvider
+          || currentProvider.id !== providerId
+          || !parseProviderServices(currentProvider.approvedServices).includes(service)
+          || !activePlatformServiceCodes.has(service)
+        ) {
           throw new Error("That provider is not available for the selected service.");
-        }
-        if (requestId) {
-          const ownedRequest = await env.DB.prepare(
-            `SELECT id FROM customer_requests
-              WHERE id = ? AND lower(email) = lower(?) LIMIT 1`,
-          ).bind(requestId, session.email).first<{ id: string }>();
-          if (!ownedRequest) throw new Error("That customer request does not belong to this account.");
         }
         providerEmail = provider.email.toLowerCase();
         providerName = provider.publicName || provider.name;

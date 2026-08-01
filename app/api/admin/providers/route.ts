@@ -1,35 +1,17 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../db";
+import { providerApplications } from "../../../../db/schema";
 import {
-  providerApplications,
-  providerCredentialVerifications,
-} from "../../../../db/schema";
-import {
-  parseProviderAreas,
   parseProviderServices,
-  PROVIDER_AREA_OPTIONS,
-  serializeProviderAreas,
   serializeProviderServices,
 } from "../../../../lib/service-matching";
 import {
   evaluateProviderServices,
-  getProviderLegalRequirementFlags,
   parseProviderSelfAssessment,
-  providerAreasHaveReviewedCompliance,
 } from "../../../../lib/provider-compliance";
-import {
-  PROVIDER_CREDENTIAL_METHODS,
-  PROVIDER_CREDENTIAL_STATUSES,
-  requiredProviderCredentialRequirements,
-  unmetProviderCredentialRequirements,
-  type ProviderCredentialMethod,
-  type ProviderCredentialStatus,
-} from "../../../../lib/provider-credentials";
 import { isSameOriginRequest } from "../../../../lib/account-auth";
-import {
-  getAuthenticatedEmail,
-  isVerifiedOwnerRequest,
-} from "../../../../lib/owner-auth";
+import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
+import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
 const CHECKLIST_KEYS = [
   "businessIdentity",
   "serviceExperience",
@@ -42,19 +24,6 @@ const CHECKLIST_KEYS = [
 type ChecklistKey = (typeof CHECKLIST_KEYS)[number];
 type VerificationChecklist = Record<ChecklistKey, boolean>;
 
-function parseChecklist(value: string) {
-  try {
-    const parsed = JSON.parse(value) as Partial<VerificationChecklist>;
-    return Object.fromEntries(
-      CHECKLIST_KEYS.map((key) => [key, parsed[key] === true]),
-    ) as VerificationChecklist;
-  } catch {
-    return Object.fromEntries(
-      CHECKLIST_KEYS.map((key) => [key, false]),
-    ) as VerificationChecklist;
-  }
-}
-
 function cleanChecklist(value: unknown) {
   const input = value && typeof value === "object"
     ? value as Partial<Record<ChecklistKey, unknown>>
@@ -64,27 +33,6 @@ function cleanChecklist(value: unknown) {
   ) as VerificationChecklist;
 }
 
-function clean(value: unknown, maxLength: number) {
-  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function requiredChecklistKeys(services: string[], serviceArea: string) {
-  const requirements = getProviderLegalRequirementFlags(services, serviceArea);
-  const keys: ChecklistKey[] = [];
-
-  if (requirements.montgomeryRegistration) {
-    keys.push("localRegistration");
-  }
-  if (requirements.marylandCustomerPaperwork) {
-    keys.push("consumerRules");
-  }
-  if (requirements.tintCompliance || requirements.washWaterCompliance) {
-    keys.push("serviceRules");
-  }
-
-  return keys;
-}
-
 export async function POST(request: Request) {
   if (!(await isVerifiedOwnerRequest(request))) {
     return Response.json({ error: "Owner access required." }, { status: 403 });
@@ -92,22 +40,12 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Cross-origin owner actions are not allowed." }, { status: 403 });
   }
-  const email = getAuthenticatedEmail(request);
-
   const body = (await request.json()) as {
     id?: string;
     action?: string;
     status?: string;
     checklist?: unknown;
     approvedServices?: unknown;
-    credential?: {
-      requirementKey?: unknown;
-      credentialIdentifier?: unknown;
-      status?: unknown;
-      verificationMethod?: unknown;
-      expiresAt?: unknown;
-      notes?: unknown;
-    };
   };
   if (!body.id) {
     return Response.json({ error: "Invalid provider update." }, { status: 400 });
@@ -119,9 +57,23 @@ export async function POST(request: Request) {
     return Response.json({ error: "Provider application not found." }, { status: 404 });
   }
 
+  if (body.action === "save-credential" || body.action === "verify") {
+    return Response.json({
+      error: "Legacy whole-provider verification is disabled. Test fixtures can never be converted into real or public verified providers; use Provider Registration & Compliance for v0.11 review.",
+      code: "LEGACY_VERIFICATION_DISABLED",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
+
+  if (body.action === "save-verification" && provider.isTestProvider !== "yes") {
+    return Response.json({
+      error: "Use Provider Registration & Compliance for real providers. The legacy checklist is available only inside an isolated test fixture.",
+      code: "USE_PROVIDER_COMPLIANCE_QUEUE",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
+
   if (body.action === "save-verification") {
-    if (provider.status === "declined") {
-      return Response.json({ error: "A declined provider cannot be verified." }, { status: 409 });
+    if (provider.status === "declined" || provider.isTestProvider !== "yes") {
+      return Response.json({ error: "Only an active isolated test fixture can save this legacy checklist." }, { status: 409 });
     }
     const checklist = cleanChecklist(body.checklist);
     const requestedServices = parseProviderServices(provider.service);
@@ -149,151 +101,6 @@ export async function POST(request: Request) {
       verificationChecklist: JSON.stringify(checklist),
       serviceEligibilityStatuses: JSON.stringify(eligibilityByService),
       approvedServices: approvedServicesValue,
-      verificationStatus: "in review",
-      verifiedAt: "",
-      verifiedBy: "",
-    }).where(eq(providerApplications.id, provider.id));
-    return Response.json({
-      ok: true,
-      verificationChecklist: JSON.stringify(checklist),
-      approvedServices: approvedServicesValue,
-      verificationStatus: "in review",
-    });
-  }
-
-  if (body.action === "save-credential") {
-    if (provider.status === "declined" || provider.isTestProvider === "yes") {
-      return Response.json({
-        error: "Credential checks are available only for real provider applications.",
-      }, { status: 409 });
-    }
-
-    const approvedServices = parseProviderServices(provider.approvedServices);
-    if (approvedServices.length === 0) {
-      return Response.json({
-        error: "Save the services approved for review before recording a credential check.",
-      }, { status: 409 });
-    }
-
-    const assessment = parseProviderSelfAssessment(provider.providerSelfAssessment);
-    const requirements = requiredProviderCredentialRequirements(
-      approvedServices,
-      provider.serviceArea,
-      assessment,
-    );
-    const credentialInput = body.credential ?? {};
-    const requirementKey = clean(credentialInput.requirementKey, 120);
-    const requirement = requirements.find((item) => item.key === requirementKey);
-    if (!requirement) {
-      return Response.json({
-        error: "That government credential is not legally triggered by the saved services and service area.",
-      }, { status: 409 });
-    }
-
-    const statusInput = clean(credentialInput.status, 60);
-    if (!PROVIDER_CREDENTIAL_STATUSES.includes(
-      statusInput as ProviderCredentialStatus,
-    )) {
-      return Response.json({ error: "Choose a valid credential status." }, { status: 400 });
-    }
-    const verificationMethodInput = clean(credentialInput.verificationMethod, 80);
-    if (!PROVIDER_CREDENTIAL_METHODS.includes(
-      verificationMethodInput as ProviderCredentialMethod,
-    )) {
-      return Response.json({ error: "Choose a valid official verification method." }, { status: 400 });
-    }
-
-    const status = statusInput as ProviderCredentialStatus;
-    const verificationMethod = verificationMethodInput as ProviderCredentialMethod;
-    const credentialIdentifier = clean(credentialInput.credentialIdentifier, 180);
-    const expiresAt = clean(credentialInput.expiresAt, 10);
-    const notes = clean(credentialInput.notes, 600);
-    if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
-      return Response.json({ error: "Use a valid credential expiration date." }, { status: 400 });
-    }
-    if (status === "verified" && !credentialIdentifier) {
-      return Response.json({
-        error: "Enter the exact official listing name or credential number before marking this record verified.",
-      }, { status: 400 });
-    }
-    if (
-      status === "verified"
-      && expiresAt
-      && Date.parse(expiresAt + "T23:59:59.999Z") < Date.now()
-    ) {
-      return Response.json({
-        error: "An expired credential cannot be marked verified.",
-      }, { status: 409 });
-    }
-
-    const now = new Date().toISOString();
-    const checkedAt = status === "verified" ? now : "";
-    const verifiedBy = status === "verified" ? email : "";
-    const [existing] = await db.select()
-      .from(providerCredentialVerifications)
-      .where(and(
-        eq(providerCredentialVerifications.providerId, provider.id),
-        eq(providerCredentialVerifications.requirementKey, requirement.key),
-      ))
-      .limit(1);
-    const values = {
-      requirementLabel: requirement.label,
-      jurisdiction: requirement.jurisdiction,
-      credentialIdentifier,
-      issuingAuthority: requirement.issuingAuthority,
-      legalBasisUrl: requirement.legalBasisUrl,
-      officialLookupUrl: requirement.officialLookupUrl,
-      status,
-      verificationMethod,
-      checkedAt,
-      expiresAt,
-      verifiedBy,
-      notes,
-      updatedAt: now,
-    };
-
-    if (existing) {
-      await db.update(providerCredentialVerifications).set(values)
-        .where(eq(providerCredentialVerifications.id, existing.id));
-    } else {
-      await db.insert(providerCredentialVerifications).values({
-        id: `${provider.id}:${requirement.key}`,
-        providerId: provider.id,
-        requirementKey: requirement.key,
-        ...values,
-      });
-    }
-
-    const [credential] = await db.select()
-      .from(providerCredentialVerifications)
-      .where(and(
-        eq(providerCredentialVerifications.providerId, provider.id),
-        eq(providerCredentialVerifications.requirementKey, requirement.key),
-      ))
-      .limit(1);
-
-    if (status !== "verified") {
-      await db.update(providerApplications).set({
-        verificationStatus: "in review",
-        verifiedAt: "",
-        verifiedBy: "",
-        alertsEnabled: "no",
-      }).where(eq(providerApplications.id, provider.id));
-    }
-
-    return Response.json({
-      ok: true,
-      credential,
-      providerSuspended: status !== "verified",
-    });
-  }
-
-  if (body.action === "mark-test") {
-    if (provider.status === "declined") {
-      return Response.json({ error: "A declined provider cannot receive test access." }, { status: 409 });
-    }
-    await db.update(providerApplications).set({
-      accessToken: "",
       status: "approved",
       verificationStatus: "test",
       isTestProvider: "yes",
@@ -303,80 +110,33 @@ export async function POST(request: Request) {
     }).where(eq(providerApplications.id, provider.id));
     return Response.json({
       ok: true,
-      status: "approved",
+      verificationChecklist: JSON.stringify(checklist),
+      approvedServices: approvedServicesValue,
       verificationStatus: "test",
       isTestProvider: "yes",
     });
   }
 
-  if (body.action === "verify") {
-    if (provider.status === "declined") {
-      return Response.json({ error: "A declined provider cannot be verified." }, { status: 409 });
-    }
-    const checklist = parseChecklist(provider.verificationChecklist);
-    const approvedServices = parseProviderServices(provider.approvedServices);
-    if (approvedServices.length === 0) {
-      return Response.json({ error: "Approve and save at least one requested service before verification." }, { status: 409 });
-    }
-    if (!providerAreasHaveReviewedCompliance(provider.serviceArea)) {
-      return Response.json({
-        error: "This provider cannot be verified until the state and local requirements for every service area are reviewed.",
-      }, { status: 409 });
-    }
-    const requiredKeys = requiredChecklistKeys(approvedServices, provider.serviceArea);
-    if (requiredKeys.some((key) => !checklist[key])) {
-      return Response.json({ error: "Complete and save every required legal check before verification." }, { status: 409 });
-    }
-    const assessment = parseProviderSelfAssessment(provider.providerSelfAssessment);
-    const credentialRequirements = requiredProviderCredentialRequirements(
-      approvedServices,
-      provider.serviceArea,
-      assessment,
-    );
-    const credentialRecords = await db.select()
-      .from(providerCredentialVerifications)
-      .where(eq(providerCredentialVerifications.providerId, provider.id));
-    const unmetCredentials = unmetProviderCredentialRequirements(
-      credentialRequirements,
-      credentialRecords,
-    );
-    if (unmetCredentials.length > 0) {
-      return Response.json({
-        error: `Official credential check required before activation: ${unmetCredentials
-          .map((requirement) => requirement.label)
-          .join("; ")}.`,
-      }, { status: 409 });
-    }
-
-    const normalizedAreas = parseProviderAreas(provider.serviceArea);
-    if (
-      normalizedAreas.length === 0
-      || normalizedAreas.some((area) => !PROVIDER_AREA_OPTIONS.includes(
-        area as (typeof PROVIDER_AREA_OPTIONS)[number],
-      ))
-    ) {
-      return Response.json({ error: "This provider must use only an active pilot service area." }, { status: 409 });
-    }
-    await db.update(providerApplications).set({
-      accessToken: "",
-      serviceArea: serializeProviderAreas(normalizedAreas),
-      status: "approved",
-      verificationStatus: "verified",
-      isTestProvider: "no",
-      verifiedAt: new Date().toISOString(),
-      verifiedBy: email,
-    }).where(eq(providerApplications.id, provider.id));
+  if (body.action === "mark-test") {
     return Response.json({
-      ok: true,
-      serviceArea: serializeProviderAreas(normalizedAreas),
-      status: "approved",
-      verificationStatus: "verified",
-    });
+      error: "A real provider application cannot be converted into a test fixture. Test providers must originate as isolated synthetic records with no real applicant data.",
+      code: "REAL_RECORD_TEST_CONVERSION_DISABLED",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
   }
 
   if (body.status !== "declined") {
     return Response.json({ error: "Invalid provider update." }, { status: 400 });
   }
+
+  if (provider.status !== "new") {
+    return Response.json({ error: "This provider application was already reviewed." }, { status: 409 });
+  }
+
+  // Quarantine every locally open Checkout Session before this provider
+  // record can be revoked. The cleanup helper changes local payment state
+  // before contacting Stripe, so a remote expiration failure still fails
+  // closed; a database cleanup failure prevents the decline from being saved.
+  await expireOpenCheckoutSessionsForLaunchShutdown();
 
   const updated = await db
     .update(providerApplications)
@@ -396,5 +156,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "This provider application was already reviewed." }, { status: 409 });
   }
 
+  await expireOpenCheckoutSessionsForLaunchShutdown();
   return Response.json({ ok: true, verificationStatus: "declined" });
 }

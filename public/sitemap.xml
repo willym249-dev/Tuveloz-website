@@ -11,6 +11,9 @@
   <url><loc>https://tuveloz.com/terms</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://tuveloz.com/customer-agreement</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://tuveloz.com/provider-agreement</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://tuveloz.com/marketplace-conduct</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://tuveloz.com/provisional-provider-policy</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://tuveloz.com/privacy</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://tuveloz.com/payments</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://tuveloz.com/job-operations</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>

@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   accountCredentials,
@@ -9,6 +9,8 @@ import {
   passwordVerificationCodes,
   providerApplications,
   providerCredentialVerifications,
+  providerPathwayProfiles,
+  providerServiceEligibility,
 } from "../db/schema";
 import {
   parseProviderSelfAssessment,
@@ -19,9 +21,19 @@ import {
 } from "./provider-credentials";
 import { sendAccountSecurityAlert } from "./email-notifications";
 import {
+  isPathwayLevelCompatible,
+  isProviderLevel,
+  isProviderPathway,
+  isServiceCode,
+  POLICY_JURISDICTION,
+  POLICY_VERSION,
+} from "./provider-policy";
+import { parseProviderServices } from "./service-matching";
+import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   PROVIDER_POLICY_BUNDLE_VERSION,
 } from "./policies";
+import { ELIGIBILITY_RULES_VERSION } from "./provider-eligibility-engine";
 
 export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -275,7 +287,8 @@ export function expiredSessionCookies(request: Request) {
 }
 
 async function verifiedProviderFor(email: string) {
-  const [provider] = await getDb().select().from(providerApplications)
+  const db = getDb();
+  const [provider] = await db.select().from(providerApplications)
     .where(and(
       eq(providerApplications.email, email),
       eq(providerApplications.status, "approved"),
@@ -284,6 +297,64 @@ async function verifiedProviderFor(email: string) {
     ))
     .limit(1);
   if (!provider) return null;
+
+  const [profile] = await db.select().from(providerPathwayProfiles)
+    .where(eq(providerPathwayProfiles.providerId, provider.id))
+    .orderBy(desc(providerPathwayProfiles.pathwayVersion))
+    .limit(1);
+  if (
+    !profile
+    || profile.status !== "active"
+    || profile.policyVersion !== POLICY_VERSION
+    || profile.relationshipPath !== "independent_startup"
+    || !isProviderPathway(profile.relationshipPath)
+    || !isProviderLevel(profile.providerLevel)
+    || profile.providerLevel === "learning_account"
+    || !isPathwayLevelCompatible(profile.relationshipPath, profile.providerLevel)
+    || !profile.providerPersonId
+    || profile.registrationHolderId !== provider.id
+    || provider.serviceRulesVersion !== POLICY_VERSION
+  ) {
+    return null;
+  }
+
+  const rawApprovedServices = parseProviderServices(provider.approvedServices);
+  const approvedServices = rawApprovedServices.filter(isServiceCode)
+    .filter((serviceCode) => serviceCode !== "general_auto_repair");
+  if (
+    approvedServices.length === 0
+    || approvedServices.length !== rawApprovedServices.length
+  ) {
+    return null;
+  }
+  const eligibilityRows = await db.select().from(providerServiceEligibility)
+    .where(and(
+      eq(providerServiceEligibility.providerId, provider.id),
+      eq(providerServiceEligibility.personId, profile.providerPersonId),
+      eq(providerServiceEligibility.jurisdiction, POLICY_JURISDICTION),
+      eq(providerServiceEligibility.eligibilityState, "eligible"),
+    ));
+  const now = Date.now();
+  const eligibleServiceCodes = new Set(eligibilityRows
+    .filter((row) => {
+      const validThrough = Date.parse(
+        row.validThrough.includes("T")
+          ? row.validThrough
+          : `${row.validThrough}T23:59:59.999Z`,
+      );
+      return row.policyVersion === POLICY_VERSION
+        && row.relationshipPath === profile.relationshipPath
+        && row.providerLevel === profile.providerLevel
+        && row.rulesEngineVersion === ELIGIBILITY_RULES_VERSION
+        && Number.isFinite(validThrough)
+        && validThrough >= now
+        && isServiceCode(row.serviceCode)
+        && row.serviceCode !== "general_auto_repair";
+    })
+    .map((row) => row.serviceCode));
+  if (!approvedServices.every((serviceCode) => eligibleServiceCodes.has(serviceCode))) {
+    return null;
+  }
 
   const credentialRequirements = requiredProviderCredentialRequirements(
     provider.approvedServices,
@@ -303,13 +374,30 @@ async function verifiedProviderFor(email: string) {
   return provider;
 }
 
+export async function providerApplicationFor(email: string) {
+  const [provider] = await getDb().select().from(providerApplications)
+    .where(and(
+      eq(providerApplications.email, email),
+      ne(providerApplications.status, "declined"),
+    ))
+    .orderBy(desc(providerApplications.createdAt))
+    .limit(1);
+  return provider ?? null;
+}
+
+async function providerDestinationFor(email: string) {
+  const provider = await verifiedProviderFor(email)
+    || await testProviderAccountFor(email);
+  return provider ? "/provider-jobs" : "/provider-onboarding";
+}
+
 export async function eligibleAccountRoles(email: string): Promise<AccountRole[]> {
   const [customerRows, credentialRows, provider] = await Promise.all([
     getDb().select({ id: customerRequests.id }).from(customerRequests)
       .where(eq(customerRequests.email, email)).limit(1),
     getDb().select({ email: accountCredentials.email }).from(accountCredentials)
       .where(eq(accountCredentials.email, email)).limit(1),
-    verifiedProviderFor(email),
+    providerApplicationFor(email),
   ]);
   const roles: AccountRole[] = [];
   if (credentialRows.length > 0 || customerRows.length > 0) roles.push("customer");
@@ -337,7 +425,9 @@ export async function createAccountSession(email: string, role: AccountRole) {
     token,
     role,
     roles,
-    destination: role === "customer" ? "/customer" : "/provider-jobs",
+    destination: role === "customer"
+      ? "/customer"
+      : await providerDestinationFor(email),
   };
 }
 
@@ -352,7 +442,7 @@ async function sendLoginCodeEmail(
     throw new Error("Passwordless email is not configured.");
   }
 
-  const roleLabel = role === "provider" ? "verified provider" : "customer";
+  const roleLabel = role === "provider" ? "provider" : "customer";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -479,7 +569,7 @@ async function sendPasswordVerificationEmail(
     throw new Error("Password verification email is not configured.");
   }
 
-  const roleLabel = role === "provider" ? "verified provider" : "customer";
+  const roleLabel = role === "provider" ? "provider" : "customer";
   const actionLabel = purpose === "create"
     ? "finish creating your account"
     : purpose === "reset"
@@ -877,7 +967,9 @@ export async function switchAccountRole(request: Request, role: AccountRole) {
   }).where(eq(authSessions.id, session.id));
   return {
     role,
-    destination: role === "customer" ? "/customer" : "/provider-jobs",
+    destination: role === "customer"
+      ? "/customer"
+      : await providerDestinationFor(session.email),
   };
 }
 
@@ -890,4 +982,22 @@ export async function endAccountSession(request: Request) {
 
 export async function providerAccountFor(email: string) {
   return verifiedProviderFor(email);
+}
+
+/**
+ * Isolated review accounts are intentionally excluded from every normal
+ * provider lookup. Only explicitly test-only marketplace routes may call this
+ * helper, and those routes must also require a persisted test job.
+ */
+export async function testProviderAccountFor(email: string) {
+  const [provider] = await getDb().select().from(providerApplications)
+    .where(and(
+      eq(providerApplications.email, email),
+      eq(providerApplications.status, "approved"),
+      eq(providerApplications.verificationStatus, "test"),
+      eq(providerApplications.isTestProvider, "yes"),
+    ))
+    .orderBy(desc(providerApplications.createdAt))
+    .limit(1);
+  return provider ?? null;
 }

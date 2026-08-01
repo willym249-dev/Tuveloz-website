@@ -14,7 +14,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: tuveloz-production-${{ github.event_name }}-${{ github.ref }}
+  group: tuveloz-${{ github.event_name == 'pull_request' && github.head_ref || 'production' }}
   cancel-in-progress: false
 
 jobs:
@@ -109,6 +109,8 @@ jobs:
                   && payload?.checks?.schema === "ready"
                   && Array.isArray(payload?.missingTables)
                   && payload.missingTables.length === 0
+                  && Array.isArray(payload?.missingGuardedTriggers)
+                  && payload.missingGuardedTriggers.length === 0
                 ) {
                   console.log(`Verified live Tuveloz release ${expected}.`);
                   console.log(`Production health checked at ${payload.checkedAt}.`);

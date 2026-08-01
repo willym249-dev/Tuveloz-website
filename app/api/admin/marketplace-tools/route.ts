@@ -1,6 +1,10 @@
 import { env } from "cloudflare:workers";
 import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import { isSameOriginRequest } from "../../../../lib/request-security";
+import {
+  marketplacePausedMessage,
+} from "../../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../../lib/runtime-marketplace-action";
 
 type CredentialReviewRow = {
   id: string;
@@ -37,6 +41,8 @@ function text(value: unknown, maximum: number) {
 }
 
 async function responseData() {
+  const appointmentsAvailable = await runtimeMarketplaceActionAllowed("appointment");
+  const appointmentFilter = appointmentsAvailable ? "" : "WHERE 1 = 0";
   const [credentialsResult, appointmentsResult, metricsResult] = await Promise.all([
     env.DB.prepare(
       `SELECT credential.id, credential.provider_id AS providerId,
@@ -61,13 +67,16 @@ async function responseData() {
               starts_at AS startsAt, confirmed_start_at AS confirmedStartAt,
               status, created_at AS createdAt
          FROM appointments
+        ${appointmentFilter}
         ORDER BY datetime(created_at) DESC
         LIMIT 500`,
     ).all<AppointmentAdminRow>(),
     env.DB.prepare(
       `SELECT
          (SELECT count(*) FROM provider_catalog_items WHERE active = 'yes') AS activeCatalogItems,
-         (SELECT count(*) FROM appointments WHERE status = 'requested') AS pendingAppointments,
+         ${appointmentsAvailable
+           ? "(SELECT count(*) FROM appointments WHERE status = 'requested')"
+           : "0"} AS pendingAppointments,
          (SELECT count(*) FROM provider_submitted_credentials WHERE status = 'pending') AS pendingCredentials,
          (SELECT count(*) FROM job_location_shares
            WHERE status = 'sharing' AND datetime(expires_at) > CURRENT_TIMESTAMP) AS activeLocationShares`,
@@ -81,6 +90,10 @@ async function responseData() {
   return {
     credentials: credentialsResult.results,
     appointments: appointmentsResult.results,
+    appointmentActionsAvailable: appointmentsAvailable,
+    appointmentPausedMessage: appointmentsAvailable
+      ? ""
+      : marketplacePausedMessage("appointment"),
     metrics: metricsResult ?? {
       activeCatalogItems: 0,
       pendingAppointments: 0,

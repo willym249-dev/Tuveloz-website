@@ -20,6 +20,7 @@ import {
   PROVIDER_AGREEMENT_VERSION,
   TERMS_VERSION,
 } from "../../../../lib/policies";
+import { stripeLiveModeEnabled } from "../../../../lib/stripe";
 
 type RuntimeEnvironment = Record<string, string | undefined>;
 
@@ -465,11 +466,11 @@ export async function GET(request: Request) {
 
     const runtime = env as unknown as RuntimeEnvironment;
     const stripeKey = runtime.STRIPE_SECRET_KEY?.trim() ?? "";
-    const liveModeAllowed = runtime.STRIPE_ALLOW_LIVE_MODE === "true";
+    const liveModeEnabled = stripeLiveModeEnabled();
     const stripeMode = stripeKey.startsWith("sk_test_")
       ? "test"
       : stripeKey.startsWith("sk_live_")
-        ? liveModeAllowed
+        ? liveModeEnabled
           ? "live"
           : "live blocked"
         : "not configured";

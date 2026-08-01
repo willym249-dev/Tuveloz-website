@@ -15,10 +15,15 @@ import {
 import { parseProviderServices } from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../../lib/quote-feedback";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { marketplacePausedMessage } from "../../../lib/launch-status";
+import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
+import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 
 const AVAILABILITY_STATUSES = new Set(["Available now", "Busy", "Off duty"]);
 const MAX_GALLERY_ITEMS = 12;
+const NO_STORE_HEADERS = { "cache-control": "no-store" };
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -38,6 +43,21 @@ async function activeProvider(request: Request) {
   const session = await getAccountSession(request);
   if (!session || session.role !== "provider") return null;
   return providerAccountFor(session.email);
+}
+
+async function providerPublicDiscoveryAllowed(
+  provider: NonNullable<Awaited<ReturnType<typeof activeProvider>>>,
+) {
+  try {
+    if (!(await runtimeMarketplaceActionAllowed("discovery"))) return false;
+    const activeServiceCodes = await currentPlatformActiveServiceCodes(
+      POLICY_JURISDICTION,
+    );
+    return parseProviderServices(provider.approvedServices)
+      .some((serviceCode) => activeServiceCodes.has(serviceCode));
+  } catch {
+    return false;
+  }
 }
 
 async function profileFor(providerId: string) {
@@ -218,7 +238,8 @@ async function responseData(
     hasLogo: Boolean(storedProfile.logoImageKey),
   } : defaultProfile;
   const canPublish = provider.verificationStatus === "verified"
-    && provider.isTestProvider === "no";
+    && provider.isTestProvider === "no"
+    && await providerPublicDiscoveryAllowed(provider);
   return {
     profile,
     gallery,
@@ -250,7 +271,7 @@ export async function GET(request: Request) {
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
@@ -269,7 +290,7 @@ export async function POST(request: Request) {
   const provider = await activeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider workspace." },
+      { error: "Sign in to your active provider workspace." },
       { status: 401, headers: { "cache-control": "no-store" } },
     );
   }
@@ -301,13 +322,25 @@ export async function POST(request: Request) {
       if (provider.verificationStatus !== "verified" || provider.isTestProvider === "yes") {
         return Response.json(
           { error: "Only approved real providers can publish a public business page." },
-          { status: 403 },
+          { status: 403, headers: NO_STORE_HEADERS },
         );
       }
       if (!headline || !about) {
         return Response.json(
           { error: "Add a short headline and About description before publishing." },
-          { status: 400 },
+          { status: 400, headers: NO_STORE_HEADERS },
+        );
+      }
+      if (!(await providerPublicDiscoveryAllowed(provider))) {
+        return Response.json(
+          {
+            error: marketplacePausedMessage("discovery"),
+            code: "MARKETPLACE_ONBOARDING_ONLY",
+          },
+          {
+            status: 503,
+            headers: { ...NO_STORE_HEADERS, "retry-after": "86400" },
+          },
         );
       }
     }

@@ -25,12 +25,21 @@ export async function GET(request: Request) {
   const id = new URL(request.url).searchParams.get("id")?.trim().slice(0, 100) ?? "";
   if (!id) return Response.json({ error: "Private image record not found." }, { status: 404 });
   const row = await env.DB.prepare(
-    `SELECT image_key AS imageKey,
-            image_type AS imageType,
-            provider_email AS providerEmail,
-            customer_email AS customerEmail
-       FROM job_evidence_items
-      WHERE id = ? LIMIT 1`,
+    `SELECT evidence.image_key AS imageKey,
+            evidence.image_type AS imageType,
+            evidence.provider_email AS providerEmail,
+            evidence.customer_email AS customerEmail
+       FROM job_evidence_items evidence
+       INNER JOIN customer_requests request
+         ON request.id = evidence.request_id
+      WHERE evidence.id = ?
+        AND EXISTS (
+          SELECT 1
+            FROM provider_applications provider
+           WHERE lower(provider.email) = lower(evidence.provider_email)
+             AND provider.is_test_provider = request.is_test_job
+        )
+      LIMIT 1`,
   ).bind(id).first<EvidenceImageRow>();
   if (!row?.imageKey) {
     return Response.json({ error: "Private image record not found." }, { status: 404 });

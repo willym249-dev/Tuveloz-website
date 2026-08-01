@@ -7884,6 +7884,88 @@ footer > p,
   margin-top: 20px;
 }
 
+.provider-service-status-card {
+  grid-column: 1 / -1;
+}
+
+.provider-onboarding-guide {
+  color: #c6d3dd;
+  display: grid;
+  gap: 12px;
+  line-height: 1.6;
+  margin: 24px 0;
+  padding-left: 22px;
+}
+
+.provider-onboarding-service {
+  align-items: stretch;
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+}
+
+.provider-onboarding-service h3,
+.provider-onboarding-service p {
+  color: #f7fbff;
+}
+
+.provider-onboarding-service p {
+  line-height: 1.6;
+}
+
+.provider-requirement-list {
+  display: grid;
+  gap: 10px;
+}
+
+.provider-requirement-list details {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid #29435a;
+  border-radius: 12px;
+  padding: 13px;
+}
+
+.provider-requirement-list summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.provider-requirement-list summary small {
+  color: #ffb27d;
+}
+
+.provider-requirement-list a,
+.provider-onboarding-service a {
+  color: #ff9a55;
+}
+
+.provider-evidence-form {
+  display: grid;
+  gap: 6px 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.provider-evidence-form .button,
+.provider-evidence-form .form-error,
+.provider-evidence-form .portal-success {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .provider-evidence-form {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-requirement-list summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .account-login-help {
   align-items: center;
   background: rgba(13, 35, 54, 0.82);
@@ -8281,6 +8363,256 @@ footer > p,
   padding-top: 30px;
 }
 
+.policy-content .job-operations-console {
+  border-bottom: 1px solid #29435a;
+  padding: 30px 0;
+}
+
+.job-console-warning {
+  background: rgba(164, 55, 45, 0.16);
+  border: 1px solid rgba(255, 134, 118, 0.55);
+  border-radius: 16px;
+  margin-bottom: 26px;
+  padding: 18px;
+}
+
+.job-console-warning strong {
+  color: #ffb4a8;
+  display: block;
+  font-size: 15px;
+  margin-bottom: 7px;
+}
+
+.job-console-warning p,
+.policy-content .job-action-section > p,
+.job-record-section > p,
+.job-console-scope {
+  color: #bdcad4;
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.job-console-picker {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.job-console-picker label,
+.job-operation-form form > label {
+  color: #d8e2e9;
+  display: grid;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 7px;
+}
+
+.job-console-picker input,
+.job-operation-form input,
+.job-operation-form select,
+.job-operation-form textarea {
+  background: #041120;
+  border: 1px solid #3c5c75;
+  border-radius: 10px;
+  color: #f7fbff;
+  font: inherit;
+  min-width: 0;
+  padding: 11px 12px;
+  width: 100%;
+}
+
+.job-operation-form select,
+.job-operation-form input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+.job-operation-form textarea {
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.job-console-picker button,
+.job-operation-form button {
+  background: #ff6a00;
+  border: 0;
+  border-radius: 10px;
+  color: #17100b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 42px;
+  padding: 11px 16px;
+}
+
+.job-console-picker button:disabled,
+.job-operation-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.job-console-notice {
+  border-left: 3px solid #31b97a;
+  color: #b9ebd2;
+  font-size: 13px;
+  margin: 16px 0 0;
+  padding: 10px 12px;
+}
+
+.job-console-notice.error {
+  border-left-color: #ff7868;
+  color: #ffc0b7;
+}
+
+.job-console-results {
+  display: grid;
+  gap: 24px;
+  margin-top: 26px;
+}
+
+.job-console-overview {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.job-console-overview > div {
+  background: rgba(20, 47, 69, 0.72);
+  border: 1px solid #31516a;
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+}
+
+.job-console-overview span {
+  color: #8299aa;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.job-console-overview strong {
+  color: #f7fbff;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.policy-content .job-operations-console .job-action-section,
+.policy-content .job-operations-console .job-record-section {
+  border: 0;
+  padding: 6px 0 0;
+}
+
+.job-action-grid,
+.job-record-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-top: 16px;
+}
+
+.job-operation-form,
+.job-record-card {
+  background: rgba(11, 31, 49, 0.92);
+  border: 1px solid #31516a;
+  border-radius: 14px;
+  min-width: 0;
+  padding: 15px;
+}
+
+.job-operation-form > summary {
+  align-items: center;
+  color: #f7fbff;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 900;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.job-operation-form > summary small {
+  color: #ff9a55;
+  font-size: 9px;
+  text-align: right;
+}
+
+.job-operation-form form {
+  border-top: 1px solid #29435a;
+  display: grid;
+  gap: 11px;
+  margin-top: 13px;
+  padding-top: 13px;
+}
+
+.job-operation-check {
+  align-items: start;
+  color: #c8d5de;
+  display: grid;
+  font-size: 11px;
+  gap: 8px;
+  grid-template-columns: 18px 1fr;
+  line-height: 1.5;
+}
+
+.job-operation-check input {
+  margin-top: 2px;
+  min-height: 17px;
+  padding: 0;
+}
+
+.job-form-warning {
+  background: rgba(255, 106, 0, 0.08);
+  border-left: 2px solid #ff6a00;
+  color: #d8c8bc;
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 9px 10px;
+}
+
+.job-action-pair {
+  display: grid;
+  gap: 12px;
+}
+
+.job-record-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.job-record-heading h2 {
+  margin: 0;
+}
+
+.job-record-heading strong {
+  background: rgba(255, 106, 0, 0.14);
+  border-radius: 999px;
+  color: #ff9a55;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.job-record-card h3 {
+  color: #f7fbff;
+  font-size: 15px;
+  line-height: 1.35;
+  margin: 0 0 9px;
+}
+
+.policy-content .job-record-card p {
+  color: #aebdca;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+}
+
 .payment-policy-consent {
   color: #c9d4dc;
   font-size: 12px;
@@ -8331,6 +8663,20 @@ footer > p,
   .policy-contact {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .job-console-picker {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .job-console-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .job-action-grid,
+  .job-record-grid {
+    grid-template-columns: 1fr;
   }
 }
 

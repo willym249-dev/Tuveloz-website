@@ -5,9 +5,24 @@ export default function TermsPage() {
     <PolicyPage
       eyebrow="Legal"
       title="Terms of Use"
-      summary="The agreement for using Tuveloz and its two-sided vehicle-service marketplace."
-      updated="July 28, 2026"
+      summary="An operational review draft for using Tuveloz and its two-sided vehicle-service marketplace."
+      updated="July 31, 2026"
     >
+      <section>
+        <h2>Important current status</h2>
+        <p>
+          These Terms are an operational draft, not legal advice, proof of
+          compliance, or approval to launch. Tuveloz&apos;s owner may elect to proceed
+          without hiring private counsel, but that choice does not waive or reduce
+          any duty imposed by applicable law. Tuveloz is currently in
+          provider-onboarding mode: customers cannot post, book, pay for, start,
+          complete, or release payout for a real job. Every exact service remains
+          disabled unless and until all applicable legal, government, insurance,
+          tax, payment, security, and technical launch controls are documented
+          and satisfied.
+        </p>
+      </section>
+
       <section>
         <h2>1. Agreement and eligibility</h2>
         <p>
@@ -31,17 +46,33 @@ export default function TermsPage() {
         <h2>2. Tuveloz is a marketplace</h2>
         <p>
           Tuveloz supplies technology that helps customers find and communicate
-          with independent vehicle-service businesses. Providers advertise and
-          perform services under their own names. Tuveloz does not diagnose or
-          repair vehicles and is not the provider of the vehicle service.
+          with vehicle-service provider businesses. A provider business accepts
+          the customer&apos;s job, controls any approved owner-operator, employee,
+          or sponsored-trainee assignment, and performs the service under the
+          provider business&apos;s name. Tuveloz does not itself diagnose or repair
+          vehicles merely by operating the marketplace.
+        </p>
+        <p>
+          TUVELOZ does not hire, employ, train, sponsor, assign, direct, discipline,
+          or supervise providers, mechanics, trainees, or provider-business
+          employees. Any provider personnel are employed and managed solely by
+          their separate provider business, which is responsible for hiring,
+          payroll, training, supervision, insurance, and work assignment.
         </p>
         <p>
           Customers decide whom to hire and whether to accept a quote. Providers
           decide which requests to pursue, which customers to serve, what to
           quote, when and where they are available, what lawful tools and methods
-          to use, and whether to work through Tuveloz or elsewhere. Tuveloz does
-          not create an employment, agency, partnership, joint-venture, or
-          franchise relationship with either user.
+          to use, and whether to work through Tuveloz or elsewhere. Platform use
+          is not intended by itself to create an employment, agency, partnership,
+          joint-venture, or franchise relationship with either user. Actual legal
+          status depends on the facts and applicable law; labels in these Terms
+          do not override those facts.
+        </p>
+        <p>
+          Nothing in the marketplace description, the direct customer-provider
+          agreement, or any disclaimer waives a responsibility that applicable
+          law places directly on Tuveloz.
         </p>
       </section>
 
@@ -67,19 +98,28 @@ export default function TermsPage() {
         <h2>4. Verification and legally required credentials</h2>
         <p>
           Tuveloz may review identity, business, insurance, and compliance
-          information. A “verified” label means only that Tuveloz reviewed the
-          specific items shown or recorded at that time. It is not a guarantee
-          of skill, safety, workmanship, price, availability, or future conduct.
+          information. Any evidence-checked label is limited to the named person
+          or business, exact service, jurisdiction, document, and validity period
+          shown. It is not a guarantee of skill, safety, workmanship, price,
+          availability, or future conduct.
         </p>
         <p>
-          Tuveloz requires a license, permit, certification, or registration only
-          when an applicable federal, state, county, municipal, or other
-          governmental rule requires it for the selected service and service
-          location. If no applicable law requires that credential, Tuveloz does
-          not impose one as a condition of offering that service. A regulated
-          service remains unavailable until Tuveloz records acceptable current
-          proof, and access may be paused if that proof expires or cannot be
-          confirmed.
+          There is no single universal mechanic credential that authorizes every
+          service. Depending on the exact service and location, Tuveloz may require
+          governmental credentials, business registration, insurance, competency,
+          equipment, employment, supervision, or other evidence even when no law
+          calls that evidence a mechanic license. There is no borrowed-credential
+          path. A service remains unavailable unless the responsible provider,
+          performing person, supervisor when required, and service-specific
+          evidence all pass the applicable controls.
+        </p>
+        <p>
+          At the current onboarding-only stage, no service is enabled for a real
+          customer job. A service may be considered for production only after
+          its applicable federal, Maryland, and local requirements; government
+          licenses, registrations, or approvals; and exact-operation insurance
+          requirements are documented and satisfied, and the corresponding
+          technical gate is deliberately enabled.
         </p>
       </section>
 
@@ -105,31 +145,39 @@ export default function TermsPage() {
         <p>
           Providers set their own quotes and must describe labor, parts, material
           assumptions, timing, and added costs clearly. Work or price outside the
-          accepted quote requires the customer&apos;s approval. Providers are
-          responsible for legally required estimates, authorizations, invoices,
-          disclosures, repair records, parts handling, warranties, and disposal.
+          accepted quote requires the customer&apos;s approval. Provider businesses
+          must satisfy the estimate, authorization, invoice, disclosure, repair
+          record, parts, warranty, and disposal duties applicable to their work.
         </p>
         <p>
-          Any service or parts warranty is offered by the provider or
-          manufacturer identified in the service records—not by Tuveloz—unless
-          Tuveloz expressly issues a separate written warranty.
+          Service records should identify who offers any express service or parts
+          warranty. Tuveloz does not offer a service or parts warranty merely by
+          operating the marketplace. Nothing in this draft excludes an implied or
+          statutory warranty, duty, right, or remedy that applicable law does not
+          allow the parties to exclude.
         </p>
       </section>
 
       <section>
         <h2>7. Fees and payment processing</h2>
         <p>
-          Posting a request is free. Before checkout, Tuveloz shows the
-          provider&apos;s quoted subtotal, the separate 10% Tuveloz customer
-          service fee, and the total. Stripe hosts checkout. Tuveloz&apos;s role
-          in collecting and administering a payment does not make Tuveloz the
-          provider of vehicle work, but it does not remove any payment-related
-          duty that law places directly on Tuveloz.
+          Real customer requests and payments are currently disabled. The product
+          configuration proposes a customer service fee equal to 10% of the
+          provider&apos;s quoted subtotal. That percentage is proposed pricing, not a
+          final legal, tax, accounting, or merchant-of-record conclusion. Before
+          any production use, the fee and payment flow require documented
+          compliance with applicable law and final CPA or tax-adviser, processor,
+          insurance, and operational approval. If adopted, the provider subtotal,
+          separate fee, and total must be displayed conspicuously before the
+          customer authorizes checkout.
         </p>
         <p>
-          Payment authorization, transfers, cancellations, refunds, disputes,
-          and chargebacks are governed by the{" "}
+          Any enabled payment authorization, transfer, cancellation, refund,
+          dispute, or chargeback process will also be governed by the{" "}
           <a href="/payments">Payment, Cancellation, and Refund Policy</a>.
+          Operating a payment flow would not make Tuveloz the vehicle-service
+          provider, and it would not remove any payment-related duty that law
+          places directly on Tuveloz.
         </p>
       </section>
 
@@ -179,12 +227,13 @@ export default function TermsPage() {
       <section>
         <h2>11. Disclaimers</h2>
         <p>
-          To the fullest extent permitted by law, the platform is provided “as
-          is” and “as available.” Tuveloz does not warrant uninterrupted access,
-          a particular number of requests or quotes, the accuracy of user
-          statements, or the quality, safety, legality, timing, or outcome of
-          independent-provider services. Users must make their own decisions
-          about the suitability of a provider, customer, location, and service.
+          If adopted by Tuveloz and to the fullest extent permitted by
+          law, the proposed production terms would provide the platform “as is”
+          and “as available.” Tuveloz does not promise uninterrupted access, a
+          particular number of requests or quotes, the accuracy of user
+          statements, or a particular outcome from provider services. Users must
+          make their own decisions about the suitability of a provider, customer,
+          location, and service.
         </p>
         <p>
           Nothing in these Terms excludes a warranty, duty, right, or remedy that
@@ -195,24 +244,25 @@ export default function TermsPage() {
       <section>
         <h2>12. Limitation of Tuveloz liability</h2>
         <p>
-          To the extent permitted by law, Tuveloz is not liable for a
-          customer&apos;s or provider&apos;s acts or omissions, vehicle condition,
-          service performance, parts, lost profits, lost data, business
-          interruption, or indirect, incidental, special, exemplary, or
-          consequential damages.
+          The customer and provider remain directly responsible to each other for
+          the promises they make in their service agreement. Tuveloz may propose
+          reasonable disclaimers or limitations for risks caused by users,
+          vehicle condition, provider services, third-party parts, or interrupted
+          platform access, but any such provision must be enforceable under
+          applicable law. Independent professional legal review is recommended
+          for these provisions, but it is not represented as having occurred.
         </p>
         <p>
-          For claims that applicable law allows to be limited, Tuveloz&apos;s
-          total liability arising from a particular transaction will not exceed
-          the greater of $100 or the Tuveloz service fees the claimant paid
-          during the six months before the event giving rise to the claim. This
-          limit does not apply to Tuveloz&apos;s fraud, willful misconduct, or
-          another liability that cannot legally be limited.
+          This operational draft does not set a $100, fees-paid, or other fixed
+          liability cap. No policy promises that Tuveloz has zero liability, and
+          no disclaimer or future limitation may exclude a duty, right, remedy,
+          or responsibility that applicable law does not allow the parties to
+          exclude or limit.
         </p>
       </section>
 
       <section>
-        <h2>13. Disputes with Tuveloz and Maryland law</h2>
+        <h2>13. Disputes with Tuveloz</h2>
         <p>
           Before filing a claim against Tuveloz, email{" "}
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with the facts
@@ -220,11 +270,11 @@ export default function TermsPage() {
           it informally. This does not extend a legal filing deadline.
         </p>
         <p>
-          Maryland law governs these Terms, without overriding consumer
-          protections that apply where you live. Unless applicable law requires
-          another location, claims against Tuveloz may be brought in a court with
-          jurisdiction in Maryland. These Terms do not require private
-          arbitration or waive a right to participate in a class action.
+          Governing-law, forum, and formal dispute provisions have not yet been
+          adopted for production. Independent professional legal review is
+          recommended before adopting them. This draft does not impose an
+          arbitration requirement or class-action waiver, and it does not alter
+          a filing deadline or a non-waivable right or remedy.
         </p>
       </section>
 
@@ -238,11 +288,12 @@ export default function TermsPage() {
           have the same effect as written ones to the extent allowed by law.
         </p>
         <p>
-          If one provision is unenforceable, the remaining provisions continue.
-          A failure to enforce one provision is not a waiver. These Terms and the
-          incorporated role and policy documents are the complete agreement about
-          the platform, while each accepted quote remains the separate service
-          agreement between its customer and provider.
+          If one provision is unenforceable, the remaining provisions continue
+          to the extent allowed by law. A failure to enforce one provision is not
+          a waiver. When a final production version is adopted, the accepted
+          Terms and incorporated role and policy documents will govern platform
+          use, while each accepted quote remains the separate service agreement
+          between its customer and provider.
         </p>
       </section>
     </PolicyPage>
