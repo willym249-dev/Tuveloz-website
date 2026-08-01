@@ -35,6 +35,7 @@ jobs:
       - name: Apply source and legal policy safeguards
         run: |
           python3 scripts/apply-all-inclusive-parts-guard.py
+          python3 scripts/apply-all-inclusive-parts-legal-preface.py
           python3 scripts/apply-all-inclusive-parts-legal.py
 
       - name: Set up Node.js
@@ -55,6 +56,7 @@ jobs:
       - name: Commit the validated implementation
         run: |
           rm scripts/apply-all-inclusive-parts-guard.py
+          rm scripts/apply-all-inclusive-parts-legal-preface.py
           rm scripts/apply-all-inclusive-parts-legal.py
           rm .github/workflows/apply-all-inclusive-parts-guard.yml
           git config user.name "github-actions[bot]"
