@@ -76,11 +76,11 @@ function accessTokenFrom(request: Request): {
   const headerToken = request.headers.get("cf-access-jwt-assertion")?.trim() ?? "";
   if (headerToken) return { token: headerToken, source: "access-header" };
 
-  const bridgeToken = cookieValue(request, OWNER_BRIDGE_COOKIE_NAME).trim();
-  if (bridgeToken) return { token: bridgeToken, source: "owner-bridge" };
-
   const accessCookie = cookieValue(request, ACCESS_COOKIE_NAME).trim();
   if (accessCookie) return { token: accessCookie, source: "access-cookie" };
+
+  const bridgeToken = cookieValue(request, OWNER_BRIDGE_COOKIE_NAME).trim();
+  if (bridgeToken) return { token: bridgeToken, source: "owner-bridge" };
 
   return { token: "", source: "" };
 }
