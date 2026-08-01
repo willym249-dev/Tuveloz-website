@@ -24,7 +24,10 @@ test("Maryland repair notices and line-item validation are source-bound", async 
 });
 
 test("migration creates immutable authorization, itemized invoice, signature, delivery, and retention records", async () => {
-  const migration = await read("drizzle/0042_maryland_repair_records.sql");
+  const [migration, gates] = await Promise.all([
+    read("drizzle/0042_maryland_repair_records.sql"),
+    read("drizzle/0043_signed_repair_record_gates.sql"),
+  ]);
 
   assert.match(migration, /CREATE TABLE `repair_authorization_records`/);
   assert.match(migration, /CREATE TABLE `repair_authorization_items`/);
@@ -47,6 +50,16 @@ test("migration creates immutable authorization, itemized invoice, signature, de
   assert.match(migration, /provider_invoice_final_core_immutable/);
   assert.match(migration, /provider_invoice_signed_immutable/);
   assert.match(migration, /Final provider invoice items are immutable/);
+
+  assert.match(gates, /provider_job_insert_requires_signed_repair_authorization/);
+  assert.match(gates, /provider_job_update_requires_signed_repair_authorization/);
+  assert.match(gates, /authorization\.`status` = 'signed'/);
+  assert.match(gates, /provider_invoice_cannot_insert_final_directly/);
+  assert.match(gates, /provider_invoice_final_requires_complete_repair_record/);
+  assert.match(gates, /provider_invoice_items/);
+  assert.match(gates, /stripe_payment_release_requires_signed_delivered_provider_invoice/);
+  assert.match(gates, /customer_copy_delivered_at/);
+  assert.match(gates, /provider_copy_retained_at/);
 });
 
 test("repair-record API is participant-only, test-only, same-origin, and cannot move money", async () => {
@@ -91,6 +104,9 @@ test("production health verifies the new repair-document schema and controls", a
   assert.match(health, /provider_invoice_items/);
   assert.match(health, /customer_copy_delivered_at/);
   assert.match(health, /repair_authorization_signed_immutable/);
+  assert.match(health, /provider_job_insert_requires_signed_repair_authorization/);
+  assert.match(health, /provider_invoice_final_requires_complete_repair_record/);
+  assert.match(health, /stripe_payment_release_requires_signed_delivered_provider_invoice/);
   assert.match(operations, /href="\/repair-records"/);
   assert.match(operations, /Open Maryland repair-document test workflow/);
 });
