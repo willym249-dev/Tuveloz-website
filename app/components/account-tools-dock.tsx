@@ -64,11 +64,11 @@ export function AccountToolsDock() {
   return (
     <details style={dockStyle}>
       <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-        {isOwner ? "Owner Tools" : "Owner/admin sign in"}
+        {isOwner ? "Owner Tools" : "Owner/admin sign-in"}
       </summary>
       <nav aria-label="Tuveloz owner tools" style={{ display: "grid", gap: ".15rem", marginTop: ".55rem" }}>
         <Link href="/admin" style={linkStyle}>
-          {isOwner ? "Open Owner Control Center" : "Continue to secure owner sign in"}
+          {isOwner ? "Open Owner Control Center" : "Continue to secure owner sign-in"}
         </Link>
         {isOwner && (
           <>

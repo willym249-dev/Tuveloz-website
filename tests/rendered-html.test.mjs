@@ -263,7 +263,7 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Email me a one-time code instead"));
   assert.ok(contents.includes("Use at least 10 characters"));
   assert.ok(contents.includes("Remember my email on this device"));
-  assert.ok(contents.includes("Finish sign in"));
+  assert.ok(contents.includes("Finish signing in"));
   assert.ok(contents.includes("Verified provider workspace"));
   assert.ok(contents.includes("Customer workspace"));
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
@@ -312,6 +312,23 @@ test("homepage prominently links to Tuveloz AI with clear boundaries", async () 
   assert.ok(homeSource.includes("A clearer way to describe what your vehicle needs."));
   assert.ok(homeSource.includes("It does not diagnose, dispatch"));
   assert.ok(homeSource.includes("guarantee pricing, or choose a provider."));
+});
+
+test("homepage uses clear launch language and keeps its service icons visible", async () => {
+  const [homeSource, styles] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.ok(homeSource.includes('aria-label="Current Tuveloz launch status"'));
+  assert.ok(homeSource.includes("<b>Customer requests</b> are not yet available"));
+  assert.ok(homeSource.includes("<b>Service activation</b> requires approval"));
+  assert.ok(homeSource.includes("<b>Provider applications</b> are open now"));
+  assert.ok(!styles.includes(".public-view-home > .services,"));
+  assert.match(
+    styles,
+    /\.service-grid \.tuveloz-icon \{[\s\S]*?height: 20px;[\s\S]*?width: 20px;/,
+  );
 });
 
 test("passkeys are optional, verified on the server, and never store biometric data", async () => {
@@ -581,7 +598,7 @@ test("build preserves the proposed 10 percent test configuration and fee snapsho
 
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(quotePaymentSource.includes("Configured Tuveloz fee (currently 10% in test)"));
+  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 10% in test)"));
   assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 10%"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
   assert.ok(contents.includes("Accepted service fees"));

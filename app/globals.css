@@ -511,8 +511,9 @@ a {
 
 .service-grid .tuveloz-icon {
   flex: 0 0 auto;
-  height: 16px;
-  width: 16px;
+  height: 20px;
+  stroke-width: 2.1;
+  width: 20px;
 }
 
 .service-grid .icon-accent {
@@ -9137,7 +9138,6 @@ footer > p,
   padding: 2px 7px;
 }
 
-.public-view-home > .services,
 .public-view-home > .how,
 .public-view-home > .reviews-section,
 .public-view-home > .request-section,

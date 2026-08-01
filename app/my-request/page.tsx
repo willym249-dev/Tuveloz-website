@@ -242,7 +242,7 @@ export default function MyRequestPage() {
         )}
         {job && <p>{job.vehicle} · {job.launchArea || job.municipality} · Status: {job.status}</p>}
         {job && (
-          <p>Service can happen: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
+          <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
         )}
         {job && (
           <p>
@@ -356,7 +356,7 @@ export default function MyRequestPage() {
               </>
             ) : quote.status === "declined" ? (
               <div className="quote-passed">
-                <strong>Quote passed on</strong>
+                <strong>You passed on this quote</strong>
                 <span>
                   {QUOTE_DECLINE_REASONS.find((reason) => reason.value === quote.declineReason)?.label
                     ?? "No reason shared"}

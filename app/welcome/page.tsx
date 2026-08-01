@@ -20,16 +20,16 @@ export default function WelcomePage() {
           <h1>Thank you for joining Tuveloz.</h1>
           <p>
             {isProvider
-              ? "Your provider workspace helps you receive matching requests, set your own services and prices, request appointments, and manage customer updates."
-              : "Tuveloz helps you request vehicle work, compare independent providers and quotes, request appointments, and follow job updates in one place."}
+              ? "Use your provider workspace to complete onboarding, list services for review, set future pricing and availability, and manage your business profile. Customer jobs are not yet available."
+              : "Use your customer workspace to manage your account now. After launch, you will be able to request service, compare independent providers and quotes, request appointments, and follow job updates."}
           </p>
         </div>
         <section className="account-card">
           {isProvider ? (
             <>
-              <h2>Build your provider presence</h2>
+              <h2>Build your provider profile</h2>
               <p>
-                Add your approved services, provider-set prices, availability, service area,
+                Add the services you want reviewed, provider-set prices, availability, service area,
                 and optional credentials. A credential that is legally required still needs
                 Tuveloz&apos;s separate official verification before the related service is activated.
               </p>
@@ -46,7 +46,7 @@ export default function WelcomePage() {
                 independent-provider quotes, choose a provider, and follow appointments and job updates.
               </p>
               <div className="legal-actions">
-                <Link className="button primary" href="/post-job">Post a vehicle-service request</Link>
+                <Link className="button primary" href="/post-job">View customer launch status</Link>
                 <Link className="button secondary" href="/customer">Open customer workspace</Link>
               </div>
             </>

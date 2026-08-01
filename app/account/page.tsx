@@ -455,7 +455,7 @@ export default function AccountPage() {
 
       <section className="account-main account-login-main">
         <div className="account-welcome">
-          <span className="account-kicker">Tuveloz sign in</span>
+          <span className="account-kicker">Sign in to Tuveloz</span>
           <h1>Welcome to Tuveloz.</h1>
           <p>Access your customer requests, provider application, or approved-provider workspace.</p>
         </div>
@@ -533,8 +533,8 @@ export default function AccountPage() {
                 : mode === "code"
                   ? "Use an email code."
                   : role === "customer"
-                    ? "Customer sign in"
-                    : "Provider sign in"}
+                    ? "Sign in as a customer"
+                    : "Sign in as a provider"}
           </h2>
           <p>
             {mode === "create"
@@ -663,7 +663,7 @@ export default function AccountPage() {
                 />
               </label>
               <button className="button primary" disabled={busy || code.length !== 6} type="submit">
-                {busy ? "Verifying…" : "Finish sign in"}
+                {busy ? "Verifying…" : "Finish signing in"}
               </button>
               <button
                 className="account-text-button"
@@ -825,7 +825,7 @@ export default function AccountPage() {
                 onClick={() => chooseMode("signin")}
                 type="button"
               >
-                Back to password sign in
+                Back to password sign-in
               </button>
             </form>
           )}

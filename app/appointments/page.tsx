@@ -274,7 +274,7 @@ export default function AppointmentsPage() {
                             disabled={Boolean(busy)}
                             onClick={() => void submit(
                               { action: "respond", id: appointment.id, status: "cancelled" },
-                              "Appointment request cancelled.",
+                              "Appointment request canceled.",
                             )}
                             type="button"
                           >Cancel request</button>
