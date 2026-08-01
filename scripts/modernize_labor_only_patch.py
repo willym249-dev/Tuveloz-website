@@ -53,7 +53,7 @@ core_pairs = [
     ),
     (
         '''    "0044_final_provider_invoice_legal_fields_immutable",
-    "0048_customer_supplied_parts_preferences",
+    "0045_customer_supplied_parts_preferences",
   ];
 ''',
         '''    "0044_final_provider_invoice_legal_fields_immutable",
