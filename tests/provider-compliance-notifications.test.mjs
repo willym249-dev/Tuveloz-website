@@ -26,7 +26,7 @@ test("application, evidence, appeal, privacy, and review routes call the safe no
     source("app/api/provider-evidence/route.ts"),
     source("app/api/provider-onboarding/route.ts"),
     source("app/api/admin/provider-compliance/route.ts"),
-    source("app/api/internal/evidence-scan-result/route.ts"),
+    source("lib/evidence-scan-result-recorder.ts"),
   ]);
 
   assert.match(applications, /notifyProviderApplicationReceived/);
@@ -54,7 +54,7 @@ test("each controlled evidence review outcome notifies the provider after recalc
 test("non-clean scan branches use a preloaded provider record and cannot hit the old undefined notification variables", async () => {
   const [admin, scanner, notifications] = await Promise.all([
     source("app/api/admin/provider-compliance/route.ts"),
-    source("app/api/internal/evidence-scan-result/route.ts"),
+    source("lib/evidence-scan-result-recorder.ts"),
     source("lib/provider-compliance-notifications.ts"),
   ]);
   const manualStart = admin.indexOf('if (action === "record-evidence-scan")');
@@ -68,7 +68,7 @@ test("non-clean scan branches use a preloaded provider record and cannot hit the
   assert.doesNotMatch(manualBranch, /notifyProviderEvidenceDecision/);
 
   const providerLookup = scanner.indexOf("const [evidenceProvider] = await db.select");
-  const claim = scanner.indexOf("const claimed = await db.update");
+  const claim = scanner.indexOf("await db.batch([terminalInsert, pendingUpdate]");
   const notification = scanner.lastIndexOf("await notifyProviderEvidenceScanBlocked");
   assert.ok(providerLookup >= 0 && providerLookup < claim, "provider recipient must be loaded before scan state is committed");
   assert.ok(notification > claim, "non-clean scan notification must run after the state change");
@@ -92,7 +92,7 @@ test("scan-block notifications persist durable account and email intents before 
 });
 
 test("authenticated scanner replay re-ensures a non-clean notification idempotently", async () => {
-  const scanner = await source("app/api/internal/evidence-scan-result/route.ts");
+  const scanner = await source("lib/evidence-scan-result-recorder.ts");
   const existingStart = scanner.indexOf("if (existingResult)");
   const existingEnd = scanner.indexOf("const [evidence]", existingStart);
   assert.ok(existingStart >= 0 && existingEnd > existingStart, "existing-result replay branch not found");

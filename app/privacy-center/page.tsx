@@ -29,6 +29,7 @@ type PrivacyRequest = {
 type PrivacyCenterData = {
   role: AccountRole;
   email: string;
+  availablePrivacyScopes: AccountRole[];
   preferences: {
     marketingEmail: boolean;
     productUpdateEmail: boolean;
@@ -70,11 +71,12 @@ export default function PrivacyCenterPage() {
   const [productUpdateEmail, setProductUpdateEmail] = useState(false);
   const [optionalReminderEmail, setOptionalReminderEmail] = useState(true);
 
-  async function load() {
-    const response = await fetch("/api/privacy-center", { cache: "no-store" });
+  async function load(scope?: AccountRole) {
+    const query = scope ? `?scope=${scope}` : "";
+    const response = await fetch(`/api/privacy-center${query}`, { cache: "no-store" });
     const result = await response.json() as PrivacyCenterData & { error?: string };
     if (response.status === 401) {
-      window.location.replace("/account");
+      window.location.replace("/account?role=customer&privacy=1");
       return;
     }
     if (!response.ok) throw new Error(result.error || "Unable to load the privacy center.");
@@ -82,6 +84,21 @@ export default function PrivacyCenterPage() {
     setMarketingEmail(result.preferences.marketingEmail);
     setProductUpdateEmail(result.preferences.productUpdateEmail);
     setOptionalReminderEmail(result.preferences.optionalReminderEmail);
+  }
+
+  async function selectPrivacyScope(scope: AccountRole) {
+    if (scope === data?.role) return;
+    setBusy("scope");
+    setError("");
+    setNotice("");
+    setData(null);
+    try {
+      await load(scope);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to change privacy data views.");
+    } finally {
+      setBusy("");
+    }
   }
 
   useEffect(() => {
@@ -99,7 +116,7 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/privacy-center", {
+      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -128,7 +145,7 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/privacy-center", {
+      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -163,7 +180,7 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch("/api/privacy-center", {
+      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "withdraw-request", id }),
@@ -192,7 +209,7 @@ export default function PrivacyCenterPage() {
         </Link>
         <div className="account-header-actions">
           <SiteLanguageButton />
-          <Link className="account-home-link" href={data?.role === "provider" ? "/provider-jobs" : "/customer"}>
+          <Link className="account-home-link" href="/account">
             Account
           </Link>
         </div>
@@ -212,6 +229,28 @@ export default function PrivacyCenterPage() {
 
         {data && (
           <div className="account-grid account-customer-grid">
+            {data.availablePrivacyScopes.length > 1 && (
+              <div>
+                <div className="account-role-tabs" aria-label="Choose privacy data">
+                  {data.availablePrivacyScopes.map((scope) => (
+                    <button
+                      aria-pressed={data.role === scope}
+                      className={data.role === scope ? "selected" : ""}
+                      disabled={busy === "scope"}
+                      key={scope}
+                      onClick={() => void selectPrivacyScope(scope)}
+                      type="button"
+                    >
+                      {scope === "provider" ? "Provider application data" : "Customer account data"}
+                    </button>
+                  ))}
+                </div>
+                <p className="admin-note">
+                  Provider application data is a privacy-only view. It does not approve provider
+                  work, unlock jobs, or change marketplace eligibility.
+                </p>
+              </div>
+            )}
             <nav className="workspace-nav customer-workspace-nav" aria-label="Privacy center sections">
               <a className="workspace-nav-primary" href={data.immediateTools.dataExport}>
                 Download my data
@@ -283,7 +322,7 @@ export default function PrivacyCenterPage() {
               </form>
             </section>
 
-            <section className="account-card">
+            <section className="account-card" id="privacy-request">
               <div className="account-card-heading">
                 <div>
                   <span className="account-role">Verified request</span>

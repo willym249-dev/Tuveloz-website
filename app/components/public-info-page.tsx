@@ -33,7 +33,8 @@ export function PublicInfoPage({
         </Link>
         <button
           className="menu-button"
-          aria-label="Toggle navigation"
+          aria-controls="public-main-navigation"
+          aria-label={menuOpen ? "Close main menu" : "Open main menu"}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((value) => !value)}
           type="button"
@@ -41,7 +42,7 @@ export function PublicInfoPage({
           <span />
           <span />
         </button>
-        <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
+        <nav className={menuOpen ? "nav open" : "nav"} id="public-main-navigation" aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
           <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
@@ -70,7 +71,7 @@ export function PublicInfoPage({
             {section.points && (
               <ul>
                 {section.points.map((point) => (
-                  <li key={point}><span>✓</span>{point}</li>
+                  <li key={point}><span aria-hidden="true">✓</span>{point}</li>
                 ))}
               </ul>
             )}
@@ -79,7 +80,7 @@ export function PublicInfoPage({
       </section>
 
       <section className="public-info-actions">
-        <h2>Provider applications are open; customer jobs are not open yet.</h2>
+        <h2>Provider applications are open. Customer service requests are not yet available.</h2>
         <div>
           <Link className="button primary" href="/post-job">Check customer launch status <span>→</span></Link>
           <Link className="button secondary" href="/join">Join as a provider</Link>

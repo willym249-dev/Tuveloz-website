@@ -725,7 +725,7 @@ export default function ProviderJobsPage() {
                     {job.isTestJob === "yes" && <span className="test-badge">TEST JOB</span>}
                     {job.repeatCustomer && <span className="repeat-badge">Repeat customer</span>}
                     <p>{job.vehicle} · {job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
-                    <p>Service can happen: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
+                    <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
                     <p>
                       Parts: {job.partsSource}
                       {job.partsSource !== PARTS_SOURCE_OPTIONS[0] ? ` · ${job.partsPreference}` : ""}
@@ -1162,7 +1162,7 @@ export default function ProviderJobsPage() {
               </span>
             </div>
             <p>{job.launchArea || `ZIP ${job.zip}`} · {job.municipality}</p>
-            <p>Service can happen: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
+            <p>Service locations: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
             <p>
               Parts: {job.partsSource}
               {job.partsSource !== PARTS_SOURCE_OPTIONS[0] ? ` · ${job.partsPreference}` : ""}

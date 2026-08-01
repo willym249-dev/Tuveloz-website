@@ -35,7 +35,7 @@ test("the review intake replaces broad categories with one exact service scope",
     assert.ok(page.includes(field), `missing exact intake field ${field}`);
   }
   assert.match(page, /service\.code !== "general_auto_repair"/);
-  assert.match(page, /Broad categories such as “general auto repair” are prohibited/);
+  assert.match(page, /Broad categories such as\s+“general auto repair” are not accepted/);
   assert.doesNotMatch(page, /name="service"/);
   assert.match(page, /Request posting is not open/);
   assert.match(page, /TUVELOZ does not employ, hire, train, assign, or place anyone on/);

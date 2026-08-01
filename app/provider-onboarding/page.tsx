@@ -1,7 +1,12 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import {
+  IDENTITY_ADULT_STATUS_CONSENT_TEXT,
+  IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT,
+  IDENTITY_SAME_PERSON_CERTIFICATION_TEXT,
+} from "../../lib/identity-verification-policy";
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
@@ -92,6 +97,20 @@ type OnboardingResponse = {
     providerLevelLabel: string;
     status: string;
     personId: string;
+  };
+  identityVerification: {
+    status: string;
+    failureCode: string;
+    attemptsUsed: number;
+    attemptsRemaining: number;
+    ownerOperatorEligible: boolean;
+    manualReattestationRequired: boolean;
+    method: "" | "manual" | "stripe";
+    expiredManualVerificationRequiresReplacement: boolean;
+    conflictingExternalVerificationRequiresReview: boolean;
+    configuredForThisProvider: boolean;
+    canStart: boolean;
+    complete: boolean;
   };
   services: ServiceStatus[];
   agreements: Array<{
@@ -375,6 +394,8 @@ export default function ProviderOnboardingPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [agreementBusy, setAgreementBusy] = useState(false);
+  const [identityBusy, setIdentityBusy] = useState(false);
+  const identityPollCount = useRef(0);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/provider-onboarding", { cache: "no-store" });
@@ -395,6 +416,73 @@ export default function ProviderOnboardingPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [load]);
+
+  useEffect(() => {
+    if (!data || new URLSearchParams(window.location.search).get("identity") !== "returned") {
+      return;
+    }
+    const status = data.identityVerification.status;
+    if (["verified", "blocked", "closed", "expired"].includes(status)) return;
+    if (identityPollCount.current >= 8) {
+      setNotice("Automatic identity-status refresh ended. Use Refresh status below if Stripe is still processing.");
+      return;
+    }
+    const delay = Math.min(2000 * (2 ** identityPollCount.current), 15000);
+    const timer = window.setTimeout(() => {
+      identityPollCount.current += 1;
+      void load().catch((reason) => setError(
+        reason instanceof Error ? reason.message : "Unable to refresh identity status.",
+      ));
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [data, load]);
+
+  async function startIdentityVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIdentityBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const values = new FormData(event.currentTarget);
+      const response = await fetch("/api/provider-identity-verification", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          identityConsentAcknowledged: values.get("identityConsentAcknowledged") === "yes",
+          adultVerificationAcknowledged: values.get("adultVerificationAcknowledged") === "yes",
+          samePersonCertificationAcknowledged:
+            values.get("samePersonCertificationAcknowledged") === "yes",
+          replaceExpiredManualVerificationAcknowledged:
+            values.get("replaceExpiredManualVerificationAcknowledged") === "yes",
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        status?: string;
+        url?: string;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to start identity verification.");
+      if (result.url) {
+        const destination = new URL(result.url);
+        if (
+          destination.protocol !== "https:"
+          || destination.hostname !== "verify.stripe.com"
+          || destination.username
+          || destination.password
+        ) {
+          throw new Error("Stripe returned an unexpected verification address. No redirect was opened.");
+        }
+        window.location.assign(destination.toString());
+        return;
+      }
+      await load();
+      setNotice("Identity status refreshed. Job access remains controlled by every other launch gate.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to start identity verification.");
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
 
   async function acceptAgreements(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -481,6 +569,157 @@ export default function ProviderOnboardingPage() {
                 ✓ means a listed requirement was accepted. ✕ means the service cannot be used for a
                 customer job. ⏳ means TUVELOZ received an item, but job access remains blocked.
               </p>
+            </section>
+
+            <section className="account-card" id="identity-verification">
+              <div className="account-card-heading">
+                <div>
+                  <span className="account-role">Independent owner-operator only</span>
+                  <h2>Identity and adult-status verification</h2>
+                </div>
+                <span className="account-count">
+                  {data.identityVerification.complete ? "Verified" : "Pending"}
+                </span>
+              </div>
+              <p>
+                Status: <strong>{readableStatus(data.identityVerification.status)}</strong>.
+                {data.identityVerification.attemptsUsed > 0
+                  ? ` ${data.identityVerification.attemptsRemaining} of 3 attempts remain today.`
+                  : " No Stripe Identity attempt has started."}
+              </p>
+              {!data.identityVerification.ownerOperatorEligible && (
+                <p className="form-error">
+                  Automated Stripe Identity is not available for an employee or trainee pathway.
+                  TUVELOZ does not employ or train providers. A separate person-level invitation,
+                  consent, and employer/provider-of-record workflow is required before that person can be reviewed.
+                </p>
+              )}
+              {data.identityVerification.manualReattestationRequired && (
+                <p className="form-error">
+                  This older application does not contain the required immutable performing-person
+                  name. Do not start Stripe Identity. Contact TUVELOZ for assisted re-attestation or
+                  the external manual identity-and-age review.
+                </p>
+              )}
+              {data.identityVerification.conflictingExternalVerificationRequiresReview && (
+                <p className="form-error">
+                  An existing external identity record cannot be replaced automatically. No new
+                  ID or selfie will be collected until TUVELOZ completes owner review.
+                </p>
+              )}
+              {data.identityVerification.status === "blocked" && (
+                <p className="form-error">
+                  Automated verification is blocked for manual review
+                  {data.identityVerification.failureCode
+                    ? ` (${readableStatus(data.identityVerification.failureCode)})`
+                    : ""}. No service or job access was granted.
+                </p>
+              )}
+              {data.identityVerification.status === "expired" && (
+                <p className="form-error">
+                  The prior verification is no longer current. Contact TUVELOZ for a reviewed
+                  manual alternative or complete a new verification below. Service and job access
+                  remains blocked until current verification and every other gate pass again.
+                </p>
+              )}
+              {data.identityVerification.complete ? (
+                <p className="portal-success" role="status">
+                  {data.identityVerification.method === "manual" ? "External manual" : "Stripe"} identity
+                  and adult-status verification is current. Every business,
+                  credential, insurance, exact-service, agreement, and launch gate still applies.
+                </p>
+              ) : data.identityVerification.ownerOperatorEligible
+                && !data.identityVerification.manualReattestationRequired ? (
+                  <>
+                    <p>
+                      Stripe captures a government-issued ID and a selfie and performs a biometric
+                      face comparison. TUVELOZ processes Stripe&apos;s result and limited verified output;
+                      this Identity flow persists only non-sensitive references, status/decision,
+                      dates, consent certification, and an account-session digest; not ID images,
+                      ID numbers, a new copy of your name, or date of birth. Stripe retains data under
+                      its own policy. Read the <Link href="/privacy">TUVELOZ Privacy Policy</Link>,{" "}
+                      <a href="https://stripe.com/privacy" rel="noreferrer" target="_blank">Stripe Privacy Policy</a>,
+                      and <a href="https://support.stripe.com/topics/identity-verification" rel="noreferrer" target="_blank">Stripe Identity support</a>.
+                    </p>
+                    <p>
+                      For a manual/non-biometric alternative, email{" "}
+                      <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>. The alternative may
+                      take longer, and service/job access stays blocked while it is reviewed.
+                    </p>
+                    <form onSubmit={startIdentityVerification}>
+                      <label className="policy-consent">
+                        <input
+                          name="identityConsentAcknowledged"
+                          required
+                          type="checkbox"
+                          value="yes"
+                        />
+                        <span>{IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT}</span>
+                      </label>
+                      {data.identityVerification.expiredManualVerificationRequiresReplacement && (
+                        <label className="policy-consent">
+                          <input
+                            name="replaceExpiredManualVerificationAcknowledged"
+                            required
+                            type="checkbox"
+                            value="yes"
+                          />
+                          <span>
+                            I understand my prior external identity and adult-status verification
+                            has expired. I authorize TUVELOZ to revoke that expired record and start
+                            a new Stripe government-ID, selfie, and biometric-comparison review.
+                          </span>
+                        </label>
+                      )}
+                      <label className="policy-consent">
+                        <input
+                          name="adultVerificationAcknowledged"
+                          required
+                          type="checkbox"
+                          value="yes"
+                        />
+                        <span>{IDENTITY_ADULT_STATUS_CONSENT_TEXT}</span>
+                      </label>
+                      <label className="policy-consent">
+                        <input
+                          name="samePersonCertificationAcknowledged"
+                          required
+                          type="checkbox"
+                          value="yes"
+                        />
+                        <span>{IDENTITY_SAME_PERSON_CERTIFICATION_TEXT}</span>
+                      </label>
+                      <button
+                        className="button primary"
+                        disabled={identityBusy || !data.identityVerification.canStart}
+                        type="submit"
+                      >
+                        {identityBusy
+                          ? "Opening Stripe..."
+                          : data.identityVerification.status === "requires_input"
+                            ? "Resume securely with Stripe"
+                            : "Verify securely with Stripe"}
+                      </button>
+                      {!data.identityVerification.configuredForThisProvider && (
+                        <small className="form-error">
+                          Stripe Identity is not configured in the correct test/live mode for this provider.
+                        </small>
+                      )}
+                    </form>
+                    <button
+                      className="button secondary"
+                      onClick={() => {
+                        identityPollCount.current = 0;
+                        void load().catch((reason) => setError(
+                          reason instanceof Error ? reason.message : "Unable to refresh identity status.",
+                        ));
+                      }}
+                      type="button"
+                    >
+                      Refresh status
+                    </button>
+                  </>
+                ) : null}
             </section>
 
             <section className="account-card">

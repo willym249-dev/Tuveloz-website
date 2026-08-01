@@ -284,7 +284,7 @@ function ActiveQuotePaymentCard({
           <small className="payment-release-note">
             Real checkout is currently disabled. If the proposed flow receives
             final approval, the checkout screen must show the provider subtotal,
-            total, and Configured Tuveloz fee (currently 10% in test) before the
+            total, and configured Tuveloz fee (currently 10% in test) before the
             customer accepts.
           </small>
         </>

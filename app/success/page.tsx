@@ -67,7 +67,7 @@ export default function StripeSuccessPage() {
           {payment
             ? "Verified payment record"
             : checking
-              ? "Payment record"
+              ? "Payment status"
               : canceled
                 ? "Checkout canceled"
                 : "Payments are closed"}
@@ -89,7 +89,7 @@ export default function StripeSuccessPage() {
         ) : (
           <p>
             {checking
-              ? "Checking the authenticated payment record…"
+              ? "Confirming your payment…"
               : canceled
                 ? "Customer checkout remains closed during provider onboarding."
                 : "Tuveloz is accepting account signups and provider applications, but customer checkout and payment links remain unavailable."}

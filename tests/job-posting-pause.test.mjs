@@ -31,9 +31,9 @@ test("customer signups stay open while new job requests and payments are paused"
   assert.match(launchStatus, /CUSTOMER_JOB_POSTING_PAUSED = true/);
   assert.match(
     launchStatus,
-    /not accepting new job requests or customer payments yet/,
+    /not accepting customer service requests or payments yet/,
   );
-  assert.match(postJobPage, /New job requests are temporarily paused/);
+  assert.match(postJobPage, /Customer service requests are not yet available/);
   assert.match(postJobPage, /account\?role=customer&mode=create/);
   assert.match(postJobPage, /href="\/join"/);
   assert.match(postJobPage, /Customer accounts are open\. Job requests are not\./);

@@ -304,7 +304,7 @@ function LiveAppointmentsPage() {
                             disabled={Boolean(busy)}
                             onClick={() => void submit(
                               { action: "respond", id: appointment.id, status: "cancelled" },
-                              "Appointment request cancelled.",
+                              "Appointment request canceled.",
                             )}
                             type="button"
                           >Cancel request</button>
@@ -321,7 +321,6 @@ function LiveAppointmentsPage() {
     </main>
   );
 }
-
 export default function AppointmentsPage() {
   return CUSTOMER_JOB_POSTING_PAUSED
     ? <AppointmentsClosedPage />

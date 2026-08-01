@@ -12,10 +12,41 @@ exact file is `clean`. The owner dashboard cannot create a clean result.
   in callback bodies.
 - Store a random secret of at least 32 characters as the Worker secret
   `EVIDENCE_SCAN_WEBHOOK_SECRET`.
+- For the built-in scheduled integration, set `EVIDENCE_SCAN_PROVIDER` to the
+  exact value `cloudmersive` and store the Cloudmersive key as the Worker
+  secret `CLOUDMERSIVE_API_KEY`.
 - Do not commit the secret or place it in `wrangler.jsonc`.
 - The launch-readiness dashboard remains blocked while the provider is
   `unconfigured`, the secret is missing, or an end-to-end scan has not been
   independently tested.
+
+## Built-in Cloudmersive scheduled scanner
+
+Every 15 minutes, the production Worker can load a small batch of existing
+`pending` evidence scan requests. It runs only when all three settings are
+present: `EVIDENCE_SCAN_PROVIDER=cloudmersive`, `CLOUDMERSIVE_API_KEY`, and a
+32-or-more-character `EVIDENCE_SCAN_WEBHOOK_SECRET`.
+
+For each pending request, the Worker loads the private R2 object, caps it at
+the same 10 MB upload limit, recomputes SHA-256, and requires an exact match to
+the D1 evidence and scan records before sending any bytes to Cloudmersive's
+Advanced Virus Scan endpoint. The request blocks executables, invalid files,
+scripts, password-protected files, macros, XML external entities, insecure
+deserialization, HTML, unsafe archives, OLE/embedded objects, unwanted
+actions, and any type outside PDF, JPG/JPEG, PNG, and WebP.
+
+An HTTP error, timeout, malformed response, incomplete clean response, or any
+other ambiguous vendor outcome leaves the request `pending` for retry. A
+missing, oversized, or hash-mismatched R2 object is a terminal local integrity
+error and is recorded as non-clean. A Cloudmersive `CleanResult=false` is
+recorded as infected or failed. A clean result is recorded only when all
+required advanced threat flags are explicitly false, the virus list is empty,
+and a verified format is present.
+
+The scheduled scanner and external signed callback share the same D1 result
+recorder. That recorder conditionally claims the exact pending request, preserves
+idempotency, blocks non-clean evidence, and records an audit event. A clean
+scan never accepts evidence; separate owner review is still required.
 
 ## Request
 

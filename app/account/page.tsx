@@ -22,6 +22,11 @@ type PasswordPurpose = "create" | "reset";
 const PASSWORD_MIN_LENGTH = 10;
 const REMEMBERED_EMAIL_KEY = "tuveloz.remembered-email";
 
+function destinationAfterSignIn(destination: string) {
+  const privacyReturn = new URLSearchParams(window.location.search).get("privacy") === "1";
+  return privacyReturn ? "/privacy-center" : destination;
+}
+
 export default function AccountPage() {
   const [role, setRole] = useState<Role>("customer");
   const [mode, setMode] = useState<AuthMode>("signin");
@@ -39,6 +44,7 @@ export default function AccountPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [privacyReturn, setPrivacyReturn] = useState(false);
 
   useEffect(() => {
     if (browserSupportsWebAuthn()) {
@@ -59,7 +65,11 @@ export default function AccountPage() {
     } catch {
       // Sign-in still works when this browser blocks local storage.
     }
-    const requestedRole = new URLSearchParams(window.location.search).get("role");
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestedRole = searchParams.get("role");
+    if (searchParams.get("privacy") === "1") {
+      Promise.resolve().then(() => setPrivacyReturn(true));
+    }
     if (requestedRole === "provider" || requestedRole === "customer") {
       Promise.resolve().then(() => setRole(requestedRole));
     }
@@ -67,9 +77,9 @@ export default function AccountPage() {
       if (!response.ok) return;
       const result = (await response.json()) as { role?: Role; destination?: string };
       if (result.role) {
-        window.location.replace(
+        window.location.replace(destinationAfterSignIn(
           result.destination || (result.role === "customer" ? "/customer" : "/provider-onboarding"),
-        );
+        ));
       }
     }).catch(() => {
       // The sign-in form remains available if the session check is unavailable.
@@ -189,10 +199,10 @@ export default function AccountPage() {
         setPasswordChallengeRequested(false);
         setCode("");
         setMessage("");
-        setPasskeySetupDestination(result.destination);
+        setPasskeySetupDestination(destinationAfterSignIn(result.destination));
         return;
       }
-      window.location.replace(result.destination);
+      window.location.replace(destinationAfterSignIn(result.destination));
     } catch {
       setError("Sign-in is temporarily unavailable. Please try again.");
     } finally {
@@ -267,10 +277,10 @@ export default function AccountPage() {
         setCodeRequested(false);
         setCode("");
         setMessage("");
-        setPasskeySetupDestination(result.destination);
+        setPasskeySetupDestination(destinationAfterSignIn(result.destination));
         return;
       }
-      window.location.replace(result.destination);
+      window.location.replace(destinationAfterSignIn(result.destination));
     } catch {
       setError("Account setup is temporarily unavailable. Please try again.");
     } finally {
@@ -325,7 +335,7 @@ export default function AccountPage() {
         setError(result.error || "Unable to verify this code.");
         return;
       }
-      window.location.replace(result.destination);
+      window.location.replace(destinationAfterSignIn(result.destination));
     } catch {
       setError("Sign-in is temporarily unavailable. Please try again.");
     } finally {
@@ -372,7 +382,7 @@ export default function AccountPage() {
         );
         return;
       }
-      window.location.replace(verificationResult.destination);
+      window.location.replace(destinationAfterSignIn(verificationResult.destination));
     } catch {
       setError("Passkey sign-in was canceled or is unavailable on this device.");
     } finally {
@@ -445,7 +455,7 @@ export default function AccountPage() {
 
       <section className="account-main account-login-main">
         <div className="account-welcome">
-          <span className="account-kicker">Tuveloz sign in</span>
+          <span className="account-kicker">Sign in to Tuveloz</span>
           <h1>Welcome to Tuveloz.</h1>
           <p>
             Access your customer account or provider application. Customer job
@@ -506,6 +516,18 @@ export default function AccountPage() {
             </button>
           </div>
 
+          {privacyReturn && (
+            <div className="customer-security-note">
+              <strong>Signing in for provider-application privacy access</strong>
+              <p>
+                Use or create the Customer sign-in with the same verified email used on your
+                provider application. After sign-in, choose Provider application data in the
+                Privacy Center. This privacy-only access does not approve provider work or grant
+                access to jobs.
+              </p>
+            </div>
+          )}
+
           <h2>
             {mode === "create"
               ? "Create an account."
@@ -514,8 +536,8 @@ export default function AccountPage() {
                 : mode === "code"
                   ? "Use an email code."
                   : role === "customer"
-                    ? "Customer sign in"
-                    : "Provider sign in"}
+                    ? "Sign in as a customer"
+                    : "Sign in as a provider"}
           </h2>
           <p>
             {mode === "create"
@@ -644,7 +666,7 @@ export default function AccountPage() {
                 />
               </label>
               <button className="button primary" disabled={busy || code.length !== 6} type="submit">
-                {busy ? "Verifying…" : "Finish sign in"}
+                {busy ? "Verifying…" : "Finish signing in"}
               </button>
               <button
                 className="account-text-button"
@@ -806,7 +828,7 @@ export default function AccountPage() {
                 onClick={() => chooseMode("signin")}
                 type="button"
               >
-                Back to password sign in
+                Back to password sign-in
               </button>
             </form>
           )}

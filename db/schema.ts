@@ -825,6 +825,65 @@ export const providerPersonnel = sqliteTable(
   ],
 );
 
+/**
+ * One row per Stripe Identity attempt. The row contains only Stripe and
+ * TUVELOZ references plus non-sensitive decision state. Names, dates of birth,
+ * document numbers, and document/selfie files are deliberately never stored.
+ */
+export const providerIdentityVerificationSessions = sqliteTable(
+  "provider_identity_verification_sessions",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull(),
+    applicationSubmissionEvidenceId: text("application_submission_evidence_id")
+      .notNull(),
+    personNameSourceType: text("person_name_source_type").notNull(),
+    personNameSourceId: text("person_name_source_id").notNull(),
+    accountSessionHash: text("account_session_hash").notNull(),
+    certificationVersion: text("certification_version").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    stripeVerificationSessionId: text("stripe_verification_session_id")
+      .notNull()
+      .default(""),
+    stripeVerificationReportId: text("stripe_verification_report_id")
+      .notNull()
+      .default(""),
+    stripeStatus: text("stripe_status").notNull().default("creating"),
+    decisionStatus: text("decision_status").notNull().default("pending"),
+    failureCode: text("failure_code").notNull().default(""),
+    livemode: integer("livemode").notNull().default(0),
+    consentedAt: text("consented_at").notNull(),
+    checkedAt: text("checked_at").notNull().default(""),
+    verifiedAt: text("verified_at").notNull().default(""),
+    redactedAt: text("redacted_at").notNull().default(""),
+    lastStripeEventId: text("last_stripe_event_id").notNull().default(""),
+    lastStripeEventCreated: integer("last_stripe_event_created").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_identity_verification_stripe_session_unique")
+      .on(table.stripeVerificationSessionId)
+      .where(sql`${table.stripeVerificationSessionId} <> ''`),
+    uniqueIndex("provider_identity_verification_attempt_unique")
+      .on(
+        table.providerId,
+        table.personId,
+        table.attemptNumber,
+      ),
+    uniqueIndex("provider_identity_verification_one_active_unique")
+      .on(table.providerId, table.personId)
+      .where(sql`${table.decisionStatus} = 'pending' and ${table.stripeStatus} in ('creating', 'requires_input', 'processing', 'verified')`),
+    index("provider_identity_verification_provider_person_idx")
+      .on(table.providerId, table.personId, table.createdAt),
+    index("provider_identity_verification_application_evidence_idx")
+      .on(table.applicationSubmissionEvidenceId),
+    index("provider_identity_verification_status_idx")
+      .on(table.decisionStatus, table.stripeStatus, table.updatedAt),
+  ],
+);
+
 export const providerEvidenceSubmissions = sqliteTable(
   "provider_evidence_submissions",
   {

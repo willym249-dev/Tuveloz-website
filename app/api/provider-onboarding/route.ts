@@ -6,7 +6,9 @@ import {
   dataRightsRequests,
   evidenceFileScans,
   providerAppeals,
+  providerApplicationSubmissionEvidence,
   providerEvidenceSubmissions,
+  providerIdentityVerificationSessions,
   providerPathwayProfiles,
   providerPersonnel,
 } from "../../../db/schema";
@@ -37,8 +39,15 @@ import {
   PROVIDER_POLICY_MATRIX,
   SERVICE_POLICY_CATALOG,
 } from "../../../lib/provider-policy";
+import { immutablePerformingPersonName } from "../../../lib/identity-verification-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { parseProviderServices } from "../../../lib/service-matching";
+import { stripeIdentityModeMatchesProvider } from "../../../lib/stripe";
+import {
+  expiredConfiguredManualIdentityAgeVerificationCanBeReplaced,
+  externalIdentityAgeVerificationHasData,
+  externalIdentityAgeVerificationIsCurrent,
+} from "../../../lib/provider-verification-evidence";
 
 const STRUCTURED_ONLY_REQUIREMENTS = new Set([
   "performing_person_service_eligibility_snapshot",
@@ -66,6 +75,13 @@ const DATA_RIGHTS_REQUEST_TYPES = new Set([
   "deletion",
 ]);
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+function identityApprovalValidThrough(checkedAt: string) {
+  const parsed = Date.parse(checkedAt);
+  return Number.isFinite(parsed)
+    ? new Date(parsed + (365 * DAY_MS)).toISOString().slice(0, 10)
+    : "";
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -201,6 +217,8 @@ async function responseData(
     rightsRequests,
     fileScans,
     reminders,
+    identityAttempts,
+    applicationEvidence,
   ] = await Promise.all([
     db.select().from(providerPathwayProfiles)
       .where(eq(providerPathwayProfiles.providerId, account.provider.id))
@@ -286,12 +304,115 @@ async function responseData(
     }).from(complianceReminders)
       .where(eq(complianceReminders.providerId, account.provider.id))
       .orderBy(complianceReminders.dueAt),
+    db.select().from(providerIdentityVerificationSessions)
+      .where(eq(providerIdentityVerificationSessions.providerId, account.provider.id))
+      .orderBy(desc(providerIdentityVerificationSessions.attemptNumber)),
+    db.select({
+      id: providerApplicationSubmissionEvidence.id,
+      normalizedSnapshot: providerApplicationSubmissionEvidence.normalizedSnapshot,
+    }).from(providerApplicationSubmissionEvidence)
+      .where(eq(providerApplicationSubmissionEvidence.providerId, account.provider.id))
+      .orderBy(
+        desc(providerApplicationSubmissionEvidence.createdAt),
+        desc(providerApplicationSubmissionEvidence.id),
+      ).limit(1),
   ]);
   const profile = profiles[0] ?? null;
   const pathway = profile && isProviderPathway(profile.relationshipPath)
     ? profile.relationshipPath
     : null;
   const personId = profile?.providerPersonId ?? personnel[0]?.personId ?? "";
+  const applicant = personnel.find((item) => item.personId === personId) ?? null;
+  const latestApplicationEvidence = applicationEvidence[0] ?? null;
+  const currentIdentityAttempts = identityAttempts.filter((item) => (
+    item.personId === personId
+    && item.applicationSubmissionEvidenceId === latestApplicationEvidence?.id
+  ));
+  const latestIdentityAttempt = currentIdentityAttempts[0] ?? null;
+  const approvedIdentityAttempt = applicant
+    ? currentIdentityAttempts.find((item) => (
+      item.decisionStatus === "approved"
+      && item.stripeStatus === "verified"
+      && Boolean(item.stripeVerificationSessionId)
+      && Boolean(item.stripeVerificationReportId)
+      && Boolean(item.lastStripeEventId)
+      && item.checkedAt === item.verifiedAt
+      && applicant.identityVerificationProvider === "stripe_identity"
+      && applicant.ageVerificationProvider === "stripe_identity"
+      && applicant.identityVerificationReference === item.stripeVerificationSessionId
+      && applicant.ageVerificationReference === item.stripeVerificationSessionId
+      && applicant.identityVerifiedAt === item.checkedAt
+      && applicant.ageVerifiedAt === item.checkedAt
+      && applicant.identityVerificationCheckedAt === item.checkedAt
+      && applicant.ageVerificationCheckedAt === item.checkedAt
+      && applicant.identityVerificationValidThrough
+        === identityApprovalValidThrough(item.checkedAt)
+      && applicant.ageVerificationValidThrough
+        === identityApprovalValidThrough(item.checkedAt)
+    )) ?? null
+    : null;
+  const stripeIdentityVerified = Boolean(
+    approvedIdentityAttempt
+    && applicant
+    && externalIdentityAgeVerificationIsCurrent(applicant, new Date()),
+  );
+  const currentExternalIdentityVerified = Boolean(
+    applicant
+    && applicant.identityVerifiedAt
+    && applicant.ageVerifiedAt
+    && externalIdentityAgeVerificationIsCurrent(applicant, new Date()),
+  );
+  const manualIdentityVerified = Boolean(
+    currentExternalIdentityVerified
+    && applicant?.identityVerificationProvider.trim().toLowerCase() !== "stripe_identity"
+    && applicant?.ageVerificationProvider.trim().toLowerCase() !== "stripe_identity",
+  );
+  const identityVerified = stripeIdentityVerified || manualIdentityVerified;
+  const expiredManualVerificationRequiresReplacement = Boolean(
+    applicant
+    && externalIdentityAgeVerificationHasData(applicant)
+    && expiredConfiguredManualIdentityAgeVerificationCanBeReplaced(applicant, new Date()),
+  );
+  const conflictingExternalVerificationRequiresReview = Boolean(
+    applicant
+    && externalIdentityAgeVerificationHasData(applicant)
+    && !identityVerified
+    && !expiredManualVerificationRequiresReplacement
+    && !(
+      applicant.identityVerificationProvider.trim().toLowerCase() === "stripe_identity"
+      && applicant.ageVerificationProvider.trim().toLowerCase() === "stripe_identity"
+      && approvedIdentityAttempt
+    ),
+  );
+  const identityStatus = identityVerified
+    ? "verified"
+    : expiredManualVerificationRequiresReplacement
+      ? "expired"
+      : conflictingExternalVerificationRequiresReview
+        ? "manual_review_required"
+    : latestIdentityAttempt
+      && latestIdentityAttempt.id !== approvedIdentityAttempt?.id
+      ? latestIdentityAttempt.decisionStatus === "blocked"
+        ? "blocked"
+        : latestIdentityAttempt.decisionStatus === "closed"
+          ? "closed"
+          : latestIdentityAttempt.stripeStatus
+      : approvedIdentityAttempt
+        ? "expired"
+      : latestIdentityAttempt?.decisionStatus === "blocked"
+      ? "blocked"
+      : latestIdentityAttempt?.decisionStatus === "closed"
+        ? "closed"
+        : latestIdentityAttempt?.stripeStatus || "not_started";
+  const identityOwnerOperatorEligible = profile?.relationshipPath === "independent_startup";
+  const identityManualReattestationRequired = Boolean(
+    latestApplicationEvidence
+    && !immutablePerformingPersonName(latestApplicationEvidence.normalizedSnapshot),
+  );
+  const recentIdentityAttempts = identityAttempts.filter((item) => (
+    item.personId === personId
+    && Date.parse(item.createdAt) >= Date.now() - DAY_MS
+  ));
   const selectedServices = parseProviderServices(account.provider.service)
     .filter(isServiceCode)
     .filter((serviceCode) => serviceCode !== "general_auto_repair");
@@ -434,6 +555,29 @@ async function responseData(
       workAuthorizationResponsibilityConfirmed: Boolean(item.workAuthorizationAttestedAt),
       lawfulPayConfirmed: Boolean(item.lawfulPayAttestedAt),
     })),
+    identityVerification: {
+      status: identityStatus,
+      failureCode: latestIdentityAttempt?.failureCode ?? "",
+      attemptsUsed: recentIdentityAttempts.length,
+      attemptsRemaining: Math.max(0, 3 - recentIdentityAttempts.length),
+      ownerOperatorEligible: identityOwnerOperatorEligible,
+      manualReattestationRequired: identityManualReattestationRequired,
+      method: manualIdentityVerified ? "manual" : stripeIdentityVerified ? "stripe" : "",
+      expiredManualVerificationRequiresReplacement,
+      conflictingExternalVerificationRequiresReview,
+      configuredForThisProvider: stripeIdentityModeMatchesProvider(
+        account.provider.isTestProvider,
+      ),
+      canStart: identityOwnerOperatorEligible
+        && Boolean(latestApplicationEvidence)
+        && !identityManualReattestationRequired
+        && !conflictingExternalVerificationRequiresReview
+        && stripeIdentityModeMatchesProvider(account.provider.isTestProvider)
+        && !identityVerified
+        && recentIdentityAttempts.length < 3
+        && latestIdentityAttempt?.decisionStatus !== "blocked",
+      complete: identityVerified,
+    },
     services: serviceStatuses,
     evidence: decoratedEvidence,
     appeals: appeals.map((item) => ({

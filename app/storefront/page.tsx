@@ -168,7 +168,7 @@ function LiveStripeStorefrontPage() {
       : accountState === "provider"
         ? "Provider account"
         : accountState === "signed-out"
-          ? "Sign up / Sign in"
+          ? "Sign up or sign in"
           : "Account";
 
   return (
@@ -183,7 +183,7 @@ function LiveStripeStorefrontPage() {
 
       <section className="stripe-storefront-hero">
         <span className="kicker">Stripe storefront</span>
-        <h1>Customer storefront payments are not open yet.</h1>
+        <h1>Customer payments are not yet available.</h1>
         <p>
           The current test configuration uses provider-set prices and proposes a
           separate 10% TUVELOZ fee. Final fees, tax treatment, settlement roles,
