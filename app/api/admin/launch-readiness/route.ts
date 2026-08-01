@@ -23,7 +23,6 @@ import {
   OWNER_LEGAL_REVIEW_CHOICE_GATE_KEY,
   officialSourceReferenceIsAllowedForLaunchGate,
   parseOwnerLegalReviewChoice,
-  stageIsApproved,
   type LaunchAuthorityApproval,
   type LaunchGateStatus,
   type OwnerLegalReviewChoice,
@@ -36,12 +35,21 @@ import {
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
 import { currentPlatformServiceActivations } from "../../../../lib/platform-service-activation";
 import {
+  allPolicyDocumentReleases,
+  policyDocumentReleaseIsActive,
+  type PolicyReleaseKey,
+} from "../../../../lib/policy-release-manifest";
+import {
   POLICY_STATUS,
   SERVICES,
 } from "../../../../lib/provider-policy";
+import { configuredExternalIdentityVerificationProviders } from "../../../../lib/provider-verification-evidence";
 import { isSameOriginRequest } from "../../../../lib/request-security";
+import { runtimeLaunchReadiness } from "../../../../lib/runtime-launch-readiness";
 import {
   STRIPE_LIVE_MODE_ENABLED,
+  stripeIdentityConfigurationReady,
+  stripeIdentityKeyIsLive,
   stripeLiveModeEnabled,
 } from "../../../../lib/stripe";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
@@ -52,6 +60,61 @@ const VALID_STATUSES = new Set<LaunchGateStatus>([
   "blocked",
   "not_applicable",
 ]);
+
+type WorkplanBlocker = {
+  key: string;
+  stage: "provider_onboarding" | "transaction_pilot";
+  state: string;
+  title: string;
+  reason: string;
+  responsibleRole: string;
+  nextAction: string;
+  actionHref: string;
+};
+
+const POLICY_RELEASE_PRESENTATION: Record<PolicyReleaseKey, {
+  title: string;
+  href: string;
+}> = {
+  terms: { title: "Customer and provider Terms", href: "/terms" },
+  customer_agreement: { title: "Customer Agreement", href: "/customer-agreement" },
+  provider_agreement: { title: "Provider Agreement", href: "/provider-agreement" },
+  privacy: { title: "Privacy and Cookie Notice", href: "/privacy" },
+  payment_policy: { title: "Payment, cancellation, and refund policy", href: "/payments" },
+  marketplace_conduct: { title: "Marketplace conduct and review policy", href: "/marketplace-conduct" },
+  provisional_provider_policy: { title: "Provisional provider policy", href: "/provisional-provider-policy" },
+};
+
+function launchStateReason(state: string) {
+  switch (state) {
+    case "missing":
+      return "No review record has been saved.";
+    case "pending":
+      return "The latest review record is still pending.";
+    case "blocked":
+      return "The latest review record is blocked.";
+    case "expired":
+      return "The latest approval has expired.";
+    case "authority_evidence_missing":
+      return "Evidence from one or more required authorities is missing.";
+    case "incomplete_approval":
+      return "The approval is missing an evidence reference, issuer, or review date.";
+    case "invalid_official_source":
+      return "The official-source evidence does not match the source approved for this gate.";
+    case "future_approval":
+      return "The approval date is in the future.";
+    case "expiration_missing":
+      return "A required valid-through date is missing.";
+    case "expiration_invalid":
+      return "The valid-through date is invalid.";
+    case "legal_review_window_too_long":
+      return "The official-law review window exceeds one year.";
+    case "not_approved":
+      return "This required gate cannot be marked not applicable.";
+    default:
+      return "This required readiness check has not passed.";
+  }
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -105,6 +168,7 @@ async function readinessPayload() {
     activeServiceActivations,
     openIncidentRows,
     pendingAdjustmentRows,
+    canonicalRuntimeReadiness,
   ] = await Promise.all([
     db.select().from(launchGateDecisions)
       .orderBy(desc(launchGateDecisions.gateVersion))
@@ -129,6 +193,7 @@ async function readinessPayload() {
       .where(inArray(jobIncidents.status, ["open", "under_review", "insurer_review"])),
     db.select({ value: count() }).from(paymentAdjustments)
       .where(inArray(paymentAdjustments.status, ["requested", "under_review", "active"])),
+    runtimeLaunchReadiness(),
   ]);
 
   const latestDecisionMap = new Map<string, StoredLaunchGateDecision>();
@@ -167,6 +232,14 @@ async function readinessPayload() {
   });
   const ownerChoiceDecision = latestDecisionMap.get(OWNER_LEGAL_REVIEW_CHOICE_GATE_KEY);
   const ownerChoice = parseOwnerLegalReviewChoice(ownerChoiceDecision);
+  const canonicalFailures = [
+    ...canonicalRuntimeReadiness.providerOnboarding.failures,
+    ...canonicalRuntimeReadiness.transactionPilot.failures,
+  ];
+  const canonicalFailureKeys = new Set(
+    canonicalFailures.map((failure) => failure.gateKey),
+  );
+  const policyReleases = allPolicyDocumentReleases();
 
   const runtime = env as unknown as Record<string, unknown>;
   const ownerAccessConfigured = Boolean(
@@ -181,11 +254,14 @@ async function readinessPayload() {
   const accountAuthConfigured = runtimeText(runtime, "AUTH_CODE_SECRET").length >= 32;
   const privateEvidenceBucketBound = Boolean(runtime.BUCKET);
   const evidenceScanProvider = runtimeText(runtime, "EVIDENCE_SCAN_PROVIDER");
+  const cloudmersiveApiKeyConfigured = Boolean(runtimeText(runtime, "CLOUDMERSIVE_API_KEY"));
   const authenticatedScannerConfigured = Boolean(
     evidenceScanProvider
     && evidenceScanProvider !== "unconfigured"
-    && runtimeText(runtime, "EVIDENCE_SCAN_WEBHOOK_SECRET").length >= 32,
+    && runtimeText(runtime, "EVIDENCE_SCAN_WEBHOOK_SECRET").length >= 32
+    && (evidenceScanProvider !== "cloudmersive" || cloudmersiveApiKeyConfigured),
   );
+  const evidenceScannerCanary = canonicalRuntimeReadiness.evidenceScannerCanary;
   const stripeKey = runtimeText(runtime, "STRIPE_SECRET_KEY");
   const stripeConfigured = Boolean(stripeKey);
   const stripeMode = stripeKey.startsWith("sk_live_")
@@ -195,6 +271,17 @@ async function readinessPayload() {
       : "not_configured";
   const liveStripeRequested = runtimeText(runtime, "STRIPE_ALLOW_LIVE_MODE") === "true";
   const liveStripeAllowed = stripeLiveModeEnabled();
+  const identityVerificationProviders = configuredExternalIdentityVerificationProviders();
+  const stripeIdentityConfigurationPresent = identityVerificationProviders.includes("stripe_identity")
+    && stripeIdentityConfigurationReady()
+    && stripeIdentityKeyIsLive();
+  const manualIdentityAlternativeConfigured = identityVerificationProviders.some((provider) => (
+    provider !== "stripe_identity"
+  ));
+  const stripeIdentityCanary = canonicalRuntimeReadiness.identityCanaries.stripe;
+  const runtimeCheckPassed = (key: string) => (
+    !canonicalFailureKeys.has(`internal:${key}`)
+  );
   const internalGates = [
     {
       key: "d1_integrated_schema",
@@ -207,7 +294,7 @@ async function readinessPayload() {
       key: "owner_access",
       title: "Owner access configuration is present",
       stage: "provider_onboarding",
-      passed: ownerAccessConfigured,
+      passed: runtimeCheckPassed("owner_access"),
       detail: ownerAccessConfigured
         ? "Cloudflare Access owner settings are present; this request also passed signed-token verification."
         : "OWNER_EMAIL, TEAM_DOMAIN, and OWNER_ACCESS_AUD must be configured.",
@@ -216,7 +303,7 @@ async function readinessPayload() {
       key: "account_auth",
       title: "Account sign-in secret is configured",
       stage: "provider_onboarding",
-      passed: accountAuthConfigured,
+      passed: runtimeCheckPassed("account_auth"),
       detail: accountAuthConfigured
         ? "The server reports a sufficiently long account authentication secret."
         : "AUTH_CODE_SECRET must be configured with at least 32 characters.",
@@ -225,7 +312,7 @@ async function readinessPayload() {
       key: "email_delivery",
       title: "Transactional email is configured",
       stage: "provider_onboarding",
-      passed: emailDeliveryConfigured,
+      passed: runtimeCheckPassed("email_delivery"),
       detail: emailDeliveryConfigured
         ? "The server reports an email API key and sender address. A real delivery test is still required."
         : "RESEND_API_KEY and RESEND_FROM_EMAIL must be configured.",
@@ -234,24 +321,60 @@ async function readinessPayload() {
       key: "private_evidence_storage",
       title: "Private provider-evidence storage is bound",
       stage: "provider_onboarding",
-      passed: privateEvidenceBucketBound,
+      passed: runtimeCheckPassed("private_evidence_storage"),
       detail: privateEvidenceBucketBound
         ? "The private R2 binding is present. Bucket policy and deletion behavior still require review."
         : "The BUCKET R2 binding is unavailable.",
     },
     {
       key: "authenticated_evidence_scanner",
-      title: "Authenticated evidence-scanner callback is configured",
+      title: "Cloudmersive scanner passed a guarded operational canary",
       stage: "provider_onboarding",
-      passed: authenticatedScannerConfigured,
-      detail: authenticatedScannerConfigured
-        ? `Signed scanner results are restricted to the configured ${evidenceScanProvider} provider. A real end-to-end file scan still must be tested.`
-        : "Configure EVIDENCE_SCAN_PROVIDER and a 32+ character EVIDENCE_SCAN_WEBHOOK_SECRET. Owners cannot mark a file clean manually.",
+      passed: runtimeCheckPassed("authenticated_evidence_scanner"),
+      detail: evidenceScannerCanary.evidencePassed
+        ? `A recent Cloudmersive terminal response completed the guarded pending-request and audit path at ${evidenceScannerCanary.verifiedAt}; D1 canary record: ${evidenceScannerCanary.evidenceId}.`
+        : authenticatedScannerConfigured && evidenceScanProvider === "cloudmersive"
+          ? "Cloudmersive settings are present, but D1 has no recent vendor terminal result with its consumed pending request and exact authenticated-scanner audit event. Configuration alone does not pass this gate."
+        : evidenceScanProvider === "cloudmersive" && !cloudmersiveApiKeyConfigured
+          ? "Cloudmersive is selected, but CLOUDMERSIVE_API_KEY is missing. Files remain quarantined and pending."
+          : evidenceScanProvider && evidenceScanProvider !== "unconfigured"
+            ? `The ${evidenceScanProvider} provider setting has no supported guarded operational canary. Files remain quarantined and readiness remains blocked.`
+            : "Configure Cloudmersive, its API key, and a 32+ character EVIDENCE_SCAN_WEBHOOK_SECRET. Owners cannot mark a file clean manually.",
+    },
+    {
+      key: "approved_identity_verification_provider",
+      title: "External identity-verification provider is configured",
+      stage: "provider_onboarding",
+      passed: runtimeCheckPassed("approved_identity_verification_provider"),
+      detail: identityVerificationProviders.length > 0
+        ? `${identityVerificationProviders.length} approved external identity-verification provider(s) are configured.`
+        : "Configure at least one approved external identity-verification provider before provider activation.",
+    },
+    {
+      key: "stripe_identity_automation",
+      title: "Live Stripe Identity owner-operator flow passed an end-to-end canary",
+      stage: "provider_onboarding",
+      passed: runtimeCheckPassed("stripe_identity_automation"),
+      detail: stripeIdentityCanary.evidencePassed
+        ? `A current live-mode Stripe Identity verification completed through the guarded webhook path at ${stripeIdentityCanary.verifiedAt}; D1 canary record: ${stripeIdentityCanary.evidenceId}.`
+        : stripeIdentityConfigurationPresent
+          ? "The dedicated live key, webhook secret, and provider setting are configured, but D1 has no current approved live-mode session that still matches its guard-stamped active personnel record. Configuration alone does not pass this gate."
+        : "Configure stripe_identity, a dedicated rk_live_ Identity key, and its dedicated whsec_ webhook secret before real owner-operator verification.",
+    },
+    {
+      key: "manual_identity_alternative",
+      title: "A non-Stripe identity alternative has independent vendor proof",
+      stage: "provider_onboarding",
+      passed: runtimeCheckPassed("manual_identity_alternative"),
+      detail: manualIdentityAlternativeConfigured
+        ? "A non-Stripe provider name and owner-reviewed references may support an individual application, but they are not independent vendor proof and cannot pass this operational gate. No allowlisted non-Stripe vendor-proof adapter is implemented."
+        : "No allowlisted independently verifiable non-Stripe vendor-proof adapter is implemented. Owner-entered or manual references cannot pass this operational gate.",
     },
     {
       key: "transaction_safety_switches",
       title: "Real transactions remain locked during review",
       stage: "transaction_pilot",
+      contextOnly: true,
       passed: CUSTOMER_JOB_POSTING_PAUSED
         && MARKETPLACE_MODE === "onboarding_only"
         && !liveStripeAllowed,
@@ -265,55 +388,206 @@ async function readinessPayload() {
       detail: `${policyEnabledServiceCount} customer-visible exact service code(s) are enabled in the policy catalog. Current policy status: ${POLICY_STATUS}.`,
     },
     {
-      key: "written_service_activations",
+      key: "active_policy_catalog",
+      title: "Exact-service policy catalog is active",
+      stage: "transaction_pilot",
+      passed: runtimeCheckPassed("active_policy_catalog"),
+      detail: runtimeCheckPassed("active_policy_catalog")
+        ? `${policyEnabledServiceCount} customer-visible exact service code(s) are enabled under the active policy catalog.`
+        : `The provider policy catalog status is ${POLICY_STATUS}; it must be active with at least one customer-visible exact service.`,
+    },
+    ...policyReleases.map((release) => {
+      const presentation = POLICY_RELEASE_PRESENTATION[release.key];
+      return {
+        key: `policy_release_${release.key}`,
+        title: `${presentation.title} is released`,
+        stage: "transaction_pilot" as const,
+        passed: runtimeCheckPassed(`policy_release_${release.key}`),
+        detail: policyDocumentReleaseIsActive(release)
+          ? `Active release ${release.releaseId} became effective ${release.effectiveAt}.`
+          : `${presentation.title} is ${release.releaseStatus}. Publish an active, effective, versioned, source-hash-bound release before real jobs or payments.`,
+      };
+    }),
+    {
+      key: "current_written_service_activation",
       title: "At least one exact service has a current written activation record",
       stage: "transaction_pilot",
-      passed: activatedServiceCount > 0,
+      passed: runtimeCheckPassed("current_written_service_activation"),
       detail: `${activatedServiceCount} exact service activation(s) are currently enabled under the latest mandatory legal-requirements record and insurer decision. Choosing to proceed without counsel does not satisfy this check.`,
     },
     {
       key: "stripe_sandbox_first",
       title: "Stripe is sandboxed until final approval",
       stage: "transaction_pilot",
+      contextOnly: true,
       passed: stripeConfigured && stripeMode === "test" && !liveStripeAllowed,
       detail: stripeConfigured
         ? `Stripe mode reported by the server: ${stripeMode}; effective live permission: ${liveStripeAllowed ? "on" : "off"}.`
         : "Stripe is not configured. That is safe for onboarding review but must be resolved before a payment pilot.",
     },
+    {
+      key: "live_release_switches",
+      title: "Marketplace live-release switch is enabled",
+      stage: "transaction_pilot",
+      passed: runtimeCheckPassed("live_release_switches"),
+      detail: runtimeCheckPassed("live_release_switches")
+        ? "The marketplace is in live mode."
+        : `Marketplace mode remains ${MARKETPLACE_MODE}. Activation stays separate from evidence review.`,
+    },
+    {
+      key: "stripe_live_configuration",
+      title: "Stripe live configuration is enabled",
+      stage: "transaction_pilot",
+      passed: runtimeCheckPassed("stripe_live_configuration"),
+      detail: runtimeCheckPassed("stripe_live_configuration")
+        ? "Stripe live credentials and both live-release controls are enabled."
+        : `Stripe mode is ${stripeMode}; environment live permission is ${liveStripeRequested ? "on" : "off"}; code live permission is ${STRIPE_LIVE_MODE_ENABLED ? "on" : "off"}.`,
+    },
   ] as const;
 
-  const onboardingInternalApproved = internalGates
-    .filter((gate) => gate.stage === "provider_onboarding")
-    .every((gate) => gate.passed);
-  const pilotInternalApproved = internalGates
-    .filter((gate) => gate.stage === "transaction_pilot")
-    .every((gate) => gate.passed);
-  const onboardingExternalApproved = stageIsApproved(
-    "provider_onboarding",
-    latestDecisionMap,
-    now,
+  const internalGateByKey = new Map(
+    internalGates.map((gate) => [gate.key, gate]),
   );
-  const pilotExternalApproved = stageIsApproved(
-    "transaction_pilot",
-    latestDecisionMap,
-    now,
-  );
+  const internalNextAction = (key: string) => {
+    if (key === "approved_identity_verification_provider") {
+      return {
+        responsibleRole: "TUVELOZ owner + identity-verification provider",
+        nextAction: "Select, contract with, configure, and test an approved external identity-verification provider.",
+        actionHref: "/admin/provider-compliance",
+      };
+    }
+    if (key === "stripe_identity_automation") {
+      return {
+        responsibleRole: "TUVELOZ owner + Stripe Identity deployment reviewer",
+        nextAction: "Complete one authorized live owner-operator Identity canary and confirm that the signed webhook created a current approved D1 session and guard-stamped personnel record.",
+        actionHref: "/provider-onboarding",
+      };
+    }
+    if (key === "manual_identity_alternative") {
+      return {
+        responsibleRole: "TUVELOZ owner + approved non-Stripe identity provider",
+        nextAction: "Integrate an allowlisted independently verifiable non-Stripe vendor, retain guarded vendor proof, and obtain privacy and security approval before enabling this gate.",
+        actionHref: "/admin/provider-compliance",
+      };
+    }
+    if (key === "active_policy_catalog" || key === "current_written_service_activation") {
+      return {
+        responsibleRole: "TUVELOZ owner + required legal or licensing source + insurance reviewer",
+        nextAction: "Complete the exact-service compliance and insurance record, then activate only that service and jurisdiction.",
+        actionHref: "/admin/provider-compliance",
+      };
+    }
+    if (key.startsWith("policy_release_")) {
+      const releaseKey = key.slice("policy_release_".length) as PolicyReleaseKey;
+      const presentation = POLICY_RELEASE_PRESENTATION[releaseKey];
+      return {
+        responsibleRole: "TUVELOZ owner",
+        nextAction: `Review and adopt the final ${presentation.title}, then publish its version, effective date, and source hash through the release process.`,
+        actionHref: presentation.href,
+      };
+    }
+    if (key === "live_release_switches") {
+      return {
+        responsibleRole: "TUVELOZ owner + deployment operator",
+        nextAction: "Leave this switch off until every other mandatory blocker is cleared; enabling it is a separate reviewed deployment.",
+        actionHref: "#next-steps",
+      };
+    }
+    if (key === "stripe_live_configuration") {
+      return {
+        responsibleRole: "TUVELOZ owner + payment processor + deployment operator",
+        nextAction: "After processor approval and all other blockers clear, configure the approved live Stripe account and perform a separate release.",
+        actionHref: "#next-steps",
+      };
+    }
+    const actionByKey: Record<string, string> = {
+      owner_access: "Finish and verify the signed owner-access configuration.",
+      account_auth: "Configure a production account-authentication secret of at least 32 characters.",
+      email_delivery: "Configure transactional email and complete a real delivery and failure-handling test.",
+      private_evidence_storage: "Bind and verify private evidence storage, access policy, backup, and deletion behavior.",
+      authenticated_evidence_scanner: "Complete a real Cloudmersive scan and confirm its terminal D1 result, consumed pending request, and authenticated-scanner audit event.",
+    };
+    return {
+      responsibleRole: "TUVELOZ owner + deployment or security reviewer",
+      nextAction: actionByKey[key] ?? "Complete this production configuration check and record the result.",
+      actionHref: `#technical-${key}`,
+    };
+  };
+  const canonicalBlockers = canonicalFailures.map((failure): WorkplanBlocker => {
+    if (failure.gateKey.startsWith("internal:")) {
+      const key = failure.gateKey.slice("internal:".length);
+      const gate = internalGateByKey.get(key);
+      const action = internalNextAction(key);
+      return {
+        key: failure.gateKey,
+        stage: gate?.stage ?? "transaction_pilot",
+        state: failure.state,
+        title: gate?.title ?? "Runtime readiness check is unavailable",
+        reason: gate?.detail ?? "The production readiness check did not return a passing result.",
+        ...action,
+      };
+    }
+    const gate = gates.find((item) => item.key === failure.gateKey);
+    return {
+      key: failure.gateKey,
+      stage: gate?.stage ?? "transaction_pilot",
+      state: failure.state,
+      title: gate?.title ?? "Mandatory launch evidence is incomplete",
+      reason: [
+        launchStateReason(failure.state),
+        gate?.decision?.notes || "",
+      ].filter(Boolean).join(" "),
+      responsibleRole: gate?.authority.join(" + ") ?? "TUVELOZ owner",
+      nextAction: gate
+        ? `Collect current evidence from ${gate.authority.join(" + ")} and record a new review version.`
+        : "Restore the readiness database and rerun this review.",
+      actionHref: gate ? `#launch-gate-${gate.key}` : "#next-steps",
+    };
+  });
+  const customerRequestPauseBlocker: WorkplanBlocker = {
+    key: "customer_job_posting_paused",
+    stage: "transaction_pilot",
+    state: CUSTOMER_JOB_POSTING_PAUSED ? "locked" : "approved",
+    title: "Customer job posting remains paused",
+    reason: CUSTOMER_JOB_POSTING_PAUSED
+      ? "The separate customer-job release switch is intentionally off."
+      : "The customer-job release switch is on.",
+    responsibleRole: "TUVELOZ owner + deployment operator",
+    nextAction: "Keep this switch off until every mandatory readiness blocker is cleared; activation requires a separate reviewed deployment.",
+    actionHref: "#next-steps",
+  };
+  const jobBlockers = [
+    ...(CUSTOMER_JOB_POSTING_PAUSED ? [customerRequestPauseBlocker] : []),
+    ...canonicalBlockers,
+  ];
+  const paymentBlockers = [
+    ...(CUSTOMER_JOB_POSTING_PAUSED
+      ? [{
+          ...customerRequestPauseBlocker,
+          key: "payments_waiting_for_job_release",
+          title: "Payments remain locked while customer jobs are paused",
+          reason: "TUVELOZ does not open live checkout or payouts before the customer-job release is approved.",
+        }]
+      : []),
+    ...canonicalBlockers,
+  ];
+  const canonicalRuntimeApproved = canonicalRuntimeReadiness.providerOnboardingApproved
+    && canonicalRuntimeReadiness.transactionPilotApproved;
 
   return {
     generatedAt: new Date(now).toISOString(),
     summary: {
       providerOnboardingReviewComplete:
-        onboardingInternalApproved && onboardingExternalApproved,
+        canonicalRuntimeReadiness.providerOnboardingApproved,
       transactionPilotReviewComplete:
-        onboardingInternalApproved
-        && onboardingExternalApproved
-        && pilotInternalApproved
-        && pilotExternalApproved,
+        canonicalRuntimeApproved,
       realTransactionsEnabled:
-        !CUSTOMER_JOB_POSTING_PAUSED
+        canonicalRuntimeApproved
+        && !CUSTOMER_JOB_POSTING_PAUSED
         && String(MARKETPLACE_MODE) !== "onboarding_only"
         && liveStripeAllowed
         && stripeMode === "live",
+      canonicalRuntimeApproved,
       automaticEnablement: false,
       marketplaceMode: MARKETPLACE_MODE,
       customerRequestsPaused: CUSTOMER_JOB_POSTING_PAUSED,
@@ -333,6 +607,10 @@ async function readinessPayload() {
     },
     internalGates,
     externalGates: gates,
+    workplan: {
+      jobBlockers,
+      paymentBlockers,
+    },
     ownerLegalReviewChoice: ownerChoice && ownerChoiceDecision
       ? {
           ...ownerChoice,

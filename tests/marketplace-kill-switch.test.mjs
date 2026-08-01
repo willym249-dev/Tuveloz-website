@@ -23,6 +23,8 @@ test("the central marketplace mode is default closed except for persisted test f
   ]);
   assert.match(launchStatus, /MARKETPLACE_MODE = "onboarding_only"/);
   assert.match(launchStatus, /return options\.testOnly === true/);
+  assert.match(launchStatus, /customerJobPostingPauseBlocks\(action\)/);
+  assert.match(launchStatus, /"checkout",[\s\S]*"payout",/);
   assert.match(launchStatus, /options\.runtimeReleaseApproved === true/);
   assert.match(launchStatus, /provider-onboarding mode/);
   assert.match(runtimeGate, /LAUNCH_GATE_CATALOG\.filter\(\(gate\) => gate\.required\)/);
@@ -40,6 +42,28 @@ test("the central marketplace mode is default closed except for persisted test f
   assert.match(runtimeGate, /stripe_live_configuration/);
   assert.match(runtimeAction, /if \(options\.testOnly === true\)/);
   assert.match(runtimeAction, /runtimeRealMarketplaceReleaseIsApproved\(\)/);
+});
+
+test("the customer-job pause independently blocks request, checkout, and payout", async () => {
+  const {
+    customerJobPostingPauseBlocks,
+    marketplaceActionAllowed,
+  } = await import("../lib/launch-status.ts");
+
+  for (const action of ["request", "checkout", "payout"]) {
+    assert.equal(customerJobPostingPauseBlocks(action), true, action);
+    assert.equal(
+      marketplaceActionAllowed(action, { runtimeReleaseApproved: true }),
+      false,
+      action,
+    );
+  }
+  assert.equal(customerJobPostingPauseBlocks("booking"), false);
+  assert.equal(
+    marketplaceActionAllowed("checkout", { testOnly: true }),
+    true,
+    "isolated test fixtures remain available",
+  );
 });
 
 test("runtime revocation blocks new money but preserves reconciliation and safety cleanup", async () => {
@@ -70,7 +94,10 @@ test("runtime revocation blocks new money but preserves reconciliation and safet
   );
   const launchPost = launchReview.slice(launchReview.indexOf("export async function POST"));
 
-  assert.doesNotMatch(checkoutGet, /runtimeMarketplaceActionAllowed|runtimeRealMarketplaceReleaseDecision/);
+  const checkoutReadGate = checkoutGet.indexOf('runtimeMarketplaceActionAllowed("checkout")');
+  assert.ok(checkoutReadGate > checkoutGet.indexOf("if (sessionId)"));
+  assert.ok(checkoutGet.indexOf("return Response.json({ payment: publicPaymentSummary(payment) })") < checkoutReadGate);
+  assert.ok(checkoutReadGate < checkoutGet.indexOf('const quoteId = clean(searchParams.get("quoteId")'));
   assert.doesNotMatch(paymentGet, /runtimeMarketplaceActionAllowed|runtimeRealMarketplaceReleaseDecision/);
   assert.doesNotMatch(methodDelete, /runtimeMarketplaceActionAllowed|runtimeRealMarketplaceReleaseDecision/);
   assert.doesNotMatch(paymentWebhook, /runtimeMarketplaceActionAllowed|runtimeRealMarketplaceReleaseDecision/);

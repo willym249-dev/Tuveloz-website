@@ -37,6 +37,8 @@ type EvidenceMetadata = {
   reviewDecisionId: string;
   reasonCodes: string[];
   reviewNotes: string;
+  businessIdentitySourceEligible: boolean;
+  verifiedLegalBusinessName: string;
   authenticityVerificationMethod: string;
   authenticityVerifiedBy: string;
   authenticityVerificationReference: string;
@@ -275,6 +277,8 @@ function EvidenceReviewForm({
       authenticitySourceUrl: values.authenticitySourceUrl,
       authenticityVerifiedAt: values.authenticityVerifiedAt,
       authenticityValidThrough: values.authenticityValidThrough,
+      verifiedLegalBusinessName: values.verifiedLegalBusinessName,
+      legalBusinessNameConfirmed: values.legalBusinessNameConfirmed === "yes",
     });
   }
 
@@ -311,6 +315,11 @@ function EvidenceReviewForm({
           {evidence.authenticityVerificationReference
             ? ` | reference ${evidence.authenticityVerificationReference}`
             : ""}
+        </p>
+      )}
+      {evidence.verifiedLegalBusinessName && (
+        <p className="verification-record">
+          Verified legal business name: {evidence.verifiedLegalBusinessName}
         </p>
       )}
       {evidence.hasPrivateFile && fileIsClean ? (
@@ -469,6 +478,28 @@ function EvidenceReviewForm({
                 type="date"
               />
             </label>
+            {evidence.businessIdentitySourceEligible && (
+              <>
+                <label>
+                  Exact legal business name on the verified source
+                  <input
+                    defaultValue={evidence.verifiedLegalBusinessName}
+                    maxLength={180}
+                    minLength={2}
+                    name="verifiedLegalBusinessName"
+                    placeholder="Enter the complete name exactly as verified"
+                    required
+                  />
+                </label>
+                <label className="policy-check">
+                  <input name="legalBusinessNameConfirmed" required type="checkbox" value="yes" />
+                  <span>
+                    I confirm this exact legal business name appears in or was directly
+                    confirmed for this external source; it is not copied only from the application.
+                  </span>
+                </label>
+              </>
+            )}
           </fieldset>
         )}
         <button

@@ -178,6 +178,98 @@ export const providerApplications = sqliteTable(
   ],
 );
 
+/**
+ * One normalized email may own only one non-declined provider application.
+ * This separate claim table can be safely backfilled even when legacy data
+ * contains duplicate active applications: the migration deterministically
+ * claims the oldest record and leaves all legacy rows available for review.
+ */
+export const providerApplicationEmailClaims = sqliteTable(
+  "provider_application_email_claims",
+  {
+    normalizedEmail: text("normalized_email").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    challengeId: text("challenge_id").notNull().default(""),
+    consumptionNonce: text("consumption_nonce").notNull().default(""),
+    claimedAt: text("claimed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_application_email_claims_provider_unique")
+      .on(table.providerId),
+  ],
+);
+
+export const providerApplicationChallenges = sqliteTable(
+  "provider_application_challenges",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    payloadHash: text("payload_hash").notNull(),
+    codeHash: text("code_hash").notNull(),
+    sourceHash: text("source_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    verifiedAt: text("verified_at").notNull().default(""),
+    usedAt: text("used_at").notNull().default(""),
+    consumptionNonce: text("consumption_nonce").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("provider_application_challenges_email_created_idx")
+      .on(table.email, table.createdAt),
+    index("provider_application_challenges_expires_idx").on(table.expiresAt),
+    index("provider_application_challenges_source_created_idx")
+      .on(table.sourceHash, table.createdAt),
+    uniqueIndex("provider_application_challenges_consumption_nonce_unique")
+      .on(table.consumptionNonce)
+      .where(sql`${table.consumptionNonce} <> ''`),
+  ],
+);
+
+/**
+ * Immutable evidence for the normalized application and legal-document
+ * manifest confirmed by an email challenge. OTP cleanup never removes it.
+ */
+export const providerApplicationSubmissionEvidence = sqliteTable(
+  "provider_application_submission_evidence",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    normalizedEmail: text("normalized_email").notNull(),
+    challengeId: text("challenge_id").notNull(),
+    consumptionNonce: text("consumption_nonce").notNull(),
+    normalizedSnapshot: text("normalized_snapshot").notNull(),
+    payloadHash: text("payload_hash").notNull(),
+    acceptedDocumentManifest: text("accepted_document_manifest").notNull(),
+    verifiedAt: text("verified_at").notNull(),
+    consumedAt: text("consumed_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_application_submission_evidence_challenge_unique")
+      .on(table.challengeId),
+    uniqueIndex("provider_application_submission_evidence_nonce_unique")
+      .on(table.consumptionNonce),
+    index("provider_application_submission_evidence_provider_idx")
+      .on(table.providerId, table.createdAt),
+  ],
+);
+
+export const publicWriteRateLimits = sqliteTable(
+  "public_write_rate_limits",
+  {
+    action: text("action").notNull(),
+    keyHash: text("key_hash").notNull(),
+    windowStartedAt: integer("window_started_at").notNull(),
+    requestCount: integer("request_count").notNull().default(0),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.action, table.keyHash] }),
+    index("public_write_rate_limits_updated_idx").on(table.updatedAt),
+  ],
+);
+
 export const providerCredentialVerifications = sqliteTable(
   "provider_credential_verifications",
   {
@@ -245,8 +337,17 @@ export const stripePayments = sqliteTable(
     releasedBy: text("released_by").notNull().default(""),
     refundAmountCents: integer("refund_amount_cents").notNull().default(0),
     refundedAt: text("refunded_at").notNull().default(""),
+    refundStatus: text("refund_status").notNull().default(""),
+    refundUpdatedAt: text("refund_updated_at").notNull().default(""),
+    refundFailureReason: text("refund_failure_reason").notNull().default(""),
+    lastRefundId: text("last_refund_id").notNull().default(""),
+    lastRefundEventCreated: integer("last_refund_event_created").notNull().default(0),
+    lastRefundEventId: text("last_refund_event_id").notNull().default(""),
     disputeStatus: text("dispute_status").notNull().default(""),
     disputeUpdatedAt: text("dispute_updated_at").notNull().default(""),
+    lastDisputeId: text("last_dispute_id").notNull().default(""),
+    lastDisputeEventCreated: integer("last_dispute_event_created").notNull().default(0),
+    lastDisputeEventId: text("last_dispute_event_id").notNull().default(""),
     policyAcceptedAt: text("policy_accepted_at").notNull().default(""),
     policyVersion: text("policy_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -261,6 +362,77 @@ export const stripePayments = sqliteTable(
     index("stripe_payments_status_idx").on(table.status),
     uniqueIndex("stripe_payments_checkout_session_unique").on(table.checkoutSessionId),
     index("stripe_payments_payment_intent_idx").on(table.paymentIntentId),
+  ],
+);
+
+// Stripe can redeliver the same webhook, deliver different event types out of
+// order, or retry after a transient database failure. Keep a durable receipt
+// for each endpoint/event pair so financial reconciliation is repeatable
+// without treating an acknowledgement as proof that processing succeeded.
+export const stripeWebhookEvents = sqliteTable(
+  "stripe_webhook_events",
+  {
+    id: text("id").primaryKey(),
+    endpoint: text("endpoint").notNull(),
+    eventId: text("event_id").notNull(),
+    eventType: text("event_type").notNull(),
+    livemode: integer("livemode").notNull().default(0),
+    connectedAccountId: text("connected_account_id").notNull().default(""),
+    objectId: text("object_id").notNull().default(""),
+    status: text("status").notNull().default("processing"),
+    attemptCount: integer("attempt_count").notNull().default(1),
+    receivedAt: text("received_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastAttemptAt: text("last_attempt_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    processedAt: text("processed_at").notNull().default(""),
+    lastError: text("last_error").notNull().default(""),
+  },
+  (table) => [
+    uniqueIndex("stripe_webhook_events_endpoint_event_unique")
+      .on(table.endpoint, table.eventId),
+    index("stripe_webhook_events_status_attempt_idx")
+      .on(table.status, table.lastAttemptAt),
+    index("stripe_webhook_events_received_at_idx").on(table.receivedAt),
+  ],
+);
+
+// This table is fed only by the separate standard connected-account snapshot
+// destination. V2 thin account-requirement events intentionally stay on their
+// own endpoint and signing secret. A missing or adverse snapshot fails closed
+// when an owner later attempts to release provider funds.
+export const stripeConnectedAccountSnapshots = sqliteTable(
+  "stripe_connected_account_snapshots",
+  {
+    connectedAccountId: text("connected_account_id").primaryKey(),
+    providerApplicationId: text("provider_application_id").notNull().default(""),
+    livemode: integer("livemode").notNull().default(0),
+    payoutFailureHold: integer("payout_failure_hold").notNull().default(0),
+    payoutHoldReason: text("payout_hold_reason").notNull().default(""),
+    lastPayoutId: text("last_payout_id").notNull().default(""),
+    lastPayoutStatus: text("last_payout_status").notNull().default(""),
+    lastPayoutFailureCode: text("last_payout_failure_code").notNull().default(""),
+    lastPayoutLivemode: integer("last_payout_livemode").notNull().default(0),
+    lastPayoutEventCreated: integer("last_payout_event_created").notNull().default(0),
+    lastPayoutEventId: text("last_payout_event_id").notNull().default(""),
+    externalAccountHold: integer("external_account_hold").notNull().default(1),
+    externalAccountHoldReason: text("external_account_hold_reason").notNull().default("no_snapshot"),
+    lastExternalAccountId: text("last_external_account_id").notNull().default(""),
+    lastExternalAccountType: text("last_external_account_type").notNull().default(""),
+    lastExternalAccountStatus: text("last_external_account_status").notNull().default(""),
+    lastExternalAccountLivemode: integer("last_external_account_livemode")
+      .notNull()
+      .default(0),
+    lastExternalAccountEventCreated: integer("last_external_account_event_created")
+      .notNull()
+      .default(0),
+    lastExternalAccountEventId: text("last_external_account_event_id").notNull().default(""),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("stripe_connected_account_snapshots_provider_idx")
+      .on(table.providerApplicationId),
+    index("stripe_connected_account_snapshots_payout_hold_idx")
+      .on(table.payoutFailureHold, table.externalAccountHold),
+    index("stripe_connected_account_snapshots_updated_at_idx").on(table.updatedAt),
   ],
 );
 
@@ -653,6 +825,65 @@ export const providerPersonnel = sqliteTable(
   ],
 );
 
+/**
+ * One row per Stripe Identity attempt. The row contains only Stripe and
+ * TUVELOZ references plus non-sensitive decision state. Names, dates of birth,
+ * document numbers, and document/selfie files are deliberately never stored.
+ */
+export const providerIdentityVerificationSessions = sqliteTable(
+  "provider_identity_verification_sessions",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull(),
+    applicationSubmissionEvidenceId: text("application_submission_evidence_id")
+      .notNull(),
+    personNameSourceType: text("person_name_source_type").notNull(),
+    personNameSourceId: text("person_name_source_id").notNull(),
+    accountSessionHash: text("account_session_hash").notNull(),
+    certificationVersion: text("certification_version").notNull(),
+    attemptNumber: integer("attempt_number").notNull(),
+    stripeVerificationSessionId: text("stripe_verification_session_id")
+      .notNull()
+      .default(""),
+    stripeVerificationReportId: text("stripe_verification_report_id")
+      .notNull()
+      .default(""),
+    stripeStatus: text("stripe_status").notNull().default("creating"),
+    decisionStatus: text("decision_status").notNull().default("pending"),
+    failureCode: text("failure_code").notNull().default(""),
+    livemode: integer("livemode").notNull().default(0),
+    consentedAt: text("consented_at").notNull(),
+    checkedAt: text("checked_at").notNull().default(""),
+    verifiedAt: text("verified_at").notNull().default(""),
+    redactedAt: text("redacted_at").notNull().default(""),
+    lastStripeEventId: text("last_stripe_event_id").notNull().default(""),
+    lastStripeEventCreated: integer("last_stripe_event_created").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_identity_verification_stripe_session_unique")
+      .on(table.stripeVerificationSessionId)
+      .where(sql`${table.stripeVerificationSessionId} <> ''`),
+    uniqueIndex("provider_identity_verification_attempt_unique")
+      .on(
+        table.providerId,
+        table.personId,
+        table.attemptNumber,
+      ),
+    uniqueIndex("provider_identity_verification_one_active_unique")
+      .on(table.providerId, table.personId)
+      .where(sql`${table.decisionStatus} = 'pending' and ${table.stripeStatus} in ('creating', 'requires_input', 'processing', 'verified')`),
+    index("provider_identity_verification_provider_person_idx")
+      .on(table.providerId, table.personId, table.createdAt),
+    index("provider_identity_verification_application_evidence_idx")
+      .on(table.applicationSubmissionEvidenceId),
+    index("provider_identity_verification_status_idx")
+      .on(table.decisionStatus, table.stripeStatus, table.updatedAt),
+  ],
+);
+
 export const providerEvidenceSubmissions = sqliteTable(
   "provider_evidence_submissions",
   {
@@ -725,6 +956,9 @@ export const agreementAcceptances = sqliteTable(
     ipAddress: text("ip_address").notNull().default(""),
     sessionId: text("session_id").notNull().default(""),
     deviceContext: text("device_context").notNull().default("{}"),
+    providerApplicationSubmissionEvidenceId: text(
+      "provider_application_submission_evidence_id",
+    ).notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
@@ -740,6 +974,8 @@ export const agreementAcceptances = sqliteTable(
     index("agreement_acceptances_person_time_idx").on(table.personId, table.acceptedAt),
     index("agreement_acceptances_key_version_idx")
       .on(table.agreementKey, table.agreementVersion),
+    index("agreement_acceptances_provider_application_submission_idx")
+      .on(table.providerApplicationSubmissionEvidenceId),
   ],
 );
 

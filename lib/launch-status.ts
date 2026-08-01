@@ -25,8 +25,19 @@ export type MarketplaceAction =
   | "completion"
   | "payout";
 
+const CUSTOMER_JOB_POSTING_PAUSE_ACTIONS: ReadonlySet<MarketplaceAction> = new Set([
+  "request",
+  "checkout",
+  "payout",
+]);
+
+export function customerJobPostingPauseBlocks(action: MarketplaceAction) {
+  return CUSTOMER_JOB_POSTING_PAUSED
+    && CUSTOMER_JOB_POSTING_PAUSE_ACTIONS.has(action);
+}
+
 export function marketplaceActionAllowed(
-  _action: MarketplaceAction,
+  action: MarketplaceAction,
   options: {
     testOnly?: boolean;
     runtimeReleaseApproved?: boolean;
@@ -37,7 +48,8 @@ export function marketplaceActionAllowed(
   // sufficient by itself: real actions must also receive a fresh, database-
   // backed launch-readiness decision from the server-side caller.
   return options.testOnly === true || (
-    String(MARKETPLACE_MODE) === "live"
+    !customerJobPostingPauseBlocks(action)
+    && String(MARKETPLACE_MODE) === "live"
     && options.runtimeReleaseApproved === true
   );
 }

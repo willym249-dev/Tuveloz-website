@@ -1,290 +1,212 @@
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, gt, ne, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
   agreementAcceptances,
+  providerApplicationChallenges,
+  providerApplicationEmailClaims,
+  providerApplicationSubmissionEvidence,
+  providerAuditEvents,
   providerApplications,
   providerPathwayProfiles,
   providerPersonnel,
 } from "../../../db/schema";
 import {
-  cleanProviderSelfAssessment,
-  providerAreasHaveReviewedCompliance,
-} from "../../../lib/provider-compliance";
-import { recordProviderAuditEvent } from "../../../lib/provider-audit";
+  InvalidJsonBodyError,
+  readLimitedJsonObject,
+  RequestBodyTooLargeError,
+} from "../../../lib/limited-json";
+import {
+  normalizeProviderApplicationPayload,
+  providerApplicationFinalDocumentManifest,
+  providerApplicationNormalizedSnapshot,
+  PROVIDER_APPLICATION_GENERIC_COMPLETE_MESSAGE,
+  PROVIDER_APPLICATION_MAX_JSON_BYTES,
+  ProviderApplicationValidationError,
+  providerApplicationRelationship,
+  providerApplicationRequestIp,
+  verifyProviderApplicationChallenge,
+} from "../../../lib/provider-application-verification";
+import { notifyProviderApplicationReceived } from "../../../lib/provider-compliance-notifications";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAgreementEvidenceText,
   sha256Text,
 } from "../../../lib/provider-policy-acceptance";
 import {
-  isPathwayLevelCompatible,
-  isProviderLevel,
-  isServiceCode,
   POLICY_JURISDICTION,
   POLICY_STATUS,
   POLICY_VERSION,
-  PROVIDER_POLICY_MATRIX,
-  SERVICE_POLICY_CATALOG,
-  type ProviderLevel,
-  type ProviderPathway,
-  type ServiceCode,
 } from "../../../lib/provider-policy";
-import {
-  parseProviderAreas,
-  PROVIDER_AREA_OPTIONS,
-  PROVIDER_WORK_LOCATION_OPTIONS,
-  serializeLocationOptions,
-  serializeProviderAreas,
-  serializeProviderServices,
-} from "../../../lib/service-matching";
-import { policyAccepted, PROVIDER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
+import { PROVIDER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
+import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
 
-type ApplicationPathway = "learning_account" | ProviderPathway;
+const NO_STORE_HEADERS = { "cache-control": "private, no-store" };
+const EMAIL_CONTROL_SCOPE =
+  "Email one-time-code verification confirms control of the submitted email address only. It does not verify identity, age, signing authority, business registration, licensing, insurance, qualifications, work authorization, or eligibility for jobs.";
 
-const APPLICATION_PATHWAYS = new Set<ApplicationPathway>([
-  "learning_account",
-  "independent_startup",
-  "sponsored_trainee_employee",
-  "provider_business_employee",
-]);
-const ALLOWED_AREAS = new Set<string>(PROVIDER_AREA_OPTIONS);
-const LEVEL_PRIORITY: readonly ProviderLevel[] = [
-  "sponsored_trainee",
-  "provisional_independent",
-  "standard_provider",
-  "specialty_provider",
-];
-
-function clean(value: unknown, max: number) {
-  return typeof value === "string" ? value.trim().slice(0, max) : "";
+function clean(value: unknown, maximum: number) {
+  return typeof value === "string" ? value.trim().slice(0, maximum) : "";
 }
 
-function isEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function sameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  return !origin || origin === new URL(request.url).origin;
-}
-
-function requestedServiceCodes(body: Record<string, unknown>) {
-  const source = Array.isArray(body.serviceCodes)
-    ? body.serviceCodes
-    : Array.isArray(body.services)
-      ? body.services
-      : [];
-  const values = source.map((value) => clean(value, 100)).filter(Boolean);
-  return [...new Set(values)];
-}
-
-function allowedLevelForApplication(
-  pathway: ApplicationPathway,
-  serviceCodes: readonly ServiceCode[],
-  requestedLevel: unknown,
-): ProviderLevel | null {
-  if (pathway === "learning_account") return "learning_account";
-  const compatibleLevels = PROVIDER_POLICY_MATRIX.pathway_level_compatibility[pathway];
-  const candidates = LEVEL_PRIORITY.filter((level) => (
-    compatibleLevels.includes(level)
-    && serviceCodes.every((serviceCode) => (
-      SERVICE_POLICY_CATALOG[serviceCode].allowedPathways.includes(pathway)
-      && SERVICE_POLICY_CATALOG[serviceCode].allowedProviderLevels.includes(level)
-      && PROVIDER_POLICY_MATRIX.provider_levels[level].allowed_service_codes.includes(serviceCode)
-    ))
-  ));
-  if (!candidates.length) return null;
-  if (
-    isProviderLevel(requestedLevel)
-    && candidates.includes(requestedLevel)
-    && isPathwayLevelCompatible(pathway, requestedLevel)
-  ) {
-    return requestedLevel;
+async function activeApplicationForEmail(email: string) {
+  const db = getDb();
+  const [claimed] = await db.select({
+    id: providerApplications.id,
+    status: providerApplications.status,
+  }).from(providerApplicationEmailClaims)
+    .innerJoin(
+      providerApplications,
+      eq(providerApplications.id, providerApplicationEmailClaims.providerId),
+    )
+    .where(eq(providerApplicationEmailClaims.normalizedEmail, email))
+    .limit(1);
+  if (claimed && claimed.status !== "declined") {
+    return { ...claimed, claimed: true as const };
   }
-  return candidates[0] ?? null;
+
+  const [legacy] = await db.select({
+    id: providerApplications.id,
+    status: providerApplications.status,
+  }).from(providerApplications).where(and(
+    eq(sql<string>`lower(trim(${providerApplications.email}))`, email),
+    ne(providerApplications.status, "declined"),
+  )).orderBy(desc(providerApplications.createdAt), desc(providerApplications.id)).limit(1);
+  return legacy ? { ...legacy, claimed: false as const } : null;
 }
 
-function applicationRelationship(pathway: ApplicationPathway) {
-  if (pathway === "independent_startup") return "owner_operator";
-  if (pathway === "sponsored_trainee_employee") return "trainee";
-  if (pathway === "provider_business_employee") return "employee";
-  return "learner";
+function genericCompleteResponse() {
+  return Response.json({
+    ok: true,
+    message: PROVIDER_APPLICATION_GENERIC_COMPLETE_MESSAGE,
+    onboardingUrl: "/provider-onboarding",
+  }, { status: 202, headers: NO_STORE_HEADERS });
 }
 
-function requestIp(request: Request) {
-  return clean(
-    request.headers.get("cf-connecting-ip")
-      || request.headers.get("x-forwarded-for")?.split(",")[0]
-      || "",
-    128,
+function invalidChallengeResponse() {
+  return Response.json(
+    { error: "That verification code is invalid, expired, already used, or does not match this application." },
+    { status: 401, headers: NO_STORE_HEADERS },
   );
 }
 
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) {
-    return Response.json({ error: "This application must be submitted from TUVELOZ." }, { status: 403 });
+  if (!isStrictSameOriginWriteRequest(request)) {
+    return Response.json(
+      { error: "This verified application must be submitted from TUVELOZ." },
+      { status: 403, headers: NO_STORE_HEADERS },
+    );
   }
 
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const name = clean(body.name, 120);
-    const email = clean(body.email, 180).toLowerCase();
-    const preferredLanguage = clean(body.preferredLanguage, 60) || "English";
-    const applicationPathwayValue = clean(body.applicationPathway, 80);
-    const applicationPathway = APPLICATION_PATHWAYS.has(applicationPathwayValue as ApplicationPathway)
-      ? applicationPathwayValue as ApplicationPathway
-      : null;
-    const rawServiceCodes = requestedServiceCodes(body);
-    const serviceCodes = rawServiceCodes.filter(isServiceCode);
-    const serviceArea = clean(body.serviceArea, 240);
-    const businessMunicipality = clean(body.businessMunicipality, 100);
-    const workLocations = Array.isArray(body.workLocations)
-      ? body.workLocations.map((value) => clean(value, 100)).filter(Boolean)
-      : [clean(body.workLocations, 100)].filter(Boolean);
-    const businessServiceAddress = clean(body.businessServiceAddress, 240);
-    const legalBusinessName = clean(body.legalBusinessName, 180);
-    const businessEntityType = clean(body.businessEntityType, 100);
-    const businessFormationState = clean(body.businessFormationState, 100);
-    const sponsoringProviderLegalName = clean(body.sponsoringProviderLegalName, 180);
-    const sponsorContactName = clean(body.sponsorContactName, 120);
-    const sponsorContactEmail = clean(body.sponsorContactEmail, 180).toLowerCase();
-    const sponsorContactTitle = clean(body.sponsorContactTitle, 100);
-    const signerName = clean(body.signerName, 120);
-    const signerTitle = clean(body.signerTitle, 100);
-    const rulesReviewed = body.rulesReviewed === true;
-    const adultAcknowledged = body.adultAcknowledged === true;
-    const employmentResponsibilityAcknowledged = (
-      body.employmentWorkAuthorizationResponsibilityAcknowledged === true
+    const body = await readLimitedJsonObject(
+      request,
+      PROVIDER_APPLICATION_MAX_JSON_BYTES,
     );
-    const acceptedTerms = policyAccepted(body.termsBundleAccepted)
-      || policyAccepted(body.termsAccepted);
-    const privacyAcknowledged = policyAccepted(body.privacyAcknowledged);
-
-    if (!name || !email || !applicationPathway || !signerName || !signerTitle) {
-      return Response.json({ error: "Complete the applicant, pathway, and signer fields." }, { status: 400 });
-    }
-    if (!isEmail(email)) {
-      return Response.json({ error: "Enter a valid applicant email address." }, { status: 400 });
-    }
-    if (!rawServiceCodes.length || rawServiceCodes.length !== serviceCodes.length) {
-      return Response.json({ error: "Choose only exact services listed in the v0.11 review matrix." }, { status: 400 });
-    }
-    if (serviceCodes.includes("general_auto_repair")) {
-      return Response.json({ error: "General auto repair is too broad. Choose exact service codes." }, { status: 400 });
-    }
-
-    const areas = parseProviderAreas(serviceArea);
-    if (areas.length === 0 || areas.some((area) => !ALLOWED_AREAS.has(area))) {
-      return Response.json({ error: "Choose at least one listed service area." }, { status: 400 });
-    }
-    if (!providerAreasHaveReviewedCompliance(areas)) {
-      return Response.json({
-        error: "This service area is not open for provider review yet.",
-      }, { status: 409 });
-    }
-    if (!businessMunicipality) {
-      return Response.json({ error: "Enter the municipality where the provider is based." }, { status: 400 });
-    }
-    if (
-      workLocations.length === 0
-      || workLocations.some((value) => !PROVIDER_WORK_LOCATION_OPTIONS.includes(
-        value as (typeof PROVIDER_WORK_LOCATION_OPTIONS)[number],
-      ))
-    ) {
-      return Response.json({ error: "Choose only the listed service-location options." }, { status: 400 });
-    }
-    if (workLocations.includes(PROVIDER_WORK_LOCATION_OPTIONS[1]) && !businessServiceAddress) {
-      return Response.json({
-        error: "Enter the business service address when customers may come to the business.",
-      }, { status: 400 });
-    }
-    if (
-      applicationPathway === "independent_startup"
-      && (!legalBusinessName || !businessEntityType || !businessFormationState)
-    ) {
-      return Response.json({
-        error: "The independent owner-operator pathway requires the provider business details.",
-      }, { status: 400 });
-    }
-    if (
-      (applicationPathway === "sponsored_trainee_employee"
-        || applicationPathway === "provider_business_employee")
-      && (
-        !sponsoringProviderLegalName
-        || !sponsorContactName
-        || !sponsorContactTitle
-        || !isEmail(sponsorContactEmail)
-      )
-    ) {
-      return Response.json({
-        error: "Enter the sponsoring or employer provider business and its authorized contact.",
-      }, { status: 400 });
-    }
-    if (
-      !rulesReviewed
-      || !adultAcknowledged
-      || !employmentResponsibilityAcknowledged
-      || !acceptedTerms
-      || !privacyAcknowledged
-    ) {
-      return Response.json({
-        error: "Complete every required legal acknowledgment. Privacy remains a separate acknowledgment.",
-      }, { status: 400 });
-    }
-
-    const providerLevel = allowedLevelForApplication(
-      applicationPathway,
-      serviceCodes,
-      body.providerLevel,
+    const challengeId = clean(body.challengeId, 64);
+    const verificationCode = clean(body.verificationCode, 12);
+    const application = normalizeProviderApplicationPayload(body);
+    const verified = await verifyProviderApplicationChallenge(
+      application,
+      challengeId,
+      verificationCode,
     );
-    if (!providerLevel) {
-      return Response.json({
-        error: "Those services do not fit one lawful pathway and provider level. Choose services from one level, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.",
-      }, { status: 400 });
+    if (!verified) {
+      return invalidChallengeResponse();
     }
 
-    const existing = await getDb().select({ id: providerApplications.id })
-      .from(providerApplications)
-      .where(and(
-        eq(providerApplications.email, email),
-        ne(providerApplications.status, "declined"),
-      ))
-      .orderBy(desc(providerApplications.createdAt))
-      .limit(1);
-    if (existing[0]) {
-      return Response.json({
-        error: "An application already exists for this email. Sign in to continue the provider onboarding checklist.",
-        onboardingUrl: "/provider-onboarding",
-      }, { status: 409 });
-    }
-
+    const db = getDb();
     const now = new Date().toISOString();
+    const consumptionNonce = crypto.randomUUID();
+    const challengeConsume = () => db.update(providerApplicationChallenges).set({
+      usedAt: now,
+      consumptionNonce,
+    }).where(and(
+      eq(providerApplicationChallenges.id, verified.challenge.id),
+      eq(providerApplicationChallenges.email, application.email),
+      eq(providerApplicationChallenges.payloadHash, verified.payloadHash),
+      eq(providerApplicationChallenges.usedAt, ""),
+      eq(providerApplicationChallenges.consumptionNonce, ""),
+      eq(providerApplicationChallenges.verifiedAt, verified.challenge.verifiedAt),
+      gt(providerApplicationChallenges.expiresAt, now),
+    )).returning({ id: providerApplicationChallenges.id });
+    const challengeWasConsumedByConcurrentRequest = async () => {
+      const [consumed] = await db.select({ id: providerApplicationChallenges.id })
+        .from(providerApplicationChallenges)
+        .where(and(
+          eq(providerApplicationChallenges.id, verified.challenge.id),
+          eq(providerApplicationChallenges.email, application.email),
+          eq(providerApplicationChallenges.payloadHash, verified.payloadHash),
+          eq(providerApplicationChallenges.verifiedAt, verified.challenge.verifiedAt),
+          gt(providerApplicationChallenges.usedAt, ""),
+          gt(providerApplicationChallenges.consumptionNonce, ""),
+        ))
+        .limit(1);
+      return Boolean(consumed);
+    };
+
+    const existing = await activeApplicationForEmail(application.email);
+    if (existing) {
+      // Proof of email control is required even for an idempotent retry. The
+      // response deliberately reveals no application identifier or status.
+      if (existing.claimed) {
+        const consumed = await challengeConsume();
+        if (!consumed.length && !await challengeWasConsumedByConcurrentRequest()) {
+          return invalidChallengeResponse();
+        }
+      } else {
+        try {
+          await db.batch([
+            challengeConsume(),
+            db.insert(providerApplicationEmailClaims).values({
+              normalizedEmail: application.email,
+              providerId: existing.id,
+              challengeId: verified.challenge.id,
+              consumptionNonce,
+              claimedAt: now,
+            }).onConflictDoNothing(),
+          ] as const);
+        } catch (claimError) {
+          const winner = await activeApplicationForEmail(application.email);
+          if (!winner || !await challengeWasConsumedByConcurrentRequest()) {
+            throw claimError;
+          }
+        }
+      }
+      return genericCompleteResponse();
+    }
+
     const providerId = crypto.randomUUID();
     const personId = crypto.randomUUID();
-    const acceptanceSessionId = crypto.randomUUID();
-    const legacyAssessment = cleanProviderSelfAssessment(body.providerSelfAssessment);
+    const submissionEvidenceId = crypto.randomUUID();
+    const acceptedDocumentManifest = await providerApplicationFinalDocumentManifest(
+      verified.challenge.id,
+    );
     const applicationMetadata = {
-      ...legacyAssessment,
+      ...application.providerSelfAssessment,
       onboarding: {
-        applicationPathway,
-        providerLevel,
+        applicationPathway: application.applicationPathway,
+        providerLevel: application.providerLevel,
         policyVersion: POLICY_VERSION,
         policyStatus: POLICY_STATUS,
         jurisdiction: POLICY_JURISDICTION,
-        legalBusinessName,
-        businessEntityType,
-        businessFormationState,
-        sponsoringProviderLegalName,
-        sponsorContactName,
-        sponsorContactEmail,
-        sponsorContactTitle,
-        signerName,
-        signerTitle,
+        legalBusinessName: application.legalBusinessName,
+        businessEntityType: application.businessEntityType,
+        businessFormationState: application.businessFormationState,
+        sponsoringProviderLegalName: application.sponsoringProviderLegalName,
+        sponsorContactName: application.sponsorContactName,
+        sponsorContactEmail: application.sponsorContactEmail,
+        sponsorContactTitle: application.sponsorContactTitle,
+        signerName: application.signerName,
+        signerTitle: application.signerTitle,
         adultAcknowledgedAt: now,
         employmentResponsibilityAcknowledgedAt: now,
+        emailControlVerifiedAt: verified.challenge.verifiedAt,
+        emailControlVerificationScope: EMAIL_CONTROL_SCOPE,
+        emailControlChallengeId: verified.challenge.id,
+        providerApplicationSubmissionEvidenceId: submissionEvidenceId,
       },
     };
-    const eligibilityStatuses = Object.fromEntries(serviceCodes.map((serviceCode) => [
+    const eligibilityStatuses = Object.fromEntries(application.serviceCodes.map((serviceCode) => [
       serviceCode,
       {
         status: "blocked",
@@ -294,18 +216,17 @@ export async function POST(request: Request) {
       },
     ]));
 
-    const db = getDb();
-    await db.insert(providerApplications).values({
+    const applicationInsert = db.insert(providerApplications).values({
       id: providerId,
-      name,
-      email,
-      preferredLanguage,
-      service: serializeProviderServices(serviceCodes),
-      serviceArea: serializeProviderAreas(areas),
-      businessMunicipality,
-      workLocations: serializeLocationOptions(workLocations, PROVIDER_WORK_LOCATION_OPTIONS),
-      businessServiceAddress,
-      experience: clean(body.experience, 1000),
+      name: application.name,
+      email: application.email,
+      preferredLanguage: application.preferredLanguage,
+      service: application.service,
+      serviceArea: application.serviceArea,
+      businessMunicipality: application.businessMunicipality,
+      workLocations: application.workLocationsSerialized,
+      businessServiceAddress: application.businessServiceAddress,
+      experience: application.experience,
       insuranceStatus: "pending-evidence",
       providerSelfAssessment: JSON.stringify(applicationMetadata),
       serviceEligibilityStatuses: JSON.stringify(eligibilityStatuses),
@@ -318,106 +239,248 @@ export async function POST(request: Request) {
       verificationStatus: "not reviewed",
     });
 
-    const holdReasonCodes = applicationPathway === "learning_account"
+    const holdReasonCodes = application.applicationPathway === "learning_account"
       ? ["learning_account_no_customer_jobs", "services_not_activated"]
       : [
           "pending_identity_and_evidence_review",
           "services_not_activated",
-          ...(applicationPathway === "sponsored_trainee_employee"
-            || applicationPathway === "provider_business_employee"
+          ...(application.applicationPathway === "sponsored_trainee_employee"
+            || application.applicationPathway === "provider_business_employee"
             ? ["sponsor_or_employer_confirmation_required"]
             : []),
         ];
-    await db.insert(providerPathwayProfiles).values({
+    const pathwayInsert = db.insert(providerPathwayProfiles).values({
       id: crypto.randomUUID(),
       providerId,
       providerPersonId: personId,
-      relationshipPath: applicationPathway,
-      providerLevel,
+      relationshipPath: application.applicationPathway,
+      providerLevel: application.providerLevel,
       pathwayVersion: 1,
-      status: applicationPathway === "learning_account" ? "learning_only" : "pending_review",
+      status: application.applicationPathway === "learning_account"
+        ? "learning_only"
+        : "pending_review",
       policyVersion: POLICY_VERSION,
       holdReasonCodes: JSON.stringify(holdReasonCodes),
       createdAt: now,
       updatedAt: now,
     });
-    await db.insert(providerPersonnel).values({
+    const personnelInsert = db.insert(providerPersonnel).values({
       id: crypto.randomUUID(),
       providerId,
       personId,
-      relationshipType: applicationRelationship(applicationPathway),
+      relationshipType: providerApplicationRelationship(application.applicationPathway),
       personnelRole: "technician",
-      providerLevel,
+      providerLevel: application.providerLevel,
       rosterVersion: 1,
-      status: applicationPathway === "learning_account" ? "learning_only" : "pending",
+      status: application.applicationPathway === "learning_account" ? "learning_only" : "pending",
       createdAt: now,
       updatedAt: now,
     });
 
+    const emailControlVerification = {
+      method: "email_one_time_code",
+      scope: "email_control_only",
+      verifiedEmail: application.email,
+      verifiedAt: verified.challenge.verifiedAt,
+      challengeId: verified.challenge.id,
+      consumptionNonce,
+      providerApplicationSubmissionEvidenceId: submissionEvidenceId,
+      limitation: EMAIL_CONTROL_SCOPE,
+    };
     const deviceContext = JSON.stringify({
       userAgent: clean(request.headers.get("user-agent"), 600),
       language: clean(request.headers.get("accept-language"), 200),
       country: clean(request.headers.get("cf-ipcountry"), 20),
       policyBundleVersion: PROVIDER_POLICY_BUNDLE_VERSION,
       policyStatus: POLICY_STATUS,
+      emailControlVerification,
     });
+    const acceptanceInserts = [];
     for (const document of PROVIDER_ACCEPTANCE_DOCUMENTS) {
-      const agreementText = providerAgreementEvidenceText(document);
-      await db.insert(agreementAcceptances).values({
+      const agreementText = providerAgreementEvidenceText(document, {
+        acceptanceEvidenceId: verified.challenge.id,
+      });
+      const documentBinding = acceptedDocumentManifest.find(
+        (entry) => entry.key === document.key,
+      );
+      if (!documentBinding) throw new Error(`Missing application document binding: ${document.key}`);
+      acceptanceInserts.push(db.insert(agreementAcceptances).values({
         id: crypto.randomUUID(),
         providerId,
         personId,
         jurisdiction: POLICY_JURISDICTION,
         agreementKey: document.key,
         agreementVersion: document.version,
-        agreementHash: await sha256Text(agreementText),
+        agreementHash: documentBinding.finalAgreementHash,
         agreementText,
-        acceptedByName: signerName,
-        acceptedByTitle: signerTitle,
+        acceptedByName: application.signerName,
+        acceptedByTitle: application.signerTitle,
         acceptanceAction: document.control === "privacy-acknowledgment"
-          ? "affirmative-separate-privacy-checkbox"
-          : "affirmative-provider-terms-bundle-checkbox",
+          ? "affirmative-separate-privacy-checkbox-plus-email-code"
+          : "affirmative-provider-terms-bundle-checkbox-plus-email-code",
         acceptedAt: now,
-        ipAddress: requestIp(request),
-        sessionId: acceptanceSessionId,
+        ipAddress: providerApplicationRequestIp(request),
+        sessionId: verified.challenge.id,
         deviceContext,
+        providerApplicationSubmissionEvidenceId: submissionEvidenceId,
         createdAt: now,
-      });
+      }));
     }
 
-    await recordProviderAuditEvent({
+    const submissionEvidenceInsert = db.insert(
+      providerApplicationSubmissionEvidence,
+    ).values({
+      id: submissionEvidenceId,
+      providerId,
+      normalizedEmail: application.email,
+      challengeId: verified.challenge.id,
+      consumptionNonce,
+      normalizedSnapshot: providerApplicationNormalizedSnapshot(application),
+      payloadHash: verified.payloadHash,
+      acceptedDocumentManifest: JSON.stringify(acceptedDocumentManifest),
+      verifiedAt: verified.challenge.verifiedAt,
+      consumedAt: now,
+      createdAt: now,
+    });
+
+    const auditId = crypto.randomUUID();
+    const auditMetadata = {
+      applicationPathway: application.applicationPathway,
+      providerLevel: application.providerLevel,
+      serviceCodes: application.serviceCodes,
+      agreementVersions: Object.fromEntries(
+        PROVIDER_ACCEPTANCE_DOCUMENTS.map((document) => [document.key, document.version]),
+      ),
+      emailControlVerification,
+      providerApplicationSubmissionEvidenceId: submissionEvidenceId,
+      applicationPayloadHash: verified.payloadHash,
+      identityVerified: false,
+      businessVerified: false,
+      serviceEligibilityGranted: false,
+    };
+    const normalizedAuditEvent = {
+      id: auditId,
       providerId,
       personId,
+      requestId: "",
+      serviceCode: "",
       jurisdiction: POLICY_JURISDICTION,
       eventType: "provider_application_submitted",
       entityType: "provider_application",
       entityId: providerId,
-      actorType: "applicant",
-      actorId: email,
-      outcome: "pending_review",
-      reasonCodes: holdReasonCodes,
-      metadata: {
-        applicationPathway,
-        providerLevel,
-        serviceCodes,
-        agreementVersions: Object.fromEntries(
-          PROVIDER_ACCEPTANCE_DOCUMENTS.map((document) => [document.key, document.version]),
-        ),
-      },
+      actorType: "email_verified_applicant",
+      actorId: application.email,
+      outcome: "pending_review_email_control_only",
+      reasonCodes: [...holdReasonCodes, "email_control_verified_only"],
+      metadata: auditMetadata,
+      policyVersion: POLICY_VERSION,
+      previousEventHash: "",
+      occurredAt: now,
+    };
+    const auditEventHash = await sha256Text(JSON.stringify(normalizedAuditEvent));
+    const auditInsert = db.insert(providerAuditEvents).values({
+      id: auditId,
+      providerId,
+      personId,
+      requestId: "",
+      serviceCode: "",
+      jurisdiction: POLICY_JURISDICTION,
+      eventType: "provider_application_submitted",
+      entityType: "provider_application",
+      entityId: providerId,
+      eventVersion: 1,
+      actorType: "email_verified_applicant",
+      actorId: application.email,
+      outcome: "pending_review_email_control_only",
+      reasonCodes: JSON.stringify([...holdReasonCodes, "email_control_verified_only"]),
+      metadata: JSON.stringify(auditMetadata),
+      policyVersion: POLICY_VERSION,
+      previousEventHash: "",
+      eventHash: auditEventHash,
+      occurredAt: now,
+      createdAt: now,
     });
 
-    return Response.json({
-      ok: true,
-      applicationId: providerId,
-      onboardingUrl: "/provider-onboarding",
-      status: applicationPathway === "learning_account" ? "learning_only" : "pending_review",
-      message: "Application saved. Create or sign in to your provider account to upload the required evidence and follow the review checklist.",
-    }, { status: 201 });
+    // The challenge is consumed in the same D1 transaction as the normalized
+    // email claim and every required application/legal record. A concurrent
+    // duplicate claim aborts and rolls back the full batch.
+    try {
+      await db.batch([
+        challengeConsume(),
+        db.insert(providerApplicationEmailClaims).values({
+          normalizedEmail: application.email,
+          providerId,
+          challengeId: verified.challenge.id,
+          consumptionNonce,
+          claimedAt: now,
+        }),
+        applicationInsert,
+        submissionEvidenceInsert,
+        pathwayInsert,
+        personnelInsert,
+        ...acceptanceInserts,
+        auditInsert,
+      ] as const);
+    } catch (batchError) {
+      // A concurrent verified request for the same normalized email may have
+      // won the unique claim. Only that concrete state converts the conflict
+      // into the same non-enumerating, idempotent success response.
+      const winner = await activeApplicationForEmail(application.email);
+      if (!winner) throw batchError;
+      if (winner.claimed) {
+        const consumed = await challengeConsume();
+        if (!consumed.length && !await challengeWasConsumedByConcurrentRequest()) {
+          throw batchError;
+        }
+      } else {
+        try {
+          await db.batch([
+            challengeConsume(),
+            db.insert(providerApplicationEmailClaims).values({
+              normalizedEmail: application.email,
+              providerId: winner.id,
+              challengeId: verified.challenge.id,
+              consumptionNonce,
+              claimedAt: now,
+            }).onConflictDoNothing(),
+          ] as const);
+        } catch (claimError) {
+          if (!await challengeWasConsumedByConcurrentRequest()) throw claimError;
+        }
+      }
+      return genericCompleteResponse();
+    }
+
+    // Delivery is best-effort and remains outside the legal-record transaction.
+    await notifyProviderApplicationReceived({
+      providerId,
+      email: application.email,
+    });
+    return genericCompleteResponse();
   } catch (error) {
-    console.error("Unable to save provider application", error);
+    if (error instanceof RequestBodyTooLargeError) {
+      return Response.json(
+        { error: "The provider application is too large." },
+        { status: 413, headers: NO_STORE_HEADERS },
+      );
+    }
+    if (error instanceof InvalidJsonBodyError) {
+      return Response.json(
+        { error: error.message },
+        { status: 400, headers: NO_STORE_HEADERS },
+      );
+    }
+    if (error instanceof ProviderApplicationValidationError) {
+      return Response.json(
+        { error: error.message },
+        { status: error.status, headers: NO_STORE_HEADERS },
+      );
+    }
+
+    console.error("Unable to save verified provider application", error);
     return Response.json(
-      { error: "We could not save your application. Please try again." },
-      { status: 500 },
+      { error: "We could not verify and save the application. Request a new code and try again." },
+      { status: 500, headers: NO_STORE_HEADERS },
     );
   }
 }

@@ -46,6 +46,7 @@ import {
 } from "../../../lib/launch-status";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import { policyAccepted } from "../../../lib/policies";
+import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../lib/customer-policy-acceptance";
 import { POLICY_VERSION } from "../../../lib/provider-policy";
 import { QUOTE_DECLINE_REASON_VALUES } from "../../../lib/quote-feedback";
 import { isSameOriginRequest } from "../../../lib/request-security";
@@ -535,6 +536,12 @@ export async function POST(request: Request) {
 
   if (action !== "accept-quote") {
     return noStoreJson({ error: "Unknown quote action." }, 400);
+  }
+  if (!customerAcceptanceBundleIsReleasedForPurpose("provider_selection")) {
+    return noStoreJson({
+      error: "Quote acceptance remains closed until every required customer and payment policy has an active, effective, hash-verified release.",
+      code: "CUSTOMER_POLICY_RELEASE_REQUIRED",
+    }, 503);
   }
   if (quote.status !== "submitted") {
     return noStoreJson({ error: "Reconsider this quote before selecting it." }, 409);

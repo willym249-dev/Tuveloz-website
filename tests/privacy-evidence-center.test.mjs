@@ -14,7 +14,7 @@ test("privacy center stores signed-in choices and a durable request history", as
   assert.match(migration, /CREATE TABLE `account_communication_preferences`/);
   assert.match(migration, /CREATE TABLE `privacy_requests`/);
   assert.match(migration, /privacy_requests_one_active_type_unique/);
-  assert.match(api, /getAccountSession/);
+  assert.match(api, /getPrivacyAccountSession/);
   assert.match(api, /isSameOriginRequest/);
   assert.match(api, /essentialTransactionalEmail: true/);
   assert.match(api, /securityEmail: true/);
@@ -41,6 +41,24 @@ test("account export excludes authentication secrets and limits third-party disc
   assert.doesNotMatch(exportApi, /payment_intent_id AS/);
   assert.doesNotMatch(exportApi, /provider_email AS providerEmail/);
   assert.doesNotMatch(exportApi, /customer_email AS customerEmail/);
+  for (const providerRecord of [
+    "providerPathwayHistory",
+    "providerPersonnelRecords",
+    "providerIdentityVerificationHistory",
+    "providerAgreementAcceptanceHistory",
+    "providerEvidenceMetadata",
+    "providerEvidenceScanHistory",
+    "exactServiceEligibilityHistory",
+    "providerAppeals",
+    "providerAuditHistory",
+    "providerDataRightsRequests",
+  ]) {
+    assert.ok(exportApi.includes(providerRecord), `provider export omits ${providerRecord}`);
+  }
+  assert.doesNotMatch(exportApi, /storage_key AS/);
+  assert.doesNotMatch(exportApi, /document_hash AS/);
+  assert.doesNotMatch(exportApi, /identity_verification_reference AS/);
+  assert.doesNotMatch(exportApi, /account_session_hash AS/);
 });
 
 test("private job evidence is append-only, participant-only, and separate from payment authorization", async () => {

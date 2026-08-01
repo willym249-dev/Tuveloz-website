@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lte, or } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../db";
 import { stripePayments } from "../db/schema";
@@ -9,6 +9,14 @@ export function stripeObjectId(
 ) {
   return typeof value === "string" ? value : value?.id ?? "";
 }
+
+const REFUND_HOLD_PAYMENT_STATUSES = new Set([
+  "refund_pending",
+  "refund_requires_action",
+  "refund_failed_review",
+  "refund_canceled_review",
+  "refund_status_review",
+]);
 
 function destinationTransferId(charge: Stripe.Charge | null) {
   if (!charge?.transfer) return "";
@@ -229,7 +237,9 @@ export async function recordPaidCheckoutSession(
 
   const nextStatus = launchReadinessHold
     ? "paid_launch_readiness_hold"
-    : payment.refundAmountCents > 0 || payment.disputeStatus
+    : payment.refundAmountCents > 0
+        || payment.disputeStatus
+        || REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)
       ? payment.status
       : payment.settlementStrategy === "destination_charge"
         ? "paid_and_transferred"
@@ -317,7 +327,24 @@ async function paymentForStripeObject(
   return payment ?? null;
 }
 
-export async function recordRefundedCharge(charge: Stripe.Charge) {
+function paymentStatusAfterRefundedCharge(
+  payment: typeof stripePayments.$inferSelect,
+  charge: Stripe.Charge,
+) {
+  if (payment.disputeStatus || REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)) {
+    return payment.status;
+  }
+  if (charge.amount_refunded <= 0) return payment.status;
+  return charge.refunded ? "refunded" : "partially_refunded";
+}
+
+export async function recordRefundedCharge(
+  stripeClient: Stripe,
+  eventCharge: Stripe.Charge,
+) {
+  // Re-read Stripe instead of trusting a potentially delayed snapshot. This
+  // prevents an old charge.refunded delivery from reducing a newer hold.
+  const charge = await stripeClient.charges.retrieve(eventCharge.id);
   const payment = await paymentForStripeObject(
     charge.id,
     stripeObjectId(charge.payment_intent),
@@ -335,12 +362,114 @@ export async function recordRefundedCharge(charge: Stripe.Charge) {
     refundedAt: charge.amount_refunded > 0
       ? payment.refundedAt || now
       : "",
-    status: charge.refunded ? "refunded" : "partially_refunded",
+    status: paymentStatusAfterRefundedCharge(payment, charge),
     updatedAt: now,
   }).where(eq(stripePayments.id, payment.id));
 }
 
-export async function recordDisputeStatus(dispute: Stripe.Dispute) {
+function refundPaymentStatus(
+  payment: typeof stripePayments.$inferSelect,
+  refund: Stripe.Refund,
+  charge: Stripe.Charge,
+) {
+  if (payment.disputeStatus) return payment.status;
+  switch (refund.status) {
+    case "succeeded":
+      return charge.refunded ? "refunded" : "partially_refunded";
+    case "pending":
+      return "refund_pending";
+    case "requires_action":
+      return "refund_requires_action";
+    case "failed":
+      return "refund_failed_review";
+    case "canceled":
+      return "refund_canceled_review";
+    default:
+      return "refund_status_review";
+  }
+}
+
+/**
+ * Reconciles the current Refund and Charge after refund.created,
+ * refund.updated, refund.failed, or the legacy charge.refund.updated event.
+ * Every non-succeeded asynchronous state places a release hold.
+ */
+export async function recordRefundStatus(
+  stripeClient: Stripe,
+  eventRefund: Stripe.Refund,
+  eventId: string,
+  eventCreated: number,
+) {
+  const refund = await stripeClient.refunds.retrieve(eventRefund.id);
+  const chargeId = stripeObjectId(refund.charge) || stripeObjectId(eventRefund.charge);
+  if (!chargeId) {
+    console.warn("Ignoring a refund without a Stripe Charge", {
+      eventId,
+      refundId: refund.id,
+    });
+    return;
+  }
+  const charge = await stripeClient.charges.retrieve(chargeId);
+  const payment = await paymentForStripeObject(
+    charge.id,
+    stripeObjectId(charge.payment_intent) || stripeObjectId(refund.payment_intent),
+  );
+  if (!payment) {
+    console.warn("Ignoring a refund without a Tuveloz payment record", {
+      eventId,
+      refundId: refund.id,
+      chargeId,
+    });
+    return;
+  }
+  if (eventCreated < payment.lastRefundEventCreated) {
+    console.warn("Ignoring an older Stripe refund event", {
+      eventId,
+      refundId: refund.id,
+      eventCreated,
+      lastRefundEventCreated: payment.lastRefundEventCreated,
+    });
+    return;
+  }
+
+  const nextStatus = refundPaymentStatus(payment, refund, charge);
+  if (
+    eventCreated === payment.lastRefundEventCreated
+    && REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)
+    && !REFUND_HOLD_PAYMENT_STATUSES.has(nextStatus)
+  ) {
+    // Stripe event timestamps have one-second precision. An equally timed safe
+    // event cannot clear an already-recorded adverse refund state.
+    return;
+  }
+
+  const now = new Date().toISOString();
+  await getDb().update(stripePayments).set({
+    refundAmountCents: charge.amount_refunded,
+    refundedAt: charge.amount_refunded > 0 ? payment.refundedAt || now : "",
+    refundStatus: refund.status ?? "unknown",
+    refundUpdatedAt: now,
+    refundFailureReason: refund.failure_reason?.slice(0, 120) ?? "",
+    lastRefundId: refund.id,
+    lastRefundEventCreated: eventCreated,
+    lastRefundEventId: eventId,
+    status: nextStatus,
+    updatedAt: now,
+  }).where(and(
+    eq(stripePayments.id, payment.id),
+    lte(stripePayments.lastRefundEventCreated, eventCreated),
+  ));
+}
+
+export async function recordDisputeStatus(
+  stripeClient: Stripe,
+  eventDispute: Stripe.Dispute,
+  eventId: string,
+  eventCreated: number,
+) {
+  // Re-read the dispute so delayed created/updated/funds events converge on
+  // Stripe's current status rather than regressing local state.
+  const dispute = await stripeClient.disputes.retrieve(eventDispute.id);
   const payment = await paymentForStripeObject(
     stripeObjectId(dispute.charge),
     stripeObjectId(dispute.payment_intent),
@@ -348,6 +477,15 @@ export async function recordDisputeStatus(dispute: Stripe.Dispute) {
   if (!payment) {
     console.warn("Ignoring a dispute without a Tuveloz payment record", {
       disputeId: dispute.id,
+    });
+    return;
+  }
+  if (eventCreated < payment.lastDisputeEventCreated) {
+    console.warn("Ignoring an older Stripe dispute event", {
+      eventId,
+      disputeId: dispute.id,
+      eventCreated,
+      lastDisputeEventCreated: payment.lastDisputeEventCreated,
     });
     return;
   }
@@ -361,9 +499,15 @@ export async function recordDisputeStatus(dispute: Stripe.Dispute) {
   await getDb().update(stripePayments).set({
     disputeStatus: dispute.status,
     disputeUpdatedAt: now,
+    lastDisputeId: dispute.id,
+    lastDisputeEventCreated: eventCreated,
+    lastDisputeEventId: eventId,
     status,
     updatedAt: now,
-  }).where(eq(stripePayments.id, payment.id));
+  }).where(and(
+    eq(stripePayments.id, payment.id),
+    lte(stripePayments.lastDisputeEventCreated, eventCreated),
+  ));
 }
 
 export function publicPaymentSummary(
@@ -385,6 +529,7 @@ export function publicPaymentSummary(
     releasedAt: payment.releasedAt,
     refundAmountCents: payment.refundAmountCents,
     refundedAt: payment.refundedAt,
+    refundStatus: payment.refundStatus,
     disputeStatus: payment.disputeStatus,
   };
 }

@@ -4,6 +4,10 @@ import handler from "vinext/server/app-router-entry";
 import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
+import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
+import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
+import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
+import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -103,6 +107,31 @@ function stagingAccessDenied(acceptsHtml: boolean) {
 }
 
 const worker = {
+  async scheduled(
+    _controller: ScheduledController,
+    _env: Env,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    const scheduledTask = (label: string, task: () => Promise<unknown>) => (
+      task().catch((error) => {
+        console.error(`Unable to run scheduled ${label}`, error);
+      })
+    );
+    ctx.waitUntil(Promise.allSettled([
+      scheduledTask("compliance reminders", () => processDueComplianceReminders()),
+      scheduledTask("provider application verification cleanup", () => (
+        cleanupProviderApplicationVerificationState()
+      )),
+      scheduledTask("superseded Stripe Identity session cleanup", () => (
+        cleanupSupersededStripeIdentitySessions(5)
+      )),
+      scheduledTask("email notification delivery", () => flushPendingEmailNotifications(20)),
+      scheduledTask("quarantined provider evidence scans", () => (
+        processPendingCloudmersiveEvidenceScans()
+      )),
+    ]).then(() => undefined));
+  },
+
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html") === true;

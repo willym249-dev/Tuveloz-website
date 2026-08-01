@@ -5,8 +5,10 @@ import {
   storeJobEvidenceImage,
 } from "../../../lib/job-evidence-images";
 import { ImageValidationError, validateJobImage } from "../../../lib/job-images";
+import { marketplacePausedMessage } from "../../../lib/launch-status";
 import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 
 type AccountRole = "customer" | "provider";
 type EvidenceType =
@@ -48,6 +50,19 @@ const PROVIDER_EVIDENCE_TYPES = new Set<EvidenceType>([
   "completion-note",
 ]);
 const MAX_EVIDENCE_ITEMS_PER_JOB = 30;
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("job_start"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
@@ -271,6 +286,11 @@ export async function POST(request: Request) {
         { error: "Only the customer and selected provider can add records to this accepted job." },
         { status: 403 },
       );
+    }
+    if (!(await runtimeMarketplaceActionAllowed("job_start", {
+      testOnly: job.isTestJob === "yes",
+    }))) {
+      return marketplacePausedResponse();
     }
     if (!evidenceStatusAllowed(evidenceType, job.requestStatus)) {
       return Response.json(

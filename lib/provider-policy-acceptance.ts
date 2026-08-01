@@ -7,6 +7,7 @@ import {
   TERMS_VERSION,
 } from "./policies";
 import { POLICY_VERSION } from "./provider-policy";
+import { policyDocumentRelease } from "./policy-release-manifest";
 
 export const PROVIDER_TERMS_ACCEPTANCE_TEXT =
   "I am at least 18 years old and authorized to act for the applicant or provider business. I agree to the Terms of Use, Provider Agreement, Payment, Cancellation and Refund Policy, Marketplace Conduct and Review Policy, and Provisional Provider and Trainee Policy shown for this application. I certify that the application information is complete and current, and I understand that no service or customer-job access is granted until each required approval is recorded.";
@@ -24,24 +25,11 @@ export const PROVIDER_ACCEPTANCE_PURPOSES = [
 export type ProviderAcceptancePurpose = (typeof PROVIDER_ACCEPTANCE_PURPOSES)[number];
 
 // These policy pages are still operational-review drafts. A document must be
-// deliberately released here, with its canonical rendered-body SHA-256 and an
-// effective release identifier, before a clickwrap record can satisfy provider
-// eligibility. Changing a draft to active also requires a new document version
-// so the immutable acceptance table records a fresh affirmative acceptance.
-type ProviderDocumentRelease = {
-  releaseStatus: "draft" | "inactive" | "active" | "retired";
-  effectiveAt: string;
-  releaseId: string;
-  canonicalBodyHash: string;
-};
-
-const DRAFT_RELEASE: Readonly<ProviderDocumentRelease> = Object.freeze({
-  releaseStatus: "draft",
-  effectiveAt: "",
-  releaseId: "",
-  canonicalBodyHash: "",
-});
-
+// deliberately released in the shared manifest, with the SHA-256 of its exact
+// normalized policy-page source and an effective release identifier, before a
+// clickwrap record can satisfy provider eligibility. CI recomputes that hash.
+// Changing a draft to active also requires a new document version so the
+// immutable acceptance table records a fresh affirmative acceptance.
 export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
   {
     key: "terms",
@@ -50,7 +38,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/terms",
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("terms"),
   },
   {
     key: "provider_agreement",
@@ -59,7 +47,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/provider-agreement",
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("provider_agreement"),
   },
   {
     key: "payment_policy",
@@ -68,7 +56,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/payments",
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("payment_policy"),
   },
   {
     key: "marketplace_conduct",
@@ -77,7 +65,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/marketplace-conduct",
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("marketplace_conduct"),
   },
   {
     key: "provisional_provider_policy",
@@ -86,7 +74,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/provisional-provider-policy",
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("provisional_provider_policy"),
   },
   {
     key: "privacy",
@@ -95,7 +83,7 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     href: "/privacy",
     control: "privacy-acknowledgment",
     presentedText: PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
-    ...DRAFT_RELEASE,
+    ...policyDocumentRelease("privacy"),
   },
 ] as const;
 
@@ -164,6 +152,7 @@ export function providerAgreementEvidenceText(
       status: document.releaseStatus,
       effectiveAt: document.effectiveAt,
       releaseId: document.releaseId,
+      reviewBodyHash: document.reviewBodyHash,
       canonicalBodyHash: document.canonicalBodyHash,
     },
   });

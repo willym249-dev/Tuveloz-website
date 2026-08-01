@@ -15,6 +15,7 @@ type InternalGate = {
   key: string;
   title: string;
   stage: "provider_onboarding" | "transaction_pilot";
+  contextOnly?: boolean;
   passed: boolean;
   detail: string;
 };
@@ -52,6 +53,17 @@ type ExternalGate = {
   };
 };
 
+type WorkplanBlocker = {
+  key: string;
+  stage: "provider_onboarding" | "transaction_pilot";
+  state: string;
+  title: string;
+  reason: string;
+  responsibleRole: string;
+  nextAction: string;
+  actionHref: string;
+};
+
 type ReadinessResponse = {
   error?: string;
   generatedAt: string;
@@ -64,6 +76,7 @@ type ReadinessResponse = {
     customerRequestsPaused: boolean;
     stripeMode: string;
     liveStripeAllowed: boolean;
+    canonicalRuntimeApproved: boolean;
   };
   workload: {
     providers: number;
@@ -78,6 +91,10 @@ type ReadinessResponse = {
   };
   internalGates: InternalGate[];
   externalGates: ExternalGate[];
+  workplan: {
+    jobBlockers: WorkplanBlocker[];
+    paymentBlockers: WorkplanBlocker[];
+  };
   ownerLegalReviewChoice: null | {
     format: "tuveloz_owner_legal_review_choice_v1";
     decision: "proceeding_without_counsel";
@@ -240,7 +257,65 @@ export default function LaunchReadinessPage() {
 
       {data && (
         <>
-          <section className="admin-section">
+          <section className="admin-section" id="maryland-provider-pathway-workplan">
+            <div className="admin-section-heading">
+              <div>
+                <h2>Montgomery County provider-pathway workplan</h2>
+                <p className="admin-section-copy">
+                  These are launch holds, not optional suggestions. They do not enable services,
+                  jobs, payments, or payouts, and they do not guarantee that Tuveloz has no liability.
+                </p>
+                <p className="admin-section-copy">
+                  Official sources: {" "}
+                  <a
+                    href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    County OCP registration guidance
+                  </a>
+                  {" · "}
+                  <a
+                    href="https://www.montgomerycountymd.gov/OCP/Resources/Files/Licensing_Forms/ch_31a_02152011.pdf"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    County Code Chapter 31A
+                  </a>
+                </p>
+              </div>
+              <strong>all customer work remains disabled</strong>
+            </div>
+            <div className="admin-grid">
+              <article className="admin-card">
+                <div className="admin-card-top"><span>County baseline</span><strong>blocked</strong></div>
+                <h3>No unregistered simple-repair lane</h3>
+                <p>Mobile repair and maintenance businesses need current Montgomery County OCP registration.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Learning account</span><strong>no jobs</strong></div>
+                <h3>Learning means application interest only</h3>
+                <p>No customer work, training, employment, job assignment, payment, or payout is available through this account.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Independent owner-operator</span><strong>blocked</strong></div>
+                <h3>Verify the actual business and exact coverage</h3>
+                <p>Require a real provider business, current OCP registration, and broker-confirmed coverage for every exact service before activation.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Trainee employee</span><strong>blocked</strong></div>
+                <h3>A separately registered business must be provider of record</h3>
+                <p>Trainees can only be employees of that business and remain unavailable until provider-of-record, insurance, workers&apos; compensation, supervision, assignment, and payout controls are implemented.</p>
+              </article>
+              <article className="admin-card">
+                <div className="admin-card-top"><span>Specialty work</span><strong>blocked</strong></div>
+                <h3>Apply the additional exact-service gates</h3>
+                <p>Specialty services remain unavailable until every applicable license, permit, agency, location, environmental, insurance, and workflow requirement is verified.</p>
+              </article>
+            </div>
+          </section>
+
+          <section className="admin-section" id="current-safety-position">
             <div className="admin-section-heading">
               <div>
                 <h2>Optional counsel choice</h2>
@@ -314,6 +389,72 @@ export default function LaunchReadinessPage() {
           <section className="admin-section">
             <div className="admin-section-heading">
               <div>
+                <h2>Why customer jobs are blocked</h2>
+                <p className="admin-section-copy">
+                  This list comes from the same fail-closed readiness decision used by the
+                  production job routes. Clearing a record here does not turn the marketplace on.
+                </p>
+              </div>
+              <strong>{data.workplan.jobBlockers.length} blocker(s)</strong>
+            </div>
+            {data.workplan.jobBlockers.length === 0 ? (
+              <p className="portal-success">
+                No readiness blocker is currently reported. A separate reviewed release is still required.
+              </p>
+            ) : (
+              <div className="admin-grid">
+                {data.workplan.jobBlockers.map((blocker) => (
+                  <article className="admin-card" key={`job:${blocker.key}`}>
+                    <div className="admin-card-top">
+                      <span>X {words(blocker.state)}</span>
+                      <time>{stageTitle(blocker.stage)}</time>
+                    </div>
+                    <h3>{blocker.title}</h3>
+                    <p>{blocker.reason}</p>
+                    <p><strong>Responsible:</strong> {blocker.responsibleRole}</p>
+                    <Link href={blocker.actionHref}>Next action: {blocker.nextAction}</Link>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="admin-section">
+            <div className="admin-section-heading">
+              <div>
+                <h2>Why payments and payouts are blocked</h2>
+                <p className="admin-section-copy">
+                  Live checkout and provider payouts require the complete canonical readiness
+                  decision plus their separate payment and deployment controls.
+                </p>
+              </div>
+              <strong>{data.workplan.paymentBlockers.length} blocker(s)</strong>
+            </div>
+            {data.workplan.paymentBlockers.length === 0 ? (
+              <p className="portal-success">
+                No readiness blocker is currently reported. Payment activation remains a separate reviewed release.
+              </p>
+            ) : (
+              <div className="admin-grid">
+                {data.workplan.paymentBlockers.map((blocker) => (
+                  <article className="admin-card" key={`payment:${blocker.key}`}>
+                    <div className="admin-card-top">
+                      <span>X {words(blocker.state)}</span>
+                      <time>{stageTitle(blocker.stage)}</time>
+                    </div>
+                    <h3>{blocker.title}</h3>
+                    <p>{blocker.reason}</p>
+                    <p><strong>Responsible:</strong> {blocker.responsibleRole}</p>
+                    <Link href={blocker.actionHref}>Next action: {blocker.nextAction}</Link>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="admin-section">
+            <div className="admin-section-heading">
+              <div>
                 <h2>Current safety position</h2>
                 <p className="admin-section-copy">
                   These values are read from the running server. Secret values are never displayed.
@@ -361,7 +502,12 @@ export default function LaunchReadinessPage() {
           </section>
 
           {stages.map((stage) => {
-            const internal = data.internalGates.filter((gate) => gate.stage === stage);
+            const internal = data.internalGates.filter((gate) => (
+              gate.stage === stage && !gate.contextOnly
+            ));
+            const stageContext = data.internalGates.filter((gate) => (
+              gate.stage === stage && gate.contextOnly
+            ));
             const external = data.externalGates.filter((gate) => gate.stage === stage);
             return (
               <section className="admin-section" key={stage}>
@@ -369,7 +515,8 @@ export default function LaunchReadinessPage() {
                   <div>
                     <h2>{stageTitle(stage)}</h2>
                     <p className="admin-section-copy">
-                      ✓ means the evidence is current. X or ! means this stage remains blocked.
+                      For required readiness checks, ✓ means current and X or ! means
+                      this stage remains blocked. Stage-context cards are informational only.
                     </p>
                   </div>
                   <strong>
@@ -382,7 +529,7 @@ export default function LaunchReadinessPage() {
                 <h3>Technical and operational checks</h3>
                 <div className="admin-grid">
                   {internal.map((gate) => (
-                    <article className="admin-card" key={gate.key}>
+                    <article className="admin-card" id={`technical-${gate.key}`} key={gate.key}>
                       <div className="admin-card-top">
                         <span>{gate.passed ? "✓ passed" : "X blocked"}</span>
                         <time>system check</time>
@@ -393,10 +540,33 @@ export default function LaunchReadinessPage() {
                   ))}
                 </div>
 
+                {stageContext.length > 0 && (
+                  <>
+                    <h3>Current stage context</h3>
+                    <p className="admin-section-copy">
+                      These safeguards describe the current staged deployment. They are not
+                      readiness failures and are replaced by the canonical live-release gates
+                      when a separately reviewed launch occurs.
+                    </p>
+                    <div className="admin-grid">
+                      {stageContext.map((gate) => (
+                        <article className="admin-card" id={`technical-${gate.key}`} key={gate.key}>
+                          <div className="admin-card-top">
+                            <span>{gate.passed ? "staged safeguard active" : "live-stage context"}</span>
+                            <time>informational</time>
+                          </div>
+                          <h3>{gate.title}</h3>
+                          <p>{gate.detail}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <h3>Mandatory evidence and reviewer records</h3>
                 <div className="admin-grid">
                   {external.map((gate) => (
-                    <article className="admin-card" key={gate.key}>
+                    <article className="admin-card" id={`launch-gate-${gate.key}`} key={gate.key}>
                       <div className="admin-card-top">
                         <span>{reviewSymbol(gate.reviewState)} {words(gate.reviewState)}</span>
                         <time>{gate.required ? "required" : "optional lane"}</time>
@@ -504,7 +674,7 @@ export default function LaunchReadinessPage() {
             );
           })}
 
-          <section className="admin-section">
+          <section className="admin-section" id="next-steps">
             <div className="admin-section-heading">
               <div>
                 <h2>What happens after this review</h2>

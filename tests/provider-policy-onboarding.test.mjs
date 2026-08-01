@@ -28,14 +28,18 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
 
 test("provider applications create pathways, people, and immutable agreement evidence", async () => {
   const route = await read("../app/api/providers/route.ts");
+  const verification = await read("../lib/provider-application-verification.ts");
   const acceptance = await read("../lib/provider-policy-acceptance.ts");
-  assert.ok(route.includes('serviceCodes.includes("general_auto_repair")'));
-  assert.ok(route.includes("allowedLevelForApplication"));
+  assert.ok(verification.includes('serviceCodes.includes("general_auto_repair")'));
+  assert.ok(verification.includes("allowedLevelForApplication"));
   assert.ok(route.includes("providerPathwayProfiles"));
   assert.ok(route.includes("providerPersonnel"));
   assert.ok(route.includes("agreementAcceptances"));
-  assert.ok(route.includes("agreementHash: await sha256Text(agreementText)"));
-  assert.ok(route.includes("privacyAcknowledged"));
+  assert.ok(route.includes("agreementHash: documentBinding.finalAgreementHash"));
+  assert.ok(verification.includes("finalAgreementHash: await sha256Text(agreementText)"));
+  assert.ok(route.includes("providerApplicationSubmissionEvidence"));
+  assert.ok(route.includes("acceptanceEvidenceId: verified.challenge.id"));
+  assert.ok(verification.includes("privacyAcknowledged"));
   assert.ok(route.includes("sponsor_or_employer_confirmation_required"));
   assert.ok(acceptance.includes("PROVIDER_TERMS_ACCEPTANCE_TEXT"));
   assert.ok(acceptance.includes("PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT"));
@@ -46,6 +50,7 @@ test("provider applications create pathways, people, and immutable agreement evi
 
 test("draft policy acknowledgments are bound for review but fail closed for job eligibility", async () => {
   const acceptance = await read("../lib/provider-policy-acceptance.ts");
+  const releaseManifest = JSON.parse(await read("../config/policy-releases.json"));
   const onboarding = await read("../app/api/provider-onboarding/route.ts");
   const onboardingPage = await read("../app/provider-onboarding/page.tsx");
   const eligibility = await read("../lib/provider-eligibility-engine.ts");
@@ -53,7 +58,13 @@ test("draft policy acknowledgments are bound for review but fail closed for job 
   assert.ok(acceptance.includes('PROVIDER_ACCEPTANCE_EVIDENCE_SCHEMA_VERSION = "2"'));
   assert.ok(acceptance.includes('"application_review_only"'));
   assert.ok(acceptance.includes('"provider_eligibility"'));
-  assert.match(acceptance, /releaseStatus: "draft"/);
+  assert.match(acceptance, /policyDocumentRelease\("provider_agreement"\)/);
+  assert.ok(Object.values(releaseManifest).every((release) => (
+    release.releaseStatus === "draft"
+    && release.effectiveAt === ""
+    && release.releaseId === ""
+    && release.canonicalBodyHash === ""
+  )));
   assert.match(acceptance, /SHA256_HEX\.test\(document\.canonicalBodyHash\)/);
   assert.match(acceptance, /document\.releaseStatus === "active"/);
   assert.match(acceptance, /effectiveAt <= asOf\.getTime\(\)/);

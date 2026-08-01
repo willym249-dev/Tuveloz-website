@@ -58,6 +58,7 @@ import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   policyAccepted,
 } from "../../../lib/policies";
+import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../lib/customer-policy-acceptance";
 import {
   POLICY_JURISDICTION,
   POLICY_VERSION,
@@ -110,6 +111,13 @@ export async function POST(request: Request) {
   }
   if (!(await runtimeMarketplaceActionAllowed("request"))) {
     return pausedCustomerRequestResponse();
+  }
+  if (!customerAcceptanceBundleIsReleasedForPurpose("request_scope")) {
+    return customerValidationError(
+      "Customer requests remain closed until every required customer policy has an active, effective, hash-verified release.",
+      "CUSTOMER_POLICY_RELEASE_REQUIRED",
+      503,
+    );
   }
   if (!isSameOriginRequest(request)) {
     return customerValidationError(

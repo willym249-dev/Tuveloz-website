@@ -78,21 +78,32 @@ npx wrangler secret put AUTH_CODE_SECRET
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_PAYMENT_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_IDENTITY_SECRET_KEY
+npx wrangler secret put STRIPE_IDENTITY_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET
 npx wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET
 ```
 
 `AUTH_CODE_SECRET` protects stored one-time codes and session tokens. Rotating
 it signs every customer and provider out. The Stripe values must be sandbox
-`sk_test_...` and `whsec_...` values during testing. Do not add any real secret
+`sk_test_...`, `rk_test_...`, and `whsec_...` values during testing. Do not add any real secret
 value to `wrangler.jsonc`.
 
 Leave `STRIPE_ALLOW_LIVE_MODE` set to `"false"` in `wrangler.jsonc` until the
 legal business owner has completed the live-account, compliance, refund,
 dispute, and provider-payout review.
 
+Customer and provider legal pages are released only through
+`config/policy-releases.json`. Draft entries must stay blank. Before changing
+an entry to `active`, approve the exact page, increment its policy version,
+record a unique release ID and effective time, and enter the SHA-256 of the
+page source after normalizing CRLF line endings to LF. The production test suite
+recomputes every active hash and blocks deployment if the page changed.
+
 ## 5. Configure Stripe webhooks
 
-Create two Stripe event destinations:
+Create four Stripe event destinations. Do not reuse signing secrets or mix
+standard snapshot events with V2 thin events:
 
 1. A standard snapshot webhook at
    `https://YOUR-DOMAIN/api/stripe/webhooks/payments` for:
@@ -100,22 +111,120 @@ Create two Stripe event destinations:
    - `checkout.session.async_payment_succeeded`
    - `checkout.session.async_payment_failed`
    - `checkout.session.expired`
-2. A connected-account destination at
+   - `charge.refunded`
+   - `charge.refund.updated`
+   - `refund.created`
+   - `refund.failed`
+   - `refund.updated`
+   - `charge.dispute.created`
+   - `charge.dispute.updated`
+   - `charge.dispute.closed`
+   - `charge.dispute.funds_reinstated`
+   - `charge.dispute.funds_withdrawn`
+2. A standard snapshot webhook at
+   `https://YOUR-DOMAIN/api/stripe/webhooks/identity` for:
+   - `identity.verification_session.created`
+   - `identity.verification_session.processing`
+   - `identity.verification_session.requires_input`
+   - `identity.verification_session.verified`
+   - `identity.verification_session.canceled`
+   - `identity.verification_session.redacted`
+3. A **Connected accounts**, standard **Snapshot** destination at
+   `https://YOUR-DOMAIN/api/stripe/webhooks/connected-accounts` for:
+   - `account.external_account.created`
+   - `account.external_account.updated`
+   - `account.external_account.deleted`
+   - `payout.created`
+   - `payout.updated`
+   - `payout.paid`
+   - `payout.failed`
+   - `payout.canceled`
+   - `payout.reconciliation_completed`
+4. A connected-account destination at
    `https://YOUR-DOMAIN/api/stripe/webhooks/connect`. Select **Connected
    accounts**, **Thin** payload style, and:
    - `v2.core.account[requirements].updated`
    - `v2.core.account[configuration.recipient].capability_status_updated`
 
-Each destination has its own `whsec_...` signing secret. Store the standard
-destination secret in `STRIPE_PAYMENT_WEBHOOK_SECRET` and the thin destination
-secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+Each destination has its own `whsec_...` signing secret. Store the payment
+destination secret in `STRIPE_PAYMENT_WEBHOOK_SECRET`, the Identity destination
+secret in `STRIPE_IDENTITY_WEBHOOK_SECRET`, the connected-account
+snapshot secret in `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET`, and the V2 thin
+destination secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+
+The payment and connected-account endpoints keep durable event receipts. A
+failed processing attempt is retried; an already-completed event is safely
+acknowledged without applying it again. Failed/canceled refunds, payout
+failures, deleted or unusable external accounts, missing snapshots, and stale
+payment-mode snapshots all fail closed before checkout or provider release.
+
+Stripe Identity is independently fail-closed. Leave
+`IDENTITY_VERIFICATION_PROVIDERS` blank until the integrations are approved and
+tested. Stripe Identity must use a separate `STRIPE_IDENTITY_SECRET_KEY`; create
+the most restricted key possible with only the Identity verification-session
+and verification-report access required by this integration. Use `rk_test_...`
+for test applicants and `rk_live_...` for real applicants. Do not reuse the
+payments `STRIPE_SECRET_KEY`, and do not grant Identity file-download access.
+The dedicated `STRIPE_IDENTITY_WEBHOOK_SECRET` must belong only to the standard
+snapshot Identity destination above.
+
+Set `IDENTITY_VERIFICATION_PROVIDERS` to include `stripe_identity` only after its
+live integration has been approved and tested. A non-Stripe provider name is
+configuration for a future manual/non-biometric adapter; it does not make that
+alternative operational. Do not use `tuveloz`, an owner name, or
+self-attestation as an external provider. Before a non-Stripe gate can pass,
+implement an allowlisted adapter with independently verifiable proof and
+document the vendor contract, retention, access controls, reference format,
+and review procedure.
+
+Configuration strings do not satisfy either readiness gate. The Stripe gate
+requires one authorized, current live-mode owner-operator verification that
+completed through the signed webhook and still exactly matches the active
+guard-stamped personnel record. The manual-alternative gate is intentionally
+blocked until an independently verifiable, allowlisted provider adapter exists;
+an owner-entered record and its audit event may support an individual assisted
+review but cannot pass operational readiness. Confirm the Stripe canary evidence
+ID and timestamp on the owner launch-readiness page and keep provider onboarding
+blocked while the manual adapter is absent. A canary never approves a customer
+job, provider service, payment, or marketplace launch.
+
+The automated flow is limited to a signed-in independent owner-operator whose
+immutable v2 application separately names the performing person. Employee and
+trainee paths remain blocked pending a separate person-level invitation and
+consent workflow. Legacy applications without that immutable name require an
+assisted re-attestation or the approved manual review; a self-entered name is
+not accepted as proof. TUVELOZ requests a Stripe-hosted government-ID check,
+selfie, and biometric comparison. The webhook uses verified name and date of
+birth only in memory to require an exact application-name match and age 18 or
+older. The Identity integration persists only Stripe/TUVELOZ references,
+status/decision, consent and event dates, certification version, and an account
+session digest. It does not persist Stripe's ID number, verified DOB, document
+image, or selfie. Stripe retains collected data under its own privacy policy.
+Test-mode results cannot verify a real provider. Identity live mode is
+independent of the payment live-mode switch and does not enable customer jobs,
+checkout, payments, or payouts.
+
+For an access, correction, or deletion request involving Identity, follow the
+verified privacy-request procedure and review any legal hold first. Coordinate
+Stripe-side redaction through an authorized reviewed operation; do not expose
+session digests or internal Stripe references in the ordinary data export.
+Retain only the minimal non-PII decision/audit metadata still required by law,
+security, fraud prevention, or an active dispute, and record the disposition.
 
 For local testing, run separate Stripe CLI listeners:
 
 ```bash
 stripe listen \
-  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired' \
+  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,charge.refund.updated,refund.created,refund.failed,refund.updated,charge.dispute.created,charge.dispute.updated,charge.dispute.closed,charge.dispute.funds_reinstated,charge.dispute.funds_withdrawn' \
   --forward-to http://localhost:3000/api/stripe/webhooks/payments
+
+stripe listen \
+  --events 'identity.verification_session.created,identity.verification_session.processing,identity.verification_session.requires_input,identity.verification_session.verified,identity.verification_session.canceled,identity.verification_session.redacted' \
+  --forward-to http://localhost:3000/api/stripe/webhooks/identity
+
+stripe listen \
+  --events 'account.external_account.created,account.external_account.updated,account.external_account.deleted,payout.created,payout.updated,payout.paid,payout.failed,payout.canceled,payout.reconciliation_completed' \
+  --forward-connect-to http://localhost:3000/api/stripe/webhooks/connected-accounts
 
 stripe listen \
   --thin-events 'v2.core.account[requirements].updated,v2.core.account[configuration.recipient].capability_status_updated' \
@@ -151,6 +260,11 @@ email lookup indexes, and the 10% customer-fee snapshot stored with each quote.
 Migration `0021_romantic_pepper_potts.sql` adds provider-to-Stripe account
 mappings and immutable payment records used for Checkout, webhook
 reconciliation, and idempotent transfers.
+Migration `0045_chilly_maginty.sql` adds durable Stripe webhook receipts,
+asynchronous refund/dispute reconciliation fields, and connected-account
+payout/external-account snapshots. Do not configure any of the three webhook
+destinations until this migration has been applied; the endpoints intentionally
+return an error instead of acknowledging an event they cannot durably record.
 
 ## 8. Test and deploy
 

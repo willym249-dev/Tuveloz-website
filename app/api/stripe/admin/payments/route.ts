@@ -12,6 +12,7 @@ import {
   providerApplications,
   providerInvoices,
   providerJobRecords,
+  stripeConnectedAccountSnapshots,
   stripePayments,
 } from "../../../../../db/schema";
 import { isSameOriginRequest } from "../../../../../lib/account-auth";
@@ -35,6 +36,7 @@ import {
   evaluateAssignedJobStage,
   jobAuthorizationDecisionMatchesContext,
 } from "../../../../../lib/job-operations";
+import { connectedAccountPayoutSafety } from "../../../../../lib/stripe-connected-account-snapshots";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -80,8 +82,21 @@ export async function GET(request: Request) {
     releasedBy: stripePayments.releasedBy,
     refundAmountCents: stripePayments.refundAmountCents,
     refundedAt: stripePayments.refundedAt,
+    refundStatus: stripePayments.refundStatus,
+    refundUpdatedAt: stripePayments.refundUpdatedAt,
+    refundFailureReason: stripePayments.refundFailureReason,
     disputeStatus: stripePayments.disputeStatus,
     disputeUpdatedAt: stripePayments.disputeUpdatedAt,
+    connectedAccountSnapshotId:
+      stripeConnectedAccountSnapshots.connectedAccountId,
+    payoutFailureHold: stripeConnectedAccountSnapshots.payoutFailureHold,
+    payoutHoldReason: stripeConnectedAccountSnapshots.payoutHoldReason,
+    externalAccountHold: stripeConnectedAccountSnapshots.externalAccountHold,
+    externalAccountHoldReason:
+      stripeConnectedAccountSnapshots.externalAccountHoldReason,
+    lastPayoutStatus: stripeConnectedAccountSnapshots.lastPayoutStatus,
+    lastExternalAccountStatus:
+      stripeConnectedAccountSnapshots.lastExternalAccountStatus,
     createdAt: stripePayments.createdAt,
   }).from(stripePayments)
     .leftJoin(
@@ -99,6 +114,13 @@ export async function GET(request: Request) {
     .leftJoin(
       customerProfiles,
       sql`lower(${customerProfiles.email}) = lower(${stripePayments.customerEmail})`,
+    )
+    .leftJoin(
+      stripeConnectedAccountSnapshots,
+      eq(
+        stripeConnectedAccountSnapshots.connectedAccountId,
+        stripePayments.connectedAccountId,
+      ),
     )
     .orderBy(desc(stripePayments.createdAt))
     .limit(100);
@@ -198,6 +220,17 @@ export async function POST(request: Request) {
       { error: "A refunded or disputed payment cannot be released." },
       { status: 409 },
     );
+  }
+  const connectedAccountSafety = await connectedAccountPayoutSafety(
+    payment.connectedAccountId,
+  );
+  if (!connectedAccountSafety.allowed) {
+    return Response.json({
+      error: connectedAccountSafety.reasons[0]
+        || "The provider payout account requires review.",
+      code: "STRIPE_CONNECTED_ACCOUNT_PAYOUT_HOLD",
+      reasons: connectedAccountSafety.reasons,
+    }, { status: 409, headers: { "cache-control": "no-store" } });
   }
 
   const stageDecision = await evaluateAssignedJobStage({

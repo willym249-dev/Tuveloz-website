@@ -4,7 +4,7 @@ import { customerRequests, providerQuotes } from "../../../db/schema";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { parseExactServiceCodes } from "../../../lib/customer-job-scope";
 import { getJobImage } from "../../../lib/job-images";
-import { isOwnerRequest } from "../../../lib/owner-auth";
+import { isVerifiedOwnerRequest } from "../../../lib/owner-auth";
 import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   if (!job) return privateError("Image not found.", 404);
 
   const session = await getAccountSession(request);
-  let allowed = isOwnerRequest(request) || (Boolean(token) && token === job.accessToken);
+  let allowed = Boolean(token) && token === job.accessToken;
   if (
     !allowed
     && session?.role === "customer"
@@ -86,6 +86,9 @@ export async function GET(request: Request) {
         allowed = await providerCanDiscoverIssue(provider, job);
       }
     }
+  }
+  if (!allowed) {
+    allowed = await isVerifiedOwnerRequest(request);
   }
   if (!allowed) return privateError("Private image access required.", 403);
 

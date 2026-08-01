@@ -13,6 +13,28 @@ type PaymentSummary = {
   disputeStatus: string;
 };
 
+type CheckoutAcceptance = {
+  agreementKey: string;
+  agreementVersion: string;
+  agreementHash: string;
+  presentedText: string;
+  cancellationRefundSummary: string;
+  scope: {
+    providerLegalName: string;
+    serviceCodes: string[];
+    scheduledFor: string;
+    performingPersonId: string;
+    supervisorPersonId: string;
+    laborAmountCents: number;
+    partsAmountCents: number;
+    taxAmountCents: number;
+    otherAmountCents: number;
+    providerAmountCents: number;
+    customerFeeCents: number;
+    customerTotalCents: number;
+  };
+};
+
 type QuotePaymentCardProps = {
   accessToken: string;
   quote: {
@@ -37,10 +59,17 @@ const COMPLETE_STATUSES = new Set([
 const REVIEW_STATUSES = new Set([
   "refunded",
   "partially_refunded",
+  "refund_pending",
+  "refund_requires_action",
+  "refund_failed_review",
+  "refund_canceled_review",
+  "refund_status_review",
   "disputed",
   "dispute_won_review",
   "dispute_lost",
 ]);
+
+const CHECKOUT_STATUS_TOKEN_KEY = "tuveloz:checkout-status-token";
 
 function dollars(value: string | number) {
   return `$${(Number(value) / 100).toFixed(2)}`;
@@ -62,25 +91,32 @@ export function QuotePaymentCard({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [acceptedPaymentPolicy, setAcceptedPaymentPolicy] = useState(false);
+  const [checkoutAcceptance, setCheckoutAcceptance] =
+    useState<CheckoutAcceptance | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const query = new URLSearchParams({
-      quoteId: quote.id,
-      token: accessToken,
-    });
-    fetch(`/api/stripe/checkout?${query}`, { cache: "no-store" })
+    const query = new URLSearchParams({ quoteId: quote.id });
+    fetch(`/api/stripe/checkout?${query}`, {
+      cache: "no-store",
+      headers: accessToken
+        ? { "x-tuveloz-request-token": accessToken }
+        : undefined,
+    })
       .then(async (response) => {
         const result = await response.json() as {
           checkoutAllowed?: boolean;
           reason?: string;
           payment?: PaymentSummary | null;
+          checkoutAcceptance?: CheckoutAcceptance | null;
           error?: string;
         };
         if (!response.ok) throw new Error(result.error || "Unable to check payment readiness.");
         setCheckoutAllowed(result.checkoutAllowed ?? false);
         setReason(result.reason ?? "");
         setPayment(result.payment ?? null);
+        setCheckoutAcceptance(result.checkoutAcceptance ?? null);
+        setAcceptedPaymentPolicy(false);
       })
       .catch((failure) => {
         setError(failure instanceof Error ? failure.message : "Unable to check payment readiness.");
@@ -99,6 +135,9 @@ export function QuotePaymentCard({
           quoteId: quote.id,
           token: accessToken,
           policyAccepted: acceptedPaymentPolicy,
+          checkoutAgreementKey: checkoutAcceptance?.agreementKey,
+          checkoutAgreementVersion: checkoutAcceptance?.agreementVersion,
+          checkoutAgreementHash: checkoutAcceptance?.agreementHash,
         }),
       });
       const result = await response.json() as {
@@ -110,11 +149,32 @@ export function QuotePaymentCard({
         if (result.payment) setPayment(result.payment);
         throw new Error(result.error || "Unable to open Stripe Checkout.");
       }
+      if (accessToken) {
+        window.sessionStorage.setItem(CHECKOUT_STATUS_TOKEN_KEY, accessToken);
+      } else {
+        window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
+      }
       window.location.assign(result.url);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Unable to open Stripe Checkout.");
       setBusy(false);
     }
+  }
+
+  function downloadAcceptance() {
+    if (!checkoutAcceptance) return;
+    const content = JSON.stringify({
+      quoteId: quote.id,
+      ...checkoutAcceptance,
+    }, null, 2);
+    const url = URL.createObjectURL(new Blob([content], {
+      type: "application/json",
+    }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `tuveloz-checkout-authorization-${quote.id}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -149,8 +209,8 @@ export function QuotePaymentCard({
           {payment.status === "released"
             ? "✓ Paid. The completed-job provider payment has been released."
             : payment.status === "ready_for_release"
-              ? "✓ Paid. The completed job is ready for owner-reviewed payout release."
-              : "✓ Paid. The provider amount will be released after job completion and owner review."}
+              ? "✓ Paid. The recorded job is ready for owner-reviewed payout release."
+              : "✓ Paid. The provider amount will be released after recorded completion and owner payment review."}
         </div>
       ) : payment && (
         REVIEW_STATUSES.has(payment.status)
@@ -165,21 +225,52 @@ export function QuotePaymentCard({
         <>
           {reason && <p className="admin-note">{reason}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
-          <label className="policy-consent payment-policy-consent">
-            <input
-              checked={acceptedPaymentPolicy}
-              onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
-              type="checkbox"
-            />
-            <span>
-              I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
-              <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
-              <Link href="/payments">Payment Policy</Link>.
-            </span>
-          </label>
+          {checkoutAcceptance ? (
+            <>
+              <dl className="quote-breakdown" aria-label="Exact checkout authorization">
+                <div><dt>Provider legal identity</dt><dd>{checkoutAcceptance.scope.providerLegalName}</dd></div>
+                <div><dt>Exact service codes</dt><dd>{checkoutAcceptance.scope.serviceCodes.join(", ")}</dd></div>
+                <div><dt>Scheduled time</dt><dd>{checkoutAcceptance.scope.scheduledFor}</dd></div>
+                <div><dt>Performing person ID</dt><dd>{checkoutAcceptance.scope.performingPersonId}</dd></div>
+                <div><dt>Supervisor person ID</dt><dd>{checkoutAcceptance.scope.supervisorPersonId || "none"}</dd></div>
+                <div><dt>Labor</dt><dd>{dollars(checkoutAcceptance.scope.laborAmountCents)}</dd></div>
+                <div><dt>Parts</dt><dd>{dollars(checkoutAcceptance.scope.partsAmountCents)}</dd></div>
+                <div><dt>Tax</dt><dd>{dollars(checkoutAcceptance.scope.taxAmountCents)}</dd></div>
+                <div><dt>Other charges</dt><dd>{dollars(checkoutAcceptance.scope.otherAmountCents)}</dd></div>
+                <div><dt>Complete provider amount</dt><dd>{dollars(checkoutAcceptance.scope.providerAmountCents)}</dd></div>
+                <div><dt>Tuveloz service fee</dt><dd>{dollars(checkoutAcceptance.scope.customerFeeCents)}</dd></div>
+                <div className="total"><dt>Customer total</dt><dd>{dollars(checkoutAcceptance.scope.customerTotalCents)}</dd></div>
+              </dl>
+              <p className="admin-note">
+                <strong>Cancellation and refund summary:</strong>{" "}
+                {checkoutAcceptance.cancellationRefundSummary}
+              </p>
+              <label className="policy-consent payment-policy-consent">
+                <input
+                  checked={acceptedPaymentPolicy}
+                  onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  {checkoutAcceptance.presentedText}{" "}
+                  <Link href="/terms">Terms of Use</Link>{" · "}
+                  <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
+                  <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+                </span>
+              </label>
+              <button className="button secondary" onClick={downloadAcceptance} type="button">
+                Download this exact authorization
+              </button>
+            </>
+          ) : (
+            <p className="admin-note">
+              Checkout acceptance is unavailable until the exact released policies,
+              provider, scope, schedule, price, fee, and refund summary are bound together.
+            </p>
+          )}
           <button
             className="button primary"
-            disabled={!checkoutAllowed || !acceptedPaymentPolicy || busy}
+            disabled={!checkoutAllowed || !checkoutAcceptance || !acceptedPaymentPolicy || busy}
             onClick={openCheckout}
             type="button"
           >
@@ -197,6 +288,11 @@ export function QuotePaymentCard({
           </small>
         </>
       )}
+      <small className="payment-release-note">
+        Owner payout review is an administrative payment-control step only. It is not an
+        inspection, endorsement, or certification of repairs, parts, safety, legal compliance,
+        or workmanship.
+      </small>
     </section>
   );
 }

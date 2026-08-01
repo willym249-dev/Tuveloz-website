@@ -78,7 +78,8 @@ test("profile edits remain private but publication requires live active services
   assert.match(helper, /currentPlatformActiveServiceCodes\([\s\S]*POLICY_JURISDICTION/);
   assert.match(helper, /parseProviderServices\(provider\.approvedServices\)/);
   assert.match(route, /const canPublish =[\s\S]*await providerPublicDiscoveryAllowed\(provider\)/);
-  assert.match(post, /publicStatus === "published"[\s\S]*await providerPublicDiscoveryAllowed\(provider\)/);
+  assert.match(post, /publicationRequested[\s\S]*await providerPublicDiscoveryAllowed\(provider\)/);
+  assert.match(post, /const publicStatus = publicationRequested[\s\S]*"pending_review"/);
   assert.ok(post.indexOf("providerPublicDiscoveryAllowed(provider)") < post.indexOf("db.insert(providerProfiles)"));
   assert.match(post, /code: "MARKETPLACE_ONBOARDING_ONLY"/);
   assert.match(post, /"retry-after": "86400"/);

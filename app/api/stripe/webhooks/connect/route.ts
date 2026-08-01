@@ -6,6 +6,11 @@ import {
   stripeErrorResponse,
   stripeWebhookCryptoProvider,
 } from "../../../../../lib/stripe";
+import {
+  claimStripeWebhookEvent,
+  completeStripeWebhookEvent,
+  failStripeWebhookEvent,
+} from "../../../../../lib/stripe-webhook-events";
 
 async function handleRequirementsUpdated(
   stripeClient: Stripe,
@@ -47,6 +52,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing Stripe-Signature header." }, { status: 400 });
   }
 
+  let claimId = "";
   try {
     const stripeClient = getStripeClient();
     const webhookSecret = getStripeWebhookSecret("STRIPE_CONNECT_WEBHOOK_SECRET");
@@ -62,6 +68,27 @@ export async function POST(request: Request) {
       undefined,
       stripeWebhookCryptoProvider(),
     );
+    const relatedObject = "related_object" in thinEvent
+      ? thinEvent.related_object
+      : null;
+    const claim = await claimStripeWebhookEvent({
+      endpoint: "connect_thin",
+      eventId: thinEvent.id,
+      eventType: thinEvent.type,
+      livemode: thinEvent.livemode,
+      connectedAccountId: relatedObject?.id ?? "",
+      objectId: relatedObject?.id ?? "",
+    });
+    claimId = claim.id;
+    if (!claim.shouldProcess) {
+      if (claim.busy) {
+        return Response.json(
+          { error: "This Stripe event is already being processed; retry it." },
+          { status: 503, headers: { "retry-after": "5" } },
+        );
+      }
+      return Response.json({ received: true, duplicate: true });
+    }
 
     // Fetch the complete V2 event through the same Stripe Client. Passing the
     // event context is important for organization or connected-account events.
@@ -70,6 +97,7 @@ export async function POST(request: Request) {
       {},
       thinEvent.context ? { stripeContext: thinEvent.context } : undefined,
     );
+    let handled = true;
     switch (event.type) {
       case "v2.core.account[requirements].updated":
         await handleRequirementsUpdated(
@@ -86,11 +114,20 @@ export async function POST(request: Request) {
         );
         break;
       default:
+        handled = false;
         break;
     }
+    await completeStripeWebhookEvent(claim.id, handled ? "processed" : "ignored");
 
     return Response.json({ received: true });
   } catch (error) {
+    if (claimId) {
+      try {
+        await failStripeWebhookEvent(claimId);
+      } catch (receiptError) {
+        console.error("Unable to mark the Stripe Connect thin webhook attempt failed", receiptError);
+      }
+    }
     if (error instanceof Stripe.errors.StripeSignatureVerificationError) {
       return Response.json({ error: "Invalid Stripe thin-event signature." }, { status: 400 });
     }

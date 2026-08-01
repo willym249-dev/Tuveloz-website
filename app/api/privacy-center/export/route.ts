@@ -1,5 +1,13 @@
 import { env } from "cloudflare:workers";
-import { getAccountSession, providerAccountFor } from "../../../../lib/account-auth";
+import {
+  getPrivacyAccountSession,
+  providerApplicationOwnershipFor,
+} from "../../../../lib/account-auth";
+import {
+  parsePrivacyScope,
+  privacyAccountAccessFor,
+  type PrivacyScope,
+} from "../../../../lib/privacy-account-access";
 
 type AccountRole = "customer" | "provider";
 
@@ -12,15 +20,11 @@ type AccountRecord = {
   updatedAt: string;
 };
 
-function cleanEmail(value: string) {
-  return value.trim().toLowerCase();
-}
-
-async function signedInAccount(request: Request) {
-  const session = await getAccountSession(request);
+async function signedInAccount(request: Request, requestedScope?: PrivacyScope) {
+  const session = await getPrivacyAccountSession(request);
   if (!session || (session.role !== "customer" && session.role !== "provider")) return null;
-  if (session.role === "provider" && !(await providerAccountFor(session.email))) return null;
-  return { email: cleanEmail(session.email), role: session.role as AccountRole };
+  const application = await providerApplicationOwnershipFor(session.email);
+  return privacyAccountAccessFor(session, application, requestedScope);
 }
 
 async function rows<T>(sql: string, values: unknown[] = []) {
@@ -259,7 +263,11 @@ async function customerExport(email: string) {
               paid_at AS paidAt,
               refund_amount_cents AS refundAmountCents,
               refunded_at AS refundedAt,
+              refund_status AS refundStatus,
+              refund_updated_at AS refundUpdatedAt,
+              refund_failure_reason AS refundFailureReason,
               dispute_status AS disputeStatus,
+              dispute_updated_at AS disputeUpdatedAt,
               created_at AS createdAt,
               updated_at AS updatedAt
          FROM stripe_payments
@@ -298,10 +306,169 @@ async function customerExport(email: string) {
   };
 }
 
-async function providerExport(email: string) {
-  const provider = await providerAccountFor(email);
-  if (!provider) return {};
-  const providerId = provider.id;
+async function providerOnboardingExport(providerId: string) {
+  const [
+    pathwayProfiles,
+    personnel,
+    identityVerificationHistory,
+    agreementHistory,
+    providerEvidence,
+    evidenceScanHistory,
+    serviceEligibility,
+    appeals,
+    providerAuditHistory,
+    providerDataRightsRequests,
+  ] = await Promise.all([
+    rows(
+      `SELECT id, provider_person_id AS providerPersonId,
+              relationship_path AS relationshipPath, provider_level AS providerLevel,
+              pathway_version AS pathwayVersion, status,
+              policy_version AS policyVersion, hold_reason_codes AS holdReasonCodes,
+              effective_at AS effectiveAt, valid_through AS validThrough,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_pathway_profiles WHERE provider_id = ?
+        ORDER BY pathway_version DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, relationship_type AS relationshipType,
+              personnel_role AS personnelRole, provider_level AS providerLevel,
+              roster_version AS rosterVersion, status,
+              identity_verified_at AS identityVerifiedAt,
+              age_verified_at AS ageVerifiedAt,
+              identity_verification_provider AS identityVerificationProvider,
+              identity_verification_checked_at AS identityVerificationCheckedAt,
+              identity_verification_valid_through AS identityVerificationValidThrough,
+              age_verification_provider AS ageVerificationProvider,
+              age_verification_checked_at AS ageVerificationCheckedAt,
+              age_verification_valid_through AS ageVerificationValidThrough,
+              employer_attested_at AS employerAttestedAt,
+              work_authorization_attested_at AS workAuthorizationAttestedAt,
+              lawful_pay_attested_at AS lawfulPayAttestedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_personnel WHERE provider_id = ?
+        ORDER BY roster_version DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId,
+              application_submission_evidence_id AS applicationSubmissionEvidenceId,
+              certification_version AS certificationVersion,
+              attempt_number AS attemptNumber,
+              stripe_status AS stripeStatus, decision_status AS decisionStatus,
+              failure_code AS failureCode, livemode,
+              consented_at AS consentedAt, checked_at AS checkedAt,
+              verified_at AS verifiedAt, redacted_at AS redactedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_identity_verification_sessions WHERE provider_id = ?
+        ORDER BY attempt_number DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, jurisdiction,
+              agreement_key AS agreementKey, agreement_version AS agreementVersion,
+              agreement_hash AS agreementHash, agreement_text AS agreementText,
+              accepted_by_name AS acceptedByName, accepted_by_title AS acceptedByTitle,
+              acceptance_action AS acceptanceAction, accepted_at AS acceptedAt,
+              ip_address AS ipAddress, device_context AS deviceContext,
+              created_at AS createdAt
+         FROM agreement_acceptances WHERE provider_id = ?
+        ORDER BY datetime(accepted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, requirement_key AS requirementKey,
+              service_code AS serviceCode, jurisdiction, evidence_type AS evidenceType,
+              evidence_scope AS evidenceScope, content_type AS contentType, issuer,
+              source_url AS sourceUrl, effective_at AS effectiveAt,
+              expires_at AS expiresAt, status, submitted_at AS submittedAt,
+              reviewed_at AS reviewedAt, review_decision_id AS reviewDecisionId,
+              reason_codes AS reasonCodes, review_notes AS reviewNotes,
+              authenticity_verification_method AS authenticityVerificationMethod,
+              authenticity_source_url AS authenticitySourceUrl,
+              authenticity_verified_at AS authenticityVerifiedAt,
+              authenticity_valid_through AS authenticityValidThrough,
+              supersedes_evidence_id AS supersedesEvidenceId,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_evidence_submissions WHERE provider_id = ?
+        ORDER BY datetime(submitted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, evidence_submission_id AS evidenceSubmissionId,
+              scan_provider AS scanProvider, scan_engine_version AS scanEngineVersion,
+              status, threat_name AS threatName, requested_at AS requestedAt,
+              completed_at AS completedAt, created_at AS createdAt,
+              updated_at AS updatedAt
+         FROM evidence_file_scans WHERE provider_id = ?
+        ORDER BY datetime(requested_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, service_code AS serviceCode,
+              jurisdiction, relationship_path AS relationshipPath,
+              provider_level AS providerLevel, eligibility_state AS eligibilityState,
+              reason_codes AS reasonCodes, requirement_versions AS requirementVersions,
+              evidence_decision_ids AS evidenceDecisionIds,
+              rules_engine_version AS rulesEngineVersion,
+              policy_version AS policyVersion, calculated_at AS calculatedAt,
+              valid_through AS validThrough, next_expiration_at AS nextExpirationAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_service_eligibility WHERE provider_id = ?
+        ORDER BY datetime(calculated_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, evidence_submission_id AS evidenceSubmissionId,
+              service_code AS serviceCode, appeal_type AS appealType, reason,
+              status, submitted_at AS submittedAt, due_at AS dueAt,
+              reviewed_at AS reviewedAt, decision,
+              decision_reason AS decisionReason, resolution_notes AS resolutionNotes,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_appeals WHERE provider_id = ?
+        ORDER BY datetime(submitted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, request_id AS requestId,
+              service_code AS serviceCode, jurisdiction, event_type AS eventType,
+              entity_type AS entityType, entity_id AS entityId,
+              event_version AS eventVersion, actor_type AS actorType, outcome,
+              reason_codes AS reasonCodes, policy_version AS policyVersion,
+              event_hash AS eventHash, occurred_at AS occurredAt,
+              created_at AS createdAt
+         FROM provider_audit_events WHERE provider_id = ?
+        ORDER BY datetime(occurred_at) DESC LIMIT 5000`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, request_type AS requestType, scope, details,
+              identity_verification_status AS identityVerificationStatus,
+              status, received_at AS receivedAt, due_at AS dueAt,
+              legal_hold AS legalHold, resolved_at AS resolvedAt,
+              response_summary AS responseSummary,
+              deletion_completed_at AS deletionCompletedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM data_rights_requests WHERE provider_id = ?
+        ORDER BY datetime(received_at) DESC`,
+      [providerId],
+    ),
+  ]);
+  return {
+    providerPathwayHistory: pathwayProfiles,
+    providerPersonnelRecords: personnel,
+    providerIdentityVerificationHistory: identityVerificationHistory,
+    providerAgreementAcceptanceHistory: agreementHistory,
+    providerEvidenceMetadata: providerEvidence,
+    providerEvidenceScanHistory: evidenceScanHistory,
+    exactServiceEligibilityHistory: serviceEligibility,
+    providerAppeals: appeals,
+    providerAuditHistory,
+    providerDataRightsRequests,
+  };
+}
+
+async function providerExport(email: string, providerId: string) {
   const [
     application,
     profile,
@@ -453,7 +620,12 @@ async function providerExport(email: string) {
               paid_at AS paidAt,
               released_at AS releasedAt,
               refund_amount_cents AS refundAmountCents,
+              refunded_at AS refundedAt,
+              refund_status AS refundStatus,
+              refund_updated_at AS refundUpdatedAt,
+              refund_failure_reason AS refundFailureReason,
               dispute_status AS disputeStatus,
+              dispute_updated_at AS disputeUpdatedAt,
               created_at AS createdAt,
               updated_at AS updatedAt
          FROM stripe_payments
@@ -495,6 +667,7 @@ async function providerExport(email: string) {
     ),
   ]);
 
+  const onboarding = await providerOnboardingExport(providerId);
   return {
     providerApplication: application,
     providerPublicProfile: profile,
@@ -506,11 +679,19 @@ async function providerExport(email: string) {
     paymentSummaries: payments,
     officialCredentialCheckRecords: credentials,
     privateJobEvidenceMetadata: evidence,
+    ...onboarding,
   };
 }
 
 export async function GET(request: Request) {
-  const account = await signedInAccount(request);
+  const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
+  if (requestedScope === null) {
+    return Response.json(
+      { error: "Choose either customer or provider privacy data." },
+      { status: 400, headers: { "cache-control": "private, no-store" } },
+    );
+  }
+  const account = await signedInAccount(request, requestedScope);
   if (!account) {
     return Response.json(
       { error: "Sign in to export your Tuveloz account data." },
@@ -523,7 +704,7 @@ export async function GET(request: Request) {
       commonExport(account.email, account.role),
       account.role === "customer"
         ? customerExport(account.email)
-        : providerExport(account.email),
+        : providerExport(account.email, account.providerId),
     ]);
     const exportDocument = {
       generatedAt: new Date().toISOString(),

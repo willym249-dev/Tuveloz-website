@@ -1,0 +1,58 @@
+{
+  "terms": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "4c311d8c26f454b2c1ec7e582a3572f1df741df6c5dde9f90d3c7891755a1efa",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/terms/page.tsx"
+  },
+  "customer_agreement": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "0242065d2eb26052db55894caf740fd251a9de906abbe238a6f00be8e8f68ca1",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/customer-agreement/page.tsx"
+  },
+  "provider_agreement": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "3bced4559f2ff3ecddc6e483884b0f5fed5c68500e3ad162138186f9519cdee1",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/provider-agreement/page.tsx"
+  },
+  "privacy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "daa9dd5d7550a6b8a8bdd66639c7d99130939894507d79c3fc1ed85464b3945c",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/privacy/page.tsx"
+  },
+  "payment_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "9b346646f5e168b94150fc5d1ff9244e97d3767c5423944c2fc25cd817f3bf33",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/payments/page.tsx"
+  },
+  "marketplace_conduct": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "3640b5b370e079632782335aaaef8e697d5b304136a6e07c36e6e80ecca6d71c",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/marketplace-conduct/page.tsx"
+  },
+  "provisional_provider_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "cc507c301719c628c611fa7c755bdf8f06b11d84a1011a31fd6856c750a292f6",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/provisional-provider-policy/page.tsx"
+  }
+}

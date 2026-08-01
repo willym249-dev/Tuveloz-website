@@ -23,6 +23,10 @@ import {
   jobScopeFactsSnapshot,
 } from "./job-scope-facts";
 import {
+  PROVIDER_ARRIVAL_CONFIRMATION_VERSION,
+  providerArrivalConfirmationIsFresh,
+} from "./provider-arrival-confirmation";
+import {
   annualComplianceReviewWindowIsValid,
   hasCompleteMandatoryLegalComplianceEvidence,
 } from "./legal-compliance-evidence";
@@ -62,7 +66,7 @@ import {
 } from "./provider-policy";
 import { parseProviderServices } from "./service-matching";
 
-export const ELIGIBILITY_RULES_VERSION = "0.14.0";
+export const ELIGIBILITY_RULES_VERSION = "0.14.1";
 export const PLATFORM_ACTIVATION_PROVIDER_ID = "__tuveloz_platform__";
 
 export const JOB_FACTS_SOURCES = [
@@ -145,6 +149,8 @@ export type StageEligibilityInput = {
   customerProviderDisclosureAcceptedAt?: string;
   jobFacts?: unknown;
   jobFactsSource?: JobFactsSource;
+  jobFactsConfirmedAt?: string;
+  jobFactsConfirmationVersion?: string;
   jobFactsBindingReasons?: readonly { code: string; detail: string }[];
   effectiveAt?: string;
   testOnly?: boolean;
@@ -797,6 +803,23 @@ export async function evaluateStageEligibility(
     });
   }
   if (
+    input.stage === "job_start"
+    && (
+      input.jobFactsConfirmationVersion !== PROVIDER_ARRIVAL_CONFIRMATION_VERSION
+      || !providerArrivalConfirmationIsFresh(
+        input.jobFactsConfirmedAt,
+        effectiveAt.toISOString(),
+        now.toISOString(),
+        now.getTime(),
+      )
+    )
+  ) {
+    reasons.push({
+      code: "provider_arrival_confirmation_missing_or_stale",
+      detail: "The assigned provider must personally confirm the actual location, vehicle, operation, and safety facts immediately before work starts.",
+    });
+  }
+  if (
     (input.stage === "completion" || input.stage === "payout")
     && jobFactsSource !== "provider_arrival_recheck"
   ) {
@@ -902,6 +925,12 @@ export async function evaluateStageEligibility(
         jobFactsVersion: jobFactsEvaluation.facts?.version ?? 0,
         jobFactsHash,
         jobFactsSource,
+        jobFactsConfirmationVersion: input.jobFactsConfirmationVersion ?? "",
+        jobFactsConfirmedAt: input.jobFactsConfirmedAt ?? "",
+        jobFactsConfirmedByProviderId:
+          jobFactsSource === "provider_arrival" ? input.providerId : "",
+        jobFactsConfirmedByPersonId:
+          jobFactsSource === "provider_arrival" ? input.personId ?? "" : "",
         jobFactsSnapshot: jobFactsEvaluation.facts,
         launchReadinessDecisionIds,
         launchReadinessCheckedAt,
@@ -929,6 +958,8 @@ export async function evaluateStageEligibility(
         effectiveAt: effectiveAt.toISOString(),
         jobFactsHash,
         jobFactsSource,
+        jobFactsConfirmationVersion: input.jobFactsConfirmationVersion ?? "",
+        jobFactsConfirmedAt: input.jobFactsConfirmedAt ?? "",
         locationRuleResults: jobFactsEvaluation.locationRuleResults,
         scopeCheckResult: jobFactsEvaluation.scopeCheckResult,
         launchReadinessDecisionIds,

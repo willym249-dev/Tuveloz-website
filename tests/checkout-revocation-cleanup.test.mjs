@@ -19,21 +19,26 @@ test("declining a provider quarantines open checkouts before saving the decline"
 });
 
 test("a non-clean authenticated scan quarantines open checkouts before recording the result", async () => {
-  const route = await read("app/api/internal/evidence-scan-result/route.ts");
+  const route = await read("lib/evidence-scan-result-recorder.ts");
   const cleanupGuard = route.indexOf('if (status !== "clean") {');
   const cleanup = route.indexOf(
     "expireOpenCheckoutSessionsForLaunchShutdown()",
     cleanupGuard,
   );
-  const claim = route.indexOf("const claimed = await db.update(evidenceFileScans)");
-  const resultInsert = route.indexOf("await db.insert(evidenceFileScans).values");
-  const evidenceRevocation = route.indexOf("await db.update(providerEvidenceSubmissions).set");
+  const resultInsert = route.indexOf("const terminalInsert = db.insert(evidenceFileScans).select", cleanupGuard);
+  const claim = route.indexOf("const pendingUpdate = db.update(evidenceFileScans)", cleanupGuard);
+  const atomicBatch = route.indexOf("await db.batch([terminalInsert, pendingUpdate]", cleanupGuard);
+  const evidenceRevocation = route.indexOf(
+    "await db.update(providerEvidenceSubmissions).set",
+    cleanupGuard,
+  );
   const afterCleanup = route.lastIndexOf("expireOpenCheckoutSessionsForLaunchShutdown()");
 
   assert.ok(cleanupGuard >= 0, "non-clean scan path must be explicit");
   assert.ok(cleanup > cleanupGuard, "non-clean scan must invoke checkout quarantine");
   assert.ok(cleanup < claim, "quarantine must happen before claiming the pending scan");
   assert.ok(cleanup < resultInsert, "quarantine must happen before recording the revoking scan result");
+  assert.ok(atomicBatch > claim && atomicBatch > resultInsert, "claim and terminal insert must execute in one D1 batch");
   assert.ok(cleanup < evidenceRevocation, "quarantine must happen before revoking accepted evidence");
   assert.ok(afterCleanup > evidenceRevocation, "quarantine must run again after the scan revocation");
 });
