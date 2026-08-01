@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  inspect:
+  inspect-public-source:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -78,5 +78,52 @@ jobs:
         with:
           name: tuveloz-ai-public-source
           path: ai-inspection
+          if-no-files-found: error
+          retention-days: 1
+
+  inspect-cloudflare-routing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Resolve the Worker or Pages project serving ai.tuveloz.com
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CF_API_TOKEN:-}" || { echo "Cloudflare token unavailable"; exit 2; }
+          test -n "${CF_ACCOUNT_ID:-}" || { echo "Cloudflare account unavailable"; exit 2; }
+          mkdir -p cloudflare-inspection
+          auth=(-H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json")
+
+          curl --fail --silent --show-error "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/scripts" \
+            | jq '{success, result: [.result[] | {id, created_on, modified_on}]}' \
+            > cloudflare-inspection/worker-scripts.json
+
+          curl --fail --silent --show-error "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/workers/domains" \
+            | jq '{success, result: [.result[] | {id, hostname, service, environment, zone_id}]}' \
+            > cloudflare-inspection/worker-domains.json
+
+          curl --fail --silent --show-error "${auth[@]}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
+            | jq '{success, result: [.result[] | {name, subdomain, domains, production_branch, created_on, latest_deployment: (.latest_deployment | {id, url, environment, created_on, deployment_trigger})}]}' \
+            > cloudflare-inspection/pages-projects.json
+
+          jq -n \
+            --slurpfile workers cloudflare-inspection/worker-scripts.json \
+            --slurpfile domains cloudflare-inspection/worker-domains.json \
+            --slurpfile pages cloudflare-inspection/pages-projects.json \
+            '{workers: $workers[0], domains: $domains[0], pages: $pages[0]}' \
+            > cloudflare-inspection/summary.json
+
+      - name: Upload Cloudflare routing inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: tuveloz-ai-cloudflare-routing
+          path: cloudflare-inspection
           if-no-files-found: error
           retention-days: 1
