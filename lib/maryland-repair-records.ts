@@ -1,4 +1,4 @@
-export const MARYLAND_REPAIR_RECORDS_VERSION = "maryland-repair-records-2026-08-01";
+export const MARYLAND_REPAIR_RECORDS_VERSION = "maryland-repair-records-2026-08-01-v2";
 
 export const MARYLAND_CUSTOMER_RIGHTS_HEADING = "Customer's Rights";
 
@@ -20,8 +20,17 @@ export const MANUFACTURER_SPECIAL_POLICY_NOTICE = [
 export const REPAIR_FACILITY_RESPONSIBILITY_NOTICE =
   "Under certain circumstances, the repair facility may not be responsible for damage to the customer's vehicle while it is on the facility's premises. The customer should ask the repair facility about the extent of its responsibility and insurance coverage.";
 
-export const ELECTRONIC_SIGNATURE_NOTICE =
-  "Typing your name and selecting the signature checkbox is intended as your electronic signature on this exact stored record. It does not waive any non-waivable right or accept work outside the written record.";
+export const ELECTRONIC_SIGNATURE_NOTICE = [
+  "Electronic transaction consent: By typing your name and selecting the separate signature checkbox, you agree to conduct this specific repair authorization or invoice transaction electronically and to receive, access, download, and retain the exact electronic record through your secure Tuveloz account.",
+  "You may refuse to conduct this or a future transaction electronically. If you do not agree, do not sign electronically and contact the provider to arrange a non-electronic record.",
+  "Your typed name and affirmative checkbox are intended as your electronic signature on this exact stored record. This does not waive any non-waivable right or accept work outside the written record.",
+].join(" ");
+
+export const REPAIRS_NEEDED_AND_PERFORMED_STATEMENT =
+  "All labor performed and parts replaced were necessary to perform the repairs described on this invoice.";
+
+export const PROVIDER_TEST_DRIVE_CERTIFICATION =
+  "I certify that this vehicle has been tested or test driven when needed and that the mechanic's work was performed satisfactorily.";
 
 export type RepairLineType = "labor" | "part" | "sublet" | "other" | "tax";
 export type RepairPartCondition =
