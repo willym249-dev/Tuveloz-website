@@ -93,26 +93,27 @@ export default function AdminTestLabPage() {
 
   useEffect(() => {
     let active = true;
-
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as Partial<LabScenario>;
-        if (
-          typeof parsed.stage === "string"
-          && stageOrder.includes(parsed.stage as LabStage)
-          && Array.isArray(parsed.history)
-        ) {
-          setScenario({
-            stage: parsed.stage as LabStage,
-            updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : "",
-            history: parsed.history.filter((item): item is string => typeof item === "string").slice(-20),
-          });
+    const storageTimer = window.setTimeout(() => {
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as Partial<LabScenario>;
+          if (
+            typeof parsed.stage === "string"
+            && stageOrder.includes(parsed.stage as LabStage)
+            && Array.isArray(parsed.history)
+          ) {
+            setScenario({
+              stage: parsed.stage as LabStage,
+              updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : "",
+              history: parsed.history.filter((item): item is string => typeof item === "string").slice(-20),
+            });
+          }
         }
+      } catch {
+        window.localStorage.removeItem(STORAGE_KEY);
       }
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    }, 0);
 
     void fetch("/api/admin/test-lab/access", { cache: "no-store" })
       .then(async (response) => {
@@ -133,6 +134,7 @@ export default function AdminTestLabPage() {
 
     return () => {
       active = false;
+      window.clearTimeout(storageTimer);
     };
   }, []);
 
