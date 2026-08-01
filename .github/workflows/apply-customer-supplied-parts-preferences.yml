@@ -46,6 +46,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+
+          core_path = Path("scripts/apply_labor_only_core.py.gz.b64")
+          core = core_path.read_text().strip()
+          core = core.replace("+way8KW", "+may8KW").rstrip("=")
+          expected_core = "814510317304c0342e0dae529f0f8860f35330fe3e234d6c50a2fa34a078642e"
+          if sha256(core.encode()).hexdigest() != expected_core:
+              raise SystemExit("Core labor-only payload checksum did not match.")
+          core_path.write_text(core)
+
+          ui_path = Path("scripts/apply_labor_only_ui.py.gz.b64")
+          ui = ui_path.read_text().strip()
+          expected_ui = "6fab92baefdd421ee585366c54a4e44a314b1701988acf92f14c4eaa9e5954ec"
+          if sha256(ui.encode()).hexdigest() != expected_ui:
+              raise SystemExit("UI labor-only payload checksum did not match.")
+          ui_path.write_text(ui)
+          PY
           base64 --decode scripts/apply_labor_only_core.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_core.py
           base64 --decode scripts/apply_labor_only_ui.py.gz.b64 | gzip --decompress > scripts/apply_labor_only_ui.py
           python -m py_compile scripts/apply_labor_only_core.py scripts/apply_labor_only_ui.py
