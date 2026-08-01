@@ -39,6 +39,9 @@ test("the review intake replaces broad categories with one exact service scope",
   assert.doesNotMatch(page, /name="service"/);
   assert.match(page, /Request posting is not open/);
   assert.match(page, /TUVELOZ does not employ, hire, train, assign, or place anyone on/);
+  assert.match(page, /Current service area/);
+  assert.match(page, /<strong>\{CURRENT_LAUNCH_AREA\}<\/strong>/);
+  assert.doesNotMatch(page, /Policy code:/);
 
   assert.match(scope, /CUSTOMER_REQUEST_SCOPE_VERSION = 1/);
   assert.match(scope, /parseExactServiceCodes/);
