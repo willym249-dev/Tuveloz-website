@@ -11,6 +11,7 @@ import {
   providerAreasHaveReviewedCompliance,
 } from "../../../lib/provider-compliance";
 import { recordProviderAuditEvent } from "../../../lib/provider-audit";
+import { notifyProviderApplicationReceived } from "../../../lib/provider-compliance-notifications";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAgreementEvidenceText,
@@ -405,6 +406,7 @@ export async function POST(request: Request) {
         ),
       },
     });
+    await notifyProviderApplicationReceived({ providerId, email });
 
     return Response.json({
       ok: true,

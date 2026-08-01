@@ -245,8 +245,17 @@ export const stripePayments = sqliteTable(
     releasedBy: text("released_by").notNull().default(""),
     refundAmountCents: integer("refund_amount_cents").notNull().default(0),
     refundedAt: text("refunded_at").notNull().default(""),
+    refundStatus: text("refund_status").notNull().default(""),
+    refundUpdatedAt: text("refund_updated_at").notNull().default(""),
+    refundFailureReason: text("refund_failure_reason").notNull().default(""),
+    lastRefundId: text("last_refund_id").notNull().default(""),
+    lastRefundEventCreated: integer("last_refund_event_created").notNull().default(0),
+    lastRefundEventId: text("last_refund_event_id").notNull().default(""),
     disputeStatus: text("dispute_status").notNull().default(""),
     disputeUpdatedAt: text("dispute_updated_at").notNull().default(""),
+    lastDisputeId: text("last_dispute_id").notNull().default(""),
+    lastDisputeEventCreated: integer("last_dispute_event_created").notNull().default(0),
+    lastDisputeEventId: text("last_dispute_event_id").notNull().default(""),
     policyAcceptedAt: text("policy_accepted_at").notNull().default(""),
     policyVersion: text("policy_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -261,6 +270,77 @@ export const stripePayments = sqliteTable(
     index("stripe_payments_status_idx").on(table.status),
     uniqueIndex("stripe_payments_checkout_session_unique").on(table.checkoutSessionId),
     index("stripe_payments_payment_intent_idx").on(table.paymentIntentId),
+  ],
+);
+
+// Stripe can redeliver the same webhook, deliver different event types out of
+// order, or retry after a transient database failure. Keep a durable receipt
+// for each endpoint/event pair so financial reconciliation is repeatable
+// without treating an acknowledgement as proof that processing succeeded.
+export const stripeWebhookEvents = sqliteTable(
+  "stripe_webhook_events",
+  {
+    id: text("id").primaryKey(),
+    endpoint: text("endpoint").notNull(),
+    eventId: text("event_id").notNull(),
+    eventType: text("event_type").notNull(),
+    livemode: integer("livemode").notNull().default(0),
+    connectedAccountId: text("connected_account_id").notNull().default(""),
+    objectId: text("object_id").notNull().default(""),
+    status: text("status").notNull().default("processing"),
+    attemptCount: integer("attempt_count").notNull().default(1),
+    receivedAt: text("received_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastAttemptAt: text("last_attempt_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    processedAt: text("processed_at").notNull().default(""),
+    lastError: text("last_error").notNull().default(""),
+  },
+  (table) => [
+    uniqueIndex("stripe_webhook_events_endpoint_event_unique")
+      .on(table.endpoint, table.eventId),
+    index("stripe_webhook_events_status_attempt_idx")
+      .on(table.status, table.lastAttemptAt),
+    index("stripe_webhook_events_received_at_idx").on(table.receivedAt),
+  ],
+);
+
+// This table is fed only by the separate standard connected-account snapshot
+// destination. V2 thin account-requirement events intentionally stay on their
+// own endpoint and signing secret. A missing or adverse snapshot fails closed
+// when an owner later attempts to release provider funds.
+export const stripeConnectedAccountSnapshots = sqliteTable(
+  "stripe_connected_account_snapshots",
+  {
+    connectedAccountId: text("connected_account_id").primaryKey(),
+    providerApplicationId: text("provider_application_id").notNull().default(""),
+    livemode: integer("livemode").notNull().default(0),
+    payoutFailureHold: integer("payout_failure_hold").notNull().default(0),
+    payoutHoldReason: text("payout_hold_reason").notNull().default(""),
+    lastPayoutId: text("last_payout_id").notNull().default(""),
+    lastPayoutStatus: text("last_payout_status").notNull().default(""),
+    lastPayoutFailureCode: text("last_payout_failure_code").notNull().default(""),
+    lastPayoutLivemode: integer("last_payout_livemode").notNull().default(0),
+    lastPayoutEventCreated: integer("last_payout_event_created").notNull().default(0),
+    lastPayoutEventId: text("last_payout_event_id").notNull().default(""),
+    externalAccountHold: integer("external_account_hold").notNull().default(1),
+    externalAccountHoldReason: text("external_account_hold_reason").notNull().default("no_snapshot"),
+    lastExternalAccountId: text("last_external_account_id").notNull().default(""),
+    lastExternalAccountType: text("last_external_account_type").notNull().default(""),
+    lastExternalAccountStatus: text("last_external_account_status").notNull().default(""),
+    lastExternalAccountLivemode: integer("last_external_account_livemode")
+      .notNull()
+      .default(0),
+    lastExternalAccountEventCreated: integer("last_external_account_event_created")
+      .notNull()
+      .default(0),
+    lastExternalAccountEventId: text("last_external_account_event_id").notNull().default(""),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("stripe_connected_account_snapshots_provider_idx")
+      .on(table.providerApplicationId),
+    index("stripe_connected_account_snapshots_payout_hold_idx")
+      .on(table.payoutFailureHold, table.externalAccountHold),
+    index("stripe_connected_account_snapshots_updated_at_idx").on(table.updatedAt),
   ],
 );
 

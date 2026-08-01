@@ -78,6 +78,7 @@ npx wrangler secret put AUTH_CODE_SECRET
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_PAYMENT_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET
 npx wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET
 ```
 
@@ -92,7 +93,8 @@ dispute, and provider-payout review.
 
 ## 5. Configure Stripe webhooks
 
-Create two Stripe event destinations:
+Create three Stripe event destinations. Do not reuse signing secrets or mix
+standard snapshot events with V2 thin events:
 
 1. A standard snapshot webhook at
    `https://YOUR-DOMAIN/api/stripe/webhooks/payments` for:
@@ -100,22 +102,54 @@ Create two Stripe event destinations:
    - `checkout.session.async_payment_succeeded`
    - `checkout.session.async_payment_failed`
    - `checkout.session.expired`
-2. A connected-account destination at
+   - `charge.refunded`
+   - `charge.refund.updated`
+   - `refund.created`
+   - `refund.failed`
+   - `refund.updated`
+   - `charge.dispute.created`
+   - `charge.dispute.updated`
+   - `charge.dispute.closed`
+   - `charge.dispute.funds_reinstated`
+   - `charge.dispute.funds_withdrawn`
+2. A **Connected accounts**, standard **Snapshot** destination at
+   `https://YOUR-DOMAIN/api/stripe/webhooks/connected-accounts` for:
+   - `account.external_account.created`
+   - `account.external_account.updated`
+   - `account.external_account.deleted`
+   - `payout.created`
+   - `payout.updated`
+   - `payout.paid`
+   - `payout.failed`
+   - `payout.canceled`
+   - `payout.reconciliation_completed`
+3. A connected-account destination at
    `https://YOUR-DOMAIN/api/stripe/webhooks/connect`. Select **Connected
    accounts**, **Thin** payload style, and:
    - `v2.core.account[requirements].updated`
    - `v2.core.account[configuration.recipient].capability_status_updated`
 
-Each destination has its own `whsec_...` signing secret. Store the standard
-destination secret in `STRIPE_PAYMENT_WEBHOOK_SECRET` and the thin destination
-secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+Each destination has its own `whsec_...` signing secret. Store the payment
+destination secret in `STRIPE_PAYMENT_WEBHOOK_SECRET`, the connected-account
+snapshot secret in `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET`, and the V2 thin
+destination secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
+
+The payment and connected-account endpoints keep durable event receipts. A
+failed processing attempt is retried; an already-completed event is safely
+acknowledged without applying it again. Failed/canceled refunds, payout
+failures, deleted or unusable external accounts, missing snapshots, and stale
+payment-mode snapshots all fail closed before checkout or provider release.
 
 For local testing, run separate Stripe CLI listeners:
 
 ```bash
 stripe listen \
-  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired' \
+  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,charge.refund.updated,refund.created,refund.failed,refund.updated,charge.dispute.created,charge.dispute.updated,charge.dispute.closed,charge.dispute.funds_reinstated,charge.dispute.funds_withdrawn' \
   --forward-to http://localhost:3000/api/stripe/webhooks/payments
+
+stripe listen \
+  --events 'account.external_account.created,account.external_account.updated,account.external_account.deleted,payout.created,payout.updated,payout.paid,payout.failed,payout.canceled,payout.reconciliation_completed' \
+  --forward-connect-to http://localhost:3000/api/stripe/webhooks/connected-accounts
 
 stripe listen \
   --thin-events 'v2.core.account[requirements].updated,v2.core.account[configuration.recipient].capability_status_updated' \
@@ -151,6 +185,11 @@ email lookup indexes, and the 10% customer-fee snapshot stored with each quote.
 Migration `0021_romantic_pepper_potts.sql` adds provider-to-Stripe account
 mappings and immutable payment records used for Checkout, webhook
 reconciliation, and idempotent transfers.
+Migration `0045_chilly_maginty.sql` adds durable Stripe webhook receipts,
+asynchronous refund/dispute reconciliation fields, and connected-account
+payout/external-account snapshots. Do not configure any of the three webhook
+destinations until this migration has been applied; the endpoints intentionally
+return an error instead of acknowledging an event they cannot durably record.
 
 ## 8. Test and deploy
 

@@ -12,6 +12,7 @@ import {
 } from "./job-scope-facts";
 import { isServiceCode, type ServiceCode } from "./provider-policy";
 import { sha256Text } from "./provider-policy-acceptance";
+import { customerPolicyReleaseEvidence } from "./customer-policy-acceptance";
 
 export const CUSTOMER_REQUEST_SCOPE_VERSION = 1;
 export const CUSTOMER_REQUEST_AGREEMENT_KEY = "customer_request_scope";
@@ -367,6 +368,7 @@ export function customerRequestAgreementEvidenceText(scopeSnapshot = "") {
     privacyVersion: PRIVACY_VERSION,
     acceptanceControl: "affirmative-customer-request-scope-checkbox",
     presentedText: CUSTOMER_REQUEST_ACCEPTANCE_TEXT,
+    policyRelease: customerPolicyReleaseEvidence("request_scope"),
     ...(scopeSnapshot
       ? { scopeSnapshot: JSON.parse(scopeSnapshot) as unknown }
       : {}),
@@ -381,6 +383,7 @@ export function customerRequestPrivacyAgreementEvidenceText(scopeSnapshot = "") 
     customerPolicyBundleVersion: CUSTOMER_POLICY_BUNDLE_VERSION,
     acceptanceControl: "affirmative-separate-customer-privacy-checkbox",
     presentedText: CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT,
+    policyRelease: customerPolicyReleaseEvidence("request_scope"),
     ...(scopeSnapshot
       ? { scopeSnapshot: JSON.parse(scopeSnapshot) as unknown }
       : {}),
@@ -416,6 +419,7 @@ export function customerProviderSelectionAgreementEvidenceText(
     paymentPolicyVersion: PAYMENT_POLICY_VERSION,
     acceptanceControl: "affirmative-provider-quote-selection-checkbox",
     presentedText: customerProviderSelectionAcceptanceText(scope),
+    policyRelease: customerPolicyReleaseEvidence("provider_selection"),
     scopeSnapshot: JSON.parse(customerQuoteSelectionScopeSnapshot(scope)) as unknown,
   });
 }

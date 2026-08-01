@@ -259,7 +259,11 @@ async function customerExport(email: string) {
               paid_at AS paidAt,
               refund_amount_cents AS refundAmountCents,
               refunded_at AS refundedAt,
+              refund_status AS refundStatus,
+              refund_updated_at AS refundUpdatedAt,
+              refund_failure_reason AS refundFailureReason,
               dispute_status AS disputeStatus,
+              dispute_updated_at AS disputeUpdatedAt,
               created_at AS createdAt,
               updated_at AS updatedAt
          FROM stripe_payments
@@ -295,6 +299,152 @@ async function customerExport(email: string) {
     jobAuthorizations: authorizations,
     paymentSummaries: payments,
     privateJobEvidenceMetadata: evidence,
+  };
+}
+
+async function providerOnboardingExport(providerId: string) {
+  const [
+    pathwayProfiles,
+    personnel,
+    agreementHistory,
+    providerEvidence,
+    evidenceScanHistory,
+    serviceEligibility,
+    appeals,
+    providerAuditHistory,
+    providerDataRightsRequests,
+  ] = await Promise.all([
+    rows(
+      `SELECT id, provider_person_id AS providerPersonId,
+              relationship_path AS relationshipPath, provider_level AS providerLevel,
+              pathway_version AS pathwayVersion, status,
+              policy_version AS policyVersion, hold_reason_codes AS holdReasonCodes,
+              effective_at AS effectiveAt, valid_through AS validThrough,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_pathway_profiles WHERE provider_id = ?
+        ORDER BY pathway_version DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, relationship_type AS relationshipType,
+              personnel_role AS personnelRole, provider_level AS providerLevel,
+              roster_version AS rosterVersion, status,
+              identity_verified_at AS identityVerifiedAt,
+              age_verified_at AS ageVerifiedAt,
+              identity_verification_provider AS identityVerificationProvider,
+              identity_verification_checked_at AS identityVerificationCheckedAt,
+              identity_verification_valid_through AS identityVerificationValidThrough,
+              age_verification_provider AS ageVerificationProvider,
+              age_verification_checked_at AS ageVerificationCheckedAt,
+              age_verification_valid_through AS ageVerificationValidThrough,
+              employer_attested_at AS employerAttestedAt,
+              work_authorization_attested_at AS workAuthorizationAttestedAt,
+              lawful_pay_attested_at AS lawfulPayAttestedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_personnel WHERE provider_id = ?
+        ORDER BY roster_version DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, jurisdiction,
+              agreement_key AS agreementKey, agreement_version AS agreementVersion,
+              agreement_hash AS agreementHash, agreement_text AS agreementText,
+              accepted_by_name AS acceptedByName, accepted_by_title AS acceptedByTitle,
+              acceptance_action AS acceptanceAction, accepted_at AS acceptedAt,
+              ip_address AS ipAddress, device_context AS deviceContext,
+              created_at AS createdAt
+         FROM agreement_acceptances WHERE provider_id = ?
+        ORDER BY datetime(accepted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, requirement_key AS requirementKey,
+              service_code AS serviceCode, jurisdiction, evidence_type AS evidenceType,
+              evidence_scope AS evidenceScope, content_type AS contentType, issuer,
+              source_url AS sourceUrl, effective_at AS effectiveAt,
+              expires_at AS expiresAt, status, submitted_at AS submittedAt,
+              reviewed_at AS reviewedAt, review_decision_id AS reviewDecisionId,
+              reason_codes AS reasonCodes, review_notes AS reviewNotes,
+              authenticity_verification_method AS authenticityVerificationMethod,
+              authenticity_source_url AS authenticitySourceUrl,
+              authenticity_verified_at AS authenticityVerifiedAt,
+              authenticity_valid_through AS authenticityValidThrough,
+              supersedes_evidence_id AS supersedesEvidenceId,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_evidence_submissions WHERE provider_id = ?
+        ORDER BY datetime(submitted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, evidence_submission_id AS evidenceSubmissionId,
+              scan_provider AS scanProvider, scan_engine_version AS scanEngineVersion,
+              status, threat_name AS threatName, requested_at AS requestedAt,
+              completed_at AS completedAt, created_at AS createdAt,
+              updated_at AS updatedAt
+         FROM evidence_file_scans WHERE provider_id = ?
+        ORDER BY datetime(requested_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, service_code AS serviceCode,
+              jurisdiction, relationship_path AS relationshipPath,
+              provider_level AS providerLevel, eligibility_state AS eligibilityState,
+              reason_codes AS reasonCodes, requirement_versions AS requirementVersions,
+              evidence_decision_ids AS evidenceDecisionIds,
+              rules_engine_version AS rulesEngineVersion,
+              policy_version AS policyVersion, calculated_at AS calculatedAt,
+              valid_through AS validThrough, next_expiration_at AS nextExpirationAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_service_eligibility WHERE provider_id = ?
+        ORDER BY datetime(calculated_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, evidence_submission_id AS evidenceSubmissionId,
+              service_code AS serviceCode, appeal_type AS appealType, reason,
+              status, submitted_at AS submittedAt, due_at AS dueAt,
+              reviewed_at AS reviewedAt, decision,
+              decision_reason AS decisionReason, resolution_notes AS resolutionNotes,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM provider_appeals WHERE provider_id = ?
+        ORDER BY datetime(submitted_at) DESC`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, person_id AS personId, request_id AS requestId,
+              service_code AS serviceCode, jurisdiction, event_type AS eventType,
+              entity_type AS entityType, entity_id AS entityId,
+              event_version AS eventVersion, actor_type AS actorType, outcome,
+              reason_codes AS reasonCodes, policy_version AS policyVersion,
+              event_hash AS eventHash, occurred_at AS occurredAt,
+              created_at AS createdAt
+         FROM provider_audit_events WHERE provider_id = ?
+        ORDER BY datetime(occurred_at) DESC LIMIT 5000`,
+      [providerId],
+    ),
+    rows(
+      `SELECT id, request_type AS requestType, scope, details,
+              identity_verification_status AS identityVerificationStatus,
+              status, received_at AS receivedAt, due_at AS dueAt,
+              legal_hold AS legalHold, resolved_at AS resolvedAt,
+              response_summary AS responseSummary,
+              deletion_completed_at AS deletionCompletedAt,
+              created_at AS createdAt, updated_at AS updatedAt
+         FROM data_rights_requests WHERE provider_id = ?
+        ORDER BY datetime(received_at) DESC`,
+      [providerId],
+    ),
+  ]);
+  return {
+    providerPathwayHistory: pathwayProfiles,
+    providerPersonnelRecords: personnel,
+    providerAgreementAcceptanceHistory: agreementHistory,
+    providerEvidenceMetadata: providerEvidence,
+    providerEvidenceScanHistory: evidenceScanHistory,
+    exactServiceEligibilityHistory: serviceEligibility,
+    providerAppeals: appeals,
+    providerAuditHistory,
+    providerDataRightsRequests,
   };
 }
 
@@ -453,7 +603,12 @@ async function providerExport(email: string) {
               paid_at AS paidAt,
               released_at AS releasedAt,
               refund_amount_cents AS refundAmountCents,
+              refunded_at AS refundedAt,
+              refund_status AS refundStatus,
+              refund_updated_at AS refundUpdatedAt,
+              refund_failure_reason AS refundFailureReason,
               dispute_status AS disputeStatus,
+              dispute_updated_at AS disputeUpdatedAt,
               created_at AS createdAt,
               updated_at AS updatedAt
          FROM stripe_payments
@@ -495,6 +650,7 @@ async function providerExport(email: string) {
     ),
   ]);
 
+  const onboarding = await providerOnboardingExport(providerId);
   return {
     providerApplication: application,
     providerPublicProfile: profile,
@@ -506,6 +662,7 @@ async function providerExport(email: string) {
     paymentSummaries: payments,
     officialCredentialCheckRecords: credentials,
     privateJobEvidenceMetadata: evidence,
+    ...onboarding,
   };
 }
 

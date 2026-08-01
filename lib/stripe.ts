@@ -65,7 +65,10 @@ export function getStripeClient() {
 }
 
 export function getStripeWebhookSecret(
-  name: "STRIPE_CONNECT_WEBHOOK_SECRET" | "STRIPE_PAYMENT_WEBHOOK_SECRET",
+  name:
+    | "STRIPE_CONNECT_WEBHOOK_SECRET"
+    | "STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET"
+    | "STRIPE_PAYMENT_WEBHOOK_SECRET",
 ) {
   return requiredRuntimeValue(name);
 }

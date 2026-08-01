@@ -6,6 +6,11 @@
     "nodejs_compat"
   ],
   "main": "./worker/index.ts",
+  "triggers": {
+    "crons": [
+      "*/15 * * * *"
+    ]
+  },
   "routes": [
     {
       "pattern": "tuveloz.com",

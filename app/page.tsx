@@ -1017,8 +1017,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section reviews-section" id="reviews">
         <div className="reviews-heading">
           <div>
-            <span className="kicker">Verified customer reviews</span>
-            <h2>See how local providers performed.</h2>
+            <span className="kicker">Reviews linked to a completed Tuveloz job</span>
+            <h2>Read customer feedback tied to Tuveloz job records.</h2>
+            <p>
+              A completed-job link confirms a platform record; it does not independently verify
+              every statement, certify repair quality, or guarantee future performance.
+            </p>
           </div>
           {reviewSummary.count > 0 && (
             <div className="reviews-summary" aria-label={`${reviewSummary.average} out of 5 stars across ${reviewSummary.count} reviews`}>
@@ -1051,7 +1055,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         ) : (
           <div className="reviews-empty">
             <strong>No public reviews yet.</strong>
-            <p>Verified reviews will appear after customers complete jobs.</p>
+            <p>Job-linked reviews will appear after customers complete Tuveloz jobs.</p>
           </div>
         )}
       </section>

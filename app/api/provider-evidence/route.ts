@@ -11,6 +11,7 @@ import {
   providerApplicationFor,
 } from "../../../lib/account-auth";
 import { recordProviderAuditEvent } from "../../../lib/provider-audit";
+import { notifyProviderEvidenceReceived } from "../../../lib/provider-compliance-notifications";
 import {
   deleteProviderEvidence,
   getProviderEvidence,
@@ -421,6 +422,11 @@ export async function POST(request: Request) {
         supersedesEvidenceId,
         expirationRemindersScheduled: expirationReminderSchedule(expiresAt, nowValue).length,
       },
+    });
+    await notifyProviderEvidenceReceived({
+      providerId: account.provider.id,
+      evidenceId,
+      email: account.provider.email,
     });
     return Response.json({
       ok: true,

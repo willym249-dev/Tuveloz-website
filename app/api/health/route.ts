@@ -39,6 +39,8 @@ const REQUIRED_TABLES = [
   "repair_authorization_records",
   "repair_authorization_items",
   "provider_invoice_items",
+  "stripe_webhook_events",
+  "stripe_connected_account_snapshots",
 ] as const;
 
 const REQUIRED_GUARDED_TRIGGERS = [
@@ -58,8 +60,13 @@ const REQUIRED_GUARDED_TRIGGERS = [
 // migrations without exposing any production records through the health response.
 const REQUIRED_COLUMN_PROBES = [
   `SELECT scope_version, scope_authorization_decision_id,
-          authorized_price_snapshot
+          authorized_price_snapshot, refund_status, refund_updated_at,
+          last_refund_event_created, last_dispute_event_created
      FROM stripe_payments
+    LIMIT 0`,
+  `SELECT payout_failure_hold, external_account_hold,
+          last_payout_event_created, last_external_account_event_created
+     FROM stripe_connected_account_snapshots
     LIMIT 0`,
   `SELECT authenticity_verification_method, authenticity_verified_by,
           authenticity_verification_reference, authenticity_source_url,

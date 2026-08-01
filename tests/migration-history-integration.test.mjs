@@ -23,6 +23,7 @@ test("migration journal preserves upstream order before renumbered provider and 
     "0042_maryland_repair_records",
     "0043_signed_repair_record_gates",
     "0044_final_provider_invoice_legal_fields_immutable",
+    "0045_chilly_maginty",
   ];
   const tail = journal.entries.slice(31);
 
@@ -44,7 +45,7 @@ test("migration journal preserves upstream order before renumbered provider and 
 });
 
 test("snapshot lineage ends in the combined upstream and provider-control schema", async () => {
-  const snapshotNumbers = ["0026", "0037", "0038", "0039", "0040", "0041"];
+  const snapshotNumbers = ["0026", "0037", "0038", "0039", "0040", "0041", "0045"];
   const snapshots = await Promise.all(
     snapshotNumbers.map((number) => readJson(`drizzle/meta/${number}_snapshot.json`)),
   );
@@ -85,6 +86,8 @@ test("snapshot lineage ends in the combined upstream and provider-control schema
     "provider_personnel",
     "provider_evidence_submissions",
     "launch_gate_decisions",
+    "stripe_webhook_events",
+    "stripe_connected_account_snapshots",
   ]) {
     assert.ok(finalTables[table], `combined snapshot is missing ${table}`);
   }

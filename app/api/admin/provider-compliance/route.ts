@@ -21,6 +21,7 @@ import {
   requiredOfficialLegalSourceReferences,
 } from "../../../../lib/legal-compliance-evidence";
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
+import { notifyProviderEvidenceDecision } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
 import { ELIGIBILITY_RULES_VERSION } from "../../../../lib/provider-eligibility-engine";
 import { PLATFORM_SERVICE_ACTIVATION_RULES_VERSION } from "../../../../lib/platform-service-activation";
@@ -1236,6 +1237,11 @@ export async function POST(request: Request) {
       });
       const recalculatedProvider = await recalculateProvider(evidence.providerId, actorId);
       await expireOpenCheckoutSessionsForLaunchShutdown();
+      await notifyProviderEvidenceDecision({
+        evidenceId: evidence.id,
+        email: evidenceProvider[0].email,
+        status,
+      });
       return Response.json({
         ok: true,
         message: "Non-clean scan result recorded. The file and every dependent service remain blocked.",
