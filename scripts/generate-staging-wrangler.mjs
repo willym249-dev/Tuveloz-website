@@ -73,6 +73,7 @@ const config = {
     RESEND_FROM_EMAIL: "",
     SITE_URL: "https://staging.tuveloz.com",
     STRIPE_ALLOW_LIVE_MODE: "false",
+    STRIPE_IDENTITY_ALLOW_LIVE_MODE: "false",
     TEAM_DOMAIN: teamDomain,
   },
 };

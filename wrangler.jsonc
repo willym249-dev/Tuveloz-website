@@ -48,6 +48,7 @@
     "RESEND_FROM_EMAIL": "Tuveloz <alerts@updates.tuveloz.com>",
     "SITE_URL": "https://tuveloz.com",
     "STRIPE_ALLOW_LIVE_MODE": "false",
+    "STRIPE_IDENTITY_ALLOW_LIVE_MODE": "false",
     "TEAM_DOMAIN": "https://old-violet-1b67.cloudflareaccess.com"
   }
 }

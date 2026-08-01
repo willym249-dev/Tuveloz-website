@@ -15,6 +15,7 @@ import {
 } from "./identity-verification-policy";
 import {
   getStripeIdentityClient,
+  getStripeIdentityVerificationFlowId,
   stripeIdentityModeMatchesProvider,
 } from "./stripe";
 import {
@@ -100,11 +101,23 @@ export function stripeIdentitySessionBindingMatches(
   session: Stripe.Identity.VerificationSession,
 ) {
   const metadata = session.metadata ?? {};
+  const documentOptions = session.options?.document;
+  const allowedDocumentTypes = documentOptions?.allowed_types ?? [];
   return session.id === row.stripeVerificationSessionId
     && session.livemode === Boolean(row.livemode)
     && session.client_reference_id === row.id
-    && session.type === "document"
-    && session.options?.document?.require_matching_selfie === true
+    && session.type === "verification_flow"
+    && session.verification_flow === getStripeIdentityVerificationFlowId()
+    && documentOptions?.require_live_capture === true
+    && documentOptions.require_matching_selfie === true
+    && documentOptions.require_id_number !== true
+    && allowedDocumentTypes.length === 3
+    && allowedDocumentTypes.includes("driving_license")
+    && allowedDocumentTypes.includes("id_card")
+    && allowedDocumentTypes.includes("passport")
+    && session.options?.id_number === undefined
+    && session.options?.email?.require_verification !== true
+    && session.options?.phone?.require_verification !== true
     && text(metadata.tuveloz_provider_id, 120) === row.providerId
     && text(metadata.tuveloz_person_id, 120) === row.personId
     && text(metadata.tuveloz_application_evidence_id, 120)

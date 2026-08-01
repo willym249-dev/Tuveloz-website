@@ -80,6 +80,7 @@ npx wrangler secret put STRIPE_SECRET_KEY
 npx wrangler secret put STRIPE_PAYMENT_WEBHOOK_SECRET
 npx wrangler secret put STRIPE_IDENTITY_SECRET_KEY
 npx wrangler secret put STRIPE_IDENTITY_WEBHOOK_SECRET
+npx wrangler secret put STRIPE_IDENTITY_VERIFICATION_FLOW_ID
 npx wrangler secret put STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET
 npx wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET
 ```
@@ -168,8 +169,36 @@ payments `STRIPE_SECRET_KEY`, and do not grant Identity file-download access.
 The dedicated `STRIPE_IDENTITY_WEBHOOK_SECRET` must belong only to the standard
 snapshot Identity destination above.
 
-Set `IDENTITY_VERIFICATION_PROVIDERS` to include `stripe_identity` only after its
-live integration has been approved and tested. A non-Stripe provider name is
+Create a reusable Stripe **TEST** Verification Flow and store its `vf_*` ID in
+the encrypted Cloudflare secret `STRIPE_IDENTITY_VERIFICATION_FLOW_ID`. The
+reviewed flow must require a government document, camera-only live capture, and
+a matching selfie; allow only a driver's license, state/national ID card, or
+passport; and leave ID-number, email, and phone verification off. Leave the
+Dashboard return URL blank because TUVELOZ supplies the signed-in provider's
+same-origin return URL per session. The server rechecks the flow ID and all
+API-visible options on every retrieved session and fails closed on drift.
+Before adding `stripe_identity` to the provider allowlist, run one synthetic
+TEST create/retrieve canary with every marketplace and payment gate closed and
+confirm Stripe returns the expected option shape. Record only the privacy-safe
+shape and IDs; never record a client secret, document, selfie, name, or birth
+date.
+
+Keep `STRIPE_IDENTITY_ALLOW_LIVE_MODE=false`. A separate code-controlled
+Identity live switch is also false, so a Cloudflare variable or copied
+`rk_live_*` key cannot begin real-person verification by itself. Test Identity
+may be reviewed without enabling jobs, provider activation, checkout, payments,
+transfers, or payouts.
+
+A future real-person release requires a separately reviewed **LIVE**
+Verification Flow, live restricted key, and live-only webhook destination and
+signing secret. Re-run the option-shape canary in live configuration without a
+real applicant before changing both the code and environment live locks.
+
+Set `IDENTITY_VERIFICATION_PROVIDERS` to include `stripe_identity` only during
+an authorized test-mode validation after this code and its secrets are deployed,
+or during a future separately reviewed live release. With both Identity live
+locks false, the current release accepts only `rk_test_*` for records explicitly
+marked as test providers. A non-Stripe provider name is
 configuration for a future manual/non-biometric adapter; it does not make that
 alternative operational. Do not use `tuveloz`, an owner name, or
 self-attestation as an external provider. Before a non-Stripe gate can pass,

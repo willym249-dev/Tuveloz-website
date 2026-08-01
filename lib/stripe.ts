@@ -11,6 +11,11 @@ export class StripeConfigurationError extends Error {}
 // still onboarding-only.
 export const STRIPE_LIVE_MODE_ENABLED = false as const;
 
+// Identity has a separate release lock from payments. A Cloudflare variable or
+// restricted live key cannot activate real-person verification unless a future
+// reviewed code release deliberately changes this constant too.
+export const STRIPE_IDENTITY_LIVE_MODE_ENABLED = false as const;
+
 export function stripeLiveModeEnabled() {
   return Boolean(STRIPE_LIVE_MODE_ENABLED)
     && String(MARKETPLACE_MODE) === "live"
@@ -29,6 +34,27 @@ function requiredRuntimeValue(name: string) {
     );
   }
   return value;
+}
+
+function stripeIdentityKeyMode(value: string) {
+  if (value.startsWith("rk_test_")) return "test" as const;
+  if (value.startsWith("rk_live_")) return "live" as const;
+  return "not_configured" as const;
+}
+
+export function stripeIdentityLiveModeEnabled() {
+  return Boolean(STRIPE_IDENTITY_LIVE_MODE_ENABLED)
+    && runtimeEnvironment().STRIPE_IDENTITY_ALLOW_LIVE_MODE === "true";
+}
+
+export function getStripeIdentityVerificationFlowId() {
+  const flowId = requiredRuntimeValue("STRIPE_IDENTITY_VERIFICATION_FLOW_ID");
+  if (!/^vf_[A-Za-z0-9]+$/.test(flowId)) {
+    throw new StripeConfigurationError(
+      "STRIPE_IDENTITY_VERIFICATION_FLOW_ID is not a valid Stripe verification-flow ID.",
+    );
+  }
+  return flowId;
 }
 
 /**
@@ -70,16 +96,20 @@ export function stripeIdentityConfigurationReady() {
     .split(",")
     .map((value) => value.trim().toLowerCase());
   const key = runtime.STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "";
+  const keyMode = stripeIdentityKeyMode(key);
+  const flowId = runtime.STRIPE_IDENTITY_VERIFICATION_FLOW_ID?.trim() ?? "";
   const webhookSecret = runtime.STRIPE_IDENTITY_WEBHOOK_SECRET?.trim() ?? "";
+  const safeKeyConfigured = keyMode === "test"
+    || (keyMode === "live" && stripeIdentityLiveModeEnabled());
   return providers.includes("stripe_identity")
-    && /^rk_(?:test|live)_/.test(key)
+    && safeKeyConfigured
+    && /^vf_[A-Za-z0-9]+$/.test(flowId)
     && webhookSecret.startsWith("whsec_");
 }
 
 /**
- * Identity is isolated from payment release. A live or restricted Stripe key
- * may verify applicants while the code-controlled money switches stay off;
- * this client is exported only for Stripe Identity operations.
+ * Identity is isolated from payment release and has its own code-controlled
+ * live-mode lock. This client is exported only for Stripe Identity operations.
  */
 export function getStripeIdentityClient() {
   if (!stripeIdentityConfigurationReady()) {
@@ -88,6 +118,17 @@ export function getStripeIdentityClient() {
     );
   }
   const secretKey = requiredRuntimeValue("STRIPE_IDENTITY_SECRET_KEY");
+  const keyMode = stripeIdentityKeyMode(secretKey);
+  if (keyMode === "live" && !stripeIdentityLiveModeEnabled()) {
+    throw new StripeConfigurationError(
+      "A live Stripe Identity key was provided while Identity live mode is code-disabled. Use the dedicated rk_test_ key until the reviewed live release.",
+    );
+  }
+  if (keyMode === "not_configured") {
+    throw new StripeConfigurationError(
+      "STRIPE_IDENTITY_SECRET_KEY must be a dedicated restricted rk_test_ or reviewed rk_live_ key.",
+    );
+  }
   return new Stripe(secretKey, {
     httpClient: Stripe.createFetchHttpClient(),
     appInfo: {
@@ -100,12 +141,17 @@ export function getStripeIdentityClient() {
 
 export function stripeIdentityKeyIsLive() {
   const key = runtimeEnvironment().STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "";
-  return /^rk_live_/.test(key);
+  return stripeIdentityKeyMode(key) === "live";
 }
 
 export function stripeIdentityModeMatchesProvider(isTestProvider: string) {
-  return stripeIdentityConfigurationReady()
-    && stripeIdentityKeyIsLive() === (isTestProvider !== "yes");
+  if (!stripeIdentityConfigurationReady()) return false;
+  const keyMode = stripeIdentityKeyMode(
+    runtimeEnvironment().STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "",
+  );
+  return isTestProvider === "yes"
+    ? keyMode === "test"
+    : keyMode === "live" && stripeIdentityLiveModeEnabled();
 }
 
 export function getStripeWebhookSecret(
