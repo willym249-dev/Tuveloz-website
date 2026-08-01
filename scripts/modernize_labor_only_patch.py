@@ -103,6 +103,115 @@ core = replace_exact(
 )
 core_path.write_text(core)
 
+ui_path = Path("scripts/apply_labor_only_ui.py")
+ui = ui_path.read_text()
+
+ui = replace_exact(
+    ui,
+    '''    ''' + "'''" + '''              I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
+              <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
+              <Link href="/payments">Payment Policy</Link>.
+''' + "'''" + ''',
+    '''    ''' + "'''" + '''                <span>
+                  {checkoutAcceptance.presentedText}{" "}
+                  <Link href="/terms">Terms of Use</Link>{" · "}
+                  <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
+                  <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+                </span>
+''' + "'''" + ''',
+    "checkout consent current marker",
+)
+ui = replace_exact(
+    ui,
+    '''    ''' + "'''" + '''              I confirm this payment includes vehicle-service labor only and no
+              provider-supplied parts, parts reimbursement, parts tax, or parts charge.
+              I am 18 or older and agree to the <Link href="/terms">Terms</Link>,{" "}
+              <Link href="/customer-agreement">Customer Agreement</Link>, and{" "}
+              <Link href="/payments">Payment Policy</Link>.
+''' + "'''" + ''',
+    '''    ''' + "'''" + '''                <span>
+                  I confirm this payment includes vehicle-service labor only and no
+                  provider-supplied parts, parts reimbursement, parts tax, or parts charge.{" "}
+                  {checkoutAcceptance.presentedText}{" "}
+                  <Link href="/terms">Terms of Use</Link>{" · "}
+                  <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
+                  <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+                </span>
+''' + "'''" + ''',
+    "checkout consent labor-only replacement",
+)
+ui = replace_exact(
+    ui,
+    "    '            disabled={!checkoutAllowed || !acceptedPaymentPolicy || busy}\\n',\n",
+    "    '            disabled={!checkoutAllowed || !checkoutAcceptance || !acceptedPaymentPolicy || busy}\\n',\n",
+    "checkout disabled current marker",
+)
+ui = replace_exact(
+    ui,
+    "    '            disabled={!checkoutAllowed || !laborOnlyQuote || !acceptedPaymentPolicy || busy}\\n',\n",
+    "    '            disabled={!checkoutAllowed || !checkoutAcceptance || !laborOnlyQuote || !acceptedPaymentPolicy || busy}\\n',\n",
+    "checkout disabled labor-only replacement",
+)
+ui = replace_exact(
+    ui,
+    '''    ''' + "'''" + '''              <span>{data.services.length} approved {data.services.length === 1 ? "service" : "services"}</span>
+              <span>{displayLocation}</span>
+''' + "'''" + ''',
+    '''    ''' + "'''" + '''              <span>{data.services.length} currently listed {data.services.length === 1 ? "service" : "services"}</span>
+              <span>{displayLocation}</span>
+''' + "'''" + ''',
+    "provider preview current service marker",
+)
+ui = replace_exact(
+    ui,
+    '''    ''' + "'''" + '''              <span>{data.services.length} approved {data.services.length === 1 ? "service" : "services"}</span>
+              <span>Customer-supplied parts: {profile.customerSuppliedPartsPolicy}</span>
+              <span>{displayLocation}</span>
+''' + "'''" + ''',
+    '''    ''' + "'''" + '''              <span>{data.services.length} currently listed {data.services.length === 1 ? "service" : "services"}</span>
+              <span>Customer-supplied parts: {profile.customerSuppliedPartsPolicy}</span>
+              <span>{displayLocation}</span>
+''' + "'''" + ''',
+    "provider preview labor-only replacement",
+)
+ui = replace_exact(
+    ui,
+    '''              <div><strong>Page visibility</strong><small>You control when customers can see it</small></div>
+''',
+    '''              <div><strong>Page visibility</strong><small>Publication requires TUVELOZ content review</small></div>
+''',
+    "provider publication current wording",
+)
+ui = replace_exact(
+    ui,
+    '''          <p>These are the services Tuveloz has approved this provider to quote.</p>
+''',
+    '''          <p>
+            These exact services are recorded on this profile for possible quote eligibility after
+            marketplace launch. A listing is not a guarantee of licensing, insurance, skill,
+            quality, safety, or lawful performance; review the dated records and official sources above.
+          </p>
+''',
+    "public provider services current marker",
+)
+ui = replace_exact(
+    ui,
+    '''          <p>
+            These are the services Tuveloz has approved this provider to quote for labor.
+            Any required parts are purchased separately by the customer.
+          </p>
+''',
+    '''          <p>
+            These exact services are recorded on this profile for possible labor-quote eligibility after
+            marketplace launch. Any required parts are purchased separately by the customer. A listing is
+            not a guarantee of licensing, insurance, skill, quality, safety, or lawful performance; review
+            the dated records and official sources above.
+          </p>
+''',
+    "public provider services labor-only replacement",
+)
+ui_path.write_text(ui)
+
 hardening_path = Path("scripts/apply_labor_only_hardening.py")
 hardening = hardening_path.read_text().replace(
     "0045_customer_supplied_parts_preferences",
