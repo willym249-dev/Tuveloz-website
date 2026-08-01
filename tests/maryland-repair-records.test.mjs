@@ -79,13 +79,20 @@ test("repair-record API is participant-only, test-only, same-origin, and cannot 
   assert.doesNotMatch(source, /UPDATE stripe_payments|INSERT INTO stripe_payments/);
 });
 
-test("customer sees the required rights immediately before the repair authorization signature", async () => {
-  const page = await read("app/repair-records/page.tsx");
+test("customer sees conspicuous rights immediately before the exact repair authorization signature", async () => {
+  const [page, layout, styles] = await Promise.all([
+    read("app/repair-records/page.tsx"),
+    read("app/repair-records/layout.tsx"),
+    read("app/repair-records/repair-records.css"),
+  ]);
 
   const rights = page.indexOf("repair-customer-rights");
   const signature = page.indexOf("Sign and authorize this exact record");
   assert.ok(rights >= 0, "Customer's Rights block is missing");
   assert.ok(signature > rights, "Customer signature must follow the Customer's Rights block");
+  assert.match(page, /selectedSubmitValue/);
+  assert.match(page, /SubmitEvent/);
+  assert.match(page, /values\.status = selectedSubmitValue\(event\)/);
   assert.match(page, /Itemized estimate lines/);
   assert.match(page, /Montgomery County registration number/);
   assert.match(page, /Customer instructions or description of symptoms/);
@@ -93,6 +100,11 @@ test("customer sees the required rights immediately before the repair authorizat
   assert.match(page, /Mechanic names, initials, or numbers/);
   assert.match(page, /Sign invoice and receive secure copy/);
   assert.match(page, /Payment was not automatically released/);
+  assert.match(layout, /repair-records\.css/);
+  assert.match(styles, /\.repair-customer-rights/);
+  assert.match(styles, /border: 4px solid currentColor/);
+  assert.match(styles, /\.repair-signature-form/);
+  assert.match(styles, /border-top: 0/);
 });
 
 test("production health verifies the new repair-document schema and controls", async () => {
