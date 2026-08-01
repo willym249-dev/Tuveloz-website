@@ -442,7 +442,9 @@ export function effectiveProviderServices(
   isTestProvider: string,
 ) {
   if (isTestProvider === "yes") return requestedServices;
-  return approvedServices.trim() || requestedServices;
+  // A real provider's application choices are interests, not authorization.
+  // An empty approved list must stay empty so no route can fail open.
+  return approvedServices.trim();
 }
 
 export function areaForZip(zipValue: string) {

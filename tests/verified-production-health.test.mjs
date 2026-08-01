@@ -15,8 +15,15 @@ test("public health endpoint reports release and required schema without private
   assert.match(api, /provider_applications/);
   assert.match(api, /email_notification_outbox/);
   assert.match(api, /job_authorizations/);
+  assert.match(api, /job_authorization_events/);
   assert.match(api, /privacy_requests/);
   assert.match(api, /job_evidence_items/);
+  assert.match(api, /provider_service_eligibility/);
+  assert.match(api, /launch_gate_decisions/);
+  assert.match(api, /accepted_quote_creates_initial_authorization_update/);
+  assert.match(api, /accepted_quote_creates_initial_authorization_insert/);
+  assert.match(api, /missingGuardedTriggers/);
+  assert.match(api, /row\.sql\?\.includes\("is_test_job"\)/);
   assert.match(api, /"cache-control": "no-store, max-age=0"/);
   assert.match(api, /does not expose credentials, private records, user counts, payment details, or internal security controls/);
   assert.doesNotMatch(api, /SELECT \*/);
@@ -36,6 +43,7 @@ test("production workflow stamps and verifies the exact deployed commit", async 
   assert.match(workflow, /payload\?\.checks\?\.database === "ready"/);
   assert.match(workflow, /payload\?\.checks\?\.schema === "ready"/);
   assert.match(workflow, /payload\.missingTables\.length === 0/);
+  assert.match(workflow, /payload\.missingGuardedTriggers\.length === 0/);
   assert.match(workflow, /Cloudflare did not serve the exact healthy release/);
 });
 

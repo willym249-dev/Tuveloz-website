@@ -9,6 +9,10 @@ import {
   providerMatchesJob,
   providerMatchesServiceLocation,
 } from "./service-matching";
+import {
+  marketplacePausedMessage,
+} from "./launch-status";
+import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 
 type AlertResult = {
   configured: boolean;
@@ -45,6 +49,14 @@ async function sendProviderJobAlert(
     .where(eq(customerRequests.id, requestId)).limit(1);
   if (!job || job.status !== "approved") {
     return { configured: true, attempted: 0, sent: 0, failures: [] };
+  }
+  if (!(await runtimeMarketplaceActionAllowed("discovery", { testOnly: job.isTestJob === "yes" }))) {
+    return {
+      configured: true,
+      attempted: 0,
+      sent: 0,
+      failures: [marketplacePausedMessage("discovery")],
+    };
   }
   if (job.isTestJob === "yes") {
     return { configured: true, attempted: 0, sent: 0, failures: [] };
@@ -154,6 +166,13 @@ export async function sendAcceptedQuoteAlert(
     )).limit(1);
   if (!job || !quote) {
     return { configured: true, sent: false, failure: "Accepted job details were not found." };
+  }
+  if (!(await runtimeMarketplaceActionAllowed("booking", { testOnly: job.isTestJob === "yes" }))) {
+    return {
+      configured: true,
+      sent: false,
+      failure: marketplacePausedMessage("booking"),
+    };
   }
   if (job.isTestJob === "yes") {
     return { configured: true, sent: false };

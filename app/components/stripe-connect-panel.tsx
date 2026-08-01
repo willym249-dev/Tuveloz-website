@@ -132,7 +132,7 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
           <span className="kicker">Stripe Connect</span>
           <h2>Sign in before setting up payouts.</h2>
           <p>
-            Stripe onboarding is available only from a verified provider session,
+            Stripe onboarding is available only from an active provider session,
             so private workspace links are never sent to Stripe.
           </p>
         </div>
@@ -271,7 +271,7 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
                       type="number"
                       value={productPrice}
                     />
-                    <small>Tuveloz adds the separate 10% customer service fee at Checkout.</small>
+                    <small>The test configuration proposes a separate 10% customer fee; final live pricing and tax treatment require approval.</small>
                   </label>
                   <button className="button primary" disabled={busy} type="submit">
                     {busy ? "Creating…" : "Create Stripe product"}

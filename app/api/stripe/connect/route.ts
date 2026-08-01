@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const provider = await authenticatedStripeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider account to manage Stripe payouts." },
+      { error: "Sign in to your active provider account to manage Stripe payouts." },
       { status: 401 },
     );
   }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   const provider = await authenticatedStripeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to your verified provider account to start Stripe onboarding." },
+      { error: "Sign in to your active provider account to start Stripe onboarding." },
       { status: 401 },
     );
   }

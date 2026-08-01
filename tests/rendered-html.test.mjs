@@ -24,7 +24,13 @@ test("every recorded database migration is included in the project", async () =>
       "utf8",
     )
   )));
-  assert.equal(journal.entries.length, 31);
+  const migrationFiles = (await readdir(
+    fileURLToPath(new URL("../drizzle", import.meta.url)),
+  )).filter((name) => name.endsWith(".sql")).sort();
+  const recordedFiles = journal.entries
+    .map((entry) => `${entry.tag}.sql`)
+    .sort();
+  assert.deepEqual(recordedFiles, migrationFiles);
 });
 
 test("build contains separate tint, rain-guard, and sunshade services", async () => {
@@ -72,7 +78,8 @@ test("build clearly explains customer choice and provider freedom", async () => 
   assert.ok(contents.includes("Compare providers and quotes"));
   assert.ok(contents.includes("Use one simple job workspace"));
   assert.ok(contents.includes("Request tools that help you grow"));
-  assert.ok(contents.includes("Get approved. Review matching jobs. Run your business your way."));
+  assert.ok(contents.includes("Apply for exact services. Get ready for future jobs. Run your business your way."));
+  assert.ok(contents.includes("TUVELOZ does not employ or train providers."));
 });
 
 test("build contains a simple, protected quote choice and factual private analytics", async () => {
@@ -218,7 +225,7 @@ test("provider approval requires applicable state and local proof without reques
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Tuveloz must receive and verify proof before approval"));
-  assert.ok(contents.includes("If none applies, no document is needed."));
+  assert.ok(contents.includes("If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."));
   assert.ok(contents.includes("repair-registration proof received and verified"));
   assert.ok(contents.includes("cannot be verified until the state and local requirements"));
 });
@@ -446,8 +453,8 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(contents.includes("I am 18 or older and agree to the"));
   assert.ok(contents.includes("TUVELOZ LLC"));
   assert.ok(contents.includes("merchant of record"));
-  assert.ok(contents.includes("Storefront purchases use Stripe destination charges"));
-  assert.ok(contents.includes("Quote-based payments use a charge created on the Tuveloz platform"));
+  assert.ok(contents.includes("Any charge, transfer, or connected-account configuration remains in testing"));
+  assert.ok(contents.includes("technical labels or movement of funds do not by themselves determine who is merchant of record"));
   assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
   assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
   assert.ok(sitemapSource.includes("<loc>https://tuveloz.com/payments</loc>"));
@@ -459,9 +466,10 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.equal(manifest.display, "standalone");
   assert.ok(contents.includes("does not sell personal information"));
   assert.ok(contents.includes("customer and provider form a separate service agreement"));
-  assert.ok(termsSource.includes("do not require private"));
+  assert.ok(termsSource.includes("unnecessary identity documents"));
   assert.ok(termsSource.includes("arbitration"));
-  assert.ok(contents.includes("If no applicable law requires the credential, Tuveloz does not require one."));
+  assert.ok(contents.includes("Every exact service is disabled."));
+  assert.ok(contents.includes("No person may borrow, rent, share, or rely on another provider"));
   assert.ok(requestSource.includes("termsAcceptedAt"));
   assert.ok(requestSource.includes("CUSTOMER_POLICY_BUNDLE_VERSION"));
   assert.ok(providerSource.includes("termsAcceptedAt"));
@@ -500,7 +508,8 @@ test("customer and provider pages keep role-specific actions separate", async ()
     "utf8",
   );
 
-  assert.ok(customerSource.includes("Post a job"));
+  assert.ok(customerSource.includes("Customer launch status"));
+  assert.ok(customerSource.includes("New customer requests remain closed during provider onboarding."));
   assert.ok(customerSource.includes("My jobs"));
   assert.ok(customerSource.includes("How customer privacy works"));
   assert.ok(customerSource.includes("workspace-tools"));
@@ -535,7 +544,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!providerAlertsSource.includes("/provider-jobs?token="));
 });
 
-test("build itemizes and snapshots the 10 percent customer service fee", async () => {
+test("build preserves the proposed 10 percent test configuration and fee snapshots", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
@@ -544,16 +553,24 @@ test("build itemizes and snapshots the 10 percent customer service fee", async (
     new URL("../lib/customer-fee.ts", import.meta.url),
     "utf8",
   );
+  const paymentPolicySource = await readFile(
+    new URL("../app/payments/page.tsx", import.meta.url),
+    "utf8",
+  );
+  const quotePaymentSource = await readFile(
+    new URL("../app/components/quote-payment-card.tsx", import.meta.url),
+    "utf8",
+  );
   const migration = await readFile(
     new URL("../drizzle/0020_kind_rick_jones.sql", import.meta.url),
     "utf8",
   );
 
   assert.ok(contents.includes("Provider quote subtotal"));
-  assert.ok(contents.includes("Tuveloz service fee (10%)"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(contents.includes("Your provider quote remains your full subtotal."));
-  assert.ok(contents.includes("A 10% customer service fee is shown before you confirm"));
+  assert.ok(quotePaymentSource.includes("Configured Tuveloz fee (currently 10% in test)"));
+  assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 10%"));
+  assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
   assert.ok(contents.includes("Accepted service fees"));
   assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 1000"));
   assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
@@ -1126,7 +1143,7 @@ test("owner control center uses signed access and exposes focused factual tools"
   assert.ok(!controlSource.includes("Enable live payments"));
 });
 
-test("provider activation and public claims require exact current government credential checks", async () => {
+test("public claims keep credential checks while real provider auth requires exact v0.11 gates", async () => {
   const [
     requirementSource,
     schemaSource,
@@ -1164,11 +1181,12 @@ test("provider activation and public claims require exact current government cre
   assert.ok(adminActionSource.includes("isVerifiedOwnerRequest(request)"));
   assert.ok(adminActionSource.includes("isSameOriginRequest(request)"));
   assert.ok(adminActionSource.includes('body.action === "save-credential"'));
-  assert.ok(adminActionSource.includes("requiredProviderCredentialRequirements("));
-  assert.ok(adminActionSource.includes("unmetProviderCredentialRequirements("));
-  assert.ok(adminActionSource.includes("Official credential check required before activation"));
-  assert.ok(adminActionSource.includes('status !== "verified"'));
+  assert.ok(adminActionSource.includes('body.action === "verify"'));
+  assert.ok(adminActionSource.includes("LEGACY_VERIFICATION_DISABLED"));
+  assert.ok(adminActionSource.includes('verificationStatus: "test"'));
+  assert.ok(adminActionSource.includes('isTestProvider: "yes"'));
   assert.ok(adminActionSource.includes('alertsEnabled: "no"'));
+  assert.ok(!adminActionSource.includes("requiredProviderCredentialRequirements("));
 
   assert.ok(adminPageSource.includes("Official government credential checks"));
   assert.ok(adminPageSource.includes("Do not store Social Security numbers"));
@@ -1188,6 +1206,9 @@ test("provider activation and public claims require exact current government cre
 
   assert.ok(accountAuthSource.includes("providerCredentialRequirementsAreSatisfied"));
   assert.ok(accountAuthSource.includes("providerCredentialVerifications"));
+  assert.ok(accountAuthSource.includes("providerServiceEligibility"));
+  assert.ok(accountAuthSource.includes('profile.relationshipPath !== "independent_startup"'));
+  assert.ok(accountAuthSource.includes("profile.policyVersion !== POLICY_VERSION"));
 });
 
 
@@ -1260,7 +1281,7 @@ test("guest request consent choices are optional, explicit, and recorded", async
 });
 
 
-test("owner alerts, security notifications, and idle session expiry are wired", async () => {
+test("automatic provider alerts, security notifications, and idle session expiry are wired", async () => {
   const [requestRoute, accountAuth, passkeys, notifications, schema, migration] =
     await Promise.all([
       readFile(new URL("../app/api/requests/route.ts", import.meta.url), "utf8"),
@@ -1271,7 +1292,10 @@ test("owner alerts, security notifications, and idle session expiry are wired", 
       readFile(new URL("../drizzle/0030_email_notification_outbox.sql", import.meta.url), "utf8"),
     ]);
 
-  assert.ok(requestRoute.includes("sendNewCustomerRequestAlert(id)"));
+  assert.ok(requestRoute.includes("decideAutomaticJobRouting"));
+  assert.ok(requestRoute.includes("automaticDecision.matchingProviders.map"));
+  assert.ok(requestRoute.includes("New eligible TUVELOZ job request"));
+  assert.ok(!requestRoute.includes("sendNewCustomerRequestAlert(id)"));
   assert.ok(accountAuth.includes("SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000"));
   assert.ok(accountAuth.includes("SESSION_LIFETIME_SECONDS = 12 * 60 * 60"));
   assert.ok(accountAuth.includes("idleExpired"));

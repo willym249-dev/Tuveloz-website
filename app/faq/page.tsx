@@ -5,31 +5,35 @@ export default function FaqPage() {
     <PublicInfoPage
       kicker="Frequently asked questions"
       title="The important answers, without the clutter."
-      intro="These are the basics customers and independent providers should understand before using Tuveloz."
+      intro="These are the basics customers and provider applicants should understand while TUVELOZ remains in provider-onboarding mode."
       sections={[
         {
           title: "Is Tuveloz the vehicle-service provider?",
-          text: "No. Tuveloz is a marketplace that helps customers and independent providers find one another. The selected provider performs the service.",
+          text: "TUVELOZ is designed as a marketplace. The selected provider business—not TUVELOZ—will offer and perform the vehicle service. This description does not waive any responsibility TUVELOZ has under applicable law.",
+        },
+        {
+          title: "Does TUVELOZ employ or train providers?",
+          text: "No. TUVELOZ does not employ, train, sponsor, assign, or supervise providers, mechanics, trainees, or provider-business employees. A separate provider business must handle its own hiring, payroll, training, supervision, insurance, and job assignment. Applicant-only accounts receive no training or jobs.",
         },
         {
           title: "Does posting a request cost money?",
-          text: "Posting a request is free. Any customer service fee is shown separately before a paid quote is confirmed.",
+          text: "Customer requests and payments are not open yet. Before a future launch, the final fee and tax treatment must be approved and every charge and refund term must be shown before payment.",
         },
         {
           title: "Who sets the provider price?",
-          text: "Each provider sets their own quote. Tuveloz does not require a provider to accept a job or use a specific schedule.",
+          text: "In the planned workflow, each provider business sets or approves its quote and chooses whether to pursue a request. Real quoting is currently disabled.",
         },
         {
           title: "Are all providers licensed?",
-          text: "Tuveloz requires proof only when a service and location legally require a license or registration. Other approved services may not legally require one.",
+          text: "Do not assume an umbrella license or 'fully verified' status. TUVELOZ will show the exact evidence checked for a specific service, person, location, and date. Insurance, registration, competency, supervision, or other evidence may apply even where there is no universal mechanic license.",
         },
         {
           title: "Where is Tuveloz operating?",
-          text: "The current launch area is Montgomery County, Maryland. Customers and providers can request future areas from the Learn page.",
+          text: "Provider onboarding is focused on Montgomery County, Maryland. Real customer jobs and payments are not open in any area yet. Customers and providers can request future areas from the Learn page.",
         },
         {
           title: "How do I access my tools?",
-          text: "Sign in and choose the correct workspace. Customers see customer requests and quotes; verified providers see matched jobs and business tools.",
+          text: "Sign in and choose the correct workspace. Provider applicants use the onboarding checklist to submit private evidence; matched real jobs remain unavailable during launch review.",
         },
       ]}
     />

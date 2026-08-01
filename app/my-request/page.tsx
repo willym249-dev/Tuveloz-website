@@ -21,6 +21,7 @@ type Quote = {
   priceCents: string;
   laborPriceCents: string;
   partsPriceCents: string;
+  scopeVersion: number;
   customerFeeRateBps: number;
   customerFeeCents: string;
   customerTotalCents: string;
@@ -36,6 +37,17 @@ type Quote = {
   providerWorkLocations: string;
   providerBusinessMunicipality: string;
   providerBusinessServiceAddress?: string;
+  selectionBlockedReason: string;
+  selectionAcceptance: null | {
+    agreementKey: string;
+    agreementVersion: string;
+    agreementHash: string;
+    presentedText: string;
+    scopeVersion: number;
+    performingPersonDisplay: string;
+    scheduledFor: string;
+    serviceCodes: string[];
+  };
 };
 type Job = {
   id: string;
@@ -44,12 +56,16 @@ type Job = {
   zip: string;
   vehicle: string;
   launchArea: string;
+  jurisdiction: string;
   municipality: string;
   service: string;
+  serviceCodes: string[];
+  scheduledFor: string;
   partsSource: string;
   partsPreference: string;
   serviceLocations: string;
   serviceAddress: string;
+  details: string;
   preferredProviderName: string;
   repeatOfRequestId: string;
   status: string;
@@ -73,6 +89,7 @@ export default function MyRequestPage() {
   const [pendingQuoteId, setPendingQuoteId] = useState("");
   const [pendingDeclineId, setPendingDeclineId] = useState("");
   const [submittingQuoteId, setSubmittingQuoteId] = useState("");
+  const [acceptedSelectionQuoteId, setAcceptedSelectionQuoteId] = useState("");
   const [error, setError] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [review, setReview] = useState<Review | null>(null);
@@ -102,11 +119,27 @@ export default function MyRequestPage() {
   }, []);
 
   async function accept(quoteId: string) {
+    const selectedQuote = quotes.find((quote) => quote.id === quoteId);
+    if (
+      !selectedQuote?.selectionAcceptance
+      || acceptedSelectionQuoteId !== quoteId
+    ) {
+      setError("Review and accept the exact provider, performing person, scope, schedule, and price first.");
+      return;
+    }
     setError("");
     setSubmittingQuoteId(quoteId);
     const response = await fetch("/api/customer-quotes", {
       method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "accept-quote", token: accessToken, quoteId }),
+      body: JSON.stringify({
+        action: "accept-quote",
+        token: accessToken,
+        quoteId,
+        selectionAccepted: true,
+        selectionAgreementKey: selectedQuote.selectionAcceptance.agreementKey,
+        selectionAgreementVersion: selectedQuote.selectionAcceptance.agreementVersion,
+        selectionAgreementHash: selectedQuote.selectionAcceptance.agreementHash,
+      }),
     });
     const result = (await response.json()) as { error?: string; providerEmail?: string };
     setSubmittingQuoteId("");
@@ -122,6 +155,7 @@ export default function MyRequestPage() {
     })));
     setJob((current) => current ? { ...current, status: "quote accepted" } : current);
     setPendingQuoteId("");
+    setAcceptedSelectionQuoteId("");
   }
 
   async function declineQuote(quoteId: string, declineReason: string) {
@@ -200,6 +234,12 @@ export default function MyRequestPage() {
       <section className="portal-intro">
         <span className="kicker">Your request</span>
         <h1>{job ? parseJobServices(job.service).join(" + ") : "Compare provider quotes."}</h1>
+        {job && (
+          <p>
+            Exact service: {job.serviceCodes.join(", ") || "No exact service code recorded"}
+            {job.scheduledFor ? ` · ${new Date(job.scheduledFor).toLocaleString()}` : ""}
+          </p>
+        )}
         {job && <p>{job.vehicle} · {job.launchArea || job.municipality} · Status: {job.status}</p>}
         {job && (
           <p>Service can happen: {parseCustomerServiceLocations(job.serviceLocations).join(" · ")}</p>
@@ -256,7 +296,7 @@ export default function MyRequestPage() {
               {quote.status === "submitted" ? "Quote from" : quote.status}
             </span>
             <h2>{quote.providerName}</h2>
-            {quote.providerVerified && <span className="verified-badge">✓ Tuveloz verified</span>}
+            {quote.providerVerified && <span className="verified-badge">Provider account active for this quote</span>}
             {quote.providerTest && <span className="test-badge">TEST PROVIDER · FICTIONAL</span>}
             {!quote.providerTest && quote.reviewCount > 0 && (
               <p className="provider-rating" aria-label={`${quote.ratingAverage} out of 5 stars from ${quote.reviewCount} reviews`}>
@@ -276,7 +316,7 @@ export default function MyRequestPage() {
               )}
               <div><dt>Provider quote subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
-                <dt>Tuveloz service fee (10%)</dt>
+                <dt>Tuveloz service fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
               </div>
               <div className="total">
@@ -336,15 +376,40 @@ export default function MyRequestPage() {
               <p className="admin-note">Another quote was selected.</p>
             ) : pendingQuoteId === quote.id ? (
               <div className="quote-confirm" role="group" aria-label={`Confirm ${quote.providerName} quote`}>
-                <strong>Confirm this quote?</strong>
+                <strong>Authorize this exact provider and quote?</strong>
                 <p>
                   {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
                   including the 10% Tuveloz service fee
                 </p>
+                {quote.selectionAcceptance ? (
+                  <label className="policy-consent">
+                    <input
+                      checked={acceptedSelectionQuoteId === quote.id}
+                      onChange={(event) => setAcceptedSelectionQuoteId(
+                        event.target.checked ? quote.id : "",
+                      )}
+                      type="checkbox"
+                    />
+                    <span>
+                      {quote.selectionAcceptance.presentedText}{" "}
+                      <Link href="/terms">Terms</Link>{" · "}
+                      <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
+                      <Link href="/payments">Payment Policy</Link>
+                    </span>
+                  </label>
+                ) : (
+                  <p className="form-error" role="alert">
+                    {quote.selectionBlockedReason || "This quote is missing its exact authorization record."}
+                  </p>
+                )}
                 <div>
                   <button
                     className="button primary"
-                    disabled={submittingQuoteId === quote.id}
+                    disabled={
+                      submittingQuoteId === quote.id
+                      || !quote.selectionAcceptance
+                      || acceptedSelectionQuoteId !== quote.id
+                    }
                     onClick={() => accept(quote.id)}
                   >
                     {submittingQuoteId === quote.id ? "Confirming…" : "Confirm quote"}
@@ -352,7 +417,10 @@ export default function MyRequestPage() {
                   <button
                     className="button secondary"
                     disabled={submittingQuoteId === quote.id}
-                    onClick={() => setPendingQuoteId("")}
+                    onClick={() => {
+                      setPendingQuoteId("");
+                      setAcceptedSelectionQuoteId("");
+                    }}
                     type="button"
                   >
                     Go back
@@ -396,14 +464,21 @@ export default function MyRequestPage() {
               <div className="quote-decision-actions">
                 <button
                   className="button primary"
+                  disabled={!quote.selectionAcceptance}
                   onClick={() => {
                     setPendingDeclineId("");
+                    setAcceptedSelectionQuoteId("");
                     setPendingQuoteId(quote.id);
                   }}
                   type="button"
                 >
                   Choose provider
                 </button>
+                {!quote.selectionAcceptance && (
+                  <small className="form-error">
+                    {quote.selectionBlockedReason || "Exact quote authorization is unavailable."}
+                  </small>
+                )}
                 <button
                   className="quote-pass-link"
                   onClick={() => {

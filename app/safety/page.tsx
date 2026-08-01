@@ -4,13 +4,13 @@ export default function SafetyPage() {
   return (
     <PublicInfoPage
       kicker="Safety & trust"
-      title="Clear rules before a job begins."
-      intro="Tuveloz uses approval checks, limited information sharing, clear quotes, and role-specific access to reduce confusion and protect both sides of the marketplace."
+      title="Exact checks before any future job begins."
+      intro="Provider onboarding is open, but all real services and job stages are currently blocked. TUVELOZ is implementing exact-service evidence checks, limited information sharing, clear quotes, and role-specific access."
       sections={[
         {
-          title: "Provider approval",
-          text: "Provider access begins only after Tuveloz reviews the application. A license or registration is requested only when the selected service and location legally require it.",
-          points: ["Approved services only", "Location-specific compliance", "Provider access can be removed"],
+          title: "Account review is not blanket job approval",
+          text: "TUVELOZ reviews each exact service, performing person, location, date, evidence set, current agreement, and any supervision requirement. A label identifies the specific evidence checked; it is not a guarantee of safety, quality, or outcome.",
+          points: ["Exact services only", "Person- and location-specific checks", "Expired evidence blocks dependent work"],
         },
         {
           title: "Customer privacy",
@@ -18,11 +18,11 @@ export default function SafetyPage() {
         },
         {
           title: "Transparent quotes",
-          text: "Customers review the provider subtotal, any separate Tuveloz service fee, parts information, and the total before confirming.",
+          text: "After launch approval, customers must see the provider subtotal, parts and labor, any separate TUVELOZ fee, taxes or other charges, refund terms, and total before confirming.",
         },
         {
           title: "Independent choice",
-          text: "Customers choose their provider. Providers choose their jobs, prices, schedule, tools, and methods, subject to applicable law and the agreed job scope.",
+          text: "Customers choose their provider. Providers choose their jobs, prices, schedule, tools, and methods, subject to applicable law and the agreed job scope. TUVELOZ does not employ, train, assign, or supervise providers or provider personnel.",
         },
       ]}
     />

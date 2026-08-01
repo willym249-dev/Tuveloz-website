@@ -36,10 +36,13 @@
   ],
   "vars": {
     "AUTH_EMAIL_HEADER": "cf-access-authenticated-user-email",
+    "EVIDENCE_SCAN_PROVIDER": "unconfigured",
+    "IDENTITY_VERIFICATION_PROVIDERS": "",
     "OWNER_EMAIL": "hello@tuveloz.com",
     "OWNER_ACCESS_AUD": "e440192c4dcff94d592a94c4661dddb4df210f07c10611a47dd308480149ed06",
     "RESEND_FROM_EMAIL": "Tuveloz <alerts@updates.tuveloz.com>",
     "SITE_URL": "https://tuveloz.com",
+    "STRIPE_ALLOW_LIVE_MODE": "false",
     "TEAM_DOMAIN": "https://old-violet-1b67.cloudflareaccess.com"
   }
 }

@@ -1,7 +1,21 @@
 import { env } from "cloudflare:workers";
-import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import {
+  getAccountSession,
+  providerAccountFor,
+  testProviderAccountFor,
+} from "../../../lib/account-auth";
+import {
+  assignedJobOperationContext,
+  evaluateAssignedJobStage,
+} from "../../../lib/job-operations";
+import {
+  CUSTOMER_JOB_POSTING_PAUSED,
+  CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
 import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import {
   authorizationDisclosuresForJob,
   CUSTOMER_AUTHORIZATION_PRINCIPLES,
@@ -21,6 +35,7 @@ type AcceptedJobRow = {
   customerEmail: string;
   providerName: string;
   providerEmail: string;
+  isTestJob: string;
   quoteId: string;
   priceCents: string;
   laborPriceCents: string;
@@ -69,6 +84,99 @@ const CREATE_TYPES = new Set<AuthorizationType>([
 ]);
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const MAX_AMOUNT_CENTS = 100_000_000;
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: CUSTOMER_JOB_POSTING_PAUSED
+        ? CUSTOMER_JOB_POSTING_PAUSED_MESSAGE
+        : marketplacePausedMessage("scope_change"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
+
+function isIsolatedTestJob(context: {
+  isTestJob: boolean;
+  isTestProvider: boolean;
+}) {
+  return context.isTestJob && context.isTestProvider;
+}
+
+async function currentProviderMatchesContext(context: NonNullable<Awaited<
+  ReturnType<typeof assignedJobOperationContext>
+>>) {
+  const provider = context.isTestJob && context.isTestProvider
+    ? await testProviderAccountFor(context.providerEmail)
+    : await providerAccountFor(context.providerEmail);
+  return provider?.id === context.providerId;
+}
+
+async function authorizeScopeMutation(requestId: string, providerEmail: string) {
+  const initialContext = await assignedJobOperationContext(requestId, providerEmail);
+  if (!initialContext) {
+    return {
+      response: Response.json(
+        { error: "The current accepted provider assignment was not found." },
+        { status: 409, headers: { "cache-control": "no-store" } },
+      ),
+      context: null,
+    };
+  }
+  if (initialContext.isTestJob !== initialContext.isTestProvider) {
+    return {
+      response: Response.json(
+        { error: "The provider and job test classifications do not match." },
+        { status: 409, headers: { "cache-control": "no-store" } },
+      ),
+      context: null,
+    };
+  }
+  if (CUSTOMER_JOB_POSTING_PAUSED && !isIsolatedTestJob(initialContext)) {
+    return { response: marketplacePausedResponse(), context: null };
+  }
+
+  const decision = await evaluateAssignedJobStage({
+    requestId,
+    providerEmail,
+    stage: "scope_change",
+    persist: true,
+  });
+  if (!decision.allowed || !decision.context || !decision.result?.decisionId) {
+    return {
+      response: Response.json(
+        {
+          error: decision.error || "Current provider and service eligibility is required.",
+          code: "SCOPE_CHANGE_ELIGIBILITY_DENIED",
+          reasons: decision.result?.reasons ?? [],
+        },
+        { status: decision.status || 409, headers: { "cache-control": "no-store" } },
+      ),
+      context: null,
+    };
+  }
+  if (
+    decision.context.isTestJob !== decision.context.isTestProvider
+    || (CUSTOMER_JOB_POSTING_PAUSED && !isIsolatedTestJob(decision.context))
+    || !await currentProviderMatchesContext(decision.context)
+  ) {
+    return {
+      response: Response.json(
+        {
+          error: "The current provider assignment changed or is no longer eligible.",
+          code: "SCOPE_CHANGE_ELIGIBILITY_CHANGED",
+        },
+        { status: 409, headers: { "cache-control": "no-store" } },
+      ),
+      context: null,
+    };
+  }
+  return { response: null, context: decision.context };
+}
 
 function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
@@ -135,6 +243,7 @@ async function acceptedJobs(role: AccountRole, email: string) {
             lower(request.email) AS customerEmail,
             quote.provider_name AS providerName,
             lower(quote.provider_email) AS providerEmail,
+            request.is_test_job AS isTestJob,
             quote.id AS quoteId,
             quote.price_cents AS priceCents,
             quote.labor_price_cents AS laborPriceCents,
@@ -146,6 +255,12 @@ async function acceptedJobs(role: AccountRole, email: string) {
          ON quote.request_id = request.id
         AND quote.status = 'accepted'
       WHERE ${roleClause}
+        AND EXISTS (
+          SELECT 1
+            FROM provider_applications provider
+           WHERE lower(provider.email) = lower(quote.provider_email)
+             AND provider.is_test_provider = request.is_test_job
+        )
         AND request.status NOT IN ('cancelled','canceled')
       ORDER BY datetime(request.created_at) DESC
       LIMIT 100`,
@@ -202,9 +317,12 @@ async function responseData(request: Request) {
 
   const role = session.role as AccountRole;
   const email = cleanEmail(session.email);
-  const [jobs, authorizations] = await Promise.all([
+  const [jobs, authorizations, realScopeChangesAvailable] = await Promise.all([
     acceptedJobs(role, email),
     authorizationRows(role, email),
+    CUSTOMER_JOB_POSTING_PAUSED
+      ? Promise.resolve(false)
+      : runtimeMarketplaceActionAllowed("scope_change").catch(() => false),
   ]);
   const byRequest = authorizations.reduce<Map<string, AuthorizationRow[]>>((map, item) => {
     const items = map.get(item.requestId) ?? [];
@@ -220,6 +338,8 @@ async function responseData(request: Request) {
     customerAuthorizationPrinciples: CUSTOMER_AUTHORIZATION_PRINCIPLES,
     jobs: jobs.map((job) => ({
       ...job,
+      transactionActionsAvailable: job.isTestJob === "yes"
+        || realScopeChangesAvailable,
       disclosures: authorizationDisclosuresForJob(job.service),
       authorizations: (byRequest.get(job.requestId) ?? []).map(publicAuthorization),
     })),
@@ -236,6 +356,7 @@ async function providerAssignedJob(providerEmail: string, requestId: string) {
             lower(request.email) AS customerEmail,
             quote.provider_name AS providerName,
             lower(quote.provider_email) AS providerEmail,
+            request.is_test_job AS isTestJob,
             quote.id AS quoteId,
             quote.price_cents AS priceCents,
             quote.labor_price_cents AS laborPriceCents,
@@ -248,6 +369,12 @@ async function providerAssignedJob(providerEmail: string, requestId: string) {
         AND lower(quote.provider_email) = lower(?)
         AND quote.status = 'accepted'
       WHERE request.id = ?
+        AND EXISTS (
+          SELECT 1
+            FROM provider_applications provider
+           WHERE lower(provider.email) = lower(quote.provider_email)
+             AND provider.is_test_provider = request.is_test_job
+        )
       LIMIT 1`,
   ).bind(providerEmail, requestId).first<AcceptedJobRow>();
 }
@@ -278,6 +405,17 @@ async function createAuthorization(request: Request, payload: Record<string, unk
   }
   if (!ACTIVE_JOB_STATUSES.has(job.requestStatus.toLowerCase())) {
     return Response.json({ error: "New work orders and change orders are available only while the job is active." }, { status: 409 });
+  }
+  const scopeAuthorization = await authorizeScopeMutation(requestId, provider.email);
+  if (scopeAuthorization.response) return scopeAuthorization.response;
+  if (scopeAuthorization.context?.providerId !== provider.id) {
+    return Response.json(
+      {
+        error: "The selected provider assignment changed before the authorization could be created.",
+        code: "SCOPE_CHANGE_ASSIGNMENT_CHANGED",
+      },
+      { status: 409, headers: { "cache-control": "no-store" } },
+    );
   }
 
   const pending = await env.DB.prepare(
@@ -384,7 +522,8 @@ async function createAuthorization(request: Request, payload: Record<string, unk
     now,
   ).run();
 
-  await notifyMarketplaceAccount({
+  if (scopeAuthorization.context && !isIsolatedTestJob(scopeAuthorization.context)) {
+    await notifyMarketplaceAccount({
     eventKey: `job-authorization-created:${id}:customer`,
     email: job.customerEmail,
     role: "customer",
@@ -400,7 +539,8 @@ async function createAuthorization(request: Request, payload: Record<string, unk
       "Tuveloz is the marketplace; the independent provider performs the work and states the warranty.",
       "Open Job agreements: https://tuveloz.com/job-authorizations",
     ],
-  });
+    });
+  }
 
   return Response.json({ ok: true, id, ...(await responseData(request)) }, { status: 201 });
 }
@@ -460,6 +600,33 @@ async function respondToAuthorization(request: Request, payload: Record<string, 
     return Response.json({ error: "This authorization was already answered or withdrawn." }, { status: 409 });
   }
 
+  let actionContext: Awaited<ReturnType<typeof assignedJobOperationContext>> = null;
+  if (decision === "accepted") {
+    const scopeAuthorization = await authorizeScopeMutation(
+      authorization.requestId,
+      authorization.providerEmail,
+    );
+    if (scopeAuthorization.response) return scopeAuthorization.response;
+    if (
+      !scopeAuthorization.context
+      || !ACTIVE_JOB_STATUSES.has(scopeAuthorization.context.requestStatus.toLowerCase())
+    ) {
+      return Response.json(
+        { error: "Additional work cannot be accepted after this job stops being active." },
+        { status: 409, headers: { "cache-control": "no-store" } },
+      );
+    }
+    actionContext = scopeAuthorization.context;
+  } else {
+    const declineContext = await assignedJobOperationContext(
+      authorization.requestId,
+      authorization.providerEmail,
+    );
+    if (declineContext?.isTestJob === declineContext?.isTestProvider) {
+      actionContext = declineContext;
+    }
+  }
+
   const now = new Date().toISOString();
   const updated = await env.DB.prepare(
     `UPDATE job_authorizations
@@ -508,8 +675,9 @@ async function respondToAuthorization(request: Request, payload: Record<string, 
     now,
   ).run();
 
-  await notifyMarketplaceAccount({
-    eventKey: `job-authorization-response:${id}:${decision}:provider`,
+  if (actionContext && !isIsolatedTestJob(actionContext)) {
+    await notifyMarketplaceAccount({
+      eventKey: `job-authorization-response:${id}:${decision}:provider`,
     email: authorization.providerEmail,
     role: "provider",
     title: `${authorizationLabel(authorization.authorizationType)} ${decision}`,
@@ -524,7 +692,8 @@ async function respondToAuthorization(request: Request, payload: Record<string, 
         : "The declined work or charge is not authorized.",
       "Open Job agreements: https://tuveloz.com/job-authorizations",
     ],
-  });
+    });
+  }
 
   return Response.json({ ok: true, ...(await responseData(request)) });
 }
@@ -582,8 +751,18 @@ async function withdrawAuthorization(request: Request, payload: Record<string, u
     now,
   ).run();
 
-  await notifyMarketplaceAccount({
-    eventKey: `job-authorization-withdrawn:${id}:customer`,
+  const withdrawalContext = await assignedJobOperationContext(
+    authorization.requestId,
+    provider.email,
+  );
+  if (
+    withdrawalContext
+    && withdrawalContext.providerId === provider.id
+    && !withdrawalContext.isTestJob
+    && !withdrawalContext.isTestProvider
+  ) {
+    await notifyMarketplaceAccount({
+      eventKey: `job-authorization-withdrawn:${id}:customer`,
     email: authorization.customerEmail,
     role: "customer",
     title: `${authorizationLabel(authorization.authorizationType)} withdrawn`,
@@ -595,7 +774,8 @@ async function withdrawAuthorization(request: Request, payload: Record<string, u
       "The withdrawn work or charge is not authorized.",
       "Open Job agreements: https://tuveloz.com/job-authorizations",
     ],
-  });
+    });
+  }
 
   return Response.json({ ok: true, ...(await responseData(request)) });
 }

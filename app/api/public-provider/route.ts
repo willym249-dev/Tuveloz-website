@@ -22,6 +22,25 @@ import {
   providerCredentialRequirementsAreSatisfied,
   requiredProviderCredentialRequirements,
 } from "../../../lib/provider-credentials";
+import {
+  marketplacePausedMessage,
+} from "../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
+import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
+import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("discovery"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 type CatalogRow = {
   id: string;
@@ -90,11 +109,19 @@ export async function GET(request: Request) {
       expiresAt: record.expiresAt,
     }] : [];
   });
+  const currentProvider = await providerAccountFor(result.provider.email);
+  const activePlatformServiceCodes = await currentPlatformActiveServiceCodes(
+    POLICY_JURISDICTION,
+  );
+  const currentPublicServices = parseProviderServices(result.provider.approvedServices)
+    .filter((serviceCode) => activePlatformServiceCodes.has(serviceCode));
   const publicAccess = (
     result.profile.publicStatus === "published"
     && result.provider.status === "approved"
     && result.provider.verificationStatus === "verified"
     && result.provider.isTestProvider === "no"
+    && currentProvider?.id === result.provider.id
+    && currentPublicServices.length > 0
     && credentialRequirementsSatisfied
   );
   const session = await getAccountSession(request);
@@ -105,7 +132,12 @@ export async function GET(request: Request) {
   if (!publicAccess && !privatePreview) {
     return Response.json({ error: "Provider page not found." }, { status: 404 });
   }
-  if (publicAccess) {
+  const publicDiscoveryAllowed = await runtimeMarketplaceActionAllowed("discovery");
+  if (!privatePreview && !publicDiscoveryAllowed) {
+    return marketplacePausedResponse();
+  }
+  const servingPublicProfile = publicAccess && publicDiscoveryAllowed;
+  if (servingPublicProfile) {
     try {
       await db.update(providerProfiles).set({
         profileViewCount: sql`${providerProfiles.profileViewCount} + 1`,
@@ -188,15 +220,19 @@ export async function GET(request: Request) {
       businessHours: result.profile.businessHours,
       hasLogo: Boolean(result.profile.logoImageKey),
     },
-    services: parseProviderServices(result.provider.approvedServices),
-    catalog: catalogResult.results,
+    services: servingPublicProfile
+      ? currentPublicServices
+      : parseProviderServices(result.provider.approvedServices),
+    catalog: servingPublicProfile
+      ? catalogResult.results.filter((item) => activePlatformServiceCodes.has(item.service))
+      : catalogResult.results,
     optionalCredentials: optionalCredentialResult.results,
     areas: parseProviderAreas(result.provider.serviceArea),
     workLocations: parseProviderWorkLocations(result.provider.workLocations),
     businessMunicipality: result.provider.businessMunicipality,
     gallery,
     reviews,
-    privatePreview: !publicAccess && privatePreview,
+    privatePreview: privatePreview && !servingPublicProfile,
     testProvider: result.provider.isTestProvider === "yes",
     reviewSummary: { average, count: reviews.length },
     credentialReview: {
@@ -209,7 +245,9 @@ export async function GET(request: Request) {
     },
   }, {
     headers: {
-      "cache-control": publicAccess ? "public, max-age=0, must-revalidate" : "private, no-store",
+      "cache-control": servingPublicProfile
+        ? "public, max-age=0, must-revalidate"
+        : "private, no-store",
     },
   });
 }

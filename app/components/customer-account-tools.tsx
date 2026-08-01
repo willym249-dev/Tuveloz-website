@@ -190,7 +190,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
     <div className="saved-provider-panel">
       {error && <p className="form-error" role="alert">{error}</p>}
       <p className="customer-tool-explainer">
-        Save verified providers who have sent a quote on one of your Tuveloz requests.
+        Save providers who previously sent a quote on one of your Tuveloz requests.
       </p>
       <section>
         <h3>Saved providers</h3>
@@ -203,7 +203,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
           <div className="saved-provider-grid">
             {data.savedProviders.map((provider) => (
               <article key={provider.id}>
-                <span className="verified-badge">✓ Tuveloz verified</span>
+                <span className="verified-badge">Prior quote provider</span>
                 <h3>{provider.name}</h3>
                 <p>{parseProviderServices(provider.service).join(" · ")}</p>
                 <small>{provider.serviceArea}</small>
@@ -231,7 +231,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
           <div className="saved-provider-grid">
             {available.map((provider) => (
               <article key={provider.id}>
-                <span className="verified-badge">✓ Tuveloz verified</span>
+                <span className="verified-badge">Prior quote provider</span>
                 <h3>{provider.name}</h3>
                 <p>{parseProviderServices(provider.service).join(" · ")}</p>
                 <small>{provider.serviceArea}</small>

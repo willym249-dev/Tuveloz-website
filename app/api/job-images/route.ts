@@ -2,14 +2,48 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { customerRequests, providerQuotes } from "../../../db/schema";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import { parseExactServiceCodes } from "../../../lib/customer-job-scope";
 import { getJobImage } from "../../../lib/job-images";
 import { isOwnerRequest } from "../../../lib/owner-auth";
+import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
+import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
+import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import {
-  effectiveProviderServices,
+  parseProviderServices,
   providerMatchesArea,
-  providerMatchesJob,
   providerMatchesServiceLocation,
 } from "../../../lib/service-matching";
+
+const NO_STORE_HEADERS = { "cache-control": "private, no-store" };
+
+function privateError(error: string, status: number) {
+  return Response.json({ error }, { status, headers: NO_STORE_HEADERS });
+}
+
+async function providerCanDiscoverIssue(
+  provider: NonNullable<Awaited<ReturnType<typeof providerAccountFor>>>,
+  job: typeof customerRequests.$inferSelect,
+) {
+  try {
+    if (!(await runtimeMarketplaceActionAllowed("discovery"))) return false;
+    const serviceCodes = parseExactServiceCodes(job.serviceCodes);
+    if (
+      job.jurisdiction !== POLICY_JURISDICTION
+      || serviceCodes.length !== 1
+      || !parseProviderServices(provider.approvedServices).includes(serviceCodes[0])
+    ) {
+      return false;
+    }
+    const activeServiceCodes = await currentPlatformActiveServiceCodes(
+      job.jurisdiction,
+    );
+    return activeServiceCodes.has(serviceCodes[0])
+      && providerMatchesArea(provider.serviceArea, job.launchArea || job.zip)
+      && providerMatchesServiceLocation(provider.workLocations, job.serviceLocations);
+  } catch {
+    return false;
+  }
+}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -17,13 +51,13 @@ export async function GET(request: Request) {
   const kind = url.searchParams.get("kind");
   const token = url.searchParams.get("token") ?? "";
   if (!requestId || !["issue", "completion"].includes(kind ?? "")) {
-    return Response.json({ error: "Image not found." }, { status: 404 });
+    return privateError("Image not found.", 404);
   }
 
   const db = getDb();
   const [job] = await db.select().from(customerRequests)
     .where(eq(customerRequests.id, requestId)).limit(1);
-  if (!job) return Response.json({ error: "Image not found." }, { status: 404 });
+  if (!job) return privateError("Image not found.", 404);
 
   const session = await getAccountSession(request);
   let allowed = isOwnerRequest(request) || (Boolean(token) && token === job.accessToken);
@@ -43,25 +77,23 @@ export async function GET(request: Request) {
           eq(providerQuotes.providerEmail, provider.email),
           eq(providerQuotes.status, "accepted"),
         )).limit(1);
-      allowed = Boolean(acceptedQuote) || (
-        kind === "issue"
+      allowed = Boolean(acceptedQuote);
+      if (
+        !allowed
+        && kind === "issue"
         && job.status === "approved"
-        && providerMatchesJob(
-          effectiveProviderServices(provider.service, provider.approvedServices, provider.isTestProvider),
-          job.service,
-        )
-        && providerMatchesArea(provider.serviceArea, job.launchArea || job.zip)
-        && providerMatchesServiceLocation(provider.workLocations, job.serviceLocations)
-      );
+      ) {
+        allowed = await providerCanDiscoverIssue(provider, job);
+      }
     }
   }
-  if (!allowed) return Response.json({ error: "Private image access required." }, { status: 403 });
+  if (!allowed) return privateError("Private image access required.", 403);
 
   const key = kind === "issue" ? job.issueImageKey : job.completionImageKey;
   const contentType = kind === "issue" ? job.issueImageType : job.completionImageType;
-  if (!key) return Response.json({ error: "Image not found." }, { status: 404 });
+  if (!key) return privateError("Image not found.", 404);
   const image = await getJobImage(key);
-  if (!image) return Response.json({ error: "Image not found." }, { status: 404 });
+  if (!image) return privateError("Image not found.", 404);
 
   return new Response(image.body, {
     headers: {

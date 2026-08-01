@@ -187,6 +187,11 @@ export default function ProviderQuoteToolkitPage() {
             Keep clear wording ready without letting Tuveloz set your prices, schedule,
             services, warranty, or business decisions.
           </p>
+          <p className="admin-note">
+            Tuveloz is currently open for provider onboarding only. These private templates are
+            preparation tools; they do not activate a service or let anyone view, quote, accept,
+            start, complete, or receive payment for a real job.
+          </p>
           {email && <small>Signed in as {email}</small>}
         </div>
 
@@ -279,7 +284,7 @@ export default function ProviderQuoteToolkitPage() {
                 a separate accepted authorization.
               </p>
               <div className="hero-actions">
-                <Link className="button primary" href="/provider-jobs">Open available jobs</Link>
+                <Link className="button primary" href="/provider-jobs">Return to provider workspace</Link>
                 <Link className="button secondary" href="/job-authorizations">Job agreements</Link>
                 <Link className="button secondary" href="/job-authorizations/documents">Invoices and receipts</Link>
                 <Link className="button secondary" href="/appointments">Appointments</Link>

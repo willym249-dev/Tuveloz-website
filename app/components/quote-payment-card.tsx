@@ -5,6 +5,7 @@ import Link from "next/link";
 
 type PaymentSummary = {
   id: string;
+  scopeVersion: number;
   status: string;
   paidAt: string;
   releasedAt: string;
@@ -18,8 +19,12 @@ type QuotePaymentCardProps = {
     id: string;
     providerName: string;
     priceCents: string;
+    laborPriceCents: string;
+    partsPriceCents: string;
+    customerFeeRateBps: number;
     customerFeeCents: string;
     customerTotalCents: string;
+    scopeVersion: number;
   };
 };
 
@@ -37,7 +42,7 @@ const REVIEW_STATUSES = new Set([
   "dispute_lost",
 ]);
 
-function dollars(value: string) {
+function dollars(value: string | number) {
   return `$${(Number(value) / 100).toFixed(2)}`;
 }
 
@@ -45,6 +50,12 @@ export function QuotePaymentCard({
   accessToken,
   quote,
 }: QuotePaymentCardProps) {
+  const taxAndOtherCents = Math.max(
+    0,
+    Number(quote.priceCents)
+      - Number(quote.laborPriceCents)
+      - Number(quote.partsPriceCents),
+  );
   const [checkoutAllowed, setCheckoutAllowed] = useState(false);
   const [reason, setReason] = useState("");
   const [payment, setPayment] = useState<PaymentSummary | null>(null);
@@ -117,10 +128,19 @@ export function QuotePaymentCard({
         </p>
       </div>
       <dl className="quote-breakdown">
-        <div><dt>Provider quote</dt><dd>{dollars(quote.priceCents)}</dd></div>
-        <div><dt>Tuveloz service fee (10%)</dt><dd>{dollars(quote.customerFeeCents)}</dd></div>
+        <div><dt>Provider labor</dt><dd>{dollars(quote.laborPriceCents)}</dd></div>
+        <div><dt>Provider parts</dt><dd>{dollars(quote.partsPriceCents)}</dd></div>
+        <div><dt>Authorized tax and other charges</dt><dd>{dollars(taxAndOtherCents)}</dd></div>
+        <div><dt>Complete authorized provider amount</dt><dd>{dollars(quote.priceCents)}</dd></div>
+        <div>
+          <dt>Tuveloz service fee ({quote.customerFeeRateBps / 100}%)</dt>
+          <dd>{dollars(quote.customerFeeCents)}</dd>
+        </div>
         <div className="total"><dt>Total</dt><dd>{dollars(quote.customerTotalCents)}</dd></div>
       </dl>
+      <small className="payment-release-note">
+        Authorized job scope version {quote.scopeVersion}.
+      </small>
 
       {loading ? (
         <p className="admin-note">Checking Stripe payment readiness…</p>
@@ -170,9 +190,10 @@ export function QuotePaymentCard({
                 : `Pay ${dollars(quote.customerTotalCents)} with Stripe`}
           </button>
           <small className="payment-release-note">
-            For quote-based jobs, Tuveloz charges the customer now and transfers
-            the provider&apos;s full quoted subtotal only after completion and
-            owner confirmation.
+            Real checkout is currently disabled. If the proposed flow receives
+            final approval, the checkout screen must show the provider subtotal,
+            total, and Configured Tuveloz fee (currently 10% in test) before the
+            customer accepts.
           </small>
         </>
       )}

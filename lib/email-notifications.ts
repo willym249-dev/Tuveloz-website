@@ -1,7 +1,15 @@
 import { env } from "cloudflare:workers";
-import { and, eq, lt, ne } from "drizzle-orm";
+import { and, eq, like, lt, ne, or } from "drizzle-orm";
 import { getDb } from "../db";
 import { emailNotificationOutbox } from "../db/schema";
+import {
+  classifyEmailEvent,
+  emailEventAllowedByReleaseState,
+  PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
+  TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
+} from "./email-event-policy";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "./launch-status";
+import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -46,6 +54,23 @@ async function markFailed(id: string, attempts: number, error: unknown) {
   }).where(eq(emailNotificationOutbox.id, id));
 }
 
+async function emailEventDeliveryIsAllowed(eventKey: string) {
+  const classification = classifyEmailEvent(eventKey);
+  if (classification.kind !== "transaction") {
+    return emailEventAllowedByReleaseState(eventKey, false);
+  }
+  if (CUSTOMER_JOB_POSTING_PAUSED) return false;
+  const releaseAllowsAction = await runtimeMarketplaceActionAllowed(
+    classification.action,
+  ).catch(() => false);
+  return emailEventAllowedByReleaseState(eventKey, releaseAllowsAction);
+}
+
+async function realTransactionEmailCandidatesAreAvailable() {
+  if (CUSTOMER_JOB_POSTING_PAUSED) return false;
+  return runtimeMarketplaceActionAllowed("request").catch(() => false);
+}
+
 async function deliverEvent(eventKey: string) {
   const db = getDb();
   const [notification] = await db.select().from(emailNotificationOutbox)
@@ -58,6 +83,10 @@ async function deliverEvent(eventKey: string) {
   ) {
     return;
   }
+  // A suppressed or unclassified row remains pending with the same attempt
+  // count. Closing launch readiness must never release stale transaction mail,
+  // and quarantine must not rewrite delivery history as if an email was sent.
+  if (!(await emailEventDeliveryIsAllowed(notification.eventKey))) return;
 
   const attempts = notification.attempts + 1;
   const apiKey = runtimeEnv().RESEND_API_KEY ?? "";
@@ -105,12 +134,23 @@ async function deliverEvent(eventKey: string) {
 
 export async function flushPendingEmailNotifications(limit = RETRY_BATCH_SIZE) {
   const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
+  const transactionCandidatesAvailable = await realTransactionEmailCandidatesAreAvailable();
+  const candidatePatterns = transactionCandidatesAvailable
+    ? [
+      ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
+      ...TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
+    ]
+    : PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS;
+  const recognizedCandidate = or(...candidatePatterns.map((pattern) => (
+    like(emailNotificationOutbox.eventKey, pattern)
+  )));
   const rows = await getDb().select({
     eventKey: emailNotificationOutbox.eventKey,
   }).from(emailNotificationOutbox)
     .where(and(
       ne(emailNotificationOutbox.status, "sent"),
       lt(emailNotificationOutbox.attempts, MAX_DELIVERY_ATTEMPTS),
+      recognizedCandidate,
     ))
     .orderBy(emailNotificationOutbox.createdAt)
     .limit(safeLimit);
@@ -187,9 +227,10 @@ export async function sendAccountSecurityAlert(input: {
     const customerLines = [
       "Thank you for signing up with Tuveloz.",
       "",
-      "Tuveloz is an online marketplace that connects customers with independent vehicle-service providers. You can request work, compare provider quotes, choose who you want, request appointments, and follow job updates in one account.",
+      "Tuveloz is currently open for account and provider onboarding only.",
       "",
-      `Post a vehicle-service request: ${siteUrl()}/post-job`,
+      "Your customer account is ready for profile and policy review. Real service requests, jobs, provider quotes, appointments, and payments are not open yet.",
+      "",
       `Open your customer workspace: ${siteUrl()}/customer`,
       "",
       "Tuveloz is a marketplace and does not itself perform vehicle services.",
@@ -197,10 +238,11 @@ export async function sendAccountSecurityAlert(input: {
     const providerLines = [
       "Thank you for joining Tuveloz as an independent provider.",
       "",
-      "Tuveloz helps independent mobile providers and shop-based businesses list approved services and provider-set prices, receive matching customer requests, request appointments, control availability, and manage job updates.",
+      "Tuveloz is currently open for provider applications and compliance onboarding only.",
       "",
-      `Open your provider workspace: ${siteUrl()}/provider-jobs`,
-      `Add services and prices: ${siteUrl()}/provider-services`,
+      "You may complete your provider profile and submit required verification records. Applying does not activate a service or make jobs available. Real customer requests, jobs, quotes, appointments, payments, and service activation are closed.",
+      "",
+      `Continue provider onboarding: ${siteUrl()}/provider-onboarding`,
       "",
       "Optional credentials may be added for customer context. Any credential legally required for an approved service must still complete Tuveloz's separate official verification process before that service is activated.",
     ];

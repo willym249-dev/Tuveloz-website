@@ -1,10 +1,17 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../../../../db";
 import {
   accountCredentials,
   customerProfiles,
   customerRequests,
+  jobCancellations,
+  jobChangeOrders,
+  jobIncidents,
+  jobScopeVersions,
+  paymentAdjustments,
   providerApplications,
+  providerInvoices,
+  providerJobRecords,
   stripePayments,
 } from "../../../../../db/schema";
 import { isSameOriginRequest } from "../../../../../lib/account-auth";
@@ -17,6 +24,30 @@ import {
   retrieveRecipientAccountStatus,
   stripeErrorResponse,
 } from "../../../../../lib/stripe";
+import {
+  marketplacePausedMessage,
+} from "../../../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../../../lib/runtime-marketplace-action";
+import { runtimeRealMarketplaceReleaseDecision } from "../../../../../lib/runtime-launch-readiness";
+import {
+  appendJobLifecycleEvent,
+  assessPayoutReadiness,
+  evaluateAssignedJobStage,
+  jobAuthorizationDecisionMatchesContext,
+} from "../../../../../lib/job-operations";
+
+function marketplacePausedResponse() {
+  return Response.json(
+    {
+      error: marketplacePausedMessage("payout"),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 export async function GET(request: Request) {
   if (!(await isVerifiedOwnerRequest(request))) {
@@ -75,23 +106,15 @@ export async function GET(request: Request) {
   return Response.json({
     payments: payments.map((payment) => {
       const { customerAccountEmail, ...safePayment } = payment;
-      const readyAfterCompletion =
-        payment.settlementStrategy === "separate_transfer"
-        && payment.status === "paid_pending_completion"
-        && payment.refundAmountCents === 0
-        && !payment.disputeStatus
-        && payment.jobStatus === "completed";
       return {
         ...safePayment,
         customerHasAccount: Boolean(customerAccountEmail),
-        status: readyAfterCompletion ? "ready_for_release" : payment.status,
-        canRelease:
-          payment.settlementStrategy === "separate_transfer"
-          && payment.jobStatus === "completed"
-          && payment.refundAmountCents === 0
-          && !payment.disputeStatus
-          && (payment.status === "paid_pending_completion"
-            || payment.status === "ready_for_release"),
+        // Completion is only one prerequisite. The POST release endpoint is
+        // the authority for eligibility, invoice, incident, cancellation,
+        // refund, dispute, reserve, and timer checks.
+        canRelease: false,
+        releaseReviewRequired: payment.settlementStrategy === "separate_transfer"
+          && payment.status === "paid_pending_completion",
       };
     }),
   });
@@ -104,7 +127,6 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Cross-origin transfer release is not allowed." }, { status: 403 });
   }
-
   const body = (await request.json()) as { paymentId?: unknown };
   const paymentId = typeof body.paymentId === "string"
     ? body.paymentId.trim().slice(0, 120)
@@ -138,7 +160,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const [job] = await getDb().select({ status: customerRequests.status })
+  const [job] = await getDb().select({
+    status: customerRequests.status,
+    isTestJob: customerRequests.isTestJob,
+  })
     .from(customerRequests)
     .where(eq(customerRequests.id, payment.requestId))
     .limit(1);
@@ -147,6 +172,17 @@ export async function POST(request: Request) {
       { error: "The provider must mark the job completed before funds can be released." },
       { status: 409 },
     );
+  }
+  // Test jobs never create Stripe payments. Real money movement also remains
+  // code-blocked in onboarding-only mode, before any Stripe API mutation.
+  if (job.isTestJob === "yes") {
+    return Response.json(
+      { error: "A test job must never have a Stripe payment or transfer." },
+      { status: 409 },
+    );
+  }
+  if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
+    return marketplacePausedResponse();
   }
   if (
     payment.status !== "paid_pending_completion"
@@ -162,6 +198,115 @@ export async function POST(request: Request) {
       { error: "A refunded or disputed payment cannot be released." },
       { status: 409 },
     );
+  }
+
+  const stageDecision = await evaluateAssignedJobStage({
+    requestId: payment.requestId,
+    stage: "payout",
+    effectiveAt: new Date().toISOString(),
+  });
+  if (!stageDecision.allowed || !stageDecision.result?.decisionId || !stageDecision.context) {
+    return Response.json({
+      error: stageDecision.error,
+      code: "PAYOUT_ELIGIBILITY_DENIED",
+      reasons: stageDecision.result?.reasons ?? [],
+    }, { status: stageDecision.status, headers: { "cache-control": "no-store" } });
+  }
+  const context = stageDecision.context;
+  const db = getDb();
+  const [authorizedScope] = await db.select({
+    authorizationDecisionId: jobScopeVersions.authorizationDecisionId,
+    priceBreakdown: jobScopeVersions.priceBreakdown,
+  }).from(jobScopeVersions).where(and(
+    eq(jobScopeVersions.requestId, payment.requestId),
+    eq(jobScopeVersions.quoteId, context.quoteId),
+    eq(jobScopeVersions.version, context.scopeVersion),
+  )).limit(1);
+  if (
+    !authorizedScope
+    || payment.scopeVersion !== context.scopeVersion
+    || payment.scopeAuthorizationDecisionId !== authorizedScope.authorizationDecisionId
+    || payment.authorizedPriceSnapshot !== authorizedScope.priceBreakdown
+  ) {
+    return Response.json({
+      error: "The paid amount is not bound to the current customer-authorized scope and price snapshot.",
+      code: "PAYOUT_SCOPE_PAYMENT_SNAPSHOT_MISMATCH",
+    }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
+  const [jobRecord] = await db.select().from(providerJobRecords)
+    .where(and(
+      eq(providerJobRecords.requestId, payment.requestId),
+      eq(providerJobRecords.providerEmail, context.providerEmail),
+    )).limit(1);
+  const [finalInvoice] = await db.select().from(providerInvoices)
+    .where(and(
+      eq(providerInvoices.requestId, payment.requestId),
+      eq(providerInvoices.scopeVersion, context.scopeVersion),
+    )).limit(1);
+  const [incidents, cancellations, changes, adjustments] = await Promise.all([
+    db.select().from(jobIncidents).where(eq(jobIncidents.requestId, payment.requestId)),
+    db.select().from(jobCancellations).where(eq(jobCancellations.requestId, payment.requestId)),
+    db.select().from(jobChangeOrders).where(eq(jobChangeOrders.requestId, payment.requestId)),
+    db.select().from(paymentAdjustments).where(eq(paymentAdjustments.requestId, payment.requestId)),
+  ]);
+  const [actualStartCurrent, completionCurrent] = await Promise.all([
+    jobAuthorizationDecisionMatchesContext(
+      context,
+      jobRecord?.jobStartDecisionId || "",
+      "job_start",
+    ),
+    jobAuthorizationDecisionMatchesContext(
+      context,
+      jobRecord?.completionDecisionId || "",
+      "completion",
+    ),
+  ]);
+  const readiness = assessPayoutReadiness({
+    jobCompleted: job.status === "completed"
+      && jobRecord?.workStatus === "completed"
+      && actualStartCurrent,
+    completionDecisionId: completionCurrent
+      ? jobRecord?.completionDecisionId || ""
+      : "",
+    finalInvoiceStatus: finalInvoice?.status || "",
+    finalInvoiceTotalCents: finalInvoice?.totalAmountCents ?? -1,
+    // The paid provider amount is the maximum releasable authorization. A
+    // changed invoice requires a separately approved payment flow.
+    authorizedTotalCents: payment.providerAmountCents,
+    openIncidentCount: incidents.filter((item) => (
+      ["open", "under_review", "insurer_review"].includes(item.status)
+      || item.holdPayments === "yes"
+    )).length,
+    openClaimCount: incidents.filter((item) => (
+      ["injury", "property_damage", "service_quality_claim"].includes(item.incidentType)
+      && item.status !== "resolved"
+    )).length,
+    unresolvedCancellationCount: cancellations.filter((item) => (
+      ["submitted", "under_review"].includes(item.status)
+    )).length,
+    unauthorizedChangeOrderCount: changes.filter((item) => item.status === "pending_customer").length,
+    pendingRefundCount: adjustments.filter((item) => (
+      ["refund_request", "cancellation_refund"].includes(item.adjustmentType)
+      && ["requested", "under_review"].includes(item.status)
+    )).length,
+    approvedRefundAmountCents: payment.refundAmountCents + adjustments.filter((item) => (
+      ["refund_request", "cancellation_refund"].includes(item.adjustmentType)
+      && ["approved", "approved_test_only"].includes(item.status)
+    )).reduce((sum, item) => sum + item.amountCents, 0),
+    openDisputeCount: (payment.disputeStatus ? 1 : 0) + adjustments.filter((item) => (
+      item.adjustmentType === "dispute" && item.status === "active"
+    )).length,
+    activeReserveAmountCents: adjustments.filter((item) => (
+      item.adjustmentType === "reserve" && item.status === "active"
+    )).reduce((sum, item) => sum + item.amountCents, 0),
+    providerTimerRunning: Boolean(jobRecord?.timerStartedAt),
+  });
+  if (!readiness.allowed) {
+    return Response.json({
+      error: readiness.reasons[0] || "Payout release controls did not pass.",
+      code: "PAYOUT_OPERATIONAL_HOLD",
+      ...readiness,
+    }, { status: 409, headers: { "cache-control": "no-store" } });
   }
 
   try {
@@ -191,6 +336,7 @@ export async function POST(request: Request) {
     if (
       paymentIntent.status !== "succeeded"
       || paymentIntent.amount_received !== payment.customerTotalCents
+      || !charge
       || !chargeId
       || charge.refunded
       || charge.amount_refunded > 0
@@ -205,6 +351,10 @@ export async function POST(request: Request) {
 
     // source_transaction ties the transfer to the customer's successful charge.
     // The idempotency key prevents two owner clicks from paying twice.
+    const releaseDecision = await runtimeRealMarketplaceReleaseDecision();
+    if (!releaseDecision.approved) {
+      return marketplacePausedResponse();
+    }
     const transfer = await stripeClient.transfers.create(
       {
         amount: payment.providerAmountCents,
@@ -216,6 +366,11 @@ export async function POST(request: Request) {
           tuveloz_payment_record_id: payment.id,
           tuveloz_request_id: payment.requestId,
           ...(payment.quoteId ? { tuveloz_quote_id: payment.quoteId } : {}),
+          tuveloz_launch_onboarding_ids:
+            releaseDecision.providerOnboardingDecisionIds.join(",").slice(0, 500),
+          tuveloz_launch_pilot_ids:
+            releaseDecision.transactionPilotDecisionIds.join(",").slice(0, 500),
+          tuveloz_launch_checked_at: releaseDecision.checkedAt,
         },
       },
       {
@@ -232,6 +387,24 @@ export async function POST(request: Request) {
       releasedBy: getAuthenticatedEmail(request),
       updatedAt: releasedAt,
     }).where(eq(stripePayments.id, payment.id));
+    await appendJobLifecycleEvent({
+      requestId: payment.requestId,
+      quoteId: payment.quoteId || "",
+      providerId: payment.providerApplicationId,
+      actorRole: "owner",
+      actorId: getAuthenticatedEmail(request),
+      eventType: "provider_payout_released",
+      fromStatus: job.status,
+      toStatus: job.status,
+      scopeVersion: context.scopeVersion,
+      authorizationSnapshotId: stageDecision.result.decisionId,
+      reasonCode: "all_payout_controls_passed",
+      details: {
+        paymentId: payment.id,
+        transferId: transfer.id,
+        providerAmountCents: payment.providerAmountCents,
+      },
+    });
 
     return Response.json({
       ok: true,

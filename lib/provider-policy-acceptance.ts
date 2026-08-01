@@ -1,0 +1,177 @@
+import {
+  MARKETPLACE_CONDUCT_VERSION,
+  PAYMENT_POLICY_VERSION,
+  PRIVACY_VERSION,
+  PROVISIONAL_PROVIDER_POLICY_VERSION,
+  PROVIDER_AGREEMENT_VERSION,
+  TERMS_VERSION,
+} from "./policies";
+import { POLICY_VERSION } from "./provider-policy";
+
+export const PROVIDER_TERMS_ACCEPTANCE_TEXT =
+  "I am at least 18 years old and authorized to act for the applicant or provider business. I agree to the Terms of Use, Provider Agreement, Payment, Cancellation and Refund Policy, Marketplace Conduct and Review Policy, and Provisional Provider and Trainee Policy shown for this application. I certify that the application information is complete and current, and I understand that no service or customer-job access is granted until each required approval is recorded.";
+
+export const PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT =
+  "I separately acknowledge that I reviewed the Privacy Policy and understand how TUVELOZ handles provider-application, identity, credential, insurance, personnel, and service-eligibility information.";
+
+export const PROVIDER_ACCEPTANCE_EVIDENCE_SCHEMA_VERSION = "2";
+
+export const PROVIDER_ACCEPTANCE_PURPOSES = [
+  "application_review_only",
+  "provider_eligibility",
+] as const;
+
+export type ProviderAcceptancePurpose = (typeof PROVIDER_ACCEPTANCE_PURPOSES)[number];
+
+// These policy pages are still operational-review drafts. A document must be
+// deliberately released here, with its canonical rendered-body SHA-256 and an
+// effective release identifier, before a clickwrap record can satisfy provider
+// eligibility. Changing a draft to active also requires a new document version
+// so the immutable acceptance table records a fresh affirmative acceptance.
+type ProviderDocumentRelease = {
+  releaseStatus: "draft" | "inactive" | "active" | "retired";
+  effectiveAt: string;
+  releaseId: string;
+  canonicalBodyHash: string;
+};
+
+const DRAFT_RELEASE: Readonly<ProviderDocumentRelease> = Object.freeze({
+  releaseStatus: "draft",
+  effectiveAt: "",
+  releaseId: "",
+  canonicalBodyHash: "",
+});
+
+export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
+  {
+    key: "terms",
+    version: TERMS_VERSION,
+    title: "Terms of Use",
+    href: "/terms",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...DRAFT_RELEASE,
+  },
+  {
+    key: "provider_agreement",
+    version: PROVIDER_AGREEMENT_VERSION,
+    title: "Provider Agreement",
+    href: "/provider-agreement",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...DRAFT_RELEASE,
+  },
+  {
+    key: "payment_policy",
+    version: PAYMENT_POLICY_VERSION,
+    title: "Payment, Cancellation and Refund Policy",
+    href: "/payments",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...DRAFT_RELEASE,
+  },
+  {
+    key: "marketplace_conduct",
+    version: MARKETPLACE_CONDUCT_VERSION,
+    title: "Marketplace Conduct and Review Policy",
+    href: "/marketplace-conduct",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...DRAFT_RELEASE,
+  },
+  {
+    key: "provisional_provider_policy",
+    version: PROVISIONAL_PROVIDER_POLICY_VERSION,
+    title: "Provisional Provider and Trainee Policy",
+    href: "/provisional-provider-policy",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...DRAFT_RELEASE,
+  },
+  {
+    key: "privacy",
+    version: PRIVACY_VERSION,
+    title: "Privacy Policy",
+    href: "/privacy",
+    control: "privacy-acknowledgment",
+    presentedText: PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
+    ...DRAFT_RELEASE,
+  },
+] as const;
+
+export type ProviderAgreementKey = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number]["key"];
+
+type ProviderAcceptanceDocument = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number];
+
+type ProviderAgreementEvidenceOptions = {
+  purpose?: ProviderAcceptancePurpose;
+  acceptanceEvidenceId?: string;
+  asOf?: Date;
+};
+
+const SHA256_HEX = /^[a-f0-9]{64}$/i;
+
+export function providerAcceptanceDocumentIsReleasedForEligibility(
+  document: ProviderAcceptanceDocument,
+  asOf = new Date(),
+) {
+  const effectiveAt = Date.parse(document.effectiveAt);
+  return document.releaseStatus === "active"
+    && Boolean(document.releaseId.trim())
+    && SHA256_HEX.test(document.canonicalBodyHash)
+    && Number.isFinite(effectiveAt)
+    && effectiveAt <= asOf.getTime();
+}
+
+export function providerAcceptanceBundleIsReleasedForEligibility(asOf = new Date()) {
+  return PROVIDER_ACCEPTANCE_DOCUMENTS.every((document) => (
+    providerAcceptanceDocumentIsReleasedForEligibility(document, asOf)
+  ));
+}
+
+export function providerAgreementEvidenceText(
+  document: ProviderAcceptanceDocument,
+  options: ProviderAgreementEvidenceOptions = {},
+) {
+  const requestedPurpose = options.purpose ?? "provider_eligibility";
+  const releasedForEligibility = providerAcceptanceDocumentIsReleasedForEligibility(
+    document,
+    options.asOf,
+  );
+  const acceptancePurpose: ProviderAcceptancePurpose = (
+    requestedPurpose === "provider_eligibility" && releasedForEligibility
+  ) ? "provider_eligibility" : "application_review_only";
+
+  // A draft acknowledgment is immutable application-review evidence, not a
+  // deterministic eligibility token. The per-acceptance identifier means a
+  // later eligibility calculation cannot mistake a draft acknowledgment for a
+  // released clickwrap record, even if the draft version label is unchanged.
+  const acceptanceEvidenceId = acceptancePurpose === "application_review_only"
+    ? options.acceptanceEvidenceId?.trim() || crypto.randomUUID()
+    : "";
+
+  return JSON.stringify({
+    schemaVersion: PROVIDER_ACCEPTANCE_EVIDENCE_SCHEMA_VERSION,
+    title: document.title,
+    version: document.version,
+    href: document.href,
+    providerPolicyVersion: POLICY_VERSION,
+    acceptanceControl: document.control,
+    presentedText: document.presentedText,
+    acceptancePurpose,
+    acceptanceEvidenceId,
+    release: {
+      status: document.releaseStatus,
+      effectiveAt: document.effectiveAt,
+      releaseId: document.releaseId,
+      canonicalBodyHash: document.canonicalBodyHash,
+    },
+  });
+}
+
+export async function sha256Text(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}

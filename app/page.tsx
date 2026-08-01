@@ -15,10 +15,23 @@ import {
   parseCustomerServiceLocations,
   PARTS_PREFERENCE_OPTIONS,
   PARTS_SOURCE_OPTIONS,
-  PROVIDER_SERVICE_GROUPS,
   PROVIDER_WORK_LOCATION_OPTIONS,
   providerModeForWorkLocations,
 } from "../lib/service-matching";
+import {
+  POLICY_JURISDICTION,
+  POLICY_STATUS,
+  POLICY_VERSION,
+  PROVIDER_LEVEL_LABELS,
+  SERVICES,
+  type ProviderLevel,
+  type ProviderPathway,
+  type ServiceCode,
+} from "../lib/provider-policy";
+import {
+  PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
+  PROVIDER_TERMS_ACCEPTANCE_TEXT,
+} from "../lib/provider-policy-acceptance";
 import { MarketPriceLinks } from "./components/market-price-links";
 import VehicleSelector from "./components/vehicle-selector";
 import {
@@ -31,6 +44,13 @@ import {
   type TuvelozIconName,
 } from "./components/tuveloz-icons";
 import { ConfirmAction } from "./components/confirm-action";
+
+// The old homepage form accepted multiple broad service labels and older
+// clickwrap. It is permanently excluded from rendering; /post-job is the only
+// customer-intake review surface and uses the exact-service authorization flow.
+function legacyHomepageRequestFormEnabled() {
+  return false;
+}
 
 const services: Array<{
   icon: TuvelozIconName;
@@ -106,6 +126,88 @@ const feedbackCustomerOptions = [
   "Service history and reminders",
   "More providers and service choices",
 ];
+
+type ProviderApplicationPathway = "learning_account" | ProviderPathway;
+
+const PROVIDER_APPLICATION_PATHWAYS: ReadonlyArray<{
+  code: ProviderApplicationPathway;
+  label: string;
+  description: string;
+}> = [
+  {
+    code: "learning_account",
+    label: "Applicant-only account",
+    description: "Application-interest record only. TUVELOZ does not provide training, employment, job assignment, customer jobs, or payouts through this account.",
+  },
+  {
+    code: "independent_startup",
+    label: "Independent startup owner-operator",
+    description: "You own the provider business and personally perform any future approved work.",
+  },
+  {
+    code: "sponsored_trainee_employee",
+    label: "Sponsored trainee employee",
+    description: "You are a genuine paid trainee employee of a separate approved provider business - not TUVELOZ.",
+  },
+  {
+    code: "provider_business_employee",
+    label: "Regular provider-business employee",
+    description: "You are a current non-trainee employee of a separate provider business responsible for the work - not a TUVELOZ employee.",
+  },
+];
+
+const PROVIDER_REVIEW_SERVICES = SERVICES.filter(
+  (service) => service.code !== "general_auto_repair",
+);
+
+const PROVIDER_REVIEW_SERVICE_GROUPS = [
+  {
+    id: "limited",
+    label: "Limited and provisional services",
+    description: "Candidate limited services for later qualification review. Selecting one does not enroll you in training or authorize customer work.",
+    services: PROVIDER_REVIEW_SERVICES.filter((service) => (
+      service.allowedProviderLevels.includes("sponsored_trainee")
+      || service.allowedProviderLevels.includes("provisional_independent")
+    )),
+  },
+  {
+    id: "standard",
+    label: "Standard provider services",
+    description: "Services requiring an approved registered provider business and matching coverage.",
+    services: PROVIDER_REVIEW_SERVICES.filter((service) => (
+      service.allowedProviderLevels.includes("standard_provider")
+    )),
+  },
+  {
+    id: "specialty",
+    label: "Specialty provider services",
+    description: "Higher-control services requiring the listed licenses, permits, evidence, and workflow approval.",
+    services: PROVIDER_REVIEW_SERVICES.filter((service) => (
+      service.allowedProviderLevels.includes("specialty_provider")
+    )),
+  },
+] as const;
+
+function deriveProviderLevel(
+  pathway: ProviderApplicationPathway,
+  selectedServices: readonly ServiceCode[],
+): ProviderLevel {
+  if (pathway === "learning_account") return "learning_account";
+  if (pathway === "sponsored_trainee_employee") return "sponsored_trainee";
+
+  const selectedPolicies = selectedServices.map((code) => (
+    PROVIDER_REVIEW_SERVICES.find((service) => service.code === code)
+  ));
+  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("specialty_provider"))) {
+    return "specialty_provider";
+  }
+  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("standard_provider"))) {
+    return "standard_provider";
+  }
+  return pathway === "independent_startup"
+    ? "provisional_independent"
+    : "standard_provider";
+}
 
 type PublicReview = {
   id: string;
@@ -191,7 +293,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [repeatBooking, setRepeatBooking] = useState<RepeatBooking | null>(null);
   const [repeatBookingError, setRepeatBookingError] = useState("");
   const [useSameVehicle, setUseSameVehicle] = useState(true);
-  const [selectedProviderServices, setSelectedProviderServices] = useState<string[]>([]);
+  const [selectedProviderServices, setSelectedProviderServices] = useState<ServiceCode[]>([]);
+  const [providerPathwayChoice, setProviderPathwayChoice] = useState<ProviderApplicationPathway>(
+    "learning_account",
+  );
   const [selectedProviderAreas, setSelectedProviderAreas] = useState<string[]>([
     CURRENT_LAUNCH_AREA,
   ]);
@@ -200,6 +305,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [headerAccountState, setHeaderAccountState] = useState<
     "checking" | "signed-out" | "customer" | "provider"
   >("checking");
+  const [headerAccountDestination, setHeaderAccountDestination] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -217,10 +323,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         const result = (await response.json()) as {
           role?: "customer" | "provider";
+          destination?: string;
         };
 
         if (result.role === "customer" || result.role === "provider") {
           setHeaderAccountState(result.role);
+          setHeaderAccountDestination(result.destination ?? "");
           return;
         }
 
@@ -244,6 +352,16 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   );
   const providerFormIsSpanish = language === "es";
   const providerLanguage = providerFormIsSpanish ? "Spanish" : "English";
+  const providerLevel = deriveProviderLevel(
+    providerPathwayChoice,
+    selectedProviderServices,
+  );
+  const providerRelationshipPath = providerPathwayChoice === "learning_account"
+    ? null
+    : providerPathwayChoice;
+  const providerNeedsOwnBusiness = providerPathwayChoice === "independent_startup";
+  const providerNeedsSponsor = providerPathwayChoice === "sponsored_trainee_employee"
+    || providerPathwayChoice === "provider_business_employee";
   const providerLegalRequirements = getProviderLegalRequirementFlags(
     selectedProviderServices,
     selectedProviderAreas,
@@ -326,7 +444,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         && !quote.providerTest
       ));
       if (result.job.status !== "completed" || result.job.isTestJob || !provider) {
-        throw new Error("Repeat booking is available after a completed real job with a verified provider.");
+        throw new Error("Repeat booking is available after a completed real job with an eligible provider account.");
       }
       if (result.job.launchArea && result.job.launchArea !== CURRENT_LAUNCH_AREA) {
         throw new Error(
@@ -425,6 +543,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       setRequestError("Choose at least one place where the service can happen.");
       return;
     }
+    if (!isRequest && providerServices.length === 0) {
+      setApplicationError(
+        providerFormIsSpanish
+          ? "Seleccione al menos un servicio para revisión."
+          : "Choose at least one exact service for application review.",
+      );
+      return;
+    }
     if (!isRequest && providerWorkLocations.length === 0) {
       setApplicationError(
         providerFormIsSpanish
@@ -435,21 +561,48 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     }
     const legalRequirementsAccepted = !hasVisibleLegalRequirements
       || formData.get("legal-confirmation") === "yes";
+    const adultAcknowledged = formData.get("adult-acknowledged") === "yes";
+    const employmentResponsibilityAcknowledged = (
+      formData.get("employment-work-authorization-acknowledged") === "yes"
+    );
+    const termsBundleAccepted = formData.get("terms-bundle-accepted") === "yes";
+    const privacyAcknowledged = formData.get("privacy-acknowledged") === "yes";
     const payload = {
       name: values["provider-name"],
       email: values["provider-email"],
       preferredLanguage: providerLanguage,
       services: providerServices,
+      serviceCodes: providerServices,
+      applicationPathway: providerPathwayChoice,
+      providerPathway: providerRelationshipPath,
+      providerLevel,
+      learningAccountOnly: providerPathwayChoice === "learning_account",
+      policyVersion: POLICY_VERSION,
+      policyStatus: POLICY_STATUS,
+      policyJurisdiction: POLICY_JURISDICTION,
       serviceArea: serviceAreas.join(" | "),
       businessMunicipality: values["business-municipality"],
+      legalBusinessName: values["legal-business-name"],
+      businessEntityType: values["business-entity-type"],
+      businessFormationState: values["business-formation-state"],
+      sponsoringProviderLegalName: values["sponsoring-provider-legal-name"],
+      sponsorContactName: values["sponsor-contact-name"],
+      sponsorContactEmail: values["sponsor-contact-email"],
+      sponsorContactTitle: values["sponsor-contact-title"],
       workLocations: providerWorkLocations,
       businessServiceAddress: values["business-service-address"],
       experience: "",
       insuranceStatus: "",
       rulesReviewed: legalRequirementsAccepted,
-      providerAttestation: legalRequirementsAccepted,
-      legalResponsibility: legalRequirementsAccepted,
-      termsAccepted: formData.get("terms-accepted") === "yes",
+      providerAttestation: legalRequirementsAccepted && adultAcknowledged,
+      legalResponsibility: legalRequirementsAccepted && employmentResponsibilityAcknowledged,
+      signerName: values["signer-name"],
+      signerTitle: values["signer-title"],
+      adultAcknowledged,
+      employmentWorkAuthorizationResponsibilityAcknowledged: employmentResponsibilityAcknowledged,
+      termsBundleAccepted,
+      privacyAcknowledged,
+      termsAccepted: termsBundleAccepted,
       providerSelfAssessment: providerAssessment,
     };
 
@@ -496,6 +649,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         setSelectedProviderServices([]);
         setSelectedProviderAreas([CURRENT_LAUNCH_AREA]);
         setSelectedProviderWorkLocations([]);
+        setProviderPathwayChoice("learning_account");
         setProviderAssessment(emptyProviderSelfAssessment);
         setApplicationSent(true);
       }
@@ -598,12 +752,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     }
   }
 
-  const accountHref =
+  const accountHref = headerAccountDestination || (
     headerAccountState === "customer"
       ? "/customer"
       : headerAccountState === "provider"
-        ? "/provider-jobs"
-        : "/account";
+        ? "/provider-onboarding"
+        : "/account"
+  );
   const accountLabel =
     headerAccountState === "customer"
       ? "Customer account"
@@ -633,7 +788,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
-          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Post a job</Link>
+          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>
@@ -651,7 +806,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             {accountLabel}
           </Link>
           <Link className="header-cta" href="/post-job">
-            Post a job
+            Launch status
           </Link>
         </div>
       </header>
@@ -661,7 +816,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="pulse" />
-            Local vehicle-service marketplace
+            Provider onboarding is open
           </div>
           <h1>
             Vehicle services.
@@ -671,25 +826,25 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </span>
           </h1>
           <p>
-            Customers compare available services, providers, and quotes to
-            choose what fits their budget. Providers review matching jobs,
-            set their schedule, and help shape tools that make business simpler.
+            TUVELOZ is building a local vehicle-service marketplace. Provider
+            applications and evidence review are open; customer job requests,
+            payments, and real provider work are not open yet.
           </p>
           <div className="hero-actions">
             <Link className="button primary" href="/post-job">
-              Post a job request <span>→</span>
+              See customer launch status <span>→</span>
             </Link>
             <Link className="button secondary" href="/join">
               Join as a provider
             </Link>
           </div>
           <div className="hero-launch-note">
-            <strong>Operating now in Montgomery County, Maryland</strong>
+            <strong>Provider onboarding now in Montgomery County, Maryland</strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
           </div>
         </div>
 
-        <div className="hero-visual" aria-label="Tuveloz service request preview">
+        <div className="hero-visual" aria-label="Concept preview of the planned Tuveloz service-request workflow">
           <div className="speed-lines" />
           <div className="phone">
             <div className="phone-top">
@@ -715,15 +870,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <div className="match-card">
               <div className="provider-photo">M</div>
               <div>
-                <strong>Provider nearby</strong>
-                <span>Ready to review requests</span>
+                <strong>Planned provider match</strong>
+                <span>Concept preview—not a live job</span>
               </div>
               <b>→</b>
             </div>
           </div>
           <div className="floating-card arrival">
             <span className="check">✓</span>
-            <div><strong>New quote received</strong><small>Review the provider&apos;s price</small></div>
+            <div><strong>Example quote flow</strong><small>Available only after launch activation</small></div>
           </div>
           <div className="floating-card rating">
             <strong>Local independent providers</strong>
@@ -733,10 +888,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
 
       <section className="proof-strip" aria-label="Tuveloz advantages">
-        <span><b>Now serving</b> Montgomery County</span>
-        <span><b>Compare</b> provider quotes</span>
-        <span><b>Control</b> your schedule</span>
-        <span><b>Request</b> helpful business tools</span>
+        <span><b>Now onboarding</b> Montgomery County providers</span>
+        <span><b>Customer jobs</b> not open yet</span>
+        <span><b>Exact services</b> default blocked</span>
+        <span><b>Apply</b> for provider review</span>
       </section>
 
       <section className="audience-section" aria-labelledby="audience-heading">
@@ -762,9 +917,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For customers</span>
             <h3>Compare your options. Choose what works.</h3>
             <p>
-              Request the services your vehicle needs, compare available
-              providers and their quotes, and choose the option that fits your
-              budget.
+              After launch activation, customers will request exact services,
+              compare eligible providers and quotes, and choose what fits. That
+              transaction flow is currently closed.
             </p>
             <ul>
               <li><span>✓</span> Choose from available services</li>
@@ -772,7 +927,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span>✓</span> You make the final decision</li>
             </ul>
             <Link className="button primary" href="/post-job">
-              Request vehicle service <span>→</span>
+              Check customer launch status <span>→</span>
             </Link>
           </article>
 
@@ -781,8 +936,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h3>Run your work on your terms.</h3>
             <p>
               Mobile mechanics, service-truck operators, and shop-based
-              providers can set availability, review matching jobs, send a
-              price, and choose the opportunities that fit their schedule.
+              providers can apply now, choose exact services for review, and
+              upload required evidence. Job access begins only after the exact
+              service and provider pass every launch gate.
             </p>
             <ul>
               <li><span>✓</span> Work on your schedule</li>
@@ -803,8 +959,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h2>Vehicle help, without the runaround.</h2>
           </div>
           <p>
-            We&apos;re starting with seven practical service categories so the first
-            launch stays useful and easier to operate well.
+            These are product concepts, not currently offered customer services.
+            Only exact service codes that pass the written launch controls may open later.
           </p>
         </div>
         <div className="service-cards">
@@ -815,35 +971,35 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
               <h3>{service.title}</h3>
               <p>{service.text}</p>
-              <Link href="/post-job">Post this job <span>→</span></Link>
+              <Link href="/post-job">Not open yet · view launch status <span>→</span></Link>
             </article>
           ))}
         </div>
         <div className="quote-banner">
           <div className="quote-icon"><TuvelozIcon name="quote" /></div>
           <div>
-            <span className="kicker">Quote-only service</span>
-            <h3>Need an estimate for a dent, scratch, or paintwork?</h3>
+            <span className="kicker">Planned quote workflow</span>
+            <h3>Cosmetic-repair quotes are not open yet.</h3>
             <p>
-              Request a cosmetic-repair quote from a qualified local provider.
-              Final pricing may require photos or an in-person inspection.
+              This concept remains disabled unless an exact service definition,
+              provider evidence, and launch approvals are implemented.
             </p>
           </div>
           <Link className="button secondary" href="/post-job">
-            Request a quote <span>→</span>
+            View launch status <span>→</span>
           </Link>
         </div>
       </section>
 
       <section className="section how" id="how-it-works">
         <div className="how-intro">
-          <span className="kicker light">How it works</span>
-          <h2>Post the work. Let providers respond.</h2>
+          <span className="kicker light">Planned customer workflow</span>
+          <h2>After activation: post exact work and compare eligible providers.</h2>
           <p>
-            We&apos;re starting with a request-and-quote model while the local
-            provider network grows.
+            The request-and-quote flow shown here is a product preview. Real
+            requests, quotes, bookings, completion, payments, and payouts remain blocked.
           </p>
-          <Link className="text-link" href="/post-job">Post a job request →</Link>
+          <Link className="text-link" href="/post-job">See customer launch status →</Link>
         </div>
         <div className="steps">
           {steps.map(([number, title, text]) => (
@@ -882,10 +1038,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </div>
                 <blockquote>{review.comment}</blockquote>
                 <div className="review-byline">
-                  <div><strong>{review.customerDisplayName}</strong><span>Verified completed job</span></div>
+                  <div><strong>{review.customerDisplayName}</strong><span>Completed job record</span></div>
                   <div>
                     <strong>{review.providerName}</strong>
-                    {review.providerVerified && <span className="verified-inline">✓ Tuveloz verified</span>}
+                    {review.providerVerified && <span className="verified-inline">Provider account was active for this job</span>}
                     <span>{review.service}</span>
                   </div>
                 </div>
@@ -909,9 +1065,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h2>Post your job. We&apos;ll send it to providers who match.</h2>
           )}
           <p>
-            Tuveloz reviews each request before sharing it with eligible local
-            providers. Because our network is new, getting a quote may take longer
-            at first. Response times should improve as more providers join.
+            Customer requests are currently closed. After launch approval, the
+            server—not a manual owner decision—will share an exact-service request
+            only with providers whose current eligibility records match it.
           </p>
           <div className="pilot-vision">
             <strong>Our vision</strong>
@@ -921,13 +1077,36 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
           </div>
           <ul>
-            <li><span>✓</span> No payment required to post</li>
-            <li><span>✓</span> Approved jobs reach matching providers</li>
-            <li><span>✓</span> You choose whether to accept a quote</li>
-            <li><span>✓</span> A 10% customer service fee is shown before you confirm</li>
+            <li><span>✕</span> Customer posting is not open yet</li>
+            <li><span>✓</span> Future jobs must use enabled exact service codes</li>
+            <li><span>✓</span> Customers will choose whether to accept a quote</li>
+            <li><span>⏳</span> Final fees and tax treatment remain under mandatory legal and CPA or tax-adviser review</li>
           </ul>
         </div>
 
+        {!legacyHomepageRequestFormEnabled() && (
+          <div className="lead-form">
+            <div className="form-heading">
+              <span>01</span>
+              <div>
+                <h3>Review the one exact-service intake</h3>
+                <p>
+                  The old multi-service homepage form is disabled. The dedicated
+                  review page uses one exact service code, a scheduled time,
+                  jurisdiction, immutable terms/privacy records, and server-side gates.
+                </p>
+              </div>
+            </div>
+            <Link className="button primary form-button" href="/post-job">
+              Open exact-service intake review <span>→</span>
+            </Link>
+            <small>
+              It is review-only. No customer job can be submitted while onboarding mode is active.
+            </small>
+          </div>
+        )}
+
+        {legacyHomepageRequestFormEnabled() && (
         <form
           className="lead-form"
           key={`${vehicleResetVersion}:${repeatBooking?.token ?? "new"}`}
@@ -966,7 +1145,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <>
               <div className="form-heading">
                 <span>01</span>
-                <div><h3>Post a job request</h3><p>Once approved, your request reaches eligible providers.</p></div>
+                <div><h3>Planned exact-service request</h3><p>After launch, qualifying requests route automatically to providers eligible for every selected service.</p></div>
               </div>
               {repeatBooking && (
                 <div className="repeat-booking-banner">
@@ -1121,7 +1300,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   })}
                 </div>
                 <small className="customer-service-note">
-                  Availability depends on a verified provider being approved for that exact service.
+                  Availability depends on a provider having current approval for that exact service.
                   Rain guards include vent visors and window deflectors; window tint is separate.
                 </small>
               </fieldset>
@@ -1323,6 +1502,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </>
           )}
         </form>
+        )}
       </section>
 
       <section className="section providers" id="providers">
@@ -1334,21 +1514,33 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             {view === "provider" ? (
               <h1>
                 {providerFormIsSpanish
-                  ? "Reciba aprobación. Revise trabajos compatibles. Maneje su negocio a su manera."
-                  : "Get approved. Review matching jobs. Run your business your way."}
+                  ? "Solicite la revisión de servicios específicos. Prepárese para trabajos futuros. Maneje su negocio a su manera."
+                  : "Apply for exact services. Get ready for future jobs. Run your business your way."}
               </h1>
             ) : (
               <h2>
                 {providerFormIsSpanish
-                  ? "Reciba aprobación. Revise trabajos compatibles. Maneje su negocio a su manera."
-                  : "Get approved. Review matching jobs. Run your business your way."}
+                  ? "Solicite la revisión de servicios específicos. Prepárese para trabajos futuros. Maneje su negocio a su manera."
+                  : "Apply for exact services. Get ready for future jobs. Run your business your way."}
               </h2>
             )}
             <p>
               {providerFormIsSpanish
-                ? "Defina su disponibilidad, revise trabajos que coincidan con sus servicios, envíe su precio y gestione el trabajo seleccionado desde un solo lugar. Los mecánicos móviles, operadores de camiones de servicio y proveedores con taller son partes importantes de la red. También puede solicitar funciones que faciliten el manejo y el crecimiento de su negocio."
-                : "Set your availability, review jobs that match your services, send your price, and manage selected work in one simple place. Mobile mechanics, service-truck operators, and shop-based providers are all important to the network. You can also request features that make your business easier to run and help it grow."}
+                ? "La incorporación de proveedores está abierta ahora. Después del lanzamiento, los proveedores elegibles podrán definir su disponibilidad, revisar trabajos que coincidan con sus servicios, enviar su precio y gestionar el trabajo seleccionado desde un solo lugar."
+                : "Provider onboarding is open now. After marketplace launch, eligible providers will be able to set availability, review jobs that match their exact services, send a price, and manage selected work in one place."}
             </p>
+            <div className="legal-requirement-note">
+              <strong>
+                {providerFormIsSpanish
+                  ? "TUVELOZ no emplea ni capacita a proveedores."
+                  : "TUVELOZ does not employ or train providers."}
+              </strong>
+              <small>
+                {providerFormIsSpanish
+                  ? "TUVELOZ no contrata, patrocina, asigna ni supervisa a mecánicos, aprendices o empleados de negocios proveedores. Un negocio proveedor separado debe manejar su propia contratación, nómina, capacitación, supervisión y asignación de trabajo."
+                  : "TUVELOZ does not hire, sponsor, assign, or supervise mechanics, trainees, or provider-business employees. A separate provider business must handle its own hiring, payroll, training, supervision, and work assignment."}
+              </small>
+            </div>
             <p className="provider-extra-work">
               <strong>
                 {providerFormIsSpanish
@@ -1364,6 +1556,26 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div><span>02</span><strong>{providerFormIsSpanish ? "Defina su precio, disponibilidad y área de servicio" : "Set your price, availability, and service area"}</strong></div>
               <div><span>03</span><strong>{providerFormIsSpanish ? "Solicite herramientas que simplifiquen y hagan crecer su negocio" : "Request tools that simplify and grow your business"}</strong></div>
             </div>
+            <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
+              <div className="eligibility-guide-heading">
+                <span id="provider-guide-title">7-STEP PROVIDER GUIDE</span>
+              </div>
+              <ol>
+                <li>Choose the account pathway that matches your real working relationship.</li>
+                <li>Select only the exact services you want Tuveloz to review.</li>
+                <li>Provide your legal business or sponsoring-provider details when required.</li>
+                <li>Tell us where the business operates and how future service could occur.</li>
+                <li>Review the service-specific legal and evidence requirements.</li>
+                <li>Type the authorized signer&apos;s name and complete each acknowledgment.</li>
+                <li>Submit for review. No customer-job access begins until written activation.</li>
+              </ol>
+              <div className="legal-requirement-note" aria-label="Service status legend">
+                <strong>Service status legend</strong>
+                <small>✓ Selectable for application review</small>
+                <small>✕ Not available for real customer jobs</small>
+                <small>⏳ Under review for mandatory requirements and insurer activation</small>
+              </div>
+            </section>
           </div>
 
           <form
@@ -1374,8 +1586,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             {applicationSent ? (
               <div className="success-message provider-success" role="status">
                 <span>✓</span>
-                <h3>{providerFormIsSpanish ? "Gracias por su interés." : "Thanks for your interest."}</h3>
-                <p>{providerFormIsSpanish ? "Revisaremos su información mientras formamos la red local." : "We'll review your information as we build the local network."}</p>
+                <h3>{providerFormIsSpanish ? "Solicitud guardada." : "Application saved."}</h3>
+                <p>{providerFormIsSpanish
+                  ? "Cree su cuenta de proveedor con el mismo correo para cargar documentos y seguir la revisión."
+                  : "Create your provider account with the same email to upload documents and follow the exact-service review checklist."}</p>
+                <Link className="button primary" href="/account?role=provider">
+                  {providerFormIsSpanish ? "Continuar con la verificación" : "Continue provider verification"}
+                </Link>
                 <button type="button" onClick={() => setApplicationSent(false)}>
                   {providerFormIsSpanish ? "Enviar otra respuesta" : "Submit another response"}
                 </button>
@@ -1392,70 +1609,178 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   {providerFormIsSpanish ? "Correo electrónico" : "Email"}
                   <input required name="provider-email" type="email" placeholder="hello@yourbusiness.com" />
                 </label>
+                <div className="legal-requirement-note" role="status">
+                  <strong>✕ No v0.11 service is available for a real customer job today.</strong>
+                  <small>
+                    Applications and service selections are accepted for review only. Activation requires
+                    documented compliance with applicable law, insurer approval, and every required government,
+                    agency, environmental, tax, payment, privacy, security, and service-specific control.
+                  </small>
+                  <small>
+                    Policy {POLICY_VERSION} · {POLICY_JURISDICTION} · {POLICY_STATUS}
+                  </small>
+                </div>
+                <fieldset className="area-fieldset">
+                  <legend>1. Choose your provider pathway</legend>
+                  <p>Select the choice that describes the real relationship. It does not grant job access.</p>
+                  <div className="area-options">
+                    {PROVIDER_APPLICATION_PATHWAYS.map((pathway) => (
+                      <label key={pathway.code}>
+                        <input
+                          checked={providerPathwayChoice === pathway.code}
+                          name="provider-pathway-choice"
+                          onChange={() => {
+                            setProviderPathwayChoice(pathway.code);
+                            setSelectedProviderServices([]);
+                          }}
+                          type="radio"
+                          value={pathway.code}
+                        />
+                        <span>
+                          <strong>{pathway.label}</strong>
+                          <small>{pathway.description}</small>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <input
+                    name="provider-pathway"
+                    type="hidden"
+                    value={providerRelationshipPath ?? "learning_account"}
+                  />
+                  <input name="provider-level" type="hidden" value={providerLevel} />
+                  <div className="provider-mode-preview" aria-live="polite">
+                    <span>Derived policy level</span>
+                    <strong className="provider-mode-badge">
+                      {PROVIDER_LEVEL_LABELS[providerLevel]}
+                    </strong>
+                  </div>
+                </fieldset>
+                {providerNeedsOwnBusiness && (
+                  <fieldset className="area-fieldset">
+                    <legend>Independent owner-operator business</legend>
+                    <label>
+                      Legal business name
+                      <input required name="legal-business-name" placeholder="Registered business name" />
+                    </label>
+                    <label>
+                      Business entity type
+                      <select required name="business-entity-type" defaultValue="">
+                        <option value="" disabled>Choose one</option>
+                        <option value="sole_proprietorship">Sole proprietorship</option>
+                        <option value="limited_liability_company">Limited liability company</option>
+                        <option value="corporation">Corporation</option>
+                        <option value="partnership">Partnership</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </label>
+                    <label>
+                      State where the business is formed or registered
+                      <input required name="business-formation-state" placeholder="Maryland" />
+                    </label>
+                  </fieldset>
+                )}
+                {providerNeedsSponsor && (
+                  <fieldset className="area-fieldset">
+                    <legend>
+                      {providerPathwayChoice === "sponsored_trainee_employee"
+                        ? "Sponsoring provider business"
+                        : "Employer provider business"}
+                    </legend>
+                    <label>
+                      Legal business name
+                      <input required name="sponsoring-provider-legal-name" placeholder="Provider business legal name" />
+                    </label>
+                    <label>
+                      Authorized business contact
+                      <input required name="sponsor-contact-name" placeholder="Contact's legal name" />
+                    </label>
+                    <label>
+                      Contact title
+                      <input required name="sponsor-contact-title" placeholder="Owner, manager, or authorized signer" />
+                    </label>
+                    <label>
+                      Contact email
+                      <input required name="sponsor-contact-email" type="email" placeholder="contact@provider.com" />
+                    </label>
+                  </fieldset>
+                )}
+                {providerPathwayChoice === "learning_account" && (
+                  <div className="legal-requirement-note">
+                    <strong>Applicant-only account: no training, employment, customer jobs, or payout</strong>
+                    <small>You may select services only to identify what you hope to qualify for independently later. TUVELOZ does not provide training or promise work.</small>
+                  </div>
+                )}
                 <fieldset className="area-fieldset service-fieldset">
                   <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
                   <p>
                     {providerFormIsSpanish
-                      ? "Seleccione todos los que correspondan."
-                      : "Choose all that apply."}
+                      ? "Seleccione servicios de un solo nivel por solicitud."
+                      : "Choose exact services from one level per application. Changing levels replaces incompatible selections."}
                   </p>
                   <div className="service-groups provider-service-groups">
-                    {PROVIDER_SERVICE_GROUPS.map((group) => {
-                      const selectedCount = group.options.filter((service) => (
-                        selectedProviderServices.includes(service.value)
+                    {PROVIDER_REVIEW_SERVICE_GROUPS.map((group) => {
+                      const groupServices = providerPathwayChoice === "learning_account"
+                        ? group.services
+                        : group.services.filter((service) => (
+                            service.allowedPathways.includes(providerPathwayChoice)
+                          ));
+                      if (groupServices.length === 0) return null;
+                      const selectedCount = groupServices.filter((service) => (
+                        selectedProviderServices.includes(service.code)
                       )).length;
                       return (
                         <details
                           className="service-group"
-                          open={group.id === "mobile" ? true : undefined}
+                          open={group.id === "limited" ? true : undefined}
                           key={group.id}
                         >
                           <summary>
                             <span>
-                              <strong>
-                                {providerFormIsSpanish ? group.labelEs : group.label}
-                              </strong>
-                              <small>
-                                {providerFormIsSpanish
-                                  ? group.descriptionEs
-                                  : group.description}
-                              </small>
+                              <strong>{group.label}</strong>
+                              <small>{group.description}</small>
                             </span>
                             <b>
                               {selectedCount
-                                ? providerFormIsSpanish
-                                  ? `${selectedCount} seleccionados`
-                                  : `${selectedCount} selected`
-                                : providerFormIsSpanish
-                                  ? "Ver"
-                                  : "View"}
+                                ? `${selectedCount} selected`
+                                : "View"}
                             </b>
                           </summary>
                           <div className="service-options">
-                            {group.options.map((service) => (
-                              <label key={service.value}>
+                            {groupServices.map((service) => (
+                              <label key={service.code}>
                                 <input
-                                  checked={selectedProviderServices.includes(service.value)}
+                                  checked={selectedProviderServices.includes(service.code)}
                                   name="provider-service"
                                   type="checkbox"
-                                  value={service.value}
+                                  value={service.code}
                                   onChange={(event) => setSelectedProviderServices((current) => (
                                     event.target.checked
-                                      ? [...current, service.value]
-                                      : current.filter((item) => item !== service.value)
+                                      ? providerPathwayChoice === "learning_account"
+                                        ? [...new Set([...current, service.code])]
+                                        : [
+                                            ...current.filter((item) => {
+                                              const selected = PROVIDER_REVIEW_SERVICES.find(
+                                                (candidate) => candidate.code === item,
+                                              );
+                                              return selected?.allowedProviderLevels.some((level) => (
+                                                service.allowedProviderLevels.some((nextLevel) => nextLevel === level)
+                                              ));
+                                            }),
+                                            service.code,
+                                          ]
+                                      : current.filter((item) => item !== service.code)
                                   ))}
                                 />
                                 <span>
-                                  <strong>
-                                    {providerFormIsSpanish ? service.labelEs : service.label}
-                                  </strong>
-                                  {service.note && (
-                                    <small>
-                                      {providerFormIsSpanish
-                                        ? service.noteEs
-                                        : service.note}
-                                    </small>
-                                  )}
+                                  <strong>✓ {service.label}</strong>
+                                  <small>{service.description}</small>
+                                  <small>
+                                    ✕ Real jobs unavailable · Under review pending mandatory requirements + insurer activation
+                                    {service.launchState.includes("environmental") ? " + environmental approval" : ""}
+                                    {service.launchState.includes("agency") ? " + agency approval" : ""}
+                                  </small>
+                                  <small>Exact code: {service.code}</small>
                                 </span>
                               </label>
                             ))}
@@ -1465,9 +1790,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     })}
                   </div>
                   <small className="customer-service-note">
-                    {providerFormIsSpanish
-                      ? "Cada servicio se activa solo después de la revisión y aprobación de Tuveloz."
-                      : "Each service is activated only after Tuveloz review and approval."}
+                    ✕ General auto repair is prohibited as a broad category and is not selectable.
+                    Choose exact v0.11 services only. Selections are for review, not real-job access.
                   </small>
                 </fieldset>
                 <label>
@@ -1750,23 +2074,51 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     </label>
                   </section>
                 ) : null}
+                <fieldset className="area-fieldset">
+                  <legend>Authorized signature and acknowledgments</legend>
+                  <label>
+                    Typed signer name
+                    <input required name="signer-name" placeholder="Full legal name" />
+                  </label>
+                  <label>
+                    Signer title or capacity
+                    <input required name="signer-title" placeholder="Applicant, owner, or authorized representative" />
+                  </label>
+                  <label className="policy-consent">
+                    <input required name="adult-acknowledged" type="checkbox" value="yes" />
+                    <span>I confirm that I am at least 18 years old and authorized to submit this application.</span>
+                  </label>
+                  <label className="policy-consent">
+                    <input
+                      required
+                      name="employment-work-authorization-acknowledged"
+                      type="checkbox"
+                      value="yes"
+                    />
+                    <span>
+                      I understand that the provider business—not Tuveloz—is responsible for lawful
+                      employment classification, work authorization, wages, payroll taxes, workers&apos;
+                      compensation, supervision, and personnel records. An independent owner-operator
+                      remains responsible for their own business and work authorization obligations.
+                    </span>
+                  </label>
+                </fieldset>
                 <label className="policy-consent">
-                  <input required name="terms-accepted" type="checkbox" value="yes" />
+                  <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
                   <span>
-                    {providerFormIsSpanish
-                      ? "Confirmo que tengo 18 años o más, acepto los "
-                      : "I am 18 or older and agree to the "}
-                    <a href="/terms">
-                      {providerFormIsSpanish ? "Términos" : "Terms"}
-                    </a>
-                    {providerFormIsSpanish ? " y el " : " and "}
-                    <a href="/provider-agreement">
-                      {providerFormIsSpanish ? "Acuerdo del Proveedor" : "Provider Agreement"}
-                    </a>
-                    {providerFormIsSpanish ? ", y reconozco la " : ", and acknowledge the "}
-                    <a href="/privacy">
-                      {providerFormIsSpanish ? "Política de Privacidad" : "Privacy Policy"}
-                    </a>.
+                    {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
+                    Review the <a href="/terms">Terms</a>,{" "}
+                    <a href="/provider-agreement">Provider Agreement</a>,{" "}
+                    <a href="/payments">Payment Policy</a>,{" "}
+                    <a href="/marketplace-conduct">Conduct Policy</a>, and{" "}
+                    <a href="/provisional-provider-policy">Provider Pathway Policy</a>.
+                  </span>
+                </label>
+                <label className="policy-consent">
+                  <input required name="privacy-acknowledged" type="checkbox" value="yes" />
+                  <span>
+                    {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
+                    Review the <a href="/privacy">Privacy Policy</a>.
                   </span>
                 </label>
                 {pendingSubmission === "application" ? (
@@ -1793,8 +2145,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 {applicationError && <p className="form-error" role="alert">{applicationError}</p>}
                 <small>
                   {providerFormIsSpanish
-                    ? "Si la ley exige una licencia o un registro para el servicio y la ubicación seleccionados, Tuveloz debe recibir y verificar la prueba antes de aprobarlos. Si no corresponde ningún requisito, no se necesita un documento."
-                    : "If the selected service and location legally require a license or registration, Tuveloz must receive and verify proof before approval. If none applies, no document is needed."}
+                    ? "Si la ley exige una licencia o un registro para el servicio y la ubicación seleccionados, Tuveloz debe recibir y verificar la prueba antes de aprobarlos. Si no corresponde una licencia gubernamental, Tuveloz no la solicitará por ese motivo; aún pueden exigirse seguros, competencia, documentos comerciales u otras pruebas del servicio."
+                    : "If the selected service and location legally require a license or registration, Tuveloz must receive and verify proof before approval. If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."}
                 </small>
               </>
             )}
@@ -2023,9 +2375,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
       <section className="final-cta">
         <span className="kicker light">Tuveloz</span>
-        <h2>Start with one clear request.</h2>
+        <h2>Provider onboarding is open. Customer jobs remain closed.</h2>
         <div>
-          <Link className="button lime" href="/post-job">Post a job request <span>→</span></Link>
+          <Link className="button lime" href="/post-job">See customer launch status <span>→</span></Link>
           <Link className="button ghost" href="/join">Join the provider network</Link>
         </div>
       </section>
@@ -2037,7 +2389,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
-          <Link href="/post-job">Post a job</Link>
+          <Link href="/post-job">Customer launch status</Link>
           <Link href="/join">Join as a provider</Link>
           <Link href="/how-it-works">How it works</Link>
           <Link href="/safety">Safety &amp; trust</Link>
@@ -2047,6 +2399,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <a href="/terms">Terms</a>
           <a href="/customer-agreement">Customer agreement</a>
           <a href="/provider-agreement">Provider agreement</a>
+          <a href="/marketplace-conduct">Marketplace conduct</a>
+          <a href="/provisional-provider-policy">Provider pathways</a>
           <a href="/privacy">Privacy</a>
           <a href="/payments">Payments</a>
           <Link href="/about#expansion">Request your area</Link>
@@ -2057,7 +2411,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
         <div className="footer-bottom">
           <span>© 2026 Tuveloz. All rights reserved.</span>
-          <span>Local marketplace · Operating now in Montgomery County, Maryland.</span>
+          <span>Marketplace build · Provider onboarding open in Montgomery County, Maryland.</span>
         </div>
       </footer>
     </main>

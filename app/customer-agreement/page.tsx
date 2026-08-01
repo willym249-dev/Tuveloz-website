@@ -5,9 +5,23 @@ export default function CustomerAgreementPage() {
     <PolicyPage
       eyebrow="Customers"
       title="Customer Agreement"
-      summary="Your choices, responsibilities, and direct agreement with the independent provider you select."
-      updated="July 28, 2026"
+      summary="An operational review draft about your choices and direct agreement with the provider business you select."
+      updated="July 31, 2026"
     >
+      <section>
+        <h2>Important current status</h2>
+        <p>
+          This Customer Agreement is an operational draft, not legal advice,
+          proof of compliance, or approval to launch. Tuveloz&apos;s owner may elect
+          to proceed without hiring private counsel, but that choice does not
+          waive or reduce any duty imposed by applicable law. Tuveloz is currently
+          in provider-onboarding mode, so customers cannot post, book, pay for,
+          start, or complete a real job. Every exact service remains disabled
+          until its mandatory legal, government, insurance, tax, payment,
+          security, and technical launch controls are documented and satisfied.
+        </p>
+      </section>
+
       <section>
         <h2>1. How this agreement fits</h2>
         <p>
@@ -40,15 +54,25 @@ export default function CustomerAgreementPage() {
       <section>
         <h2>4. Selecting a provider</h2>
         <p>
-          You are responsible for evaluating the provider and quote. Tuveloz
-          displays the verification information it has reviewed, but a badge is
-          not a guarantee. Tuveloz requires a governmental credential only when
-          applicable law requires it for that service and location.
+          You evaluate the provider and quote using the information available to
+          you. Any evidence-checked status shown by Tuveloz is limited to the
+          named provider or person, exact service, location, document, and
+          validity period shown; it is not a guarantee. Depending on the service,
+          Tuveloz may require governmental credentials, business registration,
+          insurance, competency, employment, supervision, or other evidence.
         </p>
         <p>
           Accepting a quote creates a direct service agreement between you and
-          the provider. The accepted quote and messages define the work. No added
-          work, substitute part, or price increase is approved unless you agree.
+          the responsible provider business. The accepted quote and messages
+          define the work. The provider business controls any approved employee
+          or sponsored-trainee assignment. No added work, substitute part, or
+          price increase is approved unless you agree. This direct agreement
+          does not waive any non-waivable duty that law places on Tuveloz.
+        </p>
+        <p>
+          TUVELOZ does not employ or train the provider, mechanic, trainee, or
+          provider-business employee. Any employee or trainee works for and is
+          assigned and supervised by the separate provider business, not TUVELOZ.
         </p>
       </section>
 
@@ -69,19 +93,24 @@ export default function CustomerAgreementPage() {
           A diagnosis or pre-purchase opinion may be limited by what can
           reasonably be observed and tested at the location. It is not an
           official state inspection unless an authorized provider expressly says
-          so. The provider must identify parts and any provider or manufacturer
-          warranty in the service records.
+          so. The provider business should identify parts and who offers any
+          express warranty in the service records. Implied or statutory warranty
+          rights and duties remain governed by applicable law.
         </p>
       </section>
 
       <section>
         <h2>7. Price, payment, cancellation, and refunds</h2>
         <p>
-          Before payment, you see the provider subtotal, the separate 10% Tuveloz
-          customer service fee, and the total. You authorize the displayed amount
-          only after choosing to continue. The{" "}
-          <a href="/payments">Payment, Cancellation, and Refund Policy</a> governs
-          payment administration, cancellations, refunds, and disputes.
+          Real customer payments are currently disabled. The product
+          configuration proposes a customer service fee equal to 10% of the
+          provider subtotal, subject to documented compliance with applicable
+          law and final CPA or tax-adviser, payment-processor, insurance, and
+          operational approval. If that pricing is adopted, the provider
+          subtotal, separate fee, and total must be displayed conspicuously before
+          you choose whether to authorize checkout. The{" "}
+          <a href="/payments">Payment, Cancellation, and Refund Policy</a> explains
+          the proposed payment administration and customer protections.
         </p>
       </section>
 
@@ -89,10 +118,12 @@ export default function CustomerAgreementPage() {
         <h2>8. Problems with service</h2>
         <p>
           Raise a workmanship, parts, warranty, delay, or property concern with
-          the provider promptly and preserve relevant messages, approvals,
+          the provider business promptly and preserve relevant messages, approvals,
           receipts, and photos. Tuveloz may help organize records or review an
-          unreleased payment, but the provider remains responsible for the
-          vehicle service and any provider warranty.
+          unreleased payment if live transactions are later enabled, but the
+          provider business remains responsible for the vehicle service and any
+          warranty it expressly offers. Tuveloz remains responsible for its own
+          conduct and any duty applicable law does not allow it to disclaim.
         </p>
       </section>
 

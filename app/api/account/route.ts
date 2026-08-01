@@ -7,6 +7,7 @@ import {
 } from "../../../db/schema";
 import {
   getAccountSession,
+  providerApplicationFor,
   providerAccountFor,
 } from "../../../lib/account-auth";
 
@@ -77,13 +78,28 @@ export async function GET(request: Request) {
 
     const provider = await providerAccountFor(session.email);
     if (!provider) {
+      const application = await providerApplicationFor(session.email);
+      if (application) {
+        return Response.json({
+          role: "provider",
+          destination: "/provider-onboarding",
+          email: session.email,
+          availableRoles: session.availableRoles,
+          provider: {
+            name: application.name,
+            applicationStatus: application.status,
+            verificationStatus: application.verificationStatus,
+          },
+        }, { headers: { "cache-control": "no-store" } });
+      }
       return Response.json(
-        { error: "Verified provider access is no longer active." },
+        { error: "This provider account no longer has active exact-service access." },
         { status: 403, headers: { "cache-control": "no-store" } },
       );
     }
     return Response.json({
       role: "provider",
+      destination: "/provider-jobs",
       email: session.email,
       availableRoles: session.availableRoles,
       provider: {

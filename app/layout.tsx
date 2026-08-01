@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   title: "Tuveloz | Customer Choice. Provider Freedom.",
   description:
-    "A local vehicle-service marketplace currently operating in Montgomery County, Maryland. Customers compare quotes while providers choose their schedule, prices, and work.",
+    "TUVELOZ is onboarding independent provider businesses in Montgomery County, Maryland. Customer job requests and payments are not open yet.",
   icons: {
     icon: "/tuveloz-favicon-v2.svg",
     shortcut: "/tuveloz-favicon-v2.svg",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tuveloz | Customer Choice. Provider Freedom.",
     description:
-      "Local vehicle services, now operating in Montgomery County, Maryland. Customers compare providers and quotes while providers choose how they work.",
+      "Provider onboarding is underway in Montgomery County, Maryland. Customer jobs and payments remain closed during launch review.",
     images: [{
       url: "/tuveloz-google-profile-logo.png",
       width: 1024,

@@ -52,6 +52,7 @@ type AcceptedJob = {
   partsPriceCents: string;
   availability: string;
   quoteMessage: string;
+  transactionActionsAvailable: boolean;
   disclosures: string[];
   authorizations: JobAuthorization[];
 };
@@ -334,7 +335,17 @@ export default function JobAuthorizationsPage() {
                   </div>
                 </details>
 
-                {data.role === "provider" && job.requestStatus !== "completed" && (
+                {!job.transactionActionsAvailable && (
+                  <p className="admin-note">
+                    Existing records remain available, and pending proposals may still be declined or
+                    withdrawn. Creating or accepting work, change, or scope authorizations is disabled
+                    while Tuveloz remains in provider-onboarding mode.
+                  </p>
+                )}
+
+                {data.role === "provider"
+                  && job.transactionActionsAvailable
+                  && job.requestStatus !== "completed" && (
                   <details className="workspace-tools">
                     <summary>Create a detailed work order or change order</summary>
                     <div className="workspace-tool-content">
@@ -478,23 +489,27 @@ export default function JobAuthorizationsPage() {
                                   value={draft.note}
                                 />
                               </label>
-                              <label>
-                                <input
-                                  checked={draft.consentAccepted}
-                                  onChange={(event) => updateResponseDraft(authorization.id, { consentAccepted: event.target.checked })}
-                                  type="checkbox"
-                                />
-                                I reviewed the written scope and amount. I understand that accepting authorizes only this record and does not make Tuveloz the vehicle-service provider.
-                              </label>
+                              {job.transactionActionsAvailable && (
+                                <label>
+                                  <input
+                                    checked={draft.consentAccepted}
+                                    onChange={(event) => updateResponseDraft(authorization.id, { consentAccepted: event.target.checked })}
+                                    type="checkbox"
+                                  />
+                                  I reviewed the written scope and amount. I understand that accepting authorizes only this record and does not make Tuveloz the vehicle-service provider.
+                                </label>
+                              )}
                               <div className="hero-actions">
-                                <button
-                                  className="button primary"
-                                  disabled={busyId === `respond:${authorization.id}`}
-                                  onClick={() => respond(authorization.id, "accepted")}
-                                  type="button"
-                                >
-                                  Accept written authorization
-                                </button>
+                                {job.transactionActionsAvailable && (
+                                  <button
+                                    className="button primary"
+                                    disabled={busyId === `respond:${authorization.id}`}
+                                    onClick={() => respond(authorization.id, "accepted")}
+                                    type="button"
+                                  >
+                                    Accept written authorization
+                                  </button>
+                                )}
                                 <button
                                   className="button secondary"
                                   disabled={busyId === `respond:${authorization.id}`}

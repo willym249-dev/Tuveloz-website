@@ -135,7 +135,7 @@ type ProviderQuote = {
 type PendingAdminAction = {
   kind: "request" | "provider";
   id: string;
-  status: "approved" | "declined" | "test";
+  status: "approved" | "declined";
   title: string;
   message: string;
 };
@@ -301,48 +301,6 @@ export default function AdminPage() {
     setPendingAction(null);
   }
 
-  async function markRequestTest(id: string) {
-    setError("");
-    const response = await fetch("/api/admin/requests", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "mark-test" }),
-    });
-    const result = (await response.json()) as { error?: string; isTestJob?: string };
-    if (!response.ok) return setError(result.error || "Unable to mark this request as a test job.");
-    setRequests((items) => items.map((item) => (
-      item.id === id ? { ...item, isTestJob: result.isTestJob ?? "yes" } : item
-    )));
-    setPendingAction(null);
-    setAlertStatus("Test job enabled. Approving it will not email real providers.");
-  }
-
-  async function markProviderTest(id: string) {
-    setError("");
-    const response = await fetch("/api/admin/providers", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, action: "mark-test" }),
-    });
-    const result = (await response.json()) as {
-      error?: string;
-      verificationStatus?: string;
-      isTestProvider?: string;
-    };
-    if (!response.ok) return setError(result.error || "Unable to activate this test provider.");
-    setProviders((items) => items.map((item) => (
-      item.id === id ? {
-        ...item,
-        status: "approved",
-        verificationStatus: result.verificationStatus ?? "test",
-        isTestProvider: result.isTestProvider ?? "yes",
-        alertsEnabled: "no",
-      } : item
-    )));
-    setPendingAction(null);
-    setAlertStatus("Test provider activated. It can access test jobs only and receives no real alerts or public badge.");
-  }
-
   function updateVerificationDraft(
     providerId: string,
     update: (draft: VerificationDraft) => VerificationDraft,
@@ -450,11 +408,7 @@ export default function AdminPage() {
     if (!pendingAction) return;
     setActionBusy(true);
     try {
-      if (pendingAction.status === "test" && pendingAction.kind === "request") {
-        await markRequestTest(pendingAction.id);
-      } else if (pendingAction.status === "test") {
-        await markProviderTest(pendingAction.id);
-      } else if (pendingAction.kind === "request") {
+      if (pendingAction.kind === "request") {
         await updateRequest(pendingAction.id, pendingAction.status);
       } else {
         await updateProvider(pendingAction.id, pendingAction.status);
@@ -571,7 +525,13 @@ export default function AdminPage() {
     <main className="admin-shell">
       <header className="admin-header">
         <Link className="brand" href="/"><BrandMark /><span>Tuveloz</span></Link>
-        <div><span>Private owner dashboard</span><Link href="/">View site</Link></div>
+        <div>
+          <span>Private owner dashboard</span>
+          <Link href="/admin/launch-readiness">Integrated launch review</Link>
+          <Link href="/admin/compliance-operations">Compliance operations</Link>
+          <Link href="/admin/provider-compliance">Provider compliance queue</Link>
+          <Link href="/">View site</Link>
+        </div>
       </header>
 
       <section className="admin-intro">
@@ -687,15 +647,6 @@ export default function AdminPage() {
                           title: "Decline this customer request?",
                           message: "The request will not be shown to providers. Please confirm before continuing.",
                         })}>Decline</button>
-                        {item.isTestJob !== "yes" && (
-                          <button onClick={() => setPendingAction({
-                            kind: "request",
-                            id: item.id,
-                            status: "test",
-                            title: "Mark this as a test job?",
-                            message: "This request will be isolated from real providers and automatic provider alerts. Only test providers will be able to quote it.",
-                          })}>Mark as test job</button>
-                        )}
                       </div>
                     )}
                     <div className="admin-contact"><strong>{item.name}</strong><a href={`mailto:${item.email}`}>{item.email}</a></div>
@@ -752,11 +703,10 @@ export default function AdminPage() {
           <section className="admin-section" hidden={activeAdminView !== "providers"} id="owner-provider-approvals">
             <h2>Provider applications</h2>
             <p className="admin-section-copy">
-              A provider receives workspace access only after service eligibility and every legally
-              triggered government credential are checked. The public profile names the exact
-              credential checked; Tuveloz does not publish a vague licensed or verified claim.
-              Tuveloz currently reviews applications only for Montgomery County, Maryland.
-              Do not request a credential when the saved services and jurisdiction do not legally require it.
+              Register and review every real applicant in the Provider Registration &amp; Compliance
+              queue. This older view is retained for isolated fictional test providers only and
+              cannot grant a real provider blanket approval. Tuveloz currently reviews applications
+              only for Montgomery County, Maryland.
             </p>
             <div className="compliance-guides">
               <article>
@@ -809,6 +759,47 @@ export default function AdminPage() {
                     && savedCredentialsComplete;
                   const isVerified = item.verificationStatus === "verified";
                   const isTestProvider = item.isTestProvider === "yes";
+                  if (!isTestProvider) {
+                    return (
+                      <article className="admin-card" key={item.id}>
+                        <div className="admin-card-top">
+                          <span>{item.status} · {item.verificationStatus}</span>
+                          <time>{item.createdAt}</time>
+                        </div>
+                        <h3>{item.name}</h3>
+                        <p>Requested services: {requestedServices.join(", ") || "No exact services recorded"}</p>
+                        <p>
+                          Real provider applications use the v0.11 relationship, evidence, agreement,
+                          and exact-service rules. This legacy screen cannot approve or activate them.
+                        </p>
+                        <div className="admin-link-actions">
+                          <Link href="/admin/provider-compliance">Open Provider Registration &amp; Compliance</Link>
+                          <a href={`mailto:${item.email}`}>{item.email}</a>
+                        </div>
+                        {item.status === "new" && (
+                          <button onClick={() => setPendingAction({
+                            kind: "provider",
+                            id: item.id,
+                            status: "declined",
+                            title: "Decline this provider?",
+                            message: "The provider will remain blocked from workspace access, job alerts, and customer work.",
+                          })}>Decline application</button>
+                        )}
+                        {pendingAction?.kind === "provider" && pendingAction.id === item.id && (
+                          <div className="quote-confirm action-confirm" role="group" aria-label={pendingAction.title}>
+                            <strong>{pendingAction.title}</strong>
+                            <p>{pendingAction.message}</p>
+                            <div>
+                              <button className="button primary" disabled={actionBusy} onClick={confirmPendingAction}>
+                                {actionBusy ? "Updating…" : "Yes, confirm"}
+                              </button>
+                              <button className="button secondary" disabled={actionBusy} onClick={() => setPendingAction(null)}>Go back</button>
+                            </div>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  }
                   const matchingJobs = requests.filter((request) => (
                     request.status === "approved"
                     && providerMatchesJob(
@@ -902,7 +893,7 @@ export default function AdminPage() {
                             const statusLabel = eligibility?.status === "ready"
                               ? "Ready for owner review"
                               : eligibility?.status === "needs-review"
-                                ? "Legal review needed"
+                                ? "Compliance review needed"
                                 : eligibility?.status === "blocked"
                                   ? "Legal requirement not met"
                                   : "Manual review required";
@@ -1086,13 +1077,6 @@ export default function AdminPage() {
                             message: "The provider will not receive workspace access, job alerts, or a public eligibility record.",
                           })}>Decline</button>
                         )}
-                        <button onClick={() => setPendingAction({
-                          kind: "provider",
-                          id: item.id,
-                          status: "test",
-                          title: "Activate this fictional test provider?",
-                          message: "This grants test-only workspace access. It will receive no real job alerts, public eligibility record, public rating, or access to real customer jobs.",
-                        })}>Activate as test provider</button>
                         {!savedComplete && (
                           <span className="admin-link-note">
                             Save at least one approved service, every applicable checklist item, and

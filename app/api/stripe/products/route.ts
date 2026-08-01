@@ -8,6 +8,25 @@ import {
   stripeErrorResponse,
 } from "../../../../lib/stripe";
 import { authenticatedStripeProvider } from "../../../../lib/stripe-provider";
+import {
+  marketplacePausedMessage,
+  type MarketplaceAction,
+} from "../../../../lib/launch-status";
+import { runtimeMarketplaceActionAllowed } from "../../../../lib/runtime-marketplace-action";
+import { runtimeRealMarketplaceReleaseDecision } from "../../../../lib/runtime-launch-readiness";
+
+function marketplacePausedResponse(action: MarketplaceAction) {
+  return Response.json(
+    {
+      error: marketplacePausedMessage(action),
+      code: "MARKETPLACE_ONBOARDING_ONLY",
+    },
+    {
+      status: 503,
+      headers: { "cache-control": "no-store", "retry-after": "86400" },
+    },
+  );
+}
 
 function clean(value: unknown, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -22,6 +41,9 @@ function expandedDefaultPrice(product: Stripe.Product) {
 }
 
 export async function GET() {
+  if (!(await runtimeMarketplaceActionAllowed("discovery"))) {
+    return marketplacePausedResponse("discovery");
+  }
   try {
     const stripeClient = getStripeClient();
 
@@ -134,9 +156,14 @@ export async function POST(request: Request) {
   const provider = await authenticatedStripeProvider(request);
   if (!provider) {
     return Response.json(
-      { error: "Sign in to a verified provider account before creating an offering." },
+      { error: "Sign in to an active provider account before creating an offering." },
       { status: 401 },
     );
+  }
+  // Product publication always targets the real Stripe platform account; it
+  // is never an isolated test-fixture operation.
+  if (!(await runtimeMarketplaceActionAllowed("quote"))) {
+    return marketplacePausedResponse("quote");
   }
   if (!provider.stripeAccountId) {
     return Response.json(
@@ -198,6 +225,10 @@ export async function POST(request: Request) {
 
     // No connected-account request option is passed here: the product and its
     // default price are intentionally created on the platform account.
+    const releaseDecision = await runtimeRealMarketplaceReleaseDecision();
+    if (!releaseDecision.approved) {
+      return marketplacePausedResponse("quote");
+    }
     const product = await stripeClient.products.create(
       {
         name,
@@ -210,6 +241,11 @@ export async function POST(request: Request) {
           tuveloz_provider_application_id: provider.id,
           tuveloz_connected_account_id: provider.stripeAccountId,
           tuveloz_provider_name: provider.name,
+          tuveloz_launch_onboarding_ids:
+            releaseDecision.providerOnboardingDecisionIds.join(",").slice(0, 500),
+          tuveloz_launch_pilot_ids:
+            releaseDecision.transactionPilotDecisionIds.join(",").slice(0, 500),
+          tuveloz_launch_checked_at: releaseDecision.checkedAt,
         },
       },
       {

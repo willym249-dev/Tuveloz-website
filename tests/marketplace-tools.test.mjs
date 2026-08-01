@@ -66,6 +66,14 @@ test("customers and providers can request appointments with participant checks",
   assert.ok(api.includes("getAccountSession(request)"));
   assert.ok(api.includes("isSameOriginRequest(request)"));
   assert.ok(api.includes("quote.status = 'accepted'"));
+  assert.ok(api.includes("currentAccount: await providerAccountFor(provider.email)"));
+  assert.ok(api.includes("currentProvider.id !== providerId"));
+  assert.ok(api.includes("currentPlatformActiveServiceCodes(POLICY_JURISDICTION)"));
+  assert.match(api, /currentPlatformActiveServiceCodes\(\s*appointmentJurisdiction/);
+  assert.ok(api.includes("parseExactServiceCodes(ownedRequest.serviceCodes)"));
+  assert.ok(api.includes("requestServiceCodes[0] !== service"));
+  assert.ok(api.includes("activePlatformServiceCodes.has(service)"));
+  assert.ok(!api.includes("parseProviderServices(provider.approvedServices).includes(service)"));
   assert.ok(api.includes("requested_by_role"));
   assert.ok(api.includes("The person who received the request must confirm or decline it."));
   assert.ok(api.includes("notifyMarketplaceAccount"));

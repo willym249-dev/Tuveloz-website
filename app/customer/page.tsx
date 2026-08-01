@@ -100,7 +100,7 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
   saved: {
     title: "Saved providers",
     emptyTitle: "No saved providers yet",
-    emptyText: "Verified providers from your quote history can be saved here.",
+    emptyText: "Providers from your quote history can be saved here.",
   },
   settings: {
     title: "Profile & settings",
@@ -264,7 +264,7 @@ export default function CustomerPage() {
         <div className="account-welcome">
           <span className="account-kicker">Customer workspace</span>
           <h1>Your jobs.</h1>
-          <p>View updates, review quotes, or post a new request.</p>
+          <p>View saved records and quotes. New customer requests remain closed during provider onboarding.</p>
           {account && <small>Signed in as {account.email}</small>}
         </div>
 
@@ -273,7 +273,7 @@ export default function CustomerPage() {
         {account && (
           <div className="account-grid account-customer-grid">
             <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
-              <Link className="workspace-nav-primary" href="/post-job">Post a job</Link>
+              <Link className="workspace-nav-primary" href="/post-job">Customer launch status</Link>
               {([
                 ["requests", "My requests"],
                 ["quotes", "Quotes received"],
@@ -388,7 +388,7 @@ export default function CustomerPage() {
                 </Link>
               ) : requestView ? (
                 <Link className="button primary account-button" href="/post-job">
-                  Post a job <span>→</span>
+                  Customer launch status <span>→</span>
                 </Link>
               ) : null}
             </section>
