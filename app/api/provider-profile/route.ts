@@ -17,7 +17,11 @@ import {
   parseProviderServices,
 } from "../../../lib/service-matching";
 import { QUOTE_DECLINE_REASONS } from "../../../lib/quote-feedback";
-import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
+import {
+  getAccountSession,
+  providerAccountFor,
+  testProviderAccountFor,
+} from "../../../lib/account-auth";
 import { marketplacePausedMessage } from "../../../lib/launch-status";
 import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
@@ -49,7 +53,8 @@ function profileSlug(name: string, providerId: string) {
 async function activeProvider(request: Request) {
   const session = await getAccountSession(request);
   if (!session || session.role !== "provider") return null;
-  return providerAccountFor(session.email);
+  return (await providerAccountFor(session.email))
+    || (await testProviderAccountFor(session.email));
 }
 
 async function providerPublicDiscoveryAllowed(
