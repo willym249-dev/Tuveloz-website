@@ -6,10 +6,19 @@ import {
   jobScopeVersions,
   jobReviews,
   providerApplications,
+  providerCredentialVerifications,
   providerPathwayProfiles,
+  providerPersonnel,
+  providerProfiles,
   providerQuotes,
 } from "../../../db/schema";
 import { getAccountSession } from "../../../lib/account-auth";
+import { parseProviderSelfAssessment } from "../../../lib/provider-compliance";
+import {
+  providerCredentialRecordIsCurrent,
+  requiredProviderCredentialRequirements,
+} from "../../../lib/provider-credentials";
+import { externalIdentityAgeVerificationIsCurrent } from "../../../lib/provider-verification-evidence";
 import { sendAcceptedQuoteAlert } from "../../../lib/provider-alerts";
 import {
   CUSTOMER_PROVIDER_SELECTION_AGREEMENT_KEY,
@@ -94,6 +103,74 @@ function storedCustomerPrice(quote: typeof providerQuotes.$inferSelect) {
     : customerPriceFor(Number(quote.priceCents), quote.customerFeeRateBps);
 }
 
+/**
+ * Only the credential(s) actually required for this provider's approved
+ * services are ever disclosed as "confirmed" — used by both the quote
+ * preview and the acceptance-commit path so the disclosed facts never
+ * drift from what gets hashed into the immutable acceptance record.
+ */
+async function confirmedCredentialLabelsForProvider(
+  db: ReturnType<typeof getDb>,
+  provider: {
+    id: string;
+    approvedServices: string;
+    serviceArea: string;
+    providerSelfAssessment: string;
+  },
+): Promise<string[]> {
+  const requirements = requiredProviderCredentialRequirements(
+    provider.approvedServices,
+    provider.serviceArea,
+    parseProviderSelfAssessment(provider.providerSelfAssessment),
+  );
+  if (requirements.length === 0) return [];
+  const records = await db.select().from(providerCredentialVerifications)
+    .where(eq(providerCredentialVerifications.providerId, provider.id));
+  return requirements.flatMap((requirement) => {
+    const record = records.find((candidate) => (
+      candidate.requirementKey === requirement.key
+      && providerCredentialRecordIsCurrent(candidate)
+    ));
+    return record ? [requirement.publicLabel] : [];
+  });
+}
+
+async function yearsExperienceForProvider(
+  db: ReturnType<typeof getDb>,
+  providerId: string,
+): Promise<string> {
+  const [row] = await db.select({ yearsExperience: providerProfiles.yearsExperience })
+    .from(providerProfiles)
+    .where(eq(providerProfiles.providerId, providerId))
+    .limit(1);
+  return row?.yearsExperience ?? "";
+}
+
+/**
+ * "Verified" is only ever shown for the performing person when their
+ * identity and age check are both current through the scheduled job time —
+ * the same external-identity currency test the eligibility engine applies
+ * at booking. An expired, missing, or never-run check falls back to a
+ * neutral label instead of an unearned claim.
+ */
+async function performingPersonIsIdentityVerified(
+  db: ReturnType<typeof getDb>,
+  providerId: string,
+  personId: string,
+  through: Date,
+): Promise<boolean> {
+  if (!providerId || !personId) return false;
+  const [record] = await db.select().from(providerPersonnel)
+    .where(and(
+      eq(providerPersonnel.providerId, providerId),
+      eq(providerPersonnel.personId, personId),
+    ))
+    .orderBy(desc(providerPersonnel.rosterVersion))
+    .limit(1);
+  if (!record) return false;
+  return externalIdentityAgeVerificationIsCurrent(record, through);
+}
+
 function selectionScopeFor(
   job: typeof customerRequests.$inferSelect,
   acceptedRequestScope: CustomerRequestScope | null,
@@ -101,6 +178,9 @@ function selectionScopeFor(
   providerId: string,
   providerName: string,
   profile: typeof providerPathwayProfiles.$inferSelect | undefined,
+  confirmedCredentialLabels: readonly string[],
+  yearsExperience: string,
+  performingPersonVerified: boolean,
 ): { scope: CustomerQuoteSelectionScope; reason: "" } | { scope: null; reason: string } {
   const requestServiceCodes = parseExactServiceCodes(job.serviceCodes);
   const quoteServiceCodes = parseExactServiceCodes(quote.serviceCodes);
@@ -192,7 +272,9 @@ function selectionScopeFor(
       reason: "This quote is not a labor-only Tuveloz quote with a zero parts amount.",
     };
   }
-  const performingPersonDisplay = `${quote.providerName} — verified owner-operator`;
+  const performingPersonDisplay = performingPersonVerified
+    ? `${quote.providerName} — identity-verified owner-operator`
+    : `${quote.providerName} — owner-operator`;
   return {
     reason: "",
     scope: {
@@ -216,6 +298,8 @@ function selectionScopeFor(
         partType: quote.partType,
         availability: quote.availability,
         message: quote.message,
+        confirmedCredentialLabels,
+        yearsExperience,
       },
     },
   };
@@ -228,6 +312,9 @@ async function selectionPresentation(
   providerId: string,
   providerName: string,
   profile: typeof providerPathwayProfiles.$inferSelect | undefined,
+  confirmedCredentialLabels: readonly string[],
+  yearsExperience: string,
+  performingPersonVerified: boolean,
 ) {
   const result = selectionScopeFor(
     job,
@@ -236,6 +323,9 @@ async function selectionPresentation(
     providerId,
     providerName,
     profile,
+    confirmedCredentialLabels,
+    yearsExperience,
+    performingPersonVerified,
   );
   if (!result.scope) {
     return { selectionAcceptance: null, selectionBlockedReason: result.reason };
@@ -316,6 +406,9 @@ export async function GET(request: Request) {
         workLocations: providerApplications.workLocations,
         businessMunicipality: providerApplications.businessMunicipality,
         businessServiceAddress: providerApplications.businessServiceAddress,
+        approvedServices: providerApplications.approvedServices,
+        serviceArea: providerApplications.serviceArea,
+        providerSelfAssessment: providerApplications.providerSelfAssessment,
       }).from(providerApplications).where(inArray(providerApplications.email, providerEmails))
     : [];
   const providerDetails = new Map(
@@ -333,6 +426,17 @@ export async function GET(request: Request) {
       latestProfiles.set(profile.providerId, profile);
     }
   }
+
+  const confirmedCredentialLabelsByProviderId = new Map<string, string[]>(
+    await Promise.all(providerVerifications.map(async (provider) => (
+      [provider.id, await confirmedCredentialLabelsForProvider(db, provider)] as const
+    ))),
+  );
+  const yearsExperienceByProviderId = new Map<string, string>(
+    await Promise.all(providerIds.map(async (providerId) => (
+      [providerId, await yearsExperienceForProvider(db, providerId)] as const
+    ))),
+  );
   const verifiedEmails = new Set(
     providerVerifications
       .filter((provider) => (
@@ -360,6 +464,17 @@ export async function GET(request: Request) {
       && Number(quote.priceCents) > 0;
     const customerPrice = storedCustomerPrice(quote);
     const provider = providerDetails.get(quote.providerEmail);
+    const scheduledThrough = new Date(
+      quote.scheduledFor || job.scheduledFor || Date.now(),
+    );
+    const performingPersonVerified = provider
+      ? await performingPersonIsIdentityVerified(
+        db,
+        provider.id,
+        quote.performingPersonId,
+        scheduledThrough,
+      )
+      : false;
     const presentation = await selectionPresentation(
       job,
       acceptedRequestScope,
@@ -367,6 +482,9 @@ export async function GET(request: Request) {
       provider?.id ?? "",
       provider?.name ?? "",
       provider ? latestProfiles.get(provider.id) : undefined,
+      provider ? confirmedCredentialLabelsByProviderId.get(provider.id) ?? [] : [],
+      provider ? yearsExperienceByProviderId.get(provider.id) ?? "" : "",
+      performingPersonVerified,
     );
     return {
       ...quote,
@@ -583,6 +701,16 @@ export async function POST(request: Request) {
     job.id,
     job.email,
   );
+  const [activeConfirmedCredentialLabels, activeYearsExperience, activePerformingPersonVerified] = await Promise.all([
+    confirmedCredentialLabelsForProvider(db, activeProvider),
+    yearsExperienceForProvider(db, activeProvider.id),
+    performingPersonIsIdentityVerified(
+      db,
+      activeProvider.id,
+      quote.performingPersonId,
+      new Date(quote.scheduledFor || job.scheduledFor || Date.now()),
+    ),
+  ]);
   const selection = selectionScopeFor(
     job,
     acceptedRequestScope,
@@ -590,6 +718,9 @@ export async function POST(request: Request) {
     activeProvider.id,
     activeProvider.name,
     activeProfile,
+    activeConfirmedCredentialLabels,
+    activeYearsExperience,
+    activePerformingPersonVerified,
   );
   if (!selection.scope) {
     return noStoreJson({

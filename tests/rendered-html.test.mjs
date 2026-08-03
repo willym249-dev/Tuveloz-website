@@ -1229,7 +1229,7 @@ test("public claims scope credential records while real provider auth requires e
   assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
   assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
   assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
-  assert.ok(publicPageSource.includes("Dated government-credential records"));
+  assert.ok(publicPageSource.includes("Confirmed for this service"));
   assert.ok(publicPageSource.includes("No credential record displayed for this scope"));
   assert.ok(publicPageSource.includes("not a blanket licensed-provider claim"));
   assert.ok(publicPageSource.includes("Provider-supplied profile"));
