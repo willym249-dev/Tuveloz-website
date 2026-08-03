@@ -12,6 +12,7 @@
     "deploy": "vinext deploy",
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply tuveloz-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote"

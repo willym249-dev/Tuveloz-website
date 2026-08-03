@@ -43,3 +43,6 @@ next-env.d.ts
 /outputs/
 /work/
 *.tsbuildinfo
+
+# ai council dev CLI cache (may contain question/answer text, not secrets)
+/.ai-council-cache.json
