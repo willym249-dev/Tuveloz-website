@@ -328,7 +328,7 @@ test("homepage uses clear launch language and keeps its service icons visible", 
   assert.ok(!styles.includes(".public-view-home > .services,"));
   assert.match(
     styles,
-    /\.service-grid \.tuveloz-icon \{[\s\S]*?height: 20px;[\s\S]*?width: 20px;/,
+    /\.service-icon \.tuveloz-icon,[\s\S]*?\{[\s\S]*?height: 28px;[\s\S]*?width: 28px;/,
   );
 });
 

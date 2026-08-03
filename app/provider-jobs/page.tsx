@@ -254,8 +254,8 @@ export default function ProviderJobsPage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    if (activeView !== "invoices" || invoicesLoaded || invoicesLoading) return;
+  function loadInvoices() {
+    if (invoicesLoaded || invoicesLoading) return;
     setInvoicesLoading(true);
     fetch("/api/provider-invoices", { cache: "no-store" })
       .then(async (response) => {
@@ -271,7 +271,7 @@ export default function ProviderJobsPage() {
         setInvoicesError(reason instanceof Error ? reason.message : "Unable to load invoices.");
       })
       .finally(() => setInvoicesLoading(false));
-  }, [activeView, invoicesLoaded, invoicesLoading]);
+  }
 
   function reviewQuote(event: FormEvent<HTMLFormElement>, requestId: string) {
     event.preventDefault();
@@ -653,7 +653,7 @@ export default function ProviderJobsPage() {
           </button>
           <button aria-pressed={activeView === "schedule"} className={activeView === "schedule" ? "is-active" : ""} onClick={() => setActiveView("schedule")} type="button">Schedule</button>
           <button aria-pressed={activeView === "earnings"} className={activeView === "earnings" ? "is-active" : ""} onClick={() => setActiveView("earnings")} type="button">Earnings</button>
-          <button aria-pressed={activeView === "invoices"} className={activeView === "invoices" ? "is-active" : ""} onClick={() => setActiveView("invoices")} type="button">Invoices</button>
+          <button aria-pressed={activeView === "invoices"} className={activeView === "invoices" ? "is-active" : ""} onClick={() => { setActiveView("invoices"); loadInvoices(); }} type="button">Invoices</button>
           <button aria-pressed={activeView === "messages"} className={activeView === "messages" ? "is-active" : ""} onClick={() => setActiveView("messages")} type="button">Messages</button>
           <button aria-pressed={activeView === "reviews"} className={activeView === "reviews" ? "is-active" : ""} onClick={() => setActiveView("reviews")} type="button">Reviews</button>
           <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
