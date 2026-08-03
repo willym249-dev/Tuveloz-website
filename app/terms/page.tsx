@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="An operational review draft for using Tuveloz and its two-sided vehicle-service marketplace."
-      updated="August 1, 2026"
+      updated="August 2, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -260,11 +260,13 @@ export default function TermsPage() {
           for these provisions, but it is not represented as having occurred.
         </p>
         <p>
-          This operational draft does not set a $100, fees-paid, or other fixed
-          liability cap. No policy promises that Tuveloz has zero liability, and
-          no disclaimer or future limitation may exclude a duty, right, remedy,
-          or responsibility that applicable law does not allow the parties to
-          exclude or limit.
+          To the maximum extent permitted by applicable law, Tuveloz&apos;s total
+          liability for any claim arising from your use of the platform is
+          limited to the total platform fee Tuveloz collected on the job
+          giving rise to the claim. No policy promises that Tuveloz has zero
+          liability, and no disclaimer or limitation — including this cap —
+          may exclude a duty, right, remedy, or responsibility that applicable
+          law does not allow the parties to exclude or limit.
         </p>
       </section>
 

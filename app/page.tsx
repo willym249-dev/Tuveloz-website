@@ -34,6 +34,7 @@ import {
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../lib/provider-policy-acceptance";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
+import { track } from "../lib/analytics";
 import VehicleSelector from "./components/vehicle-selector";
 import {
   SiteLanguageButton,
@@ -129,24 +130,24 @@ const PROVIDER_APPLICATION_PATHWAYS: ReadonlyArray<{
   description: string;
 }> = [
   {
-    code: "learning_account",
-    label: "Applicant-only account",
-    description: "Application-interest record only. TUVELOZ does not provide training, employment, job assignment, customer jobs, or payouts through this account.",
-  },
-  {
     code: "independent_startup",
-    label: "Independent startup owner-operator",
-    description: "You own the provider business and personally perform any future approved work.",
+    label: "I own my business",
+    description: "You own the provider business and personally perform any future approved work. Most applicants choose this.",
   },
   {
     code: "sponsored_trainee_employee",
-    label: "Sponsored trainee employee",
+    label: "I'm a trainee employed by a registered provider business",
     description: "You are a genuine paid trainee employee of a separate approved provider business—not Tuveloz.",
   },
   {
     code: "provider_business_employee",
-    label: "Regular provider-business employee",
+    label: "I'm an employee of a registered provider business",
     description: "You are a current non-trainee employee of a separate provider business responsible for the work—not a Tuveloz employee.",
+  },
+  {
+    code: "learning_account",
+    label: "Just exploring for now",
+    description: "Application-interest record only. TUVELOZ does not provide training, employment, job assignment, customer jobs, or payouts through this account.",
   },
 ];
 
@@ -375,6 +376,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       ? "needs-review"
       : "ready";
   const hasVisibleLegalRequirements = Object.values(providerLegalRequirements).some(Boolean);
+
+  useEffect(() => {
+    if (view === "provider") track("provider_signup_started");
+    if (view === "request") track("customer_request_started");
+    // Fire once per page view, not on every re-render as form state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   useEffect(() => {
     fetch("/api/reviews").then(async (response) => {
@@ -636,6 +644,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         setProviderPathwayChoice("learning_account");
         setProviderAssessment(emptyProviderSelfAssessment);
         setApplicationSent(true);
+        track("provider_signup_completed");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Please try again.";
         setApplicationError(message);
@@ -687,6 +696,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         setVehicleResetVersion((version) => version + 1);
         setRequestToken(result.accessToken ?? "");
         setRequestSent(true);
+        track("customer_request_posted");
       }
       else {
         if (!result.challengeId) {
@@ -915,45 +925,30 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
 
         <div className="hero-visual" aria-label="Preview of the planned Tuveloz service-request experience" role="img">
-          <div className="speed-lines" />
-          <div className="phone">
-            <div className="phone-top">
-              <BrandMark compact />
-              <span className="status-dot" />
-            </div>
-            <div className="phone-copy">
-              <small>GOOD MORNING</small>
-              <strong>What does your vehicle need?</strong>
-            </div>
-            <div className="service-grid">
-              <div className="selected"><TuvelozIcon name="battery" />Battery</div>
-              <div><TuvelozIcon name="tire" />Tire</div>
-              <div><TuvelozIcon name="diagnostics" />Diagnostics</div>
-              <div><TuvelozIcon name="tint" />Window tint</div>
-            </div>
-            <div className="map-card">
-              <div className="road road-one" />
-              <div className="road road-two" />
-              <div className="map-pin">T</div>
-              <div className="provider-pin">M</div>
-            </div>
-            <div className="match-card">
-              <div className="provider-photo">M</div>
-              <div>
-                <strong>Planned provider match</strong>
-                <span>Concept preview—not a live job</span>
-              </div>
-              <b>→</b>
-            </div>
+          <div className="quote-board">
+            <article className="quote-ticket qt-1">
+              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
+              <strong>Battery replacement</strong>
+              <span className="qt-price">$118</span>
+              <small>Ramirez Mobile Auto · concept preview</small>
+            </article>
+            <article className="quote-ticket qt-2">
+              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
+              <strong>Battery replacement</strong>
+              <span className="qt-price">$96</span>
+              <small>Silver Spring Auto Care · concept preview</small>
+            </article>
+            <article className="quote-ticket qt-3 qt-selected">
+              <div className="qt-head"><span>JOB #4471</span><b>Planned pick</b></div>
+              <strong>Battery replacement</strong>
+              <span className="qt-price">$96</span>
+              <small>Silver Spring Auto Care · concept preview</small>
+              <span className="qt-stamp">YOU CHOOSE</span>
+            </article>
           </div>
-          <div className="floating-card arrival">
-            <span className="check">✓</span>
-            <div><strong>Quote preview</strong><small>Available after customer launch</small></div>
-          </div>
-          <div className="floating-card rating">
-            <strong>Local independent providers</strong>
-            <span>FOUNDING NETWORK</span>
-          </div>
+          <p className="hero-visual-caption">
+            Concept preview — not a live job. Customer requests and quotes open after launch.
+          </p>
         </div>
       </section>
 
@@ -962,6 +957,38 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <span><b>Customer requests</b> are not yet available</span>
         <span><b>Service activation</b> requires approval</span>
         <span><b>Provider applications</b> are open now</span>
+      </section>
+
+      <section className="trust-section" aria-labelledby="trust-heading">
+        <div className="trust-intro">
+          <span className="kicker light">Trust, stated plainly</span>
+          <h2 id="trust-heading">We show what&apos;s documented. Nothing more.</h2>
+        </div>
+        <div className="trust-grid">
+          <article className="trust-card">
+            <span className="trust-card-label">Marketplace, not mechanic</span>
+            <p>
+              Tuveloz connects you with providers and handles payment. The
+              work itself is a direct agreement between you and the provider
+              you choose.
+            </p>
+          </article>
+          <article className="trust-card">
+            <span className="trust-card-label">Independent providers</span>
+            <p>
+              Providers are independent businesses, not Tuveloz employees —
+              they set their own price, schedule, and methods.
+            </p>
+          </article>
+          <article className="trust-card">
+            <span className="trust-card-label">Law-based verification</span>
+            <p>
+              When a service legally requires a license or registration, we
+              confirm it before that provider can offer it — nothing added
+              just in case.
+            </p>
+          </article>
+        </div>
       </section>
 
       {view === "home" && (
@@ -1657,23 +1684,17 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
             <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
               <div className="eligibility-guide-heading">
-                <span id="provider-guide-title">8-STEP PROVIDER GUIDE</span>
+                <span id="provider-guide-title">How applying works</span>
               </div>
               <ol>
-                <li>Choose the account pathway that matches your real working relationship.</li>
-                <li>Select only the exact services you want Tuveloz to review.</li>
-                <li>Provide your legal business or sponsoring-provider details when required.</li>
-                <li>Tell us where the business operates and how future service could occur.</li>
-                <li>Review the service-specific legal and evidence requirements.</li>
-                <li>Type the authorized signer&apos;s name and complete each acknowledgment.</li>
-                <li>Request the one-time code sent to the application email.</li>
-                <li>Enter the code to prove email control and continue. A new application is created only if none exists for that email; existing application changes happen after sign-in.</li>
+                <li>Tell us which services you offer.</li>
+                <li>Give us your business details.</li>
+                <li>Review the legal requirements for your selected services and confirm you can meet them.</li>
+                <li>Sign and verify your email to submit.</li>
               </ol>
-              <div className="legal-requirement-note" aria-label="Service status legend">
-                <strong>Service status legend</strong>
-                <small>✓ Selectable for application review</small>
-                <small>✕ Not available for real customer jobs</small>
-                <small>⏳ Under review for mandatory requirements and insurer activation</small>
+              <div className="legal-requirement-note" aria-label="Service status note">
+                <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
+                <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
               </div>
             </section>
           </div>
@@ -1717,14 +1738,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   <input required name="provider-email" type="email" placeholder="hello@yourbusiness.com" />
                 </label>
                 <div className="legal-requirement-note" role="status">
-                  <strong>✕ No v0.11 service is available for a real customer job today.</strong>
+                  <strong>No service is available for a real customer job today.</strong>
                   <small>
                     Applications and service selections are accepted for review only. Activation requires
                     documented compliance with applicable law, insurer approval, and every required government,
                     agency, environmental, tax, payment, privacy, security, and service-specific control.
-                  </small>
-                  <small>
-                    Policy {POLICY_VERSION} · {POLICY_JURISDICTION} · {POLICY_STATUS}
                   </small>
                 </div>
                 <div className="legal-requirement-note" aria-label="Montgomery County provider pathway rules">

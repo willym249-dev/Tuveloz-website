@@ -29,11 +29,11 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
       <svg viewBox="0 0 24 24" focusable="false">
         <path
           className="brand-funnel"
-          d="M4.25 5.25c0-.55.45-1 1-1h13.5c.55 0 1 .45 1 1v1.4c0 .32-.15.62-.4.81l-4.85 3.66v4.26c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4.26L4.65 7.46a1 1 0 0 1-.4-.81v-1.4Z"
+          d="M4.5 5H19.5V6.1L14.3 10.9V13.6H9.7V10.9L4.5 6.1Z"
         />
         <path
           className="brand-fuel-drop"
-          d="M12 17.35c-1.12 1.36-1.78 2.28-1.78 3.12a1.78 1.78 0 0 0 3.56 0c0-.84-.66-1.76-1.78-3.12Z"
+          d="M12 14.9C13.6 16.7 14.4 18 14.4 19.1A2.4 2.4 0 1 1 9.6 19.1C9.6 18 10.4 16.7 12 14.9Z"
         />
       </svg>
     </span>

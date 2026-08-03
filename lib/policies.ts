@@ -1,4 +1,4 @@
-export const TERMS_VERSION = "2026-08-01";
+export const TERMS_VERSION = "2026-08-02";
 export const CUSTOMER_AGREEMENT_VERSION = "2026-08-01";
 export const PROVIDER_AGREEMENT_VERSION = "2026-08-01";
 export const PRIVACY_VERSION = "2026-07-28";

@@ -96,6 +96,18 @@ type Provider = {
   verified: boolean;
   testProvider: boolean;
 };
+type ProviderInvoice = {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+  totalAmountCents: number;
+  laborAmountCents: number;
+  partsAmountCents: number;
+  taxAmountCents: number;
+  workSummary: string;
+  issuedAt: string;
+  createdAt: string;
+};
 type PendingQuote = {
   requestId: string;
   laborPrice: string;
@@ -115,6 +127,7 @@ type ProviderView =
   | "accepted"
   | "schedule"
   | "earnings"
+  | "invoices"
   | "messages"
   | "reviews"
   | "profile"
@@ -183,6 +196,10 @@ export default function ProviderJobsPage() {
   const [canSwitchWorkspace, setCanSwitchWorkspace] = useState(false);
   const [activeView, setActiveView] = useState<ProviderView>("available");
   const [signingOut, setSigningOut] = useState(false);
+  const [invoices, setInvoices] = useState<ProviderInvoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
+  const [invoicesError, setInvoicesError] = useState("");
 
   useEffect(() => {
     async function loadWorkspace() {
@@ -236,6 +253,25 @@ export default function ProviderJobsPage() {
     const intervalId = window.setInterval(updateNow, 1_000);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (activeView !== "invoices" || invoicesLoaded || invoicesLoading) return;
+    setInvoicesLoading(true);
+    fetch("/api/provider-invoices", { cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({})) as {
+          error?: string;
+          invoices?: ProviderInvoice[];
+        };
+        if (!response.ok) throw new Error(data.error || "Unable to load invoices.");
+        setInvoices(data.invoices ?? []);
+        setInvoicesLoaded(true);
+      })
+      .catch((reason) => {
+        setInvoicesError(reason instanceof Error ? reason.message : "Unable to load invoices.");
+      })
+      .finally(() => setInvoicesLoading(false));
+  }, [activeView, invoicesLoaded, invoicesLoading]);
 
   function reviewQuote(event: FormEvent<HTMLFormElement>, requestId: string) {
     event.preventDefault();
@@ -617,6 +653,7 @@ export default function ProviderJobsPage() {
           </button>
           <button aria-pressed={activeView === "schedule"} className={activeView === "schedule" ? "is-active" : ""} onClick={() => setActiveView("schedule")} type="button">Schedule</button>
           <button aria-pressed={activeView === "earnings"} className={activeView === "earnings" ? "is-active" : ""} onClick={() => setActiveView("earnings")} type="button">Earnings</button>
+          <button aria-pressed={activeView === "invoices"} className={activeView === "invoices" ? "is-active" : ""} onClick={() => setActiveView("invoices")} type="button">Invoices</button>
           <button aria-pressed={activeView === "messages"} className={activeView === "messages" ? "is-active" : ""} onClick={() => setActiveView("messages")} type="button">Messages</button>
           <button aria-pressed={activeView === "reviews"} className={activeView === "reviews" ? "is-active" : ""} onClick={() => setActiveView("reviews")} type="button">Reviews</button>
           <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
@@ -1094,6 +1131,41 @@ export default function ProviderJobsPage() {
         </section>
           </div>
         </div>
+      )}
+      {workspaceReady && activeView === "invoices" && (
+        <section className="portal-section" id="provider-invoices">
+          <div className="portal-section-heading">
+            <div><span className="kicker">Job records</span><h2>Invoices</h2></div>
+            <p>Invoices issued for your completed jobs.</p>
+          </div>
+          {invoicesError && <p className="form-error" role="alert">{invoicesError}</p>}
+          {invoicesLoading ? (
+            <p className="admin-note">Loading invoices…</p>
+          ) : invoices.length === 0 ? (
+            <p className="admin-note">No invoices yet. They&apos;ll appear here once a job is completed and invoiced.</p>
+          ) : (
+            <div className="portal-grid">
+              {invoices.map((invoice) => (
+                <article className="portal-card" key={invoice.id}>
+                  <div className="job-status-row">
+                    <span className="portal-service">{invoice.invoiceNumber}</span>
+                    <strong>${(invoice.totalAmountCents / 100).toFixed(2)}</strong>
+                  </div>
+                  <p>{invoice.workSummary}</p>
+                  <dl className="quote-breakdown compact">
+                    <div><dt>Labor</dt><dd>${(invoice.laborAmountCents / 100).toFixed(2)}</dd></div>
+                    <div><dt>Parts</dt><dd>${(invoice.partsAmountCents / 100).toFixed(2)}</dd></div>
+                    <div><dt>Tax</dt><dd>${(invoice.taxAmountCents / 100).toFixed(2)}</dd></div>
+                    <div className="total"><dt>Total</dt><dd>${(invoice.totalAmountCents / 100).toFixed(2)}</dd></div>
+                  </dl>
+                  <p className="records-disclaimer">
+                    Status: {invoice.status}{invoice.issuedAt ? ` · Issued ${invoice.issuedAt}` : ""}
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       )}
       {workspaceReady && activeView === "available" && (
         <div className="portal-section-heading open-jobs-heading" id="open-jobs">
