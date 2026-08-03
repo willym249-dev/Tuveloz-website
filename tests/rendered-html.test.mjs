@@ -496,11 +496,11 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
   assert.ok(contents.includes("does not sell personal information"));
-  assert.ok(contents.includes("customer and provider form a separate service agreement"));
+  assert.ok(contents.includes("customer and provider form their own service agreement"));
   assert.ok(termsSource.includes("unnecessary identity documents"));
   assert.ok(termsSource.includes("arbitration"));
   assert.ok(contents.includes("Every exact service is disabled."));
-  assert.ok(contents.includes("No person may borrow, rent, share, or rely on another provider"));
+  assert.ok(contents.includes("You can't borrow, rent, share, or rely on someone else's registration"));
   assert.ok(requestSource.includes("termsAcceptedAt"));
   assert.ok(requestSource.includes("CUSTOMER_POLICY_BUNDLE_VERSION"));
   assert.ok(providerSource.includes("termsAcceptedAt"));
