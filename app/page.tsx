@@ -1930,14 +1930,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                                   ))}
                                 />
                                 <span>
-                                  <strong>✓ {service.label}</strong>
+                                  <strong>{service.label}</strong>
                                   <small>{service.description}</small>
-                                  <small>
-                                    ✕ Real jobs unavailable · Under review pending mandatory requirements + insurer activation
-                                    {service.launchState.includes("environmental") ? " + environmental approval" : ""}
-                                    {service.launchState.includes("agency") ? " + agency approval" : ""}
-                                  </small>
-                                  <small>Exact code: {service.code}</small>
+                                  <small>Not yet available for real jobs — pending required legal and insurance review.</small>
                                 </span>
                               </label>
                             ))}
@@ -1947,8 +1942,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     })}
                   </div>
                   <small className="customer-service-note">
-                    ✕ General auto repair is prohibited as a broad category and is not selectable.
-                    Choose exact v0.11 services only. Selections are for review, not real-job access.
+                    "General auto repair" is a broad category and isn&apos;t selectable — choose the exact
+                    services you offer instead. Selections are for review, not real-job access.
                   </small>
                 </fieldset>
                 <label>
