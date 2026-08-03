@@ -693,6 +693,19 @@ export const launchFeedback = sqliteTable(
   ],
 );
 
+export const analyticsEvents = sqliteTable(
+  "analytics_events",
+  {
+    id: text("id").primaryKey(),
+    event: text("event").notNull(),
+    props: text("props").notNull().default("{}"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("analytics_events_event_created_at_idx").on(table.event, table.createdAt),
+  ],
+);
+
 export const expansionInterests = sqliteTable(
   "expansion_interests",
   {

@@ -1,10 +1,11 @@
 /**
  * Minimal first-party funnel-event tracker. No third-party analytics tool is
- * wired in yet (none exists in this codebase) — events are logged
- * server-side via /api/analytics so drop-off is measurable from day one
- * without sending real user behavior to a third party before you've chosen
- * and set one up (Plausible, PostHog, GA4, etc.). Swap the POST target in
- * `track` for a real SDK call later; call sites don't need to change.
+ * wired in yet (none exists in this codebase) — events are persisted to the
+ * analytics_events D1 table via /api/analytics so drop-off is measurable
+ * from day one without sending real user behavior to a third party before
+ * you've chosen and set one up (Plausible, PostHog, GA4, etc.). Swap the
+ * POST target in `track` for a real SDK call later; call sites don't need
+ * to change.
  */
 
 export type AnalyticsEvent =

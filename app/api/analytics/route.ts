@@ -1,3 +1,6 @@
+import { getDb } from "../../../db";
+import { analyticsEvents } from "../../../db/schema";
+
 const KNOWN_EVENTS = new Set([
   "provider_signup_started",
   "provider_step1_completed",
@@ -19,14 +22,11 @@ export async function POST(request: Request) {
     if (!KNOWN_EVENTS.has(event)) {
       return Response.json({ error: "Unknown event." }, { status: 400 });
     }
-    // Structured console logging only today — no analytics tool is wired in
-    // yet. This is intentionally schema-free; add persistence once a real
-    // tool (Plausible, PostHog, GA4) is chosen.
-    console.log("[analytics]", JSON.stringify({
+    await getDb().insert(analyticsEvents).values({
+      id: crypto.randomUUID(),
       event,
-      props: body.props ?? {},
-      at: typeof body.at === "string" ? body.at : new Date().toISOString(),
-    }));
+      props: JSON.stringify(body.props ?? {}),
+    });
     return Response.json({ ok: true }, { status: 202 });
   } catch (error) {
     console.error("Unable to record analytics event", error);
