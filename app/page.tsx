@@ -35,6 +35,8 @@ import {
 } from "../lib/provider-policy-acceptance";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { track } from "../lib/analytics";
+import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
+import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
 import {
   SiteLanguageButton,
@@ -1246,6 +1248,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           onChange={() => pendingSubmission === "request" && setPendingSubmission("")}
           onSubmit={(event) => handleSubmit(event, "request")}
         >
+          <LocationDatalists />
           {requestSent ? (
             <div className="success-message" role="status">
               <span>✓</span>
@@ -1368,6 +1371,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   <input
                     defaultValue={repeatBooking?.municipality ?? ""}
                     required
+                    list={MUNICIPALITY_DATALIST_ID}
                     name="municipality"
                     placeholder="Example: Rockville or Silver Spring"
                   />
@@ -1378,6 +1382,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <input
                   defaultValue={repeatBooking?.zip ?? ""}
                   required
+                  list={ZIP_DATALIST_ID}
                   name="zip"
                   inputMode="numeric"
                   placeholder="20901"
@@ -1552,7 +1557,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               {customerAllowsProviderTravel && (
                 <label>
                   Service address
-                  <input
+                  <AddressAutocompleteInput
                     defaultValue={repeatBooking?.serviceAddress ?? ""}
                     required
                     name="service-address"
@@ -1942,13 +1947,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     })}
                   </div>
                   <small className="customer-service-note">
-                    "General auto repair" is a broad category and isn&apos;t selectable — choose the exact
+                    &ldquo;General auto repair&rdquo; is a broad category and isn&apos;t selectable — choose the exact
                     services you offer instead. Selections are for review, not real-job access.
                   </small>
                 </fieldset>
                 <label>
                   {providerFormIsSpanish ? "Ubicación del negocio" : "Business location"}
-                  <input required name="business-municipality" placeholder={providerFormIsSpanish ? "Ciudad o pueblo" : "City or town"} />
+                  <input required list={MUNICIPALITY_DATALIST_ID} name="business-municipality" placeholder={providerFormIsSpanish ? "Ciudad o pueblo" : "City or town"} />
                   <small>
                     {providerFormIsSpanish
                       ? "Se usa para determinar las reglas locales que correspondan."
@@ -2006,7 +2011,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     {providerFormIsSpanish
                       ? "Dirección donde atenderá a clientes"
                       : "Business meeting address"}
-                    <input
+                    <AddressAutocompleteInput
                       required
                       name="business-service-address"
                       placeholder={providerFormIsSpanish ? "Dirección" : "Street address"}

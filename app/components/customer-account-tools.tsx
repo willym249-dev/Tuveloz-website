@@ -6,6 +6,8 @@ import {
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
   parseProviderServices,
 } from "../../lib/service-matching";
+import { AddressAutocompleteInput } from "./address-autocomplete-input";
+import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./location-datalists";
 
 type CustomerProfile = {
   email: string;
@@ -125,6 +127,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
         {error && <p className="form-error" role="alert">{error}</p>}
         {data && (
           <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}-${data.profile.zip}`} onSubmit={saveProfile}>
+            <LocationDatalists />
             <label>
               Account email
               <input disabled readOnly value={data.profile.email} />
@@ -138,11 +141,11 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
             <div className="field-row">
               <label>
                 City, town, or municipality
-                <input defaultValue={data.profile.municipality} maxLength={100} name="municipality" required placeholder="Example: Rockville" />
+                <input defaultValue={data.profile.municipality} list={MUNICIPALITY_DATALIST_ID} maxLength={100} name="municipality" required placeholder="Example: Rockville" />
               </label>
               <label>
                 ZIP code
-                <input defaultValue={data.profile.zip} inputMode="numeric" maxLength={10} name="zip" required placeholder="20850" />
+                <input defaultValue={data.profile.zip} inputMode="numeric" list={ZIP_DATALIST_ID} maxLength={10} name="zip" required placeholder="20850" />
               </label>
             </div>
             <fieldset className="area-fieldset location-fieldset">
@@ -168,7 +171,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
             {providerMayVisit && (
               <label>
                 Default service address
-                <input defaultValue={data.profile.serviceAddress} maxLength={240} name="serviceAddress" required placeholder="Street address" />
+                <AddressAutocompleteInput defaultValue={data.profile.serviceAddress} maxLength={240} name="serviceAddress" required placeholder="Street address" />
                 <small>This stays private until you select a provider for a job.</small>
               </label>
             )}

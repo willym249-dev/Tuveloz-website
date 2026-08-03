@@ -35,6 +35,8 @@ import {
   PARTS_PREFERENCE_OPTIONS,
   PARTS_SOURCE_OPTIONS,
 } from "../../lib/service-matching";
+import { AddressAutocompleteInput } from "../components/address-autocomplete-input";
+import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "../components/location-datalists";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -150,6 +152,7 @@ export default async function PostJobPage() {
           method="post"
           style={{ marginTop: 24 }}
         >
+          <LocationDatalists />
           <div className="form-heading">
             <span>01</span>
             <div>
@@ -189,6 +192,7 @@ export default async function PostJobPage() {
             <label>
               City, town, or municipality
               <input
+                list={MUNICIPALITY_DATALIST_ID}
                 maxLength={100}
                 name="municipality"
                 placeholder="Example: Rockville or Silver Spring"
@@ -202,6 +206,7 @@ export default async function PostJobPage() {
               ZIP code
               <input
                 inputMode="numeric"
+                list={ZIP_DATALIST_ID}
                 maxLength={10}
                 name="zip"
                 pattern="[0-9]{5}(-[0-9]{4})?"
@@ -366,7 +371,7 @@ export default async function PostJobPage() {
 
           <label>
             Service address
-            <input
+            <AddressAutocompleteInput
               maxLength={240}
               name="service-address"
               placeholder="Exact street address or complete roadside position"
