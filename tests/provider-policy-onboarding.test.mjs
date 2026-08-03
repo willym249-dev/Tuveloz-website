@@ -95,11 +95,12 @@ test("draft policy acknowledgments are bound for review but fail closed for job 
 
 test("public onboarding and agreements clearly deny TUVELOZ employment or training", async () => {
   const homepage = await read("../app/page.tsx");
+  const signupForm = await read("../app/components/provider-signup-form.tsx");
   const terms = await read("../app/terms/page.tsx");
   const providerAgreement = await read("../app/provider-agreement/page.tsx");
   const faq = await read("../app/faq/page.tsx");
   assert.ok(homepage.includes("TUVELOZ does not employ or train providers."));
-  assert.ok(homepage.includes("Applicant-only account: no training, employment, customer jobs, or payout"));
+  assert.match(signupForm, /provider business—not Tuveloz—is responsible for lawful\s+employment classification/);
   assert.ok(terms.includes("TUVELOZ does not hire, employ, train, sponsor, assign"));
   assert.ok(providerAgreement.includes("TUVELOZ does not place provider personnel"));
   assert.ok(faq.includes("Applicant-only accounts receive no training or jobs."));

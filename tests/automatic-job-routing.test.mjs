@@ -191,11 +191,11 @@ test("the request route stays launch-closed, fails closed, and never queues owne
   assert.ok(pause >= 0 && pause < bodyRead);
   assert.ok(decision >= 0 && decision < insertion);
   assert.match(route, /if \(!automaticDecision\.allowed\)/);
-  assert.match(route, /status: "approved"/);
-  assert.match(route, /approvedAt: recordedAt/);
-  assert.match(route, /serviceCodes: JSON\.stringify\(automaticDecision\.serviceCodes\)/);
-  assert.match(route, /jurisdiction: automaticDecision\.jurisdiction/);
-  assert.match(route, /scheduledFor: automaticDecision\.scheduledFor/);
+  assert.match(route, /status: automaticDecision \? "approved" : "new"/);
+  assert.match(route, /approvedAt: automaticDecision \? recordedAt : ""/);
+  assert.match(route, /serviceCodes: JSON\.stringify\(automaticDecision \? automaticDecision\.serviceCodes : \[\]\)/);
+  assert.match(route, /jurisdiction: automaticDecision \? automaticDecision\.jurisdiction : jurisdiction/);
+  assert.match(route, /scheduledFor: automaticDecision \? automaticDecision\.scheduledFor : scheduledFor/);
   assert.match(route, /policyVersion: POLICY_VERSION/);
   assert.match(route, /automaticDecision\.matchingProviders\.map/);
   assert.match(route, /routingActivationDecisionIds: automaticDecision\.activationDecisionIds/);

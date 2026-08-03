@@ -28,6 +28,7 @@ import {
   POLICY_JURISDICTION,
   SERVICES,
 } from "../../lib/provider-policy";
+import { servicesForCustomerSelection } from "../../lib/service-tiers";
 import {
   CURRENT_LAUNCH_AREA,
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
@@ -45,6 +46,7 @@ const exactServiceFactRequirements = exactServices.map((service) => ({
   ...service,
   ...jobScopeRequirementsForService(service.code),
 }));
+const selectableCustomerServices = servicesForCustomerSelection();
 
 export default async function PostJobPage() {
   if (CUSTOMER_JOB_POSTING_PAUSED) {
@@ -163,8 +165,8 @@ export default async function PostJobPage() {
 
           <div className="field-row">
             <label>
-              Customer name
-              <input maxLength={100} name="name" placeholder="Full legal name" required />
+              Customer name <span className="optional-label">(optional)</span>
+              <input maxLength={100} name="name" placeholder="Full legal name" />
             </label>
             <label>
               Email address
@@ -173,12 +175,11 @@ export default async function PostJobPage() {
           </div>
 
           <label>
-            Vehicle
+            Vehicle <span className="optional-label">(optional)</span>
             <input
               maxLength={320}
               name="vehicle"
               placeholder="Year, make, model, trim, engine, and relevant vehicle details"
-              required
             />
           </label>
 
@@ -223,17 +224,14 @@ export default async function PostJobPage() {
           <input name="scheduled-time-zone" type="hidden" value="America/New_York" />
 
           <label>
-            Choose one specific service
-            <select name="service-code" required defaultValue="">
-              <option disabled value="">No services are available yet</option>
-              {exactServices.map((service) => {
-                const available = service.launchState === "enabled" && service.customerVisible;
-                return (
-                  <option disabled={!available} key={service.code} value={service.code}>
-                    {service.label} — {service.code}{available ? "" : " — not currently offered"}
-                  </option>
-                );
-              })}
+            Service <span className="optional-label">(optional — helps match the right providers)</span>
+            <select name="service-code" defaultValue="">
+              <option value="">Not sure / other</option>
+              {selectableCustomerServices.map((service) => (
+                <option key={service.code} value={service.code}>
+                  {service.label} — {service.code}
+                </option>
+              ))}
             </select>
             <small>
               Each request must name one approved service. Broad categories such as
@@ -242,8 +240,8 @@ export default async function PostJobPage() {
           </label>
 
           <label>
-            Exact requested operation or subtype code
-            <select name="requested-operation" required defaultValue="">
+            Exact requested operation or subtype code <span className="optional-label">(optional)</span>
+            <select name="requested-operation" defaultValue="">
               <option disabled value="">Choose an operation listed for the exact service</option>
               {exactServiceFactRequirements.map((service) => (
                 <optgroup key={service.code} label={`${service.label} (${service.code})`}>
@@ -303,11 +301,11 @@ export default async function PostJobPage() {
           </details>
 
           <fieldset className="area-fieldset">
-            <legend>Parts arrangement for this labor-only request</legend>
+            <legend>Parts arrangement for this labor-only request <span className="optional-label">(optional)</span></legend>
             <div className="area-options parts-source-options">
               {PARTS_SOURCE_OPTIONS.map((option) => (
                 <label key={option}>
-                  <input name="parts-source" required type="radio" value={option} />
+                  <input name="parts-source" type="radio" value={option} />
                   {option}
                 </label>
               ))}
@@ -316,8 +314,8 @@ export default async function PostJobPage() {
           </fieldset>
 
           <label>
-            Customer-supplied parts preference
-            <select defaultValue="No preference" name="parts-preference" required>
+            Customer-supplied parts preference <span className="optional-label">(optional)</span>
+            <select defaultValue="No preference" name="parts-preference">
               {PARTS_PREFERENCE_OPTIONS.map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
@@ -331,7 +329,6 @@ export default async function PostJobPage() {
           <label className="policy-consent">
             <input
               name="labor-only-parts-acknowledged"
-              required
               type="checkbox"
               value="yes"
             />
@@ -343,11 +340,11 @@ export default async function PostJobPage() {
           </label>
 
           <fieldset className="area-fieldset">
-            <legend>One exact service-location arrangement</legend>
+            <legend>Exact service-location arrangement <span className="optional-label">(optional)</span></legend>
             <div className="area-options">
               {CUSTOMER_SERVICE_LOCATION_OPTIONS.map((option) => (
                 <label key={option}>
-                  <input name="service-location" required type="radio" value={option} />
+                  <input name="service-location" type="radio" value={option} />
                   {option}
                 </label>
               ))}
@@ -355,8 +352,8 @@ export default async function PostJobPage() {
           </fieldset>
 
           <label>
-            Exact job-location type
-            <select defaultValue="" name="job-location-type" required>
+            Exact job-location type <span className="optional-label">(optional)</span>
+            <select defaultValue="" name="job-location-type">
               <option disabled value="">Choose the physical location type</option>
               {JOB_LOCATION_TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
@@ -390,14 +387,14 @@ export default async function PostJobPage() {
           </div>
 
           <fieldset className="area-fieldset">
-            <legend>Property authority</legend>
+            <legend>Property authority <span className="optional-label">(optional)</span></legend>
             <div className="area-options">
               <label>
-                <input name="property-permission" required type="radio" value="customer_confirmed_authority" />
+                <input name="property-permission" type="radio" value="customer_confirmed_authority" />
                 I control or am authorized to use this private property for the vehicle and requested provider visit.
               </label>
               <label>
-                <input name="property-permission" required type="radio" value="not_applicable_public_roadside" />
+                <input name="property-permission" type="radio" value="not_applicable_public_roadside" />
                 This is a public-roadside request; private-property permission does not apply, and the roadside controls must pass.
               </label>
             </div>
@@ -405,8 +402,8 @@ export default async function PostJobPage() {
 
           <div className="field-row">
             <label>
-              Vehicle driveability
-              <select defaultValue="" name="vehicle-driveability" required>
+              Vehicle driveability <span className="optional-label">(optional)</span>
+              <select defaultValue="" name="vehicle-driveability">
                 <option disabled value="">Choose current driveability</option>
                 {JOB_VEHICLE_DRIVEABILITY_VALUES.map((value) => (
                   <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
@@ -414,8 +411,8 @@ export default async function PostJobPage() {
               </select>
             </label>
             <label>
-              Current vehicle state
-              <select defaultValue="" name="vehicle-state" required>
+              Current vehicle state <span className="optional-label">(optional)</span>
+              <select defaultValue="" name="vehicle-state">
                 <option disabled value="">Choose the closest exact state</option>
                 {JOB_VEHICLE_STATE_VALUES.map((value) => (
                   <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
@@ -425,8 +422,8 @@ export default async function PostJobPage() {
           </div>
 
           <label>
-            High-voltage involvement
-            <select defaultValue="" name="high-voltage-status" required>
+            High-voltage involvement <span className="optional-label">(optional)</span>
+            <select defaultValue="" name="high-voltage-status">
               <option disabled value="">Choose the known high-voltage status</option>
               {JOB_HIGH_VOLTAGE_STATUS_VALUES.map((value) => (
                 <option key={value} value={value}>{value.replaceAll("_", " ")}</option>

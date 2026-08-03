@@ -293,7 +293,7 @@ test("limited JSON requires the exact application/json media type", async () => 
 });
 
 test("provider UI freezes the reviewed payload and preserves the challenge while entering its code", async () => {
-  const page = await read("app/page.tsx");
+  const page = await read("app/components/provider-signup-form.tsx");
 
   assert.match(page, /pendingApplicationPayload/);
   assert.match(page, /fetch\("\/api\/providers\/challenge"/);

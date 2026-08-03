@@ -67,15 +67,15 @@ test("new real requests fail before data reads and require immutable exact-scope
   assert.ok(pause >= 0 && pause < formRead && pause < jsonRead);
   assert.ok(routing >= 0 && routing < requestInsert);
   assert.ok(requestInsert >= 0 && requestInsert < acceptanceInsert);
-  assert.match(route, /serviceCodes\.length !== 1/);
+  assert.match(route, /serviceCodes\.length > 1/);
   assert.match(route, /jurisdiction !== POLICY_JURISDICTION/);
   assert.match(route, /Date\.parse\(scheduledFor\) <= Date\.now\(\)/);
   assert.match(route, /jobScopeFactsFromInput/);
   assert.match(route, /evaluateJobScopeFacts\(\[serviceCode\], jobFacts\)/);
   assert.match(route, /jobFacts: jobFactsEvaluation\.facts/);
   assert.match(route, /service: serviceLabel/);
-  assert.match(route, /serviceCodes: JSON\.stringify\(automaticDecision\.serviceCodes\)/);
-  assert.match(route, /scopeSnapshot: customerRequestScopeSnapshot|const scopeSnapshot = customerRequestScopeSnapshot/);
+  assert.match(route, /serviceCodes: JSON\.stringify\(automaticDecision \? automaticDecision\.serviceCodes : \[\]\)/);
+  assert.match(route, /const scopeSnapshot = automaticDecision[\s\S]*\? customerRequestScopeSnapshot/);
   assert.match(route, /CUSTOMER_REQUEST_AGREEMENT_KEY/);
   assert.match(route, /CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY/);
   assert.match(route, /agreementText: customerRequestAgreementEvidenceText\(scopeSnapshot\)/);

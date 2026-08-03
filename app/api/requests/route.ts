@@ -51,6 +51,7 @@ import {
   isLaborOnlyPartsSource,
   normalizeLaborOnlyPartsSource,
   NO_PARTS_NEEDED_SOURCE,
+  PARTS_DISCUSSION_SOURCE,
   PARTS_PREFERENCE_OPTIONS,
   providerMatchesArea,
   providerMatchesServiceLocation,
@@ -179,12 +180,12 @@ export async function POST(request: Request) {
       body = (await request.json()) as Record<string, unknown>;
     }
 
-    const name = clean(body.name, 100);
+    const name = clean(body.name, 100) || "Not provided";
     const email = clean(body.email, 180).toLowerCase();
     const zip = clean(body.zip, 10);
     const submittedLaunchArea = clean(body.launchArea, 80);
     const municipality = clean(body.municipality, 100);
-    const vehicle = clean(body.vehicle, 320);
+    const vehicle = clean(body.vehicle, 320) || "Not provided";
     const submittedServiceCodes = Array.isArray(body.serviceCodes)
       ? body.serviceCodes
       : [body.serviceCode];
@@ -193,7 +194,7 @@ export async function POST(request: Request) {
     const scheduledTimeZone = clean(body.scheduledTimeZone, 80) || "America/New_York";
     const scheduledFor = normalizeScheduledFor(body.scheduledFor, scheduledTimeZone);
     const submittedPartsSource = clean(body.partsSource, 100);
-    const partsSource = normalizeLaborOnlyPartsSource(submittedPartsSource);
+    let partsSource = normalizeLaborOnlyPartsSource(submittedPartsSource);
     let partsPreference = clean(body.partsPreference, 80);
     const laborOnlyPartsAcknowledged = policyAccepted(
       body.laborOnlyPartsAcknowledged,
@@ -223,7 +224,7 @@ export async function POST(request: Request) {
     const rememberEmailConsent = policyAccepted(body.rememberEmailConsent);
     const marketingConsent = policyAccepted(body.marketingConsent);
 
-    if (!name || !email || !zip || !municipality || !vehicle || !details) {
+    if (!email || !details || !zip || !municipality || !serviceAddress) {
       return customerValidationError("Please complete every required field.");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -262,112 +263,122 @@ export async function POST(request: Request) {
         "SCHEDULE_MUST_BE_FUTURE",
       );
     }
-    if (serviceCodes.length !== 1) {
+    if (serviceCodes.length > 1) {
       return customerValidationError(
         "Choose one recognized exact service code. Broad or combined categories are not accepted.",
         "EXACT_SERVICE_REQUIRED",
       );
     }
-    const serviceCode = serviceCodes[0];
-    const jobFacts = jobScopeFactsFromInput({
-      serviceCode,
-      operationCode: submittedOperations.length === 1
-        ? submittedOperations[0]
-        : "",
-      prohibitedOperationsAttestedAbsent: submittedProhibitedAbsences,
-      locationType: body.jobLocationType,
-      address: serviceAddress,
-      municipality,
-      county: JOB_SCOPE_COUNTY,
-      state: JOB_SCOPE_STATE,
-      postalCode: zip,
-      jurisdiction,
-      propertyPermission: body.propertyPermission,
-      vehicleDriveability: body.vehicleDriveability,
-      vehicleState: body.vehicleState,
-      highVoltageStatus: body.highVoltageStatus,
-      safetyAttestations: submittedSafetyAttestations,
-    });
-    const jobFactsEvaluation = evaluateJobScopeFacts([serviceCode], jobFacts);
-    if (!jobFactsEvaluation.allowed || !jobFactsEvaluation.facts) {
-      return customerValidationError(
-        jobFactsEvaluation.reasons[0]?.detail
-          || "Complete the exact operation, location, vehicle, and safety facts.",
-        jobFactsEvaluation.reasons[0]?.code || "JOB_FACTS_REQUIRED",
-      );
-    }
-    if (
-      !["customer_private_property", "public_roadside"]
-        .includes(jobFactsEvaluation.facts.location.type)
-    ) {
-      return customerValidationError(
-        "Customer intake can currently bind only a customer-authorized private location or a fully checked lawful roadside location. Facility services remain disabled.",
-        "CUSTOMER_LOCATION_TYPE_NOT_OPEN",
-      );
-    }
-    if (
-      jobFactsEvaluation.facts.location.type === "customer_private_property"
-      && (
-        serviceLocations[0] !== CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
-        || jobFactsEvaluation.facts.location.propertyPermission
-          !== "customer_confirmed_authority"
-      )
-    ) {
-      return customerValidationError(
-        "A customer-location request must use customer-controlled private property with confirmed authority.",
-        "PROPERTY_PERMISSION_REQUIRED",
-      );
-    }
-    if (
-      jobFactsEvaluation.facts.location.type === "public_roadside"
-      && (
-        serviceLocations[0] !== CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
-        || jobFactsEvaluation.facts.location.propertyPermission
-          !== "not_applicable_public_roadside"
-      )
-    ) {
-      return customerValidationError(
-        "A roadside request must use the public-roadside permission value and the provider-comes-to-me arrangement.",
-        "ROADSIDE_LOCATION_FACTS_REQUIRED",
-      );
-    }
-    if (!partsSource || !isLaborOnlyPartsSource(partsSource)) {
-      return customerValidationError(
-        "Tuveloz accepts labor-only requests. Choose no parts needed, customer-supplied parts, or discuss whether the customer must buy parts separately.",
-        "LABOR_ONLY_PARTS_SOURCE_REQUIRED",
-      );
-    }
-    if (!PARTS_PREFERENCE_OPTIONS.includes(
-      partsPreference as (typeof PARTS_PREFERENCE_OPTIONS)[number],
-    )) {
-      return customerValidationError(
-        "Choose a listed customer-supplied-parts preference.",
-      );
-    }
-    if (!laborOnlyPartsAcknowledged) {
-      return customerValidationError(
-        "Confirm that Tuveloz quotes and payments cannot include provider-supplied parts or any parts charge.",
-        "LABOR_ONLY_PARTS_ACKNOWLEDGMENT_REQUIRED",
-      );
-    }
-    if (partsSource === NO_PARTS_NEEDED_SOURCE) {
-      partsPreference = "No preference";
-    }
-    if (
-      serviceLocations.length !== 1
-      || !CUSTOMER_SERVICE_LOCATION_OPTIONS.includes(
-        serviceLocations[0] as (typeof CUSTOMER_SERVICE_LOCATION_OPTIONS)[number],
-      )
-    ) {
-      return customerValidationError("Choose one exact service-location arrangement.");
-    }
-    if (
-      serviceLocations[0] === CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
-      && !serviceAddress
-    ) {
-      return customerValidationError(
-        "Enter the exact service address when a provider may come to you.",
-      );
+    // A blank service selection is allowed — everything below this point is
+    // specific to quoting/routing one exact service, so it only applies when
+    // the customer actually named one. Without a service, the request is
+    // saved for manual review instead of automatic provider matching.
+    const serviceCode = serviceCodes[0] ?? null;
+    let jobFactsEvaluation: ReturnType<typeof evaluateJobScopeFacts> | null = null;
+    if (serviceCode) {
+      const jobFacts = jobScopeFactsFromInput({
+        serviceCode,
+        operationCode: submittedOperations.length === 1
+          ? submittedOperations[0]
+          : "",
+        prohibitedOperationsAttestedAbsent: submittedProhibitedAbsences,
+        locationType: body.jobLocationType,
+        address: serviceAddress,
+        municipality,
+        county: JOB_SCOPE_COUNTY,
+        state: JOB_SCOPE_STATE,
+        postalCode: zip,
+        jurisdiction,
+        propertyPermission: body.propertyPermission,
+        vehicleDriveability: body.vehicleDriveability,
+        vehicleState: body.vehicleState,
+        highVoltageStatus: body.highVoltageStatus,
+        safetyAttestations: submittedSafetyAttestations,
+      });
+      jobFactsEvaluation = evaluateJobScopeFacts([serviceCode], jobFacts);
+      if (!jobFactsEvaluation.allowed || !jobFactsEvaluation.facts) {
+        return customerValidationError(
+          jobFactsEvaluation.reasons[0]?.detail
+            || "Complete the exact operation, location, vehicle, and safety facts.",
+          jobFactsEvaluation.reasons[0]?.code || "JOB_FACTS_REQUIRED",
+        );
+      }
+      if (
+        !["customer_private_property", "public_roadside"]
+          .includes(jobFactsEvaluation.facts.location.type)
+      ) {
+        return customerValidationError(
+          "Customer intake can currently bind only a customer-authorized private location or a fully checked lawful roadside location. Facility services remain disabled.",
+          "CUSTOMER_LOCATION_TYPE_NOT_OPEN",
+        );
+      }
+      if (
+        jobFactsEvaluation.facts.location.type === "customer_private_property"
+        && (
+          serviceLocations[0] !== CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
+          || jobFactsEvaluation.facts.location.propertyPermission
+            !== "customer_confirmed_authority"
+        )
+      ) {
+        return customerValidationError(
+          "A customer-location request must use customer-controlled private property with confirmed authority.",
+          "PROPERTY_PERMISSION_REQUIRED",
+        );
+      }
+      if (
+        jobFactsEvaluation.facts.location.type === "public_roadside"
+        && (
+          serviceLocations[0] !== CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
+          || jobFactsEvaluation.facts.location.propertyPermission
+            !== "not_applicable_public_roadside"
+        )
+      ) {
+        return customerValidationError(
+          "A roadside request must use the public-roadside permission value and the provider-comes-to-me arrangement.",
+          "ROADSIDE_LOCATION_FACTS_REQUIRED",
+        );
+      }
+      if (!partsSource || !isLaborOnlyPartsSource(partsSource)) {
+        return customerValidationError(
+          "Tuveloz accepts labor-only requests. Choose no parts needed, customer-supplied parts, or discuss whether the customer must buy parts separately.",
+          "LABOR_ONLY_PARTS_SOURCE_REQUIRED",
+        );
+      }
+      if (!PARTS_PREFERENCE_OPTIONS.includes(
+        partsPreference as (typeof PARTS_PREFERENCE_OPTIONS)[number],
+      )) {
+        return customerValidationError(
+          "Choose a listed customer-supplied-parts preference.",
+        );
+      }
+      if (!laborOnlyPartsAcknowledged) {
+        return customerValidationError(
+          "Confirm that Tuveloz quotes and payments cannot include provider-supplied parts or any parts charge.",
+          "LABOR_ONLY_PARTS_ACKNOWLEDGMENT_REQUIRED",
+        );
+      }
+      if (partsSource === NO_PARTS_NEEDED_SOURCE) {
+        partsPreference = "No preference";
+      }
+      if (
+        serviceLocations.length !== 1
+        || !CUSTOMER_SERVICE_LOCATION_OPTIONS.includes(
+          serviceLocations[0] as (typeof CUSTOMER_SERVICE_LOCATION_OPTIONS)[number],
+        )
+      ) {
+        return customerValidationError("Choose one exact service-location arrangement.");
+      }
+      if (
+        serviceLocations[0] === CUSTOMER_SERVICE_LOCATION_OPTIONS[0]
+        && !serviceAddress
+      ) {
+        return customerValidationError(
+          "Enter the exact service address when a provider may come to you.",
+        );
+      }
+    } else {
+      partsSource = partsSource || PARTS_DISCUSSION_SOURCE;
+      partsPreference = partsPreference || "No preference";
     }
     if (!acceptedTerms || !privacyAcknowledged) {
       return customerValidationError(
@@ -462,24 +473,27 @@ export async function POST(request: Request) {
       repeatOfRequestId = previousJob.id;
     }
 
-    const automaticDecision = await decideAutomaticJobRouting({
-      serviceCodes: [serviceCode],
-      jurisdiction,
-      scheduledFor,
-      jobFacts: jobFactsEvaluation.facts,
-      ...(preferredProviderId ? { requiredProviderId: preferredProviderId } : {}),
-    });
-    if (!automaticDecision.allowed) {
-      return customerValidationError(
-        automaticDecision.message,
-        automaticDecision.code,
-        automaticDecision.code === "EXACT_SERVICE_REQUIRED"
-          || automaticDecision.code === "BROAD_SERVICE_PROHIBITED"
-          || automaticDecision.code === "JURISDICTION_NOT_SUPPORTED"
-          || automaticDecision.code === "SCHEDULE_REQUIRED"
-          ? 400
-          : 409,
-      );
+    let automaticDecision: Awaited<ReturnType<typeof decideAutomaticJobRouting>> | null = null;
+    if (serviceCode && jobFactsEvaluation?.facts) {
+      automaticDecision = await decideAutomaticJobRouting({
+        serviceCodes: [serviceCode],
+        jurisdiction,
+        scheduledFor,
+        jobFacts: jobFactsEvaluation.facts,
+        ...(preferredProviderId ? { requiredProviderId: preferredProviderId } : {}),
+      });
+      if (!automaticDecision.allowed) {
+        return customerValidationError(
+          automaticDecision.message,
+          automaticDecision.code,
+          automaticDecision.code === "EXACT_SERVICE_REQUIRED"
+            || automaticDecision.code === "BROAD_SERVICE_PROHIBITED"
+            || automaticDecision.code === "JURISDICTION_NOT_SUPPORTED"
+            || automaticDecision.code === "SCHEDULE_REQUIRED"
+            ? 400
+            : 409,
+        );
+      }
     }
 
     const id = crypto.randomUUID();
@@ -487,30 +501,57 @@ export async function POST(request: Request) {
     const image = await validateJobImage(issuePhoto, false);
     const issueImageKey = image ? await storeJobImage(id, "issue", image) : "";
     const recordedAt = new Date().toISOString();
-    const serviceLabel = SERVICE_POLICY_CATALOG[serviceCode].label;
-    const scopeSnapshot = customerRequestScopeSnapshot({
-      requestId: id,
-      scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
-      serviceCodes: automaticDecision.serviceCodes,
-      jurisdiction: automaticDecision.jurisdiction,
-      municipality,
-      scheduledFor: automaticDecision.scheduledFor,
-      vehicle,
-      zip,
-      launchArea: CURRENT_LAUNCH_AREA,
-      serviceLocations: serializedLocations,
-      serviceAddress,
-      partsSource,
-      partsPreference,
-      details,
-      hasIssueImage: Boolean(image),
-      jobFacts: jobFactsEvaluation.facts,
-      routingActivationDecisionIds: automaticDecision.activationDecisionIds,
-      routingLaunchReadinessDecisionIds:
-        automaticDecision.launchReadinessDecisionIds,
-      routingLaunchReadinessCheckedAt:
-        automaticDecision.launchReadinessCheckedAt,
-    });
+    const serviceLabel = serviceCode
+      ? SERVICE_POLICY_CATALOG[serviceCode].label
+      : "Not sure / other";
+    // No exact service means no scope-fact envelope to bind the acceptance to —
+    // build an honest snapshot that records what was actually agreed to instead
+    // of forcing this through the exact-service scope-snapshot contract.
+    const scopeSnapshot = automaticDecision && jobFactsEvaluation && jobFactsEvaluation.facts
+      ? customerRequestScopeSnapshot({
+          requestId: id,
+          scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
+          serviceCodes: automaticDecision.serviceCodes,
+          jurisdiction: automaticDecision.jurisdiction,
+          municipality,
+          scheduledFor: automaticDecision.scheduledFor,
+          vehicle,
+          zip,
+          launchArea: CURRENT_LAUNCH_AREA,
+          serviceLocations: serializedLocations,
+          serviceAddress,
+          partsSource,
+          partsPreference,
+          details,
+          hasIssueImage: Boolean(image),
+          jobFacts: jobFactsEvaluation.facts,
+          routingActivationDecisionIds: automaticDecision.activationDecisionIds,
+          routingLaunchReadinessDecisionIds:
+            automaticDecision.launchReadinessDecisionIds,
+          routingLaunchReadinessCheckedAt:
+            automaticDecision.launchReadinessCheckedAt,
+        })
+      : JSON.stringify({
+          requestId: id,
+          scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
+          serviceCodes: [],
+          jurisdiction,
+          municipality,
+          scheduledFor,
+          vehicle,
+          zip,
+          launchArea: CURRENT_LAUNCH_AREA,
+          serviceLocations: serializedLocations,
+          serviceAddress,
+          partsSource,
+          partsPreference,
+          details,
+          hasIssueImage: Boolean(image),
+          jobFacts: null,
+          routingActivationDecisionIds: [],
+          routingLaunchReadinessDecisionIds: [],
+          routingLaunchReadinessCheckedAt: "",
+        });
     const acceptanceSessionId = crypto.randomUUID();
     const deviceContext = customerAcceptanceDeviceContext(request);
     const [scopedAcceptanceHash, scopedPrivacyHash] = await Promise.all([
@@ -529,8 +570,8 @@ export async function POST(request: Request) {
         municipality,
         vehicle,
         service: serviceLabel,
-        serviceCodes: JSON.stringify(automaticDecision.serviceCodes),
-        jurisdiction: automaticDecision.jurisdiction,
+        serviceCodes: JSON.stringify(automaticDecision ? automaticDecision.serviceCodes : []),
+        jurisdiction: automaticDecision ? automaticDecision.jurisdiction : jurisdiction,
         partsSource,
         partsPreference,
         laborOnlyPartsAcknowledgedAt: recordedAt,
@@ -538,15 +579,15 @@ export async function POST(request: Request) {
         serviceLocations: serializedLocations,
         serviceAddress,
         details,
-        scheduledFor: automaticDecision.scheduledFor,
+        scheduledFor: automaticDecision ? automaticDecision.scheduledFor : scheduledFor,
         preferredProviderEmail,
         preferredProviderName,
         repeatOfRequestId,
         accessToken,
         issueImageKey,
         issueImageType: image?.contentType ?? "",
-        status: "approved",
-        approvedAt: recordedAt,
+        status: automaticDecision ? "approved" : "new",
+        approvedAt: automaticDecision ? recordedAt : "",
         policyVersion: POLICY_VERSION,
         termsAcceptedAt: recordedAt,
         termsVersion: CUSTOMER_POLICY_BUNDLE_VERSION,
@@ -612,34 +653,38 @@ export async function POST(request: Request) {
       throw error;
     }
 
-    const notifications = await Promise.allSettled(
-      automaticDecision.matchingProviders.map((provider) => (
-        sendMarketplaceUpdateEmail({
-          eventKey: `automatic-request:${id}:${provider.providerId}`,
-          recipientEmail: provider.email,
-          subject: "New eligible TUVELOZ job request",
-          lines: [
-            `Hello ${provider.name},`,
-            "",
-            `A customer request matches your approved exact service: ${serviceCode}.`,
-            `Requested service time: ${automaticDecision.scheduledFor}.`,
-            "",
-            "Open your private provider workspace to review the exact scope and decide whether to quote:",
-            "https://tuveloz.com/account?role=provider",
-            "",
-            "TUVELOZ routed this request because the service activation and provider eligibility records were current through the requested job time. You remain free to decline the opportunity.",
-          ],
-        })
-      )),
-    );
-    const failedNotificationCount = notifications.filter(
-      (notification) => notification.status === "rejected",
-    ).length;
-    if (failedNotificationCount) {
-      console.error("Eligible-provider request notifications failed", {
-        requestId: id,
-        failedNotificationCount,
-      });
+    let matchingProviderCount = 0;
+    if (automaticDecision) {
+      const notifications = await Promise.allSettled(
+        automaticDecision.matchingProviders.map((provider) => (
+          sendMarketplaceUpdateEmail({
+            eventKey: `automatic-request:${id}:${provider.providerId}`,
+            recipientEmail: provider.email,
+            subject: "New eligible TUVELOZ job request",
+            lines: [
+              `Hello ${provider.name},`,
+              "",
+              `A customer request matches your approved exact service: ${serviceCode}.`,
+              `Requested service time: ${automaticDecision.scheduledFor}.`,
+              "",
+              "Open your private provider workspace to review the exact scope and decide whether to quote:",
+              "https://tuveloz.com/account?role=provider",
+              "",
+              "TUVELOZ routed this request because the service activation and provider eligibility records were current through the requested job time. You remain free to decline the opportunity.",
+            ],
+          })
+        )),
+      );
+      const failedNotificationCount = notifications.filter(
+        (notification) => notification.status === "rejected",
+      ).length;
+      if (failedNotificationCount) {
+        console.error("Eligible-provider request notifications failed", {
+          requestId: id,
+          failedNotificationCount,
+        });
+      }
+      matchingProviderCount = automaticDecision.matchingProviders.length;
     }
 
     return Response.json({
@@ -647,8 +692,8 @@ export async function POST(request: Request) {
       accessToken,
       requestId: id,
       scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
-      automaticallyApproved: true,
-      matchingProviderCount: automaticDecision.matchingProviders.length,
+      automaticallyApproved: Boolean(automaticDecision),
+      matchingProviderCount,
     }, { status: 201, headers: { "cache-control": "no-store" } });
   } catch (error) {
     if (error instanceof ImageValidationError) {

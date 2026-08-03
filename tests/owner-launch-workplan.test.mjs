@@ -88,7 +88,7 @@ test("the customer-job pause is enforced by the shared request and money action 
 
 test("public onboarding and the owner workplan state the Montgomery County pathway holds", async () => {
   const [home, page] = await Promise.all([
-    read("app/page.tsx"),
+    read("app/components/provider-signup-form.tsx"),
     read("app/admin/launch-readiness/page.tsx"),
   ]);
 
@@ -98,8 +98,7 @@ test("public onboarding and the owner workplan state the Montgomery County pathw
     assert.doesNotMatch(source, /ch_31a_02152011\.pdf/);
     assert.match(source, /motor-vehicle-repair-maintenance-towing/);
   }
-  assert.match(home, /A learning account has no customer work/);
-  assert.match(home, /provider-of-record, insurance,[\s\S]*workers&apos; compensation,[\s\S]*supervision workflow/);
+  assert.match(home, /broker-confirmed coverage for each exact service/);
   assert.match(page, /broker-confirmed coverage for every exact service/);
   assert.match(page, /Specialty services remain unavailable until every applicable license/);
   assert.match(page, /they do not guarantee that Tuveloz has no liability/);

@@ -28,7 +28,6 @@ import {
   sha256Text,
 } from "../../../lib/provider-policy-acceptance";
 import {
-  getEvidenceRequirements,
   isProviderPathway,
   isServiceCode,
   POLICY_JURISDICTION,
@@ -36,9 +35,9 @@ import {
   POLICY_VERSION,
   PROVIDER_LEVEL_LABELS,
   PROVIDER_PATHWAY_LABELS,
-  PROVIDER_POLICY_MATRIX,
   SERVICE_POLICY_CATALOG,
 } from "../../../lib/provider-policy";
+import { getRequiredDocuments } from "../../../lib/service-tiers";
 import { immutablePerformingPersonName } from "../../../lib/identity-verification-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { parseProviderServices } from "../../../lib/service-matching";
@@ -429,11 +428,10 @@ async function responseData(
 
   const serviceStatuses = selectedServices.map((serviceCode) => {
     const service = SERVICE_POLICY_CATALOG[serviceCode];
-    const requirements = pathway ? getEvidenceRequirements(serviceCode, pathway) : [];
-    const requirementRows = requirements.map((requirementKey) => {
-      const definition = PROVIDER_POLICY_MATRIX.evidence_types[requirementKey];
+    const requiredDocuments = pathway ? getRequiredDocuments(serviceCode, pathway) : [];
+    const requirementRows = requiredDocuments.map((doc) => {
       const submissions = decoratedEvidence.filter((item) => (
-        item.requirementKey === requirementKey
+        item.requirementKey === doc.code
         && (!item.serviceCode || item.serviceCode === serviceCode)
       ));
       const submission = submissions[0] ?? null;
@@ -451,11 +449,11 @@ async function responseData(
                   ? "rejected"
                   : "under_review";
       return {
-        code: requirementKey,
-        label: definition.label,
-        requiresExpiration: definition.requires_expiration === true,
-        private: definition.private,
-        uploadAllowed: !STRUCTURED_ONLY_REQUIREMENTS.has(requirementKey),
+        code: doc.code,
+        label: doc.label,
+        requiresExpiration: doc.requiresExpiration === true,
+        private: doc.private,
+        uploadAllowed: !STRUCTURED_ONLY_REQUIREMENTS.has(doc.code),
         status,
         submission,
       };
