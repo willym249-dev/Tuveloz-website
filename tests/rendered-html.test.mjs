@@ -78,8 +78,8 @@ test("build clearly explains customer choice and provider freedom", async () => 
   assert.ok(contents.includes("Compare providers and quotes"));
   assert.ok(contents.includes("Use one simple job workspace"));
   assert.ok(contents.includes("Request tools that help you grow"));
-  assert.ok(contents.includes("Apply for exact services. Get ready for future jobs. Run your business your way."));
-  assert.ok(contents.includes("TUVELOZ does not employ or train providers."));
+  assert.ok(contents.includes("Your business. Your price. Your schedule."));
+  assert.ok(contents.includes("Tuveloz doesn't employ, train, or assign work to providers"));
 });
 
 test("build contains a simple, protected quote choice and factual private analytics", async () => {

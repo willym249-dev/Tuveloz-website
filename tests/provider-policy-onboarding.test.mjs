@@ -99,7 +99,7 @@ test("public onboarding and agreements clearly deny TUVELOZ employment or traini
   const terms = await read("../app/terms/page.tsx");
   const providerAgreement = await read("../app/provider-agreement/page.tsx");
   const faq = await read("../app/faq/page.tsx");
-  assert.ok(homepage.includes("TUVELOZ does not employ or train providers."));
+  assert.ok(homepage.includes("Tuveloz doesn&apos;t employ, train, or assign work to providers"));
   assert.match(signupForm, /provider business—not Tuveloz—is responsible for lawful\s+employment classification/);
   assert.ok(terms.includes("TUVELOZ does not hire, employ, train, sponsor, assign"));
   assert.ok(providerAgreement.includes("TUVELOZ does not place provider personnel"));
