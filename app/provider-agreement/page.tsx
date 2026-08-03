@@ -3,28 +3,25 @@ import { PolicyPage } from "../components/policy-page";
 export default function ProviderAgreementPage() {
   return (
     <PolicyPage
-      eyebrow="Providers • Operational review draft"
+      eyebrow="Providers"
       title="Provider Agreement"
-      summary="An operational review draft for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="August 1, 2026"
+      summary="Plain-language terms for provider businesses working through Tuveloz."
+      updated="August 3, 2026"
     >
       <section>
-        <h2>1. Draft status and related policies</h2>
+        <h2>1. Where this stands, and what else applies</h2>
         <p>
-          This document is an operational review draft. It is not legal advice,
-          proof of compliance, an active provider agreement, or approval for
-          anyone to offer or perform a vehicle service through Tuveloz. Tuveloz&apos;s
-          owner may elect not to hire private counsel, but that choice does not
-          waive or reduce any applicable law. Before production activation,
-          Tuveloz must document and satisfy every mandatory federal, Maryland,
-          local, government, agency, insurance, tax, payment, privacy, security,
-          and service-specific requirement. Independent professional legal review
-          remains recommended for complex or disputed provisions.
+          This is an operational document, not a final legal contract, legal
+          advice, or approval to perform a vehicle service through Tuveloz
+          yet. Tuveloz&apos;s owner may proceed without private counsel for now,
+          but that doesn&apos;t reduce any legal requirement. Before any service
+          goes live, Tuveloz has to document and satisfy every applicable
+          federal, Maryland, local, insurance, tax, payment, privacy, and
+          service-specific requirement.
         </p>
         <p>
-          This draft supplements the <a href="/terms">Terms of Use</a> and must
-          be read with the{" "}
-          <a href="/marketplace-conduct">Marketplace Conduct Policy</a>, the{" "}
+          This agreement works together with the <a href="/terms">Terms of Use</a>,
+          the <a href="/marketplace-conduct">Marketplace Conduct Policy</a>, the{" "}
           <a href="/provisional-provider-policy">
             Provisional Provider and Trainee Policy
           </a>, the <a href="/privacy">Privacy Policy</a>, and the{" "}
@@ -33,280 +30,229 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>2. Marketplace role and responsibilities</h2>
+        <h2>2. Your business, your relationship with Tuveloz</h2>
         <p>
-          Tuveloz operates marketplace, payment, eligibility, record, and
-          support features. The provider business that appears on the accepted
-          quote is the vehicle-service provider and contracts directly with the
-          customer. It is responsible for its services, personnel, tools, handling
-          of customer-supplied parts, estimates, authorizations, service records,
-          taxes imposed on it outside the Tuveloz labor-only transaction, insurance,
-          workmanship, safety practices, records, and provider warranties.
+          You&apos;re an independent business, not a Tuveloz employee, agent, or
+          partner — nothing here creates an employment relationship. You
+          control your own prices, schedule, tools, methods, materials, and
+          customers. Tuveloz doesn&apos;t hire, employ, train, sponsor, assign,
+          direct, discipline, supervise, or put you or your personnel on
+          payroll — and doesn&apos;t promise you any customer work.
         </p>
         <p>
-          Tuveloz does not become the vehicle-service provider or the employer of
-          provider personnel merely by operating these features. Platform safety,
-          eligibility, payment, and conduct controls do not transfer the provider
-          business&apos;s operational duties to Tuveloz. Nothing in this agreement
-          waives or promises to eliminate any responsibility Tuveloz has under
-          applicable law.
+          Being cleared to perform a vehicle service is different from being
+          authorized to work in the United States. Reviewing your license,
+          registration, or insurance doesn&apos;t establish immigration or
+          employment authorization — that&apos;s on you or your employer, and
+          Tuveloz won&apos;t ask for immigration documents unless the law
+          specifically requires it.
         </p>
       </section>
 
       <section>
-        <h2>3. The three permitted relationship pathways</h2>
-        <h3>Independent startup owner-operator</h3>
+        <h2>3. No exclusivity, no obligation</h2>
         <p>
-          An adult owner-operator may apply through an independently established
-          business. The owner-operator must personally be the performing person
-          and must satisfy the business registration, tax, payout, insurance,
-          competency, location, and exact-service requirements in the approved
-          matrix. The owner-operator controls lawful methods, tools, scheduling,
-          labor pricing, and whether to pursue a request, subject to the accepted
-          labor-only quote and platform safety rules.
+          You can work other platforms or find your own customers — Tuveloz
+          isn&apos;t exclusive. You&apos;re never required to accept, quote, or
+          complete any specific job.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. The three ways to work through Tuveloz</h2>
+        <h3>Independent owner-operator</h3>
+        <p>
+          You apply as your own established business and personally perform
+          the work. You&apos;re responsible for your own registration, taxes,
+          payout setup, insurance, and the requirements for your exact
+          service — and you control your own methods, tools, schedule, and
+          pricing.
         </p>
         <h3>Sponsored trainee employee</h3>
         <p>
-          A sponsored trainee must be a genuine paid employee of a registered
-          provider business. The registered provider business—not the trainee—is
-          the provider of record. It must place the trainee on its current
-          personnel roster, maintain workers&apos; compensation and applicable
-          insurance, assign an eligible supervisor, control and review the work,
-          and complete all required checkpoints and final sign-off.
+          You&apos;re a genuine paid employee of a registered provider business,
+          and that business — not you — is the provider of record. It has to
+          keep you on its personnel roster, carry workers&apos; compensation and
+          the required insurance, assign you an eligible supervisor, and sign
+          off on the required checkpoints.
         </p>
         <h3>Regular provider-business employee</h3>
         <p>
-          A registered standard or specialty provider business may assign a
-          genuine non-trainee employee only when the employee is on a current
-          roster and supported by the required employment, workers&apos; compensation,
-          insurance, competency, and exact-service records. This pathway cannot
-          be used to bypass trainee supervision or another service requirement.
+          A registered provider business can also assign a genuine
+          non-trainee employee, as long as you&apos;re on its current roster and
+          backed by the required employment, insurance, and competency
+          records. This route can&apos;t be used to skip trainee supervision or
+          any other service requirement.
         </p>
         <p>
-          Labels and contract language do not decide worker classification. The
-          actual relationship and applicable law control. Provider personnel are
-          not Tuveloz employees, and no provider business or worker may bind
-          Tuveloz.
+          However you&apos;re labeled, the real relationship and the actual law
+          decide your classification — not the words in this agreement.
+          Provider personnel are never Tuveloz employees, and no provider or
+          worker can bind Tuveloz to anything.
         </p>
       </section>
 
       <section>
-        <h2>4. No borrowed credentials or contractor sponsorship</h2>
+        <h2>5. No borrowed credentials</h2>
         <p>
-          No person may borrow, rent, share, or rely on another provider&apos;s
+          You can&apos;t borrow, rent, share, or rely on someone else&apos;s
           registration, license, insurance, supervisor, account, or verified
-          identity to obtain job access. The sponsored-trainee pathway has no
-          independent-contractor or 1099 version. A sponsoring provider may not
-          place an unaffiliated contractor on its roster to avoid registration,
-          employment, payroll, tax, insurance, or supervision duties.
+          identity to get job access. The sponsored-trainee route has no
+          independent-contractor or 1099 version — a sponsoring business
+          can&apos;t put an unaffiliated contractor on its roster just to skip
+          registration, payroll, tax, insurance, or supervision duties.
         </p>
         <p>
-          A person who is not a genuine employee within an approved provider
-          pathway must qualify independently as an owner-operator before
-          performing paid work. Credentials and eligibility are tied to the exact
-          provider business, performing person, service, location, and job date;
-          one person may not inherit another person&apos;s evidence.
-        </p>
-      </section>
-
-      <section>
-        <h2>5. No service is active yet</h2>
-        <p>
-          Every exact service is disabled. No application, public label, uploaded
-          document, account status, provisional level, trainee relationship, or
-          candidate-service list authorizes customer work. A service may be
-          enabled only after its applicable laws and government or agency
-          requirements are documented and satisfied, Tuveloz&apos;s insurance broker
-          confirms coverage for the exact operation, and the required pathways,
-          evidence, exclusions, supervision, location, incident, and operating
-          controls are implemented in production.
-        </p>
-        <p>
-          Until that activation occurs, the service must remain blocked at
-          discovery, matching, quoting, booking, assignment, job start, scope
-          change, completion, and payout. Broad categories such as “general auto
-          repair” never substitute for an enabled exact service code.
+          If you&apos;re not a genuine employee under one of the pathways above,
+          you need to qualify independently as an owner-operator before doing
+          paid work. Your eligibility is tied to you, your exact service,
+          your location, and the job date — nobody can inherit someone else&apos;s
+          evidence.
         </p>
       </section>
 
       <section>
-        <h2>6. Provider-business control of each job</h2>
+        <h2>6. No service is live yet</h2>
         <p>
-          The provider business decides whether to pursue a request, sets or
-          approves the labor-only quote, accepts the customer contract, assigns the
-          performing person, sets lawful work methods, supplies or approves tools,
-          confirms whether it is willing to install the customer&apos;s separately
-          purchased part, controls scheduling, and determines the supervision required
-          by the approved service procedure. Tuveloz may enforce platform gates
-          but does not assign or supervise a sponsored trainee on the provider
-          business&apos;s behalf.
+          Every exact service is disabled. No application, uploaded
+          document, account status, or candidate-service selection authorizes
+          real customer work. A service can only turn on after its legal and
+          government requirements are documented, Tuveloz&apos;s insurer confirms
+          coverage for that exact work, and the required evidence,
+          supervision, and safety controls are actually built and turned on
+          in production.
         </p>
         <p>
-          For employee work, the provider business must control any substitution,
-          ensure the replacement person is eligible, disclose the change to the
-          customer, and obtain any required fresh customer acceptance. The
-          provider business must prepare or approve required estimates,
-          authorizations, change orders, invoices, warranty terms, repair records,
-          and completion sign-off. Sponsored work may not complete or pay out
-          without the required provider-business approval.
+          Until then, a service stays blocked at every stage — discovery,
+          quoting, booking, job start, and payout. A broad category like
+          &quot;general auto repair&quot; never substitutes for a specific, enabled
+          service.
         </p>
       </section>
 
       <section>
-        <h2>7. Employment, payroll, and work authorization</h2>
+        <h2>7. Running your jobs</h2>
         <p>
-          TUVELOZ does not hire, employ, train, sponsor, assign, direct,
-          discipline, or supervise any provider, mechanic, trainee, or
-          provider-business employee. TUVELOZ does not place provider personnel
-          on its payroll or promise them customer work.
+          You decide whether to pursue a request, set or approve your quote,
+          and control how the work gets done, lawfully. If work needs to
+          differ from what was quoted, or conditions turn unsafe, stop and
+          get the customer&apos;s approval before continuing — a trainee or
+          employee can&apos;t expand scope, send a separate invoice, redirect
+          payment, or promise a warranty outside your business&apos;s process.
         </p>
         <p>
-          A provider business is solely responsible for lawful hiring, wages,
-          payroll, withholding, tax reporting, scheduling, training, direction,
-          discipline, workers&apos; compensation, benefits, and every other employer
-          obligation for its trainees and regular employees. Tuveloz pays the
-          provider business, not its trainee or employee; the provider business
-          must pay its personnel through its own lawful payroll process.
-        </p>
-        <p>
-          Authorization to perform a vehicle service is different from legal
-          authorization to work in the United States. Platform review of a repair
-          registration, driver&apos;s license, certification, or insurance does not
-          establish immigration or employment authorization. The employing
-          provider business must complete its legally required work-authorization
-          process. Tuveloz will not request or store unnecessary immigration
-          documents unless applicable law and a documented lawful process
-          specifically require them.
+          Your quotes need to clearly state the service, scope, timing,
+          price, and any parts assumptions — never include provider-supplied
+          parts, parts reimbursement, or parts tax; those are the customer&apos;s
+          own purchase. If you&apos;re substituting a different performing person,
+          you&apos;re responsible for making sure they&apos;re eligible, telling the
+          customer, and getting their approval if needed.
         </p>
       </section>
 
       <section>
-        <h2>8. Quotes and direct customer contracts</h2>
+        <h2>8. Your responsibilities</h2>
         <p>
-          The provider business sets or approves each labor-only quote and must
-          clearly state the enabled service code, labor scope, customer-supplied-part
-          assumptions, exclusions, timing, labor price, and workmanship warranty.
-          A provider may not include provider-supplied parts, parts reimbursement,
-          parts tax, or another parts charge in a Tuveloz quote, change order,
-          invoice used for platform payment, or payment request. Customer acceptance
-          forms a direct service agreement with the provider business. Added work,
-          a different performing person, or a labor-price change requires the
-          provider business&apos;s approval and the customer&apos;s documented authorization
-          when applicable.
+          You&apos;re solely responsible for performing services safely and
+          lawfully; holding every license, registration, permit, or insurance
+          your service and location legally require; your own equipment and
+          materials; your tax obligations, including self-employment tax; and
+          any workers or subcontractors you use.
         </p>
         <p>
-          The performing person must stop when the requested work differs from the
-          enabled scope or conditions are unsafe. Neither a trainee nor a regular
-          employee may independently expand the scope, issue a separate invoice,
-          redirect payment, or promise a warranty outside the provider
-          business&apos;s approved process.
+          Insurance has to actually match your business, your relationship
+          with any workers, the exact service, the location, and the job
+          date — a certificate alone doesn&apos;t prove coverage. Report a lapse,
+          or an incident like an injury, property damage, or a safety issue,
+          right away.
         </p>
       </section>
 
       <section>
-        <h2>9. Insurance, safety, and incidents</h2>
+        <h2>9. What we require from you</h2>
         <p>
-          Insurance must match the provider business, worker relationship, exact
-          service, location, vehicle use, and job date. A certificate alone does
-          not prove coverage. The provider business must maintain every legally
-          required and broker-approved policy, endorsement, limit, and worker
-          coverage and must report a lapse or material change immediately.
-        </p>
-        <p>
-          The provider business and performing person must follow the approved
-          worksite, equipment, environmental, road-safety, test-drive, stop-work,
-          and incident procedures. Injury, vehicle or property damage, fire,
-          spill, customer threat, police contact, lost property, equipment
-          failure, incorrect parts, or suspected fuel or high-voltage danger must
-          be reported promptly and relevant records preserved.
+          Tuveloz will only ever ask for documentation tied to a specific
+          legal requirement for the service(s) you&apos;ve selected. We won&apos;t ask
+          for paperwork &quot;as a precaution&quot; or request anything beyond what the
+          law actually requires.
         </p>
       </section>
 
       <section>
-        <h2>10. Provider payout and customer payment</h2>
+        <h2>10. Customer information</h2>
         <p>
-          The provider business&apos;s accepted subtotal is separate from Tuveloz&apos;s
-          disclosed customer service fee. Subject to documented compliance with
-          applicable law and final processor, CPA or tax-adviser, insurance, and
-          operational approval, Stripe administers payment and the eligible provider
-          subtotal is scheduled for transfer to the provider business after the
-          required completion and payment reviews. An employee or sponsored
-          trainee has no right to receive the job payout directly from Tuveloz.
-        </p>
-        <p>
-          A transfer may be delayed, reversed, or recovered for a refund,
-          chargeback, fraud, legal restraint, payment-network requirement,
-          duplicate or incorrect payment, or material failure to provide the
-          accepted service, subject to applicable law and the payment policy.
-          Payment administration does not shift invoicing, warranty, payroll, or
-          service responsibility away from the provider business.
+          Use a customer&apos;s contact, vehicle, photo, or location information
+          only to quote, schedule, perform, document, and support their job —
+          or where the law requires it. Don&apos;t sell it, use it for unrelated
+          marketing, publish it, or hold onto it longer than you reasonably
+          need to. You&apos;re responsible for your personnel&apos;s access to and
+          handling of that information, and for following the{" "}
+          <a href="/marketplace-conduct">Marketplace Conduct Policy</a>.
         </p>
       </section>
 
       <section>
-        <h2>11. Customer information and marketplace conduct</h2>
+        <h2>11. Payment</h2>
         <p>
-          Use customer contact, vehicle, photo, and location information only to
-          quote, schedule, perform, document, and support the authorized service
-          or as law requires. Do not sell it, use it for unrelated marketing,
-          publish it, or keep it longer than reasonably necessary. The provider
-          business is responsible for its personnel&apos;s access and conduct.
-        </p>
-        <p>
-          The provider business and every performing person must follow the{" "}
-          <a href="/marketplace-conduct">Marketplace Conduct Policy</a>, including
-          its rules on identity, customer treatment, credential integrity,
-          safety, truthful claims, reviews, records, and payment conduct.
+          You get your full quoted price; Tuveloz&apos;s 10% fee is charged
+          separately to the customer. Payment is released after the job is
+          marked complete, administered through Stripe, subject to the
+          required completion and payment reviews. A transfer can be
+          delayed, reversed, or recovered for a refund, chargeback, fraud, a
+          legal issue, or a payment mistake — none of which changes your
+          invoicing, warranty, or service responsibilities.
         </p>
       </section>
 
       <section>
-        <h2>12. Review, suspension, and termination</h2>
+        <h2>12. Taxes</h2>
         <p>
-          Tuveloz may block a service, person, or provider business while
-          reviewing a credential, insurance, classification, safety, payment,
-          fraud, privacy, or conduct concern and may remove access for a material
-          or repeated breach. When reasonably practical and legally appropriate,
-          Tuveloz will identify the reason and provide a route to submit relevant
-          records. An appeal does not reactivate an unmet legal, insurance, or
-          safety gate.
-        </p>
-        <p>
-          A provider business may stop using Tuveloz, subject to accepted jobs,
-          customer obligations, payments, disputes, investigations, and required
-          records. Expiration or suspension of a business, worker, supervisor,
-          credential, or insurance requirement immediately blocks dependent work.
+          You&apos;ll provide a completed W-9 when you sign up, and Tuveloz will
+          issue a 1099 for applicable annual earnings.
         </p>
       </section>
 
       <section>
-        <h2>13. Responsibility for claims</h2>
+        <h2>13. Review, suspension, and ending access</h2>
         <p>
-          To the extent permitted by law, the provider business will defend and
-          reimburse Tuveloz for third-party claims and reasonable losses caused
-          by its services, personnel, breach of a customer agreement, violation
-          of law, taxes, credential misuse, or content it had no right to use.
-          This obligation does not cover Tuveloz&apos;s own fraud, willful misconduct,
-          or responsibility that applicable law does not allow Tuveloz to shift.
+          You can stop using Tuveloz any time, with no penalty, notice
+          period, or fee, subject to any jobs, payments, or disputes still
+          open.
         </p>
         <p>
-          No disclaimer, insurance requirement, provider obligation, or
-          independent-business label guarantees that Tuveloz has zero liability.
-          Tuveloz remains responsible for its own marketplace, payment, privacy,
-          and other duties to the extent applicable law imposes them.
+          Tuveloz can also block a service, a person, or your business while
+          looking into a real concern about a credential, insurance, safety,
+          payment, or conduct issue, and can remove access for a serious or
+          repeated breach. Where it&apos;s practical and legally appropriate,
+          we&apos;ll tell you why and give you a way to respond — though an appeal
+          doesn&apos;t reactivate a legal or safety requirement that isn&apos;t
+          actually met. Losing or letting a required credential or insurance
+          lapse blocks the work that depends on it immediately.
         </p>
       </section>
 
       <section>
-        <h2>14. Terms that continue</h2>
+        <h2>14. If something goes wrong</h2>
         <p>
-          Payment adjustments, payroll and tax duties, confidentiality,
-          customer-data limits, service and warranty responsibilities, incident
-          cooperation, reimbursement obligations, dispute terms, and other
-          provisions that by their nature must continue survive the end of
-          platform access. If this Provider Agreement conflicts with the general
-          Terms on a provider-specific issue, this agreement controls after a
-          final production version is adopted.
+          You agree to cover Tuveloz for claims that come from your work,
+          your negligence, or an inaccurate statement you make about your
+          experience, credentials, or insurance — this doesn&apos;t apply to
+          Tuveloz&apos;s own fraud or willful misconduct, or anything the law
+          doesn&apos;t let you take on. None of this means Tuveloz has zero
+          responsibility of its own — Tuveloz remains responsible for its own
+          marketplace, payment, and privacy duties wherever the law requires
+          it.
+        </p>
+      </section>
+
+      <section>
+        <h2>15. Terms that continue</h2>
+        <p>
+          Payment adjustments, tax duties, confidentiality, customer-data
+          limits, warranty responsibilities, incident cooperation, and
+          dispute terms all continue to apply even after you stop using
+          Tuveloz. If anything here conflicts with the general Terms of Use
+          on a provider-specific point, this agreement controls.
         </p>
       </section>
     </PolicyPage>
