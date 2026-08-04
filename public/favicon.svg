@@ -1,11 +1,10 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="tuveloz-orange" x1="5" y1="3" x2="28" y2="29" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FF8A2A"/>
-      <stop offset="0.72" stop-color="#FF6A00"/>
-    </linearGradient>
-  </defs>
-  <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="#07182D" stroke="#FF6A00"/>
-  <path d="M5.7 7.4c0-.74.6-1.34 1.34-1.34h17.92c.74 0 1.34.6 1.34 1.34v1.86c0 .43-.2.83-.54 1.09l-6.44 4.86v5.66c0 .74-.6 1.34-1.34 1.34h-3.96c-.74 0-1.34-.6-1.34-1.34v-5.66l-6.44-4.86a1.36 1.36 0 0 1-.54-1.09V7.4Z" fill="url(#tuveloz-orange)"/>
-  <path d="M16 23.54c-1.5 1.81-2.37 3.04-2.37 4.16a2.37 2.37 0 0 0 4.74 0c0-1.12-.87-2.35-2.37-4.16Z" fill="url(#tuveloz-orange)"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tuveloz badge: rounded square, brand black, orange keyline -->
+  <rect x="31" y="31" width="450" height="450" rx="102" fill="#050505" stroke="#FF6A00" stroke-width="30"/>
+  <!-- Funnel -->
+  <path d="M146 150 L366 150 L300 254 L300 342 L212 342 L212 254 Z"
+        fill="#FF6A00" stroke="#FF6A00" stroke-width="26" stroke-linejoin="round"/>
+  <!-- Drop -->
+  <path d="M256 380 C241 401 227 417 227 431 A29 29 0 0 0 285 431 C285 417 271 401 256 380 Z"
+        fill="#FF6A00"/>
 </svg>
