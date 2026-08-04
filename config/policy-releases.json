@@ -24,11 +24,11 @@
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {
-    "releaseStatus": "draft",
-    "effectiveAt": "",
-    "releaseId": "",
+    "releaseStatus": "active",
+    "effectiveAt": "2026-08-04T06:00:46.511Z",
+    "releaseId": "privacy-2026-08-04",
     "reviewBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
-    "canonicalBodyHash": "",
+    "canonicalBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
     "sourceFile": "app/privacy/page.tsx"
   },
   "payment_policy": {
