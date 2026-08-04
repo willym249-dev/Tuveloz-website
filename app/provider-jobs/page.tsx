@@ -621,7 +621,7 @@ export default function ProviderJobsPage() {
               {!provider.testProvider && (
                 <p className="provider-fee-note">
                   Your quote remains the provider subtotal. The current test
-                  configuration proposes a separate 10% TUVELOZ customer fee;
+                  configuration proposes a separate 5% TUVELOZ customer fee;
                   final pricing and tax treatment remain under mandatory legal and CPA or tax-adviser review.
                 </p>
               )}

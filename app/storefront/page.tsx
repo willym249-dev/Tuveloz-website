@@ -186,7 +186,7 @@ function LiveStripeStorefrontPage() {
         <h1>Customer payments are not yet available.</h1>
         <p>
           The current test configuration uses provider-set prices and proposes a
-          separate 10% TUVELOZ fee. Final fees, tax treatment, settlement roles,
+          separate 5% TUVELOZ fee. Final fees, tax treatment, settlement roles,
           and refund terms require approval and conspicuous checkout disclosure.
         </p>
         <label>
@@ -261,7 +261,7 @@ function LiveStripeStorefrontPage() {
                   <p>{product.description}</p>
                   <dl className="quote-breakdown compact">
                     <div><dt>Provider price</dt><dd>{dollars(product.unitAmount)}</dd></div>
-                    <div><dt>Tuveloz fee (10%)</dt><dd>{dollars(totals.customerFeeCents)}</dd></div>
+                    <div><dt>Tuveloz fee (5%)</dt><dd>{dollars(totals.customerFeeCents)}</dd></div>
                     <div className="total"><dt>Total</dt><dd>{dollars(totals.customerTotalCents)}</dd></div>
                   </dl>
                   <button

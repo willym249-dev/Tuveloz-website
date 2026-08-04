@@ -285,7 +285,7 @@ npm run db:migrate:remote
 Run this again after adding a new migration.
 
 Migration `0020_kind_rick_jones.sql` adds passwordless login/session storage,
-email lookup indexes, and the 10% customer-fee snapshot stored with each quote.
+email lookup indexes, and the 5% customer-fee snapshot stored with each quote.
 Migration `0021_romantic_pepper_potts.sql` adds provider-to-Stripe account
 mappings and immutable payment records used for Checkout, webhook
 reconciliation, and idempotent transfers.

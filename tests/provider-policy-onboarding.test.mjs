@@ -60,7 +60,7 @@ test("draft policy acknowledgments are bound for review but fail closed for job 
   assert.ok(acceptance.includes('"provider_eligibility"'));
   assert.match(acceptance, /policyDocumentRelease\("provider_agreement"\)/);
   assert.ok(Object.entries(releaseManifest).every(([key, release]) => (
-    key === "terms"
+    ["terms", "provider_agreement", "customer_agreement", "payment_policy"].includes(key)
       ? release.releaseStatus === "active"
         && release.effectiveAt !== ""
         && release.releaseId !== ""

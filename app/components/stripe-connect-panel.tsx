@@ -282,7 +282,7 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
                       type="number"
                       value={productPrice}
                     />
-                    <small>The test configuration proposes a separate 10% customer fee; final live pricing and tax treatment require approval.</small>
+                    <small>The test configuration proposes a separate 5% customer fee; final live pricing and tax treatment require approval.</small>
                   </label>
                   <button className="button primary" disabled={busy} type="submit">
                     {busy ? "Creating…" : "Create Stripe product"}

@@ -146,10 +146,10 @@ export default function TermsPage() {
       <section>
         <h2>7. Fees</h2>
         <p>
-          Once enabled, Tuveloz plans to charge a 10% fee on completed jobs,
+          Once enabled, Tuveloz plans to charge a 5% fee on completed jobs,
           added to the provider&apos;s quoted price and shown to the customer
           before they accept. There&apos;s no fee to browse, post a request, apply
-          as a provider, or send a quote. That 10% figure is Tuveloz&apos;s
+          as a provider, or send a quote. That 5% figure is Tuveloz&apos;s
           proposed pricing — it still needs final sign-off from a tax
           adviser, the payment processor, and Tuveloz&apos;s insurance broker
           before it&apos;s final.

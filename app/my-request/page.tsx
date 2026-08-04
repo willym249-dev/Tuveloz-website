@@ -406,7 +406,7 @@ export default function MyRequestPage() {
                 <strong>Authorize this exact provider and quote?</strong>
                 <p>
                   {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
-                  including the 10% Tuveloz service fee
+                  including the 5% Tuveloz service fee
                 </p>
                 {quote.selectionAcceptance ? (
                   <label className="policy-consent">

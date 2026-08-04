@@ -6,7 +6,7 @@ export default function PaymentsPage() {
       eyebrow="Money"
       title="Payment, Cancellation, and Refund Policy"
       summary="An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections."
-      updated="August 1, 2026"
+      updated="August 4, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -27,7 +27,7 @@ export default function PaymentsPage() {
         <h2>1. Price shown before checkout</h2>
         <p>
           Customer requests and checkout are not yet open. The current product
-          configuration proposes a customer service fee equal to 10% of the
+          configuration proposes a customer service fee equal to 5% of the
           provider&apos;s quoted subtotal. If that pricing and payment flow receive
           final approval, the customer must see the provider subtotal, separate
           Tuveloz fee, and total conspicuously before choosing whether to proceed.
@@ -46,7 +46,7 @@ export default function PaymentsPage() {
           is purchased separately by the customer and is not included in the
           provider subtotal. The proposed product design separately tracks the accepted
           provider labor subtotal and a
-          10% customer service fee for marketplace and transaction support. The
+          5% customer service fee for marketplace and transaction support. The
           percentage, transfer calculation, adjustments, and accounting treatment
           remain subject to documented compliance with applicable law and final
           CPA or tax-adviser, processor, insurance, and operational approval.
