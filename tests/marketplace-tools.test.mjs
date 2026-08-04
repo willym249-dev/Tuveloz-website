@@ -112,7 +112,7 @@ test("owner tools stay protected and are discoverable only to the owner", async 
 
   assert.ok(layout.includes("<AccountToolsDock />"));
   assert.ok(dock.includes('fetch("/api/owner-access"'));
-  assert.ok(dock.includes("(isOwner || ownerEntryAvailable)"));
+  assert.ok(dock.includes("if (!isOwner) return null;"));
   assert.ok(dock.includes('href="/admin"'));
   assert.ok(dock.includes('href="/admin/marketplace-tools"'));
   assert.ok(adminApi.includes("await isVerifiedOwnerRequest(request)"));

@@ -124,7 +124,7 @@ export default function ProvisionalProviderPolicyPage() {
           share, or claim coverage under another provider&apos;s registration,
           license, insurance, supervisor, account, roster, or identity merely to
           obtain job access. A provider business may not create a paper
-          “sponsorship,” false payroll relationship, or nominal assignment to
+          &ldquo;sponsorship,&rdquo; false payroll relationship, or nominal assignment to
           evade registration, classification, tax, workers&apos; compensation,
           insurance, or supervision duties.
         </p>

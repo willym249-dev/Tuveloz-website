@@ -155,7 +155,7 @@ export default function PrivacyPage() {
         <p>
           People who cannot sign in may email{" "}
           <a href="mailto:hello@tuveloz.com?subject=Privacy%20Request">hello@tuveloz.com</a>{" "}
-          with the subject “Privacy Request.” We may verify identity and authority
+          with the subject &ldquo;Privacy Request.&rdquo; We may verify identity and authority
           before acting. We will respond within the period required by applicable
           law and explain any denial. Privacy requests do not require payment, and
           Tuveloz will not discriminate against someone for exercising an applicable right.

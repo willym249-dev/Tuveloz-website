@@ -27,7 +27,7 @@
     "releaseStatus": "draft",
     "effectiveAt": "",
     "releaseId": "",
-    "reviewBodyHash": "daa9dd5d7550a6b8a8bdd66639c7d99130939894507d79c3fc1ed85464b3945c",
+    "reviewBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
     "canonicalBodyHash": "",
     "sourceFile": "app/privacy/page.tsx"
   },
@@ -51,7 +51,7 @@
     "releaseStatus": "draft",
     "effectiveAt": "",
     "releaseId": "",
-    "reviewBodyHash": "cc507c301719c628c611fa7c755bdf8f06b11d84a1011a31fd6856c750a292f6",
+    "reviewBodyHash": "e0c9460b370d78cc0dc15a787ac18f42866e33fcc6939b03f75a9826a3ad4442",
     "canonicalBodyHash": "",
     "sourceFile": "app/provisional-provider-policy/page.tsx"
   }
