@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
@@ -5,6 +8,8 @@ import {
 } from "../../lib/launch-status";
 
 export function JobPostingPauseNotice() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <>
       <style>{`
@@ -27,11 +32,33 @@ export function JobPostingPauseNotice() {
           max-width: 70rem;
         }
 
-        .tuveloz-launch-pause-copy strong {
+        .tuveloz-launch-pause-heading {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+        }
+
+        .tuveloz-launch-pause-heading strong {
           color: #ff6a00;
           font-size: 0.78rem;
           letter-spacing: 0.09em;
           text-transform: uppercase;
+        }
+
+        .tuveloz-launch-pause-toggle {
+          display: none;
+          align-items: center;
+          gap: 0.3rem;
+          min-height: 2.25rem;
+          padding: 0.3rem 0.6rem;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          border-radius: 0.7rem;
+          background: transparent;
+          color: white;
+          font-size: 0.78rem;
+          font-weight: 750;
+          cursor: pointer;
         }
 
         .tuveloz-launch-pause-copy span {
@@ -69,6 +96,18 @@ export function JobPostingPauseNotice() {
           .tuveloz-launch-pause {
             align-items: stretch;
             flex-direction: column;
+            gap: 0.75rem;
+            padding-top: 0.6rem;
+            padding-bottom: 0.6rem;
+          }
+
+          .tuveloz-launch-pause-toggle {
+            display: inline-flex;
+          }
+
+          .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-copy span,
+          .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-actions {
+            display: none;
           }
 
           .tuveloz-launch-pause-actions a {
@@ -79,12 +118,23 @@ export function JobPostingPauseNotice() {
       `}</style>
       <aside
         aria-label="Tuveloz customer launch update"
-        className="tuveloz-launch-pause"
+        className={expanded ? "tuveloz-launch-pause expanded" : "tuveloz-launch-pause"}
         role="status"
       >
         <div className="tuveloz-launch-pause-copy">
-          <strong>Customer launch update</strong>
-          <span>{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
+          <div className="tuveloz-launch-pause-heading">
+            <strong>Customer launch update</strong>
+            <button
+              aria-controls="tuveloz-launch-pause-details"
+              aria-expanded={expanded}
+              className="tuveloz-launch-pause-toggle"
+              onClick={() => setExpanded((value) => !value)}
+              type="button"
+            >
+              {expanded ? "Hide details" : "Details"} <span aria-hidden>{expanded ? "▴" : "▾"}</span>
+            </button>
+          </div>
+          <span id="tuveloz-launch-pause-details">{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
           <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
         </div>
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
