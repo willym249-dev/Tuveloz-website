@@ -3846,6 +3846,80 @@ label > small {
   padding: 11px;
 }
 
+.service-option {
+  background: #f7f9fb;
+  border: 1px solid #dbe3e9;
+  border-radius: 10px;
+}
+
+.service-option > label {
+  background: none;
+  border: 0;
+  padding: 11px 11px 4px;
+}
+
+.service-scope {
+  margin: 0 11px 10px 38px;
+}
+
+.service-scope > summary {
+  color: #526b7d;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  list-style: none;
+}
+
+.service-scope > summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-scope > summary::before {
+  content: "+ ";
+}
+
+.service-scope[open] > summary::before {
+  content: "− ";
+}
+
+.service-scope small {
+  color: #687b8a;
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-top: 3px;
+}
+
+.legal-note-details > summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  list-style: none;
+  margin-top: 4px;
+  text-decoration: underline;
+}
+
+.legal-note-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.legal-note-details small {
+  display: block;
+  margin-top: 6px;
+}
+
+.tier-swap-notice {
+  background: #fff4e8;
+  border: 1px solid #ffc48a;
+  border-radius: 10px;
+  color: #8a4b00;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+}
+
 .customer-service-options {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

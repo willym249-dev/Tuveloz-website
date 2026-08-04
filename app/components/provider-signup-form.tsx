@@ -51,8 +51,8 @@ const PROVIDER_REVIEW_SERVICES = SERVICES.filter(
 const PROVIDER_REVIEW_SERVICE_GROUPS = [
   {
     id: "limited",
-    label: "Limited and provisional services",
-    description: "Candidate limited services for later qualification review. Selecting one does not enroll you in training or authorize customer work.",
+    label: "Getting started — basic services",
+    description: "Entry-level services. Selecting one doesn't enroll you in training or authorize customer work.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("sponsored_trainee")
       || service.allowedProviderLevels.includes("provisional_independent")
@@ -60,16 +60,16 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
   },
   {
     id: "standard",
-    label: "Standard provider services",
-    description: "Services requiring an approved registered provider business and matching coverage.",
+    label: "Standard services",
+    description: "Requires a registered provider business with matching coverage.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("standard_provider")
     )),
   },
   {
     id: "specialty",
-    label: "Specialty provider services",
-    description: "Higher-control services requiring the listed licenses, permits, evidence, and workflow approval.",
+    label: "Specialty services",
+    description: "Requires the listed licenses, permits, and approvals.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("specialty_provider")
     )),
@@ -99,6 +99,7 @@ export function ProviderSignupForm() {
 
   const [step, setStep] = useState<SignupStep>(1);
   const [selectedProviderServices, setSelectedProviderServices] = useState<ServiceCode[]>([]);
+  const [tierSwapNotice, setTierSwapNotice] = useState("");
   const [selectedProviderWorkLocations, setSelectedProviderWorkLocations] = useState<string[]>([]);
   const [legalConfirmed, setLegalConfirmed] = useState(false);
   const [providerAssessment, setProviderAssessment] = useState<ProviderSelfAssessment>(
@@ -161,8 +162,8 @@ export function ProviderSignupForm() {
     if (selectedProviderServices.length === 0) {
       setStepError(
         providerFormIsSpanish
-          ? "Seleccione al menos un servicio para revisión."
-          : "Choose at least one exact service for application review.",
+          ? "Elija al menos un servicio."
+          : "Pick at least one service.",
       );
       return;
     }
@@ -395,38 +396,47 @@ export function ProviderSignupForm() {
           <h3>{providerFormIsSpanish ? "Conviértase en proveedor fundador" : "Become a founding provider"}</h3>
           <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
           <div className="legal-requirement-note" role="status">
-            <strong>No service is available for a real customer job today.</strong>
-            <small>
-              Applications and service selections are accepted for review only. Activation requires
-              documented compliance with applicable law, insurer approval, and every required government,
-              agency, environmental, tax, payment, privacy, security, and service-specific control.
-            </small>
-          </div>
-          <div className="legal-requirement-note" aria-label="Montgomery County provider pathway rules">
-            <strong>Montgomery County has no unregistered simple-repair lane.</strong>
-            <small>
-              A mobile repair or maintenance business must hold the County OCP registration.
-              An independent owner-operator needs a real business, current OCP registration, and
-              broker-confirmed coverage for each exact service.
-            </small>
-            <small>
-              Official sources: {" "}
-              <a
-                href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
-                rel="noreferrer"
-                target="_blank"
-              >
-                Montgomery County OCP registration guidance
-              </a>
-              {" · "}
-              <a
-                href="https://codelibrary.amlegal.com/codes/montgomerycounty/latest/montgomeryco_md/0-0-0-138743"
-                rel="noreferrer"
-                target="_blank"
-              >
-                County Code Chapter 31A
-              </a>
-            </small>
+            <strong>
+              {providerFormIsSpanish
+                ? "Las solicitudes son solo para revisión — ningún servicio está activo todavía."
+                : "Applications are for review only — no service is available for a real customer job today."}
+            </strong>
+            <details className="legal-note-details">
+              <summary>
+                {providerFormIsSpanish
+                  ? "Por qué, y qué exige el Condado de Montgomery"
+                  : "Why, and what Montgomery County requires"}
+              </summary>
+              <small>
+                Applications and service selections are accepted for review only. Activation requires
+                documented compliance with applicable law, insurer approval, and every required government,
+                agency, environmental, tax, payment, privacy, security, and service-specific control.
+              </small>
+              <small>
+                <strong>Montgomery County has no unregistered simple-repair lane.</strong>{" "}
+                A mobile repair or maintenance business must hold the County OCP registration.
+                An independent owner-operator needs a real business, current OCP registration, and
+                broker-confirmed coverage for each exact service.
+              </small>
+              <small>
+                Official sources: {" "}
+                <a
+                  href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Montgomery County OCP registration guidance
+                </a>
+                {" · "}
+                <a
+                  href="https://codelibrary.amlegal.com/codes/montgomerycounty/latest/montgomeryco_md/0-0-0-138743"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  County Code Chapter 31A
+                </a>
+              </small>
+            </details>
           </div>
           <fieldset className="area-fieldset service-fieldset">
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
@@ -454,46 +464,73 @@ export function ProviderSignupForm() {
                     </summary>
                     <div className="service-options">
                       {groupServices.map((service) => (
-                        <label key={service.code}>
-                          <input
-                            checked={selectedProviderServices.includes(service.code)}
-                            name="provider-service"
-                            type="checkbox"
-                            value={service.code}
-                            onChange={(event) => setSelectedProviderServices((current) => (
-                              event.target.checked
-                                ? [
-                                    ...current.filter((item) => {
-                                      const selected = PROVIDER_REVIEW_SERVICES.find(
-                                        (candidate) => candidate.code === item,
-                                      );
-                                      return selected?.allowedProviderLevels.some((level) => (
-                                        service.allowedProviderLevels.some((nextLevel) => nextLevel === level)
-                                      ));
-                                    }),
-                                    service.code,
-                                  ]
-                                : current.filter((item) => item !== service.code)
-                            ))}
-                          />
-                          <span>
-                            <strong>{service.label}</strong>
+                        <div className="service-option" key={service.code}>
+                          <label>
+                            <input
+                              checked={selectedProviderServices.includes(service.code)}
+                              name="provider-service"
+                              type="checkbox"
+                              value={service.code}
+                              onChange={(event) => {
+                                if (!event.target.checked) {
+                                  setSelectedProviderServices((current) => (
+                                    current.filter((item) => item !== service.code)
+                                  ));
+                                  setTierSwapNotice("");
+                                  return;
+                                }
+                                const kept = selectedProviderServices.filter((item) => {
+                                  const selected = PROVIDER_REVIEW_SERVICES.find(
+                                    (candidate) => candidate.code === item,
+                                  );
+                                  return selected?.allowedProviderLevels.some((level) => (
+                                    service.allowedProviderLevels.some((nextLevel) => nextLevel === level)
+                                  ));
+                                });
+                                const removedLabels = selectedProviderServices
+                                  .filter((item) => !kept.includes(item))
+                                  .map((code) => PROVIDER_REVIEW_SERVICES.find(
+                                    (candidate) => candidate.code === code,
+                                  )?.label)
+                                  .filter(Boolean)
+                                  .join(", ");
+                                setSelectedProviderServices([...kept, service.code]);
+                                setTierSwapNotice(removedLabels
+                                  ? (providerFormIsSpanish
+                                    ? `Se quitó: ${removedLabels}. Una solicitud cubre un solo nivel de servicios a la vez.`
+                                    : `Removed: ${removedLabels}. An application covers one service tier at a time.`)
+                                  : "");
+                              }}
+                            />
+                            <span>
+                              <strong>{service.label}</strong>
+                            </span>
+                          </label>
+                          <details className="service-scope">
+                            <summary>
+                              {providerFormIsSpanish
+                                ? "Qué incluye y qué no"
+                                : "What's included and not included"}
+                            </summary>
                             <small>{service.description}</small>
-                          </span>
-                        </label>
+                          </details>
+                        </div>
                       ))}
                     </div>
                   </details>
                 );
               })}
             </div>
+            {tierSwapNotice && (
+              <p className="tier-swap-notice" role="status">{tierSwapNotice}</p>
+            )}
             <small className="customer-service-note">
-              &ldquo;General auto repair&rdquo; is a broad category and isn&apos;t selectable — choose the exact
-              services you offer instead. Selections are for review, not real-job access.
+              &ldquo;General auto repair&rdquo; is too broad to select — pick the exact services you
+              offer instead. Selections are for review, not real-job access.
             </small>
           </fieldset>
           <div className="provider-mode-preview" aria-live="polite">
-            <span>Derived policy level</span>
+            <span>{providerFormIsSpanish ? "Su nivel de proveedor" : "Your provider tier"}</span>
             <strong className="provider-mode-badge">{PROVIDER_LEVEL_LABELS[providerLevel]}</strong>
           </div>
           <button type="button" className="button lime form-button" onClick={goToStep2}>
@@ -853,7 +890,7 @@ export function ProviderSignupForm() {
           <fieldset className="area-fieldset">
             <legend>Performing person, authorized signature, and acknowledgments</legend>
             <label>
-              Performing person&apos;s legal first name
+              Legal first name of the person doing the work
               <input
                 autoComplete="given-name"
                 required
@@ -862,7 +899,7 @@ export function ProviderSignupForm() {
               />
             </label>
             <label>
-              Performing person&apos;s legal last name
+              Legal last name of the person doing the work
               <input
                 autoComplete="family-name"
                 required
