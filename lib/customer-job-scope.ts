@@ -82,6 +82,8 @@ export type CustomerQuoteSelectionScope = {
     partType: string;
     availability: string;
     message: string;
+    confirmedCredentialLabels: readonly string[];
+    yearsExperience: string;
   };
 };
 
@@ -355,6 +357,8 @@ export function customerQuoteSelectionScopeSnapshot(
       partType: scope.quote.partType,
       availability: scope.quote.availability,
       message: scope.quote.message,
+      confirmedCredentialLabels: [...scope.quote.confirmedCredentialLabels],
+      yearsExperience: scope.quote.yearsExperience,
     },
   });
 }
@@ -390,6 +394,24 @@ export function customerRequestPrivacyAgreementEvidenceText(scopeSnapshot = "") 
   });
 }
 
+/**
+ * States plainly what is and isn't confirmed for this exact service — never
+ * implying that missing optional info makes a provider less trustworthy.
+ * Only the specific credential(s) actually required for the selected service
+ * are described as "confirmed"; everything else is disclosed as
+ * provider-supplied and explicitly optional.
+ */
+function providerDisclosureLine(scope: CustomerQuoteSelectionScope) {
+  const { confirmedCredentialLabels, yearsExperience } = scope.quote;
+  const confirmedText = confirmedCredentialLabels.length > 0
+    ? `This provider has confirmed ${confirmedCredentialLabels.join(", ")} required for this service.`
+    : "No license, registration, or insurance is legally required for this provider's selected service, so nothing is confirmed here.";
+  const experienceText = yearsExperience
+    ? `They have shared that they have ${yearsExperience} of experience — this is provider-supplied and not a legal requirement.`
+    : "They have not provided their years of experience — this isn't legally required.";
+  return `${confirmedText} ${experienceText} Compare their price, reviews, and completed jobs to decide if they're the right fit.`;
+}
+
 export function customerProviderSelectionAcceptanceText(
   scope: CustomerQuoteSelectionScope,
 ) {
@@ -401,6 +423,7 @@ export function customerProviderSelectionAcceptanceText(
   return [
     `I select ${scope.quote.providerName} and its disclosed performing person (${scope.quote.performingPersonDisplay}) for only the exact service code ${serviceLabel} and operation ${operationCodes}.`,
     `The authorized location is ${scope.request.jobFacts.location.address} (${scope.request.jobFacts.location.type}), with the stored property, vehicle-condition, excluded-operation, and safety attestations unchanged.`,
+    providerDisclosureLine(scope),
     `I accept quote ${scope.quote.quoteId} for a displayed customer total of $${amount}, scheduled for ${scope.quote.scheduledFor}.`,
     "I confirm that the accepted provider amount is labor only. Any OEM or aftermarket preference concerns a part I purchase separately; no provider-supplied parts, parts reimbursement, parts tax, or other parts charge is included.",
     "I agree to the linked Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy.",

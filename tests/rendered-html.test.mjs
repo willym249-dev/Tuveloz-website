@@ -78,8 +78,8 @@ test("build clearly explains customer choice and provider freedom", async () => 
   assert.ok(contents.includes("Compare providers and quotes"));
   assert.ok(contents.includes("Use one simple job workspace"));
   assert.ok(contents.includes("Request tools that help you grow"));
-  assert.ok(contents.includes("Apply for exact services. Get ready for future jobs. Run your business your way."));
-  assert.ok(contents.includes("TUVELOZ does not employ or train providers."));
+  assert.ok(contents.includes("Your business. Your price. Your schedule."));
+  assert.ok(contents.includes("Tuveloz doesn't employ, train, or assign work to providers"));
 });
 
 test("build contains a simple, protected quote choice and factual private analytics", async () => {
@@ -496,11 +496,11 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
   assert.ok(contents.includes("does not sell personal information"));
-  assert.ok(contents.includes("customer and provider form a separate service agreement"));
+  assert.ok(contents.includes("customer and provider form their own service agreement"));
   assert.ok(termsSource.includes("unnecessary identity documents"));
   assert.ok(termsSource.includes("arbitration"));
   assert.ok(contents.includes("Every exact service is disabled."));
-  assert.ok(contents.includes("No person may borrow, rent, share, or rely on another provider"));
+  assert.ok(contents.includes("You can't borrow, rent, share, or rely on someone else's registration"));
   assert.ok(requestSource.includes("termsAcceptedAt"));
   assert.ok(requestSource.includes("CUSTOMER_POLICY_BUNDLE_VERSION"));
   assert.ok(providerSource.includes("termsAcceptedAt"));
@@ -1229,7 +1229,7 @@ test("public claims scope credential records while real provider auth requires e
   assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
   assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
   assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
-  assert.ok(publicPageSource.includes("Dated government-credential records"));
+  assert.ok(publicPageSource.includes("Confirmed for this service"));
   assert.ok(publicPageSource.includes("No credential record displayed for this scope"));
   assert.ok(publicPageSource.includes("not a blanket licensed-provider claim"));
   assert.ok(publicPageSource.includes("Provider-supplied profile"));

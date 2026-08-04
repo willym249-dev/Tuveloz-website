@@ -12,14 +12,12 @@ import {
   PARTS_SOURCE_OPTIONS,
 } from "../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
+import { SERVICE_CODES } from "../lib/provider-policy";
 import { track } from "../lib/analytics";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
-import {
-  SiteLanguageButton,
-  useSiteLanguage,
-} from "./components/site-language";
+import { SiteLanguageButton } from "./components/site-language";
 import {
   BrandMark,
   TuvelozIcon,
@@ -29,46 +27,59 @@ import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
 import { ProviderSignupForm } from "./components/provider-signup-form";
 
+// Homepage launches with only the easy-entry, no-license services — the
+// simplest onboarding path. Specialized/proof-required services (tire
+// repair, A/C service, towing, etc.) are added as separate categories once
+// the marketplace is ready to expand, not shown here yet. Each group's
+// serviceCodes must be real entries from lib/provider-policy.ts's catalog,
+// checked below, so this list can't silently drift from what actually exists.
 const services: Array<{
   icon: TuvelozIconName;
   title: string;
   text: string;
+  serviceCodes: readonly string[];
 }> = [
   {
     icon: "battery",
     title: "Battery & Jump Start",
     text: "Get back on the road when your battery lets you down.",
+    serviceCodes: ["provisional_12v_jump_start", "provisional_12v_battery_replacement"],
   },
   {
-    icon: "tire",
-    title: "Tire Help",
-    text: "Flat tire support, spare installation, and mobile tire service.",
+    icon: "services",
+    title: "Wiper Blade & Bulb Replacement",
+    text: "Quick, simple replacements for worn wiper blades and everyday bulbs.",
+    serviceCodes: ["provisional_wiper_blade_replacement", "provisional_conventional_bulb_replacement"],
   },
   {
-    icon: "diagnostics",
-    title: "Basic Vehicle Diagnostics",
-    text: "Connect with a local independent provider for a basic on-site vehicle assessment.",
-  },
-  {
-    icon: "tint",
-    title: "Window Tint Quotes",
-    text: "Request quotes from local tint providers for installations that follow applicable state and local laws.",
-  },
-  {
-    icon: "rain-guard",
-    title: "Rain Guards & Vent Visors",
-    text: "Request installation of vehicle-fit rain guards, vent visors, or window deflectors.",
-  },
-  {
-    icon: "sunshade",
-    title: "Vehicle Sunshades",
-    text: "Request installation of a removable or retractable sunshade made to fit your vehicle.",
+    icon: "services",
+    title: "Fluid Top-Off",
+    text: "An approved, limited top-off to keep your vehicle running right.",
+    serviceCodes: ["provisional_fluid_topoff_limited"],
   },
   {
     icon: "detailing",
-    title: "Car Washing & Detailing",
-    text: "Choose an exterior wash with basic rim cleaning, interior detailing, or both.",
+    title: "Detailing",
+    text: "Choose an exterior wash, interior detailing, or both.",
+    serviceCodes: ["provisional_basic_detailing"],
   },
+  {
+    icon: "diagnostics",
+    title: "Basic Diagnostics",
+    text: "Connect with a local independent provider for a basic on-site vehicle assessment.",
+    serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
+  },
+];
+
+const KNOWN_SERVICE_CODES: readonly string[] = SERVICE_CODES;
+if (services.some((service) => service.serviceCodes.some((code) => !KNOWN_SERVICE_CODES.includes(code)))) {
+  throw new Error("Homepage services list references an unknown service code.");
+}
+
+const liveSteps = [
+  ["01", "Post what you need", "A quick description is enough."],
+  ["02", "Get quotes", "Independent providers respond with their price."],
+  ["03", "Choose what works", "Compare and pick, or don't accept anything at all."],
 ];
 
 const steps = [
@@ -147,7 +158,6 @@ function dollars(cents: number | undefined) {
 export type PublicView = "home" | "about" | "request" | "provider";
 
 export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
-  const { language } = useSiteLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
@@ -219,7 +229,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const customerAllowsProviderTravel = selectedCustomerLocations.includes(
     CUSTOMER_SERVICE_LOCATION_OPTIONS[0],
   );
-  const providerFormIsSpanish = language === "es";
 
   useEffect(() => {
     if (view === "provider") track("provider_signup_started");
@@ -572,35 +581,58 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
-          <div className="eyebrow">
-            <span className="pulse" />
-            Provider onboarding is open
-          </div>
-          <h1>
-            Vehicle services.
-            <br />
-            <span className="hero-value-line">
-              Choice for customers. Freedom for providers.
-            </span>
-          </h1>
-          <p>
-            Tuveloz is building a local marketplace for vehicle services. Provider
-            applications and evidence review are open. Customer service requests and
-            payments are not yet available, so providers cannot accept jobs through Tuveloz yet.
-          </p>
+          {CUSTOMER_JOB_POSTING_PAUSED ? (
+            <>
+              <div className="eyebrow">
+                <span className="pulse" />
+                Provider onboarding is open
+              </div>
+              <h1>
+                Vehicle services.
+                <br />
+                <span className="hero-value-line">
+                  Choice for customers. Freedom for providers.
+                </span>
+              </h1>
+              <p>
+                Tuveloz is building a local marketplace for vehicle services. Provider
+                applications and evidence review are open. Customer service requests and
+                payments are not yet available, so providers cannot accept jobs through Tuveloz yet.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1>Any car issue. Multiple quotes. You choose.</h1>
+              <p>
+                Tell us what your vehicle needs. Local independent providers send you
+                real quotes. You pick the one that works — on your schedule, your
+                price, your call.
+              </p>
+            </>
+          )}
           <div className="hero-actions">
-            <Link className="button primary" href="/post-job">
-              See customer launch status <span>→</span>
-            </Link>
+            {CUSTOMER_JOB_POSTING_PAUSED ? (
+              <Link className="button primary" href="/post-job">
+                See customer launch status <span>→</span>
+              </Link>
+            ) : (
+              <Link className="button primary" href="/post-job">
+                Get started — free <span>→</span>
+              </Link>
+            )}
             <Link className="button secondary" href="/join">
-              Join as a provider
+              {CUSTOMER_JOB_POSTING_PAUSED ? "Join as a provider" : "Join as a provider — free"} <span>→</span>
             </Link>
             <a className="button ai" href="https://ai.tuveloz.com/">
               Try Tuveloz AI <span>✦</span>
             </a>
           </div>
           <div className="hero-launch-note">
-            <strong>Now onboarding providers in Montgomery County, Maryland</strong>
+            <strong>
+              {CUSTOMER_JOB_POSTING_PAUSED
+                ? "Now onboarding providers in Montgomery County, Maryland"
+                : "Now serving Montgomery County, Maryland. More areas coming soon."}
+            </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
           </div>
         </div>
@@ -628,7 +660,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </article>
           </div>
           <p className="hero-visual-caption">
-            Concept preview — not a live job. Customer requests and quotes open after launch.
+            {CUSTOMER_JOB_POSTING_PAUSED
+              ? "Concept preview — not a live job. Customer requests and quotes open after launch."
+              : "Example preview of a real quote comparison."}
           </p>
         </div>
       </section>
@@ -766,7 +800,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
               <h3>{service.title}</h3>
               <p>{service.text}</p>
-              <Link href="/post-job">Planned service · View launch status <span>→</span></Link>
             </article>
           ))}
         </div>
@@ -788,16 +821,26 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
       <section className="section how" id="how-it-works">
         <div className="how-intro">
-          <span className="kicker light">Planned customer workflow</span>
-          <h2>After launch, request a specific service and compare eligible providers.</h2>
-          <p>
-            The request-and-quote flow shown here is a product preview. Requests,
-            quotes, bookings, payments, and payouts are not yet available.
-          </p>
-          <Link className="text-link" href="/post-job">See customer launch status →</Link>
+          <span className="kicker light">
+            {CUSTOMER_JOB_POSTING_PAUSED ? "Planned customer workflow" : "How it works"}
+          </span>
+          <h2>
+            {CUSTOMER_JOB_POSTING_PAUSED
+              ? "After launch, request a specific service and compare eligible providers."
+              : "Post it once. Compare real quotes. Choose what works."}
+          </h2>
+          {CUSTOMER_JOB_POSTING_PAUSED && (
+            <p>
+              The request-and-quote flow shown here is a product preview. Requests,
+              quotes, bookings, payments, and payouts are not yet available.
+            </p>
+          )}
+          {CUSTOMER_JOB_POSTING_PAUSED && (
+            <Link className="text-link" href="/post-job">See customer launch status →</Link>
+          )}
         </div>
         <div className="steps">
-          {steps.map(([number, title, text]) => (
+          {(CUSTOMER_JOB_POSTING_PAUSED ? steps : liveSteps).map(([number, title, text]) => (
             <article key={number}>
               <span>{number}</span>
               <div>
@@ -858,40 +901,50 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section request-section" id="request">
         <div className="request-copy">
           <span className="kicker">
-            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "New and growing"}
+            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "For customers"}
           </span>
           {view === "request" ? (
             <h1>
               {CUSTOMER_JOB_POSTING_PAUSED
                 ? "Create your account now. Request service after launch."
-                : "Post your job. We'll send it to providers who match."}
+                : "Post it once. Compare real quotes. No pressure."}
             </h1>
           ) : (
             <h2>
               {CUSTOMER_JOB_POSTING_PAUSED
                 ? "Create your account now. Request service after launch."
-                : "Post your job. We'll send it to providers who match."}
+                : "Post it once. Compare real quotes. No pressure."}
             </h2>
           )}
-          <p>
-            Customer requests, quotes, bookings, and payments are currently closed.
-            You can create a customer account now, and provider applications remain
-            open. After launch approval, the server will share an exact-service
-            request only with providers whose current eligibility records match it.
-          </p>
-          <div className="pilot-vision">
-            <strong>Our vision</strong>
-            <p>
-              We want to change how the mechanic industry works: give customers
-              clearer choices and help independent providers grow.
-            </p>
-          </div>
-          <ul>
-            <li><span>✕</span> Customer posting is not open yet</li>
-            <li><span>✓</span> Future jobs must use enabled exact service codes</li>
-            <li><span>✓</span> Customers will choose whether to accept a quote</li>
-            <li><span>⏳</span> Final fees and tax treatment remain under mandatory legal and CPA or tax-adviser review</li>
-          </ul>
+          {CUSTOMER_JOB_POSTING_PAUSED ? (
+            <>
+              <p>
+                Customer requests, quotes, bookings, and payments are currently closed.
+                You can create a customer account now, and provider applications remain
+                open. After launch approval, the server will share an exact-service
+                request only with providers whose current eligibility records match it.
+              </p>
+              <div className="pilot-vision">
+                <strong>Our vision</strong>
+                <p>
+                  We want to change how the mechanic industry works: give customers
+                  clearer choices and help independent providers grow.
+                </p>
+              </div>
+              <ul>
+                <li><span>✕</span> Customer posting is not open yet</li>
+                <li><span>✓</span> Future jobs must use enabled exact service codes</li>
+                <li><span>✓</span> Customers will choose whether to accept a quote</li>
+                <li><span>⏳</span> Final fees and tax treatment remain under mandatory legal and CPA or tax-adviser review</li>
+              </ul>
+            </>
+          ) : (
+            <ul>
+              <li><span>✓</span> Describe what&apos;s wrong — no rigid categories required</li>
+              <li><span>✓</span> Independent local providers send you their price</li>
+              <li><span>✓</span> You decide — no fee to post, no fee to compare, no obligation to accept</li>
+            </ul>
+          )}
         </div>
 
         {CUSTOMER_JOB_POSTING_PAUSED ? (
@@ -1318,54 +1371,23 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section providers" id="providers">
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
-            <span className="kicker light">
-              {providerFormIsSpanish ? "Para proveedores independientes" : "For independent providers"}
-            </span>
+            <span className="kicker light">For providers</span>
             {view === "provider" ? (
-              <h1>
-                {providerFormIsSpanish
-                  ? "Solicite la revisión de servicios específicos. Prepárese para trabajos futuros. Maneje su negocio a su manera."
-                  : "Apply for exact services. Get ready for future jobs. Run your business your way."}
-              </h1>
+              <h1>Your business. Your price. Your schedule.</h1>
             ) : (
-              <h2>
-                {providerFormIsSpanish
-                  ? "Solicite la revisión de servicios específicos. Prepárese para trabajos futuros. Maneje su negocio a su manera."
-                  : "Apply for exact services. Get ready for future jobs. Run your business your way."}
-              </h2>
+              <h2>Your business. Your price. Your schedule.</h2>
             )}
             <p>
-              {providerFormIsSpanish
-                ? "La incorporación de proveedores está abierta ahora. Después del lanzamiento, los proveedores elegibles podrán definir su disponibilidad, revisar trabajos que coincidan con sus servicios, enviar su precio y gestionar el trabajo seleccionado desde un solo lugar."
-                : "Provider onboarding is open now. After marketplace launch, eligible providers will be able to set availability, review jobs that match their exact services, send a price, and manage selected work in one place."}
-            </p>
-            <div className="legal-requirement-note">
-              <strong>
-                {providerFormIsSpanish
-                  ? "TUVELOZ no emplea ni capacita a proveedores."
-                  : "TUVELOZ does not employ or train providers."}
-              </strong>
-              <small>
-                {providerFormIsSpanish
-                  ? "TUVELOZ no contrata, patrocina, asigna ni supervisa a mecánicos, aprendices o empleados de negocios proveedores. Un negocio proveedor separado debe manejar su propia contratación, nómina, capacitación, supervisión y asignación de trabajo."
-                  : "TUVELOZ does not hire, sponsor, assign, or supervise mechanics, trainees, or provider-business employees. A separate provider business must handle its own hiring, payroll, training, supervision, and work assignment."}
-              </small>
-            </div>
-            <p className="provider-extra-work">
-              <strong>
-                {providerFormIsSpanish
-                  ? "¿Ya tiene un trabajo de tiempo completo o su propio negocio?"
-                  : "Already have a full-time job or your own business?"}
-              </strong>{" "}
-              {providerFormIsSpanish
-                ? "Use Tuveloz para encontrar oportunidades locales adicionales cuando se ajusten a su horario, sin obligación de cotizar cada solicitud."
-                : "Use Tuveloz for extra local opportunities when they fit your schedule, with no obligation to quote every request."}
+              Tuveloz doesn&apos;t employ, train, or assign work to providers — you run
+              your own business and choose the jobs that fit. Sign up free, no
+              listing fee, no subscription.
             </p>
             <div className="provider-benefits">
-              <div><span>01</span><strong>{providerFormIsSpanish ? "Revise trabajos que coincidan con sus servicios" : "Review jobs matched to your services"}</strong></div>
-              <div><span>02</span><strong>{providerFormIsSpanish ? "Defina su precio, disponibilidad y área de servicio" : "Set your price, availability, and service area"}</strong></div>
-              <div><span>03</span><strong>{providerFormIsSpanish ? "Solicite herramientas que simplifiquen y hagan crecer su negocio" : "Request tools that simplify and grow your business"}</strong></div>
+              <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
+              <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
+              <div><span>03</span><strong>Only asked for paperwork when the law actually requires it for your service</strong></div>
             </div>
+            <a className="button primary" href="#providers">Join free <span>→</span></a>
             <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
               <div className="eligibility-guide-heading">
                 <span id="provider-guide-title">How applying works</span>

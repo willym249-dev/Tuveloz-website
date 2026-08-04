@@ -258,49 +258,74 @@ export default function ProviderStorefrontPage() {
         </p>
       </section>
 
-      {!data.testProvider && !data.credentialReview.noGovernmentCredentialTriggered && (
-        <section className="storefront-section storefront-credentials" aria-labelledby="credential-checks-heading">
-          <div className="storefront-section-heading">
-            <div>
-              <span className="kicker">Official sources</span>
-              <h2 id="credential-checks-heading">Dated government-credential records</h2>
-            </div>
-            <p>
-              Each record is limited to the listed service, work mode, and jurisdiction. Tuveloz
-              checked the shown source on the displayed date; the provider and issuing authority
-              control current status. These records are not a blanket licensed-provider claim or a
-              guarantee of competence, quality, safety, insurance, or legal compliance.
-            </p>
+      <section className="storefront-section storefront-trust-panel" aria-labelledby="trust-panel-heading">
+        <div className="storefront-section-heading">
+          <div>
+            <span className="kicker">What&apos;s confirmed vs. shared</span>
+            <h2 id="trust-panel-heading">Confirmed records and provider-shared info, kept separate</h2>
           </div>
-          <div className="storefront-confidence-grid">
-            {data.credentialReview.credentials.map((credential) => (
-              <article key={credential.requirementKey}>
-                <TuvelozIcon name="overview" />
-                <div>
-                  <span>{credential.jurisdiction}</span>
-                  <strong>{credential.label}</strong>
-                  <small>
-                    Tuveloz checked the {credential.issuingAuthority} source on{" "}
-                    {new Date(credential.checkedAt).toLocaleDateString()}.
-                    {credential.expiresAt
-                      ? ` Recorded expiration: ${new Date(`${credential.expiresAt}T00:00:00Z`).toLocaleDateString()}.`
-                      : " No expiration date is displayed."}
-                    {" "}Status can change after the check; recheck the official lookup before work.
-                  </small>
-                  <span className="admin-link-actions">
-                    <a href={credential.legalBasisUrl} target="_blank" rel="noreferrer">
-                      Official requirement
-                    </a>
-                    <a href={credential.officialLookupUrl} target="_blank" rel="noreferrer">
-                      Official lookup
-                    </a>
-                  </span>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+          <p>
+            A cheaper, newer, or less-credentialed provider isn&apos;t blocked or ranked lower here —
+            compare price, reviews, and completed jobs to decide what&apos;s the right fit for you.
+          </p>
+        </div>
+        <div className="storefront-trust-columns">
+          <article className="storefront-trust-column" aria-labelledby="confirmed-heading">
+            <h3 id="confirmed-heading">Confirmed for this service</h3>
+            {data.testProvider ? (
+              <p className="admin-note">Test profile — fictional data for testing only.</p>
+            ) : data.credentialReview.credentials.length > 0 ? (
+              <>
+                <p className="storefront-trust-note">
+                  Each record is limited to the listed service, work mode, and jurisdiction. Tuveloz
+                  checked the shown source on the displayed date; status can change afterward. These
+                  records are not a blanket licensed-provider claim or a guarantee of competence,
+                  quality, safety, insurance, or legal compliance.
+                </p>
+                <ul className="storefront-confirmed-list">
+                  {data.credentialReview.credentials.map((credential) => (
+                    <li key={credential.requirementKey}>
+                      <strong>{credential.label}</strong>
+                      <span>{credential.jurisdiction}</span>
+                      <small>
+                        Tuveloz checked the {credential.issuingAuthority} source on{" "}
+                        {new Date(credential.checkedAt).toLocaleDateString()}.
+                        {credential.expiresAt
+                          ? ` Recorded expiration: ${new Date(`${credential.expiresAt}T00:00:00Z`).toLocaleDateString()}.`
+                          : " No expiration date is displayed."}
+                        {" "}Status can change after the check; recheck the official lookup before work.
+                      </small>
+                      <span className="admin-link-actions">
+                        <a href={credential.legalBasisUrl} target="_blank" rel="noreferrer">
+                          Official requirement
+                        </a>
+                        <a href={credential.officialLookupUrl} target="_blank" rel="noreferrer">
+                          Official lookup
+                        </a>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="admin-note">
+                No license, registration, or insurance is legally required for this provider&apos;s
+                listed services in this jurisdiction, so nothing is confirmed here.
+              </p>
+            )}
+          </article>
+          <article className="storefront-trust-column" aria-labelledby="shared-heading">
+            <h3 id="shared-heading">Additional info the provider has shared</h3>
+            <p className="storefront-trust-note">Optional — not legally required for this service.</p>
+            <dl className="storefront-facts">
+              <div>
+                <dt>Years of experience</dt>
+                <dd>{data.testProvider ? "Test profile" : (profile.yearsExperience || "Not provided")}</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
 
       <nav className="storefront-tabs" aria-label="Provider business page">
         <a href="#overview"><TuvelozIcon name="overview" />Overview</a>
@@ -316,9 +341,6 @@ export default function ProviderStorefrontPage() {
           <p className="storefront-about">{profile.about}</p>
         </div>
         <dl className="storefront-facts">
-          {profile.yearsExperience && (
-            <div><dt>Experience</dt><dd>{profile.yearsExperience}</dd></div>
-          )}
           <div><dt>Based in</dt><dd>{businessMunicipality}</dd></div>
           <div><dt>Availability</dt><dd>{profile.availabilityNote || profile.availabilityStatus}</dd></div>
           {profile.businessHours && (
