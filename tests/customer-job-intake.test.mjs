@@ -7,11 +7,13 @@ async function source(path) {
 }
 
 test("the review intake replaces broad categories with one exact service scope", async () => {
-  const [page, scope, homepage] = await Promise.all([
+  const [page, requestForm, scope, homepage] = await Promise.all([
     source("app/post-job/page.tsx"),
+    source("app/components/customer-request-form.tsx"),
     source("lib/customer-job-scope.ts"),
     source("app/page.tsx"),
   ]);
+  const intake = `${page}\n${requestForm}`;
 
   for (const field of [
     'name="service-code"',
@@ -32,16 +34,16 @@ test("the review intake replaces broad categories with one exact service scope",
     'name="terms-accepted"',
     'name="privacy-acknowledged"',
   ]) {
-    assert.ok(page.includes(field), `missing exact intake field ${field}`);
+    assert.ok(intake.includes(field), `missing exact intake field ${field}`);
   }
-  assert.match(page, /service\.code !== "general_auto_repair"/);
-  assert.match(page, /Broad categories such as\s+“general auto repair” are not accepted/);
-  assert.doesNotMatch(page, /name="service"/);
-  assert.match(page, /Request posting is not open/);
+  assert.match(requestForm, /servicesForCustomerSelection\(\)/);
+  assert.match(intake, /Broad\s+categories such as\s+“general auto repair” are not accepted/);
+  assert.doesNotMatch(intake, /name="service"/);
+  assert.match(page, /if \(CUSTOMER_JOB_POSTING_PAUSED\)/);
   assert.match(page, /TUVELOZ does not employ, hire, train, assign, or place anyone on/);
-  assert.match(page, /Current service area/);
-  assert.match(page, /<strong>\{CURRENT_LAUNCH_AREA\}<\/strong>/);
-  assert.doesNotMatch(page, /Policy code:/);
+  assert.match(intake, /Current service area/);
+  assert.match(intake, /<strong>\{CURRENT_LAUNCH_AREA\}<\/strong>/);
+  assert.doesNotMatch(intake, /Policy code:/);
 
   assert.match(scope, /CUSTOMER_REQUEST_SCOPE_VERSION = 1/);
   assert.match(scope, /parseExactServiceCodes/);
