@@ -46,3 +46,10 @@ next-env.d.ts
 
 # ai council dev CLI cache (may contain question/answer text, not secrets)
 /.ai-council-cache.json
+
+# local Claude Code settings (machine-specific)
+.claude/settings.local.json
+
+# ad-build intermediates (ffmpeg work dirs and unzipped source images)
+brand/ads/**/_work/
+brand/ads/**/_unzip/
