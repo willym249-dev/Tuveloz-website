@@ -15,7 +15,8 @@ Shared facts used everywhere:
 - What: Local marketplace for vehicle services — customers post a job, local
   independent providers send quotes, the customer chooses.
 - Where: Montgomery County, Maryland (more areas by request).
-- Now: Onboarding independent providers. Free to join, 5% platform fee.
+- Now: Onboarding independent providers. Free to join, no provider fees
+  (customers pay a small 5% service fee to the site).
 - Tagline: **Customer choice. Provider freedom.**
 - Site: https://tuveloz.com · Provider signup: https://tuveloz.com/join
 - Email: hello@tuveloz.com
@@ -40,9 +41,9 @@ Vehicle services, your price, your call 🚗 MoCo, MD. Providers: join free ⬇�
 ## X — @TuvelozApp (bio limit 160 chars)
 
 ```
-Your car, real quotes, your call. The vehicle-services marketplace for Montgomery County, MD. Providers: run your own business — join free, keep 95%.
+Your car, real quotes, your call. The vehicle-services marketplace for Montgomery County, MD. Providers: run your own business — join free, no provider fees.
 ```
-(149 chars. Location: `Montgomery County, MD` · Website: `https://tuveloz.com`)
+(157 chars. Location: `Montgomery County, MD` · Website: `https://tuveloz.com`)
 
 ## Facebook Page
 
@@ -57,7 +58,7 @@ Tuveloz is a local marketplace for vehicle services in Montgomery County, Maryla
 
 For customers (launching soon): tell us what your vehicle needs — a jump start, battery replacement, detailing, wiper blades and bulbs, fluid top-offs, or a basic diagnostic. Local independent providers send you real quotes. You compare and choose the one that works — your schedule, your price, your call.
 
-For providers (onboarding now): run your own business, not somebody else's route. Set your own prices, choose your own jobs, keep your independence. Joining is free and Tuveloz takes a low 5% platform fee — nothing hidden.
+For providers (onboarding now): run your own business, not somebody else's route. Set your own prices, choose your own jobs, keep your independence. Joining is free and there are no provider fees — you keep what you earn.
 
 Customer choice. Provider freedom.
 
@@ -71,7 +72,7 @@ Questions: hello@tuveloz.com
 ```
 Tuveloz is a local marketplace for vehicle services in Montgomery County, Maryland. Customers describe what their vehicle needs — battery and jump-start help, wiper blade and bulb replacement, fluid top-offs, detailing, or basic diagnostics — and local independent providers respond with real quotes. Customers compare options and choose what works for their schedule and budget.
 
-Independent providers are joining now: signing up is free, providers set their own prices and choose their own jobs, and Tuveloz charges a low 5% platform fee. Customer job posting opens soon.
+Independent providers are joining now: signing up is free with no provider fees, and providers set their own prices and choose their own jobs. Customer job posting opens soon.
 
 Customer choice. Provider freedom. Learn more or apply as a provider at tuveloz.com.
 ```
@@ -88,9 +89,9 @@ is commented out.)
 Tuveloz is a marketplace where you post what your vehicle needs and local independent providers send you real quotes. You compare. You choose. No pressure.
 
 Right now we're onboarding providers:
-✅ Free to join
+✅ Free to join — no provider fees
 ✅ Set your own prices, pick your own jobs
-✅ Low 5% platform fee — that's it
+✅ You keep what you earn
 
 Mechanics, detailers, roadside pros — claim your spot before customer launch: tuveloz.com/join
 
