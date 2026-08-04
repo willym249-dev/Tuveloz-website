@@ -159,7 +159,6 @@ const spanishText: Record<string, string> = {
   "Isolated owner test records remain visibly labeled and never create real service or payments.": "Los registros de prueba aislados del propietario permanecen claramente etiquetados y nunca crean servicios ni pagos reales.",
   "Open customer account": "Abrir cuenta de cliente",
   "View launch status": "Ver estado del lanzamiento",
-  "Payment policy (not live)": "Política de pagos (no activa)",
   "1. After launch: request an enabled exact service": "1. Después del lanzamiento: solicite un servicio específico habilitado",
   "4. After launch: compare quotes": "4. Después del lanzamiento: compare cotizaciones",
   "5. After launch: choose and track": "5. Después del lanzamiento: elija y dé seguimiento",
@@ -823,9 +822,15 @@ function translateInterface(root: ParentNode, language: SiteLanguage) {
   });
 }
 
+// The Spanish translation dictionary below is incomplete - it predates
+// several recent English-only rewrites (homepage, Terms of Use, Provider
+// Agreement) that were deliberately left untranslated pending real Spanish
+// copy. Until that copy exists, the site stays English-only: this always
+// returns "en" regardless of any stored preference, and SiteLanguageButton
+// renders nothing, so nobody - new visitor or returning tester - can land
+// in a half-translated experience on a legal page or elsewhere.
 function getLanguageSnapshot(): SiteLanguage {
-  if (typeof window === "undefined") return "en";
-  return window.localStorage.getItem(LANGUAGE_KEY) === "es" ? "es" : "en";
+  return "en";
 }
 
 function subscribeLanguage(listener: () => void) {
@@ -888,20 +893,8 @@ export function useSiteLanguage() {
   return useContext(SiteLanguageContext);
 }
 
+// Hidden until real Spanish copy exists for the pages rewritten this
+// session - see the note on getLanguageSnapshot above.
 export function SiteLanguageButton() {
-  const { language, setLanguage } = useSiteLanguage();
-  const nextLanguage = language === "en" ? "es" : "en";
-
-  return (
-    <button
-      aria-label={language === "en" ? "Cambiar toda la página a español" : "Change the whole page to English"}
-      className="site-language-button"
-      data-language-control
-      onClick={() => setLanguage(nextLanguage)}
-      type="button"
-    >
-      <span aria-hidden="true">🌐</span>
-      <strong>{language === "en" ? "Español" : "English"}</strong>
-    </button>
-  );
+  return null;
 }

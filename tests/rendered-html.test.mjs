@@ -133,7 +133,7 @@ test("build contains global language, optional budget details, repeat booking, a
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("Change the whole page to English"));
+  assert.ok(!contents.includes("Change the whole page to English"));
   assert.ok(!contents.includes("About how much is your budget?"));
   assert.ok(contents.includes("Include a budget here only if you want providers to see one."));
   assert.ok(contents.includes("Compare all matching providers instead"));
