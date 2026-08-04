@@ -40,11 +40,11 @@
     "sourceFile": "app/payments/page.tsx"
   },
   "marketplace_conduct": {
-    "releaseStatus": "draft",
-    "effectiveAt": "",
-    "releaseId": "",
-    "reviewBodyHash": "3640b5b370e079632782335aaaef8e697d5b304136a6e07c36e6e80ecca6d71c",
-    "canonicalBodyHash": "",
+    "releaseStatus": "active",
+    "effectiveAt": "2026-08-04T05:52:38.993Z",
+    "releaseId": "marketplace-conduct-2026-08-04",
+    "reviewBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
+    "canonicalBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
     "sourceFile": "app/marketplace-conduct/page.tsx"
   },
   "provisional_provider_policy": {

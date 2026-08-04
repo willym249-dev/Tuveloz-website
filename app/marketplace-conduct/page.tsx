@@ -6,7 +6,7 @@ export default function MarketplaceConductPage() {
       eyebrow="Providers • Operational review draft v0.11"
       title="Marketplace Conduct Policy"
       summary="Draft conduct rules for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="July 31, 2026"
+      updated="August 4, 2026"
     >
       <section>
         <h2>1. Draft status and scope</h2>
