@@ -10,7 +10,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://tuveloz.com"),
   manifest: "/manifest.webmanifest",
-  title: "Tuveloz | Customer Choice. Provider Freedom.",
+  title: {
+    default: "Tuveloz | Customer Choice. Provider Freedom.",
+    template: "%s | Tuveloz",
+  },
   description:
     "Post what your vehicle needs and compare real quotes from local independent providers in Montgomery County, MD. Providers join free — customer launch coming soon.",
   icons: {

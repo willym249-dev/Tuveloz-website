@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { PublicInfoPage } from "../components/public-info-page";
+
+export const metadata: Metadata = {
+  title: "How It Works",
+  description:
+    "How the Tuveloz marketplace will work: request a service, compare quotes from local independent providers, and choose what works for you.",
+};
 
 export default function HowItWorksPage() {
   return (
