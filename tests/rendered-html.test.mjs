@@ -469,7 +469,7 @@ test("build records policy consent and publishes legal, privacy, payment, and se
     "utf8",
   );
   const sitemapSource = await readFile(
-    new URL("../public/sitemap.xml", import.meta.url),
+    new URL("../app/sitemap.ts", import.meta.url),
     "utf8",
   );
   const manifest = JSON.parse(await readFile(
@@ -489,10 +489,10 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(contents.includes("technical labels or movement of funds do not by themselves determine who is merchant of record"));
   assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
   assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
-  assert.ok(sitemapSource.includes("<loc>https://tuveloz.com/payments</loc>"));
-  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/admin</loc>"));
-  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/customer</loc>"));
-  assert.ok(!sitemapSource.includes("<loc>https://tuveloz.com/provider-jobs</loc>"));
+  assert.ok(sitemapSource.includes('path: "/payments"'));
+  assert.ok(!sitemapSource.includes('path: "/admin"'));
+  assert.ok(!sitemapSource.includes('path: "/customer"'));
+  assert.ok(!sitemapSource.includes('path: "/provider-jobs"'));
   assert.equal(manifest.name, "Tuveloz");
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
