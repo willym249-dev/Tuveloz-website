@@ -1,6 +1,6 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Tuveloz badge: rounded square, brand black, orange keyline -->
-  <rect x="31" y="31" width="450" height="450" rx="102" fill="#050505" stroke="#FF6A00" stroke-width="30"/>
+  <!-- Tuveloz badge: rounded square, brand navy, orange keyline -->
+  <rect x="31" y="31" width="450" height="450" rx="102" fill="#07182D" stroke="#FF6A00" stroke-width="30"/>
   <!-- Funnel -->
   <path d="M146 150 L366 150 L300 254 L300 342 L212 342 L212 254 Z"
         fill="#FF6A00" stroke="#FF6A00" stroke-width="26" stroke-linejoin="round"/>

@@ -1,9 +1,17 @@
-# Tuveloz Brand Kit (v2)
+# Tuveloz Brand Kit (v3 — DEFINITIVE)
 
-One unified mark everywhere: the Tuveloz badge — chunky funnel + drop in orange
-(`#FF6A00`) inside a rounded square with orange keyline on brand black (`#050505`).
-Master vector: [`brand/tuveloz-icon.svg`](../tuveloz-icon.svg). The website favicon
-(`public/tuveloz-favicon-v2.svg`) is the same badge, so site + socials + email match.
+One unified mark everywhere: the Tuveloz badge — chunky funnel + detached drop in
+orange (`#FF6A00`) inside a rounded square with orange keyline on brand **navy**
+(`#07182D`). Master raster: `tuveloz-profile-master-1024.png` (this folder).
+Master vector: [`brand/tuveloz-icon.svg`](../tuveloz-icon.svg).
+
+**Every website icon and social image is generated from these masters — never
+hand-pick or re-draw the logo.** To regenerate the site's favicon, app icons,
+and og-image after any master change, run:
+
+```bash
+node scripts/generate-brand-assets.mjs
+```
 
 ## Profile pictures (this folder)
 
@@ -26,9 +34,13 @@ Badge sits at 76% of canvas so circular crops never clip the keyline.
 - `brand/tuveloz-lockup-horizontal.svg` — vector source for the lockup.
 
 Tagline in use: **"Customer choice. Provider freedom."** — matches the website
-title. Badge background is brand black (`#050505`), same as the site theme.
+title. Badge interior is brand navy (`#07182D`); page/canvas background stays
+brand black (`#050505`).
 
 ## Regenerating
 
-Edit `brand/tuveloz-icon.svg`, then re-run the build script (rasterizes the SVG
-with sharp at each size and composites the avatar canvases).
+Edit the masters here (or `brand/tuveloz-icon.svg` for the vector), then run
+`node scripts/generate-brand-assets.mjs` to rebuild everything in `public/`
+(favicon.ico, favicon SVGs, apple-touch-icon, icon-192/512, og-image). Bump the
+`?v=` query string in `app/layout.tsx` and `public/manifest.webmanifest` after
+regenerating so cached copies stop being served.
