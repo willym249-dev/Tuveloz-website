@@ -34,9 +34,12 @@ Montgomery County, MD · Providers join free ⬇️
 ## TikTok — @tuveloz (bio limit 80 chars)
 
 ```
-Vehicle services, your price, your call 🚗 MoCo, MD. Providers: join free ⬇️
+Vehicle services, your price, your call 🚗 MoCo, MD. Join free: tuveloz.com/join
 ```
-(76 chars. Website field: `https://tuveloz.com/join`)
+(80 chars, live as of Aug 2026. URL is inline because the account has no
+website-link field — TikTok only offers one to business accounts / 1k+
+followers. Switch to `Providers: join free ⬇️` + website field
+`https://tuveloz.com/join` once the link field unlocks.)
 
 ## X — @TuvelozApp (bio limit 160 chars)
 
