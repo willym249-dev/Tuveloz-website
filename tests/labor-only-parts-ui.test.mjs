@@ -6,13 +6,15 @@ const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 
 test("customer and provider forms describe OEM and aftermarket as communication only", async () => {
-  const [postJob, providerJobs, profile] = await Promise.all([
+  const [postJob, requestForm, providerJobs, profile] = await Promise.all([
     read("app/post-job/page.tsx"),
+    read("app/components/customer-request-form.tsx"),
     read("app/provider-jobs/page.tsx"),
     read("app/components/provider-business-page.tsx"),
   ]);
-  assert.match(postJob, /Customer-supplied parts preference/);
-  assert.match(postJob, /labor-only-parts-acknowledged/);
+  const customerIntake = `${postJob}\n${requestForm}`;
+  assert.match(customerIntake, /Customer-supplied parts preference/);
+  assert.match(customerIntake, /labor-only-parts-acknowledged/);
   assert.match(providerJobs, /laborOnlyConfirmed/);
   assert.match(providerJobs, /Parts charged through Tuveloz/);
   assert.match(profile, /CUSTOMER_SUPPLIED_PARTS_POLICY_OPTIONS/);

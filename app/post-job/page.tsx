@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Customer Launch Status",
+  description:
+    "Customer accounts are open; service requests are not yet available. See where Tuveloz stands and get ready for launch in Montgomery County, MD.",
+};
 import {
   CUSTOMER_REQUEST_ACCEPTANCE_TEXT,
   CUSTOMER_REQUEST_AGREEMENT_KEY,
@@ -14,39 +21,9 @@ import {
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
   CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
 } from "../../lib/launch-status";
-import {
-  JOB_HIGH_VOLTAGE_STATUS_VALUES,
-  JOB_LOCATION_TYPE_OPTIONS,
-  JOB_SAFETY_ATTESTATION_OPTIONS,
-  JOB_SCOPE_COUNTY,
-  JOB_SCOPE_STATE,
-  JOB_VEHICLE_DRIVEABILITY_VALUES,
-  JOB_VEHICLE_STATE_VALUES,
-  jobScopeRequirementsForService,
-} from "../../lib/job-scope-facts";
-import {
-  POLICY_JURISDICTION,
-  SERVICES,
-} from "../../lib/provider-policy";
-import { servicesForCustomerSelection } from "../../lib/service-tiers";
-import {
-  CURRENT_LAUNCH_AREA,
-  CUSTOMER_SERVICE_LOCATION_OPTIONS,
-  PARTS_COMMUNICATION_NOTICE,
-  PARTS_PREFERENCE_OPTIONS,
-  PARTS_SOURCE_OPTIONS,
-} from "../../lib/service-matching";
-import { AddressAutocompleteInput } from "../components/address-autocomplete-input";
-import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "../components/location-datalists";
+import { CustomerRequestForm } from "../components/customer-request-form";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
-
-const exactServices = SERVICES.filter((service) => service.code !== "general_auto_repair");
-const exactServiceFactRequirements = exactServices.map((service) => ({
-  ...service,
-  ...jobScopeRequirementsForService(service.code),
-}));
-const selectableCustomerServices = servicesForCustomerSelection();
 
 export default async function PostJobPage() {
   if (CUSTOMER_JOB_POSTING_PAUSED) {
@@ -69,7 +46,7 @@ export default async function PostJobPage() {
           <div className="account-welcome">
             <span className="account-kicker">Customer launch status</span>
             <h1>Customer accounts are open. Job requests are not.</h1>
-            <p>{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</p>
+            <p>Customer service requests are not yet available. {CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</p>
             <small>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</small>
           </div>
 
@@ -124,391 +101,29 @@ export default async function PostJobPage() {
 
       <section className="account-main">
         <div className="account-welcome">
-          <span className="account-kicker">Customer launch preview</span>
-          <h1>Customer service requests are not yet available.</h1>
+          <span className="account-kicker">Request service</span>
+          <h1>Tell us what your vehicle needs.</h1>
           <p>
-            The planned request form is shown below for review. {CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}
+            Post your request, compare quotes from local independent providers,
+            and choose the one that works — or accept nothing at all.
           </p>
-          <small>Preview the complete service-request form below.</small>
+          <small>
+            TUVELOZ does not employ, hire, train, assign, or place anyone on
+            payroll. Customers select an independent provider business for an
+            exact approved service.
+          </small>
         </div>
 
-        <section className="account-card" style={{ marginTop: 32, minHeight: 0 }}>
-          <div className="account-card-heading">
-            <div>
-              <span className="account-role">Preview only</span>
-              <h2>Creating an account does not submit a request.</h2>
-            </div>
-          </div>
-          <p>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</p>
-          <p>
-            TUVELOZ does not employ, hire, train, assign, or place anyone on
-            payroll. When jobs eventually open, customers will select an
-            independent provider business for an exact approved service.
-          </p>
-        </section>
-
-        <form
-          action="/api/requests"
-          className="lead-form"
-          encType="multipart/form-data"
-          method="post"
-          style={{ marginTop: 24 }}
-        >
-          <LocationDatalists />
-          <div className="form-heading">
-            <span>01</span>
-            <div>
-              <h2>Customer and service details</h2>
-              <p>Preview only. This form cannot submit a live service request.</p>
-            </div>
-          </div>
-
-          <div className="field-row">
-            <label>
-              Customer name <span className="optional-label">(optional)</span>
-              <input maxLength={100} name="name" placeholder="Full legal name" />
-            </label>
-            <label>
-              Email address
-              <input maxLength={180} name="email" placeholder="you@example.com" required type="email" />
-            </label>
-          </div>
-
-          <label>
-            Vehicle <span className="optional-label">(optional)</span>
-            <input
-              maxLength={320}
-              name="vehicle"
-              placeholder="Year, make, model, trim, engine, and relevant vehicle details"
-            />
-          </label>
-
-          <input name="jurisdiction" type="hidden" value={POLICY_JURISDICTION} />
-          <input name="launch-area" type="hidden" value={CURRENT_LAUNCH_AREA} />
-          <div className="field-row">
-            <div className="fixed-launch-area">
-              <span>Current service area</span>
-              <strong>{CURRENT_LAUNCH_AREA}</strong>
-            </div>
-            <label>
-              City, town, or municipality
-              <input
-                list={MUNICIPALITY_DATALIST_ID}
-                maxLength={100}
-                name="municipality"
-                placeholder="Example: Rockville or Silver Spring"
-                required
-              />
-            </label>
-          </div>
-
-          <div className="field-row">
-            <label>
-              ZIP code
-              <input
-                inputMode="numeric"
-                list={ZIP_DATALIST_ID}
-                maxLength={10}
-                name="zip"
-                pattern="[0-9]{5}(-[0-9]{4})?"
-                placeholder="20901"
-                required
-              />
-            </label>
-            <label>
-              Requested service date and time
-              <input name="scheduled-for" required type="datetime-local" />
-              <small>Entered and recorded in America/New_York time.</small>
-            </label>
-          </div>
-          <input name="scheduled-time-zone" type="hidden" value="America/New_York" />
-
-          <label>
-            Service <span className="optional-label">(optional — helps match the right providers)</span>
-            <select name="service-code" defaultValue="">
-              <option value="">Not sure / other</option>
-              {selectableCustomerServices.map((service) => (
-                <option key={service.code} value={service.code}>
-                  {service.label} — {service.code}
-                </option>
-              ))}
-            </select>
-            <small>
-              Each request must name one approved service. Broad categories such as
-              “general auto repair” are not accepted.
-            </small>
-          </label>
-
-          <label>
-            Exact requested operation or subtype code <span className="optional-label">(optional)</span>
-            <select name="requested-operation" defaultValue="">
-              <option disabled value="">Choose an operation listed for the exact service</option>
-              {exactServiceFactRequirements.map((service) => (
-                <optgroup key={service.code} label={`${service.label} (${service.code})`}>
-                  {service.allowedOperations.length ? service.allowedOperations.map((operation) => (
-                    <option key={`${service.code}:${operation}`} value={operation}>
-                      {operation}
-                    </option>
-                  )) : (
-                    <option disabled value="">No mandatory-compliance-approved operation scope</option>
-                  )}
-                </optgroup>
-              ))}
-            </select>
-            <small>
-              The server verifies that this operation belongs to the selected
-              service. A service label cannot conceal a different task.
-            </small>
-          </label>
-
-          <details className="pilot-vision">
-            <summary><strong>Required excluded-operation confirmations</strong></summary>
-            <p>
-              Check only the exclusions for the selected exact service. Do not
-              check an item if that condition or work is present; use a separately
-              approved workflow instead.
-            </p>
-            {exactServiceFactRequirements.map((service) => (
-              <section key={service.code} style={{ marginTop: 16 }}>
-                <strong>{service.label}</strong>
-                <small style={{ display: "block" }}>
-                  Location rule: {service.locationRule || "not configured — denied"}
-                </small>
-                {service.prohibitedOperations.length ? (
-                  <div className="area-options">
-                    {service.prohibitedOperations.map((operation) => (
-                      <label key={`${service.code}:${operation}`}>
-                        <input name="prohibited-operation-absent" type="checkbox" value={operation} />
-                        I confirm {operation} is absent from this request and vehicle condition.
-                      </label>
-                    ))}
-                  </div>
-                ) : <small>No additional prohibited-scope tokens are listed.</small>}
-              </section>
-            ))}
-          </details>
-
-          <details className="pilot-vision">
-            <summary><strong>Review every planned exact service</strong></summary>
-            <ul>
-              {exactServices.map((service) => (
-                <li key={service.code}>
-                  <code>{service.code}</code> — {service.label}: {service.description}.{" "}
-                  Allowed operations: {jobScopeRequirementsForService(service.code).allowedOperations.join(", ") || "none — denied"}.
-                </li>
-              ))}
-            </ul>
-          </details>
-
-          <fieldset className="area-fieldset">
-            <legend>Parts arrangement for this labor-only request <span className="optional-label">(optional)</span></legend>
-            <div className="area-options parts-source-options">
-              {PARTS_SOURCE_OPTIONS.map((option) => (
-                <label key={option}>
-                  <input name="parts-source" type="radio" value={option} />
-                  {option}
-                </label>
-              ))}
-            </div>
-            <small className="parts-equipment-note">{PARTS_COMMUNICATION_NOTICE}</small>
-          </fieldset>
-
-          <label>
-            Customer-supplied parts preference <span className="optional-label">(optional)</span>
-            <select defaultValue="No preference" name="parts-preference">
-              {PARTS_PREFERENCE_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-            <small>
-              OEM and aftermarket are communication preferences only. They do not add
-              a part, parts price, reimbursement, tax, or purchase to this request.
-            </small>
-          </label>
-
-          <label className="policy-consent">
-            <input
-              name="labor-only-parts-acknowledged"
-              type="checkbox"
-              value="yes"
-            />
-            <span>
-              I understand that every quote and payment through Tuveloz is for labor
-              only. I will purchase any required parts separately, and the provider
-              cannot include provider-supplied parts or a parts charge in Tuveloz.
-            </span>
-          </label>
-
-          <fieldset className="area-fieldset">
-            <legend>Exact service-location arrangement <span className="optional-label">(optional)</span></legend>
-            <div className="area-options">
-              {CUSTOMER_SERVICE_LOCATION_OPTIONS.map((option) => (
-                <label key={option}>
-                  <input name="service-location" type="radio" value={option} />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label>
-            Exact job-location type <span className="optional-label">(optional)</span>
-            <select defaultValue="" name="job-location-type">
-              <option disabled value="">Choose the physical location type</option>
-              {JOB_LOCATION_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            <small>
-              Customer intake currently accepts only customer-controlled private
-              property or a fully checked lawful roadside position. Facility-only
-              workflows remain blocked.
-            </small>
-          </label>
-
-          <label>
-            Service address
-            <AddressAutocompleteInput
-              maxLength={240}
-              name="service-address"
-              placeholder="Exact street address or complete roadside position"
-              required
-            />
-            <small>
-              Enter the municipality shown above, Maryland or MD, and the same ZIP
-              code in this address. The server binds all five structured fields to
-              the immutable scope. This review-mode check is not geocoding.
-            </small>
-          </label>
-          <div className="fixed-launch-area">
-            <span>Structured address boundary</span>
-            <strong>{JOB_SCOPE_COUNTY}, {JOB_SCOPE_STATE}</strong>
-            <small>Municipality, ZIP, and policy jurisdiction must exactly agree with the submitted address.</small>
-          </div>
-
-          <fieldset className="area-fieldset">
-            <legend>Property authority <span className="optional-label">(optional)</span></legend>
-            <div className="area-options">
-              <label>
-                <input name="property-permission" type="radio" value="customer_confirmed_authority" />
-                I control or am authorized to use this private property for the vehicle and requested provider visit.
-              </label>
-              <label>
-                <input name="property-permission" type="radio" value="not_applicable_public_roadside" />
-                This is a public-roadside request; private-property permission does not apply, and the roadside controls must pass.
-              </label>
-            </div>
-          </fieldset>
-
-          <div className="field-row">
-            <label>
-              Vehicle driveability <span className="optional-label">(optional)</span>
-              <select defaultValue="" name="vehicle-driveability">
-                <option disabled value="">Choose current driveability</option>
-                {JOB_VEHICLE_DRIVEABILITY_VALUES.map((value) => (
-                  <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Current vehicle state <span className="optional-label">(optional)</span>
-              <select defaultValue="" name="vehicle-state">
-                <option disabled value="">Choose the closest exact state</option>
-                {JOB_VEHICLE_STATE_VALUES.map((value) => (
-                  <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <label>
-            High-voltage involvement <span className="optional-label">(optional)</span>
-            <select defaultValue="" name="high-voltage-status">
-              <option disabled value="">Choose the known high-voltage status</option>
-              {JOB_HIGH_VOLTAGE_STATUS_VALUES.map((value) => (
-                <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
-              ))}
-            </select>
-            <small>Unknown or suspected high-voltage damage defaults to no authorization.</small>
-          </label>
-
-          <fieldset className="area-fieldset">
-            <legend>Exact location and safety attestations</legend>
-            <p>
-              The selected service and location rule determine which boxes are
-              required. Missing facts deny routing, quoting, booking, and later stages.
-            </p>
-            <div className="area-options">
-              {JOB_SAFETY_ATTESTATION_OPTIONS.map((option) => (
-                <label key={option.value}>
-                  <input name="safety-attestation" type="checkbox" value={option.value} />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <label>
-            Exact requested scope
-            <textarea
-              maxLength={1500}
-              name="job-details"
-              placeholder="State the exact task requested, symptoms or condition, known hazards, access limits, and work that is not authorized. Do not include payment data or sensitive documents."
-              required
-              rows={6}
-            />
-            <small>
-              A provider may quote only this scope. Any added work, substitute part,
-              changed price, schedule, or performing person needs a new approval.
-            </small>
-          </label>
-
-          <label className="photo-field">
-            Issue photo <span>(optional)</span>
-            <input accept="image/jpeg,image/png,image/webp" name="issue-photo" type="file" />
-            <small>JPG, PNG, or WebP; maximum 8 MB. Do not upload identity, payment, or medical records.</small>
-          </label>
-
-          <input name="customer-acceptance-key" type="hidden" value={CUSTOMER_REQUEST_AGREEMENT_KEY} />
-          <input name="customer-acceptance-version" type="hidden" value={CUSTOMER_REQUEST_AGREEMENT_VERSION} />
-          <input name="customer-acceptance-hash" type="hidden" value={acceptanceHash} />
-          <label className="policy-consent">
-            <input name="terms-accepted" required type="checkbox" value="yes" />
-            <span>
-              {CUSTOMER_REQUEST_ACCEPTANCE_TEXT}{" "}
-              <Link href="/terms">Terms of Use</Link>{" · "}
-              <Link href="/customer-agreement">Customer Agreement</Link>
-            </span>
-          </label>
-
-          <input name="customer-privacy-key" type="hidden" value={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY} />
-          <input name="customer-privacy-version" type="hidden" value={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION} />
-          <input name="customer-privacy-hash" type="hidden" value={privacyHash} />
-          <label className="policy-consent">
-            <input name="privacy-acknowledged" required type="checkbox" value="yes" />
-            <span>
-              {CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
-              <Link href="/privacy">Privacy Policy</Link>
-            </span>
-          </label>
-
-          <label className="policy-consent optional-consent">
-            <input name="remember-email-consent" type="checkbox" value="yes" />
-            <span>Create a reusable guest profile after I verify this email. Optional.</span>
-          </label>
-          <label className="policy-consent optional-consent">
-            <input name="marketing-consent" type="checkbox" value="yes" />
-            <span>Email me occasional TUVELOZ promotions. Optional.</span>
-          </label>
-
-          <button className="button primary form-button" disabled type="submit">
-            Request posting is not open
-          </button>
-          <p className="admin-note">
-            This preview cannot create a service request, offer employment, promise
-            work, or charge anyone.
-          </p>
-        </form>
+        <CustomerRequestForm
+          acceptanceKey={CUSTOMER_REQUEST_AGREEMENT_KEY}
+          acceptanceVersion={CUSTOMER_REQUEST_AGREEMENT_VERSION}
+          acceptanceHash={acceptanceHash}
+          acceptanceText={CUSTOMER_REQUEST_ACCEPTANCE_TEXT}
+          privacyKey={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY}
+          privacyVersion={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION}
+          privacyHash={privacyHash}
+          privacyText={CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT}
+        />
 
         <div className="hero-actions" style={{ marginTop: 24 }}>
           <Link className="button primary" href="/account?role=customer&mode=create">
