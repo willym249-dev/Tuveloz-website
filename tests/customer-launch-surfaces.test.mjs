@@ -95,7 +95,7 @@ test("account and private-request surfaces describe launch mode without active-j
 
 test("public discovery and bilingual launch copy stay aligned with onboarding-only mode", async () => {
   const [sitemap, language] = await Promise.all([
-    source("public/sitemap.xml"),
+    source("app/sitemap.ts"),
     source("app/components/site-language.tsx"),
   ]);
 
