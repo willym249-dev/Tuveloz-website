@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "Customer Launch Status",
-  description:
-    "Customer accounts are open; service requests are not yet available. See where Tuveloz stands and get ready for launch in Montgomery County, MD.",
-};
 import {
   CUSTOMER_REQUEST_ACCEPTANCE_TEXT,
   CUSTOMER_REQUEST_AGREEMENT_KEY,
@@ -24,6 +18,12 @@ import {
 import { CustomerRequestForm } from "../components/customer-request-form";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
+
+export const metadata: Metadata = {
+  title: "Customer Launch Status",
+  description:
+    "Customer accounts are open; service requests are not yet available. See where Tuveloz stands and get ready for launch in Montgomery County, MD.",
+};
 
 export default async function PostJobPage() {
   if (CUSTOMER_JOB_POSTING_PAUSED) {
