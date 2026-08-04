@@ -2,18 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 /**
  * Owner access stays separate from customer and provider navigation.
  *
  * Customer and provider workspaces already contain their own role-specific tools,
  * so this global floating control is intentionally hidden from ordinary signed-in
- * users. It appears only on the account page as an owner sign-in entry or after
- * Cloudflare Access has verified the owner session.
+ * users and from public visitors. It only renders after Cloudflare Access has
+ * verified the owner session server-side — it never advertises that an owner
+ * surface exists to anyone who hasn't already passed that check.
  */
 export function AccountToolsDock() {
-  const pathname = usePathname();
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -35,9 +34,7 @@ export function AccountToolsDock() {
     };
   }, []);
 
-  const ownerEntryAvailable = pathname === "/account";
-  const ownerControlVisible = (isOwner || ownerEntryAvailable);
-  if (!ownerControlVisible) return null;
+  if (!isOwner) return null;
 
   const dockStyle = {
     position: "fixed" as const,
@@ -64,27 +61,18 @@ export function AccountToolsDock() {
   return (
     <details style={dockStyle}>
       <summary style={{ cursor: "pointer", fontWeight: 800 }}>
-        {isOwner ? "Owner Tools" : "Owner/admin sign-in"}
+        Owner Tools
       </summary>
       <nav aria-label="Tuveloz owner tools" style={{ display: "grid", gap: ".15rem", marginTop: ".55rem" }}>
         <Link href="/admin" style={linkStyle}>
-          {isOwner ? "Open Owner Control Center" : "Continue to secure owner sign-in"}
+          Open Owner Control Center
         </Link>
-        {isOwner && (
-          <>
-            <Link href="/admin/marketplace-tools" style={linkStyle}>
-              Marketplace operations
-            </Link>
-            <Link href="/admin/test-lab" style={linkStyle}>
-              Open Test Lab
-            </Link>
-          </>
-        )}
-        {!isOwner && ownerEntryAvailable && (
-          <small style={{ display: "block", padding: ".25rem .65rem", opacity: .78, lineHeight: 1.4 }}>
-            Cloudflare Access verifies the owner separately. Customer and provider accounts cannot grant owner access.
-          </small>
-        )}
+        <Link href="/admin/marketplace-tools" style={linkStyle}>
+          Marketplace operations
+        </Link>
+        <Link href="/admin/test-lab" style={linkStyle}>
+          Open Test Lab
+        </Link>
       </nav>
     </details>
   );

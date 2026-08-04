@@ -59,11 +59,16 @@ test("draft policy acknowledgments are bound for review but fail closed for job 
   assert.ok(acceptance.includes('"application_review_only"'));
   assert.ok(acceptance.includes('"provider_eligibility"'));
   assert.match(acceptance, /policyDocumentRelease\("provider_agreement"\)/);
-  assert.ok(Object.values(releaseManifest).every((release) => (
-    release.releaseStatus === "draft"
-    && release.effectiveAt === ""
-    && release.releaseId === ""
-    && release.canonicalBodyHash === ""
+  assert.ok(Object.entries(releaseManifest).every(([key, release]) => (
+    key === "terms"
+      ? release.releaseStatus === "active"
+        && release.effectiveAt !== ""
+        && release.releaseId !== ""
+        && /^[a-f0-9]{64}$/i.test(release.canonicalBodyHash)
+      : release.releaseStatus === "draft"
+        && release.effectiveAt === ""
+        && release.releaseId === ""
+        && release.canonicalBodyHash === ""
   )));
   assert.match(acceptance, /SHA256_HEX\.test\(document\.canonicalBodyHash\)/);
   assert.match(acceptance, /document\.releaseStatus === "active"/);

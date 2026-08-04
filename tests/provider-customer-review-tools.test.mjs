@@ -31,9 +31,8 @@ test("owner entry stays separate while role tools remain inside their workspaces
 
   assert.doesNotMatch(source, /href="\/provider-jobs\/toolkit"/);
   assert.doesNotMatch(source, /href="\/job-authorizations\/documents"/);
-  assert.match(source, /Owner\/admin sign-in/);
-  assert.match(source, /Customer and provider accounts cannot grant owner access/);
-  assert.match(source, /pathname === "\/account"/);
+  assert.match(source, /if \(!isOwner\) return null;/);
+  assert.doesNotMatch(source, /usePathname/);
   assert.match(source, /href="\/admin"/);
   assert.match(source, /href="\/admin\/marketplace-tools"/);
 });
