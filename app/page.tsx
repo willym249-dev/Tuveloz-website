@@ -596,9 +596,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </span>
               </h1>
               <p>
-                Tuveloz is building a local marketplace for vehicle services. Provider
-                applications and evidence review are open. Customer service requests and
-                payments are not yet available, so providers cannot accept jobs through Tuveloz yet.
+                Tuveloz is a local vehicle-services marketplace launching in Montgomery
+                County, Maryland. Independent providers can apply now — join free, keep
+                100% of your quoted price, no exclusivity. Customer requests, payments,
+                and real jobs open after launch review.
               </p>
             </>
           ) : (
@@ -613,17 +614,24 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
           <div className="hero-actions">
             {CUSTOMER_JOB_POSTING_PAUSED ? (
-              <Link className="button primary" href="/post-job">
-                See customer launch status <span>→</span>
-              </Link>
+              <>
+                <Link className="button primary" href="/join">
+                  Join as a provider — free <span>→</span>
+                </Link>
+                <Link className="button secondary" href="/post-job">
+                  Customer launch status <span>→</span>
+                </Link>
+              </>
             ) : (
-              <Link className="button primary" href="/post-job">
-                Get started — free <span>→</span>
-              </Link>
+              <>
+                <Link className="button primary" href="/post-job">
+                  Get started — free <span>→</span>
+                </Link>
+                <Link className="button secondary" href="/join">
+                  Join as a provider — free <span>→</span>
+                </Link>
+              </>
             )}
-            <Link className="button secondary" href="/join">
-              {CUSTOMER_JOB_POSTING_PAUSED ? "Join as a provider" : "Join as a provider — free"} <span>→</span>
-            </Link>
             <a className="button ai" href="https://ai.tuveloz.com/">
               Try Tuveloz AI <span>✦</span>
             </a>
@@ -684,9 +692,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <article className="trust-card">
             <span className="trust-card-label">Marketplace, not mechanic</span>
             <p>
-              Tuveloz connects you with providers and handles payment. The
-              work itself is a direct agreement between you and the provider
-              you choose.
+              Tuveloz connects you with providers; at launch, payment will run
+              through the platform. The work itself is a direct agreement
+              between you and the provider you choose.
             </p>
           </article>
           <article className="trust-card">
@@ -699,9 +707,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <article className="trust-card">
             <span className="trust-card-label">Law-based verification</span>
             <p>
-              When a service legally requires a license or registration, we
-              confirm it before that provider can offer it — nothing added
-              just in case.
+              When a service legally requires a license or registration, it
+              must be documented and confirmed before that provider can offer
+              the service through Tuveloz — nothing added just in case.
             </p>
           </article>
         </div>
@@ -1386,9 +1394,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <div className="provider-benefits">
               <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
-              <div><span>03</span><strong>Only asked for paperwork when the law actually requires it for your service</strong></div>
+              <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
-            <a className="button primary" href="#providers">Join free <span>→</span></a>
+            <a className="button primary" href="#provider-apply">Join free <span>→</span></a>
             <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
               <div className="eligibility-guide-heading">
                 <span id="provider-guide-title">How applying works</span>
@@ -1405,7 +1413,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </section>
           </div>
 
-          <ProviderSignupForm />
+          <div id="provider-apply">
+            <ProviderSignupForm />
+          </div>
         </div>
       </section>
 

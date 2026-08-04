@@ -13,7 +13,7 @@ export default function HowItWorksPage() {
         },
         {
           title: "2. Tuveloz checks eligibility",
-          text: "Tuveloz will share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards.",
+          text: "Tuveloz intends to share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards. Meeting these standards does not guarantee safety, quality, or results.",
         },
         {
           title: "3. Providers remain separate businesses",
