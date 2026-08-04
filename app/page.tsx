@@ -26,6 +26,7 @@ import {
 import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
 import { ProviderSignupForm } from "./components/provider-signup-form";
+import { SocialLinks } from "./components/social-links";
 
 // Homepage launches with only the easy-entry, no-license services — the
 // simplest onboarding path. Specialized/proof-required services (tire
@@ -1665,6 +1666,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
         </div>
         <div className="footer-bottom">
+          <SocialLinks />
           <span>© 2026 Tuveloz. All rights reserved.</span>
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>

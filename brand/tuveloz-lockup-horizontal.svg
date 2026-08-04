@@ -1,4 +1,5 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1560" height="500" viewBox="0 0 1560 500" xmlns="http://www.w3.org/2000/svg">
+  <svg x="40" y="60" width="380" height="380" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Tuveloz badge: rounded square, brand black, orange keyline -->
   <rect x="31" y="31" width="450" height="450" rx="102" fill="#050505" stroke="#FF6A00" stroke-width="30"/>
   <!-- Funnel -->
@@ -7,4 +8,8 @@
   <!-- Drop -->
   <path d="M256 380 C241 401 227 417 227 431 A29 29 0 0 0 285 431 C285 417 271 401 256 380 Z"
         fill="#FF6A00"/>
+</svg>
+
+  <text x="470" y="295" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="200" fill="#FF6A00">Tuveloz</text>
+  <text x="478" y="375" font-family="Arial, Helvetica, sans-serif" font-size="54" fill="#FF6A00">Customer choice. Provider freedom.</text>
 </svg>

@@ -1777,6 +1777,51 @@ footer > p {
   padding-top: 24px;
 }
 
+.footer-social {
+  display: flex;
+  gap: 12px;
+}
+
+.footer-bottom {
+  align-items: center;
+}
+
+.footer-social-link {
+  align-items: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  width: 36px;
+}
+
+.footer-social-link:hover {
+  background: var(--lime);
+  border-color: var(--lime);
+  transform: translateY(-2px);
+}
+
+.footer-social-link:hover .social-icon {
+  color: var(--ink);
+}
+
+.social-icon {
+  color: #c6d0d8;
+  display: block;
+  fill: currentColor;
+  height: 17px;
+  width: 17px;
+}
+
+.social-icon .icon-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
 @media (max-width: 1050px) {
   .site-header {
     grid-template-columns: 1fr auto;

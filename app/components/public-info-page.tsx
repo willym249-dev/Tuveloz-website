@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SiteLanguageButton } from "./site-language";
 import { BrandMark } from "./tuveloz-icons";
+import { SocialLinks } from "./social-links";
 
 export type PublicInfoSection = {
   title: string;
@@ -108,6 +109,7 @@ export function PublicInfoPage({
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
         </div>
         <div className="footer-bottom">
+          <SocialLinks />
           <span>© 2026 Tuveloz. All rights reserved.</span>
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
