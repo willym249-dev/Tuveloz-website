@@ -71,12 +71,12 @@ a {
 
 .brand-mark {
   align-items: center;
-  background: linear-gradient(145deg, #ff8a2a 0%, #ff6a00 72%);
+  background: #07182d;
   border-radius: 9px;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 0 0 2px #ff6a00,
     0 5px 14px rgba(255, 106, 0, 0.16);
-  color: #07182d;
+  color: #ff6a00;
   display: inline-flex;
   font-size: 17px;
   height: 32px;
@@ -404,10 +404,10 @@ a {
 
 .mini-mark {
   align-items: center;
-  background: linear-gradient(145deg, #ff8a2a 0%, #ff6a00 72%);
+  background: #07182d;
   border-radius: 7px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  color: #07182d;
+  box-shadow: inset 0 0 0 2px #ff6a00;
+  color: #ff6a00;
   display: flex;
   font-size: 11px;
   font-weight: 900;
@@ -4398,10 +4398,8 @@ body {
 .brand-mark,
 .mini-mark {
   background: #07182d;
-  border: 1px solid rgba(255, 106, 0, 0.48);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
-    0 6px 16px rgba(0, 0, 0, 0.22);
+  border: 2px solid #ff6a00;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
   color: #ff6a00;
 }
 
