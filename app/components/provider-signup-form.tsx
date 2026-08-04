@@ -52,7 +52,7 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
   {
     id: "limited",
     label: "Getting started — basic services",
-    description: "Entry-level services. Selecting one doesn't enroll you in training or authorize customer work.",
+    description: "The simplest services to start with.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("sponsored_trainee")
       || service.allowedProviderLevels.includes("provisional_independent")
@@ -75,6 +75,16 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
     )),
   },
 ] as const;
+
+/**
+ * Strip the internal "Provisional " policy prefix for display. The policy
+ * catalog keeps the full label as the legal name of record; applicants see
+ * the plain service name, and the tier is shown separately when it matters.
+ */
+function serviceDisplayLabel(label: string) {
+  const plain = label.replace(/^Provisional /, "");
+  return plain.charAt(0).toUpperCase() + plain.slice(1);
+}
 
 function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
   const selectedPolicies = selectedServices.map((code) => (
@@ -99,7 +109,8 @@ export function ProviderSignupForm() {
 
   const [step, setStep] = useState<SignupStep>(1);
   const [selectedProviderServices, setSelectedProviderServices] = useState<ServiceCode[]>([]);
-  const [tierSwapNotice, setTierSwapNotice] = useState("");
+  const [soloBusiness, setSoloBusiness] = useState(true);
+  const [challengeResetNotice, setChallengeResetNotice] = useState("");
   const [selectedProviderWorkLocations, setSelectedProviderWorkLocations] = useState<string[]>([]);
   const [legalConfirmed, setLegalConfirmed] = useState(false);
   const [providerAssessment, setProviderAssessment] = useState<ProviderSelfAssessment>(
@@ -115,13 +126,29 @@ export function ProviderSignupForm() {
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
 
   const providerLevel = deriveProviderLevel(selectedProviderServices);
+  // A service can be added only if it shares an allowed provider level with
+  // every current selection — one application covers one tier at a time.
+  // Incompatible options render disabled (with an explanation) instead of
+  // silently replacing the applicant's earlier picks.
+  const serviceIsSelectable = (service: (typeof PROVIDER_REVIEW_SERVICES)[number]) => (
+    selectedProviderServices.length === 0
+    || selectedProviderServices.every((code) => {
+      const selected = PROVIDER_REVIEW_SERVICES.find((candidate) => candidate.code === code);
+      return selected?.allowedProviderLevels.some((level) => (
+        service.allowedProviderLevels.includes(level)
+      ));
+    })
+  );
+  const hasLockedServices = selectedProviderServices.length > 0
+    && PROVIDER_REVIEW_SERVICES.some((service) => (
+      !selectedProviderServices.includes(service.code) && !serviceIsSelectable(service)
+    ));
   const providerAcceptsCustomersAtBusiness = selectedProviderWorkLocations.includes(
     PROVIDER_WORK_LOCATION_OPTIONS[1],
   );
-  // Same display-name-keyed lookup the page used before extraction; selected
-  // services are policy ServiceCodes, so this may already under-match against
-  // the legacy string sets in lib/provider-compliance.ts. Preserved as-is —
-  // reconciling that mismatch is a separate piece of work.
+  // Selected ServiceCodes are matched against the legal-category sets via the
+  // code-to-category map in lib/provider-compliance.ts, so requirement
+  // questions appear exactly for the services the law covers.
   const providerLegalRequirements = getProviderLegalRequirementFlags(
     selectedProviderServices,
     SELECTED_PROVIDER_AREAS,
@@ -204,6 +231,12 @@ export function ProviderSignupForm() {
     }
 
     const legalRequirementsAccepted = !hasVisibleLegalRequirements || legalConfirmed;
+    // One-person businesses enter their name once; the signer and legal
+    // business name derive from it instead of being asked again.
+    const soloFullName = [values["performing-person-first-name"], values["performing-person-last-name"]]
+      .map((value) => String(value ?? "").trim())
+      .filter(Boolean)
+      .join(" ");
     const adultAcknowledged = formData.get("adult-acknowledged") === "yes";
     const employmentResponsibilityAcknowledged = (
       formData.get("employment-work-authorization-acknowledged") === "yes"
@@ -225,7 +258,7 @@ export function ProviderSignupForm() {
       policyJurisdiction: POLICY_JURISDICTION,
       serviceArea: SELECTED_PROVIDER_AREAS.join(" | "),
       businessMunicipality: values["business-municipality"],
-      legalBusinessName: values["legal-business-name"],
+      legalBusinessName: soloBusiness ? values["provider-name"] : values["legal-business-name"],
       businessEntityType: values["business-entity-type"],
       businessFormationState: values["business-formation-state"],
       workLocations: selectedProviderWorkLocations,
@@ -235,8 +268,8 @@ export function ProviderSignupForm() {
       rulesReviewed: legalRequirementsAccepted,
       providerAttestation: legalRequirementsAccepted && adultAcknowledged,
       legalResponsibility: legalRequirementsAccepted && employmentResponsibilityAcknowledged,
-      signerName: values["signer-name"],
-      signerTitle: values["signer-title"],
+      signerName: soloBusiness ? soloFullName : values["signer-name"],
+      signerTitle: soloBusiness ? "Owner" : values["signer-title"],
       performingPersonFirstName: values["performing-person-first-name"],
       performingPersonLastName: values["performing-person-last-name"],
       performingPersonIdentityAcknowledged:
@@ -311,6 +344,7 @@ export function ProviderSignupForm() {
       setPendingApplicationPayload(payload);
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
+      setChallengeResetNotice("");
     } catch (error) {
       setConfirmingSubmit(false);
       const message = error instanceof Error ? error.message : "Please try again.";
@@ -347,10 +381,13 @@ export function ProviderSignupForm() {
     return (
       <div className="success-message provider-success" role="status">
         <span>✓</span>
-        <h3>{providerFormIsSpanish ? "Verificación completa." : "Verification complete."}</h3>
+        <h3>{providerFormIsSpanish ? "Solicitud recibida." : "Application received."}</h3>
         <p>{providerFormIsSpanish
-          ? "Si no existía una solicitud para este correo, se creó una nueva. Inicie sesión para verla o continuarla; los cambios a una solicitud existente no se guardaron en este formulario público."
-          : "If no application existed for this email, a new one was created. Sign in with the same email to view or continue it. Changes to an existing application were not saved by this public form."}</p>
+          ? "Siguiente paso: inicie sesión con el mismo correo para subir su evidencia y seguir la revisión."
+          : "Next step: sign in with the same email to upload your evidence and track the review."}</p>
+        <p><small>{providerFormIsSpanish
+          ? "Si ya existía una solicitud para este correo, se conservó esa solicitud; los cambios se hacen después de iniciar sesión."
+          : "If an application already existed for this email, that one was kept — changes happen after you sign in."}</small></p>
         <Link className="button primary" href="/account?role=provider">
           {providerFormIsSpanish ? "Continuar con la verificación" : "Continue provider verification"}
         </Link>
@@ -370,6 +407,11 @@ export function ProviderSignupForm() {
         // recomputed from current field values, so a stale challenge would
         // otherwise verify code against an outdated application.
         if ((event.target as HTMLElement).closest("[data-signup-step='3']")) {
+          if (applicationChallengeId) {
+            setChallengeResetNotice(providerFormIsSpanish
+              ? "Cambió su solicitud, así que el código anterior ya no es válido. Envíe de nuevo para recibir un código nuevo."
+              : "You changed your application, so the earlier code is no longer valid. Submit again to get a fresh code.");
+          }
           resetChallenge();
         }
       }}
@@ -381,11 +423,11 @@ export function ProviderSignupForm() {
         </span>
         {showStep2 && (
           <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Prove it"}
+            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
           </span>
         )}
         <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Cobre" : "Get paid"}
+          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
         </span>
       </div>
 
@@ -393,13 +435,13 @@ export function ProviderSignupForm() {
 
       {step === 1 && (
         <div data-signup-step="1">
-          <h3>{providerFormIsSpanish ? "Conviértase en proveedor fundador" : "Become a founding provider"}</h3>
+          <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
           <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
           <div className="legal-requirement-note" role="status">
             <strong>
               {providerFormIsSpanish
-                ? "Las solicitudes son solo para revisión — ningún servicio está activo todavía."
-                : "Applications are for review only — no service is available for a real customer job today."}
+                ? "Una cosa importante: esta solicitud es para revisión. Los trabajos reales se abren cuando sus servicios pasen la revisión de lanzamiento."
+                : "One thing to know: this application is for review. Real customer jobs open once your services pass launch review."}
             </strong>
             <details className="legal-note-details">
               <summary>
@@ -463,76 +505,64 @@ export function ProviderSignupForm() {
                       <b>{selectedCount ? `${selectedCount} selected` : "View"}</b>
                     </summary>
                     <div className="service-options">
-                      {groupServices.map((service) => (
-                        <div className="service-option" key={service.code}>
-                          <label>
-                            <input
-                              checked={selectedProviderServices.includes(service.code)}
-                              name="provider-service"
-                              type="checkbox"
-                              value={service.code}
-                              onChange={(event) => {
-                                if (!event.target.checked) {
+                      {groupServices.map((service) => {
+                        const isSelected = selectedProviderServices.includes(service.code);
+                        const isLocked = !isSelected && !serviceIsSelectable(service);
+                        return (
+                          <div className="service-option" key={service.code}>
+                            <label>
+                              <input
+                                checked={isSelected}
+                                disabled={isLocked}
+                                name="provider-service"
+                                type="checkbox"
+                                value={service.code}
+                                onChange={(event) => {
                                   setSelectedProviderServices((current) => (
-                                    current.filter((item) => item !== service.code)
+                                    event.target.checked
+                                      ? [...current, service.code]
+                                      : current.filter((item) => item !== service.code)
                                   ));
-                                  setTierSwapNotice("");
-                                  return;
-                                }
-                                const kept = selectedProviderServices.filter((item) => {
-                                  const selected = PROVIDER_REVIEW_SERVICES.find(
-                                    (candidate) => candidate.code === item,
-                                  );
-                                  return selected?.allowedProviderLevels.some((level) => (
-                                    service.allowedProviderLevels.some((nextLevel) => nextLevel === level)
-                                  ));
-                                });
-                                const removedLabels = selectedProviderServices
-                                  .filter((item) => !kept.includes(item))
-                                  .map((code) => PROVIDER_REVIEW_SERVICES.find(
-                                    (candidate) => candidate.code === code,
-                                  )?.label)
-                                  .filter(Boolean)
-                                  .join(", ");
-                                setSelectedProviderServices([...kept, service.code]);
-                                setTierSwapNotice(removedLabels
-                                  ? (providerFormIsSpanish
-                                    ? `Se quitó: ${removedLabels}. Una solicitud cubre un solo nivel de servicios a la vez.`
-                                    : `Removed: ${removedLabels}. An application covers one service tier at a time.`)
-                                  : "");
-                              }}
-                            />
-                            <span>
-                              <strong>{service.label}</strong>
-                            </span>
-                          </label>
-                          <details className="service-scope">
-                            <summary>
-                              {providerFormIsSpanish
-                                ? "Qué incluye y qué no"
-                                : "What's included and not included"}
-                            </summary>
-                            <small>{service.description}</small>
-                          </details>
-                        </div>
-                      ))}
+                                }}
+                              />
+                              <span>
+                                <strong>{serviceDisplayLabel(service.label)}</strong>
+                              </span>
+                            </label>
+                            <details className="service-scope">
+                              <summary>
+                                {providerFormIsSpanish
+                                  ? "Qué incluye y qué no"
+                                  : "What's included and not included"}
+                              </summary>
+                              <small>{service.description}</small>
+                            </details>
+                          </div>
+                        );
+                      })}
                     </div>
                   </details>
                 );
               })}
             </div>
-            {tierSwapNotice && (
-              <p className="tier-swap-notice" role="status">{tierSwapNotice}</p>
+            {hasLockedServices && (
+              <p className="tier-swap-notice" role="status">
+                {providerFormIsSpanish
+                  ? "Algunos servicios están bloqueados porque una solicitud cubre un solo nivel a la vez. Para cambiar de nivel, desmarque sus selecciones actuales."
+                  : "Some services are locked because one application covers one service tier at a time. To switch tiers, uncheck your current picks first."}
+              </p>
             )}
             <small className="customer-service-note">
               &ldquo;General auto repair&rdquo; is too broad to select — pick the exact services you
-              offer instead. Selections are for review, not real-job access.
+              offer instead.
             </small>
           </fieldset>
-          <div className="provider-mode-preview" aria-live="polite">
-            <span>{providerFormIsSpanish ? "Su nivel de proveedor" : "Your provider tier"}</span>
-            <strong className="provider-mode-badge">{PROVIDER_LEVEL_LABELS[providerLevel]}</strong>
-          </div>
+          {providerLevel !== "provisional_independent" && (
+            <div className="provider-mode-preview" aria-live="polite">
+              <span>{providerFormIsSpanish ? "Nivel de la solicitud" : "Application tier"}</span>
+              <strong className="provider-mode-badge">{PROVIDER_LEVEL_LABELS[providerLevel]}</strong>
+            </div>
+          )}
           <button type="button" className="button lime form-button" onClick={goToStep2}>
             {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
           </button>
@@ -551,7 +581,7 @@ export function ProviderSignupForm() {
               </p>
               {requiredDocumentsBySelection.map((entry) => (
                 <div key={entry.code} className="legal-requirement-note">
-                  <strong>{entry.label}</strong>
+                  <strong>{serviceDisplayLabel(entry.label)}</strong>
                   {entry.documents.map((doc) => (
                     <small key={doc.code}>
                       {doc.label}
@@ -774,40 +804,131 @@ export function ProviderSignupForm() {
 
       {step === 3 && (
         <div data-signup-step="3">
-          <h3>{providerFormIsSpanish ? "Cobre" : "Get paid"}</h3>
+          <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
           <p>
             {providerFormIsSpanish
-              ? "Cuéntenos sobre su negocio. La configuración de pago viene después."
-              : "Tell us about your business. Payout setup comes next."}
+              ? "Unos datos sobre usted y su negocio. La configuración de pago viene después de la aprobación."
+              : "A few details about you and your business. Payout setup comes after approval."}
           </p>
+          <fieldset className="area-fieldset">
+            <legend>{providerFormIsSpanish ? "¿Quién solicita?" : "Who's applying?"}</legend>
+            <div className="area-options">
+              <label>
+                <input
+                  checked={soloBusiness}
+                  name="business-size"
+                  type="radio"
+                  onChange={() => setSoloBusiness(true)}
+                />
+                {providerFormIsSpanish
+                  ? "Solo yo — hago el trabajo yo mismo"
+                  : "Just me — I do the work myself"}
+              </label>
+              <label>
+                <input
+                  checked={!soloBusiness}
+                  name="business-size"
+                  type="radio"
+                  onChange={() => setSoloBusiness(false)}
+                />
+                {providerFormIsSpanish
+                  ? "Un negocio con empleados o ayudantes"
+                  : "A business with employees or helpers"}
+              </label>
+            </div>
+          </fieldset>
           <label>
-            {providerFormIsSpanish ? "Nombre personal o del negocio" : "Name or business name"}
-            <input required name="provider-name" placeholder={providerFormIsSpanish ? "Su nombre o compañía" : "Your name or company"} />
+            {soloBusiness
+              ? (providerFormIsSpanish ? "Su nombre legal" : "Your legal first name")
+              : (providerFormIsSpanish
+                ? "Nombre legal de la persona que hará el trabajo"
+                : "Legal first name of the person doing the work")}
+            <input
+              autoComplete="given-name"
+              required
+              name="performing-person-first-name"
+              placeholder={providerFormIsSpanish
+                ? "Nombre tal como aparece en su identificación"
+                : "First name exactly as shown on ID"}
+            />
+          </label>
+          <label>
+            {soloBusiness
+              ? (providerFormIsSpanish ? "Su apellido legal" : "Your legal last name")
+              : (providerFormIsSpanish
+                ? "Apellido legal de la persona que hará el trabajo"
+                : "Legal last name of the person doing the work")}
+            <input
+              autoComplete="family-name"
+              required
+              name="performing-person-last-name"
+              placeholder={providerFormIsSpanish
+                ? "Apellido tal como aparece en su identificación"
+                : "Last name exactly as shown on ID"}
+            />
+            <small>
+              {providerFormIsSpanish
+                ? "Debe coincidir con la identificación usada en la verificación de identidad de Stripe."
+                : "Must match the ID used in the separate Stripe Identity check."}
+            </small>
           </label>
           <label>
             {providerFormIsSpanish ? "Correo electrónico" : "Email"}
             <input required name="provider-email" type="email" placeholder="hello@yourbusiness.com" />
           </label>
-          <fieldset className="area-fieldset">
-            <legend>Independent owner-operator business</legend>
+          <label>
+            {providerFormIsSpanish ? "Nombre del negocio" : "Business name"}
+            <input
+              required
+              name="provider-name"
+              placeholder={providerFormIsSpanish ? "Su negocio o su propio nombre" : "Your business or your own name"}
+            />
+            {soloBusiness && (
+              <small>
+                {providerFormIsSpanish
+                  ? "Tal como está registrado — o simplemente su propio nombre si no ha registrado un negocio."
+                  : "As registered — or just your own name if you haven't registered a business."}
+              </small>
+            )}
+          </label>
+          <fieldset className="area-fieldset" key={soloBusiness ? "solo-business" : "team-business"}>
+            <legend>
+              {providerFormIsSpanish ? "Detalles del negocio" : "Business details"}
+            </legend>
+            {!soloBusiness && (
+              <label>
+                {providerFormIsSpanish ? "Nombre legal del negocio" : "Legal business name"}
+                <input required name="legal-business-name" placeholder={providerFormIsSpanish ? "Nombre registrado del negocio" : "Registered business name"} />
+              </label>
+            )}
             <label>
-              Legal business name
-              <input required name="legal-business-name" placeholder="Registered business name" />
-            </label>
-            <label>
-              Business entity type
-              <select required name="business-entity-type" defaultValue="">
-                <option value="" disabled>Choose one</option>
-                <option value="sole_proprietorship">Sole proprietorship</option>
-                <option value="limited_liability_company">Limited liability company</option>
-                <option value="corporation">Corporation</option>
-                <option value="partnership">Partnership</option>
-                <option value="other">Other</option>
+              {providerFormIsSpanish ? "Tipo de entidad" : "Business entity type"}
+              <select required name="business-entity-type" defaultValue={soloBusiness ? "sole_proprietorship" : ""}>
+                <option value="" disabled>{providerFormIsSpanish ? "Elija una" : "Choose one"}</option>
+                <option value="sole_proprietorship">{providerFormIsSpanish ? "Propietario único" : "Sole proprietorship"}</option>
+                <option value="limited_liability_company">{providerFormIsSpanish ? "Compañía de responsabilidad limitada (LLC)" : "Limited liability company"}</option>
+                <option value="corporation">{providerFormIsSpanish ? "Corporación" : "Corporation"}</option>
+                <option value="partnership">{providerFormIsSpanish ? "Sociedad" : "Partnership"}</option>
+                <option value="other">{providerFormIsSpanish ? "Otro" : "Other"}</option>
               </select>
+              {soloBusiness && (
+                <small>
+                  {providerFormIsSpanish
+                    ? "La mayoría de los negocios de una sola persona sin registro son de propietario único. Cámbielo si registró una LLC o corporación."
+                    : "Most one-person businesses without a registration are sole proprietorships. Change this if you registered an LLC or corporation."}
+                </small>
+              )}
             </label>
             <label>
-              State where the business is formed or registered
-              <input required name="business-formation-state" placeholder="Maryland" />
+              {providerFormIsSpanish
+                ? "Estado donde el negocio está formado o registrado"
+                : "State where the business is formed or registered"}
+              <input
+                required
+                defaultValue={soloBusiness ? "Maryland" : undefined}
+                name="business-formation-state"
+                placeholder="Maryland"
+              />
             </label>
           </fieldset>
           <label>
@@ -888,30 +1009,11 @@ export function ProviderSignupForm() {
             </Link>
           </div>
           <fieldset className="area-fieldset">
-            <legend>Performing person, authorized signature, and acknowledgments</legend>
-            <label>
-              Legal first name of the person doing the work
-              <input
-                autoComplete="given-name"
-                required
-                name="performing-person-first-name"
-                placeholder="First name exactly as shown on ID"
-              />
-            </label>
-            <label>
-              Legal last name of the person doing the work
-              <input
-                autoComplete="family-name"
-                required
-                name="performing-person-last-name"
-                placeholder="Last name exactly as shown on ID"
-              />
-              <small>
-                This names the individual tied to this provider-person record. It may be
-                different from the business name or authorized signer and must match the ID
-                used in the separate Stripe Identity check.
-              </small>
-            </label>
+            <legend>
+              {providerFormIsSpanish
+                ? "Firma y confirmaciones"
+                : "Signature and acknowledgments"}
+            </legend>
             <label className="policy-consent">
               <input
                 required
@@ -920,21 +1022,36 @@ export function ProviderSignupForm() {
                 value="yes"
               />
               <span>
-                I certify that this is the legal name of the actual person tied to this
-                application who may perform services. This does not grant job access.
+                {providerFormIsSpanish
+                  ? "Certifico que el nombre legal anterior corresponde a la persona real de esta solicitud que puede realizar los servicios."
+                  : "I certify that the legal name above is the actual person tied to this application who may perform services."}
               </span>
             </label>
-            <label>
-              Typed signer name
-              <input required name="signer-name" placeholder="Full legal name" />
-            </label>
-            <label>
-              Signer title or capacity
-              <input required name="signer-title" placeholder="Applicant, owner, or authorized representative" />
-            </label>
+            {soloBusiness ? (
+              <p className="hint">
+                {providerFormIsSpanish
+                  ? "Como negocio de una sola persona, usted firma esta solicitud como propietario con el nombre legal anterior."
+                  : "As a one-person business, you sign this application as the owner, using your legal name above."}
+              </p>
+            ) : (
+              <>
+                <label>
+                  {providerFormIsSpanish ? "Nombre del firmante" : "Typed signer name"}
+                  <input required name="signer-name" placeholder={providerFormIsSpanish ? "Nombre legal completo" : "Full legal name"} />
+                </label>
+                <label>
+                  {providerFormIsSpanish ? "Título o capacidad del firmante" : "Signer title or capacity"}
+                  <input required name="signer-title" placeholder={providerFormIsSpanish ? "Solicitante, propietario o representante autorizado" : "Applicant, owner, or authorized representative"} />
+                </label>
+              </>
+            )}
             <label className="policy-consent">
               <input required name="adult-acknowledged" type="checkbox" value="yes" />
-              <span>I confirm that I am at least 18 years old and authorized to submit this application.</span>
+              <span>
+                {providerFormIsSpanish
+                  ? "Confirmo que tengo al menos 18 años y autorización para enviar esta solicitud."
+                  : "I confirm that I am at least 18 years old and authorized to submit this application."}
+              </span>
             </label>
             <label className="policy-consent">
               <input
@@ -976,12 +1093,14 @@ export function ProviderSignupForm() {
               onChange={(event) => event.stopPropagation()}
             >
               <strong id="provider-email-code-title">
-                Step 2 of 2: confirm the application email
+                {providerFormIsSpanish
+                  ? "Último paso: escriba el código que le enviamos por correo"
+                  : "Last step: enter the code we emailed you"}
               </strong>
               <small>
-                Enter the 6-digit code sent to the email above. The code expires in 10 minutes.
-                This proves email control only; it does not verify identity, age, authority,
-                business registration, licensing, insurance, qualifications, or job eligibility.
+                {providerFormIsSpanish
+                  ? "Escriba el código de 6 dígitos enviado al correo anterior. El código vence en 10 minutos. Solo confirma el control del correo; no verifica identidad, edad, autoridad, registro del negocio, licencias, seguros, calificaciones ni elegibilidad para trabajos."
+                  : "Enter the 6-digit code sent to the email above. The code expires in 10 minutes. This proves email control only; it does not verify identity, age, authority, business registration, licensing, insurance, qualifications, or job eligibility."}
               </small>
               <label>
                 6-digit verification code
@@ -1045,9 +1164,12 @@ export function ProviderSignupForm() {
               <button className="button lime form-button" type="submit" disabled={applicationBusy}>
                 {applicationBusy
                   ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
-                  : (providerFormIsSpanish ? "Solicitar ingreso" : "Start application")} <span>→</span>
+                  : (providerFormIsSpanish ? "Enviar solicitud" : "Submit application")} <span>→</span>
               </button>
             </div>
+          )}
+          {challengeResetNotice && !applicationChallengeId && (
+            <p className="hint" role="status">{challengeResetNotice}</p>
           )}
           {applicationError && <p className="form-error" role="alert">{applicationError}</p>}
           <small>

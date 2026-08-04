@@ -164,7 +164,7 @@ test("build protects every important submission with a second confirmation", asy
 
   assert.ok(contents.includes("Confirm and post"));
   assert.ok(contents.includes("Confirm and send code"));
-  assert.ok(contents.includes("Step 2 of 2: confirm the application email"));
+  assert.ok(contents.includes("Last step: enter the code we emailed you"));
   assert.ok(contents.includes("Confirm and send"));
   assert.ok(contents.includes("Confirm quote"));
   assert.ok(contents.includes("Yes, submit quote"));

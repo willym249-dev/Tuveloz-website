@@ -299,10 +299,10 @@ test("provider UI freezes the reviewed payload and preserves the challenge while
   assert.match(page, /fetch\("\/api\/providers\/challenge"/);
   assert.match(page, /\.\.\.pendingApplicationPayload,[\s\S]*challengeId: applicationChallengeId,[\s\S]*verificationCode: applicationVerificationCode/);
   assert.match(page, /onChange=\{\(event\) => event\.stopPropagation\(\)\}/);
-  assert.match(page, /Step 2 of 2: confirm the application email/);
+  assert.match(page, /Last step: enter the code we emailed you/);
   assert.match(page, /This proves email control only/);
   assert.match(page, /Verify email and continue/);
-  assert.match(page, /Changes to an existing application were not saved by this public form/);
+  assert.match(page, /If an application already existed for this email, that one was kept/);
   assert.doesNotMatch(page, /Verify email and submit application|Application saved\./);
 });
 
