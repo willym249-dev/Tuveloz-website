@@ -120,6 +120,53 @@ const MONTGOMERY_REPAIR_SERVICES = new Set([
   "Classic car restoration",
 ]);
 
+/**
+ * The statutory-category sets below are keyed by legacy display names, but the
+ * public signup form submits catalog ServiceCodes from lib/provider-policy.ts.
+ * This map places each catalog code into the already-reviewed legal categories
+ * so requirement questions appear exactly when the underlying law applies —
+ * e.g. Chapter 31A repair/maintenance coverage for jump starts and wiper
+ * blades. Codes with no entry (photo documentation, visual observation,
+ * towing, fuel delivery, official inspection) trigger no category here; their
+ * gating lives in the evidence matrix instead.
+ */
+const SERVICE_CODE_LEGAL_EQUIVALENTS: Record<string, readonly string[]> = {
+  general_auto_repair: ["General auto repair"],
+  provisional_obd_read_only: [DIAGNOSTICS_SERVICE],
+  provisional_wiper_blade_replacement: ["Mobile mechanical service"],
+  provisional_engine_or_cabin_air_filter: ["Mobile mechanical service"],
+  provisional_conventional_bulb_replacement: ["Mobile mechanical service"],
+  provisional_fluid_topoff_limited: ["Mobile mechanical service"],
+  provisional_12v_jump_start: ["Battery jump-starts"],
+  provisional_12v_battery_replacement: ["Battery replacement"],
+  provisional_temporary_spare_install: [TIRE_SERVICE],
+  provisional_basic_detailing: [CAR_WASH_SERVICE, "Interior detailing"],
+  sponsored_oil_filter_service: ["Mobile mechanical service"],
+  battery_replacement: ["Battery replacement"],
+  tire_repair_or_installation: ["Tire repair and replacement"],
+  basic_vehicle_diagnostics: [DIAGNOSTICS_SERVICE],
+  mobile_car_wash: [MOBILE_CAR_WASH_SERVICE],
+  motor_vehicle_ac_service: ["Mobile mechanical service"],
+  body_paint_refinishing: ["Body repair and paint"],
+  window_tint_installation: [TINT_SERVICE],
+  vehicle_lockout: [LOCKOUT_SERVICE],
+  ev_high_voltage_service: ["Hybrid and EV service"],
+};
+
+/** A service plus the legal-category names it maps onto (identity included). */
+function legalMatchNames(service: string): readonly string[] {
+  const equivalents = SERVICE_CODE_LEGAL_EQUIVALENTS[service];
+  return equivalents ? [service, ...equivalents] : [service];
+}
+
+function matchesCategory(service: string, category: ReadonlySet<string>) {
+  return legalMatchNames(service).some((name) => category.has(name));
+}
+
+function matchesService(service: string, target: string) {
+  return legalMatchNames(service).includes(target);
+}
+
 const TIRE_SERVICES = new Set([
   TIRE_SERVICE,
   "Mobile tire service",
@@ -214,17 +261,19 @@ export function getProviderLegalRequirementFlags(
     // Montgomery County Code Chapter 31A broadly covers repair, maintenance,
     // diagnosis, tires, windows, paint, and other installation work.
     montgomeryRegistration: servesMontgomeryCounty
-      && services.some((service) => MONTGOMERY_REPAIR_SERVICES.has(service)),
+      && services.some((service) => matchesCategory(service, MONTGOMERY_REPAIR_SERVICES)),
     marylandCustomerPaperwork: servesMontgomeryCounty
-      && services.some((service) => MONTGOMERY_REPAIR_SERVICES.has(service)),
-    tintCompliance: areas.length > 0 && services.includes(TINT_SERVICE),
+      && services.some((service) => matchesCategory(service, MONTGOMERY_REPAIR_SERVICES)),
+    tintCompliance: areas.length > 0
+      && services.some((service) => matchesService(service, TINT_SERVICE)),
     washWaterCompliance: areas.length > 0
-      && services.some((service) => WASH_WATER_SERVICES.has(service)),
+      && services.some((service) => matchesCategory(service, WASH_WATER_SERVICES)),
     officialInspectionRestriction: areas.length > 0
-      && services.some((service) => INDEPENDENT_INSPECTION_SERVICES.has(service)),
+      && services.some((service) => matchesCategory(service, INDEPENDENT_INSPECTION_SERVICES)),
     removedTireRule: areas.length > 0
-      && services.some((service) => TIRE_SERVICES.has(service)),
-    locksmithCredential: areas.length > 0 && services.includes(LOCKOUT_SERVICE),
+      && services.some((service) => matchesCategory(service, TIRE_SERVICES)),
+    locksmithCredential: areas.length > 0
+      && services.some((service) => matchesService(service, LOCKOUT_SERVICE)),
     serviceSpecificRules: areas.length > 0
       && services.some((service) => providerServiceRequiresSpecialRules(service)),
     pausedService: services.some((service) => providerServiceIsPaused(service)),
@@ -239,7 +288,7 @@ function evaluateService(
   const blockers: string[] = [];
   const reviews: string[] = [];
   const servesMontgomeryCounty = areas.includes(MONTGOMERY_COUNTY);
-  const isMontgomeryRepairService = MONTGOMERY_REPAIR_SERVICES.has(service);
+  const isMontgomeryRepairService = matchesCategory(service, MONTGOMERY_REPAIR_SERVICES);
   const requiresCustomerPaperwork = servesMontgomeryCounty && isMontgomeryRepairService;
   const safetyPolicy = serviceSafetyPolicyFor(service);
 
@@ -271,7 +320,7 @@ function evaluateService(
     }
   }
 
-  if (service === TINT_SERVICE) {
+  if (matchesService(service, TINT_SERVICE)) {
     if (assessment.tintRequirementsReady === "no") {
       blockers.push(
         "Window tint installation must follow the legal limits for the vehicle and state.",
@@ -283,7 +332,7 @@ function evaluateService(
     }
   }
 
-  if (WASH_WATER_SERVICES.has(service)) {
+  if (matchesCategory(service, WASH_WATER_SERVICES)) {
     if (assessment.washWaterReady === "no") {
       blockers.push(
         "Commercial car-wash water must be kept out of storm drains and waterways.",
@@ -295,19 +344,19 @@ function evaluateService(
     }
   }
 
-  if (service === LOCKOUT_SERVICE) {
+  if (matchesService(service, LOCKOUT_SERVICE)) {
     reviews.push(
       "Verify the active Maryland locksmith business license, the registration of the person performing the work, required insurance, and the per-job customer/vehicle authorization process.",
     );
   }
 
-  if (TIRE_SERVICES.has(service)) {
+  if (matchesCategory(service, TIRE_SERVICES)) {
     reviews.push(
       "Confirm that a removed tire remains with the customer or follows a lawful approved disposal process.",
     );
   }
 
-  if (INDEPENDENT_INSPECTION_SERVICES.has(service)) {
+  if (matchesCategory(service, INDEPENDENT_INSPECTION_SERVICES)) {
     reviews.push(
       "Keep independent diagnostics separate from an official Maryland safety inspection unless the station and mechanic credentials are verified for that exact service.",
     );
