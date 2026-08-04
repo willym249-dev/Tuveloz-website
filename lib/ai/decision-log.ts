@@ -3,9 +3,11 @@
 // sessions instead of contradicting each other. Pure formatting/parsing
 // only — reading and writing the file lives in scripts/ai-council.ts.
 
+import type { CouncilMode } from "./council.ts";
+
 export type DecisionLogEntry = {
   timestamp: string;
-  mode: "quick" | "consensus" | "deep";
+  mode: CouncilMode;
   question: string;
   consulted: string[];
   agreed: boolean | null;

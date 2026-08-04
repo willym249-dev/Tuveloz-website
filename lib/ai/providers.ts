@@ -19,10 +19,13 @@ export type ProviderCallResult = {
 };
 
 const REQUEST_TIMEOUT_MS = 30_000;
+// Claude Fable 5 always reasons before answering, so its turns can run well
+// past the 30s that is plenty for the other providers.
+const CLAUDE_TIMEOUT_MS = 120_000;
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
@@ -91,26 +94,40 @@ export async function callGemini(input: ProviderCallInput): Promise<ProviderCall
 }
 
 export async function callClaude(input: ProviderCallInput): Promise<ProviderCallResult> {
-  const response = await fetchWithTimeout("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": input.apiKey,
-      "anthropic-version": "2023-06-01",
+  // Fable 5 runs safety classifiers that can decline a request outright; the
+  // server-side fallback re-runs a declined request on Opus so the council
+  // still gets an answer instead of an error.
+  const isFable = input.model.startsWith("claude-fable");
+  const response = await fetchWithTimeout(
+    "https://api.anthropic.com/v1/messages",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": input.apiKey,
+        "anthropic-version": "2023-06-01",
+        ...(isFable ? { "anthropic-beta": "server-side-fallback-2026-07-01" } : {}),
+      },
+      body: JSON.stringify({
+        model: input.model,
+        max_tokens: input.maxTokens,
+        ...(isFable ? { fallbacks: "default" } : {}),
+        ...(input.system ? { system: input.system } : {}),
+        messages: [{ role: "user", content: input.prompt }],
+      }),
     },
-    body: JSON.stringify({
-      model: input.model,
-      max_tokens: input.maxTokens,
-      ...(input.system ? { system: input.system } : {}),
-      messages: [{ role: "user", content: input.prompt }],
-    }),
-  });
+    CLAUDE_TIMEOUT_MS,
+  );
   if (!response.ok) {
     throw new Error(`Claude request failed (${response.status}): ${await safeText(response)}`);
   }
   const data = (await response.json()) as {
     content?: Array<{ text?: string }>;
+    stop_reason?: string;
   };
+  if (data.stop_reason === "refusal") {
+    throw new Error("Claude declined this request (stop_reason: refusal).");
+  }
   const text = data.content?.map((block) => block.text ?? "").join("").trim();
   if (!text) throw new Error("Claude response had no text content.");
   return { provider: "anthropic", model: input.model, text };

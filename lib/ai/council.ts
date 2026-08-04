@@ -5,6 +5,8 @@
 //   - "consensus" two cheap-tier models in parallel; a third (capable-tier)
 //                 tiebreaker is only called if the first two disagree.
 //   - "deep"      all three cheap-tier models, for decisions worth the spend.
+//   - "frontier"  one frontier-tier model (Claude Fable 5), for the hardest
+//                 questions where a single top-tier answer beats a vote.
 // Results are cache-keyed on (mode, tokens, models, system, question) so a
 // repeated question never re-spends credits.
 
@@ -18,15 +20,24 @@ import {
 
 export type CouncilKeys = Partial<Record<CouncilProvider, string>>;
 
-export type CouncilModels = Record<CouncilProvider, { cheap: string; capable: string }>;
+export type CouncilTier = "cheap" | "capable" | "frontier";
+
+export type CouncilModels = Record<
+  CouncilProvider,
+  { cheap: string; capable: string; frontier?: string }
+>;
 
 export const DEFAULT_COUNCIL_MODELS: CouncilModels = {
   openai: { cheap: "gpt-4o-mini", capable: "gpt-4o" },
   gemini: { cheap: "gemini-2.0-flash", capable: "gemini-2.0-pro" },
-  anthropic: { cheap: "claude-haiku-4-5-20251001", capable: "claude-sonnet-5" },
+  anthropic: {
+    cheap: "claude-haiku-4-5-20251001",
+    capable: "claude-sonnet-5",
+    frontier: "claude-fable-5",
+  },
 };
 
-export type CouncilMode = "quick" | "consensus" | "deep";
+export type CouncilMode = "quick" | "consensus" | "deep" | "frontier";
 
 export type CouncilTask = {
   question: string;
@@ -35,7 +46,7 @@ export type CouncilTask = {
   maxTokens?: number;
 };
 
-export type CouncilAnswer = ProviderCallResult & { tier: "cheap" | "capable" };
+export type CouncilAnswer = ProviderCallResult & { tier: CouncilTier };
 
 export type CouncilResult = {
   mode: CouncilMode;
@@ -51,6 +62,11 @@ export type CouncilCache = {
 };
 
 const DEFAULT_MAX_TOKENS = 400;
+// Fable 5 always thinks before answering, and thinking tokens count against
+// max_tokens — a tight cap risks truncating the visible reply after thinking
+// spend. Billing is per token actually generated, so the high cap only costs
+// what a given answer uses.
+const FRONTIER_MAX_TOKENS = 16000;
 const AGREEMENT_THRESHOLD = 0.28;
 const PROVIDER_ORDER: CouncilProvider[] = ["anthropic", "openai", "gemini"];
 
@@ -102,16 +118,18 @@ function pickLongest(answers: CouncilAnswer[]) {
 
 async function callTier(
   provider: CouncilProvider,
-  tier: "cheap" | "capable",
+  tier: CouncilTier,
   keys: CouncilKeys,
   models: CouncilModels,
   task: CouncilTask,
 ): Promise<CouncilAnswer> {
   const apiKey = keys[provider];
   if (!apiKey) throw new Error(`Missing API key for ${provider}.`);
+  const model = models[provider][tier];
+  if (!model) throw new Error(`No ${tier}-tier model is configured for ${provider}.`);
   const result = await callerFor(provider)({
     apiKey,
-    model: models[provider][tier],
+    model,
     system: task.system,
     prompt: task.question,
     maxTokens: task.maxTokens ?? DEFAULT_MAX_TOKENS,
@@ -127,6 +145,20 @@ async function runMode(
 ): Promise<CouncilResult> {
   const providers = availableProviders(keys);
   if (providers.length === 0) throw new Error("No AI provider API keys are configured.");
+
+  if (mode === "frontier") {
+    const provider = providers.find((candidate) => models[candidate].frontier);
+    if (!provider) {
+      throw new Error(
+        "Frontier mode needs a provider with a frontier-tier model and an API key (Anthropic by default).",
+      );
+    }
+    const answer = await callTier(provider, "frontier", keys, models, {
+      ...task,
+      maxTokens: task.maxTokens ?? FRONTIER_MAX_TOKENS,
+    });
+    return { mode, answer: answer.text, agreed: null, consulted: [answer], cached: false };
+  }
 
   if (mode === "quick" || providers.length < 2) {
     const provider = pickPrimary(providers, task.question);

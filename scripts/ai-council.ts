@@ -16,6 +16,7 @@
 // Usage:
 //   node --experimental-strip-types scripts/ai-council.ts "should we cache quotes for 5 minutes or 30?"
 //   node --experimental-strip-types scripts/ai-council.ts --mode deep "pick a name for the invoices tab"
+//   node --experimental-strip-types scripts/ai-council.ts --mode frontier "hardest question, ask Claude Fable 5 directly"
 //   node --experimental-strip-types scripts/ai-council.ts --mode consensus --system "You are a senior TypeScript reviewer." "..."
 //   node --experimental-strip-types scripts/ai-council.ts --files lib/service-matching.ts,app/page.tsx "does this matching logic look right?"
 //   node --experimental-strip-types scripts/ai-council.ts --no-git --no-log "quick one-off question, don't log or add project context"
@@ -199,7 +200,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.question) {
     console.error(
-      'Usage: ai-council.ts [--mode quick|consensus|deep] [--system "..."] [--files a.ts,b.ts] ' +
+      'Usage: ai-council.ts [--mode quick|consensus|deep|frontier] [--system "..."] [--files a.ts,b.ts] ' +
         '[--no-cache] [--no-log] [--no-git] "question"',
     );
     process.exitCode = 1;
