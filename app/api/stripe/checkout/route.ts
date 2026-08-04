@@ -626,7 +626,7 @@ export async function POST(request: Request) {
             unit_amount: applicationFeeCents,
             product_data: {
               name: "Tuveloz customer service fee",
-              description: "10% marketplace service fee",
+              description: "5% marketplace service fee",
             },
           },
           quantity: 1,
@@ -1083,7 +1083,7 @@ export async function POST(request: Request) {
         ? {
             // Storefront products use the requested Destination Charge pattern:
             // Stripe transfers the provider amount immediately and leaves the
-            // 10% application fee on the Tuveloz platform.
+            // 5% application fee on the Tuveloz platform.
             application_fee_amount: applicationFeeCents,
             transfer_data: {
               destination: connectedAccountId,

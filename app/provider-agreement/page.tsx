@@ -194,7 +194,7 @@ export default function ProviderAgreementPage() {
       <section>
         <h2>11. Payment</h2>
         <p>
-          You get your full quoted price; Tuveloz&apos;s 10% fee is charged
+          You get your full quoted price; Tuveloz&apos;s 5% fee is charged
           separately to the customer. Payment is released after the job is
           marked complete, administered through Stripe, subject to the
           required completion and payment reviews. A transfer can be

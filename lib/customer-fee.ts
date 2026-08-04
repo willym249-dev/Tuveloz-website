@@ -1,5 +1,5 @@
-export const CUSTOMER_SERVICE_FEE_RATE_BPS = 1000;
-export const CUSTOMER_SERVICE_FEE_PERCENT = 10;
+export const CUSTOMER_SERVICE_FEE_RATE_BPS = 500;
+export const CUSTOMER_SERVICE_FEE_PERCENT = 5;
 
 export function customerPriceFor(
   providerQuoteCents: number,

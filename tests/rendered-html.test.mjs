@@ -575,7 +575,7 @@ test("customer and provider pages keep role-specific actions separate", async ()
   assert.ok(!providerAlertsSource.includes("/provider-jobs?token="));
 });
 
-test("build preserves the proposed 10 percent test configuration and fee snapshots", async () => {
+test("build preserves the proposed 5 percent test configuration and fee snapshots", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
@@ -599,11 +599,11 @@ test("build preserves the proposed 10 percent test configuration and fee snapsho
 
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 10% in test)"));
-  assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 10%"));
+  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 5% in test)"));
+  assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 5%"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
   assert.ok(contents.includes("Accepted service fees"));
-  assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 1000"));
+  assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 500"));
   assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
   assert.ok(migration.includes("customer_fee_rate_bps"));
   assert.ok(migration.includes("customer_fee_cents"));

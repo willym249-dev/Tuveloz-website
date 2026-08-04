@@ -84,7 +84,7 @@ These cannot be truthfully checked off by software alone:
 
 - Which exact services and Maryland locations launch first.
 - Minimum provider documents, insurance limits, verification source, renewal timing, and approved badge wording for each service.
-- Whether the proposed customer fee remains 10% and how taxes and processing costs are handled.
+- Whether the proposed customer fee remains 5% and how taxes and processing costs are handled.
 - Cancellation/no-show amounts, refund waterfall, chargeback allocation, reserves, negative balances, and payout timing.
 - Parts ownership, returned-parts rules, provider/manufacturer warranties, and whether TUVELOZ offers any separate guarantee.
 - Customer and provider support contacts, response deadlines, incident escalation, claim handoff, and appeal deadlines.

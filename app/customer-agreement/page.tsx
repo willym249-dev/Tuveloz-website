@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="August 1, 2026"
+      updated="August 4, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -106,7 +106,7 @@ export default function CustomerAgreementPage() {
         <h2>7. Price, payment, cancellation, and refunds</h2>
         <p>
           Real customer payments are currently disabled. The product
-          configuration proposes a customer service fee equal to 10% of the
+          configuration proposes a customer service fee equal to 5% of the
           provider subtotal, subject to documented compliance with applicable
           law and final CPA or tax-adviser, payment-processor, insurance, and
           operational approval. If that pricing is adopted, the provider

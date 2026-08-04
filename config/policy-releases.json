@@ -1,17 +1,17 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T04:13:34.431Z",
-    "releaseId": "terms-2026-08-04",
-    "reviewBodyHash": "1a4d158d714ab03297f90d6f491e504f887eb217de24d52fcb16bbaa55d143ff",
-    "canonicalBodyHash": "1a4d158d714ab03297f90d6f491e504f887eb217de24d52fcb16bbaa55d143ff",
+    "effectiveAt": "2026-08-04T05:12:24.189Z",
+    "releaseId": "terms-2026-08-04-r2",
+    "reviewBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
+    "canonicalBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
     "releaseStatus": "draft",
     "effectiveAt": "",
     "releaseId": "",
-    "reviewBodyHash": "46dc085ab89ce9484c488b8af09a8f6989b8b6013e498b7f5516d597e363d6e8",
+    "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
     "canonicalBodyHash": "",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
@@ -19,7 +19,7 @@
     "releaseStatus": "draft",
     "effectiveAt": "",
     "releaseId": "",
-    "reviewBodyHash": "d6e6b5c049097784a7b68d8a15e6236ae147f2ecc7a2cac86842a2ae65d5ae3a",
+    "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
     "canonicalBodyHash": "",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
@@ -35,7 +35,7 @@
     "releaseStatus": "draft",
     "effectiveAt": "",
     "releaseId": "",
-    "reviewBodyHash": "61efc38268fb558e3bfc59bac96f11d0dffcda0690ca848820ed55e0ac35e1bd",
+    "reviewBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
     "canonicalBodyHash": "",
     "sourceFile": "app/payments/page.tsx"
   },

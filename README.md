@@ -19,7 +19,7 @@ deployment credentials, API keys, or production environment values.
 - Accepted-quote work authorizations and customer-approved change orders
 - Participant-only job condition, progress, parts, and completion evidence records
 - Signed-in Privacy Center with data export, communication choices, and verified privacy requests
-- Itemized 10% customer service fee stored with each provider quote
+- Itemized 5% customer service fee stored with each provider quote
 - Stripe Connect V2 provider onboarding with live status read directly from Stripe
 - Platform products, hosted Checkout, signed webhooks, and a simple storefront
 - Destination Charges for storefront products and owner-released transfers for completed quote jobs
