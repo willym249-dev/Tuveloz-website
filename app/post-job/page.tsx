@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   CUSTOMER_REQUEST_ACCEPTANCE_TEXT,
@@ -40,6 +41,12 @@ import { AddressAutocompleteInput } from "../components/address-autocomplete-inp
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "../components/location-datalists";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
+
+export const metadata: Metadata = {
+  title: "Customer Launch Status",
+  description:
+    "Customer accounts are open; service requests are not yet available. See where Tuveloz stands and get ready for launch in Montgomery County, MD.",
+};
 
 const exactServices = SERVICES.filter((service) => service.code !== "general_auto_repair");
 const exactServiceFactRequirements = exactServices.map((service) => ({

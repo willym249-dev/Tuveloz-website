@@ -205,7 +205,7 @@ test("build gives mobile mechanics and service-truck operators clear prominence"
   assert.ok(contents.includes("mobile mechanic/service-truck interest"));
 });
 
-test("layout uses the enlarged drop favicon with a cache-busting filename", async () => {
+test("layout uses the brand badge favicon with a cache-busting reference", async () => {
   const favicon = await readFile(
     new URL("../public/tuveloz-favicon-v2.svg", import.meta.url),
     "utf8",
@@ -215,9 +215,10 @@ test("layout uses the enlarged drop favicon with a cache-busting filename", asyn
     "utf8",
   );
 
-  assert.ok(layout.includes("/tuveloz-favicon-v2.svg"));
-  assert.ok(favicon.includes("M256 380"));
-  assert.ok(favicon.includes("#FF6A00"));
+  assert.ok(layout.includes("/tuveloz-favicon-v2.svg?v="));
+  // The favicon embeds the exact social-kit badge art (navy fill, orange
+  // keyline) rather than a hand-drawn approximation of it.
+  assert.ok(favicon.includes("data:image/png;base64,"));
 });
 
 test("provider approval requires applicable state and local proof without requesting unnecessary documents", async () => {

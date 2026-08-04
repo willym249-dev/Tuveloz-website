@@ -597,6 +597,11 @@ export function ProviderSignupForm() {
               </p>
             </>
           )}
+          <p className="hint">
+            {providerFormIsSpanish
+              ? "Todos los proveedores también completan la configuración de impuestos y pagos antes del primer pago — allí firma el formulario de impuestos requerido (Formulario W-9 del IRS), y Tuveloz emite un 1099 por las ganancias anuales aplicables, como lo exige el Acuerdo de Proveedor."
+              : "Every provider also completes tax and payout setup before their first payout — that's where you sign the required tax form (IRS Form W-9), and Tuveloz issues a 1099 for applicable annual earnings, as the Provider Agreement requires."}
+          </p>
           {hasVisibleLegalRequirements && (
             <section className="provider-eligibility-guide">
               <div className="eligibility-guide-heading">

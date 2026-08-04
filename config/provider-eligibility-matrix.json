@@ -321,15 +321,15 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": [],
+        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
       "job_control_profile": "entry_tier_customer_vehicle",
       "allowed_scope": ["customer_requested_vehicle_images", "record_customer_provided_facts"],
       "prohibited_scope": ["mechanical_opinion", "diagnosis", "inspection_result", "repair_recommendation"],
-      "policy_notes": "No unregistered customer-work lane exists at launch. A separate nonrepair pathway requires written OCP confirmation and a documented mandatory-requirements review before it is added to this matrix."
+      "policy_notes": "Photo documentation is not vehicle repair or maintenance, so no Chapter 31A registration document is required. The lane stays disabled until the written OCP confirmation and mandatory-requirements review complete."
     },
     "provisional_visual_observation_report": {
       "launch_state": "disabled_pending_mandatory_requirements_insurer",
@@ -338,8 +338,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": [],
+        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -354,8 +354,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -370,8 +370,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -385,8 +385,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -401,8 +401,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -417,8 +417,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -433,8 +433,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency", "roadside_stop_work_plan"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency", "roadside_stop_work_plan"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -449,8 +449,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "spent_battery_handling_plan", "provisional_service_competency", "roadside_stop_work_plan"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "spent_battery_handling_plan", "provisional_service_competency", "roadside_stop_work_plan"]
+        "independent_startup": ["ocp_vehicle_service_registration", "spent_battery_handling_plan"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "spent_battery_handling_plan"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -465,8 +465,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "provisional_service_competency", "roadside_stop_work_plan"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency", "roadside_stop_work_plan"]
+        "independent_startup": ["ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -481,8 +481,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "wash_water_plan", "provisional_service_competency"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "business_auto_coverage", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "wash_water_plan", "provisional_service_competency"]
+        "independent_startup": ["wash_water_plan"],
+        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "wash_water_plan"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_with_approved_wash_water_controls",
@@ -497,7 +497,7 @@
       "allowed_provider_levels": ["sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "general_liability_coi", "broker_coverage_determination", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "provisional_service_competency", "used_oil_handling_plan"]
+        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "used_oil_handling_plan"]
       },
       "supervision_by_pathway": {"sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_fixed_private_property_only",
@@ -513,9 +513,6 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage",
         "spent_battery_handling_plan"
       ],
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -531,10 +528,7 @@
       "allowed_provider_levels": ["standard_provider"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
-        "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage"
+        "ocp_vehicle_service_registration"
       ],
       "conditional_requirements": [
         "mde_scrap_tire_authorization",
@@ -552,10 +546,7 @@
       "allowed_provider_levels": ["standard_provider"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
-        "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage"
+        "ocp_vehicle_service_registration"
       ],
       "location_rule": "approved_private_property_only",
       "job_control_profile": "standard_customer_vehicle",
@@ -570,10 +561,6 @@
       "allowed_provider_levels": ["standard_provider"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
-        "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage",
         "wash_water_plan"
       ],
       "location_rule": "approved_private_property_with_approved_wash_water_controls",
@@ -589,9 +576,6 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage",
         "epa_section_609_certificate"
       ],
       "location_rule": "approved_location_for_mvac_service",
@@ -606,8 +590,6 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
         "mde_vehicle_refinishing_permit"
       ],
       "location_rule": "approved_permitted_fixed_facility_only",
@@ -622,8 +604,6 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
         "window_tint_compliance_controls"
       ],
       "location_rule": "approved_private_or_fixed_location_only",
@@ -639,10 +619,8 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_towing_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage",
         "tow_vehicle_registration",
+        "business_auto_coverage",
         "towing_custody_coverage"
       ],
       "location_rule": "approved_towing_and_storage_workflow_only",
@@ -658,9 +636,7 @@
       "requirements": [
         "md_locksmith_business_license",
         "md_locksmith_technician_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage"
+        "general_liability_coi"
       ],
       "location_rule": "approved_lockout_identity_and_location_workflow_only",
       "job_control_profile": "specialty_customer_vehicle",
@@ -674,9 +650,7 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "mva_inspection_station_license",
-        "mva_inspection_mechanic_license",
-        "general_liability_coi",
-        "broker_coverage_determination"
+        "mva_inspection_mechanic_license"
       ],
       "location_rule": "licensed_fixed_inspection_station_only",
       "job_control_profile": "specialty_customer_vehicle",
@@ -691,10 +665,7 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "motor_fuel_registration",
-        "fuel_hazmat_fire_package",
-        "general_liability_coi",
-        "broker_coverage_determination",
-        "business_auto_coverage"
+        "fuel_hazmat_fire_package"
       ],
       "location_rule": "approved_fuel_delivery_route_and_stop_work_workflow_only",
       "job_control_profile": "specialty_customer_vehicle",
@@ -709,8 +680,6 @@
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "requirements": [
         "ocp_vehicle_service_registration",
-        "general_liability_coi",
-        "broker_coverage_determination",
         "ev_high_voltage_package"
       ],
       "location_rule": "approved_ev_high_voltage_facility_only",
@@ -723,8 +692,8 @@
   },
   "stage_snapshot_fields": {
     "discovery": ["provider_business_id", "relationship_path", "provider_level", "service_code", "jurisdiction", "rules_engine_version", "holds_snapshot"],
-    "quote": ["provider_business_id", "provider_business_job_acceptance", "service_code", "jurisdiction", "requested_operations", "quote_version", "conditional_requirement_results", "broker_coverage_discovery_result", "rules_engine_version", "holds_snapshot"],
-    "booking_common": ["provider_business_id", "performing_person_id", "performing_person_identity_result_id", "performing_person_age_result_id", "performing_person_service_eligibility_snapshot_id", "relationship_path", "provider_level", "registration_holder_id", "assigned_by_provider_business_id", "provider_assignment_time", "service_code", "jurisdiction", "scheduled_time", "job_location", "broker_coverage_determination_id", "competency_evidence_ids", "job_control_profile", "location_rule_result", "scope_check_result", "agreement_versions", "customer_person_acceptance", "rules_engine_version", "holds_snapshot"],
+    "quote": ["provider_business_id", "provider_business_job_acceptance", "service_code", "jurisdiction", "requested_operations", "quote_version", "conditional_requirement_results", "coverage_evidence_discovery_result", "rules_engine_version", "holds_snapshot"],
+    "booking_common": ["provider_business_id", "performing_person_id", "performing_person_identity_result_id", "performing_person_age_result_id", "performing_person_service_eligibility_snapshot_id", "relationship_path", "provider_level", "registration_holder_id", "assigned_by_provider_business_id", "provider_assignment_time", "service_code", "jurisdiction", "scheduled_time", "job_location", "coverage_evidence_ids", "competency_evidence_ids", "job_control_profile", "location_rule_result", "scope_check_result", "agreement_versions", "customer_person_acceptance", "rules_engine_version", "holds_snapshot"],
     "booking_sponsored_only": ["sponsoring_provider_id", "personnel_roster_version", "sponsored_employment_record_id", "workers_comp_evidence_id", "supervisor_id", "supervision_level", "supervisor_assignment_id"],
     "booking_provider_employee_only": ["provider_personnel_roster_version", "provider_employee_record_id", "workers_comp_evidence_id"],
     "booking_independent_only": ["verified_owner_operator_id", "no_employee_attestation_or_workers_comp_evidence_id"],
@@ -738,8 +707,8 @@
   "provider_business_relationship_rule": "relationship_path == 'independent_startup' ? registration_holder_id == provider_business_id && (no_employee_attestation.current || workers_comp_coverage.current) && (provider_level != 'provisional_independent' || provisional_provider_addendum.current) : relationship_path == 'sponsored_trainee_employee' ? registration_holder_id == sponsoring_provider_id && workers_comp_coverage.current && sponsored_provider_addendum.current : relationship_path == 'provider_business_employee' && registration_holder_id == provider_business_id && provider_level in ['standard_provider', 'specialty_provider'] && workers_comp_coverage.current && provider_personnel_addendum.current",
   "performing_person_binding_rule": "performing_person_identity_result.valid && performing_person_age_result.verified_18_plus && performing_person_service_eligibility_snapshot.matches(performing_person_id, provider_business_id_or_sponsoring_provider_id, service_code, job_jurisdiction, scheduled_date) && (relationship_path == 'independent_startup' ? performing_person_id == verified_owner_operator_id : relationship_path == 'sponsored_trainee_employee' ? performing_person_id in sponsored_personnel_roster && sponsored_employment_attestation.matches(performing_person_id, sponsoring_provider_id, scheduled_date) && competency_evidence.matches(performing_person_id, sponsoring_provider_id, service_code, job_jurisdiction, scheduled_date) : relationship_path == 'provider_business_employee' && performing_person_id in provider_personnel_roster && provider_employee_record.matches(performing_person_id, provider_business_id, scheduled_date))",
   "provider_assignment_rule": "relationship_path == 'independent_startup' ? assigned_by_provider_business_id == provider_business_id : relationship_path == 'sponsored_trainee_employee' ? assigned_by_provider_business_id == sponsoring_provider_id && trainee_independent_bid == false && direct_trainee_payout == false : assigned_by_provider_business_id == provider_business_id",
-  "insurance_discovery_rule": "broker_coverage_determination.current && broker_coverage_determination.matches(provider_business_id, relationship_path_or_worker_class, service_code, jurisdiction, scheduled_date_when_known, required_limits, required_endorsements) && !broker_coverage_determination.exclusion_applies",
-  "insurance_booking_rule": "insurance_discovery_rule_passes && broker_coverage_determination.matches(performing_person_id_or_worker_class, job_location_type, vehicle_use, scheduled_date)",
+  "insurance_discovery_rule": "service_coverage_requirements = service_requirements.where(is_coverage_evidence); service_coverage_requirements.empty || all(service_coverage_requirements.current && matches(provider_business_id, service_code, jurisdiction))",
+  "insurance_booking_rule": "insurance_discovery_rule_passes && (service_coverage_requirements.empty || all(service_coverage_requirements.matches(job_location_type, vehicle_use, scheduled_date)))",
   "supervision_booking_rule": "relationship_path != 'sponsored_trainee_employee' || (service.supervision_by_pathway[relationship_path] == supervision_level && supervisor_assignment.valid_for(service_code, performing_person_id, scheduled_time))",
   "direct_supervision_start_rule": "supervision_level != 'direct_supervision' || (supervisor_physical_checkin.current && supervisor_id == supervisor_assignment.supervisor_id && supervisor_checkin.location == job_location && performing_person_checkin.location == job_location && ability_to_intervene_attestation.accepted && pre_job_checkpoint.accepted)",
   "supervision_completion_rule": "relationship_path != 'sponsored_trainee_employee' || (all(required_milestone_checkpoints.timestamped_and_signed) && supervisor_completion_checkpoint.accepted && provider_completion_signoff.accepted)",

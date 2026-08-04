@@ -18,13 +18,17 @@ async function publicReviewsAreAvailable() {
   }
 }
 
-function marketplacePausedResponse() {
+/**
+ * Reading public reviews while onboarding-only is an expected empty state, so
+ * GET answers 200; POST keeps 503 because submitting is genuinely unavailable.
+ */
+function marketplacePausedResponse(status: number) {
   return noStoreJson({
     error: marketplacePausedMessage("discovery"),
     code: "MARKETPLACE_ONBOARDING_ONLY",
     reviews: [],
     summary: { average: 0, count: 0 },
-  }, 503);
+  }, status);
 }
 
 function clean(value: unknown, max: number) {
@@ -40,7 +44,7 @@ function publicCustomerName(name: string) {
 
 export async function GET() {
   if (!(await publicReviewsAreAvailable())) {
-    return marketplacePausedResponse();
+    return marketplacePausedResponse(200);
   }
   const publishedReviews = await getDb().select({
     id: jobReviews.id,
@@ -102,7 +106,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (!(await publicReviewsAreAvailable())) {
-    return marketplacePausedResponse();
+    return marketplacePausedResponse(503);
   }
   const body = (await request.json()) as {
     token?: string;
