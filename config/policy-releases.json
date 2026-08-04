@@ -48,11 +48,11 @@
     "sourceFile": "app/marketplace-conduct/page.tsx"
   },
   "provisional_provider_policy": {
-    "releaseStatus": "draft",
-    "effectiveAt": "",
-    "releaseId": "",
-    "reviewBodyHash": "e0c9460b370d78cc0dc15a787ac18f42866e33fcc6939b03f75a9826a3ad4442",
-    "canonicalBodyHash": "",
+    "releaseStatus": "active",
+    "effectiveAt": "2026-08-04T05:38:44.656Z",
+    "releaseId": "provisional-provider-policy-2026-08-04",
+    "reviewBodyHash": "8484d87588301c99d394b39a02d04d907ad9f71fff88c402dc501a9a05fa98f0",
+    "canonicalBodyHash": "8484d87588301c99d394b39a02d04d907ad9f71fff88c402dc501a9a05fa98f0",
     "sourceFile": "app/provisional-provider-policy/page.tsx"
   }
 }

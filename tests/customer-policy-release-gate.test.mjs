@@ -13,7 +13,7 @@ test("customer policies remain draft and require a complete hashed release", asy
   ]);
 
   for (const [key, release] of Object.entries(manifest)) {
-    if (["terms", "provider_agreement", "customer_agreement", "payment_policy"].includes(key)) {
+    if (["terms", "provider_agreement", "customer_agreement", "payment_policy", "provisional_provider_policy"].includes(key)) {
       assert.equal(release.releaseStatus, "active");
       assert.match(release.canonicalBodyHash, /^[a-f0-9]{64}$/i);
     } else {

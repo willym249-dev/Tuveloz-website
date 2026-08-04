@@ -6,7 +6,7 @@ export default function ProvisionalProviderPolicyPage() {
       eyebrow="Providers • Operational review draft v0.11"
       title="Provisional Provider and Trainee Policy"
       summary="A deny-by-default draft for independent startup owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="July 31, 2026"
+      updated="August 4, 2026"
     >
       <section>
         <h2>1. Status and controlling rule</h2>
