@@ -216,7 +216,7 @@ test("layout uses the enlarged drop favicon with a cache-busting filename", asyn
   );
 
   assert.ok(layout.includes("/tuveloz-favicon-v2.svg"));
-  assert.ok(favicon.includes("M16 21.4"));
+  assert.ok(favicon.includes("M256 380"));
   assert.ok(favicon.includes("#FF6A00"));
 });
 
