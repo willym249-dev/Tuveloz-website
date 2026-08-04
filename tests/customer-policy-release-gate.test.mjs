@@ -12,9 +12,14 @@ test("customer policies remain draft and require a complete hashed release", asy
     source("config/policy-releases.json").then(JSON.parse),
   ]);
 
-  for (const release of Object.values(manifest)) {
-    assert.equal(release.releaseStatus, "draft");
-    assert.equal(release.canonicalBodyHash, "");
+  for (const [key, release] of Object.entries(manifest)) {
+    if (key === "terms") {
+      assert.equal(release.releaseStatus, "active");
+      assert.match(release.canonicalBodyHash, /^[a-f0-9]{64}$/i);
+    } else {
+      assert.equal(release.releaseStatus, "draft");
+      assert.equal(release.canonicalBodyHash, "");
+    }
   }
   assert.match(registry, /policyDocumentRelease\("terms"\)/);
   assert.match(registry, /releaseStatus === "active"/);
