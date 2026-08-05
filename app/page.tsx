@@ -891,9 +891,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For customers</span>
             <h3>Compare your options. Choose what works.</h3>
             <p>
-              After launch, customers will be able to request approved services,
-              compare eligible providers and quotes, and choose what works best.
-              Service requests are not yet available.
+              Soon you&apos;ll request the service you need, compare local providers
+              and quotes side by side, and pick what works best — no pressure, no
+              obligation. We&apos;re almost there; check the launch status anytime.
             </p>
             <ul>
               <li><span aria-hidden="true">✓</span> Choose from available services</li>
@@ -1582,8 +1582,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <li>Give us your business details and verify your email to submit.</li>
               </ol>
               <div className="legal-requirement-note" aria-label="Service status note">
-                <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
-                <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
+                <strong>Explore and pick your services freely — nothing&apos;s locked in.</strong>
+                <small>Each service switches on for real jobs once its legal and insurance basics are in place, and we&apos;ll walk you through anything that&apos;s needed.</small>
               </div>
             </section>
             <section className="provider-handles" aria-labelledby="provider-handles-title">
@@ -1609,9 +1609,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 ))}
               </div>
               <small className="provider-handles-note">
-                These tools open for real customer jobs only after launch review. You
-                stay an independent business — Tuveloz never sets your prices, schedule,
-                or how you do the work.
+                Get set up and comfortable now — these tools come online for real jobs
+                as we launch, and we&apos;ll keep you posted. You&apos;re always your own
+                business: Tuveloz never sets your prices, schedule, or how you work.
               </small>
             </section>
           </div>
@@ -1646,8 +1646,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           ))}
         </div>
         <p className="difference-note">
-          These describe how Tuveloz is designed to work. Every service and
-          payment opens for real customer jobs only after launch review.
+          This is how Tuveloz is built to work for you. Services and payments
+          switch on as each one is ready — no surprises, and we&apos;ll keep you
+          in the loop the whole way.
         </p>
       </section>
 
