@@ -16,7 +16,8 @@ type RuntimeEnv = Record<string, string | undefined>;
 export type AccountSecurityAction =
   | "account_created"
   | "password_reset"
-  | "passkey_added";
+  | "passkey_added"
+  | "phone_updated";
 
 type QueuedNotification = {
   eventKey: string;
@@ -263,6 +264,7 @@ export async function sendAccountSecurityAlert(input: {
   const labels: Record<Exclude<AccountSecurityAction, "account_created">, string> = {
     password_reset: "Your Tuveloz password was reset",
     passkey_added: "A passkey (Face ID, Touch ID, or device lock) was added",
+    phone_updated: "A phone number for text sign-in was added or changed",
   };
   const label = labels[input.action];
   await queueNotification({
