@@ -36,6 +36,7 @@ import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
 import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
+import { FollowAlong } from "./social-links";
 
 /**
  * New provider signups only ever create independent-contractor accounts.
@@ -682,6 +683,7 @@ export function ProviderSignupForm() {
         <button type="button" onClick={() => setApplicationSent(false)}>
           {providerFormIsSpanish ? "Iniciar otra verificación" : "Start another verification"}
         </button>
+        <FollowAlong source="provider_application_received" spanish={providerFormIsSpanish} tone="panel" />
       </div>
     );
   }

@@ -1825,6 +1825,81 @@ footer > p {
   stroke-width: 1.8;
 }
 
+/* Post-commit follow prompt (see FollowAlong in components/social-links.tsx).
+   Two tones because it lands on the navy account shell and on the white
+   application-received card. */
+.follow-along {
+  align-items: center;
+  border-radius: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 24px;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding: 20px 24px;
+  text-align: left;
+  width: 100%;
+}
+
+.follow-along-copy {
+  max-width: 430px;
+}
+
+.follow-along h3 {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+.follow-along p {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Navy account shell (/welcome) — matches .account-card. */
+.follow-along-shell {
+  background: rgba(13, 35, 54, 0.96);
+  border: 1px solid rgba(255, 106, 0, 0.22);
+}
+
+.follow-along.follow-along-shell h3 {
+  color: #ffffff;
+}
+
+.follow-along-shell p {
+  color: #b8c7d4;
+}
+
+/* Warm dark form panel (application received, inside .provider-form). The
+   heading selector is doubled so it beats the themed `.success-message h3`
+   rule further down this file. */
+.follow-along-panel {
+  background: #191919;
+  border: 1px solid #3b281d;
+}
+
+.follow-along.follow-along-panel h3 {
+  color: #f7f3ef;
+}
+
+.follow-along-panel p {
+  color: #b3a79d;
+}
+
+.follow-along-panel .footer-social-link {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #3b281d;
+}
+
+@media (max-width: 560px) {
+  .follow-along {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 @media (max-width: 1050px) {
   .site-header {
     grid-template-columns: 1fr auto;

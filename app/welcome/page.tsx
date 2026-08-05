@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BrandMark } from "../components/tuveloz-icons";
+import { FollowAlong } from "../components/social-links";
 
 export default function WelcomePage() {
   const searchParams = useSearchParams();
@@ -56,6 +57,7 @@ export default function WelcomePage() {
             Tuveloz is an online marketplace. Independent providers—not Tuveloz—perform the vehicle services.
           </p>
         </section>
+        <FollowAlong source={isProvider ? "welcome_provider" : "welcome_customer"} />
       </section>
     </main>
   );

@@ -170,19 +170,22 @@ both sets are already written in `media/captions-copy-paste.txt`.
 
 ## 5. Capture the follows already being earned
 
-Two gaps on the site, both cheap:
+**Built.** The follow prompt (`FollowAlong` in
+`app/components/social-links.tsx`) now runs at the two moments where intent is
+highest — the provider application-received screen and `/welcome` for both
+roles. Previously the only ask on the entire site was the footer.
 
-1. **Social links only appear in the footer.** The highest-propensity follower
-   in existence is a provider who just submitted an application — they've
-   already decided they're interested and they're staring at a confirmation
-   screen. A "follow along until launch" block on the post-signup confirmation
-   and on `/welcome` would convert a meaningful share of them. Same for the
-   customer waitlist path.
-2. **Google entry is still commented out** in `social-links.tsx` — unblocked
-   the moment Lever 1 completes.
+Clicks emit `social_follow_clicked` with the platform and the placement
+(`provider_application_received`, `welcome_provider`, `welcome_customer`), so
+§6 is measurable rather than a guess. Footer links stay untracked.
 
-Neither is built yet; both are small and worth doing before the DM push
-starts, so the traffic it generates lands somewhere that asks for the follow.
+**Still open:** the Google entry is commented out in `social-links.tsx` and
+stays that way until Lever 1 completes — the moment the Business Profile is
+verified, drop the share link in and it appears in the footer and in every
+follow prompt at once.
+
+Worth considering next: the same prompt on the customer-request confirmation
+once customer launch is closer, and on the homepage email capture.
 
 ---
 
