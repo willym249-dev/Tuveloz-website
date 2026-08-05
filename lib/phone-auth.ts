@@ -405,5 +405,3 @@ export async function confirmPhoneChange(
   });
   return { ok: true as const, phone };
 }
-
-export const PHONE_AUTH_ROLES = ACCOUNT_ROLES;

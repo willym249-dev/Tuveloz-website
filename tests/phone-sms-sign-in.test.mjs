@@ -75,6 +75,10 @@ test("phone sign-in only creates a customer/provider session and never owner acc
   assert.match(lib, /const session = await createAccountSession\(challenge\.email, role\);/);
   // The module never touches the separate Cloudflare Access owner path.
   assert.doesNotMatch(lib, /owner-auth|isVerifiedOwnerRequest|OWNER_ACCESS/);
+  // Guard against referencing an unimported identifier: the build strips types
+  // without type-checking, so an undefined name here would 500 every phone
+  // route only at runtime. ACCOUNT_ROLES is not imported and must not appear.
+  assert.doesNotMatch(lib, /\bACCOUNT_ROLES\b/);
 
   // The account page states the separation in the UI.
   const accountPage = await source("app/account/page.tsx");
@@ -111,10 +115,13 @@ test("adding or changing a phone requires step-up password re-authentication", a
   assert.match(route, /await confirmPhoneChange\(\s*session\.email,\s*session\.role,\s*body\.phone,\s*body\.code,\s*\)/);
   assert.match(route, /if \(!isSameOriginRequest\(request\)\)/);
 
-  // The password re-check honors the account lockout window.
+  // The password re-check enforces the same lockout as signInWithPassword, so
+  // the step-up endpoint cannot be used as an unthrottled password oracle.
   const auth = await source("lib/account-auth.ts");
-  assert.match(auth, /export async function accountPasswordMatches\(email: string, password: string\)/);
-  assert.match(auth, /if \(!credential \|\| lockExpiresAt > Date\.now\(\)\) return false;/);
+  const stepUp = auth.slice(auth.indexOf("export async function accountPasswordMatches"));
+  assert.match(stepUp, /export async function accountPasswordMatches\(email: string, password: string\)/);
+  assert.match(stepUp, /failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS/);
+  assert.match(stepUp, /lockedUntil: failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS/);
 });
 
 test("a phone change binds one number per account and alerts the account out of band", async () => {

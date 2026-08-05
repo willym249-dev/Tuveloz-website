@@ -886,8 +886,11 @@ export async function accountHasPassword(email: string) {
 /**
  * Step-up re-authentication for an already-signed-in session (for example,
  * before adding or changing a phone number). It confirms the account password
- * without opening a new email challenge and honors the same lockout window as
- * signInWithPassword. It never grants a session on its own.
+ * without opening a new email challenge and enforces the same lockout as
+ * signInWithPassword: each wrong guess increments failedAttempts and, at
+ * PASSWORD_LOGIN_MAX_ATTEMPTS, locks the account for PASSWORD_LOCKOUT_MS — so
+ * this endpoint cannot be used as an unthrottled password oracle. It never
+ * grants a session on its own.
  */
 export async function accountPasswordMatches(email: string, password: string) {
   const [credential] = await getDb().select().from(accountCredentials)
@@ -899,8 +902,34 @@ export async function accountPasswordMatches(email: string, password: string) {
   const lockExpiresAt = credential?.lockedUntil
     ? parseStoredDate(credential.lockedUntil)
     : 0;
-  if (!credential || lockExpiresAt > Date.now()) return false;
-  return constantTimeEqual(credential.passwordHash, suppliedHash);
+  const currentlyLocked = lockExpiresAt > Date.now();
+  const passwordMatches = Boolean(
+    credential && constantTimeEqual(credential.passwordHash, suppliedHash),
+  );
+
+  if (!credential || currentlyLocked || !passwordMatches) {
+    if (credential && !currentlyLocked && !passwordMatches) {
+      const previousAttempts = lockExpiresAt > 0 ? 0 : credential.failedAttempts;
+      const failedAttempts = previousAttempts + 1;
+      await getDb().update(accountCredentials).set({
+        failedAttempts: failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS ? 0 : failedAttempts,
+        lockedUntil: failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS
+          ? new Date(Date.now() + PASSWORD_LOCKOUT_MS).toISOString()
+          : "",
+        updatedAt: new Date().toISOString(),
+      }).where(eq(accountCredentials.email, email));
+    }
+    return false;
+  }
+
+  if (credential.failedAttempts > 0 || credential.lockedUntil) {
+    await getDb().update(accountCredentials).set({
+      failedAttempts: 0,
+      lockedUntil: "",
+      updatedAt: new Date().toISOString(),
+    }).where(eq(accountCredentials.email, email));
+  }
+  return true;
 }
 
 export async function verifyPasswordSignIn(
