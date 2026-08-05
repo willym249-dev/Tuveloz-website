@@ -13,6 +13,7 @@ const KNOWN_EVENTS = new Set([
   "quote_received",
   "quote_accepted",
   "job_completed",
+  "social_follow_clicked",
 ]);
 
 export async function POST(request: Request) {

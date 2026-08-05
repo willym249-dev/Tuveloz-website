@@ -170,7 +170,9 @@ test("migration 0051 creates the phone tables with a unique number index and is 
   assert.doesNotMatch(migration, /customer_requests|provider_quotes|provider_profiles/);
 
   const journal = JSON.parse(await source("drizzle/meta/_journal.json"));
-  assert.equal(journal.entries.at(-1).tag, "0051_sms_phone_sign_in");
+  // Pinned by index rather than by being the newest entry, so later
+  // migrations can be journaled without breaking this check.
+  assert.equal(journal.entries[51].tag, "0051_sms_phone_sign_in");
 
   const schema = await source("db/schema.ts");
   assert.match(schema, /export const accountPhoneNumbers = sqliteTable\(\s*"account_phone_numbers"/);

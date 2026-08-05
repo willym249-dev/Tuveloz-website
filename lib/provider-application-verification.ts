@@ -39,6 +39,7 @@ import {
   serializeProviderServices,
 } from "./service-matching";
 import { PROVIDER_POLICY_BUNDLE_VERSION } from "./policies";
+import { consumeFixedWindow } from "./public-write-rate-limit";
 
 export const PROVIDER_APPLICATION_MAX_JSON_BYTES = 48 * 1024;
 export const PROVIDER_APPLICATION_CHALLENGE_LIFETIME_MS = 10 * 60 * 1000;
@@ -460,36 +461,6 @@ function randomDigits() {
   const value = new Uint32Array(1);
   crypto.getRandomValues(value);
   return String(value[0] % 1_000_000).padStart(6, "0");
-}
-
-async function consumeFixedWindow(
-  action: string,
-  keyHash: string,
-  limit: number,
-  windowMs: number,
-) {
-  const now = Date.now();
-  const cutoff = now - windowMs;
-  const rows = await getDb().insert(publicWriteRateLimits).values({
-    action,
-    keyHash,
-    windowStartedAt: now,
-    requestCount: 1,
-    updatedAt: new Date(now).toISOString(),
-  }).onConflictDoUpdate({
-    target: [publicWriteRateLimits.action, publicWriteRateLimits.keyHash],
-    set: {
-      windowStartedAt: sql<number>`CASE WHEN ${publicWriteRateLimits.windowStartedAt} <= ${cutoff} THEN ${now} ELSE ${publicWriteRateLimits.windowStartedAt} END`,
-      requestCount: sql<number>`CASE WHEN ${publicWriteRateLimits.windowStartedAt} <= ${cutoff} THEN 1 ELSE ${publicWriteRateLimits.requestCount} + 1 END`,
-      updatedAt: new Date(now).toISOString(),
-    },
-  }).returning({
-    count: publicWriteRateLimits.requestCount,
-    windowStartedAt: publicWriteRateLimits.windowStartedAt,
-  });
-  return Boolean(rows[0])
-    && rows[0].windowStartedAt > cutoff
-    && rows[0].count <= limit;
 }
 
 async function sendProviderApplicationCode(email: string, code: string) {

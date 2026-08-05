@@ -69,6 +69,13 @@ Update the non-secret placeholders under `vars` in `wrangler.jsonc`:
   `cf-access-authenticated-user-email` when using Cloudflare Access
 - `RESEND_FROM_EMAIL`: the verified sender used for sign-in codes and provider
   alerts
+- `LAUNCH_UPDATES_POSTAL_ADDRESS`: the full mailing address printed at the foot
+  of every pre-launch launch-update email — street or PO box, city, state, ZIP.
+  US commercial email must identify the sender by physical address, so this is
+  required before the first marketing send. While it is empty the launch-update
+  sequence sends nothing at all and logs the reason, rather than mailing
+  without it. Prefer a PO box or registered agent address over a home address:
+  it is printed in every marketing email and cannot be recalled once sent.
 
 Save a random authentication secret of at least 32 characters and the Resend
 key as Cloudflare secrets:

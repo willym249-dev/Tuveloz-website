@@ -1825,6 +1825,166 @@ footer > p {
   stroke-width: 1.8;
 }
 
+/* Post-commit follow prompt (see FollowAlong in components/social-links.tsx).
+   Two tones because it lands on the navy account shell and on the white
+   application-received card. */
+.follow-along {
+  align-items: center;
+  border-radius: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 24px;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding: 20px 24px;
+  text-align: left;
+  width: 100%;
+}
+
+.follow-along-copy {
+  max-width: 430px;
+}
+
+.follow-along h3 {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+}
+
+.follow-along p {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Navy account shell (/welcome) — matches .account-card. */
+.follow-along-shell {
+  background: rgba(13, 35, 54, 0.96);
+  border: 1px solid rgba(255, 106, 0, 0.22);
+}
+
+.follow-along.follow-along-shell h3 {
+  color: #ffffff;
+}
+
+.follow-along-shell p {
+  color: #b8c7d4;
+}
+
+/* Warm dark form panel (application received, inside .provider-form). The
+   heading selector is doubled so it beats the themed `.success-message h3`
+   rule further down this file. */
+.follow-along-panel {
+  background: #191919;
+  border: 1px solid #3b281d;
+}
+
+.follow-along.follow-along-panel h3 {
+  color: #f7f3ef;
+}
+
+.follow-along-panel p {
+  color: #b3a79d;
+}
+
+.follow-along-panel .footer-social-link {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #3b281d;
+}
+
+.follow-along-email {
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-top: 16px;
+  width: 100%;
+}
+
+.launch-updates-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.launch-updates-email {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.launch-updates-email > span {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.launch-updates-email input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.launch-updates-consent {
+  align-items: flex-start;
+  display: flex;
+  font-size: 12px;
+  font-weight: 400;
+  gap: 9px;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+/* The global `input` rule is display:block/width:100%, which stretches a
+   checkbox across the row and pushes its label out of the block. Everything
+   here is undoing that for this one control. */
+.launch-updates-consent input[type="checkbox"] {
+  accent-color: var(--orange, #ff6a00);
+  align-self: flex-start;
+  border-radius: 3px;
+  display: inline-block;
+  flex: none;
+  height: 15px;
+  margin: 3px 0 0;
+  padding: 0;
+  width: 15px;
+}
+
+.launch-updates-consent > span {
+  color: #b8c7d4;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.follow-along-panel .launch-updates-consent > span {
+  color: #b3a79d;
+}
+
+.launch-updates-form .button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.launch-updates-done {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .follow-along {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .launch-updates-consent {
+    text-align: left;
+  }
+}
+
 @media (max-width: 1050px) {
   .site-header {
     grid-template-columns: 1fr auto;
@@ -5378,6 +5538,20 @@ footer > p,
   letter-spacing: 0.04em;
   margin: 4px 0 8px;
   padding: 6px 9px;
+}
+
+/* Founding cohort. Brand orange rather than the verified badge's green, so it
+   never reads as a second verification mark — it states tenure, not quality. */
+.founding-badge {
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.45);
+  border-radius: 999px;
+  color: #ffb36f;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  padding: 7px 10px;
 }
 
 .provider-workspace-badge {

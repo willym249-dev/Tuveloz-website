@@ -17,6 +17,7 @@ import {
 } from "../../../lib/service-matching";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
 import { parseProviderSelfAssessment } from "../../../lib/provider-compliance";
+import { isFoundingMember } from "../../../lib/founding-cohort";
 import {
   providerCredentialRecordIsCurrent,
   providerCredentialRequirementsAreSatisfied,
@@ -239,6 +240,9 @@ export async function GET(request: Request) {
     reviews,
     privatePreview: privatePreview && !servingPublicProfile,
     testProvider: result.provider.isTestProvider === "yes",
+    // Tenure only — states when they joined, never a quality signal. The rank
+    // itself stays server-side; the page needs only the fact of membership.
+    foundingProvider: isFoundingMember(result.provider.foundingRank),
     reviewSummary: { average, count: reviews.length },
     credentialReview: {
       requirementsSatisfied: credentialRequirementsSatisfied,
