@@ -745,9 +745,9 @@ const spanishText: Record<string, string> = {
   "Provider sign in": "Inicio de proveedor",
   "Your provider quote remains your full subtotal. Tuveloz adds a separate 5% service fee to the customer's total.": "Su cotización de proveedor permanece como su subtotal completo. Tuveloz agrega una tarifa separada del 5% al total del cliente.",
   "Provider quote subtotal": "Subtotal de la cotización",
-  "Tuveloz service fee (5%)": "Tarifa de servicio de Tuveloz (5%)",
+  "Customer Service Fee (5%)": "Tarifa de servicio de Tuveloz (5%)",
   "Customer total": "Total del cliente",
-  "A 5% customer service fee is shown before you confirm": "Se muestra una tarifa de servicio del 5% antes de confirmar",
+  "A 5% Customer Service Fee is shown before you confirm": "Se muestra una tarifa de servicio del 5% antes de confirmar",
   "Accepted service fees": "Tarifas de servicio aceptadas",
 };
 

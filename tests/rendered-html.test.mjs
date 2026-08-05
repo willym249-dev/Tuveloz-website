@@ -600,10 +600,11 @@ test("build preserves the proposed 5 percent test configuration and fee snapshot
 
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 5% in test)"));
+  assert.ok(quotePaymentSource.includes("configured Customer Service Fee (currently 5% in test)"));
   assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 5%"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
-  assert.ok(contents.includes("Accepted service fees"));
+  // Renamed to the one canonical fee name — see tests/customer-fee-consistency.test.mjs.
+  assert.ok(contents.includes("Accepted Customer Service Fees"));
   assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 500"));
   assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
   assert.ok(migration.includes("customer_fee_rate_bps"));
@@ -808,7 +809,7 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(customerSource.includes("Customer account:"));
   assert.ok(customerSource.includes("account.payments.map"));
   assert.ok(customerSource.includes("Provider subtotal:"));
-  assert.ok(customerSource.includes("Tuveloz fee:"));
+  assert.ok(customerSource.includes("Customer Service Fee:"));
   assert.ok(customerSource.includes("Refund recorded:"));
   assert.ok(customerSource.includes("Dispute status:"));
   assert.ok(customerSource.includes('href="/payments"'));

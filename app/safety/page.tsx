@@ -25,7 +25,7 @@ export default function SafetyPage() {
         },
         {
           title: "Transparent quotes",
-          text: "After launch approval, customers must see the provider subtotal, parts and labor, any separate TUVELOZ fee, taxes or other charges, refund terms, and total before confirming.",
+          text: "After launch approval, customers must see the provider subtotal, parts and labor, any separate Customer Service Fee, taxes or other charges, refund terms, and total before confirming.",
         },
         {
           title: "Independent choice",

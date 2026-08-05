@@ -1054,7 +1054,7 @@ export default function ProviderJobsPage() {
                     <div><dt>Labor-only amount</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
                     <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
                     <div className="total"><dt>Your labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Customer total with Tuveloz fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer total including Customer Service Fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <p><strong>Availability:</strong> {quote.availability}</p>
                   <blockquote>{quote.message}</blockquote>

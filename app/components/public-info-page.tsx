@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { SiteLanguageButton } from "./site-language";
 import { BrandMark } from "./tuveloz-icons";
@@ -12,16 +12,27 @@ export type PublicInfoSection = {
   points?: string[];
 };
 
+/** The last crumb is the current page and carries no href. */
+export type PublicInfoCrumb = {
+  label: string;
+  href?: string;
+};
+
 export function PublicInfoPage({
   kicker,
   title,
   intro,
   sections,
+  breadcrumbs,
+  children,
 }: {
   kicker: string;
   title: string;
   intro: string;
   sections: PublicInfoSection[];
+  breadcrumbs?: PublicInfoCrumb[];
+  /** Rendered after the section grid, above the shared call to action. */
+  children?: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -47,6 +58,10 @@ export function PublicInfoPage({
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
           <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
           <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
+          {/* Service areas and services are reached from the footer and from
+              breadcrumbs, not from here: the header nav is already at the width
+              it can hold, and a seventh item pushes the last one under the
+              sign-in button at 1280px. */}
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>
           <Link href="/faq" onClick={() => setMenuOpen(false)}>FAQ</Link>
@@ -59,6 +74,19 @@ export function PublicInfoPage({
       </header>
 
       <section className="public-info-hero">
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <nav className="public-info-breadcrumbs" aria-label="Breadcrumb">
+            <ol>
+              {breadcrumbs.map((crumb) => (
+                <li key={`${crumb.href ?? ""}${crumb.label}`}>
+                  {crumb.href
+                    ? <Link href={crumb.href}>{crumb.label}</Link>
+                    : <span aria-current="page">{crumb.label}</span>}
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
         <span className="kicker">{kicker}</span>
         <h1>{title}</h1>
         <p>{intro}</p>
@@ -80,6 +108,8 @@ export function PublicInfoPage({
         ))}
       </section>
 
+      {children}
+
       <section className="public-info-actions">
         <h2>Provider applications are open. Customer service requests are not yet available.</h2>
         <div>
@@ -96,6 +126,8 @@ export function PublicInfoPage({
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
           <Link href="/how-it-works">How it works</Link>
+          <Link href="/service-areas">Service areas</Link>
+          <Link href="/services">Services</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
           <Link href="/account">Sign in</Link>

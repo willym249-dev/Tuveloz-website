@@ -16,7 +16,7 @@ Shared facts used everywhere:
   independent providers send quotes, the customer chooses.
 - Where: Montgomery County, Maryland (more areas by request).
 - Now: Onboarding independent providers. Free to join, no provider fees
-  (customers pay a small 5% service fee to the site).
+  (customers pay a small 5% Customer Service Fee).
 - Tagline: **Customer choice. Provider freedom.**
 - Site: https://tuveloz.com · Provider signup: https://tuveloz.com/join
 - Email: hello@tuveloz.com
