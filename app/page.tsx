@@ -1422,7 +1422,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div className="fix">
                 <span className="fix-tag">With Tuveloz</span>
                 <strong>You keep 100%.</strong>
-                <p>Your price is your price. Customers cover the small 5% fee — it never comes out of your pocket.</p>
+                <p>Your price is your price. You keep every dollar you quote — we don&apos;t take a cut of your work.</p>
               </div>
             </div>
             <div className="provider-value-pair">
@@ -1496,7 +1496,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
               <div className="provider-toolkit-item">
                 <span className="tk-ico" aria-hidden="true">💵</span>
-                <div><strong>Get paid</strong><p>Keep 100% of your price. Customers cover the 5% fee. Paid to your bank.</p></div>
+                <div><strong>Get paid</strong><p>Keep 100% of your price, paid straight to your bank.</p></div>
               </div>
               <div className="provider-toolkit-item">
                 <span className="tk-ico" aria-hidden="true">📊</span>
