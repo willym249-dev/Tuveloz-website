@@ -755,6 +755,11 @@ export function ProviderSignupForm() {
                 ? "Una cosa importante: esta solicitud es para revisión. Los trabajos reales se abren cuando sus servicios pasen la revisión de lanzamiento."
                 : "One thing to know: this application is for review. Real customer jobs open once your services pass launch review."}
             </strong>
+            <small>
+              {providerFormIsSpanish
+                ? "¿Todavía no tiene registro del condado? Puede solicitar de todos modos — elija sus servicios y le mostraremos exactamente lo que cada uno necesita."
+                : "Not registered with the county yet? You can still apply — pick your services and we'll show you exactly what each one needs."}
+            </small>
             <details className="legal-note-details">
               <summary>
                 {providerFormIsSpanish
@@ -1504,6 +1509,11 @@ export function ProviderSignupForm() {
                 {providerFormIsSpanish
                   ? "Escriba el código de 6 dígitos enviado al correo anterior. El código vence en 10 minutos. Solo confirma el control del correo; no verifica identidad, edad, autoridad, registro del negocio, licencias, seguros, calificaciones ni elegibilidad para trabajos."
                   : "Enter the 6-digit code sent to the email above. The code expires in 10 minutes. This proves email control only; it does not verify identity, age, authority, business registration, licensing, insurance, qualifications, or job eligibility."}
+              </small>
+              <small className="hint">
+                {providerFormIsSpanish
+                  ? "Sus respuestas se guardan en este dispositivo — si cambia a su correo para buscar el código, seguirán aquí cuando regrese."
+                  : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
                 6-digit verification code

@@ -69,9 +69,9 @@ export default async function PostJobPage() {
               <Link className="button secondary" href="/join">
                 Apply as an independent provider
               </Link>
-              <a className="button ai" href="https://ai.tuveloz.com/">
+              <Link className="button ai" href="/ai">
                 Open Tuveloz AI
-              </a>
+              </Link>
             </div>
           </section>
         </section>

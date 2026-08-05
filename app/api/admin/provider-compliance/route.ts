@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import {
   agreementAcceptances,
@@ -26,6 +26,10 @@ import {
   notifyProviderEvidenceScanBlocked,
 } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
+import {
+  prescreenEvidence,
+  type EvidencePrescreen,
+} from "../../../../lib/evidence-review-assistant";
 import {
   boundLegalBusinessIdentityReview,
   evidenceScopeWithLegalBusinessIdentity,
@@ -120,6 +124,7 @@ const STRUCTURED_EMPLOYMENT_REQUIREMENTS = new Set<EvidenceRequirementCode>([
 type EvidenceReviewStatus = (typeof EVIDENCE_REVIEW_STATUSES)[number];
 type EvidenceReasonCode = (typeof EVIDENCE_REASON_CODES)[number];
 type EvidenceRow = typeof providerEvidenceSubmissions.$inferSelect;
+type ProviderRow = typeof providerApplications.$inferSelect;
 type ProfileRow = typeof providerPathwayProfiles.$inferSelect;
 type PersonnelRow = typeof providerPersonnel.$inferSelect;
 type ActivationRow = typeof serviceActivationDecisions.$inferSelect;
@@ -340,6 +345,49 @@ function safeEvidence(row: EvidenceRow, scan?: ScanRow) {
     scanCompletedAt: row.storageKey ? scan?.completedAt ?? "" : "",
     scanReviewedBy: row.storageKey ? scan?.reviewedBy ?? "" : "",
   };
+}
+
+// Mirrors the exact-service, pathway, person, and jurisdiction checks the
+// acceptance path enforces, so the pre-screen never suggests accepting a
+// submission the real review would reject.
+function evidenceMatchesCurrentApplication(
+  row: EvidenceRow,
+  provider: ProviderRow,
+  profile: ProfileRow | undefined,
+): boolean {
+  if (!profile || !isProviderPathway(profile.relationshipPath)) return false;
+  if (row.jurisdiction !== POLICY_JURISDICTION) return false;
+  if (!isServiceCode(row.serviceCode) || row.serviceCode === "general_auto_repair") return false;
+  if (!parseProviderServices(provider.service).includes(row.serviceCode)) return false;
+  if (!(row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types)) return false;
+  const requirementKey = row.requirementKey as EvidenceRequirementCode;
+  if (!getEvidenceRequirements(row.serviceCode, profile.relationshipPath).includes(requirementKey)) {
+    return false;
+  }
+  if (PERSON_BOUND_REQUIREMENTS.has(requirementKey) && row.personId !== profile.providerPersonId) {
+    return false;
+  }
+  return true;
+}
+
+function prescreenForEvidence(
+  row: EvidenceRow,
+  scan: ScanRow | undefined,
+  provider: ProviderRow,
+  profile: ProfileRow | undefined,
+): EvidencePrescreen {
+  const definition = row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
+    ? PROVIDER_POLICY_MATRIX.evidence_types[row.requirementKey as EvidenceRequirementCode]
+    : undefined;
+  return prescreenEvidence({
+    submissionStatus: row.status,
+    matchesCurrentApplication: evidenceMatchesCurrentApplication(row, provider, profile),
+    requiresExpiration: definition?.requires_expiration === true,
+    hasExpirationDate: Boolean(row.expiresAt),
+    isExpired: Boolean(row.expiresAt) && !currentThrough(row.expiresAt),
+    hasPrivateFile: Boolean(row.storageKey),
+    scanStatus: row.storageKey ? scan?.status ?? "missing" : "not_required",
+  });
 }
 
 function evidenceMatches(
@@ -897,7 +945,10 @@ async function complianceResponse() {
       })),
       agreements,
       allAgreementsCurrent: agreements.every((agreement) => agreement.current),
-      evidence: evidence.map((item) => safeEvidence(item, scans.get(item.id))),
+      evidence: evidence.map((item) => ({
+        ...safeEvidence(item, scans.get(item.id)),
+        prescreen: prescreenForEvidence(item, scans.get(item.id), provider, profile),
+      })),
       services,
       eligibleServices: services
         .filter((service) => service.status === "eligible")
@@ -1083,6 +1134,129 @@ export async function POST(request: Request) {
     const action = clean(body.action, 80);
     const providerId = clean(body.providerId, 120);
     const db = getDb();
+
+    if (action === "prescreen-dispatch") {
+      // Bulk pre-screen of the pending queue. This deliberately applies only
+      // the one factual, reversible outcome — a correction request for an
+      // expired or undated document — and never accepts anything. Acceptance
+      // stays a per-document human act with an external authenticity check.
+      const pendingRows = await db.select().from(providerEvidenceSubmissions)
+        .where(providerId
+          ? and(
+              eq(providerEvidenceSubmissions.providerId, providerId),
+              eq(providerEvidenceSubmissions.status, "pending"),
+            )
+          : eq(providerEvidenceSubmissions.status, "pending"));
+      if (pendingRows.length === 0) {
+        return Response.json({
+          ok: true,
+          message: "No documents are waiting for a pre-screen.",
+          corrected: 0,
+          flaggedForReview: 0,
+          readyForAuthenticity: 0,
+        });
+      }
+      const involvedProviderIds = [...new Set(pendingRows.map((row) => row.providerId))];
+      const [providerRows, profileRows, scanRows] = await Promise.all([
+        db.select().from(providerApplications)
+          .where(inArray(providerApplications.id, involvedProviderIds)),
+        db.select().from(providerPathwayProfiles)
+          .where(inArray(providerPathwayProfiles.providerId, involvedProviderIds))
+          .orderBy(desc(providerPathwayProfiles.pathwayVersion)),
+        db.select().from(evidenceFileScans)
+          .where(inArray(evidenceFileScans.evidenceSubmissionId, pendingRows.map((row) => row.id)))
+          .orderBy(desc(evidenceFileScans.requestedAt)),
+      ]);
+      const providerById = new Map(providerRows.map((provider) => [provider.id, provider]));
+      const profileByProvider = latestProfiles(profileRows);
+      const scanByEvidence = latestScanMap(scanRows);
+
+      let corrected = 0;
+      let flaggedForReview = 0;
+      let readyForAuthenticity = 0;
+      const affectedProviderIds = new Set<string>();
+      for (const row of pendingRows) {
+        const provider = providerById.get(row.providerId);
+        // Never auto-touch a test application.
+        if (!provider || provider.isTestProvider === "yes") continue;
+        const profile = profileByProvider.get(row.providerId);
+        const prescreen = prescreenForEvidence(
+          row,
+          scanByEvidence.get(row.id),
+          provider,
+          profile,
+        );
+        if (!prescreen.autoDispatch) {
+          if (prescreen.recommendation === "ready_for_authenticity_check") readyForAuthenticity += 1;
+          else if (
+            prescreen.recommendation === "reject_mismatch"
+            || prescreen.recommendation === "hold_scan_not_clean"
+          ) flaggedForReview += 1;
+          continue;
+        }
+        // Quarantine any dependent Checkout state before the evidence write,
+        // mirroring the single-document review path.
+        await expireOpenCheckoutSessionsForLaunchShutdown();
+        const now = new Date().toISOString();
+        const reviewDecisionId = crypto.randomUUID();
+        await db.update(providerEvidenceSubmissions).set({
+          status: prescreen.autoDispatch.status,
+          evidenceScope: evidenceScopeWithoutLegalBusinessIdentity(row.evidenceScope),
+          reviewedAt: now,
+          reviewedBy: actorId,
+          reviewDecisionId,
+          reasonCodes: JSON.stringify([prescreen.autoDispatch.reasonCode]),
+          reviewNotes: prescreen.autoDispatch.note,
+          authenticityVerificationMethod: "",
+          authenticityVerifiedBy: "",
+          authenticityVerificationReference: "",
+          authenticitySourceUrl: "",
+          authenticityVerifiedAt: "",
+          authenticityValidThrough: "",
+          updatedAt: now,
+        }).where(eq(providerEvidenceSubmissions.id, row.id));
+        await recordProviderAuditEvent({
+          providerId: row.providerId,
+          personId: row.personId,
+          serviceCode: row.serviceCode,
+          jurisdiction: row.jurisdiction,
+          eventType: "owner_evidence_reviewed",
+          entityType: "provider_evidence_submission",
+          entityId: row.id,
+          actorType: "verified_owner",
+          actorId,
+          outcome: prescreen.autoDispatch.status,
+          reasonCodes: [prescreen.autoDispatch.reasonCode],
+          metadata: {
+            reviewDecisionId,
+            notes: prescreen.autoDispatch.note,
+            automatedPrescreen: true,
+            prescreenRecommendation: prescreen.recommendation,
+            noSensitiveIdentityDocumentStored: true,
+          },
+        });
+        await notifyProviderEvidenceDecision({
+          evidenceId: row.id,
+          email: provider.email,
+          status: prescreen.autoDispatch.status,
+        });
+        corrected += 1;
+        affectedProviderIds.add(row.providerId);
+      }
+      for (const affectedProviderId of affectedProviderIds) {
+        await recalculateProvider(affectedProviderId, actorId);
+      }
+      await expireOpenCheckoutSessionsForLaunchShutdown();
+      return Response.json({
+        ok: true,
+        message: corrected > 0
+          ? `Pre-screen sent ${corrected} correction request${corrected === 1 ? "" : "s"} for expired or undated documents. ${readyForAuthenticity} passed the automatic checks and are ready for your external authenticity check — nothing was accepted automatically.`
+          : `No automatic corrections were needed. ${readyForAuthenticity} document${readyForAuthenticity === 1 ? " is" : "s are"} ready for your external authenticity check and ${flaggedForReview} need${flaggedForReview === 1 ? "s" : ""} a manual look. Nothing was accepted automatically.`,
+        corrected,
+        flaggedForReview,
+        readyForAuthenticity,
+      });
+    }
 
     if (action === "initialize-provider-pathway") {
       if (!providerId) return Response.json({ error: "Choose a provider application." }, { status: 400 });

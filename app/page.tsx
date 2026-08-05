@@ -237,6 +237,34 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   }, [view]);
 
   useEffect(() => {
+    // A provider who taps /join wants the application, not the customer-facing
+    // top of the homepage. Jump straight to the provider panel on load, unless
+    // a deep-link hash already targets a specific section.
+    if (view !== "provider") return;
+    if (window.location.hash) return;
+    let cancelled = false;
+    const scrollToPanel = () => {
+      if (!cancelled) document.getElementById("providers")?.scrollIntoView({ block: "start" });
+    };
+    scrollToPanel();
+    const frame = requestAnimationFrame(scrollToPanel);
+    // Content above the panel (reviews, hero image) loads async and pushes the
+    // panel down after first paint, so re-assert a few times until it settles.
+    const timers = [200, 600, 1200].map((ms) => window.setTimeout(scrollToPanel, ms));
+    // Stop fighting the visitor the moment they take over scrolling.
+    const stop = () => { cancelled = true; };
+    window.addEventListener("wheel", stop, { passive: true, once: true });
+    window.addEventListener("touchstart", stop, { passive: true, once: true });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+    };
+  }, [view]);
+
+  useEffect(() => {
     fetch("/api/reviews").then(async (response) => {
       if (!response.ok) return;
       const result = (await response.json()) as {
@@ -632,9 +660,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </Link>
               </>
             )}
-            <a className="button ai" href="https://ai.tuveloz.com/">
+            <Link className="button ai" href="/ai">
               Try Tuveloz AI <span>✦</span>
-            </a>
+            </Link>
           </div>
           <div className="hero-launch-note">
             <strong>
@@ -726,9 +754,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               help, guarantee pricing, or choose a provider.
             </p>
           </div>
-          <a className="button ai" href="https://ai.tuveloz.com/">
+          <Link className="button ai" href="/ai">
             Open Tuveloz AI <span>→</span>
-          </a>
+          </Link>
         </section>
       )}
 
@@ -1654,7 +1682,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
-          <a href="https://ai.tuveloz.com/">Tuveloz AI</a>
+          <Link href="/ai">Tuveloz AI</Link>
           <Link href="/post-job">Customer launch status</Link>
           <Link href="/join">Join as a provider</Link>
           <Link href="/how-it-works">How it works</Link>
