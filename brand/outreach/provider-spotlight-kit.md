@@ -10,8 +10,14 @@ that person. They share it because it's about them. That is local reach you
 cannot buy at any price, and it recruits the next provider better than any ad,
 because a mechanic seeing a mechanic they recognize is proof the thing is real.
 
-Run one per accepted provider, ongoing. See
+**Reserved for the first 10 accepted providers** — the founding cohort. The cap
+is the point: a spotlight everyone gets is a content format, a spotlight ten
+people get is a reason to be one of the ten. See
+`founding-provider-program.md` for who counts and what else they get, and
 `audience-growth-playbook.md` §3 for where this sits in the overall plan.
+
+Until the perk list is published on the site, don't mention the cohort in the
+ask — offer the spotlight on its own merits. Publish first, promise second.
 
 ---
 
@@ -190,10 +196,10 @@ Carried from `provider-outreach-kit.md`, plus two that only apply here:
 
 ## Cadence
 
-One spotlight per week once you have a few accepted providers — enough to be a
-reliable slot in the calendar, not so much that the feed becomes only this.
-Bank the answers as they come in; a provider who replies today doesn't have to
-post today.
+One spotlight per week, ten total. That's roughly a quarter of weekly content
+for two and a half months — a reliable calendar slot without the feed becoming
+only this. Bank the answers as they come in; a provider who replies today
+doesn't have to post today.
 
 Ask every provider at acceptance, while the good feeling is fresh. The yes rate
 right after "you're approved" is far higher than it is three weeks later.
