@@ -195,6 +195,8 @@ async function responseData(
     service: jobReviews.service,
     rating: jobReviews.rating,
     comment: jobReviews.comment,
+    providerReply: jobReviews.providerReply,
+    providerReplyAt: jobReviews.providerReplyAt,
     createdAt: jobReviews.createdAt,
   }).from(jobReviews).where(and(
     eq(jobReviews.providerEmail, provider.email),
@@ -543,6 +545,28 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error("Unable to remove the provider gallery object", error);
     }
+    return Response.json({ ok: true, ...(await responseData(provider)) });
+  }
+
+  if (action === "reply-review") {
+    const reviewId = clean(payload.reviewId, 80);
+    const reply = clean(payload.reply, 600);
+    const [review] = await db.select({ id: jobReviews.id }).from(jobReviews).where(and(
+      eq(jobReviews.id, reviewId),
+      eq(jobReviews.providerEmail, provider.email),
+      eq(jobReviews.status, "published"),
+    )).limit(1);
+    if (!review) {
+      return Response.json(
+        { error: "That review is not on your account." },
+        { status: 404, headers: { "cache-control": "no-store" } },
+      );
+    }
+    // An empty reply clears a prior response; a non-empty one stamps the time.
+    await db.update(jobReviews).set({
+      providerReply: reply,
+      providerReplyAt: reply ? new Date().toISOString() : "",
+    }).where(eq(jobReviews.id, review.id));
     return Response.json({ ok: true, ...(await responseData(provider)) });
   }
 

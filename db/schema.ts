@@ -617,6 +617,8 @@ export const jobReviews = sqliteTable(
     service: text("service").notNull(),
     rating: integer("rating").notNull(),
     comment: text("comment").notNull(),
+    providerReply: text("provider_reply").notNull().default(""),
+    providerReplyAt: text("provider_reply_at").notNull().default(""),
     status: text("status").notNull().default("published"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },

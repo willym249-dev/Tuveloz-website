@@ -36,6 +36,7 @@ type StorefrontData = {
     service: string;
     rating: number;
     comment: string;
+    providerReply?: string;
   }>;
   privatePreview: boolean;
   testProvider: boolean;
@@ -428,6 +429,12 @@ export default function ProviderStorefrontPage() {
               <article key={review.id}>
                 <div><span>{"★★★★★".slice(0, review.rating)}</span><strong>{review.rating}.0</strong></div>
                 <blockquote>{review.comment}</blockquote>
+                {review.providerReply ? (
+                  <div className="storefront-review-reply">
+                    <span>Response from the provider</span>
+                    <p>{review.providerReply}</p>
+                  </div>
+                ) : null}
                 <footer>
                   <strong>{review.customerDisplayName}</strong>
                   <span>{review.service}</span>
