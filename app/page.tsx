@@ -718,7 +718,27 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
-          {CUSTOMER_JOB_POSTING_PAUSED ? (
+          {view === "provider" ? (
+            <>
+              <div className="eyebrow">
+                <span className="pulse" />
+                Now onboarding · Montgomery County
+              </div>
+              <h1>
+                Your wrench. Your rules.
+                <br />
+                <span className="hero-value-line">
+                  We handle the rest.
+                </span>
+              </h1>
+              <p>
+                Tuveloz is a local vehicle-services marketplace launching in Montgomery
+                County, Maryland. You bring the skills — we bring the customers and knock
+                out the paperwork. Join free, keep 100% of your quoted price, no
+                exclusivity. Real jobs and payments open as we launch.
+              </p>
+            </>
+          ) : CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <div className="eyebrow">
                 <span className="pulse" />
@@ -749,7 +769,16 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </>
           )}
           <div className="hero-actions">
-            {CUSTOMER_JOB_POSTING_PAUSED ? (
+            {view === "provider" ? (
+              <>
+                <a className="button primary" href="#provider-apply">
+                  Join free — apply now <span>→</span>
+                </a>
+                <Link className="button secondary" href="/how-it-works">
+                  See how it works <span>→</span>
+                </Link>
+              </>
+            ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
                 <Link className="button primary" href="/join">
                   Join as a provider — free <span>→</span>
