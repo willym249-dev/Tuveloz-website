@@ -8,6 +8,14 @@ standalone repository.
 This document is the procedure for that move. It exists so the extraction is a
 mechanical operation somebody can execute in ten minutes, not a research task.
 
+**These steps have been rehearsed, not just written.** The Step 1 export was
+run against this commit into a directory simulating a fresh GitHub clone, and
+at the new root `npm ci` (958 packages), `npm run verify` and
+`npx expo export --platform android` all succeeded. 91 files came across and no
+`node_modules` leaked. The only steps that have _not_ been executed are the two
+that require GitHub permissions this project's automation does not have:
+creating the repository and granting the app access to it.
+
 **Delete this file once the extraction is complete.**
 
 ---
