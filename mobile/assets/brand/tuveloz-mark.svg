@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tuveloz badge: rounded square, brand navy, orange keyline -->
+  <rect x="31" y="31" width="450" height="450" rx="102" fill="#07182D" stroke="#FF6A00" stroke-width="30"/>
+  <!-- Funnel -->
+  <path d="M146 150 L366 150 L300 254 L300 342 L212 342 L212 254 Z"
+        fill="#FF6A00" stroke="#FF6A00" stroke-width="26" stroke-linejoin="round"/>
+  <!-- Drop -->
+  <path d="M256 380 C241 401 227 417 227 431 A29 29 0 0 0 285 431 C285 417 271 401 256 380 Z"
+        fill="#FF6A00"/>
+</svg>
