@@ -5205,6 +5205,20 @@ footer > p,
   padding: 6px 9px;
 }
 
+/* Founding cohort. Brand orange rather than the verified badge's green, so it
+   never reads as a second verification mark — it states tenure, not quality. */
+.founding-badge {
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.45);
+  border-radius: 999px;
+  color: #ffb36f;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  padding: 7px 10px;
+}
+
 .provider-workspace-badge {
   margin: 0 6px 8px 0;
 }

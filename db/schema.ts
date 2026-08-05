@@ -172,6 +172,10 @@ export const providerApplications = sqliteTable(
     // and capability status are always fetched from Stripe's V2 Accounts API.
     stripeAccountId: text("stripe_account_id"),
     status: text("status").notNull().default("new"),
+    // Founding cohort standing, assigned once at first verification and never
+    // recomputed. 0 = not in the cohort. See lib/founding-cohort.ts.
+    foundingRank: integer("founding_rank").notNull().default(0),
+    foundingRankAssignedAt: text("founding_rank_assigned_at").notNull().default(""),
     termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
     termsVersion: text("terms_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -179,6 +183,7 @@ export const providerApplications = sqliteTable(
   (table) => [
     index("provider_applications_created_at_idx").on(table.createdAt),
     index("provider_applications_status_idx").on(table.status),
+    index("provider_applications_founding_rank_idx").on(table.foundingRank),
     index("provider_applications_email_idx").on(table.email),
     index("provider_applications_stripe_account_idx").on(table.stripeAccountId),
   ],

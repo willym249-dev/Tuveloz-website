@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import {
   agreementAcceptances,
@@ -21,6 +21,7 @@ import {
   requiredOfficialLegalSourceReferences,
 } from "../../../../lib/legal-compliance-evidence";
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
+import { shouldAssignFoundingRank } from "../../../../lib/founding-cohort";
 import {
   notifyProviderEvidenceDecision,
   notifyProviderEvidenceScanBlocked,
@@ -734,6 +735,27 @@ async function recalculateProvider(providerId: string, actorId: string) {
     && provider.status !== "declined"
     && provider.isTestProvider !== "yes";
   const wasVerified = provider.status === "approved" && provider.verificationStatus === "verified";
+  // Founding cohort standing is claimed the first time a provider verifies,
+  // and never recomputed afterwards — rank is by acceptance, so a provider who
+  // applied first but cleared review third is third. Losing verification later
+  // does not free the slot: 20 is a cohort, not a queue with vacancies.
+  let foundingRank = provider.foundingRank;
+  let foundingRankAssignedAt = provider.foundingRankAssignedAt;
+  if (canAutoVerify && !wasVerified && provider.foundingRank === 0) {
+    const claimed = await db.select({ rank: providerApplications.foundingRank })
+      .from(providerApplications)
+      .where(gt(providerApplications.foundingRank, 0));
+    if (shouldAssignFoundingRank({
+      currentRank: provider.foundingRank,
+      assignedCount: claimed.length,
+      isTestProvider: provider.isTestProvider === "yes",
+    })) {
+      // Max rather than count, so a manually corrected record can never cause
+      // two providers to be handed the same rank.
+      foundingRank = claimed.reduce((highest, row) => Math.max(highest, row.rank), 0) + 1;
+      foundingRankAssignedAt = now;
+    }
+  }
   const statusPayload = Object.fromEntries(evaluations.map((evaluation) => [evaluation.code, {
     status: evaluation.status,
     reasons: evaluation.reasons,
@@ -764,6 +786,8 @@ async function recalculateProvider(providerId: string, actorId: string) {
         ? `v0.11-rules:${actorId}`
         : "",
     alertsEnabled: canAutoVerify ? "yes" : "no",
+    foundingRank,
+    foundingRankAssignedAt,
   }).where(eq(providerApplications.id, provider.id));
   const holdReasons = canAutoVerify
     ? []

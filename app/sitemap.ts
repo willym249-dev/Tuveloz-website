@@ -15,6 +15,7 @@ const PUBLIC_PAGES: PublicPage[] = [
   { path: "/ai", changeFrequency: "monthly", priority: 0.8 },
   { path: "/about", changeFrequency: "monthly", priority: 0.8 },
   { path: "/how-it-works", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/founding-providers", changeFrequency: "monthly", priority: 0.8 },
   { path: "/safety", changeFrequency: "monthly", priority: 0.8 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },
