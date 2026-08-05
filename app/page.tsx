@@ -120,6 +120,39 @@ const providerHandled: Array<{
   },
 ];
 
+// What a marketplace can design for that single-shop software can't. Framed as
+// how Tuveloz is built — not live guarantees — to stay inside the site's
+// launch-honest voice (the note below the grid restates the launch caveat).
+// Each maps to something real in the model: bilingual EN/ES interface,
+// platform-run payment released on completion evidence, the labor-only /
+// customer-supplied-parts flow, and mobile/on-location job records.
+const providerDifferences: Array<{
+  icon: TuvelozIconName;
+  title: string;
+  text: string;
+}> = [
+  {
+    icon: "quote",
+    title: "Bilingual to the fine print",
+    text: "Your quote, authorization, and invoice are built to read in English and Spanish — so you and your customer agree to the same words, not a rough translation.",
+  },
+  {
+    icon: "earnings",
+    title: "Paid through the platform",
+    text: "At launch, accepted jobs are paid through Tuveloz and released on your completion evidence. Finish the work and the payout is set up to follow — no chasing checks.",
+  },
+  {
+    icon: "services",
+    title: "Labor-only, done right",
+    text: "Customers bring the part. Tuveloz is designed to line up the exact part before your appointment, so a wrong part doesn't waste your trip.",
+  },
+  {
+    icon: "active-job",
+    title: "Made for mobile, not just the front desk",
+    text: "Appointments, records, and photo evidence work from any phone at the customer's location — built for mobile mechanics and service trucks, not only walk-in shops.",
+  },
+];
+
 const liveSteps = [
   ["01", "Post what you need", "A quick description is enough."],
   ["02", "Get quotes", "Independent providers respond with their price."],
@@ -1516,6 +1549,35 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <ProviderSignupForm />
           </div>
         </div>
+      </section>
+
+      <section className="section difference-section" id="what-makes-us-different">
+        <div className="section-heading">
+          <div>
+            <span className="kicker">Why Tuveloz is different</span>
+            <h2>Built as a marketplace — so we can do what shop software can&apos;t.</h2>
+          </div>
+          <p>
+            Most tools are built for one front desk. Tuveloz is built around
+            independent providers and their customers, which lets us design for
+            trust, language, and mobile work from the ground up.
+          </p>
+        </div>
+        <div className="difference-grid">
+          {providerDifferences.map((item) => (
+            <article key={item.title}>
+              <div className="difference-icon">
+                <TuvelozIcon name={item.icon} />
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))}
+        </div>
+        <p className="difference-note">
+          These describe how Tuveloz is designed to work. Every service and
+          payment opens for real customer jobs only after launch review.
+        </p>
       </section>
 
       <section className="section expansion-section" id="expansion">

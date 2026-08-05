@@ -4150,6 +4150,73 @@ label > small {
   }
 }
 
+.difference-section {
+  background: var(--paper);
+}
+
+.difference-grid {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 56px;
+}
+
+.difference-grid article {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px;
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+.difference-grid article:hover {
+  box-shadow: 0 18px 40px rgba(7, 23, 38, 0.09);
+  transform: translateY(-4px);
+}
+
+.difference-icon {
+  align-items: center;
+  background: #eaf2ff;
+  border-radius: 12px;
+  color: var(--blue);
+  display: flex;
+  height: 50px;
+  justify-content: center;
+  width: 50px;
+}
+
+.difference-icon .tuveloz-icon {
+  height: 28px;
+  width: 28px;
+}
+
+.difference-grid h3 {
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  margin: 24px 0 10px;
+}
+
+.difference-grid p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.difference-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 26px 0 0;
+  max-width: 640px;
+}
+
+@media (max-width: 720px) {
+  .difference-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .eligibility-guide-heading h4 {
   font-size: 18px;
   margin: 5px 0;
