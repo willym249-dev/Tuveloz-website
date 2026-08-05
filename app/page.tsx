@@ -827,9 +827,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </Link>
               </>
             )}
-            <a className="button ai" href="https://ai.tuveloz.com/">
+            <Link className="button ai" href="/ai">
               Try Tuveloz AI <span>✦</span>
-            </a>
+            </Link>
           </div>
           <div className="hero-launch-note">
             <strong>
@@ -921,9 +921,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               help, guarantee pricing, or choose a provider.
             </p>
           </div>
-          <a className="button ai" href="https://ai.tuveloz.com/">
+          <Link className="button ai" href="/ai">
             Open Tuveloz AI <span>→</span>
-          </a>
+          </Link>
         </section>
       )}
 
@@ -1950,7 +1950,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
-          <a href="https://ai.tuveloz.com/">Tuveloz AI</a>
+          <Link href="/ai">Tuveloz AI</Link>
           <Link href="/post-job">Customer launch status</Link>
           <Link href="/join">Join as a provider</Link>
           <Link href="/how-it-works">How it works</Link>
