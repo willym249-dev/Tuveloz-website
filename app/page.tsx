@@ -1459,6 +1459,51 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
             </div>
           </div>
+          <div className="provider-toolkit">
+            <h3>Everything you need, in one place — free.</h3>
+            <p className="provider-toolkit-lead">
+              No apps to buy, no stack of tools to juggle. Set it up on your phone
+              in minutes — it&apos;s all built in.
+            </p>
+            <div className="provider-toolkit-grid">
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">🏪</span>
+                <div><strong>Your own page</strong><p>A storefront customers can find — your work photos and star reviews.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">🔳</span>
+                <div><strong>QR code &amp; free cards</strong><p>Printable cards with your code. Hand them out; a scan lands people on you.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">🏷️</span>
+                <div><strong>Send a price</strong><p>Quote a job in a tap. The customer says yes right on their phone.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">📷</span>
+                <div><strong>Photo job records</strong><p>Snap before-and-after shots. You and the customer both keep a copy.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">💬</span>
+                <div><strong>Message customers</strong><p>Chat with the customer in the app once they pick you.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">✅</span>
+                <div><strong>OK for extra work</strong><p>Found more to fix? Send it and get a yes before you start.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">📄</span>
+                <div><strong>Clean invoices</strong><p>A tidy invoice with your warranty, written for you.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">💵</span>
+                <div><strong>Get paid</strong><p>Keep 100% of your price. Customers cover the 5% fee. Paid to your bank.</p></div>
+              </div>
+              <div className="provider-toolkit-item">
+                <span className="tk-ico" aria-hidden="true">📊</span>
+                <div><strong>See how you&apos;re doing</strong><p>Views, scans, and how often your quotes win — just for you.</p></div>
+              </div>
+            </div>
+          </div>
           <div className="provider-value-reassure">
             <strong>You&apos;ve got nothing to lose.</strong>
             <p>
