@@ -182,34 +182,42 @@ export function ProviderSignupForm() {
   const [draftRestored, setDraftRestored] = useState(false);
 
   // Restore an unfinished application from this device. Runs once after mount
-  // so server-rendered markup stays identical to the first client render.
+  // so server-rendered markup stays identical to the first client render; the
+  // microtask defers state updates so the effect never sets state synchronously.
   useEffect(() => {
-    const draft = readSignupDraft();
-    if (!draft) return;
-    if (Array.isArray(draft.selectedProviderServices)) {
-      setSelectedProviderServices(draft.selectedProviderServices.filter((code) => (
-        PROVIDER_REVIEW_SERVICES.some((service) => service.code === code)
-      )));
-    }
-    if (typeof draft.soloBusiness === "boolean") setSoloBusiness(draft.soloBusiness);
-    if (Array.isArray(draft.selectedProviderWorkLocations)) {
-      setSelectedProviderWorkLocations(draft.selectedProviderWorkLocations.filter((option) => (
-        (PROVIDER_WORK_LOCATION_OPTIONS as readonly string[]).includes(option)
-      )));
-    }
-    if (draft.providerAssessment && typeof draft.providerAssessment === "object") {
-      setProviderAssessment({ ...emptyProviderSelfAssessment, ...draft.providerAssessment });
-    }
-    if (draft.fields && typeof draft.fields === "object") {
-      const fields: Record<string, string> = {};
-      for (const key of DRAFT_TEXT_FIELDS) {
-        const value = draft.fields[key];
-        if (typeof value === "string" && value) fields[key] = value;
+    let cancelled = false;
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      const draft = readSignupDraft();
+      if (!draft) return;
+      if (Array.isArray(draft.selectedProviderServices)) {
+        setSelectedProviderServices(draft.selectedProviderServices.filter((code) => (
+          PROVIDER_REVIEW_SERVICES.some((service) => service.code === code)
+        )));
       }
-      setDraftFields(fields);
-    }
-    if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
-    setDraftRestored(true);
+      if (typeof draft.soloBusiness === "boolean") setSoloBusiness(draft.soloBusiness);
+      if (Array.isArray(draft.selectedProviderWorkLocations)) {
+        setSelectedProviderWorkLocations(draft.selectedProviderWorkLocations.filter((option) => (
+          (PROVIDER_WORK_LOCATION_OPTIONS as readonly string[]).includes(option)
+        )));
+      }
+      if (draft.providerAssessment && typeof draft.providerAssessment === "object") {
+        setProviderAssessment({ ...emptyProviderSelfAssessment, ...draft.providerAssessment });
+      }
+      if (draft.fields && typeof draft.fields === "object") {
+        const fields: Record<string, string> = {};
+        for (const key of DRAFT_TEXT_FIELDS) {
+          const value = draft.fields[key];
+          if (typeof value === "string" && value) fields[key] = value;
+        }
+        setDraftFields(fields);
+      }
+      if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
+      setDraftRestored(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Autosave everything except acknowledgments and the emailed code, so a
