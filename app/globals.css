@@ -5338,6 +5338,48 @@ footer > p,
   padding: 14px;
 }
 
+.prescreen-panel {
+  align-items: center;
+  border-color: #4a6bd8;
+  grid-template-columns: 1fr auto;
+  margin: 12px 0 6px;
+}
+
+.prescreen-panel > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.prescreen-panel > div:first-child > span {
+  color: #8fa797;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.prescreen-suggestion {
+  gap: 5px;
+}
+
+.prescreen-suggestion.ready {
+  border-color: #4a8bd8;
+}
+
+.prescreen-suggestion.attention {
+  border-color: #c9a227;
+}
+
+.prescreen-suggestion > small {
+  color: #9fb4c9;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .prescreen-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
 .credential-card > div:first-child {
   display: grid;
   gap: 3px;

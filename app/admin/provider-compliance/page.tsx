@@ -52,6 +52,20 @@ type EvidenceMetadata = {
   scanEngineVersion: string;
   scanCompletedAt: string;
   scanReviewedBy: string;
+  prescreen?: EvidencePrescreen;
+};
+
+type EvidencePrescreen = {
+  recommendation:
+    | "not_awaiting_review"
+    | "reject_mismatch"
+    | "needs_correction_expired"
+    | "hold_scan_not_clean"
+    | "ready_for_authenticity_check";
+  headline: string;
+  reasons: string[];
+  autoDispatch: { status: "needs_correction"; reasonCode: string; note: string } | null;
+  readyForOwnerAuthenticityCheck: boolean;
 };
 
 type ServiceEvaluation = {
@@ -252,10 +266,21 @@ function EvidenceReviewForm({
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
 }) {
   const fileIsClean = !evidence.hasPrivateFile || evidence.scanStatus === "clean";
+  const prescreen = evidence.prescreen;
+  const suggestedStatus: "accepted" | "needs_correction" | "rejected" | null =
+    prescreen?.recommendation === "needs_correction_expired"
+      ? "needs_correction"
+      : prescreen?.recommendation === "reject_mismatch"
+        ? "rejected"
+        : prescreen?.recommendation === "hold_scan_not_clean"
+          ? "needs_correction"
+          : prescreen?.recommendation === "ready_for_authenticity_check" && fileIsClean
+            ? "accepted"
+            : null;
   const [status, setStatus] = useState<"accepted" | "needs_correction" | "rejected">(
     evidence.status === "needs_correction" || evidence.status === "rejected"
       ? evidence.status
-      : fileIsClean ? "accepted" : "needs_correction",
+      : suggestedStatus ?? (fileIsClean ? "accepted" : "needs_correction"),
   );
   const availableReasons = status === "accepted"
     ? REVIEW_REASONS.slice(0, 1)
@@ -380,6 +405,18 @@ function EvidenceReviewForm({
             {busy ? "Recording…" : "Record external scan result"}
           </button>
         </form>
+      )}
+      {prescreen && prescreen.recommendation !== "not_awaiting_review" && (
+        <div className={`credential-card prescreen-suggestion ${prescreen.readyForOwnerAuthenticityCheck ? "ready" : "attention"}`}>
+          <strong>Automated pre-screen: {prescreen.headline}</strong>
+          {prescreen.reasons.map((reason) => <small key={reason}>· {reason}</small>)}
+          <small className="admin-note">
+            This is a suggestion from an automatic check of the recorded facts only — dates, scan
+            result, and whether it still matches this application. It reads no file contents and
+            sends nothing outside TUVELOZ. Nothing is accepted for you: accepting still requires
+            your external authenticity check below.
+          </small>
+        </div>
       )}
       <form className="credential-card" onSubmit={submit}>
         <label>
@@ -599,6 +636,16 @@ export default function ProviderCompliancePage() {
       providerLevel: draft.providerLevel,
       serviceCodes: draft.serviceCodes,
     }, `initialize:${application.id}`);
+  }
+
+  async function runQueuePrescreen() {
+    if (!window.confirm(
+      "Run the automatic pre-screen on every waiting document?\n\n"
+      + "It sends a correction request only for documents that are expired or missing a "
+      + "required expiration date, and flags the rest for you. It never accepts a document — "
+      + "acceptance always needs your external authenticity check.",
+    )) return;
+    await submitAction({ action: "prescreen-dispatch" }, "prescreen-dispatch");
   }
 
   async function submitActivation(event: FormEvent<HTMLFormElement>) {
@@ -850,6 +897,26 @@ export default function ProviderCompliancePage() {
               ✓ means the exact item passed. ✕ means customer work remains blocked. ◷ means a document
               is waiting or a job-specific check must happen later.
             </p>
+            <div className="credential-card prescreen-panel">
+              <div>
+                <strong>Automated pre-screen ({pendingEvidenceCount} waiting)</strong>
+                <span>
+                  Checks the recorded facts for every waiting document and drafts a suggestion on each
+                  card below. Running it here sends a correction request only for documents that are
+                  expired or missing a required expiration date, and flags the rest for you. It never
+                  accepts a document — acceptance always needs your external authenticity check — and it
+                  reads no file contents and sends nothing outside TUVELOZ.
+                </span>
+              </div>
+              <button
+                className="save-compliance"
+                disabled={busyKey === "prescreen-dispatch" || pendingEvidenceCount === 0}
+                onClick={() => void runQueuePrescreen()}
+                type="button"
+              >
+                {busyKey === "prescreen-dispatch" ? "Pre-screening…" : "Pre-screen the waiting queue"}
+              </button>
+            </div>
             {data.applications.length === 0 ? (
               <p className="admin-note">No provider applications yet.</p>
             ) : (
