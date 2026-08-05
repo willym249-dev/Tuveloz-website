@@ -153,6 +153,38 @@ const providerDifferences: Array<{
   },
 ];
 
+// The emotional case for joining, focused on control and ownership rather than
+// repeating the feature grid. Each line reflects a value the platform already
+// states: independence (providers aren't employed/assigned), keep-100% pricing,
+// no exclusivity, and reviews tied to completed jobs. Honest, no fabricated
+// numbers or testimonials — the marketplace is pre-launch.
+const providerReasons: Array<{
+  icon: TuvelozIconName;
+  title: string;
+  text: string;
+}> = [
+  {
+    icon: "overview",
+    title: "You're the boss",
+    text: "Tuveloz doesn't employ, train, or assign you. Set your own price, schedule, and how you do the work — every job, every time.",
+  },
+  {
+    icon: "earnings",
+    title: "Keep what you earn",
+    text: "Keep 100% of your quoted price. No subscription, no lead fees, no commission carved out of your labor.",
+  },
+  {
+    icon: "open-jobs",
+    title: "No exclusivity, no cage",
+    text: "Keep your own customers and work other platforms too. Tuveloz is one more way to fill your day — not a lock-in.",
+  },
+  {
+    icon: "reviews",
+    title: "Grow on real work",
+    text: "Reviews are tied to completed jobs, not gameable star clicks. Your track record is yours to build and keep.",
+  },
+];
+
 const liveSteps = [
   ["01", "Post what you need", "A quick description is enough."],
   ["02", "Get quotes", "Independent providers respond with their price."],
@@ -1479,6 +1511,45 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </form>
         )}
+      </section>
+
+      <section className="section provider-pitch" id="why-join">
+        <div className="section-heading">
+          <div>
+            <span className="kicker">Why mechanics join Tuveloz</span>
+            <h2>The business side, handled. The control, yours.</h2>
+          </div>
+          <p>
+            Most platforms want to own your customers and shave your pay. Tuveloz
+            is built the other way — you stay independent, keep your price, and let
+            us carry the busywork.
+          </p>
+        </div>
+        <div className="pitch-grid">
+          {providerReasons.map((reason) => (
+            <article key={reason.title}>
+              <div className="pitch-icon">
+                <TuvelozIcon name={reason.icon} />
+              </div>
+              <h3>{reason.title}</h3>
+              <p>{reason.text}</p>
+            </article>
+          ))}
+        </div>
+        <div className="founding-banner">
+          <div>
+            <span className="kicker light">Founding providers · Montgomery County</span>
+            <h3>Get in before your area fills up.</h3>
+            <p>
+              Be among the first approved providers in Montgomery County — early
+              pick of matching jobs and a real say in how Tuveloz works for
+              mechanics. Free to apply, no subscription, no exclusivity.
+            </p>
+          </div>
+          <a className="button lime" href="#provider-apply">
+            Join free <span>→</span>
+          </a>
+        </div>
       </section>
 
       <section className="section providers" id="providers">
