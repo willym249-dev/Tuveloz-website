@@ -85,13 +85,12 @@ link to `social-links.tsx` where the Google entry is stubbed out.
 At this size you cannot out-post your way to reach. You borrow it.
 
 - **Every provider who signs up is a distribution channel.** They already have
-  customers, a Facebook Marketplace presence, a truck. Ask each accepted
-  provider for one thing: share the announcement post and tag the account. A
-  provider spotlight post (their photo, their business name, their service
-  area) gets shared by them, their family, and their existing customers —
-  that's local followers arriving pre-qualified. This is the highest-yield
-  content the account will ever run, and it costs one photo and three
-  questions.
+  customers, a Facebook Marketplace presence, a truck. A provider spotlight
+  post (their photo, their business name, their service area) gets shared by
+  them, their family, and their existing customers — local followers arriving
+  pre-qualified. Highest-yield content the account will ever run, and it costs
+  one photo and three questions. Full playbook, consent rules, and copy:
+  **`provider-spotlight-kit.md`**.
 - **Local Facebook groups and Nextdoor.** MoCo groups by town — Silver Spring,
   Rockville, Gaithersburg, Germantown, Wheaton — plus "MoCo small business"
   and buy/sell groups. Post from the Tuveloz account where group rules allow
