@@ -126,7 +126,7 @@ export default function ProviderServicesPage() {
         <div className="account-welcome">
           <span className="account-kicker">Provider business tools</span>
           <h1>Services, prices, and credentials.</h1>
-          <p>Choose what you offer from your approved services and publish your own price information.</p>
+          <p>Pick from the services you are approved for and set your own prices.</p>
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
         {notice && <p className="portal-success" role="status">{notice}</p>}
@@ -155,12 +155,12 @@ export default function ProviderServicesPage() {
                   </select>
                 </label>
                 <label>
-                  Provider price ($)
+                  Your price ($)
                   <input name="startingPrice" type="number" min="0" max="100000" step="0.01" placeholder="0.00" />
                   <small>Leave at 0 when the service requires a custom quote. This is your provider price, not a promise that every job will cost the same.</small>
                 </label>
                 <label>
-                  Typical duration in minutes
+                  How long it usually takes (minutes)
                   <input name="durationMinutes" type="number" min="0" max="10080" step="5" placeholder="60" />
                 </label>
                 <label>
@@ -206,9 +206,9 @@ export default function ProviderServicesPage() {
               <p>{data.credentialNotice}</p>
               <form onSubmit={addCredential}>
                 <label>Credential or license name<input required name="credentialName" maxLength={140} /></label>
-                <label>Issuing authority<input name="issuingAuthority" maxLength={160} /></label>
+                <label>Who issued it<input name="issuingAuthority" maxLength={160} /></label>
                 <label>License or credential number<input name="credentialIdentifier" maxLength={120} /></label>
-                <label>Jurisdiction<input name="jurisdiction" maxLength={120} placeholder="Maryland or Montgomery County" /></label>
+                <label>Where it applies<input name="jurisdiction" maxLength={120} placeholder="Maryland or Montgomery County" /></label>
                 <label>Expiration date<input name="expiresAt" type="date" /></label>
                 <button className="button primary" disabled={busy === "add-credential"} type="submit">
                   {busy === "add-credential" ? "Submitting…" : "Submit credential for review"}
