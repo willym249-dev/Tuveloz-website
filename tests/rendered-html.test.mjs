@@ -310,7 +310,7 @@ test("homepage prominently links to Tuveloz AI with clear boundaries", async () 
     "utf8",
   );
 
-  assert.ok(homeSource.includes('href="https://ai.tuveloz.com/"'));
+  assert.ok(homeSource.includes('href="/ai"'));
   assert.ok(homeSource.includes("A clearer way to describe what your vehicle needs."));
   assert.ok(homeSource.includes("It does not diagnose, dispatch"));
   assert.ok(homeSource.includes("guarantee pricing, or choose a provider."));
