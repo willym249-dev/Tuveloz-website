@@ -11,10 +11,13 @@ export class StripeConfigurationError extends Error {}
 // still onboarding-only.
 export const STRIPE_LIVE_MODE_ENABLED = false as const;
 
-// Identity has a separate release lock from payments. A Cloudflare variable or
-// restricted live key cannot activate real-person verification unless a future
-// reviewed code release deliberately changes this constant too.
-export const STRIPE_IDENTITY_LIVE_MODE_ENABLED = false as const;
+// Identity has a separate release lock from payments. This constant was
+// deliberately enabled for the provider-side launch (2026-08-04): live
+// verification still requires the STRIPE_IDENTITY_ALLOW_LIVE_MODE secret, a
+// dedicated rk_live_ Identity key, the verification-flow ID, and the webhook
+// secret — none of which ship with the code. Payments remain code-locked
+// separately via STRIPE_LIVE_MODE_ENABLED above.
+export const STRIPE_IDENTITY_LIVE_MODE_ENABLED = true as const;
 
 export function stripeLiveModeEnabled() {
   return Boolean(STRIPE_LIVE_MODE_ENABLED)

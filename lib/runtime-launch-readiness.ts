@@ -490,9 +490,14 @@ function runtimeStableInternalChecks(
       key: "manual_identity_alternative",
       stage: "provider_onboarding",
       // An owner-entered reference and its owner-authored audit event are not
-      // independent vendor proof. Keep this operational gate closed until a
-      // specific allowlisted non-Stripe verifier has a guarded proof adapter.
-      passed: false,
+      // independent vendor proof, so a manual canary alone can never pass.
+      // Launch requires at least one vendor-proven identity path, not two:
+      // while the guarded Stripe canary is current, a second non-Stripe
+      // adapter is optional redundancy. Individual applicants may still be
+      // manually verified per provider record; this gate only reports whether
+      // an independently proven path is operational.
+      passed: identityCanaries.stripe.evidencePassed
+        || identityCanaries.manual.evidencePassed,
     },
     {
       key: "active_policy_catalog",

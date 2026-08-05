@@ -363,12 +363,14 @@ async function readinessPayload() {
     },
     {
       key: "manual_identity_alternative",
-      title: "A non-Stripe identity alternative has independent vendor proof",
+      title: "At least one identity path has independent vendor proof",
       stage: "provider_onboarding",
       passed: runtimeCheckPassed("manual_identity_alternative"),
-      detail: manualIdentityAlternativeConfigured
-        ? "A non-Stripe provider name and owner-reviewed references may support an individual application, but they are not independent vendor proof and cannot pass this operational gate. No allowlisted non-Stripe vendor-proof adapter is implemented."
-        : "No allowlisted independently verifiable non-Stripe vendor-proof adapter is implemented. Owner-entered or manual references cannot pass this operational gate.",
+      detail: runtimeCheckPassed("manual_identity_alternative")
+        ? "The guarded Stripe Identity canary satisfies this gate. A second non-Stripe adapter is optional redundancy; owner-entered or manual references are not independent vendor proof and cannot pass this operational gate. No allowlisted non-Stripe vendor-proof adapter is implemented."
+        : manualIdentityAlternativeConfigured
+          ? "A non-Stripe provider name and owner-reviewed references may support an individual application, but they are not independent vendor proof and cannot pass this operational gate. No allowlisted non-Stripe vendor-proof adapter is implemented, so the Stripe Identity canary must pass."
+          : "No identity path currently has independent vendor proof. Complete the live Stripe Identity canary, or integrate an allowlisted independently verifiable non-Stripe vendor-proof adapter. Owner-entered or manual references cannot pass this operational gate.",
     },
     {
       key: "transaction_safety_switches",
@@ -465,9 +467,9 @@ async function readinessPayload() {
     }
     if (key === "manual_identity_alternative") {
       return {
-        responsibleRole: "TUVELOZ owner + approved non-Stripe identity provider",
-        nextAction: "Integrate an allowlisted independently verifiable non-Stripe vendor, retain guarded vendor proof, and obtain privacy and security approval before enabling this gate.",
-        actionHref: "/admin/provider-compliance",
+        responsibleRole: "TUVELOZ owner + identity-verification provider",
+        nextAction: "Complete the live Stripe Identity canary (which satisfies this gate), or integrate an allowlisted independently verifiable non-Stripe vendor with guarded vendor proof and privacy and security approval.",
+        actionHref: "/provider-onboarding",
       };
     }
     if (key === "active_policy_catalog" || key === "current_written_service_activation") {

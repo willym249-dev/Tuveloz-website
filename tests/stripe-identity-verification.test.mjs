@@ -84,7 +84,11 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(stripe, /STRIPE_IDENTITY_WEBHOOK_SECRET/);
   assert.match(stripe, /STRIPE_IDENTITY_SECRET_KEY/);
   assert.match(stripe, /STRIPE_IDENTITY_VERIFICATION_FLOW_ID/);
-  assert.match(stripe, /STRIPE_IDENTITY_LIVE_MODE_ENABLED = false as const/);
+  // Identity live mode was deliberately code-released for the provider-side
+  // launch; live capture still requires the STRIPE_IDENTITY_ALLOW_LIVE_MODE
+  // secret and a dedicated rk_live_ key. Payments stay code-locked separately.
+  assert.match(stripe, /STRIPE_IDENTITY_LIVE_MODE_ENABLED = true as const/);
+  assert.match(stripe, /STRIPE_LIVE_MODE_ENABLED = false as const/);
   assert.match(stripe, /STRIPE_IDENTITY_ALLOW_LIVE_MODE/);
   assert.match(stripe, /value\.startsWith\("rk_test_"\)/);
   assert.match(stripe, /value\.startsWith\("rk_live_"\)/);
@@ -208,9 +212,16 @@ test("identity readiness requires current D1 canaries instead of credential-shap
   );
 
   assert.match(runtime, /manualProviders = configuredProviders\.filter/);
+  // The gate passes only through a vendor-proven canary (Stripe today; a
+  // guarded non-Stripe adapter later). Configuration strings alone never pass,
+  // and no code path fabricates a passing manual canary.
   assert.match(
     runtime,
-    /key: "manual_identity_alternative",[\s\S]*?passed: false/,
+    /key: "manual_identity_alternative",[\s\S]*?passed: identityCanaries\.stripe\.evidencePassed\s*\|\|\s*identityCanaries\.manual\.evidencePassed/,
+  );
+  assert.doesNotMatch(
+    runtime,
+    /key: "manual_identity_alternative",[\s\S]{0,600}?passed: true/,
   );
   assert.doesNotMatch(
     runtime,
