@@ -10340,6 +10340,21 @@ footer > p,
   margin: 0;
 }
 
+.customer-launch-callout-optin {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  margin-top: 6px;
+  padding-top: 12px;
+}
+
+.customer-launch-callout .launch-updates-form {
+  margin-top: 10px;
+}
+
+.customer-launch-callout .launch-updates-done {
+  color: #b8c7d4;
+  margin-top: 10px;
+}
+
 .customer-security-note p {
   margin: 6px 0 0;
 }

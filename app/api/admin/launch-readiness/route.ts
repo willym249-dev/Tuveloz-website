@@ -558,8 +558,28 @@ async function readinessPayload() {
     nextAction: "Keep this switch off until every mandatory readiness blocker is cleared; activation requires a separate reviewed deployment.",
     actionHref: "#next-steps",
   };
+  // Launch-update email needs a physical postal address before anything can be
+  // sent. Without it the sequence silently sends nothing, so customers who
+  // asked to hear about launch would never be told. Surface it here rather than
+  // leaving it to a server log nobody reads.
+  const launchUpdatePostalAddressSet = Boolean(
+    runtimeText(runtime, "LAUNCH_UPDATES_POSTAL_ADDRESS"),
+  );
+  const launchUpdateAddressBlocker: WorkplanBlocker = {
+    key: "launch_update_postal_address_missing",
+    stage: "provider_onboarding",
+    state: launchUpdatePostalAddressSet ? "approved" : "locked",
+    title: "Launch-update email has no postal address",
+    reason: launchUpdatePostalAddressSet
+      ? "A postal address is configured, so launch-update email can send."
+      : "LAUNCH_UPDATES_POSTAL_ADDRESS is unset, so every launch-update email is suppressed and subscribers who asked to hear about launch receive nothing.",
+    responsibleRole: "TUVELOZ owner + deployment operator",
+    nextAction: "Set LAUNCH_UPDATES_POSTAL_ADDRESS to the physical mailing address printed in launch-update email; a registered-agent address is acceptable.",
+    actionHref: "#next-steps",
+  };
   const jobBlockers = [
     ...(CUSTOMER_JOB_POSTING_PAUSED ? [customerRequestPauseBlocker] : []),
+    ...(launchUpdatePostalAddressSet ? [] : [launchUpdateAddressBlocker]),
     ...canonicalBlockers,
   ];
   const paymentBlockers = [
