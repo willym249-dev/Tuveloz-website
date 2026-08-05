@@ -1305,46 +1305,58 @@ export async function POST(request: Request) {
     }).where(and(
       eq(stripePayments.id, paymentId),
       eq(stripePayments.status, "checkout_release_recheck"),
-      // Quote-checkout flow: requestId and finalQuoteId are assigned from the
-      // quote selection above and are non-null here (product checkout is a
-      // separate route). The assertion is compile-only and changes no SQL.
-      eq(stripePayments.requestId, requestId!),
-      eq(stripePayments.quoteId, finalQuoteId!),
-      eq(stripePayments.scopeVersion, paymentScopeVersion),
-      eq(
-        stripePayments.scopeAuthorizationDecisionId,
-        scopeAuthorizationDecisionId,
-      ),
-      eq(stripePayments.authorizedPriceSnapshot, authorizedPriceSnapshot),
-      exists(
-        getDb().select({ id: jobScopeVersions.id }).from(jobScopeVersions)
-          .where(and(
-            eq(jobScopeVersions.requestId, requestId || ""),
-            eq(jobScopeVersions.quoteId, finalQuoteId || ""),
-            eq(jobScopeVersions.version, paymentScopeVersion),
-            eq(
-              jobScopeVersions.authorizationDecisionId,
-              scopeAuthorizationDecisionId,
-            ),
-            eq(jobScopeVersions.priceBreakdown, authorizedPriceSnapshot),
-          )),
-      ),
-      exists(
-        getDb().select({ id: providerQuotes.id }).from(providerQuotes)
-          .where(and(
-            eq(providerQuotes.id, finalQuoteId || ""),
-            eq(providerQuotes.requestId, requestId || ""),
-            eq(providerQuotes.status, "accepted"),
-            eq(providerQuotes.scopeVersion, paymentScopeVersion),
-            eq(
-              providerQuotes.authorizationDecisionId,
-              scopeAuthorizationDecisionId,
-            ),
-            eq(providerQuotes.priceCents, String(providerAmountCents)),
-            eq(providerQuotes.customerFeeCents, String(applicationFeeCents)),
-            eq(providerQuotes.customerTotalCents, String(customerTotalCents)),
-          )),
-      ),
+      // Quote checkouts re-verify the accepted-quote authorization at open time
+      // — scope version, price snapshot, and the accepted providerQuotes/
+      // jobScopeVersions binding — to reject any scope or price change made
+      // while the Stripe Session was being created. Storefront product payments
+      // have no accepted quote or mutable scope: their price is fixed when the
+      // payment record is created and the release decision is re-checked above,
+      // so they open on the payment id and status alone. Without this branch the
+      // quote-only exists() checks below could never match a product payment,
+      // expiring every storefront Checkout as a false "scope changed" error.
+      // requestId/finalQuoteId are non-null in the quote branch (assigned from
+      // the quote selection); the assertions are compile-only.
+      ...(paymentType === "quote"
+        ? [
+          eq(stripePayments.requestId, requestId!),
+          eq(stripePayments.quoteId, finalQuoteId!),
+          eq(stripePayments.scopeVersion, paymentScopeVersion),
+          eq(
+            stripePayments.scopeAuthorizationDecisionId,
+            scopeAuthorizationDecisionId,
+          ),
+          eq(stripePayments.authorizedPriceSnapshot, authorizedPriceSnapshot),
+          exists(
+            getDb().select({ id: jobScopeVersions.id }).from(jobScopeVersions)
+              .where(and(
+                eq(jobScopeVersions.requestId, requestId || ""),
+                eq(jobScopeVersions.quoteId, finalQuoteId || ""),
+                eq(jobScopeVersions.version, paymentScopeVersion),
+                eq(
+                  jobScopeVersions.authorizationDecisionId,
+                  scopeAuthorizationDecisionId,
+                ),
+                eq(jobScopeVersions.priceBreakdown, authorizedPriceSnapshot),
+              )),
+          ),
+          exists(
+            getDb().select({ id: providerQuotes.id }).from(providerQuotes)
+              .where(and(
+                eq(providerQuotes.id, finalQuoteId || ""),
+                eq(providerQuotes.requestId, requestId || ""),
+                eq(providerQuotes.status, "accepted"),
+                eq(providerQuotes.scopeVersion, paymentScopeVersion),
+                eq(
+                  providerQuotes.authorizationDecisionId,
+                  scopeAuthorizationDecisionId,
+                ),
+                eq(providerQuotes.priceCents, String(providerAmountCents)),
+                eq(providerQuotes.customerFeeCents, String(applicationFeeCents)),
+                eq(providerQuotes.customerTotalCents, String(customerTotalCents)),
+              )),
+          ),
+        ]
+        : []),
     )).returning({ id: stripePayments.id });
     if (!openedPayment.length) {
       try {
