@@ -908,8 +908,8 @@ export function ProviderSignupForm() {
               <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Solo se pide un documento por requisito legal aplicable — nada genérico."
-                  : "One document per legal requirement that actually applies — nothing generic."}
+                  ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
+                  : "We only ask for the one document each law actually requires — nothing extra."}
               </p>
               {requiredDocumentsBySelection.map((entry) => (
                 <div key={entry.code} className="legal-requirement-note">
@@ -1274,8 +1274,8 @@ export function ProviderSignupForm() {
               {soloBusiness && (
                 <small>
                   {providerFormIsSpanish
-                    ? " — asumimos propietario único en Maryland. Toque solo si registró una LLC o corporación."
-                    : " — we've assumed a Maryland sole proprietorship. Only open this if you registered an LLC or corporation."}
+                    ? " — lo configuramos como negocio de una sola persona en Maryland. Ábralo solo si registró una LLC o corporación."
+                    : " — we've set this up as a one-person Maryland business. Only open this if you registered an LLC or corporation."}
                 </small>
               )}
             </summary>
@@ -1292,7 +1292,7 @@ export function ProviderSignupForm() {
                 </label>
               )}
               <label>
-                {providerFormIsSpanish ? "Tipo de entidad" : "Business entity type"}
+                {providerFormIsSpanish ? "¿Cómo está formado su negocio?" : "How is your business set up?"}
                 <select
                   required
                   name="business-entity-type"
@@ -1300,24 +1300,24 @@ export function ProviderSignupForm() {
                     || (soloBusiness ? "sole_proprietorship" : "")}
                 >
                   <option value="" disabled>{providerFormIsSpanish ? "Elija una" : "Choose one"}</option>
-                  <option value="sole_proprietorship">{providerFormIsSpanish ? "Propietario único" : "Sole proprietorship"}</option>
-                  <option value="limited_liability_company">{providerFormIsSpanish ? "Compañía de responsabilidad limitada (LLC)" : "Limited liability company"}</option>
+                  <option value="sole_proprietorship">{providerFormIsSpanish ? "Solo yo (propietario único)" : "Just me (sole proprietor)"}</option>
+                  <option value="limited_liability_company">{providerFormIsSpanish ? "LLC (compañía de responsabilidad limitada)" : "LLC (limited liability company)"}</option>
                   <option value="corporation">{providerFormIsSpanish ? "Corporación" : "Corporation"}</option>
-                  <option value="partnership">{providerFormIsSpanish ? "Sociedad" : "Partnership"}</option>
+                  <option value="partnership">{providerFormIsSpanish ? "Sociedad (dos o más dueños)" : "Partnership (two or more owners)"}</option>
                   <option value="other">{providerFormIsSpanish ? "Otro" : "Other"}</option>
                 </select>
                 {soloBusiness && (
                   <small>
                     {providerFormIsSpanish
-                      ? "La mayoría de los negocios de una sola persona sin registro son de propietario único. Cámbielo si registró una LLC o corporación."
-                      : "Most one-person businesses without a registration are sole proprietorships. Change this if you registered an LLC or corporation."}
+                      ? "Si no registró nada, casi siempre es “Solo yo”. Cámbielo solo si creó una LLC o corporación."
+                      : "If you haven't registered anything, it's almost always “Just me.” Change it only if you set up an LLC or corporation."}
                   </small>
                 )}
               </label>
               <label>
                 {providerFormIsSpanish
-                  ? "Estado donde el negocio está formado o registrado"
-                  : "State where the business is formed or registered"}
+                  ? "¿En qué estado está registrado su negocio?"
+                  : "What state is your business registered in?"}
                 <input
                   required
                   defaultValue={draftFields["business-formation-state"]
@@ -1387,7 +1387,7 @@ export function ProviderSignupForm() {
           </fieldset>
           {providerAcceptsCustomersAtBusiness && (
             <label>
-              {providerFormIsSpanish ? "Dirección donde atenderá a clientes" : "Business meeting address"}
+              {providerFormIsSpanish ? "Dirección donde atenderá a clientes" : "Address where customers meet you"}
               <AddressAutocompleteInput
                 defaultValue={draftFields["business-service-address"] ?? ""}
                 required
@@ -1440,11 +1440,11 @@ export function ProviderSignupForm() {
             ) : (
               <>
                 <label>
-                  {providerFormIsSpanish ? "Nombre del firmante" : "Typed signer name"}
+                  {providerFormIsSpanish ? "Firma (escriba su nombre completo)" : "Signature (type your full name)"}
                   <input defaultValue={draftFields["signer-name"] ?? ""} required name="signer-name" placeholder={providerFormIsSpanish ? "Nombre legal completo" : "Full legal name"} />
                 </label>
                 <label>
-                  {providerFormIsSpanish ? "Título o capacidad del firmante" : "Signer title or capacity"}
+                  {providerFormIsSpanish ? "Su cargo en el negocio" : "Your role in the business"}
                   <input defaultValue={draftFields["signer-title"] ?? ""} required name="signer-title" placeholder={providerFormIsSpanish ? "Solicitante, propietario o representante autorizado" : "Applicant, owner, or authorized representative"} />
                 </label>
               </>
