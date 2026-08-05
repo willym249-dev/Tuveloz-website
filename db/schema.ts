@@ -536,6 +536,41 @@ export const passwordVerificationCodes = sqliteTable(
   ],
 );
 
+export const accountPhoneNumbers = sqliteTable(
+  "account_phone_numbers",
+  {
+    email: text("email").primaryKey(),
+    phoneE164: text("phone_e164").notNull(),
+    verifiedAt: text("verified_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("account_phone_numbers_phone_unique").on(table.phoneE164),
+  ],
+);
+
+export const phoneLoginCodes = sqliteTable(
+  "phone_login_codes",
+  {
+    id: text("id").primaryKey(),
+    phoneE164: text("phone_e164").notNull(),
+    purpose: text("purpose").notNull(),
+    email: text("email").notNull().default(""),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: text("used_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("phone_login_codes_phone_purpose_idx").on(table.phoneE164, table.purpose),
+    index("phone_login_codes_email_purpose_idx").on(table.email, table.purpose),
+    index("phone_login_codes_expires_at_idx").on(table.expiresAt),
+    index("phone_login_codes_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const passkeyCredentials = sqliteTable(
   "passkey_credentials",
   {
