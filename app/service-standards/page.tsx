@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   CUSTOMER_AUTHORIZATION_PRINCIPLES,
@@ -8,6 +9,12 @@ import {
 import { CUSTOMER_JOB_POSTING_PAUSED, MARKETPLACE_MODE } from "../../lib/launch-status";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
+
+export const metadata: Metadata = {
+  title: "Service Standards",
+  description:
+    "How Tuveloz balances provider freedom with service-specific safety gates — and why each service stays off until its requirements are met.",
+};
 
 const availabilityCopy: Record<ServiceAvailability, {
   label: string;
