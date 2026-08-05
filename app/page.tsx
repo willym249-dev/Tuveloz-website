@@ -305,6 +305,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   // A/B variants are set after mount in the experiment effect below.
   const [heroVariant, setHeroVariant] = useState("A");
   const [pitchVariant, setPitchVariant] = useState("A");
+  const [foundingCtaVariant, setFoundingCtaVariant] = useState("A");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -358,6 +359,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     queueMicrotask(() => {
       setHeroVariant(assigned.provider_hero ?? "A");
       setPitchVariant(assigned.provider_pitch ?? "A");
+      setFoundingCtaVariant(assigned.founding_cta ?? "A");
     });
   }, []);
 
@@ -1610,7 +1612,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
           </div>
           <a className="button lime" href="#provider-apply">
-            Join free <span>→</span>
+            {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
           </a>
         </div>
       </section>

@@ -9,6 +9,7 @@ test("experiments assign stable first-party variants", async () => {
   const lib = await read("lib/experiments.ts");
   assert.match(lib, /provider_hero:\s*\["A",\s*"B"\]/);
   assert.match(lib, /provider_pitch:\s*\["A",\s*"B"\]/);
+  assert.match(lib, /founding_cta:\s*\["A",\s*"B"\]/);
   assert.match(lib, /export function getVariant/);
   assert.match(lib, /export function activeVariants/);
   // Persisted per browser so a visitor always sees the same copy.
@@ -26,6 +27,9 @@ test("hero and pitch each render both variants and tag the start event", async (
   // Pitch variants.
   assert.match(page, /You’ve got the skills/);
   assert.match(page, /Your customers\. Your prices\. Your call\./);
+  // Founding-banner CTA variants.
+  assert.match(page, /Claim my spot/);
+  assert.match(page, /"Join free"/);
   // Start event carries the per-visitor variant map.
   assert.match(page, /track\("provider_signup_started",\s*\{\s*variants: activeVariants\(\)/);
 });
@@ -38,7 +42,7 @@ test("submitted applications are attributed to the active variants", async () =>
 
 test("owner funnel reports conversion per variant for every experiment", async () => {
   const api = await read("app/api/admin/analytics-funnel/route.ts");
-  assert.match(api, /const EXPERIMENTS = \["provider_hero", "provider_pitch"\]/);
+  assert.match(api, /const EXPERIMENTS = \["provider_hero", "provider_pitch", "founding_cta"\]/);
   assert.match(api, /experimentsSince/);
   assert.match(api, /conversion: pct\(value\.submitted, value\.started\)/);
   // Only real A/B rows are counted; legacy/malformed props are ignored.
@@ -50,4 +54,6 @@ test("owner funnel reports conversion per variant for every experiment", async (
   assert.match(adminPage, /Copy experiments/);
   assert.match(adminPage, /provider_pitch/);
   assert.match(adminPage, /Pitch headline/);
+  assert.match(adminPage, /founding_cta/);
+  assert.match(adminPage, /Founding-banner button/);
 });

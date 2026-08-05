@@ -105,7 +105,7 @@ type ExperimentRow = {
 
 // Experiments whose conversion is start → submitted on the provider funnel.
 // Add a name here (and render copy variants in the app) to measure it.
-const EXPERIMENTS = ["provider_hero", "provider_pitch"] as const;
+const EXPERIMENTS = ["provider_hero", "provider_pitch", "founding_cta"] as const;
 
 // Read the variant this row was tagged with for a given experiment. Current
 // events carry props.variants = { [name]: "A" | "B" }; the older single-field

@@ -8,13 +8,14 @@
  * split later without changing call sites.
  */
 
-export type ExperimentName = "provider_hero" | "provider_pitch";
+export type ExperimentName = "provider_hero" | "provider_pitch" | "founding_cta";
 
 // First entry is the control. Keep these in sync with the copy rendered for
 // each variant and with the labels shown on the owner funnel page.
 export const EXPERIMENT_VARIANTS: Record<ExperimentName, readonly string[]> = {
   provider_hero: ["A", "B"],
   provider_pitch: ["A", "B"],
+  founding_cta: ["A", "B"],
 };
 
 export const EXPERIMENT_NAMES = Object.keys(EXPERIMENT_VARIANTS) as ExperimentName[];

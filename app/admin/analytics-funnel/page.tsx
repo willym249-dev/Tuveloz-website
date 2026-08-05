@@ -53,6 +53,11 @@ const EXPERIMENT_META: Array<{
       B: "“Your customers. Your prices. Your call.”",
     },
   },
+  {
+    name: "founding_cta",
+    title: "Founding-banner button",
+    labels: { A: "“Join free”", B: "“Claim my spot”" },
+  },
 ];
 
 function Experiment({
