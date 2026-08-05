@@ -183,16 +183,19 @@ confirm Stripe returns the expected option shape. Record only the privacy-safe
 shape and IDs; never record a client secret, document, selfie, name, or birth
 date.
 
-Keep `STRIPE_IDENTITY_ALLOW_LIVE_MODE=false`. A separate code-controlled
-Identity live switch is also false, so a Cloudflare variable or copied
-`rk_live_*` key cannot begin real-person verification by itself. Test Identity
-may be reviewed without enabling jobs, provider activation, checkout, payments,
-transfers, or payouts.
+The code-controlled Identity live switch (`STRIPE_IDENTITY_LIVE_MODE_ENABLED`)
+was deliberately released to `true` for the provider-side launch. Real-person
+verification therefore still requires `STRIPE_IDENTITY_ALLOW_LIVE_MODE=true`, a
+dedicated `rk_live_*` Identity key, a **LIVE** Verification Flow ID, and the
+live Identity webhook secret — none of which ship in code. With those unset,
+Identity stays fail-closed and a copied `rk_live_*` key alone cannot begin
+verification. This is isolated from payments: `STRIPE_LIVE_MODE_ENABLED`
+remains `false`, so enabling Identity does not enable jobs, checkout, payments,
+transfers, or payouts. See `docs/PROVIDER_ACTIVATION_RUNBOOK.md`.
 
-A future real-person release requires a separately reviewed **LIVE**
-Verification Flow, live restricted key, and live-only webhook destination and
-signing secret. Re-run the option-shape canary in live configuration without a
-real applicant before changing both the code and environment live locks.
+Before pointing real applicants at the live flow, re-run the option-shape canary
+in live configuration (no real applicant) to confirm Stripe returns the expected
+option shape.
 
 Set `IDENTITY_VERIFICATION_PROVIDERS` to include `stripe_identity` only during
 an authorized test-mode validation after this code and its secrets are deployed,
