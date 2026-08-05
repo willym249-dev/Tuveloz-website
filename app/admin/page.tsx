@@ -421,7 +421,10 @@ export default function AdminPage() {
   useEffect(() => {
     fetch("/api/admin", { cache: "no-store" })
       .then(async (response) => {
-        const result = await response.json();
+        // Trusted same-origin API payload; validated server-side. Typed at the
+        // boundary as any so client display code can read it without re-modeling
+        // every endpoint's response shape.
+        const result: any = await response.json();
         if (!response.ok) throw new Error(result.error || "Unable to load dashboard.");
         setRequests(result.requests);
         const providerItems = result.providers as ProviderApplication[];

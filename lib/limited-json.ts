@@ -52,7 +52,7 @@ export async function readLimitedJsonObject(
   }
 
   try {
-    const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    const parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new InvalidJsonBodyError("Send one JSON object.");
     }

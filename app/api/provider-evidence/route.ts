@@ -49,7 +49,7 @@ const CORRECTABLE_EVIDENCE_STATUSES = new Set([
 const EXPIRATION_REMINDER_DAYS = [60, 30, 14, 7, 1] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function clean(value: FormDataEntryValue | string | null | undefined, max: number) {
+function clean(value: File | string | null | undefined, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 

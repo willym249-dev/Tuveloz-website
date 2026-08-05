@@ -1,0 +1,16 @@
+{
+  "//": "Browser-side project: client components and client-only libs are type-checked against the DOM lib. The generated worker-configuration.d.ts (Cloudflare Worker globals) is deliberately excluded so client code sees real browser types, not workerd's.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "tsBuildInfoFile": "./node_modules/.cache/tsc-client.tsbuildinfo"
+  },
+  "include": [
+    "app/**/*.tsx",
+    "lib/analytics.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "worker-configuration.d.ts"
+  ]
+}

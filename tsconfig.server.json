@@ -1,0 +1,23 @@
+{
+  "//": "Cloudflare Worker side: route handlers, the worker entry, db, scripts, and server libs are type-checked against the generated workerd globals (worker-configuration.d.ts) with no DOM lib. Client-only libs are excluded.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": [],
+    "tsBuildInfoFile": "./node_modules/.cache/tsc-server.tsbuildinfo"
+  },
+  "include": [
+    "worker-configuration.d.ts",
+    "worker/**/*.ts",
+    "db/**/*.ts",
+    "app/**/route.ts",
+    "app/**/sitemap.ts",
+    "app/**/robots.ts",
+    "lib/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "lib/analytics.ts",
+    "lib/ai/**"
+  ]
+}

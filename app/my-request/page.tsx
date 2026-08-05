@@ -112,7 +112,7 @@ export default function MyRequestPage() {
       ? `token=${encodeURIComponent(token)}`
       : `requestId=${encodeURIComponent(requestId)}`;
     fetch(`/api/customer-quotes?${query}`).then(async (response) => {
-      const result = await response.json();
+      const result: any = await response.json();
       if (!response.ok) throw new Error(result.error);
       setAccessToken(result.accessToken || token);
       setJob(result.job); setQuotes(result.quotes); setReview(result.review);

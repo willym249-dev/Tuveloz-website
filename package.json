@@ -11,6 +11,7 @@
     "start": "vinext start",
     "deploy": "vinext deploy",
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
+    "typecheck": "wrangler types && tsc -p tsconfig.server.json && tsc -p tsconfig.client.json",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "db:generate": "drizzle-kit generate",
