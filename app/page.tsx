@@ -237,6 +237,34 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   }, [view]);
 
   useEffect(() => {
+    // A provider who taps /join wants the application, not the customer-facing
+    // top of the homepage. Jump straight to the provider panel on load, unless
+    // a deep-link hash already targets a specific section.
+    if (view !== "provider") return;
+    if (window.location.hash) return;
+    let cancelled = false;
+    const scrollToPanel = () => {
+      if (!cancelled) document.getElementById("providers")?.scrollIntoView({ block: "start" });
+    };
+    scrollToPanel();
+    const frame = requestAnimationFrame(scrollToPanel);
+    // Content above the panel (reviews, hero image) loads async and pushes the
+    // panel down after first paint, so re-assert a few times until it settles.
+    const timers = [200, 600, 1200].map((ms) => window.setTimeout(scrollToPanel, ms));
+    // Stop fighting the visitor the moment they take over scrolling.
+    const stop = () => { cancelled = true; };
+    window.addEventListener("wheel", stop, { passive: true, once: true });
+    window.addEventListener("touchstart", stop, { passive: true, once: true });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      timers.forEach((id) => window.clearTimeout(id));
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("touchstart", stop);
+    };
+  }, [view]);
+
+  useEffect(() => {
     fetch("/api/reviews").then(async (response) => {
       if (!response.ok) return;
       const result = (await response.json()) as {
