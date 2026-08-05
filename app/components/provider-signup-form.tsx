@@ -258,7 +258,7 @@ type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
-const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
+export const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
 
 /**
  * Only plain identification/business text fields are autosaved. Legal

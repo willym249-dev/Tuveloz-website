@@ -25,7 +25,7 @@ import {
 } from "./components/tuveloz-icons";
 import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
-import { ProviderSignupForm } from "./components/provider-signup-form";
+import { ProviderSignupForm, SIGNUP_DRAFT_KEY } from "./components/provider-signup-form";
 import { SocialLinks } from "./components/social-links";
 
 // Homepage launches with only the easy-entry, no-license services — the
@@ -345,20 +345,31 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   }, [view]);
 
   useEffect(() => {
-    // A provider who taps /join wants the application, not the customer-facing
-    // top of the homepage. Jump straight to the provider panel on load, unless
-    // a deep-link hash already targets a specific section.
+    // On /join, a returning applicant wants to pick their in-progress application
+    // back up — so jump them straight to the form. A first-time visitor should
+    // meet the hero pitch first; don't yank them past it. A saved signup draft is
+    // our signal that this person has already started applying.
     if (view !== "provider") return;
     if (window.location.hash) return;
+    let hasDraft = false;
+    try {
+      hasDraft = window.localStorage.getItem(SIGNUP_DRAFT_KEY) !== null;
+    } catch {
+      hasDraft = false;
+    }
+    if (!hasDraft) return;
     let cancelled = false;
-    const scrollToPanel = () => {
-      if (!cancelled) document.getElementById("providers")?.scrollIntoView({ block: "start" });
+    const scrollToForm = () => {
+      if (cancelled) return;
+      const target = document.getElementById("provider-apply")
+        ?? document.getElementById("providers");
+      target?.scrollIntoView({ block: "start" });
     };
-    scrollToPanel();
-    const frame = requestAnimationFrame(scrollToPanel);
-    // Content above the panel (reviews, hero image) loads async and pushes the
-    // panel down after first paint, so re-assert a few times until it settles.
-    const timers = [200, 600, 1200].map((ms) => window.setTimeout(scrollToPanel, ms));
+    scrollToForm();
+    const frame = requestAnimationFrame(scrollToForm);
+    // Content above the form (reviews, hero image) loads async and pushes the
+    // form down after first paint, so re-assert a few times until it settles.
+    const timers = [200, 600, 1200].map((ms) => window.setTimeout(scrollToForm, ms));
     // Stop fighting the visitor the moment they take over scrolling.
     const stop = () => { cancelled = true; };
     window.addEventListener("wheel", stop, { passive: true, once: true });
