@@ -32,6 +32,7 @@ import {
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
 import { track } from "../../lib/analytics";
+import { activeVariants } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
@@ -259,7 +260,7 @@ type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
-const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
+export const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
 
 /**
  * Only plain identification/business text fields are autosaved. Legal
@@ -592,7 +593,7 @@ export function ProviderSignupForm() {
         setLegalConfirmed(false);
         setStep(1);
         setApplicationSent(true);
-        track("provider_signup_completed");
+        track("provider_signup_completed", { variants: activeVariants() });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Please try again.";
         setApplicationError(message);
@@ -662,7 +663,7 @@ export function ProviderSignupForm() {
     return (
       <div className="success-message provider-success" role="status">
         <span>✓</span>
-        <h3>{providerFormIsSpanish ? "Solicitud recibida." : "Application received."}</h3>
+        <h3>{providerFormIsSpanish ? "¡Listo! Recibimos su solicitud." : "You're in — we've got your application."}</h3>
         <p>{providerFormIsSpanish
           ? "Esto es lo que sigue: (1) inicie sesión con el mismo correo, (2) suba la evidencia requerida para sus servicios, (3) nuestro equipo revisa y usted puede seguir el estado en su panel. Le avisaremos por correo en cada paso."
           : "Here's what happens next: (1) sign in with the same email, (2) upload the evidence required for your services, (3) our team reviews and you can track the status from your dashboard. We'll email you at each step."}</p>
@@ -1560,14 +1561,14 @@ export function ProviderSignupForm() {
               backLabel={providerFormIsSpanish ? "Regresar" : "Go back"}
               busy={applicationBusy}
               busyLabel={providerFormIsSpanish ? "Enviando…" : "Sending…"}
-              confirmLabel={providerFormIsSpanish ? "Confirmar y enviar codigo" : "Confirm and send code"}
+              confirmLabel={providerFormIsSpanish ? "Sí, envíenme el código" : "Yes, send my code"}
               confirmStyle="lime"
               confirmType="submit"
               message={providerFormIsSpanish
-                ? "Revise la información anterior. TUVELOZ enviará un código. Solo se crea una solicitud nueva si no existe otra para este correo; los cambios a una solicitud existente se hacen después de iniciar sesión."
-                : "Review the information above. TUVELOZ will email a one-time code. Verification creates a new application only if none exists for this email; changes to an existing application happen after sign-in."}
+                ? "Écheles un vistazo a los datos de arriba — ¿todo bien? Le enviaremos un código de un solo uso para confirmar que es usted. Esto inicia una solicitud nueva solo si aún no tiene una para este correo; si ya la tiene, puede actualizarla después de iniciar sesión."
+                : "Take a quick look above — all set? We'll email you a one-time code to confirm it's you. This starts a new application only if you don't already have one for this email; if you do, you can update it after signing in."}
               onBack={() => setConfirmingSubmit(false)}
-              title={providerFormIsSpanish ? "¿Continuar con la verificación?" : "Continue with email verification?"}
+              title={providerFormIsSpanish ? "¿Listo para enviarla?" : "Ready to send it in?"}
             />
           ) : (
             <div className="form-nav">
@@ -1577,7 +1578,7 @@ export function ProviderSignupForm() {
               <button className="button lime form-button" type="submit" disabled={applicationBusy}>
                 {applicationBusy
                   ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
-                  : (providerFormIsSpanish ? "Enviar solicitud" : "Submit application")} <span>→</span>
+                  : (providerFormIsSpanish ? "Enviar mi solicitud" : "Send my application")} <span>→</span>
               </button>
             </div>
           )}

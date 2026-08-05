@@ -163,7 +163,7 @@ test("build protects every important submission with a second confirmation", asy
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Confirm and post"));
-  assert.ok(contents.includes("Confirm and send code"));
+  assert.ok(contents.includes("Yes, send my code"));
   assert.ok(contents.includes("Last step: enter the code we emailed you"));
   assert.ok(contents.includes("Confirm and send"));
   assert.ok(contents.includes("Confirm quote"));
