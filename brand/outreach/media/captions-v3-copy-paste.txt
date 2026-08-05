@@ -1,0 +1,107 @@
+TUVELOZ REEL v3 — COPY-PASTE KIT  ("This could be your Tuesday")
+================================================================
+New provider-recruitment reel. Post AFTER the two existing clips so the
+feed stays fresh. Turn ON the "AI-generated content" label when posting
+(TikTok: upload settings; Instagram: Advanced settings -> Add AI label) —
+the clip is AI footage.
+
+File: tuveloz-reel-tuesday-v3.mp4  (generate from the prompt in
+reel-provider-recruitment-v3.md, then drop the MP4 in this folder)
+
+
+--- ON-SCREEN TEXT (add natively in the app editor, do NOT bake in) ---
+EN:
+0.0-2.5s:  Fix cars in Montgomery County? This could be your Tuesday. 👇
+2.5-5.5s:  Free to join. Set your own prices. Keep 100% of what you quote.
+5.5-8.0s:  Pre-launch signup is open → tuveloz.com/join
+ES:
+0.0-2.5s:  ¿Arreglas autos en el Condado de Montgomery? Esto podría ser tu martes. 👇
+2.5-5.5s:  Unirse es gratis. Pon tus precios. Quédate con el 100% de lo que cotizas.
+5.5-8.0s:  Inscripción previa al lanzamiento abierta → tuveloz.com/join
+
+
+=====================================================================
+INSTAGRAM / FACEBOOK CAPTION (EN)
+=====================================================================
+That feeling when the job's done, the hood's shut, and the whole day was
+yours to run 🔧
+
+Tuveloz is a new local marketplace for vehicle services in Montgomery
+County, MD — and we're signing up independent providers before launch:
+
+✅ Free to join — no listing fee, no subscription
+✅ You set your prices and keep 100% of what you quote (customers pay the
+   site's small 5% fee, not you)
+✅ No exclusivity — keep every platform and client you already have
+
+Straight up: customer requests aren't live yet. Applying now means your
+review is done and you're first in line on day one.
+
+Apply in minutes (English o español): link in bio → tuveloz.com/join
+
+(First comment — paste the hashtag block there to keep this caption clean.)
+
+FIRST-COMMENT HASHTAGS (IG/FB EN):
+#MobileMechanic #MechanicLife #MechanicsOfTikTok #AutoRepair #CarRepair
+#Automotive #CarTok #CarCommunity #AutoDetailing #SkilledTrades #BlueCollar
+#SideHustle #SideGig #GigWork #BeYourOwnBoss #WorkForYourself #Entrepreneur
+#SmallBusiness #DMV #DMVsmallbusiness #MontgomeryCountyMD #MoCo #SilverSpringMD
+#RockvilleMD #GaithersburgMD #WheatonMD
+
+
+=====================================================================
+TIKTOK CAPTION (EN) — keep tags to ~5
+=====================================================================
+Fix cars in the DMV? New local marketplace, free to join, keep 100% of
+what you quote. Customer jobs aren't live yet — pre-launch signup puts you
+first in line: tuveloz.com/join
+#MobileMechanic #SideHustle #CarTok #MontgomeryCountyMD #SkilledTrades
+
+
+=====================================================================
+INSTAGRAM / FACEBOOK CAPTION (ES) — post as its own reel
+=====================================================================
+Esa sensación cuando el trabajo está hecho, el capó está cerrado, y el día
+entero fue tuyo para manejarlo 🔧
+
+Tuveloz es un nuevo mercado local de servicios vehiculares en el Condado de
+Montgomery, MD — y estamos inscribiendo proveedores independientes antes del
+lanzamiento:
+
+✅ Unirse es gratis — sin cuota de listado, sin suscripción
+✅ Tú pones tus precios y te quedas con el 100% de lo que cotizas (el cliente
+   paga la pequeña tarifa del 5% del sitio, no tú)
+✅ Sin exclusividad — conserva cada plataforma y cliente que ya tienes
+
+Para ser claros: las solicitudes de clientes todavía no están activas.
+Aplicar ahora deja tu revisión lista para el primer día.
+
+Solicita en minutos: enlace en bio → tuveloz.com/join
+
+FIRST-COMMENT HASHTAGS (IG/FB ES):
+#MecanicoMovil #MecanicoADomicilio #TrabajoExtra #IngresoExtra #NegocioPropio
+#Emprendedor #DetalladoAutomotriz #Automotive #CarTok #SideHustle
+#MontgomeryCountyMD #SilverSpringMD #GaithersburgMD #WheatonMD #DMV
+#LatinosEnMaryland #MarylandLatino
+
+
+=====================================================================
+TIKTOK CAPTION (ES) — keep tags to ~5
+=====================================================================
+¿Arreglas autos en el DMV? Nuevo mercado local, unirse es gratis, quédate
+con el 100% de lo que cotizas. Las solicitudes de clientes aún no están
+activas — la inscripción previa te pone primero en la fila: tuveloz.com/join
+#MecanicoMovil #TrabajoExtra #CarTok #MontgomeryCountyMD #LatinosEnMaryland
+
+
+=====================================================================
+POSTING NOTES
+=====================================================================
+- AI label ON (both platforms). Both this and the existing clips are AI footage.
+- Add on-screen text natively in the editor — never bake it into the export.
+- IG allows 30 tags (use the full block, ideally in the first comment);
+  TikTok deprioritizes tag-stuffed posts, so keep it to ~5.
+- Rotate a few tags between posts so the algorithm doesn't see identical blocks.
+- Best slots (ET): Wed 9 AM IG/FB, Wed 7:30 PM TikTok (EN);
+  Thu 9 AM TikTok, Thu 12 PM IG/FB (ES). Move to your own analytics peaks
+  after 2-3 posts.
