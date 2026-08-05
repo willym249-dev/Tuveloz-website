@@ -8,6 +8,7 @@ import { processDueAppointmentReminders } from "../lib/appointment-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
 import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
 import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
+import { processPendingMessageImageScans } from "../lib/message-image-scanner";
 import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
 
 interface Env {
@@ -131,6 +132,7 @@ const worker = {
       scheduledTask("quarantined provider evidence scans", () => (
         processPendingCloudmersiveEvidenceScans()
       )),
+      scheduledTask("pending message image scans", () => processPendingMessageImageScans()),
     ]).then(() => undefined));
   },
 

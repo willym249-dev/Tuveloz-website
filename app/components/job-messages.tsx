@@ -7,6 +7,7 @@ type JobMessage = {
   senderRole: "customer" | "provider";
   mine: boolean;
   body: string;
+  image?: { status: string; viewable: boolean } | null;
   createdAt: string;
 };
 
@@ -76,16 +77,21 @@ export function JobMessages({ audience }: { audience: "customer" | "provider" })
     event.preventDefault();
     if (!selected) return;
     const form = event.currentTarget;
-    const body = String(new FormData(form).get("message") ?? "").trim();
-    if (!body) return;
+    const formData = new FormData(form);
+    const body = String(formData.get("message") ?? "").trim();
+    const image = formData.get("image");
+    const hasImage = image instanceof File && image.size > 0;
+    if (!body && !hasImage) return;
     setSending(true);
     setError("");
     try {
-      const response = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ requestId: selected.requestId, body }),
-      });
+      // Multipart so an optional photo can ride along. The browser sets the
+      // content-type boundary — do not set it by hand.
+      const payload = new FormData();
+      payload.set("requestId", selected.requestId);
+      payload.set("body", body);
+      if (hasImage) payload.set("image", image);
+      const response = await fetch("/api/messages", { method: "POST", body: payload });
       const result = await response.json() as { message?: JobMessage; error?: string };
       if (!response.ok || !result.message) {
         throw new Error(result.error || "Unable to send your message.");
@@ -154,7 +160,21 @@ export function JobMessages({ audience }: { audience: "customer" | "provider" })
                 ) : selected.messages.map((message) => (
                   <article className={message.mine ? "is-mine" : ""} key={message.id}>
                     <span>{message.mine ? "You" : selected.otherParty}</span>
-                    <p>{message.body}</p>
+                    {message.body ? <p>{message.body}</p> : null}
+                    {message.image ? (
+                      message.image.viewable ? (
+                        <img
+                          className="job-message-image"
+                          src={`/api/message-image?requestId=${encodeURIComponent(selected.requestId)}&messageId=${encodeURIComponent(message.id)}`}
+                          alt="Shared photo"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : message.image.status === "blocked" ? (
+                        <span className="job-message-image-note blocked">Photo couldn&apos;t be shared — it didn&apos;t pass a safety check.</span>
+                      ) : (
+                        <span className="job-message-image-note">🔍 Photo is being checked — it&apos;ll appear once it clears.</span>
+                      )
+                    ) : null}
                     <small>{messageTime(message.createdAt)}</small>
                   </article>
                 ))}
@@ -166,9 +186,13 @@ export function JobMessages({ audience }: { audience: "customer" | "provider" })
                     maxLength={1000}
                     name="message"
                     placeholder="Keep messages focused on this job, timing, and service details."
-                    required
                     rows={3}
                   />
+                </label>
+                <label className="job-message-attach">
+                  <span>Add a photo (optional)</span>
+                  <input type="file" name="image" accept="image/jpeg,image/png,image/webp" />
+                  <small>JPG, PNG, or WebP · up to 8 MB. Photos are safety-checked before they appear.</small>
                 </label>
                 <button className="button primary" disabled={sending} type="submit">
                   {sending ? "Sending…" : "Send message"}
