@@ -96,18 +96,40 @@ async function countsSince(sinceValue: string | null): Promise<Map<string, numbe
   return map;
 }
 
-type HeroExperimentRow = {
+type ExperimentRow = {
   variant: string;
   started: number;
   submitted: number;
   conversion: number;
 };
 
-// Real conversion per hero-copy variant, so wording is judged by data, not
-// taste. Reads the `variant` prop that lib/experiments.ts stamps onto the
-// provider start/submit events. Rows without a valid A/B variant (legacy
-// events) are ignored rather than lumped into a misleading bucket.
-async function heroExperimentSince(sinceValue: string | null): Promise<HeroExperimentRow[]> {
+// Experiments whose conversion is start → submitted on the provider funnel.
+// Add a name here (and render copy variants in the app) to measure it.
+const EXPERIMENTS = ["provider_hero", "provider_pitch"] as const;
+
+// Read the variant this row was tagged with for a given experiment. Current
+// events carry props.variants = { [name]: "A" | "B" }; the older single-field
+// shape ({ experiment, variant }) is honored too so no data is lost.
+function readVariant(props: string | null, name: string): string {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as {
+      variants?: Record<string, unknown>;
+      experiment?: unknown;
+      variant?: unknown;
+    };
+    const fromMap = parsed.variants?.[name];
+    if (typeof fromMap === "string") return fromMap;
+    if (parsed.experiment === name && typeof parsed.variant === "string") return parsed.variant;
+  } catch {
+    // Malformed props — treat as unassigned.
+  }
+  return "";
+}
+
+// Real conversion per copy variant, so wording is judged by data, not taste.
+// Rows without a valid A/B variant are ignored rather than lumped into a
+// misleading bucket.
+async function experimentsSince(sinceValue: string | null): Promise<Record<string, ExperimentRow[]>> {
   const db = getDb();
   const events = ["provider_signup_started", "provider_signup_completed"];
   const eventFilter = inArray(analyticsEvents.event, events);
@@ -116,35 +138,30 @@ async function heroExperimentSince(sinceValue: string | null): Promise<HeroExper
     .from(analyticsEvents)
     .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
 
-  const tally = new Map<string, { started: number; submitted: number }>();
-  for (const row of rows) {
-    let variant = "";
-    try {
-      const props = JSON.parse(row.props ?? "{}") as { experiment?: unknown; variant?: unknown };
-      if (props.experiment === "provider_hero" && typeof props.variant === "string") {
-        variant = props.variant;
-      }
-    } catch {
-      // Malformed props — skip this row rather than guess.
+  const result: Record<string, ExperimentRow[]> = {};
+  for (const name of EXPERIMENTS) {
+    const tally = new Map<string, { started: number; submitted: number }>();
+    for (const row of rows) {
+      const variant = readVariant(row.props, name);
+      if (variant !== "A" && variant !== "B") continue;
+      const bucket = tally.get(variant) ?? { started: 0, submitted: 0 };
+      if (row.event === "provider_signup_started") bucket.started += 1;
+      else bucket.submitted += 1;
+      tally.set(variant, bucket);
     }
-    if (variant !== "A" && variant !== "B") continue;
-    const bucket = tally.get(variant) ?? { started: 0, submitted: 0 };
-    if (row.event === "provider_signup_started") bucket.started += 1;
-    else bucket.submitted += 1;
-    tally.set(variant, bucket);
+    result[name] = [...tally.entries()]
+      .map(([variant, value]) => ({
+        variant,
+        started: value.started,
+        submitted: value.submitted,
+        conversion: pct(value.submitted, value.started),
+      }))
+      .sort((a, b) => a.variant.localeCompare(b.variant));
   }
-
-  return [...tally.entries()]
-    .map(([variant, value]) => ({
-      variant,
-      started: value.started,
-      submitted: value.submitted,
-      conversion: pct(value.submitted, value.started),
-    }))
-    .sort((a, b) => a.variant.localeCompare(b.variant));
+  return result;
 }
 
-function windowPayload(counts: Map<string, number>, heroExperiment: HeroExperimentRow[]) {
+function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -154,7 +171,7 @@ function windowPayload(counts: Map<string, number>, heroExperiment: HeroExperime
       requirementsStepAbandoned: counts.get("provider_step2_abandoned") ?? 0,
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
-    heroExperiment,
+    experiments,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -182,9 +199,9 @@ export async function GET(request: Request) {
       countsSince(null),
       countsSince(since30),
       countsSince(since7),
-      heroExperimentSince(null),
-      heroExperimentSince(since30),
-      heroExperimentSince(since7),
+      experimentsSince(null),
+      experimentsSince(since30),
+      experimentsSince(since7),
     ]);
     return Response.json(
       {

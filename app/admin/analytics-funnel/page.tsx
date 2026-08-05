@@ -14,7 +14,7 @@ type FunnelStage = {
   droppedFromPrev: number;
 };
 
-type HeroExperimentRow = {
+type ExperimentRow = {
   variant: string;
   started: number;
   submitted: number;
@@ -29,37 +29,56 @@ type WindowPayload = {
     requirementsStepAbandoned: number;
     providerFirstQuoteSent: number;
   };
-  heroExperiment: HeroExperimentRow[];
+  experiments: Record<string, ExperimentRow[]>;
   rawCounts: Array<{ event: string; count: number }>;
 };
 
-// Keep these labels in sync with the copy rendered for each variant in
-// app/page.tsx (the provider hero headline).
-const HERO_VARIANT_LABEL: Record<string, string> = {
-  A: "“Your wrench. Your rules.”",
-  B: "“Do great work. Get paid.”",
-};
+// Keep these titles/labels in sync with the copy rendered for each variant in
+// app/page.tsx. Order here is the display order on this page.
+const EXPERIMENT_META: Array<{
+  name: string;
+  title: string;
+  labels: Record<string, string>;
+}> = [
+  {
+    name: "provider_hero",
+    title: "Hero headline",
+    labels: { A: "“Your wrench. Your rules.”", B: "“Do great work. Get paid.”" },
+  },
+  {
+    name: "provider_pitch",
+    title: "Pitch headline",
+    labels: {
+      A: "“You’ve got the skills…”",
+      B: "“Your customers. Your prices. Your call.”",
+    },
+  },
+];
 
-function HeroExperiment({ rows }: { rows: HeroExperimentRow[] }) {
+function Experiment({
+  title,
+  labels,
+  rows,
+}: {
+  title: string;
+  labels: Record<string, string>;
+  rows: ExperimentRow[];
+}) {
   const totalStarted = rows.reduce((sum, row) => sum + row.started, 0);
-  const leader = rows.reduce<HeroExperimentRow | null>((best, row) => {
+  const leader = rows.reduce<ExperimentRow | null>((best, row) => {
     if (row.started === 0) return best;
     if (!best || row.conversion > best.conversion) return row;
     return best;
   }, null);
   const enoughData = totalStarted >= 100 && rows.every((row) => row.started >= 30);
   return (
-    <section style={{ marginTop: "1.75rem" }}>
-      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Hero copy experiment</h2>
-      <p className="hint" style={{ margin: "0 0 0.75rem", fontSize: "0.82rem" }}>
-        Which provider-hero headline turns visitors into submitted applications. Real,
-        first-party conversion — no guesswork.
-      </p>
+    <section style={{ marginTop: "1.5rem" }}>
+      <h3 style={{ fontSize: "0.98rem", margin: "0 0 0.35rem" }}>{title}</h3>
       {totalStarted === 0 ? (
-        <p className="hint" style={{ margin: 0 }}>No hero visits recorded in this window yet.</p>
+        <p className="hint" style={{ margin: 0 }}>No visits recorded for this test in this window yet.</p>
       ) : (
         <>
-          <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 560 }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 580 }}>
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0", opacity: 0.7 }}>Variant</th>
@@ -74,7 +93,7 @@ function HeroExperiment({ rows }: { rows: HeroExperimentRow[] }) {
                 return (
                   <tr key={row.variant}>
                     <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
-                      <strong>{row.variant}</strong> {HERO_VARIANT_LABEL[row.variant] ?? ""}
+                      <strong>{row.variant}</strong> {labels[row.variant] ?? ""}
                       {isLeader && <span style={{ marginLeft: "0.4rem" }}>★ leading</span>}
                     </td>
                     <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
@@ -98,6 +117,26 @@ function HeroExperiment({ rows }: { rows: HeroExperimentRow[] }) {
           </p>
         </>
       )}
+    </section>
+  );
+}
+
+function Experiments({ windows }: { windows: WindowPayload["experiments"] }) {
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Copy experiments</h2>
+      <p className="hint" style={{ margin: "0 0 0.25rem", fontSize: "0.82rem" }}>
+        Which wording turns visitors into submitted applications. Real, first-party
+        conversion — no guesswork, nothing shared with a third party.
+      </p>
+      {EXPERIMENT_META.map((meta) => (
+        <Experiment
+          key={meta.name}
+          title={meta.title}
+          labels={meta.labels}
+          rows={windows[meta.name] ?? []}
+        />
+      ))}
     </section>
   );
 }
@@ -265,7 +304,7 @@ export default function AnalyticsFunnelPage() {
             empty="No provider signups have started in this window yet."
           />
 
-          <HeroExperiment rows={active.heroExperiment} />
+          <Experiments windows={active.experiments} />
 
           <p className="hint" style={{ marginTop: "0.75rem" }}>
             Requirements step (only shown for services that need proof or legal documents):{" "}

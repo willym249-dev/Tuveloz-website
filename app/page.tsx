@@ -14,7 +14,7 @@ import {
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { SERVICE_CODES } from "../lib/provider-policy";
 import { track } from "../lib/analytics";
-import { getVariant } from "../lib/experiments";
+import { activeVariants } from "../lib/experiments";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
@@ -302,8 +302,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   >("checking");
   const [headerAccountDestination, setHeaderAccountDestination] = useState("");
   // Control ("A") on first render so server and client match; the real assigned
-  // variant is set after mount in the provider-view effect below.
+  // A/B variants are set after mount in the experiment effect below.
   const [heroVariant, setHeroVariant] = useState("A");
+  const [pitchVariant, setPitchVariant] = useState("A");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -345,14 +346,20 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
   useEffect(() => {
     if (view === "provider") {
-      const variant = getVariant("provider_hero");
-      // Defer out of the effect's synchronous phase so it doesn't cascade
-      // renders; the assigned variant is stable for the whole session.
-      queueMicrotask(() => setHeroVariant(variant));
-      track("provider_signup_started", { experiment: "provider_hero", variant });
+      track("provider_signup_started", { variants: activeVariants() });
     }
     if (view === "request") track("customer_request_started");
   }, [view]);
+
+  useEffect(() => {
+    // Assign A/B variants once on mount (client only) and reflect them in state
+    // after paint, so server and client first render both show control.
+    const assigned = activeVariants();
+    queueMicrotask(() => {
+      setHeroVariant(assigned.provider_hero ?? "A");
+      setPitchVariant(assigned.provider_pitch ?? "A");
+    });
+  }, []);
 
   useEffect(() => {
     // On /join, a returning applicant wants to pick their in-progress application
@@ -1569,7 +1576,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="section-heading">
           <div>
             <span className="kicker">Why mechanics join Tuveloz</span>
-            <h2>You&apos;ve got the skills. Let&apos;s build the business around them.</h2>
+            <h2>
+              {pitchVariant === "B"
+                ? "Your customers. Your prices. Your call."
+                : "You’ve got the skills. Let’s build the business around them."}
+            </h2>
           </div>
           <p>
             You shouldn&apos;t have to hand your customers — or your paycheck — to
