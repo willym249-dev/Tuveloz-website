@@ -223,7 +223,6 @@ type ComplianceResponse = {
 
 type InitializeDraft = {
   pathway: string;
-  providerLevel: string;
   serviceCodes: string[];
 };
 
@@ -613,9 +612,7 @@ export default function ProviderCompliancePage() {
       for (const application of result.applications) {
         if (!application.canInitializeV011 || next[application.id]) continue;
         const pathway = result.catalog.pathways[0]?.code ?? "independent_startup";
-        const providerLevel = result.catalog.pathways[0]?.allowedLevels.find((level) => level !== "learning_account")
-          ?? "provisional_independent";
-        next[application.id] = { pathway, providerLevel, serviceCodes: [] };
+        next[application.id] = { pathway, serviceCodes: [] };
       }
       return next;
     });
@@ -665,7 +662,6 @@ export default function ProviderCompliancePage() {
       ...current,
       [providerId]: update(current[providerId] ?? {
         pathway: "independent_startup",
-        providerLevel: "provisional_independent",
         serviceCodes: [],
       }),
     }));
@@ -678,7 +674,6 @@ export default function ProviderCompliancePage() {
       action: "initialize-provider-pathway",
       providerId: application.id,
       pathway: draft.pathway,
-      providerLevel: draft.providerLevel,
       serviceCodes: draft.serviceCodes,
     }, `initialize:${application.id}`);
   }
@@ -1053,12 +1048,8 @@ export default function ProviderCompliancePage() {
                               <select
                                 value={draft.pathway}
                                 onChange={(event) => {
-                                  const pathway = event.target.value;
-                                  const allowed = data.catalog.pathways.find((item) => item.code === pathway)?.allowedLevels
-                                    .filter((level) => level !== "learning_account") ?? [];
                                   updateInitializeDraft(application.id, () => ({
-                                    pathway,
-                                    providerLevel: allowed[0] ?? "",
+                                    pathway: event.target.value,
                                     serviceCodes: [],
                                   }));
                                 }}
