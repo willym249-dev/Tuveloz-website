@@ -9,6 +9,10 @@ import {
   type FormEvent,
 } from "react";
 import { BrandMark } from "../../components/tuveloz-icons";
+import {
+  acceptanceGuideFor,
+  validateAcceptanceDraft,
+} from "../../../lib/evidence-acceptance-guide";
 
 type RequirementStatus =
   | "accepted"
@@ -282,13 +286,39 @@ function EvidenceReviewForm({
       ? evidence.status
       : suggestedStatus ?? (fileIsClean ? "accepted" : "needs_correction"),
   );
+  const [checkError, setCheckError] = useState<string[]>([]);
   const availableReasons = status === "accepted"
     ? REVIEW_REASONS.slice(0, 1)
     : REVIEW_REASONS.slice(1);
+  const guide = acceptanceGuideFor(evidence.requirementKey);
+  const today = new Date().toISOString().slice(0, 10);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    // Catch every acceptance mistake here, with plain-language guidance, before
+    // it reaches the server. This mirrors the server rules; the server still
+    // makes the real decision.
+    if (status === "accepted") {
+      const check = validateAcceptanceDraft({
+        method: String(values.authenticityVerificationMethod ?? ""),
+        verifiedBy: String(values.authenticityVerifiedBy ?? ""),
+        reference: String(values.authenticityVerificationReference ?? ""),
+        sourceUrl: String(values.authenticitySourceUrl ?? ""),
+        verifiedAt: String(values.authenticityVerifiedAt ?? ""),
+        validThrough: String(values.authenticityValidThrough ?? ""),
+        evidenceExpiresAt: evidence.expiresAt.slice(0, 10),
+        requiresBusinessIdentity: evidence.businessIdentitySourceEligible,
+        legalBusinessName: String(values.verifiedLegalBusinessName ?? ""),
+        legalBusinessNameConfirmed: values.legalBusinessNameConfirmed === "yes",
+        today,
+      });
+      if (!check.ok) {
+        setCheckError([...check.errors]);
+        return;
+      }
+    }
+    setCheckError([]);
     await onSubmit({
       action: "review-evidence",
       providerId: applicationId,
@@ -452,10 +482,19 @@ function EvidenceReviewForm({
               vendor. Official online lookups require an HTTPS .gov source; every other method
               requires a secure HTTPS source.
             </p>
+            <div className="credential-card acceptance-guide">
+              <strong>How to verify this document</strong>
+              <small>Verify with: {guide.authorityLabel}</small>
+              {guide.steps.map((step) => <small key={step}>· {step}</small>)}
+              <small className="admin-note">
+                The recommended method below is pre-selected as a starting point. Enter what you
+                actually did — TUVELOZ records your check, it does not perform it for you.
+              </small>
+            </div>
             <label>
               Verification method
               <select
-                defaultValue={evidence.authenticityVerificationMethod || ""}
+                defaultValue={evidence.authenticityVerificationMethod || guide.recommendedMethod}
                 name="authenticityVerificationMethod"
                 required
               >
@@ -498,8 +537,8 @@ function EvidenceReviewForm({
             <label>
               Checked date
               <input
-                defaultValue={evidence.authenticityVerifiedAt.slice(0, 10)}
-                max={new Date().toISOString().slice(0, 10)}
+                defaultValue={evidence.authenticityVerifiedAt.slice(0, 10) || today}
+                max={today}
                 name="authenticityVerifiedAt"
                 required
                 type="date"
@@ -539,12 +578,18 @@ function EvidenceReviewForm({
             )}
           </fieldset>
         )}
+        {checkError.length > 0 && (
+          <div className="form-error" role="alert">
+            <strong>Fix these before accepting:</strong>
+            {checkError.map((message) => <span key={message}>· {message}</span>)}
+          </div>
+        )}
         <button
           className="save-compliance"
           disabled={busy || (status === "accepted" && !fileIsClean)}
           type="submit"
         >
-          {busy ? "Saving…" : "Save evidence decision"}
+          {busy ? "Saving…" : status === "accepted" ? "Verify and accept evidence" : "Save evidence decision"}
         </button>
       </form>
     </div>
