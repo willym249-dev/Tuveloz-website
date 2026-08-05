@@ -706,6 +706,35 @@ export const analyticsEvents = sqliteTable(
   ],
 );
 
+/**
+ * Launch-notification list for customers inside the current launch area.
+ * Deliberately the smallest possible record: an email, a ZIP, and the service
+ * someone is waiting for. No account, password, vehicle, or job is created,
+ * so a customer can register interest before service requests open without
+ * handing over anything the marketplace cannot yet use.
+ */
+export const customerWaitlistSignups = sqliteTable(
+  "customer_waitlist_signups",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    zip: text("zip").notNull(),
+    service: text("service").notNull(),
+    launchArea: text("launch_area").notNull(),
+    marketingConsent: integer("marketing_consent", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    requestKey: text("request_key").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("customer_waitlist_signups_request_key_unique").on(table.requestKey),
+    index("customer_waitlist_signups_created_at_idx").on(table.createdAt),
+    index("customer_waitlist_signups_zip_idx").on(table.zip),
+  ],
+);
+
 export const expansionInterests = sqliteTable(
   "expansion_interests",
   {

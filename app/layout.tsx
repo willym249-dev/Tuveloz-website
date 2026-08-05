@@ -11,11 +11,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://tuveloz.com"),
   manifest: "/manifest.webmanifest",
   title: {
-    default: "Tuveloz | Customer Choice. Provider Freedom.",
+    default: "Tuveloz — Vehicle-Service Marketplace in Montgomery County, MD",
     template: "%s | Tuveloz",
   },
   description:
-    "Post what your vehicle needs and compare real quotes from local independent providers in Montgomery County, MD. Providers join free — customer launch coming soon.",
+    "Compare quotes from local independent vehicle-service providers in Montgomery County, MD. Providers join free and keep 100% of their quoted price — customer launch coming soon.",
+  alternates: { canonical: "/" },
   icons: {
     icon: [
       { url: "/favicon.ico?v=5", sizes: "32x32" },
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png?v=5",
   },
   openGraph: {
-    title: "Tuveloz | Customer Choice. Provider Freedom.",
+    title: "Tuveloz — Vehicle-Service Marketplace in Montgomery County, MD",
     description:
       "The vehicle-services marketplace for Montgomery County, MD. Real quotes, your choice. Providers are joining free right now — customer launch coming soon.",
     url: "https://tuveloz.com/",
@@ -42,14 +43,45 @@ export const metadata: Metadata = {
   },
 };
 
-const organizationSchema = {
+/**
+ * Organization plus WebSite, in one graph so search engines read them as the
+ * same entity. Tuveloz is described as the marketplace operator — never as an
+ * auto-repair business, which it is not.
+ */
+const structuredData = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Tuveloz",
-  url: "https://tuveloz.com",
-  logo: "https://tuveloz.com/icon-512.png?v=5",
-  email: "hello@tuveloz.com",
-  areaServed: "Montgomery County, Maryland",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://tuveloz.com/#organization",
+      name: "Tuveloz",
+      legalName: "TUVELOZ LLC",
+      url: "https://tuveloz.com",
+      logo: "https://tuveloz.com/icon-512.png?v=5",
+      email: "hello@tuveloz.com",
+      description:
+        "Tuveloz operates an online marketplace connecting customers with independent vehicle-service providers in Montgomery County, Maryland.",
+      areaServed: {
+        "@type": "AdministrativeArea",
+        name: "Montgomery County, Maryland",
+      },
+      contactPoint: [{
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "hello@tuveloz.com",
+        areaServed: "US-MD",
+        availableLanguage: ["English", "Spanish"],
+      }],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://tuveloz.com/#website",
+      name: "Tuveloz",
+      url: "https://tuveloz.com",
+      inLanguage: ["en-US", "es-US"],
+      publisher: { "@id": "https://tuveloz.com/#organization" },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -67,7 +99,7 @@ export default function RootLayout({
       >
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <SiteLanguageProvider>
           <StagingEnvironmentBanner />

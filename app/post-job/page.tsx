@@ -23,6 +23,7 @@ export const metadata: Metadata = {
   title: "Customer Launch Status",
   description:
     "Customer accounts are open; service requests are not yet available. See where Tuveloz stands and get ready for launch in Montgomery County, MD.",
+  alternates: { canonical: "/post-job" },
 };
 
 export default async function PostJobPage() {

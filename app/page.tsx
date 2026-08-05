@@ -25,8 +25,9 @@ import {
 } from "./components/tuveloz-icons";
 import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
-import { ProviderSignupForm } from "./components/provider-signup-form";
 import { SocialLinks } from "./components/social-links";
+import { AudienceSwitch, type Audience } from "./components/audience-switch";
+import { CUSTOMER_WAITLIST_SERVICE_OPTIONS } from "../lib/customer-waitlist";
 
 // Homepage launches with only the easy-entry, no-license services — the
 // simplest onboarding path. Specialized/proof-required services (tire
@@ -158,8 +159,20 @@ function dollars(cents: number | undefined) {
 
 export type PublicView = "home" | "about" | "request" | "provider";
 
+/** Deep links that only make sense on the customer side of the homepage. */
+const CUSTOMER_AUDIENCE_HASHES = ["#waitlist", "#services", "#how-it-works", "#request"];
+
 export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // The homepage speaks to one audience at a time. While customer jobs are
+  // closed, provider recruitment is the default; /about keeps the long-form
+  // page that covers both.
+  const [audience, setAudience] = useState<Audience>(
+    CUSTOMER_JOB_POSTING_PAUSED ? "providers" : "customers",
+  );
+  const [waitlistSent, setWaitlistSent] = useState(false);
+  const [waitlistBusy, setWaitlistBusy] = useState(false);
+  const [waitlistError, setWaitlistError] = useState("");
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
   const [requestBusy, setRequestBusy] = useState(false);
@@ -232,35 +245,29 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   );
 
   useEffect(() => {
-    if (view === "provider") track("provider_signup_started");
     if (view === "request") track("customer_request_started");
   }, [view]);
 
   useEffect(() => {
-    // A provider who taps /join wants the application, not the customer-facing
-    // top of the homepage. Jump straight to the provider panel on load, unless
-    // a deep-link hash already targets a specific section.
-    if (view !== "provider") return;
-    if (window.location.hash) return;
+    // A shared "/?for=customers" link has to open on the customer side, and a
+    // hash link into a customer section has to bring its own mode with it.
+    // Deferred by a microtask so server-rendered markup matches the first
+    // client render.
+    if (view !== "home") return;
     let cancelled = false;
-    const scrollToPanel = () => {
-      if (!cancelled) document.getElementById("providers")?.scrollIntoView({ block: "start" });
-    };
-    scrollToPanel();
-    const frame = requestAnimationFrame(scrollToPanel);
-    // Content above the panel (reviews, hero image) loads async and pushes the
-    // panel down after first paint, so re-assert a few times until it settles.
-    const timers = [200, 600, 1200].map((ms) => window.setTimeout(scrollToPanel, ms));
-    // Stop fighting the visitor the moment they take over scrolling.
-    const stop = () => { cancelled = true; };
-    window.addEventListener("wheel", stop, { passive: true, once: true });
-    window.addEventListener("touchstart", stop, { passive: true, once: true });
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      const requested = new URLSearchParams(window.location.search).get("for");
+      if (requested === "customers" || requested === "providers") {
+        setAudience(requested);
+        return;
+      }
+      if (CUSTOMER_AUDIENCE_HASHES.includes(window.location.hash)) {
+        setAudience("customers");
+      }
+    });
     return () => {
       cancelled = true;
-      cancelAnimationFrame(frame);
-      timers.forEach((id) => window.clearTimeout(id));
-      window.removeEventListener("wheel", stop);
-      window.removeEventListener("touchstart", stop);
     };
   }, [view]);
 
@@ -516,6 +523,61 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     }
   }
 
+  /**
+   * The waitlist asks for an email, a ZIP, and the service someone wants —
+   * nothing else. No account is created and no request is submitted, so this
+   * stays available while customer job posting is server-blocked.
+   */
+  async function handleWaitlistSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setWaitlistBusy(true);
+    setWaitlistError("");
+
+    try {
+      const response = await fetch("/api/customer-waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("waitlist-email"),
+          zip: formData.get("waitlist-zip"),
+          service: formData.get("waitlist-service"),
+          marketingConsent: formData.get("waitlist-marketing-consent") === "yes",
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Please try again.");
+      form.reset();
+      setWaitlistSent(true);
+    } catch (error) {
+      setWaitlistError(error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setWaitlistBusy(false);
+    }
+  }
+
+  function chooseAudience(next: Audience) {
+    setAudience(next);
+    setMenuOpen(false);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("for", next);
+    url.hash = "";
+    window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+    window.scrollTo({ top: 0 });
+  }
+
+  function openWaitlist() {
+    setAudience("customers");
+    setMenuOpen(false);
+    // The waitlist only exists on the customer side, so it has to render
+    // before there is anything to scroll to.
+    window.requestAnimationFrame(() => {
+      document.getElementById("waitlist")?.scrollIntoView({ block: "start" });
+    });
+  }
+
   async function handleExpansionSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -563,6 +625,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           ? "Sign up or sign in"
           : "Account";
 
+  // The homepage shows one audience at a time; /about stays the long page
+  // that covers both sides in full.
+  const isHome = view === "home";
+  const showProviderSide = !isHome || audience === "providers";
+  const showCustomerSide = !isHome || audience === "customers";
+
   return (
     <main className={`public-site public-view-${view}`}>
       <header className="site-header">
@@ -592,6 +660,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </nav>
 
         <div className="header-actions">
+          {isHome
+            ? <AudienceSwitch active={audience} onSelect={chooseAudience} />
+            : <AudienceSwitch active="customers" />}
           <SiteLanguageButton />
           <Link
             aria-label={accountLabel}
@@ -610,24 +681,35 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
-          {CUSTOMER_JOB_POSTING_PAUSED ? (
+          {isHome && (
+            <div className="hero-audience-switch">
+              <AudienceSwitch active={audience} onSelect={chooseAudience} />
+            </div>
+          )}
+          {isHome && audience === "providers" ? (
             <>
               <div className="eyebrow">
                 <span className="pulse" />
                 Provider onboarding is open
               </div>
-              <h1>
-                Vehicle services.
-                <br />
-                <span className="hero-value-line">
-                  Choice for customers. Freedom for providers.
-                </span>
-              </h1>
+              <h1>Grow your vehicle-service business with local opportunities.</h1>
               <p>
-                Tuveloz is a local vehicle-services marketplace launching in Montgomery
-                County, Maryland. Independent providers can apply now — join free, keep
-                100% of your quoted price, no exclusivity. Customer requests, payments,
-                and real jobs open after launch review.
+                Join Tuveloz free, set your own prices, and choose the jobs that fit
+                your schedule. Keep 100% of your quoted price, with no exclusivity —
+                Montgomery County, Maryland is our first launch area.
+              </p>
+            </>
+          ) : CUSTOMER_JOB_POSTING_PAUSED ? (
+            <>
+              <div className="eyebrow">
+                <span className="pulse" />
+                Customer launch coming to Montgomery County
+              </div>
+              <h1>Compare quotes from local vehicle-service providers.</h1>
+              <p>
+                Tuveloz is building a Montgomery County, Maryland marketplace where
+                customers choose their provider — and independent providers set their
+                own prices. Service requests open after launch review.
               </p>
             </>
           ) : (
@@ -641,13 +723,22 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </>
           )}
           <div className="hero-actions">
-            {CUSTOMER_JOB_POSTING_PAUSED ? (
+            {isHome && audience === "providers" ? (
               <>
                 <Link className="button primary" href="/join">
                   Join as a provider — free <span>→</span>
                 </Link>
-                <Link className="button secondary" href="/post-job">
-                  Customer launch status <span>→</span>
+                <button className="button secondary" onClick={openWaitlist} type="button">
+                  Join the customer waitlist <span>→</span>
+                </button>
+              </>
+            ) : CUSTOMER_JOB_POSTING_PAUSED ? (
+              <>
+                <a className="button primary" href="#waitlist">
+                  Join the customer waitlist <span>→</span>
+                </a>
+                <Link className="button secondary" href="/join">
+                  Join as a provider — free <span>→</span>
                 </Link>
               </>
             ) : (
@@ -664,6 +755,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               Try Tuveloz AI <span>✦</span>
             </Link>
           </div>
+          <Link className="text-link hero-tertiary-link" href="/how-it-works">
+            See how Tuveloz will work →
+          </Link>
           <div className="hero-launch-note">
             <strong>
               {CUSTOMER_JOB_POSTING_PAUSED
@@ -711,6 +805,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <span><b>Provider applications</b> are open now</span>
       </section>
 
+      {showCustomerSide && (
       <section className="trust-section" aria-labelledby="trust-heading">
         <div className="trust-intro">
           <span className="kicker light">Trust, stated plainly</span>
@@ -742,8 +837,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </article>
         </div>
       </section>
+      )}
 
-      {view === "home" && (
+      {view === "home" && showCustomerSide && (
         <section className="ai-home-card" aria-labelledby="tuveloz-ai-heading">
           <div className="ai-home-copy">
             <span className="kicker">Available now · Tuveloz AI</span>
@@ -760,6 +856,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </section>
       )}
 
+      {!isHome && (
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
           <span className="kicker">Built for both sides</span>
@@ -817,7 +914,49 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </article>
         </div>
       </section>
+      )}
 
+      {showProviderSide && isHome && (
+        <section className="section provider-home-offer" aria-labelledby="provider-offer-heading">
+          <div className="section-heading">
+            <div>
+              <span className="kicker">For providers</span>
+              <h2 id="provider-offer-heading">Free to join. Yours to run.</h2>
+            </div>
+            <p>
+              Mobile mechanics, service-truck operators, and shop-based providers
+              can apply now and pick the exact jobs they want to be matched with.
+            </p>
+          </div>
+          <div className="provider-offer-cards">
+            <article>
+              <strong>Keep 100% of your quoted price</strong>
+              <p>You set the price. The customer pays a proposed 5% service fee on top of it.</p>
+            </article>
+            <article>
+              <strong>No exclusivity</strong>
+              <p>Keep your own customers and work other platforms at the same time.</p>
+            </article>
+            <article>
+              <strong>Documents only when required</strong>
+              <p>
+                Requirements depend on your services. We&apos;ll show you exactly what
+                applies before activation.
+              </p>
+            </article>
+          </div>
+          <div className="hero-actions">
+            <Link className="button primary" href="/join">
+              Apply in about 5 minutes <span>→</span>
+            </Link>
+            <Link className="button secondary" href="/provider-requirements">
+              See what&apos;s required
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {showCustomerSide && (
       <section className="section services" id="services">
         <div className="section-heading">
           <div>
@@ -855,7 +994,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </Link>
         </div>
       </section>
+      )}
 
+      {showCustomerSide && (
       <section className="section how" id="how-it-works">
         <div className="how-intro">
           <span className="kicker light">
@@ -889,6 +1030,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </section>
 
+      )}
+
+      {showCustomerSide && (reviews.length > 0 || !isHome) && (
       <section className="section reviews-section" id="reviews">
         <div className="reviews-heading">
           <div>
@@ -934,33 +1078,39 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </div>
         )}
       </section>
+      )}
 
-      <section className="section request-section" id="request">
+      {showCustomerSide && (
+      <section className="section request-section" id={CUSTOMER_JOB_POSTING_PAUSED ? "waitlist" : "request"}>
         <div className="request-copy">
           <span className="kicker">
-            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "For customers"}
+            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer waitlist" : "For customers"}
           </span>
           {view === "request" ? (
             <h1>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
+                ? "Get notified when vehicle-service requests open."
                 : "Post it once. Compare real quotes. No pressure."}
             </h1>
           ) : (
             <h2>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
+                ? "Get notified when vehicle-service requests open."
                 : "Post it once. Compare real quotes. No pressure."}
             </h2>
           )}
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
-                Customer requests, quotes, bookings, and payments are currently closed.
-                You can create a customer account now, and provider applications remain
-                open. After launch approval, the server will share an exact-service
-                request only with providers whose current eligibility records match it.
+                Requests, quotes, and payments are closed while Tuveloz onboards local
+                providers in Montgomery County, Maryland. Tell us your ZIP code and the
+                service you need, and we&apos;ll email you when it opens.
               </p>
+              <ul>
+                <li><span>✓</span> Three answers — no account and no password</li>
+                <li><span>✓</span> One email when requests open in your ZIP code</li>
+                <li><span>✓</span> Unsubscribe at any time</li>
+              </ul>
               <div className="pilot-vision">
                 <strong>Our vision</strong>
                 <p>
@@ -968,12 +1118,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   clearer choices and help independent providers grow.
                 </p>
               </div>
-              <ul>
-                <li><span>✕</span> Customer posting is not open yet</li>
-                <li><span>✓</span> Future jobs must use enabled exact service codes</li>
-                <li><span>✓</span> Customers will choose whether to accept a quote</li>
-                <li><span>⏳</span> Final fees and tax treatment remain under mandatory legal and CPA or tax-adviser review</li>
-              </ul>
             </>
           ) : (
             <ul>
@@ -985,31 +1129,86 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
 
         {CUSTOMER_JOB_POSTING_PAUSED ? (
-          <div className="lead-form">
-            <div className="form-heading">
-              <span>✓</span>
-              <div>
-                <h3>Prepare for launch without submitting a job</h3>
+          <form className="lead-form waitlist-form" onSubmit={handleWaitlistSubmit}>
+            <LocationDatalists />
+            {waitlistSent ? (
+              <div className="success-message" role="status">
+                <span>✓</span>
+                <h3>You&apos;re on the list.</h3>
                 <p>
-                  Create your customer account to keep your information together and
-                  return when customer service requests open. No job, provider contact,
-                  booking, or payment is created now.
+                  We&apos;ll email you when vehicle-service requests open in your ZIP
+                  code. No job, provider contact, booking, or payment is created now.
                 </p>
+                <Link className="button secondary" href="/join">
+                  Apply as a provider
+                </Link>
+                <button type="button" onClick={() => setWaitlistSent(false)}>
+                  Add another ZIP code
+                </button>
               </div>
-            </div>
-            <div className="hero-actions">
-              <Link className="button primary" href="/account?role=customer&mode=create">
-                Create customer account <span>→</span>
-              </Link>
-              <Link className="button secondary" href="/join">
-                Apply as a provider
-              </Link>
-            </div>
-            <small>
-              Customer account signup and provider applications are open. Customer
-              jobs and payments remain server-blocked.
-            </small>
-          </div>
+            ) : (
+              <>
+                <div className="form-heading">
+                  <span>✓</span>
+                  <div>
+                    <h3>Prepare for launch without submitting a job</h3>
+                    <p>
+                      Three answers is all we need. No job, provider contact,
+                      booking, or payment is created now.
+                    </p>
+                  </div>
+                </div>
+                <label>
+                  Email address
+                  <input
+                    autoComplete="email"
+                    name="waitlist-email"
+                    placeholder="you@example.com"
+                    required
+                    type="email"
+                  />
+                </label>
+                <label>
+                  ZIP code
+                  <input
+                    autoComplete="postal-code"
+                    inputMode="numeric"
+                    list={ZIP_DATALIST_ID}
+                    name="waitlist-zip"
+                    placeholder="20901"
+                    required
+                  />
+                  <small>Montgomery County, Maryland is the current launch area.</small>
+                </label>
+                <label>
+                  What do you need first?
+                  <select defaultValue="" name="waitlist-service" required>
+                    <option value="" disabled>Choose one</option>
+                    {CUSTOMER_WAITLIST_SERVICE_OPTIONS.map((option) => (
+                      <option key={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="policy-consent optional-consent">
+                  <input name="waitlist-marketing-consent" type="checkbox" value="yes" />
+                  <span>
+                    Also email me occasional Tuveloz updates. <strong>Optional.</strong>
+                  </span>
+                </label>
+                <button className="button primary form-button" disabled={waitlistBusy} type="submit">
+                  {waitlistBusy ? "Saving…" : "Notify me at launch"} <span>→</span>
+                </button>
+                {waitlistError && <p className="form-error" role="alert">{waitlistError}</p>}
+                <small>
+                  We use this only to tell you when service opens near you. Prefer a full
+                  account?{" "}
+                  <Link href="/account?role=customer&mode=create">Create customer account</Link>
+                  {" · "}
+                  <Link href="/join">Apply as a provider</Link>
+                </small>
+              </>
+            )}
+          </form>
         ) : (
         <form
           className="lead-form"
@@ -1404,7 +1603,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </form>
         )}
       </section>
+      )}
 
+      {showProviderSide && (
       <section className="section providers" id="providers">
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
@@ -1424,29 +1625,81 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
-            <a className="button primary" href="#provider-apply">Join free <span>→</span></a>
-            <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
-              <div className="eligibility-guide-heading">
-                <span id="provider-guide-title">How applying works</span>
-              </div>
-              <ol>
-                <li>Tell us which services you offer.</li>
-                <li>See exactly what&apos;s required, only if anything is — skipped entirely otherwise.</li>
-                <li>Give us your business details and verify your email to submit.</li>
-              </ol>
-              <div className="legal-requirement-note" aria-label="Service status note">
-                <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
-                <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
-              </div>
-            </section>
+            <Link className="button primary" href="/join">Join free <span>→</span></Link>
           </div>
 
-          <div id="provider-apply">
-            <ProviderSignupForm />
+          <div className="provider-eligibility-guide" id="provider-apply">
+            <div className="eligibility-guide-heading">
+              <span id="provider-guide-title">How applying works</span>
+            </div>
+            <ol>
+              <li>Pick the category that describes your work.</li>
+              <li>Pick the exact jobs you do.</li>
+              <li>See exactly what&apos;s required, only if anything is — skipped entirely otherwise.</li>
+              <li>Give us your business details and verify your email to submit.</li>
+            </ol>
+            <div className="legal-requirement-note" aria-label="Service status note">
+              <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
+              <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
+            </div>
+            <Link className="button lime form-button" href="/join">
+              Start my application <span>→</span>
+            </Link>
           </div>
         </div>
       </section>
+      )}
 
+      {showProviderSide && (
+      <section className="section trust-signals-section" aria-labelledby="trust-signals-heading">
+        <div className="section-heading">
+          <div>
+            <span className="kicker">Early-stage, stated plainly</span>
+            <h2 id="trust-signals-heading">What we can tell you today.</h2>
+          </div>
+          <p>
+            Tuveloz has not run customer jobs yet, so there are no completed-job
+            reviews to show. Here is what exists instead.
+          </p>
+        </div>
+        <div className="trust-grid">
+          <article className="trust-card">
+            <span className="trust-card-label">The company</span>
+            <p>
+              Tuveloz is operated by TUVELOZ LLC, building one launch area first:
+              Montgomery County, Maryland. It is a marketplace — it does not employ
+              providers, assign work, or perform repairs.
+            </p>
+          </article>
+          <article className="trust-card">
+            <span className="trust-card-label">Reaching a person</span>
+            <p>
+              Questions go to <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+              We aim to answer within two business days, and we email applicants at
+              each step of review.
+            </p>
+          </article>
+          <article className="trust-card">
+            <span className="trust-card-label">What Tuveloz checks</span>
+            <p>
+              Email control, a government registration or license only where the law
+              requires one, broker-confirmed insurance where a service requires it,
+              a separate identity check, and approval service by service.
+            </p>
+          </article>
+          <article className="trust-card">
+            <span className="trust-card-label">Payments and disputes</span>
+            <p>
+              Payments will run through Stripe; Tuveloz never stores full card or bank
+              numbers. Payout, fee, refund, and dispute handling are written down before
+              launch — see the <Link href="/payments">payment policy</Link>.
+            </p>
+          </article>
+        </div>
+      </section>
+      )}
+
+      {!isHome && (
       <section className="section expansion-section" id="expansion">
         <div className="expansion-copy">
           <span className="kicker">Future expansion</span>
@@ -1551,7 +1804,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </form>
       </section>
+      )}
 
+      {!isHome && (
       <section className="section feedback-section" id="feedback">
         <div className="feedback-copy">
           <span className="kicker">Your feedback matters</span>
@@ -1665,13 +1920,25 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </form>
       </section>
+      )}
 
       <section className="final-cta">
         <span className="kicker light">Tuveloz</span>
         <h2>Provider applications are open. Customer service requests are not yet available.</h2>
         <div>
-          <Link className="button lime" href="/post-job">See customer launch status <span>→</span></Link>
-          <Link className="button ghost" href="/join">Join the provider network</Link>
+          {isHome && audience === "providers" ? (
+            <>
+              <Link className="button lime" href="/join">Join the provider network <span>→</span></Link>
+              <button className="button ghost" onClick={openWaitlist} type="button">
+                Join the customer waitlist
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="button lime" href="/post-job">See customer launch status <span>→</span></Link>
+              <Link className="button ghost" href="/join">Join the provider network</Link>
+            </>
+          )}
         </div>
       </section>
 
@@ -1685,6 +1952,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <Link href="/ai">Tuveloz AI</Link>
           <Link href="/post-job">Customer launch status</Link>
           <Link href="/join">Join as a provider</Link>
+          <Link href="/provider-requirements">Provider requirements</Link>
           <Link href="/how-it-works">How it works</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>

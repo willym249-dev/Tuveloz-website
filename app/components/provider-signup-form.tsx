@@ -254,11 +254,20 @@ function deriveProviderLevel(selectedServices: readonly ServiceCode[]): Provider
   return "provisional_independent";
 }
 
-type SignupStep = 1 | 2 | 3;
+/**
+ * 1 pick one category · 2 pick the exact jobs · 3 see what those jobs require
+ * · 4 business details, then email verification. The catalog is never shown
+ * all at once: an independent mechanic picks the one category that describes
+ * their work and only ever scans that category's jobs.
+ */
+type SignupStep = 1 | 2 | 3 | 4;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
-const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
+/** Honest estimate for the four steps below, verification code included. */
+const ESTIMATED_MINUTES = 5;
+
+const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v2";
 
 /**
  * Only plain identification/business text fields are autosaved. Legal
@@ -283,6 +292,7 @@ const DRAFT_TEXT_FIELDS = [
 
 type ProviderSignupDraft = {
   step?: SignupStep;
+  selectedCategory?: string;
   selectedProviderServices?: ServiceCode[];
   soloBusiness?: boolean;
   selectedProviderWorkLocations?: string[];
@@ -316,6 +326,8 @@ export function ProviderSignupForm() {
   const providerFormIsSpanish = language === "es";
 
   const [step, setStep] = useState<SignupStep>(1);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [savedNotice, setSavedNotice] = useState("");
   const [selectedProviderServices, setSelectedProviderServices] = useState<ServiceCode[]>([]);
   const [soloBusiness, setSoloBusiness] = useState(true);
   const [challengeResetNotice, setChallengeResetNotice] = useState("");
@@ -345,6 +357,12 @@ export function ProviderSignupForm() {
       if (cancelled) return;
       const draft = readSignupDraft();
       if (!draft) return;
+      if (
+        typeof draft.selectedCategory === "string"
+        && PROVIDER_REVIEW_SERVICE_GROUPS.some((group) => group.id === draft.selectedCategory)
+      ) {
+        setSelectedCategory(draft.selectedCategory);
+      }
       if (Array.isArray(draft.selectedProviderServices)) {
         setSelectedProviderServices(draft.selectedProviderServices.filter((code) => (
           PROVIDER_REVIEW_SERVICES.some((service) => service.code === code)
@@ -367,7 +385,7 @@ export function ProviderSignupForm() {
         }
         setDraftFields(fields);
       }
-      if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
+      if (draft.step && draft.step >= 1 && draft.step <= 4) setStep(draft.step);
       setDraftRestored(true);
     });
     return () => {
@@ -379,13 +397,15 @@ export function ProviderSignupForm() {
   // provider who starts on their phone can come back without retyping.
   useEffect(() => {
     if (applicationSent) return;
-    const hasProgress = selectedProviderServices.length > 0
+    const hasProgress = Boolean(selectedCategory)
+      || selectedProviderServices.length > 0
       || selectedProviderWorkLocations.length > 0
       || Object.keys(draftFields).length > 0;
     if (!hasProgress) return;
     try {
       window.localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify({
         step,
+        selectedCategory,
         selectedProviderServices,
         soloBusiness,
         selectedProviderWorkLocations,
@@ -398,6 +418,7 @@ export function ProviderSignupForm() {
   }, [
     applicationSent,
     step,
+    selectedCategory,
     selectedProviderServices,
     soloBusiness,
     selectedProviderWorkLocations,
@@ -450,7 +471,40 @@ export function ProviderSignupForm() {
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
-  const showStep2 = showProofStep || hasVisibleLegalRequirements;
+  const showRequirementsStep = showProofStep || hasVisibleLegalRequirements;
+
+  const activeCategory = PROVIDER_REVIEW_SERVICE_GROUPS.find(
+    (group) => group.id === selectedCategory,
+  );
+  // Categories other than the chosen one stay collapsed behind a disclosure,
+  // and only appear there when at least one of their jobs can still be added
+  // to the current selection.
+  const combinableCategories = PROVIDER_REVIEW_SERVICE_GROUPS.filter((group) => (
+    group.id !== selectedCategory
+    && group.services.some((service) => (
+      service.allowedPathways.includes(PROVIDER_PATHWAY)
+      && (selectedProviderServices.includes(service.code) || serviceIsSelectable(service))
+    ))
+  ));
+
+  // The visible progress track. "Requirements" disappears entirely when a
+  // selection needs no documents and raises no legal questions, so nobody
+  // counts a step they will never see.
+  const stepFlow: Array<{ step: SignupStep; label: string }> = [
+    { step: 1, label: providerFormIsSpanish ? "Categoría" : "Category" },
+    { step: 2, label: providerFormIsSpanish ? "Sus trabajos" : "Your jobs" },
+    ...(showRequirementsStep
+      ? [{ step: 3 as SignupStep, label: providerFormIsSpanish ? "Requisitos" : "Requirements" }]
+      : []),
+    { step: 4, label: providerFormIsSpanish ? "Su negocio" : "Your business" },
+  ];
+  // Email verification is the last thing an applicant does, so it is shown as
+  // a real step instead of appearing unannounced after the submit button.
+  const verifyLabel = providerFormIsSpanish ? "Verificar correo" : "Verify email";
+  const totalSteps = stepFlow.length + 1;
+  const currentPosition = applicationChallengeId
+    ? totalSteps
+    : stepFlow.findIndex((entry) => entry.step === step) + 1;
 
   function resetChallenge() {
     setApplicationChallengeId("");
@@ -459,28 +513,39 @@ export function ProviderSignupForm() {
     setConfirmingSubmit(false);
   }
 
-  function goToStep1() {
+  function goToStep(next: SignupStep) {
     resetChallenge();
     setStepError("");
-    setStep(1);
+    setSavedNotice("");
+    setStep(next);
   }
 
-  function goToStep2() {
-    if (selectedProviderServices.length === 0) {
+  function goToServicesStep() {
+    if (!selectedCategory) {
       setStepError(
         providerFormIsSpanish
-          ? "Elija al menos un servicio."
-          : "Pick at least one service.",
+          ? "Elija la categoría que mejor describe su trabajo."
+          : "Choose the category that best describes your work.",
       );
       return;
     }
-    setStepError("");
-    resetChallenge();
-    track("provider_step1_completed");
-    setStep(showStep2 ? 2 : 3);
+    goToStep(2);
   }
 
-  function goToStep3() {
+  function goToRequirementsStep() {
+    if (selectedProviderServices.length === 0) {
+      setStepError(
+        providerFormIsSpanish
+          ? "Elija al menos un trabajo."
+          : "Pick at least one job.",
+      );
+      return;
+    }
+    track("provider_step1_completed");
+    goToStep(showRequirementsStep ? 3 : 4);
+  }
+
+  function goToBusinessStep() {
     if (hasVisibleLegalRequirements && !legalConfirmed) {
       setStepError(
         providerFormIsSpanish
@@ -489,10 +554,20 @@ export function ProviderSignupForm() {
       );
       return;
     }
-    setStepError("");
-    resetChallenge();
     track("provider_step2_completed");
-    setStep(3);
+    goToStep(4);
+  }
+
+  /**
+   * Nothing leaves the device here — the draft autosaves on every change, so
+   * this button exists to say so out loud rather than to perform a save.
+   */
+  function confirmSavedForLater() {
+    setSavedNotice(
+      providerFormIsSpanish
+        ? "Guardado en este dispositivo. Vuelva a tuveloz.com/join en el mismo navegador para continuar."
+        : "Saved on this device. Come back to tuveloz.com/join in the same browser to finish.",
+    );
   }
 
   async function handleFinalSubmit(event: FormEvent<HTMLFormElement>) {
@@ -593,10 +668,12 @@ export function ProviderSignupForm() {
         setApplicationVerificationCode("");
         setPendingApplicationPayload(null);
         setConfirmingSubmit(false);
+        setSelectedCategory("");
         setSelectedProviderServices([]);
         setSelectedProviderWorkLocations([]);
         setProviderAssessment(emptyProviderSelfAssessment);
         setLegalConfirmed(false);
+        setSavedNotice("");
         setStep(1);
         setApplicationSent(true);
         track("provider_signup_completed");
@@ -665,6 +742,57 @@ export function ProviderSignupForm() {
     }
   }
 
+  function renderServiceOption(service: (typeof PROVIDER_REVIEW_SERVICES)[number]) {
+    const isSelected = selectedProviderServices.includes(service.code);
+    const isLocked = !isSelected && !serviceIsSelectable(service);
+    return (
+      <div className="service-option" key={service.code}>
+        <label>
+          <input
+            checked={isSelected}
+            disabled={isLocked}
+            name="provider-service"
+            type="checkbox"
+            value={service.code}
+            onChange={(event) => {
+              setSelectedProviderServices((current) => (
+                event.target.checked
+                  ? [...current, service.code]
+                  : current.filter((item) => item !== service.code)
+              ));
+            }}
+          />
+          <span>
+            <strong>
+              {providerServicePlainLabel(
+                service.code,
+                service.label,
+                providerFormIsSpanish,
+              )}
+            </strong>
+          </span>
+        </label>
+        <details className="service-scope">
+          <summary>
+            {providerFormIsSpanish
+              ? "Qué incluye y qué no"
+              : "What's included and not included"}
+          </summary>
+          <small>{service.description}</small>
+        </details>
+      </div>
+    );
+  }
+
+  const saveForLaterControl = (
+    <div className="signup-save-later">
+      <button className="text-link" onClick={confirmSavedForLater} type="button">
+        {providerFormIsSpanish ? "Guardar y terminar después" : "Save and finish later"}
+      </button>
+      {savedNotice && <small role="status">{savedNotice}</small>}
+    </div>
+  );
+
   if (applicationSent) {
     return (
       <div className="success-message provider-success" role="status">
@@ -712,7 +840,7 @@ export function ProviderSignupForm() {
         // edits anything after requesting a code — the payload above is
         // recomputed from current field values, so a stale challenge would
         // otherwise verify code against an outdated application.
-        if ((event.target as HTMLElement).closest("[data-signup-step='3']")) {
+        if ((event.target as HTMLElement).closest("[data-signup-step='4']")) {
           if (applicationChallengeId) {
             setChallengeResetNotice(providerFormIsSpanish
               ? "Cambió su solicitud, así que el código anterior ya no es válido. Envíe de nuevo para recibir un código nuevo."
@@ -724,22 +852,40 @@ export function ProviderSignupForm() {
       onSubmit={handleFinalSubmit}
     >
       <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
-          1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
-        </span>
-        {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
+        {stepFlow.map((entry, index) => (
+          <span
+            className={!applicationChallengeId && step === entry.step ? "on" : ""}
+            key={entry.step}
+          >
+            {index + 1}. {entry.label}
           </span>
-        )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
+        ))}
+        <span className={applicationChallengeId ? "on" : ""}>
+          {totalSteps}. {verifyLabel}
         </span>
       </div>
-      <p className="hint step-progress" aria-live="polite">
+      <div className="signup-progress">
+        <div
+          aria-valuemax={totalSteps}
+          aria-valuemin={1}
+          aria-valuenow={currentPosition}
+          aria-label={providerFormIsSpanish ? "Avance de la solicitud" : "Application progress"}
+          className="signup-progress-track"
+          role="progressbar"
+        >
+          <span style={{ width: `${(currentPosition / totalSteps) * 100}%` }} />
+        </div>
+        <p className="hint step-progress" aria-live="polite">
+          {providerFormIsSpanish
+            ? `Paso ${currentPosition} de ${totalSteps} · unos ${ESTIMATED_MINUTES} minutos en total`
+            : `Step ${currentPosition} of ${totalSteps} · about ${ESTIMATED_MINUTES} minutes in total`}
+        </p>
+      </div>
+
+      <p className="hint signup-autosave-note">
         {providerFormIsSpanish
-          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
-          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+          ? "Sus respuestas se guardan solas en este dispositivo. Puede cerrar esta página y continuar después."
+          : "Your answers save themselves on this device. You can close this page and finish later."}
       </p>
 
       {draftRestored && !applicationChallengeId && (
@@ -755,18 +901,28 @@ export function ProviderSignupForm() {
       {step === 1 && (
         <div data-signup-step="1">
           <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
-          <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
+          <p>
+            {providerFormIsSpanish
+              ? "Empiece con la categoría que mejor describe su trabajo. En el siguiente paso elige los trabajos exactos."
+              : "Start with the category that best describes your work. You'll pick the exact jobs next."}
+          </p>
           <div className="legal-requirement-note" role="status">
             <strong>
               {providerFormIsSpanish
-                ? "Una cosa importante: esta solicitud es para revisión. Los trabajos reales se abren cuando sus servicios pasen la revisión de lanzamiento."
-                : "One thing to know: this application is for review. Real customer jobs open once your services pass launch review."}
+                ? "Los requisitos dependen de sus servicios. Le mostraremos exactamente lo que aplica antes de la activación."
+                : "Requirements depend on your services. We'll show you exactly what applies before activation."}
             </strong>
             <small>
               {providerFormIsSpanish
-                ? "¿Todavía no tiene registro del condado? Puede solicitar de todos modos — elija sus servicios y le mostraremos exactamente lo que cada uno necesita."
-                : "Not registered with the county yet? You can still apply — pick your services and we'll show you exactly what each one needs."}
+                ? "¿Todavía no tiene registro del condado? Puede solicitar de todos modos."
+                : "Not registered with the county yet? You can still apply."}
+              {" "}
+              <Link href="/provider-requirements">
+                {providerFormIsSpanish ? "Ver los requisitos del proveedor" : "See provider requirements"}
+              </Link>
             </small>
+            {/* The full legal detail stays available here, collapsed, so it
+                informs without becoming the first thing an applicant reads. */}
             <details className="legal-note-details">
               <summary>
                 {providerFormIsSpanish
@@ -804,89 +960,155 @@ export function ProviderSignupForm() {
               </small>
             </details>
           </div>
-          <fieldset className="area-fieldset service-fieldset">
-            <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
-            <div className="service-groups provider-service-groups">
+          <fieldset className="area-fieldset provider-category-fieldset">
+            <legend>
+              {providerFormIsSpanish ? "¿Qué tipo de trabajo hace?" : "What kind of work do you do?"}
+            </legend>
+            <div className="provider-category-options">
               {PROVIDER_REVIEW_SERVICE_GROUPS.map((group) => {
                 const groupServices = group.services.filter((service) => (
                   service.allowedPathways.includes(PROVIDER_PATHWAY)
                 ));
                 if (groupServices.length === 0) return null;
-                const selectedCount = groupServices.filter((service) => (
-                  selectedProviderServices.includes(service.code)
-                )).length;
                 return (
-                  <details
-                    className="service-group"
-                    open={selectedCount > 0 ? true : undefined}
+                  <label
+                    className={selectedCategory === group.id ? "selected" : ""}
                     key={group.id}
                   >
-                    <summary>
-                      <span>
-                        <strong>{providerFormIsSpanish ? group.labelEs : group.label}</strong>
-                        <small>{providerFormIsSpanish ? group.descriptionEs : group.description}</small>
-                      </span>
+                    <input
+                      checked={selectedCategory === group.id}
+                      name="provider-category"
+                      type="radio"
+                      value={group.id}
+                      onChange={() => {
+                        setSelectedCategory(group.id);
+                        setStepError("");
+                        // Drop earlier picks that can never be combined with
+                        // the new category, so the next step never opens with
+                        // every job disabled and no explanation.
+                        setSelectedProviderServices((current) => current.filter((code) => {
+                          const picked = PROVIDER_REVIEW_SERVICES.find(
+                            (candidate) => candidate.code === code,
+                          );
+                          return groupServices.some((service) => (
+                            service.code === code
+                            || picked?.allowedProviderLevels.some((level) => (
+                              service.allowedProviderLevels.includes(level)
+                            ))
+                          ));
+                        }));
+                      }}
+                    />
+                    <span>
+                      <strong>{providerFormIsSpanish ? group.labelEs : group.label}</strong>
+                      <small>{providerFormIsSpanish ? group.descriptionEs : group.description}</small>
                       <b>
-                        {selectedCount
-                          ? providerFormIsSpanish
-                            ? `${selectedCount} elegidos`
-                            : `${selectedCount} selected`
-                          : providerFormIsSpanish ? "Ver" : "View"}
+                        {groupServices.length}{" "}
+                        {providerFormIsSpanish
+                          ? groupServices.length === 1 ? "trabajo" : "trabajos"
+                          : groupServices.length === 1 ? "job" : "jobs"}
                       </b>
-                    </summary>
-                    <div className="service-options">
-                      {groupServices.map((service) => {
-                        const isSelected = selectedProviderServices.includes(service.code);
-                        const isLocked = !isSelected && !serviceIsSelectable(service);
-                        return (
-                          <div className="service-option" key={service.code}>
-                            <label>
-                              <input
-                                checked={isSelected}
-                                disabled={isLocked}
-                                name="provider-service"
-                                type="checkbox"
-                                value={service.code}
-                                onChange={(event) => {
-                                  setSelectedProviderServices((current) => (
-                                    event.target.checked
-                                      ? [...current, service.code]
-                                      : current.filter((item) => item !== service.code)
-                                  ));
-                                }}
-                              />
-                              <span>
-                                <strong>
-                                  {providerServicePlainLabel(
-                                    service.code,
-                                    service.label,
-                                    providerFormIsSpanish,
-                                  )}
-                                </strong>
-                              </span>
-                            </label>
-                            <details className="service-scope">
-                              <summary>
-                                {providerFormIsSpanish
-                                  ? "Qué incluye y qué no"
-                                  : "What's included and not included"}
-                              </summary>
-                              <small>{service.description}</small>
-                            </details>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </details>
+                    </span>
+                  </label>
                 );
               })}
             </div>
-            {hasLockedServices && (
-              <p className="tier-swap-notice" role="status">
-                {providerFormIsSpanish
-                  ? "Algunos servicios están bloqueados porque una solicitud cubre un solo nivel a la vez. Para cambiar de nivel, desmarque sus selecciones actuales."
-                  : "Some services are locked because one application covers one service tier at a time. To switch tiers, uncheck your current picks first."}
-              </p>
+            <small className="customer-service-note">
+              {providerFormIsSpanish
+                ? "Puede añadir trabajos de otras categorías compatibles en el siguiente paso."
+                : "You can add jobs from other compatible categories on the next step."}
+            </small>
+          </fieldset>
+          <button type="button" className="button lime form-button" onClick={goToServicesStep}>
+            {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
+          </button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div data-signup-step="2">
+          <h3>
+            {providerFormIsSpanish
+              ? "Elija los trabajos exactos que hace"
+              : "Pick the exact jobs you do"}
+          </h3>
+          <p>
+            {providerFormIsSpanish
+              ? "Marque solo lo que realmente hace. Puede añadir más servicios después de la aprobación."
+              : "Check only what you actually do. You can add more services after approval."}
+          </p>
+          <fieldset className="area-fieldset service-fieldset">
+            <legend>
+              {activeCategory
+                ? (providerFormIsSpanish ? activeCategory.labelEs : activeCategory.label)
+                : (providerFormIsSpanish ? "Trabajos" : "Jobs")}
+            </legend>
+            <div className="service-options">
+              {(activeCategory?.services ?? [])
+                .filter((service) => service.allowedPathways.includes(PROVIDER_PATHWAY))
+                .map((service) => renderServiceOption(service))}
+            </div>
+            {combinableCategories.length > 0 && (
+              <details className="service-group other-categories">
+                <summary>
+                  <span>
+                    <strong>
+                      {providerFormIsSpanish
+                        ? "¿Hace trabajos de otra categoría?"
+                        : "Do you also do jobs from another category?"}
+                    </strong>
+                    <small>
+                      {providerFormIsSpanish
+                        ? "Opcional — solo se muestran las categorías compatibles con sus selecciones."
+                        : "Optional — only categories that combine with your picks are shown."}
+                    </small>
+                  </span>
+                  <b>{providerFormIsSpanish ? "Ver" : "View"}</b>
+                </summary>
+                <div className="service-groups provider-service-groups">
+                  {combinableCategories.map((group) => {
+                    const groupServices = group.services.filter((service) => (
+                      service.allowedPathways.includes(PROVIDER_PATHWAY)
+                    ));
+                    const selectedCount = groupServices.filter((service) => (
+                      selectedProviderServices.includes(service.code)
+                    )).length;
+                    return (
+                      <details
+                        className="service-group"
+                        open={selectedCount > 0 ? true : undefined}
+                        key={group.id}
+                      >
+                        <summary>
+                          <span>
+                            <strong>{providerFormIsSpanish ? group.labelEs : group.label}</strong>
+                            <small>{providerFormIsSpanish ? group.descriptionEs : group.description}</small>
+                          </span>
+                          <b>
+                            {selectedCount
+                              ? providerFormIsSpanish
+                                ? `${selectedCount} elegidos`
+                                : `${selectedCount} selected`
+                              : providerFormIsSpanish ? "Ver" : "View"}
+                          </b>
+                        </summary>
+                        <div className="service-options">
+                          {groupServices.map((service) => renderServiceOption(service))}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
+                {/* Only meaningful next to the list that actually contains
+                    disabled options, so it stays inside the disclosure. */}
+                {hasLockedServices && (
+                  <p className="tier-swap-notice" role="status">
+                    {providerFormIsSpanish
+                      ? "Algunos servicios están bloqueados porque una solicitud cubre un solo nivel a la vez. Para cambiar de nivel, desmarque sus selecciones actuales."
+                      : "Some services are locked because one application covers one service tier at a time. To switch tiers, uncheck your current picks first."}
+                  </p>
+                )}
+              </details>
             )}
             <small className="customer-service-note">
               {providerFormIsSpanish
@@ -900,14 +1122,20 @@ export function ProviderSignupForm() {
               <strong className="provider-mode-badge">{PROVIDER_LEVEL_LABELS[providerLevel]}</strong>
             </div>
           )}
-          <button type="button" className="button lime form-button" onClick={goToStep2}>
-            {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
-          </button>
+          <div className="form-nav">
+            <button type="button" className="button secondary" onClick={() => goToStep(1)}>
+              ← {providerFormIsSpanish ? "Cambiar categoría" : "Change category"}
+            </button>
+            <button type="button" className="button lime form-button" onClick={goToRequirementsStep}>
+              {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
+            </button>
+          </div>
+          {saveForLaterControl}
         </div>
       )}
 
-      {step === 2 && showStep2 && (
-        <div data-signup-step="2">
+      {step === 3 && showRequirementsStep && (
+        <div data-signup-step="3">
           {requiredDocumentsBySelection.length > 0 && (
             <>
               <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
@@ -1136,18 +1364,19 @@ export function ProviderSignupForm() {
             </section>
           )}
           <div className="form-nav">
-            <button type="button" className="button secondary" onClick={goToStep1}>
+            <button type="button" className="button secondary" onClick={() => goToStep(2)}>
               ← {providerFormIsSpanish ? "Regresar" : "Back"}
             </button>
-            <button type="button" className="button lime form-button" onClick={goToStep3}>
+            <button type="button" className="button lime form-button" onClick={goToBusinessStep}>
               {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
             </button>
           </div>
+          {saveForLaterControl}
         </div>
       )}
 
-      {step === 3 && (
-        <div data-signup-step="3">
+      {step === 4 && (
+        <div data-signup-step="4">
           <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
           <p>
             {providerFormIsSpanish
@@ -1495,6 +1724,40 @@ export function ProviderSignupForm() {
               Review the <a href="/privacy">Privacy Policy</a>.
             </span>
           </label>
+          {!applicationChallengeId && (
+            <section className="after-submit-note" aria-labelledby="after-submit-title">
+              <strong id="after-submit-title">
+                {providerFormIsSpanish ? "Qué pasa después de enviar" : "What happens after you submit"}
+              </strong>
+              <ol>
+                <li>
+                  {providerFormIsSpanish
+                    ? "Le enviamos un código de 6 dígitos para confirmar su correo."
+                    : "We email you a 6-digit code to confirm your email."}
+                </li>
+                <li>
+                  {providerFormIsSpanish
+                    ? "Inicia sesión y sube solo los documentos que requieren los trabajos que eligió."
+                    : "You sign in and upload only the documents your chosen jobs require."}
+                </li>
+                <li>
+                  {providerFormIsSpanish
+                    ? "Tuveloz revisa su solicitud y le responde por correo."
+                    : "Tuveloz reviews your application and replies by email."}
+                </li>
+                <li>
+                  {providerFormIsSpanish
+                    ? "Sus servicios aprobados se activan cuando abra el mercado de clientes."
+                    : "Your approved services switch on when the customer marketplace opens."}
+                </li>
+              </ol>
+              <small>
+                {providerFormIsSpanish
+                  ? "Enviar no crea ningún cargo, contacto con clientes ni compromiso de exclusividad."
+                  : "Submitting creates no charge, no customer contact, and no exclusivity commitment."}
+              </small>
+            </section>
+          )}
           {applicationChallengeId ? (
             <section
               className="legal-requirement-note"
@@ -1571,16 +1834,23 @@ export function ProviderSignupForm() {
               title={providerFormIsSpanish ? "¿Continuar con la verificación?" : "Continue with email verification?"}
             />
           ) : (
-            <div className="form-nav">
-              <button type="button" className="button secondary" onClick={showStep2 ? () => setStep(2) : goToStep1}>
-                ← {providerFormIsSpanish ? "Regresar" : "Back"}
-              </button>
-              <button className="button lime form-button" type="submit" disabled={applicationBusy}>
-                {applicationBusy
-                  ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
-                  : (providerFormIsSpanish ? "Enviar solicitud" : "Submit application")} <span>→</span>
-              </button>
-            </div>
+            <>
+              <div className="form-nav">
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => goToStep(showRequirementsStep ? 3 : 2)}
+                >
+                  ← {providerFormIsSpanish ? "Regresar" : "Back"}
+                </button>
+                <button className="button lime form-button" type="submit" disabled={applicationBusy}>
+                  {applicationBusy
+                    ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
+                    : (providerFormIsSpanish ? "Enviar solicitud" : "Submit application")} <span>→</span>
+                </button>
+              </div>
+              {saveForLaterControl}
+            </>
           )}
           {challengeResetNotice && !applicationChallengeId && (
             <p className="hint" role="status">{challengeResetNotice}</p>

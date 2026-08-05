@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { TuvelozPublic } from "../page";
+import { ProviderLanding } from "./provider-landing";
 
 export const metadata: Metadata = {
-  title: "Join as a Provider — Free Signup",
+  title: "Join as a Vehicle-Service Provider in Montgomery County, MD",
   description:
-    "Apply free to offer vehicle services on Tuveloz in Montgomery County, MD. Keep 100% of your quoted price, set your own schedule, no exclusivity.",
+    "Get local vehicle-service opportunities. Join Tuveloz free, keep 100% of your quoted price, no exclusivity. Apply in about 5 minutes.",
+  alternates: { canonical: "/join" },
+  openGraph: {
+    title: "Join Tuveloz as a vehicle-service provider",
+    description:
+      "Free to join, keep 100% of your quoted price, no exclusivity. Now onboarding independent providers in Montgomery County, MD.",
+    url: "https://tuveloz.com/join",
+    type: "website",
+  },
 };
 
 export default function JoinPage() {
-  return <TuvelozPublic view="provider" />;
+  return <ProviderLanding />;
 }

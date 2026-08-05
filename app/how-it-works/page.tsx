@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "How It Works",
   description:
     "How the Tuveloz marketplace will work: request a service, compare quotes from local independent providers, and choose what works for you.",
+  alternates: { canonical: "/how-it-works" },
 };
 
 export default function HowItWorksPage() {
