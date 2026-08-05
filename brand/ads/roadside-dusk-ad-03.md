@@ -25,6 +25,24 @@ ffmpeg editing.
 | `ad-03-assets/endcard.png` | 1990x768 | Reusable wide end card |
 | `ad-03-assets/endcard-9x16.png` | 1080x1920 | Reusable vertical end card |
 
+## V2 — full ad cut (7.9s)
+
+Story beats added on top of the cleaned footage: "Stuck?" hook over the wide
+shot, "Post it on Tuveloz." over the phone close-up, then a 1.6s quote-compare
+UI insert (mocked in brand style — `ui-insert.html` rendered with Chromium,
+since the real post-job flow is launch-gated), then the end card.
+
+| File | Notes |
+|------|-------|
+| `ad-03-assets/tuveloz-roadside-v2.mp4` | Wide, silent |
+| `ad-03-assets/tuveloz-roadside-v2-9x16.mp4` | Vertical, silent |
+| `ad-03-assets/tuveloz-roadside-v2-music.mp4` | Wide + Ad-01 music (fit unconfirmed) |
+| `ad-03-assets/tuveloz-roadside-v2-9x16-music.mp4` | Vertical + Ad-01 music |
+| `ad-03-assets/ui-insert.png` / `.html` | Quote-compare mock screen, editable |
+
+UI insert shows sample quotes ($140/$185/$160, fictional provider names) —
+swap copy in `ui-insert.html` and re-render if needed.
+
 ## Open items
 
 - **Music**: both cuts are silent (the recording had no audio). Pick a track
