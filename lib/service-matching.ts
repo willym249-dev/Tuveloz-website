@@ -282,65 +282,77 @@ export const PROVIDER_SERVICE_OPTIONS: readonly string[] = [
 ];
 
 type CustomerServiceGroup = {
-  id: "mobile" | "shop" | "specialty";
+  id: "mobile" | "repairs" | "extras" | "specialty";
   label: string;
   description: string;
   options: readonly { value: string; label: string }[];
 };
 
+// Everyday, plain-language names for the customer job picker. The `value`
+// strings are the matching keys (see providerServiceRequirementsForJob and
+// CUSTOMER_JOB_SERVICE_OPTIONS) and must never change; only the display
+// `label` is customer-facing. Grouping is visual only — it does not affect
+// matching — so the long repair list is split into two smaller buckets.
 export const CUSTOMER_SERVICE_GROUPS: readonly CustomerServiceGroup[] = [
   {
     id: "mobile",
-    label: "Mobile help",
-    description: "Services that can come to you.",
+    label: "Comes to you",
+    description: "Help that comes to wherever your car is.",
     options: [
       { value: "Mobile mechanic help", label: "Mobile mechanic" },
-      { value: "Mobile detailing", label: "Mobile detailer" },
-      { value: "Mobile tire service", label: "Mobile tire service" },
-      { value: "Battery replacement or jump start", label: "Battery replacement or jump start" },
-      { value: "Lockout assistance", label: "Lockout assistance" },
-      { value: "Fuel delivery", label: "Fuel delivery" },
+      { value: "Mobile detailing", label: "Car cleaning (detailing)" },
+      { value: "Mobile tire service", label: "Tire help" },
+      { value: "Battery replacement or jump start", label: "Dead battery or jump start" },
+      { value: "Lockout assistance", label: "Locked out of the car" },
+      { value: "Fuel delivery", label: "Out of gas" },
       { value: "Windshield chip repair", label: "Windshield chip repair" },
-      { value: "Headlight restoration", label: "Headlight restoration" },
-      { value: "Mobile car wash", label: "Mobile car wash" },
-      { value: "Basic vehicle diagnostics", label: "Basic vehicle diagnostics" },
+      { value: "Headlight restoration", label: "Foggy headlight cleanup" },
+      { value: "Mobile car wash", label: "Car wash" },
+      { value: "Basic vehicle diagnostics", label: "Find out what's wrong" },
     ],
   },
   {
-    id: "shop",
-    label: "Shop services",
-    description: "Repairs, installation, and specialist shop work.",
+    id: "repairs",
+    label: "Repairs",
+    description: "Fixing something that isn't working right.",
     options: [
       { value: "General auto repair quote", label: "Auto repair" },
-      { value: "Tire repair or replacement quote", label: "Tire repair or replacement" },
-      { value: "Brake service quote", label: "Brake service" },
-      { value: "Transmission service quote", label: "Transmission service" },
+      { value: "Tire repair or replacement quote", label: "Tire repair or new tires" },
+      { value: "Brake service quote", label: "Brakes" },
+      { value: "Transmission service quote", label: "Transmission" },
       { value: "Suspension or alignment quote", label: "Suspension or alignment" },
       { value: "Muffler or exhaust quote", label: "Muffler or exhaust" },
+      { value: "Auto glass replacement quote", label: "Auto glass replacement" },
+      { value: "Wheel or rim repair quote", label: "Wheel or rim repair" },
+    ],
+  },
+  {
+    id: "extras",
+    label: "Looks & extras",
+    description: "Making your car look better or adding features.",
+    options: [
       { value: "Window tint installation quote", label: "Window tint" },
       { value: "Body repair or paint quote", label: "Paint or body repair" },
       { value: "Dent repair quote", label: "Dent repair" },
-      { value: "Auto glass replacement quote", label: "Auto glass replacement" },
-      { value: "Wheel or rim repair quote", label: "Wheel or rim repair" },
       { value: "Performance or tuning quote", label: "Performance or tuning" },
-      { value: "Vehicle wrap or graphics quote", label: "Vehicle wrap or graphics" },
+      { value: "Vehicle wrap or graphics quote", label: "Wraps or graphics" },
       { value: "Car audio or electronics quote", label: "Car audio or electronics" },
-      { value: "Rain guard / vent visor installation", label: "Rain guard or vent visor" },
-      { value: "Vehicle sunshade installation", label: "Vehicle sunshade" },
+      { value: "Rain guard / vent visor installation", label: "Rain guards or vent visors" },
+      { value: "Vehicle sunshade installation", label: "Sunshade" },
     ],
   },
   {
     id: "specialty",
-    label: "Specialty services",
-    description: "Specialized providers and vehicle types.",
+    label: "Special requests",
+    description: "Special vehicles and less-common jobs.",
     options: [
-      { value: "Pre-purchase inspection", label: "Pre-purchase inspection" },
+      { value: "Pre-purchase inspection", label: "Check a car before buying" },
       { value: "Fleet maintenance", label: "Fleet maintenance" },
       { value: "Trailer service", label: "Trailer service" },
       { value: "Motorcycle service", label: "Motorcycle service" },
       { value: "RV service", label: "RV service" },
       { value: "Diesel service", label: "Diesel service" },
-      { value: "Hybrid or EV service", label: "Hybrid or EV service" },
+      { value: "Hybrid or EV service", label: "Hybrid or electric car" },
       { value: "Classic car restoration quote", label: "Classic car restoration" },
       { value: "Detailing or ceramic coating", label: "Detailing or ceramic coating" },
     ],

@@ -1140,7 +1140,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                     return (
                       <details
                         className="service-group"
-                        open={group.id === "mobile" ? true : undefined}
+                        open={selectedCount > 0 ? true : undefined}
                         key={group.id}
                       >
                         <summary>
