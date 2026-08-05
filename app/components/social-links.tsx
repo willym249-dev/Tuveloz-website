@@ -1,4 +1,6 @@
 import type { SVGProps } from "react";
+import { track } from "../../lib/analytics";
+import { LaunchUpdatesForm } from "./launch-updates-form";
 
 type SocialPlatform = "facebook" | "instagram" | "x" | "tiktok" | "google";
 
@@ -37,7 +39,7 @@ function SocialIcon({ platform, ...props }: { platform: SocialPlatform } & SVGPr
   );
 }
 
-export function SocialLinks({ className = "" }: { className?: string }) {
+export function SocialLinks({ className = "", source }: { className?: string; source?: string }) {
   return (
     <div className={`footer-social ${className}`.trim()}>
       {SOCIAL_LINKS.map(({ platform, label, href }) => (
@@ -48,10 +50,56 @@ export function SocialLinks({ className = "" }: { className?: string }) {
           rel="noopener noreferrer"
           aria-label={`Tuveloz on ${label}`}
           className="footer-social-link"
+          // Only placements that pass a source are measured, so the footer
+          // keeps its existing (untracked) behavior.
+          onClick={source ? () => track("social_follow_clicked", { platform, source }) : undefined}
         >
           <SocialIcon platform={platform} />
         </a>
       ))}
     </div>
+  );
+}
+
+/**
+ * Follow prompt for the moments right after someone commits — a submitted
+ * provider application or a created account. That is the highest intent a
+ * visitor will ever have, and until now the only place we asked for the
+ * follow was the site footer.
+ *
+ * Pre-launch honesty rules apply to the copy here (see
+ * brand/outreach/audience-growth-playbook.md): never imply customer requests
+ * are open, only that following is how you hear when they are.
+ */
+export function FollowAlong({
+  source,
+  spanish = false,
+  tone = "shell",
+  email = false,
+}: {
+  source: string;
+  spanish?: boolean;
+  /** "shell" = navy account pages, "panel" = warm dark form cards. */
+  tone?: "shell" | "panel";
+  /** Also offer the email list. Social is rented reach; the list is owned. */
+  email?: boolean;
+}) {
+  return (
+    <aside className={`follow-along follow-along-${tone}`}>
+      <div className="follow-along-copy">
+        <h3>{spanish ? "Síganos hasta el lanzamiento" : "Follow along until launch"}</h3>
+        <p>
+          {spanish
+            ? "Publicamos novedades del lanzamiento y perfiles de proveedores. Es la forma más rápida de enterarse el día que se abran las solicitudes de clientes."
+            : "We post launch updates and provider spotlights. It's the fastest way to hear the day customer requests open."}
+        </p>
+      </div>
+      <SocialLinks source={source} />
+      {email && (
+        <div className="follow-along-email">
+          <LaunchUpdatesForm source={source} spanish={spanish} />
+        </div>
+      )}
+    </aside>
   );
 }

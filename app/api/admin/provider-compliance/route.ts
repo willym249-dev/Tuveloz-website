@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import {
   agreementAcceptances,
@@ -21,11 +21,16 @@ import {
   requiredOfficialLegalSourceReferences,
 } from "../../../../lib/legal-compliance-evidence";
 import { recordProviderAuditEvent } from "../../../../lib/provider-audit";
+import { shouldAssignFoundingRank } from "../../../../lib/founding-cohort";
 import {
   notifyProviderEvidenceDecision,
   notifyProviderEvidenceScanBlocked,
 } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
+import {
+  prescreenEvidence,
+  type EvidencePrescreen,
+} from "../../../../lib/evidence-review-assistant";
 import {
   boundLegalBusinessIdentityReview,
   evidenceScopeWithLegalBusinessIdentity,
@@ -54,6 +59,7 @@ import {
   POLICY_JURISDICTION,
   POLICY_STATUS,
   POLICY_VERSION,
+  providerLevelForService,
   PROVIDER_LEVELS,
   PROVIDER_PATHWAYS,
   PROVIDER_POLICY_MATRIX,
@@ -119,6 +125,7 @@ const STRUCTURED_EMPLOYMENT_REQUIREMENTS = new Set<EvidenceRequirementCode>([
 type EvidenceReviewStatus = (typeof EVIDENCE_REVIEW_STATUSES)[number];
 type EvidenceReasonCode = (typeof EVIDENCE_REASON_CODES)[number];
 type EvidenceRow = typeof providerEvidenceSubmissions.$inferSelect;
+type ProviderRow = typeof providerApplications.$inferSelect;
 type ProfileRow = typeof providerPathwayProfiles.$inferSelect;
 type PersonnelRow = typeof providerPersonnel.$inferSelect;
 type ActivationRow = typeof serviceActivationDecisions.$inferSelect;
@@ -341,6 +348,49 @@ function safeEvidence(row: EvidenceRow, scan?: ScanRow) {
   };
 }
 
+// Mirrors the exact-service, pathway, person, and jurisdiction checks the
+// acceptance path enforces, so the pre-screen never suggests accepting a
+// submission the real review would reject.
+function evidenceMatchesCurrentApplication(
+  row: EvidenceRow,
+  provider: ProviderRow,
+  profile: ProfileRow | undefined,
+): boolean {
+  if (!profile || !isProviderPathway(profile.relationshipPath)) return false;
+  if (row.jurisdiction !== POLICY_JURISDICTION) return false;
+  if (!isServiceCode(row.serviceCode) || row.serviceCode === "general_auto_repair") return false;
+  if (!parseProviderServices(provider.service).includes(row.serviceCode)) return false;
+  if (!(row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types)) return false;
+  const requirementKey = row.requirementKey as EvidenceRequirementCode;
+  if (!getEvidenceRequirements(row.serviceCode, profile.relationshipPath).includes(requirementKey)) {
+    return false;
+  }
+  if (PERSON_BOUND_REQUIREMENTS.has(requirementKey) && row.personId !== profile.providerPersonId) {
+    return false;
+  }
+  return true;
+}
+
+function prescreenForEvidence(
+  row: EvidenceRow,
+  scan: ScanRow | undefined,
+  provider: ProviderRow,
+  profile: ProfileRow | undefined,
+): EvidencePrescreen {
+  const definition = row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
+    ? PROVIDER_POLICY_MATRIX.evidence_types[row.requirementKey as EvidenceRequirementCode]
+    : undefined;
+  return prescreenEvidence({
+    submissionStatus: row.status,
+    matchesCurrentApplication: evidenceMatchesCurrentApplication(row, provider, profile),
+    requiresExpiration: definition?.requires_expiration === true,
+    hasExpirationDate: Boolean(row.expiresAt),
+    isExpired: Boolean(row.expiresAt) && !currentThrough(row.expiresAt),
+    hasPrivateFile: Boolean(row.storageKey),
+    scanStatus: row.storageKey ? scan?.status ?? "missing" : "not_required",
+  });
+}
+
 function evidenceMatches(
   row: EvidenceRow,
   requirementKey: EvidenceRequirementCode,
@@ -451,16 +501,29 @@ function evaluateService(input: {
   const pathway = profile && isProviderPathway(profile.relationshipPath)
     ? profile.relationshipPath
     : null;
-  const providerLevel = profile && isProviderLevel(profile.providerLevel)
+  // The level belongs to this exact service, so a provider may be approved for
+  // services at several levels at once. The profile level stays a summary and
+  // only still blocks applicant-only accounts.
+  const serviceLevel = pathway
+    ? providerLevelForService(serviceCode, pathway)
+    : null;
+  const profileLevel = profile && isProviderLevel(profile.providerLevel)
     ? profile.providerLevel
     : null;
+  const providerLevel = serviceLevel ?? profileLevel;
   const service = SERVICE_POLICY_CATALOG[serviceCode];
 
   if (provider.status === "declined") reasons.push("application_declined");
   if (provider.isTestProvider === "yes") reasons.push("test_provider_not_live");
   if (!profile || profile.policyVersion !== POLICY_VERSION) reasons.push("current_pathway_missing");
   if (!pathway) reasons.push("recognized_pathway_missing");
-  if (!providerLevel || providerLevel === "learning_account") reasons.push("job_eligible_provider_level_missing");
+  if (
+    !providerLevel
+    || providerLevel === "learning_account"
+    || profileLevel === "learning_account"
+  ) {
+    reasons.push("job_eligible_provider_level_missing");
+  }
   if (service.launchState !== "enabled" || !service.customerVisible) {
     reasons.push("service_not_enabled_by_policy_catalog");
   }
@@ -468,12 +531,14 @@ function evaluateService(input: {
     reasons.push("pathway_level_incompatible");
   }
   if (pathway && !service.allowedPathways.includes(pathway)) reasons.push("pathway_not_allowed_for_service");
-  if (providerLevel && !service.allowedProviderLevels.includes(providerLevel)) {
+  // Denies only services that no level on this pathway may perform, rather than
+  // denying a lawful service because the provider's other work sits elsewhere.
+  if (pathway && !serviceLevel) {
     reasons.push("provider_level_not_allowed_for_service");
   }
   if (
-    providerLevel
-    && !PROVIDER_POLICY_MATRIX.provider_levels[providerLevel].allowed_service_codes.includes(serviceCode)
+    serviceLevel
+    && !PROVIDER_POLICY_MATRIX.provider_levels[serviceLevel].allowed_service_codes.includes(serviceCode)
   ) {
     reasons.push("service_not_allowed_for_provider_level");
   }
@@ -559,6 +624,9 @@ function evaluateService(input: {
   return {
     code: serviceCode,
     label: service.label,
+    // The level this exact service is approved at, stored on its own
+    // eligibility row so one provider can hold several levels at once.
+    providerLevel: serviceLevel,
     status: uniqueReasons.length === 0 ? "eligible" as const : "blocked" as const,
     reasons: uniqueReasons,
     requirements: requirementStatuses,
@@ -645,7 +713,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
     )).limit(1);
     const values = {
       relationshipPath: profile.relationshipPath,
-      providerLevel: profile.providerLevel,
+      providerLevel: evaluation.providerLevel ?? profile.providerLevel,
       eligibilityState: evaluation.status,
       reasonCodes: JSON.stringify(evaluation.reasons),
       requirementVersions: JSON.stringify({
@@ -686,6 +754,27 @@ async function recalculateProvider(providerId: string, actorId: string) {
     && provider.status !== "declined"
     && provider.isTestProvider !== "yes";
   const wasVerified = provider.status === "approved" && provider.verificationStatus === "verified";
+  // Founding cohort standing is claimed the first time a provider verifies,
+  // and never recomputed afterwards — rank is by acceptance, so a provider who
+  // applied first but cleared review third is third. Losing verification later
+  // does not free the slot: 20 is a cohort, not a queue with vacancies.
+  let foundingRank = provider.foundingRank;
+  let foundingRankAssignedAt = provider.foundingRankAssignedAt;
+  if (canAutoVerify && !wasVerified && provider.foundingRank === 0) {
+    const claimed = await db.select({ rank: providerApplications.foundingRank })
+      .from(providerApplications)
+      .where(gt(providerApplications.foundingRank, 0));
+    if (shouldAssignFoundingRank({
+      currentRank: provider.foundingRank,
+      assignedCount: claimed.length,
+      isTestProvider: provider.isTestProvider === "yes",
+    })) {
+      // Max rather than count, so a manually corrected record can never cause
+      // two providers to be handed the same rank.
+      foundingRank = claimed.reduce((highest, row) => Math.max(highest, row.rank), 0) + 1;
+      foundingRankAssignedAt = now;
+    }
+  }
   const statusPayload = Object.fromEntries(evaluations.map((evaluation) => [evaluation.code, {
     status: evaluation.status,
     reasons: evaluation.reasons,
@@ -716,6 +805,8 @@ async function recalculateProvider(providerId: string, actorId: string) {
         ? `v0.11-rules:${actorId}`
         : "",
     alertsEnabled: canAutoVerify ? "yes" : "no",
+    foundingRank,
+    foundingRankAssignedAt,
   }).where(eq(providerApplications.id, provider.id));
   const holdReasons = canAutoVerify
     ? []
@@ -878,7 +969,10 @@ async function complianceResponse() {
       })),
       agreements,
       allAgreementsCurrent: agreements.every((agreement) => agreement.current),
-      evidence: evidence.map((item) => safeEvidence(item, scans.get(item.id))),
+      evidence: evidence.map((item) => ({
+        ...safeEvidence(item, scans.get(item.id)),
+        prescreen: prescreenForEvidence(item, scans.get(item.id), provider, profile),
+      })),
       services,
       eligibleServices: services
         .filter((service) => service.status === "eligible")
@@ -1064,6 +1158,129 @@ export async function POST(request: Request) {
     const action = clean(body.action, 80);
     const providerId = clean(body.providerId, 120);
     const db = getDb();
+
+    if (action === "prescreen-dispatch") {
+      // Bulk pre-screen of the pending queue. This deliberately applies only
+      // the one factual, reversible outcome — a correction request for an
+      // expired or undated document — and never accepts anything. Acceptance
+      // stays a per-document human act with an external authenticity check.
+      const pendingRows = await db.select().from(providerEvidenceSubmissions)
+        .where(providerId
+          ? and(
+              eq(providerEvidenceSubmissions.providerId, providerId),
+              eq(providerEvidenceSubmissions.status, "pending"),
+            )
+          : eq(providerEvidenceSubmissions.status, "pending"));
+      if (pendingRows.length === 0) {
+        return Response.json({
+          ok: true,
+          message: "No documents are waiting for a pre-screen.",
+          corrected: 0,
+          flaggedForReview: 0,
+          readyForAuthenticity: 0,
+        });
+      }
+      const involvedProviderIds = [...new Set(pendingRows.map((row) => row.providerId))];
+      const [providerRows, profileRows, scanRows] = await Promise.all([
+        db.select().from(providerApplications)
+          .where(inArray(providerApplications.id, involvedProviderIds)),
+        db.select().from(providerPathwayProfiles)
+          .where(inArray(providerPathwayProfiles.providerId, involvedProviderIds))
+          .orderBy(desc(providerPathwayProfiles.pathwayVersion)),
+        db.select().from(evidenceFileScans)
+          .where(inArray(evidenceFileScans.evidenceSubmissionId, pendingRows.map((row) => row.id)))
+          .orderBy(desc(evidenceFileScans.requestedAt)),
+      ]);
+      const providerById = new Map(providerRows.map((provider) => [provider.id, provider]));
+      const profileByProvider = latestProfiles(profileRows);
+      const scanByEvidence = latestScanMap(scanRows);
+
+      let corrected = 0;
+      let flaggedForReview = 0;
+      let readyForAuthenticity = 0;
+      const affectedProviderIds = new Set<string>();
+      for (const row of pendingRows) {
+        const provider = providerById.get(row.providerId);
+        // Never auto-touch a test application.
+        if (!provider || provider.isTestProvider === "yes") continue;
+        const profile = profileByProvider.get(row.providerId);
+        const prescreen = prescreenForEvidence(
+          row,
+          scanByEvidence.get(row.id),
+          provider,
+          profile,
+        );
+        if (!prescreen.autoDispatch) {
+          if (prescreen.recommendation === "ready_for_authenticity_check") readyForAuthenticity += 1;
+          else if (
+            prescreen.recommendation === "reject_mismatch"
+            || prescreen.recommendation === "hold_scan_not_clean"
+          ) flaggedForReview += 1;
+          continue;
+        }
+        // Quarantine any dependent Checkout state before the evidence write,
+        // mirroring the single-document review path.
+        await expireOpenCheckoutSessionsForLaunchShutdown();
+        const now = new Date().toISOString();
+        const reviewDecisionId = crypto.randomUUID();
+        await db.update(providerEvidenceSubmissions).set({
+          status: prescreen.autoDispatch.status,
+          evidenceScope: evidenceScopeWithoutLegalBusinessIdentity(row.evidenceScope),
+          reviewedAt: now,
+          reviewedBy: actorId,
+          reviewDecisionId,
+          reasonCodes: JSON.stringify([prescreen.autoDispatch.reasonCode]),
+          reviewNotes: prescreen.autoDispatch.note,
+          authenticityVerificationMethod: "",
+          authenticityVerifiedBy: "",
+          authenticityVerificationReference: "",
+          authenticitySourceUrl: "",
+          authenticityVerifiedAt: "",
+          authenticityValidThrough: "",
+          updatedAt: now,
+        }).where(eq(providerEvidenceSubmissions.id, row.id));
+        await recordProviderAuditEvent({
+          providerId: row.providerId,
+          personId: row.personId,
+          serviceCode: row.serviceCode,
+          jurisdiction: row.jurisdiction,
+          eventType: "owner_evidence_reviewed",
+          entityType: "provider_evidence_submission",
+          entityId: row.id,
+          actorType: "verified_owner",
+          actorId,
+          outcome: prescreen.autoDispatch.status,
+          reasonCodes: [prescreen.autoDispatch.reasonCode],
+          metadata: {
+            reviewDecisionId,
+            notes: prescreen.autoDispatch.note,
+            automatedPrescreen: true,
+            prescreenRecommendation: prescreen.recommendation,
+            noSensitiveIdentityDocumentStored: true,
+          },
+        });
+        await notifyProviderEvidenceDecision({
+          evidenceId: row.id,
+          email: provider.email,
+          status: prescreen.autoDispatch.status,
+        });
+        corrected += 1;
+        affectedProviderIds.add(row.providerId);
+      }
+      for (const affectedProviderId of affectedProviderIds) {
+        await recalculateProvider(affectedProviderId, actorId);
+      }
+      await expireOpenCheckoutSessionsForLaunchShutdown();
+      return Response.json({
+        ok: true,
+        message: corrected > 0
+          ? `Pre-screen sent ${corrected} correction request${corrected === 1 ? "" : "s"} for expired or undated documents. ${readyForAuthenticity} passed the automatic checks and are ready for your external authenticity check — nothing was accepted automatically.`
+          : `No automatic corrections were needed. ${readyForAuthenticity} document${readyForAuthenticity === 1 ? " is" : "s are"} ready for your external authenticity check and ${flaggedForReview} need${flaggedForReview === 1 ? "s" : ""} a manual look. Nothing was accepted automatically.`,
+        corrected,
+        flaggedForReview,
+        readyForAuthenticity,
+      });
+    }
 
     if (action === "initialize-provider-pathway") {
       if (!providerId) return Response.json({ error: "Choose a provider application." }, { status: 400 });

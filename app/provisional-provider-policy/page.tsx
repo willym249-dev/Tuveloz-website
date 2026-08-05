@@ -222,10 +222,14 @@ export default function ProvisionalProviderPolicyPage() {
           Before booking, the customer must see the legal provider business, the
           assigned performing person, the accurate provisional or sponsored label,
           the exact limited service and exclusions, the supervision arrangement,
-          and the specific current evidence Tuveloz reviewed. A label is not a
-          guarantee of skill, safety, price, workmanship, or outcome. A person
-          substitution requires updated eligibility, disclosure, and affirmative
-          customer acceptance before work starts.
+          and the specific current evidence Tuveloz reviewed. Even at the entry
+          tier, the assigned performing person must have accepted, service-scoped
+          competency evidence for that exact service before assignment; a
+          customer&apos;s informed agreement to a less-experienced provider never
+          removes that or any other required gate. A label is not a guarantee of
+          skill, safety, price, workmanship, or outcome. A person substitution
+          requires updated eligibility, disclosure, and affirmative customer
+          acceptance before work starts.
         </p>
       </section>
 

@@ -172,6 +172,10 @@ export const providerApplications = sqliteTable(
     // and capability status are always fetched from Stripe's V2 Accounts API.
     stripeAccountId: text("stripe_account_id"),
     status: text("status").notNull().default("new"),
+    // Founding cohort standing, assigned once at first verification and never
+    // recomputed. 0 = not in the cohort. See lib/founding-cohort.ts.
+    foundingRank: integer("founding_rank").notNull().default(0),
+    foundingRankAssignedAt: text("founding_rank_assigned_at").notNull().default(""),
     termsAcceptedAt: text("terms_accepted_at").notNull().default(""),
     termsVersion: text("terms_version").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -179,6 +183,7 @@ export const providerApplications = sqliteTable(
   (table) => [
     index("provider_applications_created_at_idx").on(table.createdAt),
     index("provider_applications_status_idx").on(table.status),
+    index("provider_applications_founding_rank_idx").on(table.foundingRank),
     index("provider_applications_email_idx").on(table.email),
     index("provider_applications_stripe_account_idx").on(table.stripeAccountId),
   ],
@@ -536,6 +541,41 @@ export const passwordVerificationCodes = sqliteTable(
   ],
 );
 
+export const accountPhoneNumbers = sqliteTable(
+  "account_phone_numbers",
+  {
+    email: text("email").primaryKey(),
+    phoneE164: text("phone_e164").notNull(),
+    verifiedAt: text("verified_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("account_phone_numbers_phone_unique").on(table.phoneE164),
+  ],
+);
+
+export const phoneLoginCodes = sqliteTable(
+  "phone_login_codes",
+  {
+    id: text("id").primaryKey(),
+    phoneE164: text("phone_e164").notNull(),
+    purpose: text("purpose").notNull(),
+    email: text("email").notNull().default(""),
+    codeHash: text("code_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    usedAt: text("used_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("phone_login_codes_phone_purpose_idx").on(table.phoneE164, table.purpose),
+    index("phone_login_codes_email_purpose_idx").on(table.email, table.purpose),
+    index("phone_login_codes_expires_at_idx").on(table.expiresAt),
+    index("phone_login_codes_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const passkeyCredentials = sqliteTable(
   "passkey_credentials",
   {
@@ -746,6 +786,43 @@ export const emailNotificationOutbox = sqliteTable(
     uniqueIndex("email_notification_outbox_event_key_unique").on(table.eventKey),
     index("email_notification_outbox_status_created_idx").on(table.status, table.createdAt),
     index("email_notification_outbox_recipient_idx").on(table.recipientEmail),
+  ],
+);
+
+/**
+ * Pre-launch email list. Separate from every operational address the site
+ * already holds, because consent to be emailed marketing is a different thing
+ * from having applied or created an account — an applicant expects operational
+ * mail about their application, not launch announcements.
+ *
+ * The consent text and version are stored verbatim alongside the timestamp, so
+ * what someone actually agreed to can be produced later rather than inferred
+ * from whatever the form says today.
+ */
+export const launchUpdateSubscribers = sqliteTable(
+  "launch_update_subscribers",
+  {
+    // Normalized (trimmed, lowercased) email is the identity, so re-subscribing
+    // updates one row instead of creating duplicates that would double-send.
+    email: text("email").primaryKey(),
+    source: text("source").notNull().default(""),
+    language: text("language").notNull().default("en"),
+    consentText: text("consent_text").notNull().default(""),
+    consentVersion: text("consent_version").notNull().default(""),
+    consentedAt: text("consented_at").notNull().default(""),
+    // Unsubscribing keeps the row: an empty unsubscribedAt means subscribed.
+    // Deleting would let a later re-import silently resurrect the address.
+    unsubscribedAt: text("unsubscribed_at").notNull().default(""),
+    unsubscribeToken: text("unsubscribe_token").notNull(),
+    // Highest sequence step already queued for this subscriber. Steps only
+    // ever move forward, so a re-run of the cron cannot re-send a step.
+    lastStepSent: integer("last_step_sent").notNull().default(-1),
+    lastStepSentAt: text("last_step_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("launch_update_subscribers_token_unique").on(table.unsubscribeToken),
+    index("launch_update_subscribers_step_idx").on(table.unsubscribedAt, table.lastStepSent),
   ],
 );
 

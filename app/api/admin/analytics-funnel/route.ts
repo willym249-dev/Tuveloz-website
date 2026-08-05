@@ -1,4 +1,4 @@
-import { count, gte } from "drizzle-orm";
+import { and, count, gte, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { analyticsEvents } from "../../../../db/schema";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
@@ -96,7 +96,72 @@ async function countsSince(sinceValue: string | null): Promise<Map<string, numbe
   return map;
 }
 
-function windowPayload(counts: Map<string, number>) {
+type ExperimentRow = {
+  variant: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
+// Experiments whose conversion is start → submitted on the provider funnel.
+// Add a name here (and render copy variants in the app) to measure it.
+const EXPERIMENTS = ["provider_hero", "provider_pitch", "founding_cta"] as const;
+
+// Read the variant this row was tagged with for a given experiment. Current
+// events carry props.variants = { [name]: "A" | "B" }; the older single-field
+// shape ({ experiment, variant }) is honored too so no data is lost.
+function readVariant(props: string | null, name: string): string {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as {
+      variants?: Record<string, unknown>;
+      experiment?: unknown;
+      variant?: unknown;
+    };
+    const fromMap = parsed.variants?.[name];
+    if (typeof fromMap === "string") return fromMap;
+    if (parsed.experiment === name && typeof parsed.variant === "string") return parsed.variant;
+  } catch {
+    // Malformed props — treat as unassigned.
+  }
+  return "";
+}
+
+// Real conversion per copy variant, so wording is judged by data, not taste.
+// Rows without a valid A/B variant are ignored rather than lumped into a
+// misleading bucket.
+async function experimentsSince(sinceValue: string | null): Promise<Record<string, ExperimentRow[]>> {
+  const db = getDb();
+  const events = ["provider_signup_started", "provider_signup_completed"];
+  const eventFilter = inArray(analyticsEvents.event, events);
+  const rows = await db
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const result: Record<string, ExperimentRow[]> = {};
+  for (const name of EXPERIMENTS) {
+    const tally = new Map<string, { started: number; submitted: number }>();
+    for (const row of rows) {
+      const variant = readVariant(row.props, name);
+      if (variant !== "A" && variant !== "B") continue;
+      const bucket = tally.get(variant) ?? { started: 0, submitted: 0 };
+      if (row.event === "provider_signup_started") bucket.started += 1;
+      else bucket.submitted += 1;
+      tally.set(variant, bucket);
+    }
+    result[name] = [...tally.entries()]
+      .map(([variant, value]) => ({
+        variant,
+        started: value.started,
+        submitted: value.submitted,
+        conversion: pct(value.submitted, value.started),
+      }))
+      .sort((a, b) => a.variant.localeCompare(b.variant));
+  }
+  return result;
+}
+
+function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -106,6 +171,7 @@ function windowPayload(counts: Map<string, number>) {
       requirementsStepAbandoned: counts.get("provider_step2_abandoned") ?? 0,
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
+    experiments,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -127,19 +193,24 @@ export async function GET(request: Request) {
 
   try {
     const now = Date.now();
-    const [allTime, last30, last7] = await Promise.all([
+    const since30 = threshold(30, now);
+    const since7 = threshold(7, now);
+    const [allTime, last30, last7, expAll, exp30, exp7] = await Promise.all([
       countsSince(null),
-      countsSince(threshold(30, now)),
-      countsSince(threshold(7, now)),
+      countsSince(since30),
+      countsSince(since7),
+      experimentsSince(null),
+      experimentsSince(since30),
+      experimentsSince(since7),
     ]);
     return Response.json(
       {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime),
-          last30: windowPayload(last30),
-          last7: windowPayload(last7),
+          allTime: windowPayload(allTime, expAll),
+          last30: windowPayload(last30, exp30),
+          last7: windowPayload(last7, exp7),
         },
       },
       { headers: { "cache-control": "no-store" } },
