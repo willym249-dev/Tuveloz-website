@@ -209,6 +209,29 @@ that point is a way to feel busy while the marketplace stays empty.
 
 ---
 
+---
+
+## Open blockers
+
+**The email list cannot send until a postal address is set.** `LAUNCH_UPDATES_POSTAL_ADDRESS`
+is empty in `wrangler.jsonc`. US commercial email must carry the sender's
+physical mailing address, so while it is empty the launch-update sequence
+queues nothing and logs the reason — subscribers accumulate, no mail goes out.
+
+Status: **deferred, on purpose.** The only address currently on file for
+TUVELOZ LLC (Maryland Dept ID W27472109) is the owner's home address. That is
+already public record through the state's entity search, but there is a real
+difference between findable-if-someone-looks and printed in every inbox on the
+list, so it should not be used here.
+
+Resolve with a PO box or a commercial resident agent address (~$20–40 for a
+few months), then set the var and redeploy. Nothing else is blocked by this —
+signup, storage, consent, and unsubscribe all work today, and the sequence
+starts sending to everyone already on the list as soon as the address exists.
+
+**Google Business Profile** — verification submitted, pending. The share link
+stays commented out in `app/components/social-links.tsx` until it comes back.
+
 ## Honesty rules (carried over from the outreach kit)
 
 - Never imply customers can book or pay today.
