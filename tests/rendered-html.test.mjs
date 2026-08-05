@@ -627,13 +627,12 @@ test("build groups the expanded service catalog and shows automatic provider mod
     "utf8",
   );
 
-  assert.ok(contents.includes("Mobile services"));
-  assert.ok(contents.includes("Shop services"));
-  assert.ok(contents.includes("Specialty services"));
-  assert.ok(contents.includes("Mobile mechanic"));
-  assert.ok(contents.includes("Auto repair"));
-  assert.ok(contents.includes("Pre-purchase inspection"));
-  assert.ok(contents.includes("Hybrid or EV service"));
+  assert.ok(contents.includes("Work you bring to the customer"));
+  assert.ok(contents.includes("Work you do at your shop"));
+  assert.ok(contents.includes("Special jobs (need extra review)"));
+  assert.ok(contents.includes("Jump start a dead battery"));
+  assert.ok(contents.includes("Check a car before someone buys it"));
+  assert.ok(contents.includes("Deep cleaning and ceramic coating"));
   assert.ok(contents.includes("Classic car restoration"));
   assert.ok(contents.includes("Profile badge"));
   assert.ok(matchingSource.includes('export type ProviderMode = "Mobile" | "Shop" | "Both"'));
