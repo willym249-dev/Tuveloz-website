@@ -1517,12 +1517,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="section-heading">
           <div>
             <span className="kicker">Why mechanics join Tuveloz</span>
-            <h2>The business side, handled. The control, yours.</h2>
+            <h2>You&apos;ve got the skills. Let&apos;s build the business around them.</h2>
           </div>
           <p>
-            Most platforms want to own your customers and shave your pay. Tuveloz
-            is built the other way — you stay independent, keep your price, and let
-            us carry the busywork.
+            You shouldn&apos;t have to hand your customers — or your paycheck — to
+            anyone. On Tuveloz you stay independent, set your own price, and let us
+            handle the busywork. Show up, do great work, get paid. Simple as that.
           </p>
         </div>
         <div className="pitch-grid">
@@ -1539,11 +1539,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="founding-banner">
           <div>
             <span className="kicker light">Founding providers · Montgomery County</span>
-            <h3>Get in before your area fills up.</h3>
+            <h3>Be first. Own your corner of the county.</h3>
             <p>
-              Be among the first approved providers in Montgomery County — early
-              pick of matching jobs and a real say in how Tuveloz works for
-              mechanics. Free to apply, no subscription, no exclusivity.
+              The first mechanics into Montgomery County get first pick of jobs and
+              a real voice in how Tuveloz works. Free to apply, no subscription, no
+              exclusivity — there&apos;s no better time to bet on yourself.
             </p>
           </div>
           <a className="button lime" href="#provider-apply">
@@ -1562,9 +1562,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <h2>Your business. Your price. Your schedule.</h2>
             )}
             <p>
-              Tuveloz doesn&apos;t employ, train, or assign work to providers — you run
-              your own business and choose the jobs that fit. Sign up free, no
-              listing fee, no subscription.
+              This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
+              you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
             </p>
             <div className="provider-benefits">
               <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
@@ -1589,12 +1588,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <section className="provider-handles" aria-labelledby="provider-handles-title">
               <div className="provider-handles-heading">
                 <span className="kicker light">Show up. Do the work.</span>
-                <h3 id="provider-handles-title">You fix the vehicle. Tuveloz takes the paperwork off your back.</h3>
+                <h3 id="provider-handles-title">You fix the vehicle. We knock out the paperwork.</h3>
                 <p>
-                  The admin that piles up around every job — booking dates, writing
-                  quotes, keeping records, sending invoices, and getting paid — is
-                  built into one workspace. That load stays off your back, so your
-                  time goes to the vehicle instead of the office.
+                  Booking dates, quotes, records, invoices, getting paid — the admin
+                  that eats everyone else&apos;s evenings lives in one workspace here.
+                  Spend your time under the hood, not buried in office work.
                 </p>
               </div>
               <div className="provider-handles-grid">
