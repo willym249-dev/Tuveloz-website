@@ -109,8 +109,24 @@ tuveloz.com/join". If it's AI-generated footage, turn ON the
 "AI-generated content" label (TikTok: upload settings; Instagram:
 Advanced settings -> Add AI label).
 
+Footage: a mobile mechanic driving at golden hour; baked-in text reads
+"LOCAL CUSTOMERS." / "Tired of working somebody else's route?" The hook
+is on screen at 0:00 — the message rides the footage, so add only a small
+native CTA overlay in the last ~2s ("Link in bio → tuveloz.com/join") and
+fill the Accessibility alt text (below). It's AI-generated footage — turn
+ON the AI-content label in Advanced settings.
+
+Accessibility alt text (Advanced settings -> Accessibility -> Write alt text):
+  "A mobile mechanic drives at sunset. On-screen text reads 'Local
+  customers. Tired of working somebody else's route?' — an ad for
+  Tuveloz, a Montgomery County, MD marketplace where mechanics get their
+  own local customers."
+
 --- INSTAGRAM CAPTION ---
-Independent mobile mechanics in Montgomery County — this one's for you 🔧
+Tired of running somebody else's route? 🔧
+
+Montgomery County mechanics — picture local customers who are yours, not
+the shop's.
 
 Tuveloz is a new local marketplace for vehicle services, and we're
 signing up providers before launch:
@@ -126,11 +142,13 @@ review is done and you're first in line on day one.
 Apply in minutes (English o español): link in bio → tuveloz.com/join
 
 (Paste the hashtag block as the FIRST COMMENT to keep the caption clean —
-reach is identical either way.)
-#MobileMechanic #MechanicLife #AutoRepair #CarRepair #CarTok
-#SkilledTrades #BlueCollar #SideHustle #BeYourOwnBoss #SmallBusiness
-#MontgomeryCountyMD #MoCo #SilverSpringMD #RockvilleMD #GaithersburgMD
-#WheatonMD #GermantownMD #DMV #SupportLocal #MarylandSmallBusiness
+reach is identical either way. Reels distribute to NON-followers, so with
+a new account these tags + a strong 3s hook are the main reach levers.)
+#MobileMechanic #MechanicLife #MechanicsOfInstagram #AutoRepair #CarRepair
+#CarTok #SkilledTrades #BlueCollar #BeYourOwnBoss #WorkForYourself
+#OwnYourTime #SideHustle #SmallBusiness #MontgomeryCountyMD #MoCo
+#SilverSpringMD #RockvilleMD #GaithersburgMD #WheatonMD #GermantownMD
+#DMV #MarylandSmallBusiness #SupportLocal
 
 --- TIKTOK CAPTION (keep tags to ~5) ---
 New local marketplace for mobile mechanics in the DMV. Free to join, you
