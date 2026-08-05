@@ -50,7 +50,9 @@ export type ServiceCode = (typeof SERVICE_CODES)[number];
 export type EvidenceRequirementCode = keyof typeof rawPolicyMatrix.evidence_types;
 
 export type PolicyVersion = "0.11";
-export type PolicyStatus = "draft_pending_mandatory_compliance_insurance_tax";
+export type PolicyStatus =
+  | "draft_pending_mandatory_compliance_insurance_tax"
+  | "active";
 export type PolicyJurisdiction = "US-MD-MontgomeryCounty";
 export type DefaultPolicy = "deny";
 
