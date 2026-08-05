@@ -91,6 +91,14 @@ a {
   width: 24px;
 }
 
+.brand-mark img,
+.mini-mark img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
 .brand-mark .brand-funnel,
 .brand-mark .brand-fuel-drop,
 .mini-mark .brand-funnel,
@@ -4446,9 +4454,9 @@ body {
 
 .brand-mark,
 .mini-mark {
-  background: #07182d;
-  border: 2.5px solid #ff6a00;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   color: #ff6a00;
 }
 

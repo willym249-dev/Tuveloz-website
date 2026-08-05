@@ -26,16 +26,7 @@ type IconProps = SVGProps<SVGSVGElement> & {
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <span className={compact ? "mini-mark" : "brand-mark"} aria-hidden="true">
-      <svg viewBox="0 0 24 24" focusable="false">
-        <path
-          className="brand-funnel"
-          d="M7.3 6.3H16.7Q17.5 6.3 17.2 7L14.7 11.5V15.6Q14.7 16.1 14.2 16.1H9.8Q9.3 16.1 9.3 15.6V11.5L6.8 7Q6.5 6.3 7.3 6.3Z"
-        />
-        <path
-          className="brand-fuel-drop"
-          d="M12 17.6C13.15 18.65 13.35 19.35 13.35 19.55A1.35 1.35 0 1 1 10.65 19.55C10.65 19.35 10.85 18.65 12 17.6Z"
-        />
-      </svg>
+      <img src="/brand-badge.png?v=1" alt="" />
     </span>
   );
 }
