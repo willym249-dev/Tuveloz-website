@@ -313,3 +313,63 @@ Two rules that keep the thread alive:
 2. Reply within the first hour — that early-engagement window is what tells
    the algorithm to push the post wider. Publicly winning over a skeptic
    builds more trust than ten happy comments.
+
+
+=====================================================================
+MUSIC / SOUND — LEGAL RULE FOR A BUSINESS
+=====================================================================
+Tuveloz posts are COMMERCIAL use (a business promoting a service). The
+regular TikTok/Instagram music catalogs (chart songs) are licensed only
+for personal posts — using them on a brand post risks a muted audio,
+limited reach, or takedown.
+
+Standing rule: only use sounds from the COMMERCIAL MUSIC LIBRARY (CML).
+- TikTok: switch to a Business account (Settings -> Account -> Switch to
+  Business Account) and TikTok auto-restricts you to cleared sounds. Or on
+  a Creator account, filter to "Commercial sounds" when adding audio.
+- Instagram: professional/business accounts get the licensed (limited)
+  library for the same reason.
+- The CML still has trending-style tracks — you keep the sound boost
+  without the legal risk. Never upload outside music you don't have rights
+  to.
+
+
+=====================================================================
+TIKTOK POSTING — STEP BY STEP
+=====================================================================
+ONE-TIME SETUP (do once):
+A. Switch to a Business account: Settings -> Account -> Switch to Business
+   Account. Unlocks the Commercial Music Library + post analytics.
+B. Put the link in bio: Edit profile -> Website -> https://tuveloz.com/join
+   (TikTok captions are NOT clickable — the bio link is the only tap path).
+
+EACH POST:
+1. + -> Upload -> pick tuveloz-15s-vertical-ad.mp4 from Photos.
+2. Add sound: tap "Add sound" -> pick a TRENDING track (look for the ↗
+   arrow) FROM THE COMMERCIAL LIBRARY only. Upbeat/motivational fits the
+   "go independent" message.
+3. Balance volume (tap the sound -> sliders): if the ad has voiceover, keep
+   original ~100% and music ~15-20%; if the ad audio is just ambient, the
+   music can come up louder.
+4. Tap the red -> arrow (top right) to reach the post screen.
+5. Description — paste:
+   Tired of working somebody else's route? 🔧 New local marketplace for
+   mobile mechanics in the DMV. Free to join, you keep 100% of what you
+   quote. Pre-launch signup puts you first in line — link in bio.
+6. Hashtags (~5 only — TikTok buries tag-stuffed posts):
+   #MobileMechanic #SideHustle #MontgomeryCountyMD #SkilledTrades #DMV
+7. Cover: tap "Select cover" -> pick a frame where the on-screen text is
+   readable (the "LOCAL CUSTOMERS" / hook frame), not a dark frame.
+8. Turn ON the AI-content label: "More options" -> AI-generated content
+   toggle ON (realistic AI footage — required, avoids a reach penalty).
+9. Leave comments ON and Duet/Stitch ON (engagement = reach).
+10. Post at Wed 7:30 PM or Thu 9 AM ET.
+
+FIRST HOUR (most important for reach):
+- Pin a first comment with the CTA: "Free to join, keep 100% of your quote,
+  pre-launch signup → tuveloz.com/join 🔧"
+- Reply to every comment, end each reply on a question (see reply templates
+  above). Early engagement is what tells the algorithm to push wider.
+
+SPANISH VERSION: post as its own video a day later (see ES TikTok caption
+above) — don't post both languages back-to-back.
