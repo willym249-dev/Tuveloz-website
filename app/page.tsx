@@ -77,6 +77,49 @@ if (services.some((service) => service.serviceCodes.some((code) => !KNOWN_SERVIC
   throw new Error("Homepage services list references an unknown service code.");
 }
 
+// What the platform is built to carry so a provider can, as much as possible,
+// just show up and do the work. Each item maps to a real workspace tool
+// (appointments, quote toolkit, job evidence, authorizations/invoices,
+// performance) or to the marketplace itself bringing the customer. Copy stays
+// inside Tuveloz's launch-honest voice: these run for real jobs only after a
+// service passes launch review — stated in the note below the grid.
+const providerHandled: Array<{
+  icon: TuvelozIconName;
+  title: string;
+  text: string;
+}> = [
+  {
+    icon: "open-jobs",
+    title: "Customers come to you",
+    text: "No website to build, no ads to run. Matching requests reach the providers approved for that exact service.",
+  },
+  {
+    icon: "active-job",
+    title: "Scheduling in one place",
+    text: "Confirm appointments and keep every job's date, time, and details together instead of chasing texts.",
+  },
+  {
+    icon: "quote",
+    title: "Quotes in minutes",
+    text: "Reusable quote wording and your own set prices. Send a clear scope and price fast — no phone tag.",
+  },
+  {
+    icon: "gallery",
+    title: "Photo-backed job records",
+    text: "Log vehicle condition, progress, parts, and completion evidence with photos from any phone.",
+  },
+  {
+    icon: "earnings",
+    title: "Invoices and payment handled",
+    text: "Accepted quotes become written authorizations, invoices, and receipts. At launch, payment runs through the platform.",
+  },
+  {
+    icon: "overview",
+    title: "Your numbers, private",
+    text: "Track your own completed jobs and performance in a workspace only you can see.",
+  },
+];
+
 const liveSteps = [
   ["01", "Post what you need", "A quick description is enough."],
   ["02", "Get quotes", "Independent providers respond with their price."],
@@ -1438,6 +1481,33 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
                 <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
               </div>
+            </section>
+            <section className="provider-handles" aria-labelledby="provider-handles-title">
+              <div className="provider-handles-heading">
+                <span className="kicker light">Show up. Do the work.</span>
+                <h3 id="provider-handles-title">You fix the vehicle. Tuveloz is built to handle the rest.</h3>
+                <p>
+                  The parts of the day that usually eat your time — finding customers,
+                  scheduling, quoting, records, invoicing, and payment — live in one
+                  provider workspace.
+                </p>
+              </div>
+              <div className="provider-handles-grid">
+                {providerHandled.map((item) => (
+                  <article key={item.title}>
+                    <span className="provider-handles-icon">
+                      <TuvelozIcon name={item.icon} />
+                    </span>
+                    <strong>{item.title}</strong>
+                    <p>{item.text}</p>
+                  </article>
+                ))}
+              </div>
+              <small className="provider-handles-note">
+                These tools open for real customer jobs only after launch review. You
+                stay an independent business — Tuveloz never sets your prices, schedule,
+                or how you do the work.
+              </small>
             </section>
           </div>
 

@@ -4069,6 +4069,87 @@ label > small {
   letter-spacing: 0.12em;
 }
 
+.provider-handles {
+  margin-top: 22px;
+}
+
+.provider-handles-heading > .kicker {
+  display: block;
+}
+
+.provider-handles-heading h3 {
+  color: #fff;
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.2;
+  margin: 8px 0 10px;
+}
+
+.provider-handles-heading p {
+  color: #adbbc7;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.provider-handles-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.provider-handles-grid article {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.provider-handles-icon {
+  align-items: center;
+  background: rgba(200, 255, 72, 0.12);
+  border-radius: 10px;
+  color: var(--lime);
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  margin-bottom: 10px;
+  width: 34px;
+}
+
+.provider-handles-icon svg {
+  height: 18px;
+  width: 18px;
+}
+
+.provider-handles-grid strong {
+  color: #fff;
+  display: block;
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+
+.provider-handles-grid p {
+  color: #adbbc7;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.provider-handles-note {
+  color: #8fa0ad;
+  display: block;
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .provider-handles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .eligibility-guide-heading h4 {
   font-size: 18px;
   margin: 5px 0;
