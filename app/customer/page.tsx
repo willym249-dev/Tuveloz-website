@@ -8,6 +8,7 @@ import { JobMessages } from "../components/job-messages";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 import { parseJobServices } from "../../lib/service-matching";
+import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 
 type CustomerRequest = {
   id: string;
@@ -274,6 +275,18 @@ export default function CustomerPage() {
           <p>Manage your account now. New customer requests and payments remain closed during provider onboarding.</p>
           {account && <small>Signed in as {account.email}</small>}
         </div>
+
+        {CUSTOMER_JOB_POSTING_PAUSED && (
+          <aside className="customer-launch-callout" role="status">
+            <span className="account-kicker">Customer launch status</span>
+            <strong>You&rsquo;re in! Job requests open soon.</strong>
+            <p>
+              We&rsquo;ll email you the moment service requests go live. Your
+              account is ready now &mdash; creating it did not submit a request,
+              contact a provider, book service, or charge you.
+            </p>
+          </aside>
+        )}
 
         {error && <p className="form-error account-login-message" role="alert">{error}</p>}
         {!account && !error && <p className="admin-note account-loading">Loading your requests…</p>}

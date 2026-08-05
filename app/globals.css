@@ -10316,6 +10316,30 @@ footer > p,
   padding: 16px;
 }
 
+.customer-launch-callout {
+  background: #07182d;
+  border: 1px solid rgba(255, 106, 0, 0.5);
+  border-radius: 16px;
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+  max-width: 700px;
+  padding: 18px 20px;
+}
+
+.customer-launch-callout strong {
+  color: #ffffff;
+  font-size: clamp(19px, 2.4vw, 24px);
+  letter-spacing: -0.02em;
+}
+
+.customer-launch-callout p {
+  color: #b8c7d4;
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+}
+
 .customer-security-note p {
   margin: 6px 0 0;
 }
