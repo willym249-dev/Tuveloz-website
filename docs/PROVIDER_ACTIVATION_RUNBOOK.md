@@ -129,16 +129,30 @@ Right now **zero** services are `enabled` in `config/provider-eligibility-matrix
 — all sit in `disabled_pending_*`. For each Open-tier (provisional-independent)
 service you want live:
 
-1. **Config flip (reviewed deploy):** change that service's `launch_state` from
-   its `disabled_pending_*` value to `enabled` in
-   `config/provider-eligibility-matrix.json`, only after its mandatory
-   requirements and insurer approval are actually documented. Deploy.
+1. **Config flip (reviewed deploy):** a service is only truly enabled when all
+   three are true — `launch_state: "enabled"`, `customer_visible: true`, and the
+   matrix's own `status: "active"` (the `active_policy_catalog` runtime check
+   requires the active status). `launch_state` alone is not enough: the
+   eligibility engine and the catalog check both also require `customer_visible`.
+   Do this only after the service's mandatory requirements and insurer approval
+   are documented. A guard test pins the enabled set — update it in the same
+   change. **This is staged** on branch `stage/open-tier-enabled` (the 11
+   Open-tier codes flipped + guard test updated); it is intentionally unmerged.
+   Merge it (and set `status: "active"`) only when the precondition below holds.
 2. **Activation record:** in `/admin/provider-compliance`, run **activate-service**
    for that exact service + `US-MD-MontgomeryCounty`, entering: a legal-review
    valid-through (≤1 year), reviewer, internal reference, requirements summary,
    at least one official `.gov` source, the professional-review choice, and the
    written **insurer** approval (approved-by, reference, valid-through). The
-   endpoint re-checks Phase 3 readiness and refuses if anything regressed.
+   endpoint re-checks Phase 3 readiness and refuses if anything regressed. It
+   also refuses until step 1 is deployed (`launch_state` must already be
+   `enabled` and `customer_visible`).
+
+**Precondition for merging the staged branch / running activation:** for each
+service, its mandatory legal requirements are documented, written insurer
+approval exists, and the legal-category mapping has counsel review. Two codes
+carry extra preconditions beyond insurer: `photo_documentation_only` (written
+OCP) and `provisional_basic_detailing` (environmental OCP).
 
 Open-tier service codes (owner-operator lane):
 
