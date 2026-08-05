@@ -4,6 +4,7 @@ import handler from "vinext/server/app-router-entry";
 import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
+import { processDueAppointmentReminders } from "../lib/appointment-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
 import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
 import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
@@ -119,6 +120,7 @@ const worker = {
     );
     ctx.waitUntil(Promise.allSettled([
       scheduledTask("compliance reminders", () => processDueComplianceReminders()),
+      scheduledTask("appointment reminders", () => processDueAppointmentReminders()),
       scheduledTask("provider application verification cleanup", () => (
         cleanupProviderApplicationVerificationState()
       )),
