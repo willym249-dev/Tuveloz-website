@@ -17,6 +17,10 @@ const PUBLIC_PAGES: PublicPage[] = [
   { path: "/about", changeFrequency: "monthly", priority: 0.8 },
   { path: "/how-it-works", changeFrequency: "monthly", priority: 0.8 },
   { path: "/founding-providers", changeFrequency: "monthly", priority: 0.8 },
+  // The directory itself is listed; individual profile URLs are not. They are
+  // served only while marketplace discovery is open, so listing them today
+  // would point crawlers at pages that return 503.
+  { path: "/providers", changeFrequency: "weekly", priority: 0.8 },
   { path: "/safety", changeFrequency: "monthly", priority: 0.8 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },

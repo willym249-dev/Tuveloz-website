@@ -126,6 +126,7 @@ export function PublicInfoPage({
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
           <Link href="/how-it-works">How it works</Link>
+          <Link href="/providers">Providers</Link>
           <Link href="/service-areas">Service areas</Link>
           <Link href="/services">Services</Link>
           <Link href="/safety">Safety &amp; trust</Link>
