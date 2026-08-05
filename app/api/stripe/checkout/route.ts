@@ -359,12 +359,18 @@ export async function GET(request: Request) {
         { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
       );
     }
-    const [customerRequest] = await getDb().select({
-      customerEmail: customerRequests.email,
-      accessToken: customerRequests.accessToken,
-    }).from(customerRequests)
-      .where(eq(customerRequests.id, payment.requestId))
-      .limit(1);
+    // Product payments carry a null requestId and have no customer request to
+    // resolve. Skip the lookup so customerRequest stays undefined (the branches
+    // below already handle that) instead of querying customer_requests with a
+    // null id, which would match nothing anyway.
+    const [customerRequest] = payment.requestId
+      ? await getDb().select({
+        customerEmail: customerRequests.email,
+        accessToken: customerRequests.accessToken,
+      }).from(customerRequests)
+        .where(eq(customerRequests.id, payment.requestId))
+        .limit(1)
+      : [];
     const accountSession = await getAccountSession(request);
     const durableCustomerBindingMatches = payment.paymentType === "product"
       ? !payment.requestId
@@ -1299,8 +1305,11 @@ export async function POST(request: Request) {
     }).where(and(
       eq(stripePayments.id, paymentId),
       eq(stripePayments.status, "checkout_release_recheck"),
-      eq(stripePayments.requestId, requestId),
-      eq(stripePayments.quoteId, finalQuoteId),
+      // Quote-checkout flow: requestId and finalQuoteId are assigned from the
+      // quote selection above and are non-null here (product checkout is a
+      // separate route). The assertion is compile-only and changes no SQL.
+      eq(stripePayments.requestId, requestId!),
+      eq(stripePayments.quoteId, finalQuoteId!),
       eq(stripePayments.scopeVersion, paymentScopeVersion),
       eq(
         stripePayments.scopeAuthorizationDecisionId,
