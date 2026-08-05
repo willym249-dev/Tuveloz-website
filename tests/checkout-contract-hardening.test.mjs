@@ -34,7 +34,7 @@ test("checkout agreement displays and hashes exact parties, work, schedule, and 
   ]) assert.ok(acceptance.includes(phrase), phrase);
   assert.match(acceptance, /providerLegalIdentitySourceEvidenceId/);
   assert.match(acceptance, /serviceCodes: \[\.\.\.scope\.serviceCodes\]/);
-  assert.match(acceptance, /checkout:2/);
+  assert.match(acceptance, /checkout:3/);
 
   for (const label of [
     "Provider legal identity",

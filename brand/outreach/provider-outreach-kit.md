@@ -8,7 +8,7 @@ and Montgomery County community groups.
 
 Shared facts (same as profile-copy.md — do not improvise beyond these):
 - Free to join. No listing fee, no subscription, no provider fees.
-- Providers keep 100% of their quoted price (customers pay a small 5% service
+- Providers keep 100% of their quoted price (customers pay a small 5% Tuveloz service
   fee to the site — never say "providers keep 95%").
 - No exclusivity — work other platforms too.
 - Pre-launch: applying gets you reviewed now; real customer jobs open only

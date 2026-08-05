@@ -195,7 +195,7 @@ function ActiveQuotePaymentCard({
         <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
         <div><dt>Complete authorized labor amount</dt><dd>{dollars(quote.priceCents)}</dd></div>
         <div>
-          <dt>Tuveloz service fee ({quote.customerFeeRateBps / 100}%)</dt>
+          <dt>Customer Service Fee ({quote.customerFeeRateBps / 100}%)</dt>
           <dd>{dollars(quote.customerFeeCents)}</dd>
         </div>
         <div className="total"><dt>Total</dt><dd>{dollars(quote.customerTotalCents)}</dd></div>
@@ -245,7 +245,7 @@ function ActiveQuotePaymentCard({
                 <div><dt>Tax</dt><dd>{dollars(checkoutAcceptance.scope.taxAmountCents)}</dd></div>
                 <div><dt>Other charges</dt><dd>{dollars(checkoutAcceptance.scope.otherAmountCents)}</dd></div>
                 <div><dt>Complete provider amount</dt><dd>{dollars(checkoutAcceptance.scope.providerAmountCents)}</dd></div>
-                <div><dt>Tuveloz service fee</dt><dd>{dollars(checkoutAcceptance.scope.customerFeeCents)}</dd></div>
+                <div><dt>Customer Service Fee</dt><dd>{dollars(checkoutAcceptance.scope.customerFeeCents)}</dd></div>
                 <div className="total"><dt>Customer total</dt><dd>{dollars(checkoutAcceptance.scope.customerTotalCents)}</dd></div>
               </dl>
               <p className="admin-note">
@@ -292,7 +292,7 @@ function ActiveQuotePaymentCard({
           <small className="payment-release-note">
             Real checkout is currently disabled. If the proposed flow receives
             final approval, the checkout screen must show the provider subtotal,
-            total, and configured Tuveloz fee (currently 5% in test) before the
+            total, and configured Customer Service Fee (currently 5% in test) before the
             customer accepts.
           </small>
         </>

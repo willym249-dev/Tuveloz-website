@@ -547,7 +547,7 @@ export default function AdminPage() {
             <div className="admin-stats">
               <article><strong>{requests.length}</strong><span>Job requests</span></article>
               <article><strong>{quotes.length}</strong><span>Provider quotes</span></article>
-              <article><strong>${(acceptedFeeCents / 100).toFixed(2)}</strong><span>Accepted service fees</span></article>
+              <article><strong>${(acceptedFeeCents / 100).toFixed(2)}</strong><span>Accepted Customer Service Fees</span></article>
               <article><strong>{providers.length}</strong><span>Provider applications</span></article>
               <article><strong>{expansion.length}</strong><span>Expansion requests</span></article>
               <article><strong>{feedback.length}</strong><span>Feedback responses</span></article>
