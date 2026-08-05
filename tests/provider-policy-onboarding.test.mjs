@@ -14,10 +14,38 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
   assert.equal(services.length, 25);
   assert.equal(matrix.services.general_auto_repair.launch_state, "prohibited_broad_category");
   assert.equal(matrix.services.general_auto_repair.customer_visible, false);
-  assert.equal(
-    services.filter(([, service]) => service.launch_state === "enabled").length,
-    0,
+  // Only the Open-tier (owner-operator) services may be enabled, and each
+  // enabled service must also be customer-visible. This still guards against an
+  // accidental specialty/standard-tier enablement: adding a code here is a
+  // deliberate, reviewed act tied to that service's documented requirements and
+  // insurer approval.
+  const OPEN_TIER_ENABLED = [
+    "photo_documentation_only",
+    "provisional_12v_battery_replacement",
+    "provisional_12v_jump_start",
+    "provisional_basic_detailing",
+    "provisional_conventional_bulb_replacement",
+    "provisional_engine_or_cabin_air_filter",
+    "provisional_fluid_topoff_limited",
+    "provisional_obd_read_only",
+    "provisional_temporary_spare_install",
+    "provisional_visual_observation_report",
+    "provisional_wiper_blade_replacement",
+  ];
+  assert.deepEqual(
+    services
+      .filter(([, service]) => service.launch_state === "enabled")
+      .map(([code]) => code)
+      .sort(),
+    OPEN_TIER_ENABLED,
   );
+  for (const code of OPEN_TIER_ENABLED) {
+    assert.equal(matrix.services[code].customer_visible, true, `${code} visible`);
+    assert.ok(
+      matrix.services[code].allowed_provider_levels.includes("provisional_independent"),
+      `${code} is an owner-operator open-tier service`,
+    );
+  }
   assert.doesNotMatch(JSON.stringify(matrix), /counsel/i);
   assert.deepEqual(Object.keys(matrix.provider_pathways).sort(), [
     "independent_startup",
