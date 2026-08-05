@@ -181,3 +181,17 @@ test("the application accepts services spanning levels and names unsupported one
   assert.match(verification, /summaryLevelForApplication/);
   assert.match(verification, /serviceLevels,/);
 });
+
+test("the single-level collapse helper is gone from signup", async () => {
+  const signupForm = await source("app/components/provider-signup-form.tsx");
+  const adminPage = await source("app/admin/provider-compliance/page.tsx");
+
+  // deriveProviderLevel collapsed a whole selection to one level. The server
+  // now derives a level per service and ignores any client-sent level, so
+  // leaving the old helper behind invites a single-level assumption back in.
+  assert.doesNotMatch(signupForm, /deriveProviderLevel/);
+  assert.doesNotMatch(signupForm, /providerLevel,\n/);
+  // The provisioning draft no longer carries a hand-picked level either.
+  assert.doesNotMatch(adminPage, /providerLevel: draft\.providerLevel/);
+  assert.doesNotMatch(adminPage, /providerLevel: "provisional_independent"/);
+});

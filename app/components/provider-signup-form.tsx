@@ -20,7 +20,6 @@ import {
   PROVIDER_LEVEL_LABELS,
   providerLevelsForServices,
   SERVICES,
-  type ProviderLevel,
   type ServiceCode,
 } from "../../lib/provider-policy";
 import {
@@ -244,19 +243,6 @@ function providerServicePlainLabel(
   return serviceDisplayLabel(fallbackLabel);
 }
 
-function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
-  const selectedPolicies = selectedServices.map((code) => (
-    PROVIDER_REVIEW_SERVICES.find((service) => service.code === code)
-  ));
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("specialty_provider"))) {
-    return "specialty_provider";
-  }
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("standard_provider"))) {
-    return "standard_provider";
-  }
-  return "provisional_independent";
-}
-
 type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
@@ -416,7 +402,6 @@ export function ProviderSignupForm() {
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
-  const providerLevel = deriveProviderLevel(selectedProviderServices);
   const hasSpecialtySelection = providerLevels.includes("specialty_provider");
   const providerAcceptsCustomersAtBusiness = selectedProviderWorkLocations.includes(
     PROVIDER_WORK_LOCATION_OPTIONS[1],
@@ -531,7 +516,6 @@ export function ProviderSignupForm() {
       serviceCodes: selectedProviderServices,
       applicationPathway: PROVIDER_PATHWAY,
       providerPathway: PROVIDER_PATHWAY,
-      providerLevel,
       learningAccountOnly: false,
       policyVersion: POLICY_VERSION,
       policyStatus: POLICY_STATUS,
