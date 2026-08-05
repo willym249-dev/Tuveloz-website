@@ -42,32 +42,32 @@ const services: Array<{
 }> = [
   {
     icon: "battery",
-    title: "Battery & Jump Start",
-    text: "Get back on the road when your battery lets you down.",
+    title: "Battery & jump start",
+    text: "Back on the road when your battery quits.",
     serviceCodes: ["provisional_12v_jump_start", "provisional_12v_battery_replacement"],
   },
   {
     icon: "services",
-    title: "Wiper Blade & Bulb Replacement",
-    text: "Quick, simple replacements for worn wiper blades and everyday bulbs.",
+    title: "Wipers & bulbs",
+    text: "New wiper blades and burnt-out bulbs, swapped fast.",
     serviceCodes: ["provisional_wiper_blade_replacement", "provisional_conventional_bulb_replacement"],
   },
   {
     icon: "services",
-    title: "Fluid Top-Off",
-    text: "An approved, limited top-off to keep your vehicle running right.",
+    title: "Top off fluids",
+    text: "A quick top-up to keep your car running right.",
     serviceCodes: ["provisional_fluid_topoff_limited"],
   },
   {
     icon: "detailing",
-    title: "Detailing",
-    text: "Choose an exterior wash, interior detailing, or both.",
+    title: "Car cleaning",
+    text: "An outside wash, inside cleaning, or both.",
     serviceCodes: ["provisional_basic_detailing"],
   },
   {
     icon: "diagnostics",
-    title: "Basic Diagnostics",
-    text: "Connect with a local independent provider for a basic on-site vehicle assessment.",
+    title: "Find out what's wrong",
+    text: "A local provider checks your car on-site to see what's going on.",
     serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
   },
 ];
