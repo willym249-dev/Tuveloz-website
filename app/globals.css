@@ -10714,32 +10714,6 @@ footer > p,
 
 /* Provider-first homepage blocks. */
 
-.provider-offer-cards {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-bottom: 30px;
-}
-
-.provider-offer-cards article {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 22px;
-}
-
-.provider-offer-cards strong {
-  display: block;
-  font-size: 16px;
-}
-
-.provider-offer-cards p {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 8px 0 0;
-}
-
 .trust-signals-section .trust-grid {
   margin-top: 8px;
 }
@@ -10814,6 +10788,15 @@ footer > p,
   grid-template-columns: 0.85fr 1fr;
 }
 
+/* The application runs longer than its explanation, so the explanation
+   travels with it instead of leaving a column of empty space. */
+@media (min-width: 901px) {
+  .provider-apply-copy {
+    position: sticky;
+    top: 104px;
+  }
+}
+
 .provider-apply-steps {
   color: var(--muted);
   display: grid;
@@ -10886,12 +10869,93 @@ footer > p,
   grid-template-columns: 1fr auto;
 }
 
+/* The homepage carries its switch in the hero, where it is visible at every
+   width without competing with a full navigation bar. The provider landing
+   page has a two-item header, so its switch sits there until phone widths. */
 @media (max-width: 720px) {
-  .header-actions .audience-switch {
+  .provider-landing .header-actions .audience-switch {
     display: none;
   }
+}
 
-  .hero-audience-switch {
-    display: block;
-  }
+/* Informational callouts follow the site's own palette instead of the older
+   navy, so the provider pages read as one brand. */
+
+.legal-requirement-note {
+  background: #16100b;
+  border: 1px solid #3a2a1c;
+  border-left: 3px solid #ff6a00;
+  padding: 13px 15px;
+}
+
+.legal-requirement-note small,
+.eligibility-questions .legal-question > small {
+  color: #b6aaa1;
+}
+
+.provider-eligibility-guide {
+  background: #100c09;
+  border: 1px solid #3a2a1c;
+  padding: 22px;
+}
+
+.eligibility-guide-heading > span {
+  display: block;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.provider-eligibility-guide ol {
+  counter-reset: applying-step;
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.provider-eligibility-guide ol li {
+  color: #d9cec6;
+  counter-increment: applying-step;
+  font-size: 13.5px;
+  line-height: 1.55;
+  padding-left: 32px;
+  position: relative;
+}
+
+.provider-eligibility-guide ol li::before {
+  color: #ff8a2a;
+  content: counter(applying-step, decimal-leading-zero);
+  font-size: 11px;
+  font-weight: 900;
+  left: 0;
+  position: absolute;
+  top: 2px;
+}
+
+.provider-eligibility-guide .legal-requirement-note {
+  margin-top: 18px;
+}
+
+.provider-panel > .provider-eligibility-guide {
+  align-self: start;
+}
+
+/* .hero-glow is decoration, but with no styles of its own it was taking a
+   grid cell and pushing the hero copy into the right column. Lift it out of
+   the flow so the copy leads on the left and the preview sits beside it. */
+
+.hero-glow {
+  background: radial-gradient(circle, rgba(255, 106, 0, 0.18), transparent 62%);
+  height: 560px;
+  left: -140px;
+  pointer-events: none;
+  position: absolute;
+  top: -60px;
+  width: 560px;
+  z-index: 0;
+}
+
+.site-header {
+  column-gap: 24px;
 }

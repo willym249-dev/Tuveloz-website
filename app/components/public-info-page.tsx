@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { SiteLanguageButton } from "./site-language";
 import { BrandMark } from "./tuveloz-icons";
+import { SiteCopyright } from "./site-copyright";
 import { SocialLinks } from "./social-links";
 
 export type PublicInfoSection = {
@@ -95,6 +96,8 @@ export function PublicInfoPage({
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
           <Link href="/about">Learn about Tuveloz</Link>
+          <Link href="/join">Join as a provider</Link>
+          <Link href="/provider-requirements">Provider requirements</Link>
           <Link href="/how-it-works">How it works</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
@@ -110,7 +113,7 @@ export function PublicInfoPage({
         </div>
         <div className="footer-bottom">
           <SocialLinks />
-          <span>© 2026 Tuveloz. All rights reserved.</span>
+          <SiteCopyright />
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
       </footer>

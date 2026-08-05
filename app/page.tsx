@@ -25,6 +25,7 @@ import {
 } from "./components/tuveloz-icons";
 import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
+import { SiteCopyright } from "./components/site-copyright";
 import { SocialLinks } from "./components/social-links";
 import { AudienceSwitch, type Audience } from "./components/audience-switch";
 import { CUSTOMER_WAITLIST_SERVICE_OPTIONS } from "../lib/customer-waitlist";
@@ -660,9 +661,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </nav>
 
         <div className="header-actions">
-          {isHome
-            ? <AudienceSwitch active={audience} onSelect={chooseAudience} />
-            : <AudienceSwitch active="customers" />}
           <SiteLanguageButton />
           <Link
             aria-label={accountLabel}
@@ -914,46 +912,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </article>
         </div>
       </section>
-      )}
-
-      {showProviderSide && isHome && (
-        <section className="section provider-home-offer" aria-labelledby="provider-offer-heading">
-          <div className="section-heading">
-            <div>
-              <span className="kicker">For providers</span>
-              <h2 id="provider-offer-heading">Free to join. Yours to run.</h2>
-            </div>
-            <p>
-              Mobile mechanics, service-truck operators, and shop-based providers
-              can apply now and pick the exact jobs they want to be matched with.
-            </p>
-          </div>
-          <div className="provider-offer-cards">
-            <article>
-              <strong>Keep 100% of your quoted price</strong>
-              <p>You set the price. The customer pays a proposed 5% service fee on top of it.</p>
-            </article>
-            <article>
-              <strong>No exclusivity</strong>
-              <p>Keep your own customers and work other platforms at the same time.</p>
-            </article>
-            <article>
-              <strong>Documents only when required</strong>
-              <p>
-                Requirements depend on your services. We&apos;ll show you exactly what
-                applies before activation.
-              </p>
-            </article>
-          </div>
-          <div className="hero-actions">
-            <Link className="button primary" href="/join">
-              Apply in about 5 minutes <span>→</span>
-            </Link>
-            <Link className="button secondary" href="/provider-requirements">
-              See what&apos;s required
-            </Link>
-          </div>
-        </section>
       )}
 
       {showCustomerSide && (
@@ -1617,15 +1575,23 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             )}
             <p>
               Tuveloz doesn&apos;t employ, train, or assign work to providers — you run
-              your own business and choose the jobs that fit. Sign up free, no
-              listing fee, no subscription.
+              your own business and choose the jobs that fit. Mobile mechanics,
+              service-truck operators, and shop-based providers can all apply free,
+              with no listing fee and no subscription.
             </p>
             <div className="provider-benefits">
               <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
-            <Link className="button primary" href="/join">Join free <span>→</span></Link>
+            <div className="hero-actions">
+              <Link className="button primary" href="/join">
+                Apply in about 5 minutes <span>→</span>
+              </Link>
+              <Link className="button secondary" href="/provider-requirements">
+                See what&apos;s required
+              </Link>
+            </div>
           </div>
 
           <div className="provider-eligibility-guide" id="provider-apply">
@@ -1642,9 +1608,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <strong>Selecting a service doesn&apos;t authorize real customer work yet.</strong>
               <small>Every service opens to real jobs only after its legal and insurance requirements are documented and approved.</small>
             </div>
-            <Link className="button lime form-button" href="/join">
-              Start my application <span>→</span>
-            </Link>
           </div>
         </div>
       </section>
@@ -1972,7 +1935,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
         <div className="footer-bottom">
           <SocialLinks />
-          <span>© 2026 Tuveloz. All rights reserved.</span>
+          <SiteCopyright />
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
       </footer>

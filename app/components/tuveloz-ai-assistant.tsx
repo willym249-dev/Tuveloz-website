@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteLanguageButton, useSiteLanguage } from "./site-language";
 import { BrandMark } from "./tuveloz-icons";
+import { SiteCopyright } from "./site-copyright";
 import { SocialLinks } from "./social-links";
 
 type ChatTurn = { role: "user" | "assistant"; content: string };
@@ -194,7 +195,7 @@ export function TuvelozAiAssistant() {
         </div>
         <div className="footer-bottom">
           <SocialLinks />
-          <span>© 2026 Tuveloz. All rights reserved.</span>
+          <SiteCopyright />
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
       </footer>

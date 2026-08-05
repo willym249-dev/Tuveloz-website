@@ -6,6 +6,7 @@ import { track } from "../../lib/analytics";
 import { AudienceSwitch } from "../components/audience-switch";
 import { ProviderSignupForm } from "../components/provider-signup-form";
 import { SiteLanguageButton } from "../components/site-language";
+import { SiteCopyright } from "../components/site-copyright";
 import { SocialLinks } from "../components/social-links";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -190,7 +191,7 @@ export function ProviderLanding() {
         </div>
         <div className="footer-bottom">
           <SocialLinks />
-          <span>© 2026 Tuveloz. All rights reserved.</span>
+          <SiteCopyright />
           <span>Provider onboarding is open in Montgomery County, Maryland.</span>
         </div>
       </footer>
