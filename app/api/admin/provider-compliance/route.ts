@@ -54,6 +54,7 @@ import {
   POLICY_JURISDICTION,
   POLICY_STATUS,
   POLICY_VERSION,
+  providerLevelForService,
   PROVIDER_LEVELS,
   PROVIDER_PATHWAYS,
   PROVIDER_POLICY_MATRIX,
@@ -451,16 +452,29 @@ function evaluateService(input: {
   const pathway = profile && isProviderPathway(profile.relationshipPath)
     ? profile.relationshipPath
     : null;
-  const providerLevel = profile && isProviderLevel(profile.providerLevel)
+  // The level belongs to this exact service, so a provider may be approved for
+  // services at several levels at once. The profile level stays a summary and
+  // only still blocks applicant-only accounts.
+  const serviceLevel = pathway
+    ? providerLevelForService(serviceCode, pathway)
+    : null;
+  const profileLevel = profile && isProviderLevel(profile.providerLevel)
     ? profile.providerLevel
     : null;
+  const providerLevel = serviceLevel ?? profileLevel;
   const service = SERVICE_POLICY_CATALOG[serviceCode];
 
   if (provider.status === "declined") reasons.push("application_declined");
   if (provider.isTestProvider === "yes") reasons.push("test_provider_not_live");
   if (!profile || profile.policyVersion !== POLICY_VERSION) reasons.push("current_pathway_missing");
   if (!pathway) reasons.push("recognized_pathway_missing");
-  if (!providerLevel || providerLevel === "learning_account") reasons.push("job_eligible_provider_level_missing");
+  if (
+    !providerLevel
+    || providerLevel === "learning_account"
+    || profileLevel === "learning_account"
+  ) {
+    reasons.push("job_eligible_provider_level_missing");
+  }
   if (service.launchState !== "enabled" || !service.customerVisible) {
     reasons.push("service_not_enabled_by_policy_catalog");
   }
@@ -468,12 +482,14 @@ function evaluateService(input: {
     reasons.push("pathway_level_incompatible");
   }
   if (pathway && !service.allowedPathways.includes(pathway)) reasons.push("pathway_not_allowed_for_service");
-  if (providerLevel && !service.allowedProviderLevels.includes(providerLevel)) {
+  // Denies only services that no level on this pathway may perform, rather than
+  // denying a lawful service because the provider's other work sits elsewhere.
+  if (pathway && !serviceLevel) {
     reasons.push("provider_level_not_allowed_for_service");
   }
   if (
-    providerLevel
-    && !PROVIDER_POLICY_MATRIX.provider_levels[providerLevel].allowed_service_codes.includes(serviceCode)
+    serviceLevel
+    && !PROVIDER_POLICY_MATRIX.provider_levels[serviceLevel].allowed_service_codes.includes(serviceCode)
   ) {
     reasons.push("service_not_allowed_for_provider_level");
   }
@@ -559,6 +575,9 @@ function evaluateService(input: {
   return {
     code: serviceCode,
     label: service.label,
+    // The level this exact service is approved at, stored on its own
+    // eligibility row so one provider can hold several levels at once.
+    providerLevel: serviceLevel,
     status: uniqueReasons.length === 0 ? "eligible" as const : "blocked" as const,
     reasons: uniqueReasons,
     requirements: requirementStatuses,
@@ -645,7 +664,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
     )).limit(1);
     const values = {
       relationshipPath: profile.relationshipPath,
-      providerLevel: profile.providerLevel,
+      providerLevel: evaluation.providerLevel ?? profile.providerLevel,
       eligibilityState: evaluation.status,
       reasonCodes: JSON.stringify(evaluation.reasons),
       requirementVersions: JSON.stringify({

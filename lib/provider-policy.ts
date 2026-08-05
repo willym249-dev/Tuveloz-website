@@ -522,6 +522,49 @@ export function isPathwayLevelCompatible(
 }
 
 /**
+ * A provider level is a property of the exact service, not of the provider.
+ * Each enabled service names the single level lawful for it, so one provider
+ * business may hold services across several levels at once — for example
+ * standard battery replacement alongside specialty A/C service. Every service
+ * still stands on its own credential evidence: holding one specialty service
+ * never implies another (an EPA Section 609 certificate does not authorize
+ * towing, and towing custody coverage does not authorize refrigerant work).
+ *
+ * Returns the level this exact service requires under the given pathway, or
+ * null when the service is prohibited, not offered on that pathway, or not
+ * lawful at any level the pathway may hold.
+ */
+export function providerLevelForService(
+  serviceCode: ServiceCode,
+  pathway: ProviderPathway,
+): ProviderLevel | null {
+  const service = SERVICE_POLICY_CATALOG[serviceCode];
+  if (!service || !service.allowedPathways.includes(pathway)) return null;
+  const compatibleLevels = PROVIDER_POLICY_MATRIX
+    .pathway_level_compatibility[pathway];
+  return service.allowedProviderLevels.find((level) => (
+    compatibleLevels.includes(level)
+    && PROVIDER_POLICY_MATRIX.provider_levels[level]
+      .allowed_service_codes.includes(serviceCode)
+  )) ?? null;
+}
+
+/**
+ * The set of levels a provider holds, derived from the exact services they are
+ * applying for or approved for. Used for display and for the profile's summary
+ * level; authorization always runs per service through the eligibility engine.
+ */
+export function providerLevelsForServices(
+  serviceCodes: readonly ServiceCode[],
+  pathway: ProviderPathway,
+): readonly ProviderLevel[] {
+  const levels = serviceCodes
+    .map((serviceCode) => providerLevelForService(serviceCode, pathway))
+    .filter((level): level is ProviderLevel => level !== null);
+  return [...new Set(levels)];
+}
+
+/**
  * Relationship controls in the matrix sit above each service's own evidence
  * list. Compile them into every allowed service so no caller can accidentally
  * authorize a person by checking only the service-level array.

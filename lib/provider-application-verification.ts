@@ -20,14 +20,12 @@ import {
   providerApplicationPayloadHashWithSecret,
 } from "./provider-application-payload-hash";
 import {
-  isPathwayLevelCompatible,
-  isProviderLevel,
   isServiceCode,
   POLICY_JURISDICTION,
   POLICY_STATUS,
   POLICY_VERSION,
+  providerLevelForService,
   PROVIDER_POLICY_MATRIX,
-  SERVICE_POLICY_CATALOG,
   type ProviderLevel,
   type ProviderPathway,
   type ServiceCode,
@@ -110,30 +108,49 @@ function requestedServiceCodes(body: Record<string, unknown>) {
   return [...new Set(values)];
 }
 
-function allowedLevelForApplication(
+/**
+ * Each exact service carries its own lawful provider level, so one application
+ * may span levels — a solo owner-operator can offer standard battery work and
+ * specialty A/C service together. Services that are prohibited or unavailable
+ * on the chosen pathway are reported individually instead of collapsing the
+ * whole application to a single level.
+ */
+function serviceLevelsForApplication(
   pathway: ApplicationPathway,
   serviceCodes: readonly ServiceCode[],
-  requestedLevel: unknown,
+): {
+  levels: Record<string, ProviderLevel>;
+  unsupported: ServiceCode[];
+} {
+  const levels: Record<string, ProviderLevel> = {};
+  const unsupported: ServiceCode[] = [];
+  if (pathway === "learning_account") return { levels, unsupported };
+  for (const serviceCode of serviceCodes) {
+    const level = providerLevelForService(serviceCode, pathway);
+    if (level) levels[serviceCode] = level;
+    else unsupported.push(serviceCode);
+  }
+  return { levels, unsupported };
+}
+
+/**
+ * The profile's summary level. Authorization never relies on this value — the
+ * eligibility engine decides each service against that service's own level and
+ * credentials. It exists so dashboards can name the highest tier a provider
+ * currently holds.
+ */
+function summaryLevelForApplication(
+  pathway: ApplicationPathway,
+  serviceLevels: Record<string, ProviderLevel>,
 ): ProviderLevel | null {
   if (pathway === "learning_account") return "learning_account";
-  const compatibleLevels = PROVIDER_POLICY_MATRIX.pathway_level_compatibility[pathway];
-  const candidates = LEVEL_PRIORITY.filter((level) => (
-    compatibleLevels.includes(level)
-    && serviceCodes.every((serviceCode) => (
-      SERVICE_POLICY_CATALOG[serviceCode].allowedPathways.includes(pathway)
-      && SERVICE_POLICY_CATALOG[serviceCode].allowedProviderLevels.includes(level)
-      && PROVIDER_POLICY_MATRIX.provider_levels[level].allowed_service_codes.includes(serviceCode)
-    ))
-  ));
-  if (!candidates.length) return null;
-  if (
-    isProviderLevel(requestedLevel)
-    && candidates.includes(requestedLevel)
-    && isPathwayLevelCompatible(pathway, requestedLevel)
-  ) {
-    return requestedLevel;
-  }
-  return candidates[0] ?? null;
+  const held = new Set(Object.values(serviceLevels));
+  const compatibleLevels = PROVIDER_POLICY_MATRIX
+    .pathway_level_compatibility[pathway];
+  const ordered = [...LEVEL_PRIORITY]
+    .reverse()
+    .filter((level) => held.has(level) && compatibleLevels.includes(level));
+  return ordered[0] ?? null;
 }
 
 export function providerApplicationRelationship(pathway: ApplicationPathway) {
@@ -293,14 +310,24 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     );
   }
 
-  const providerLevel = allowedLevelForApplication(
+  const { levels: serviceLevels, unsupported } = serviceLevelsForApplication(
     applicationPathway,
     serviceCodes,
-    body.providerLevel,
+  );
+  if (unsupported.length) {
+    throw new ProviderApplicationValidationError(
+      `These services are not offered on the selected pathway: ${
+        unsupported.join(", ")
+      }. Remove them, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.`,
+    );
+  }
+  const providerLevel = summaryLevelForApplication(
+    applicationPathway,
+    serviceLevels,
   );
   if (!providerLevel) {
     throw new ProviderApplicationValidationError(
-      "Those services do not fit one lawful pathway and provider level. Choose services from one level, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.",
+      "Select at least one exact service that is lawful on the chosen pathway, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.",
     );
   }
 
@@ -312,6 +339,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     preferredLanguage,
     applicationPathway,
     providerLevel,
+    serviceLevels,
     serviceCodes,
     service: serializeProviderServices(serviceCodes),
     areas,
