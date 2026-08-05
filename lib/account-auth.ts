@@ -27,6 +27,8 @@ import {
   isServiceCode,
   POLICY_JURISDICTION,
   POLICY_VERSION,
+  providerLevelForService,
+  type ProviderPathway,
 } from "./provider-policy";
 import { parseProviderServices } from "./service-matching";
 import {
@@ -318,6 +320,7 @@ async function verifiedProviderFor(email: string) {
     return null;
   }
 
+  const profilePathway: ProviderPathway = profile.relationshipPath;
   const rawApprovedServices = parseProviderServices(provider.approvedServices);
   const approvedServices = rawApprovedServices.filter(isServiceCode)
     .filter((serviceCode) => serviceCode !== "general_auto_repair");
@@ -342,9 +345,16 @@ async function verifiedProviderFor(email: string) {
           ? row.validThrough
           : `${row.validThrough}T23:59:59.999Z`,
       );
+      // A provider may hold services across levels, so each row is checked
+      // against the level its own exact service requires rather than against
+      // the profile's summary level.
       return row.policyVersion === POLICY_VERSION
         && row.relationshipPath === profile.relationshipPath
-        && row.providerLevel === profile.providerLevel
+        && isServiceCode(row.serviceCode)
+        && row.providerLevel === providerLevelForService(
+          row.serviceCode,
+          profilePathway,
+        )
         && row.rulesEngineVersion === ELIGIBILITY_RULES_VERSION
         && Number.isFinite(validThrough)
         && validThrough >= now

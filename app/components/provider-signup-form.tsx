@@ -18,6 +18,7 @@ import {
   POLICY_STATUS,
   POLICY_VERSION,
   PROVIDER_LEVEL_LABELS,
+  providerLevelsForServices,
   SERVICES,
   type ProviderLevel,
   type ServiceCode,
@@ -405,24 +406,16 @@ export function ProviderSignupForm() {
     draftFields,
   ]);
 
-  const providerLevel = deriveProviderLevel(selectedProviderServices);
-  // A service can be added only if it shares an allowed provider level with
-  // every current selection — one application covers one tier at a time.
-  // Incompatible options render disabled (with an explanation) instead of
-  // silently replacing the applicant's earlier picks.
-  const serviceIsSelectable = (service: (typeof PROVIDER_REVIEW_SERVICES)[number]) => (
-    selectedProviderServices.length === 0
-    || selectedProviderServices.every((code) => {
-      const selected = PROVIDER_REVIEW_SERVICES.find((candidate) => candidate.code === code);
-      return selected?.allowedProviderLevels.some((level) => (
-        service.allowedProviderLevels.includes(level)
-      ));
-    })
+  // A provider level belongs to the exact service, not to the applicant, so one
+  // application may span levels — standard battery work alongside specialty A/C
+  // service, for example. Every service still stands on its own credentials, so
+  // nothing here locks another service out.
+  const providerLevels = providerLevelsForServices(
+    selectedProviderServices,
+    PROVIDER_PATHWAY,
   );
-  const hasLockedServices = selectedProviderServices.length > 0
-    && PROVIDER_REVIEW_SERVICES.some((service) => (
-      !selectedProviderServices.includes(service.code) && !serviceIsSelectable(service)
-    ));
+  const providerLevel = deriveProviderLevel(selectedProviderServices);
+  const hasSpecialtySelection = providerLevels.includes("specialty_provider");
   const providerAcceptsCustomersAtBusiness = selectedProviderWorkLocations.includes(
     PROVIDER_WORK_LOCATION_OPTIONS[1],
   );
@@ -837,13 +830,11 @@ export function ProviderSignupForm() {
                     <div className="service-options">
                       {groupServices.map((service) => {
                         const isSelected = selectedProviderServices.includes(service.code);
-                        const isLocked = !isSelected && !serviceIsSelectable(service);
                         return (
                           <div className="service-option" key={service.code}>
                             <label>
                               <input
                                 checked={isSelected}
-                                disabled={isLocked}
                                 name="provider-service"
                                 type="checkbox"
                                 value={service.code}
@@ -881,11 +872,11 @@ export function ProviderSignupForm() {
                 );
               })}
             </div>
-            {hasLockedServices && (
+            {hasSpecialtySelection && (
               <p className="tier-swap-notice" role="status">
                 {providerFormIsSpanish
-                  ? "Algunos servicios están bloqueados porque una solicitud cubre un solo nivel a la vez. Para cambiar de nivel, desmarque sus selecciones actuales."
-                  : "Some services are locked because one application covers one service tier at a time. To switch tiers, uncheck your current picks first."}
+                  ? "Puede elegir todos los trabajos que realmente hace. Los trabajos especiales necesitan licencias o permisos adicionales, y cada uno se activa por separado cuando se verifica ese permiso — tener uno no activa los demás."
+                  : "Pick every job you actually do. Special jobs need extra licenses or permits, and each one turns on separately once that credential is verified — having one never turns on another."}
               </p>
             )}
             <small className="customer-service-note">
@@ -894,10 +885,18 @@ export function ProviderSignupForm() {
                 : "There's no all-in-one “general repair” choice on purpose — just pick the exact jobs you do."}
             </small>
           </fieldset>
-          {providerLevel !== "provisional_independent" && (
+          {providerLevels.length > 0 && (
             <div className="provider-mode-preview" aria-live="polite">
-              <span>{providerFormIsSpanish ? "Nivel de la solicitud" : "Application tier"}</span>
-              <strong className="provider-mode-badge">{PROVIDER_LEVEL_LABELS[providerLevel]}</strong>
+              <span>
+                {providerFormIsSpanish
+                  ? providerLevels.length > 1 ? "Niveles de la solicitud" : "Nivel de la solicitud"
+                  : providerLevels.length > 1 ? "Application tiers" : "Application tier"}
+              </span>
+              {providerLevels.map((level) => (
+                <strong className="provider-mode-badge" key={level}>
+                  {PROVIDER_LEVEL_LABELS[level]}
+                </strong>
+              ))}
             </div>
           )}
           <button type="button" className="button lime form-button" onClick={goToStep2}>

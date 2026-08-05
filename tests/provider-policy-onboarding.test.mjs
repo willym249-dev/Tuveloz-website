@@ -31,7 +31,7 @@ test("provider applications create pathways, people, and immutable agreement evi
   const verification = await read("../lib/provider-application-verification.ts");
   const acceptance = await read("../lib/provider-policy-acceptance.ts");
   assert.ok(verification.includes('serviceCodes.includes("general_auto_repair")'));
-  assert.ok(verification.includes("allowedLevelForApplication"));
+  assert.ok(verification.includes("serviceLevelsForApplication"));
   assert.ok(route.includes("providerPathwayProfiles"));
   assert.ok(route.includes("providerPersonnel"));
   assert.ok(route.includes("agreementAcceptances"));
