@@ -79,9 +79,9 @@ a {
   color: #ff6a00;
   display: inline-flex;
   font-size: 17px;
-  height: 32px;
+  height: 40px;
   justify-content: center;
-  width: 32px;
+  width: 40px;
 }
 
 .brand-mark svg,
@@ -1916,8 +1916,8 @@ footer > p {
   }
 
   .brand-mark {
-    height: 29px;
-    width: 29px;
+    height: 34px;
+    width: 34px;
   }
 
   .header-cta {
