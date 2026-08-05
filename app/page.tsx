@@ -1485,11 +1485,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <section className="provider-handles" aria-labelledby="provider-handles-title">
               <div className="provider-handles-heading">
                 <span className="kicker light">Show up. Do the work.</span>
-                <h3 id="provider-handles-title">You fix the vehicle. Tuveloz is built to handle the rest.</h3>
+                <h3 id="provider-handles-title">You fix the vehicle. Tuveloz takes the paperwork off your back.</h3>
                 <p>
-                  The parts of the day that usually eat your time — finding customers,
-                  scheduling, quoting, records, invoicing, and payment — live in one
-                  provider workspace.
+                  The admin that piles up around every job — booking dates, writing
+                  quotes, keeping records, sending invoices, and getting paid — is
+                  built into one workspace. That load stays off your back, so your
+                  time goes to the vehicle instead of the office.
                 </p>
               </div>
               <div className="provider-handles-grid">
