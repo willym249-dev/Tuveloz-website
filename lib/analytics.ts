@@ -19,7 +19,11 @@ export type AnalyticsEvent =
   | "customer_request_posted"
   | "quote_received"
   | "quote_accepted"
-  | "job_completed";
+  | "job_completed"
+  // Props: { platform, source }. Measures whether the post-commit follow
+  // prompts actually convert, so audience growth is judged on data rather
+  // than on follower count alone.
+  | "social_follow_clicked";
 
 export function track(event: AnalyticsEvent, props: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;

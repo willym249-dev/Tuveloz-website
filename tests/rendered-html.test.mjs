@@ -163,7 +163,7 @@ test("build protects every important submission with a second confirmation", asy
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Confirm and post"));
-  assert.ok(contents.includes("Confirm and send code"));
+  assert.ok(contents.includes("Yes, send my code"));
   assert.ok(contents.includes("Last step: enter the code we emailed you"));
   assert.ok(contents.includes("Confirm and send"));
   assert.ok(contents.includes("Confirm quote"));
@@ -310,7 +310,7 @@ test("homepage prominently links to Tuveloz AI with clear boundaries", async () 
     "utf8",
   );
 
-  assert.ok(homeSource.includes('href="https://ai.tuveloz.com/"'));
+  assert.ok(homeSource.includes('href="/ai"'));
   assert.ok(homeSource.includes("A clearer way to describe what your vehicle needs."));
   assert.ok(homeSource.includes("It does not diagnose, dispatch"));
   assert.ok(homeSource.includes("guarantee pricing, or choose a provider."));

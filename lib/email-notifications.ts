@@ -1,10 +1,11 @@
 import { env } from "cloudflare:workers";
 import { and, eq, like, lt, ne, or } from "drizzle-orm";
 import { getDb } from "../db";
-import { emailNotificationOutbox } from "../db/schema";
+import { emailNotificationOutbox, launchUpdateSubscribers } from "../db/schema";
 import {
   classifyEmailEvent,
   emailEventAllowedByReleaseState,
+  MARKETING_EMAIL_EVENT_SQL_PATTERNS,
   PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
   TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
 } from "./email-event-policy";
@@ -16,7 +17,8 @@ type RuntimeEnv = Record<string, string | undefined>;
 export type AccountSecurityAction =
   | "account_created"
   | "password_reset"
-  | "passkey_added";
+  | "passkey_added"
+  | "phone_updated";
 
 type QueuedNotification = {
   eventKey: string;
@@ -54,8 +56,27 @@ async function markFailed(id: string, attempts: number, error: unknown) {
   }).where(eq(emailNotificationOutbox.id, id));
 }
 
-async function emailEventDeliveryIsAllowed(eventKey: string) {
+/**
+ * Marketing mail is authorized by the recipient, not by release state, and the
+ * check happens here rather than at queue time. Someone who unsubscribes after
+ * a step is queued but before the cron flushes it must not receive it — the
+ * outbox can sit for up to fifteen minutes, which is more than enough time for
+ * an unsubscribe to land in between.
+ */
+async function marketingDeliveryIsAllowed(recipientEmail: string) {
+  const [subscriber] = await getDb().select({
+    unsubscribedAt: launchUpdateSubscribers.unsubscribedAt,
+  }).from(launchUpdateSubscribers)
+    .where(eq(launchUpdateSubscribers.email, cleanEmail(recipientEmail)))
+    .limit(1);
+  return Boolean(subscriber) && !subscriber.unsubscribedAt;
+}
+
+async function emailEventDeliveryIsAllowed(eventKey: string, recipientEmail: string) {
   const classification = classifyEmailEvent(eventKey);
+  if (classification.kind === "marketing") {
+    return marketingDeliveryIsAllowed(recipientEmail);
+  }
   if (classification.kind !== "transaction") {
     return emailEventAllowedByReleaseState(eventKey, false);
   }
@@ -86,7 +107,10 @@ async function deliverEvent(eventKey: string) {
   // A suppressed or unclassified row remains pending with the same attempt
   // count. Closing launch readiness must never release stale transaction mail,
   // and quarantine must not rewrite delivery history as if an email was sent.
-  if (!(await emailEventDeliveryIsAllowed(notification.eventKey))) return;
+  if (!(await emailEventDeliveryIsAllowed(
+    notification.eventKey,
+    notification.recipientEmail,
+  ))) return;
 
   const attempts = notification.attempts + 1;
   const apiKey = runtimeEnv().RESEND_API_KEY ?? "";
@@ -135,12 +159,19 @@ async function deliverEvent(eventKey: string) {
 export async function flushPendingEmailNotifications(limit = RETRY_BATCH_SIZE) {
   const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
   const transactionCandidatesAvailable = await realTransactionEmailCandidatesAreAvailable();
+  // Marketing is always a candidate: it is gated on the recipient's own
+  // consent rather than on marketplace release state, so a paused marketplace
+  // must not strand launch updates people asked for.
   const candidatePatterns = transactionCandidatesAvailable
     ? [
       ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
       ...TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
+      ...MARKETING_EMAIL_EVENT_SQL_PATTERNS,
     ]
-    : PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS;
+    : [
+      ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
+      ...MARKETING_EMAIL_EVENT_SQL_PATTERNS,
+    ];
   const recognizedCandidate = or(...candidatePatterns.map((pattern) => (
     like(emailNotificationOutbox.eventKey, pattern)
   )));
@@ -186,6 +217,26 @@ async function queueNotification(notification: QueuedNotification) {
   } catch (error) {
     console.error("Unable to queue or deliver Tuveloz email notification", error);
   }
+}
+
+/**
+ * Queue one step of the pre-launch sequence. The event key includes the
+ * subscriber and step, so the outbox's unique-key constraint makes a repeated
+ * cron run a no-op rather than a duplicate send.
+ */
+export async function sendLaunchUpdateEmail(input: {
+  recipientEmail: string;
+  step: number;
+  subject: string;
+  lines: string[];
+}) {
+  const recipientEmail = cleanEmail(input.recipientEmail);
+  await queueNotification({
+    eventKey: `launch-updates:${input.step}:${recipientEmail}`,
+    recipientEmail,
+    subject: input.subject,
+    textBody: input.lines.join("\n"),
+  });
 }
 
 export async function sendMarketplaceUpdateEmail(input: {
@@ -263,6 +314,7 @@ export async function sendAccountSecurityAlert(input: {
   const labels: Record<Exclude<AccountSecurityAction, "account_created">, string> = {
     password_reset: "Your Tuveloz password was reset",
     passkey_added: "A passkey (Face ID, Touch ID, or device lock) was added",
+    phone_updated: "A phone number for text sign-in was added or changed",
   };
   const label = labels[input.action];
   await queueNotification({
