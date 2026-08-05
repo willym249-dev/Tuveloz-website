@@ -39,6 +39,8 @@ type StorefrontData = {
   }>;
   privatePreview: boolean;
   testProvider: boolean;
+  /** Tenure, not a quality signal — see lib/founding-cohort.ts. */
+  foundingProvider: boolean;
   reviewSummary: { average: number; count: number };
   credentialReview: {
     requirementsSatisfied: boolean;
@@ -167,6 +169,11 @@ export default function ProviderStorefrontPage() {
               <span className={`availability-chip ${profile.availabilityStatus.toLowerCase().replaceAll(" ", "-")}`}>
                 {profile.availabilityStatus}
               </span>
+              {data.foundingProvider && !data.testProvider && (
+                <span className="founding-badge" title="Joined Tuveloz before the marketplace launched">
+                  ★ Founding provider · joined before launch
+                </span>
+              )}
             </div>
             <h1>{profile.businessName}</h1>
             <p>{profile.headline}</p>

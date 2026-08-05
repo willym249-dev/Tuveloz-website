@@ -2,6 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import { flushPendingEmailNotifications } from "../lib/email-notifications";
+import { processDueLaunchUpdates } from "../lib/launch-update-delivery";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
@@ -125,6 +126,9 @@ const worker = {
       scheduledTask("superseded Stripe Identity session cleanup", () => (
         cleanupSupersededStripeIdentitySessions(5)
       )),
+      // Queue due launch updates before the flush, so a step that comes due
+      // this tick goes out on this tick rather than waiting fifteen minutes.
+      scheduledTask("launch update sequence", () => processDueLaunchUpdates(50)),
       scheduledTask("email notification delivery", () => flushPendingEmailNotifications(20)),
       scheduledTask("quarantined provider evidence scans", () => (
         processPendingCloudmersiveEvidenceScans()

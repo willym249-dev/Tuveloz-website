@@ -321,8 +321,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": [],
-        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -338,8 +338,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": [],
-        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -354,8 +354,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -370,8 +370,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -385,8 +385,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -401,8 +401,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -417,8 +417,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_only",
@@ -433,8 +433,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -449,8 +449,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration", "spent_battery_handling_plan"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "spent_battery_handling_plan"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration", "spent_battery_handling_plan"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "spent_battery_handling_plan"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -465,8 +465,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["ocp_vehicle_service_registration"],
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
+        "independent_startup": ["provisional_service_competency", "ocp_vehicle_service_registration"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_or_passed_emergency_roadside_check",
@@ -481,8 +481,8 @@
       "allowed_provider_levels": ["provisional_independent", "sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "independent_startup": ["wash_water_plan"],
-        "sponsored_trainee_employee": ["workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "wash_water_plan"]
+        "independent_startup": ["provisional_service_competency", "wash_water_plan"],
+        "sponsored_trainee_employee": ["provisional_service_competency", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "wash_water_plan"]
       },
       "supervision_by_pathway": {"independent_startup": "independent_limited_service", "sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_private_property_with_approved_wash_water_controls",
@@ -497,7 +497,7 @@
       "allowed_provider_levels": ["sponsored_trainee"],
       "jurisdictions": ["US-MD-MontgomeryCounty"],
       "path_requirements": {
-        "sponsored_trainee_employee": ["ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "used_oil_handling_plan"]
+        "sponsored_trainee_employee": ["provisional_service_competency", "ocp_vehicle_service_registration", "workers_comp_coverage", "sponsored_personnel_roster", "sponsored_employment_attestation", "qualified_supervisor_assignment", "used_oil_handling_plan"]
       },
       "supervision_by_pathway": {"sponsored_trainee_employee": "direct_supervision"},
       "location_rule": "approved_fixed_private_property_only",

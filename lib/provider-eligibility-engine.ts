@@ -55,6 +55,7 @@ import {
   isProviderLevel,
   isProviderPathway,
   isServiceCode,
+  providerLevelForService,
   POLICY_JURISDICTION,
   POLICY_VERSION,
   PROVIDER_POLICY_MATRIX,
@@ -332,9 +333,17 @@ async function evaluateOneService(options: {
   const pathway = profile && isProviderPathway(profile.relationshipPath)
     ? profile.relationshipPath
     : null;
-  const providerLevel = profile && isProviderLevel(profile.providerLevel)
+  // The level is a property of this exact service, not of the provider, so one
+  // provider business may hold services across levels at once. The profile's
+  // stored level is only a summary for display; it never authorizes work.
+  // Every service still stands on its own credential evidence below.
+  const serviceLevel = pathway
+    ? providerLevelForService(options.serviceCode, pathway)
+    : null;
+  const profileLevel = profile && isProviderLevel(profile.providerLevel)
     ? profile.providerLevel
     : null;
+  const providerLevel = serviceLevel ?? profileLevel;
 
   if (!provider || provider.status !== "approved" || provider.verificationStatus !== "verified") {
     reasons.push({ code: "provider_account_not_active", detail: "The provider business is not active and verified." });
@@ -347,7 +356,9 @@ async function evaluateOneService(options: {
   }
   if (!pathway) reasons.push({ code: "pathway_missing", detail: "A recognized provider pathway is required." });
   if (!providerLevel) reasons.push({ code: "provider_level_missing", detail: "A recognized provider level is required." });
-  if (providerLevel === "learning_account") {
+  // An applicant-only account is blocked for every service regardless of which
+  // level the requested service itself would need.
+  if (providerLevel === "learning_account" || profileLevel === "learning_account") {
     reasons.push({ code: "learning_account_no_jobs", detail: "Applicant-only accounts receive no TUVELOZ training, employment, or customer work." });
   }
   if (pathway && providerLevel && !isPathwayLevelCompatible(pathway, providerLevel)) {
@@ -427,7 +438,11 @@ async function evaluateOneService(options: {
   if (pathway && !service.allowedPathways.includes(pathway)) {
     reasons.push({ code: "pathway_not_allowed_for_service", detail: "This pathway cannot perform the selected service.", serviceCode: options.serviceCode });
   }
-  if (providerLevel && !service.allowedProviderLevels.includes(providerLevel)) {
+  // The service must name a lawful level on this pathway. Because the level is
+  // resolved from the service itself, this denies exactly the services no level
+  // on the pathway may perform, instead of denying a lawful service because the
+  // provider's other work sits at a different level.
+  if (pathway && !serviceLevel) {
     reasons.push({ code: "level_not_allowed_for_service", detail: "This provider level cannot perform the selected service.", serviceCode: options.serviceCode });
   }
 
