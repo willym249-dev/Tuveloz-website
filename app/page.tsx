@@ -1425,6 +1425,18 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
             <a className="button primary" href="#provider-apply">Join free <span>→</span></a>
+            <video
+              className="provider-reel"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              poster="/provider-reel-poster.jpg"
+              aria-label="Mobile vehicle service work in a Montgomery County driveway — engine service, jump start, and detailing."
+            >
+              <source src="/provider-reel.mp4" type="video/mp4" />
+            </video>
             <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
               <div className="eligibility-guide-heading">
                 <span id="provider-guide-title">How applying works</span>

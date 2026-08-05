@@ -1623,6 +1623,18 @@ textarea:focus {
   margin-top: 24px;
 }
 
+.provider-reel {
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  display: block;
+  margin-top: 28px;
+  max-width: 420px;
+  object-fit: cover;
+  width: 100%;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+}
+
 .provider-copy > .provider-extra-work {
   background: rgba(255, 106, 0, 0.1);
   border: 1px solid rgba(255, 106, 0, 0.34);
