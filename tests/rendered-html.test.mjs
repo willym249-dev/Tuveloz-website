@@ -776,7 +776,6 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   const adminSource = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
 
   assert.ok(publicSource.includes('view === "about" ? ('));
-  assert.ok(publicSource.includes('view === "request" ? ('));
   assert.ok(publicSource.includes('view === "provider" ? ('));
   assert.ok(!customerSource.includes("<summary>More tools</summary>"));
   assert.ok(!customerSource.includes('<a href="#my-requests">'));

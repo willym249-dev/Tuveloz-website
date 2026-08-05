@@ -156,7 +156,7 @@ function dollars(cents: number | undefined) {
   return `$${((cents ?? 0) / 100).toFixed(2)}`;
 }
 
-export type PublicView = "home" | "about" | "request" | "provider";
+export type PublicView = "home" | "about" | "provider";
 
 export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -233,7 +233,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
   useEffect(() => {
     if (view === "provider") track("provider_signup_started");
-    if (view === "request") track("customer_request_started");
   }, [view]);
 
   useEffect(() => {
@@ -940,19 +939,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">
             {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "For customers"}
           </span>
-          {view === "request" ? (
-            <h1>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h1>
-          ) : (
-            <h2>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h2>
-          )}
+          <h2>
+            {CUSTOMER_JOB_POSTING_PAUSED
+              ? "Create your account now. Request service after launch."
+              : "Post it once. Compare real quotes. No pressure."}
+          </h2>
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
