@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { track } from "../../lib/analytics";
 import {
@@ -115,6 +115,13 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
   const [matchedProviderCount, setMatchedProviderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Top of the customer funnel. Opening the request form is "started a
+    // request", mirroring provider_signup_started for the provider funnel;
+    // customer_request_posted already fires on a successful submit below.
+    track("customer_request_started");
+  }, []);
 
   const exactService = serviceCode === NOT_SURE_VALUE
     ? null
