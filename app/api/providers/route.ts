@@ -186,6 +186,7 @@ export async function POST(request: Request) {
       onboarding: {
         applicationPathway: application.applicationPathway,
         providerLevel: application.providerLevel,
+        phone: application.phone,
         policyVersion: POLICY_VERSION,
         policyStatus: POLICY_STATUS,
         jurisdiction: POLICY_JURISDICTION,

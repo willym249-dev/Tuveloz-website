@@ -3498,6 +3498,55 @@ footer > p {
   margin-top: 16px;
 }
 
+.step-progress {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin: 8px 0 0;
+  text-transform: uppercase;
+}
+
+.business-details-disclosure {
+  border: 1px solid #d4d4d4;
+  border-radius: 10px;
+  margin-top: 16px;
+}
+
+.business-details-disclosure > summary {
+  cursor: pointer;
+  list-style: none;
+  min-height: 44px;
+  padding: 13px 14px;
+}
+
+.business-details-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.business-details-disclosure > summary strong {
+  color: #172b3c;
+  font-size: 13px;
+}
+
+.business-details-disclosure > summary small {
+  color: #687b8a;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.business-details-disclosure[open] > summary {
+  background: #f5f8fb;
+  border-bottom: 1px solid #dbe3e9;
+  border-radius: 10px 10px 0 0;
+}
+
+.business-details-disclosure > .area-fieldset {
+  border: 0;
+  padding: 4px 14px 14px;
+}
+
 .area-fieldset legend {
   font-weight: 800;
   padding: 0 6px;

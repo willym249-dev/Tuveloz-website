@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   emptyProviderSelfAssessment,
@@ -103,6 +103,59 @@ type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
+const SIGNUP_DRAFT_KEY = "tuveloz-provider-signup-draft-v1";
+
+/**
+ * Only plain identification/business text fields are autosaved. Legal
+ * acknowledgment checkboxes and the emailed verification code are never
+ * restored from a draft — acceptance must be affirmative in the session that
+ * submits.
+ */
+const DRAFT_TEXT_FIELDS = [
+  "performing-person-first-name",
+  "performing-person-last-name",
+  "provider-email",
+  "provider-phone",
+  "provider-name",
+  "legal-business-name",
+  "business-entity-type",
+  "business-formation-state",
+  "business-municipality",
+  "business-service-address",
+  "signer-name",
+  "signer-title",
+] as const;
+
+type ProviderSignupDraft = {
+  step?: SignupStep;
+  selectedProviderServices?: ServiceCode[];
+  soloBusiness?: boolean;
+  selectedProviderWorkLocations?: string[];
+  providerAssessment?: ProviderSelfAssessment;
+  fields?: Record<string, string>;
+};
+
+function readSignupDraft(): ProviderSignupDraft | null {
+  try {
+    const raw = window.localStorage.getItem(SIGNUP_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as ProviderSignupDraft
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearSignupDraft() {
+  try {
+    window.localStorage.removeItem(SIGNUP_DRAFT_KEY);
+  } catch {
+    // Private-mode storage failures never block signup.
+  }
+}
+
 export function ProviderSignupForm() {
   const { language } = useSiteLanguage();
   const providerFormIsSpanish = language === "es";
@@ -124,6 +177,70 @@ export function ProviderSignupForm() {
   const [applicationVerificationCode, setApplicationVerificationCode] = useState("");
   const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
+  const [draftFields, setDraftFields] = useState<Record<string, string>>({});
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  // Restore an unfinished application from this device. Runs once after mount
+  // so server-rendered markup stays identical to the first client render.
+  useEffect(() => {
+    const draft = readSignupDraft();
+    if (!draft) return;
+    if (Array.isArray(draft.selectedProviderServices)) {
+      setSelectedProviderServices(draft.selectedProviderServices.filter((code) => (
+        PROVIDER_REVIEW_SERVICES.some((service) => service.code === code)
+      )));
+    }
+    if (typeof draft.soloBusiness === "boolean") setSoloBusiness(draft.soloBusiness);
+    if (Array.isArray(draft.selectedProviderWorkLocations)) {
+      setSelectedProviderWorkLocations(draft.selectedProviderWorkLocations.filter((option) => (
+        (PROVIDER_WORK_LOCATION_OPTIONS as readonly string[]).includes(option)
+      )));
+    }
+    if (draft.providerAssessment && typeof draft.providerAssessment === "object") {
+      setProviderAssessment({ ...emptyProviderSelfAssessment, ...draft.providerAssessment });
+    }
+    if (draft.fields && typeof draft.fields === "object") {
+      const fields: Record<string, string> = {};
+      for (const key of DRAFT_TEXT_FIELDS) {
+        const value = draft.fields[key];
+        if (typeof value === "string" && value) fields[key] = value;
+      }
+      setDraftFields(fields);
+    }
+    if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
+    setDraftRestored(true);
+  }, []);
+
+  // Autosave everything except acknowledgments and the emailed code, so a
+  // provider who starts on their phone can come back without retyping.
+  useEffect(() => {
+    if (applicationSent) return;
+    const hasProgress = selectedProviderServices.length > 0
+      || selectedProviderWorkLocations.length > 0
+      || Object.keys(draftFields).length > 0;
+    if (!hasProgress) return;
+    try {
+      window.localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify({
+        step,
+        selectedProviderServices,
+        soloBusiness,
+        selectedProviderWorkLocations,
+        providerAssessment,
+        fields: draftFields,
+      } satisfies ProviderSignupDraft));
+    } catch {
+      // Storage being unavailable only disables autosave.
+    }
+  }, [
+    applicationSent,
+    step,
+    selectedProviderServices,
+    soloBusiness,
+    selectedProviderWorkLocations,
+    providerAssessment,
+    draftFields,
+  ]);
 
   const providerLevel = deriveProviderLevel(selectedProviderServices);
   // A service can be added only if it shares an allowed provider level with
@@ -243,9 +360,14 @@ export function ProviderSignupForm() {
     );
     const termsBundleAccepted = formData.get("terms-bundle-accepted") === "yes";
     const privacyAcknowledged = formData.get("privacy-acknowledged") === "yes";
+    // A one-person business may leave the business name blank; their own
+    // legal name is the business name of record.
+    const businessName = String(values["provider-name"] ?? "").trim()
+      || (soloBusiness ? soloFullName : "");
     const payload = {
-      name: values["provider-name"],
+      name: businessName,
       email: values["provider-email"],
+      phone: values["provider-phone"],
       preferredLanguage: providerFormIsSpanish ? "Spanish" : "English",
       services: selectedProviderServices,
       serviceCodes: selectedProviderServices,
@@ -258,7 +380,7 @@ export function ProviderSignupForm() {
       policyJurisdiction: POLICY_JURISDICTION,
       serviceArea: SELECTED_PROVIDER_AREAS.join(" | "),
       businessMunicipality: values["business-municipality"],
-      legalBusinessName: soloBusiness ? values["provider-name"] : values["legal-business-name"],
+      legalBusinessName: soloBusiness ? businessName : values["legal-business-name"],
       businessEntityType: values["business-entity-type"],
       businessFormationState: values["business-formation-state"],
       workLocations: selectedProviderWorkLocations,
@@ -301,6 +423,9 @@ export function ProviderSignupForm() {
         const result = (await response.json()) as { error?: string };
         if (!response.ok) throw new Error(result.error || "Please try again.");
         form.reset();
+        clearSignupDraft();
+        setDraftFields({});
+        setDraftRestored(false);
         setApplicationChallengeId("");
         setApplicationVerificationCode("");
         setPendingApplicationPayload(null);
@@ -383,8 +508,8 @@ export function ProviderSignupForm() {
         <span>✓</span>
         <h3>{providerFormIsSpanish ? "Solicitud recibida." : "Application received."}</h3>
         <p>{providerFormIsSpanish
-          ? "Siguiente paso: inicie sesión con el mismo correo para subir su evidencia y seguir la revisión."
-          : "Next step: sign in with the same email to upload your evidence and track the review."}</p>
+          ? "Esto es lo que sigue: (1) inicie sesión con el mismo correo, (2) suba la evidencia requerida para sus servicios, (3) nuestro equipo revisa y usted puede seguir el estado en su panel. Le avisaremos por correo en cada paso."
+          : "Here's what happens next: (1) sign in with the same email, (2) upload the evidence required for your services, (3) our team reviews and you can track the status from your dashboard. We'll email you at each step."}</p>
         <p><small>{providerFormIsSpanish
           ? "Si ya existía una solicitud para este correo, se conservó esa solicitud; los cambios se hacen después de iniciar sesión."
           : "If an application already existed for this email, that one was kept — changes happen after you sign in."}</small></p>
@@ -402,6 +527,24 @@ export function ProviderSignupForm() {
     <form
       className="provider-form"
       onChange={(event) => {
+        // Capture only the draft fields rendered right now, so navigating
+        // between steps never erases values saved from another step.
+        const formData = new FormData(event.currentTarget);
+        const formElements = event.currentTarget.elements;
+        const presentFields = new Map<string, string>();
+        for (const key of DRAFT_TEXT_FIELDS) {
+          if (!formElements.namedItem(key)) continue;
+          const value = formData.get(key);
+          presentFields.set(key, typeof value === "string" ? value : "");
+        }
+        setDraftFields((current) => {
+          const next = { ...current };
+          for (const [key, value] of presentFields) {
+            if (value.trim()) next[key] = value;
+            else delete next[key];
+          }
+          return JSON.stringify(next) === JSON.stringify(current) ? current : next;
+        });
         // Reset an in-flight submission/verification state if the applicant
         // edits anything after requesting a code — the payload above is
         // recomputed from current field values, so a stale challenge would
@@ -430,6 +573,19 @@ export function ProviderSignupForm() {
           {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
         </span>
       </div>
+      <p className="hint step-progress" aria-live="polite">
+        {providerFormIsSpanish
+          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
+          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+      </p>
+
+      {draftRestored && !applicationChallengeId && (
+        <p className="hint" role="status">
+          {providerFormIsSpanish
+            ? "Bienvenido de nuevo — guardamos su avance en este dispositivo. Puede continuar donde quedó."
+            : "Welcome back — we saved your progress on this device. Pick up where you left off."}
+        </p>
+      )}
 
       {stepError && <p className="form-error" role="alert">{stepError}</p>}
 
@@ -850,6 +1006,7 @@ export function ProviderSignupForm() {
                 : "Legal first name of the person doing the work")}
             <input
               autoComplete="given-name"
+              defaultValue={draftFields["performing-person-first-name"] ?? ""}
               required
               name="performing-person-first-name"
               placeholder={providerFormIsSpanish
@@ -865,6 +1022,7 @@ export function ProviderSignupForm() {
                 : "Legal last name of the person doing the work")}
             <input
               autoComplete="family-name"
+              defaultValue={draftFields["performing-person-last-name"] ?? ""}
               required
               name="performing-person-last-name"
               placeholder={providerFormIsSpanish
@@ -879,66 +1037,128 @@ export function ProviderSignupForm() {
           </label>
           <label>
             {providerFormIsSpanish ? "Correo electrónico" : "Email"}
-            <input required name="provider-email" type="email" placeholder="hello@yourbusiness.com" />
+            <input
+              autoComplete="email"
+              defaultValue={draftFields["provider-email"] ?? ""}
+              inputMode="email"
+              required
+              name="provider-email"
+              type="email"
+              placeholder="hello@yourbusiness.com"
+            />
+            <small>
+              {providerFormIsSpanish
+                ? "Solo lo usamos para verificar su solicitud y enviarle actualizaciones."
+                : "We only use this to verify your application and send you updates."}
+            </small>
           </label>
           <label>
-            {providerFormIsSpanish ? "Nombre del negocio" : "Business name"}
+            {providerFormIsSpanish ? "Teléfono (opcional)" : "Phone (optional)"}
             <input
-              required
+              autoComplete="tel"
+              defaultValue={draftFields["provider-phone"] ?? ""}
+              inputMode="tel"
+              name="provider-phone"
+              type="tel"
+              placeholder="(301) 555-0100"
+            />
+            <small>
+              {providerFormIsSpanish
+                ? "Solo si prefiere que le contactemos por teléfono. El correo es lo único que se requiere."
+                : "Only if you'd rather we reach you by phone. Email is all that's required."}
+            </small>
+          </label>
+          <label>
+            {soloBusiness
+              ? (providerFormIsSpanish ? "Nombre del negocio (opcional)" : "Business name (optional)")
+              : (providerFormIsSpanish ? "Nombre del negocio" : "Business name")}
+            <input
+              defaultValue={draftFields["provider-name"] ?? ""}
+              required={!soloBusiness}
               name="provider-name"
               placeholder={providerFormIsSpanish ? "Su negocio o su propio nombre" : "Your business or your own name"}
             />
             {soloBusiness && (
               <small>
                 {providerFormIsSpanish
-                  ? "Tal como está registrado — o simplemente su propio nombre si no ha registrado un negocio."
-                  : "As registered — or just your own name if you haven't registered a business."}
+                  ? "Déjelo en blanco y usaremos su nombre legal — muchos negocios de una sola persona trabajan con su propio nombre."
+                  : "Leave this blank and we'll use your legal name — many one-person businesses operate under their own name."}
               </small>
             )}
           </label>
-          <fieldset className="area-fieldset" key={soloBusiness ? "solo-business" : "team-business"}>
-            <legend>
-              {providerFormIsSpanish ? "Detalles del negocio" : "Business details"}
-            </legend>
-            {!soloBusiness && (
-              <label>
-                {providerFormIsSpanish ? "Nombre legal del negocio" : "Legal business name"}
-                <input required name="legal-business-name" placeholder={providerFormIsSpanish ? "Nombre registrado del negocio" : "Registered business name"} />
-              </label>
-            )}
-            <label>
-              {providerFormIsSpanish ? "Tipo de entidad" : "Business entity type"}
-              <select required name="business-entity-type" defaultValue={soloBusiness ? "sole_proprietorship" : ""}>
-                <option value="" disabled>{providerFormIsSpanish ? "Elija una" : "Choose one"}</option>
-                <option value="sole_proprietorship">{providerFormIsSpanish ? "Propietario único" : "Sole proprietorship"}</option>
-                <option value="limited_liability_company">{providerFormIsSpanish ? "Compañía de responsabilidad limitada (LLC)" : "Limited liability company"}</option>
-                <option value="corporation">{providerFormIsSpanish ? "Corporación" : "Corporation"}</option>
-                <option value="partnership">{providerFormIsSpanish ? "Sociedad" : "Partnership"}</option>
-                <option value="other">{providerFormIsSpanish ? "Otro" : "Other"}</option>
-              </select>
+          <details
+            className="business-details-disclosure"
+            open={businessDetailsOpen || !soloBusiness}
+            onToggle={(event) => setBusinessDetailsOpen(event.currentTarget.open)}
+          >
+            <summary>
+              <strong>{providerFormIsSpanish ? "Detalles del negocio" : "Business details"}</strong>
               {soloBusiness && (
                 <small>
                   {providerFormIsSpanish
-                    ? "La mayoría de los negocios de una sola persona sin registro son de propietario único. Cámbielo si registró una LLC o corporación."
-                    : "Most one-person businesses without a registration are sole proprietorships. Change this if you registered an LLC or corporation."}
+                    ? " — asumimos propietario único en Maryland. Toque solo si registró una LLC o corporación."
+                    : " — we've assumed a Maryland sole proprietorship. Only open this if you registered an LLC or corporation."}
                 </small>
               )}
-            </label>
-            <label>
-              {providerFormIsSpanish
-                ? "Estado donde el negocio está formado o registrado"
-                : "State where the business is formed or registered"}
-              <input
-                required
-                defaultValue={soloBusiness ? "Maryland" : undefined}
-                name="business-formation-state"
-                placeholder="Maryland"
-              />
-            </label>
-          </fieldset>
+            </summary>
+            <fieldset className="area-fieldset" key={soloBusiness ? "solo-business" : "team-business"}>
+              {!soloBusiness && (
+                <label>
+                  {providerFormIsSpanish ? "Nombre legal del negocio" : "Legal business name"}
+                  <input
+                    defaultValue={draftFields["legal-business-name"] ?? ""}
+                    required
+                    name="legal-business-name"
+                    placeholder={providerFormIsSpanish ? "Nombre registrado del negocio" : "Registered business name"}
+                  />
+                </label>
+              )}
+              <label>
+                {providerFormIsSpanish ? "Tipo de entidad" : "Business entity type"}
+                <select
+                  required
+                  name="business-entity-type"
+                  defaultValue={draftFields["business-entity-type"]
+                    || (soloBusiness ? "sole_proprietorship" : "")}
+                >
+                  <option value="" disabled>{providerFormIsSpanish ? "Elija una" : "Choose one"}</option>
+                  <option value="sole_proprietorship">{providerFormIsSpanish ? "Propietario único" : "Sole proprietorship"}</option>
+                  <option value="limited_liability_company">{providerFormIsSpanish ? "Compañía de responsabilidad limitada (LLC)" : "Limited liability company"}</option>
+                  <option value="corporation">{providerFormIsSpanish ? "Corporación" : "Corporation"}</option>
+                  <option value="partnership">{providerFormIsSpanish ? "Sociedad" : "Partnership"}</option>
+                  <option value="other">{providerFormIsSpanish ? "Otro" : "Other"}</option>
+                </select>
+                {soloBusiness && (
+                  <small>
+                    {providerFormIsSpanish
+                      ? "La mayoría de los negocios de una sola persona sin registro son de propietario único. Cámbielo si registró una LLC o corporación."
+                      : "Most one-person businesses without a registration are sole proprietorships. Change this if you registered an LLC or corporation."}
+                  </small>
+                )}
+              </label>
+              <label>
+                {providerFormIsSpanish
+                  ? "Estado donde el negocio está formado o registrado"
+                  : "State where the business is formed or registered"}
+                <input
+                  required
+                  defaultValue={draftFields["business-formation-state"]
+                    ?? (soloBusiness ? "Maryland" : undefined)}
+                  name="business-formation-state"
+                  placeholder="Maryland"
+                />
+              </label>
+            </fieldset>
+          </details>
           <label>
             {providerFormIsSpanish ? "Ubicación del negocio" : "Business location"}
-            <input required list={MUNICIPALITY_DATALIST_ID} name="business-municipality" placeholder={providerFormIsSpanish ? "Ciudad o pueblo" : "City or town"} />
+            <input
+              defaultValue={draftFields["business-municipality"] ?? ""}
+              required
+              list={MUNICIPALITY_DATALIST_ID}
+              name="business-municipality"
+              placeholder={providerFormIsSpanish ? "Ciudad o pueblo" : "City or town"}
+            />
             <small>
               {providerFormIsSpanish
                 ? "Se usa para determinar las reglas locales que correspondan."
@@ -991,6 +1211,7 @@ export function ProviderSignupForm() {
             <label>
               {providerFormIsSpanish ? "Dirección donde atenderá a clientes" : "Business meeting address"}
               <AddressAutocompleteInput
+                defaultValue={draftFields["business-service-address"] ?? ""}
                 required
                 name="business-service-address"
                 placeholder={providerFormIsSpanish ? "Dirección" : "Street address"}
@@ -1042,11 +1263,11 @@ export function ProviderSignupForm() {
               <>
                 <label>
                   {providerFormIsSpanish ? "Nombre del firmante" : "Typed signer name"}
-                  <input required name="signer-name" placeholder={providerFormIsSpanish ? "Nombre legal completo" : "Full legal name"} />
+                  <input defaultValue={draftFields["signer-name"] ?? ""} required name="signer-name" placeholder={providerFormIsSpanish ? "Nombre legal completo" : "Full legal name"} />
                 </label>
                 <label>
                   {providerFormIsSpanish ? "Título o capacidad del firmante" : "Signer title or capacity"}
-                  <input required name="signer-title" placeholder={providerFormIsSpanish ? "Solicitante, propietario o representante autorizado" : "Applicant, owner, or authorized representative"} />
+                  <input defaultValue={draftFields["signer-title"] ?? ""} required name="signer-title" placeholder={providerFormIsSpanish ? "Solicitante, propietario o representante autorizado" : "Applicant, owner, or authorized representative"} />
                 </label>
               </>
             )}

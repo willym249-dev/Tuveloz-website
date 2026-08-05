@@ -155,6 +155,9 @@ export function providerApplicationRequestIp(request: Request) {
 export function normalizeProviderApplicationPayload(body: Record<string, unknown>) {
   const name = clean(body.name, 120);
   const email = clean(body.email, 180).toLowerCase();
+  // Phone is always optional: providers are independent contractors, and only
+  // email is needed to verify and deliver the application record.
+  const phone = clean(body.phone, 40);
   const preferredLanguage = clean(body.preferredLanguage, 60) || "English";
   const applicationPathwayValue = clean(body.applicationPathway, 80);
   const applicationPathway = APPLICATION_PATHWAYS.has(applicationPathwayValue as ApplicationPathway)
@@ -209,6 +212,11 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   }
   if (!isEmail(email)) {
     throw new ProviderApplicationValidationError("Enter a valid applicant email address.");
+  }
+  if (phone && !/^\+?[\d\s().-]{7,}$/.test(phone)) {
+    throw new ProviderApplicationValidationError(
+      "Enter a valid phone number, or leave the phone field blank.",
+    );
   }
   if (!rawServiceCodes.length || rawServiceCodes.length !== serviceCodes.length) {
     throw new ProviderApplicationValidationError(
@@ -300,6 +308,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     format: "tuveloz_provider_application_payload_v2" as const,
     name,
     email,
+    phone,
     preferredLanguage,
     applicationPathway,
     providerLevel,
