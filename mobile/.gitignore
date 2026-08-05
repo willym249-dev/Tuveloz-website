@@ -12,11 +12,18 @@ expo-env.d.ts
 /android
 .kotlin/
 *.orig.*
+
+# Signing material. Committing an Android upload/release keystore or an iOS
+# signing certificate is unrecoverable — the key cannot be rotated without
+# breaking every existing install's upgrade path.
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.cer
+*.certSigningRequest
 
 # Metro
 .metro-health-check*
@@ -38,6 +45,12 @@ yarn-error.*
 # Firebase / Google service files contain project identifiers, keep them local
 google-services.json
 GoogleService-Info.plist
+
+# Service-account credentials. These are true secrets — they bypass every
+# access control. They belong to a server and must never be near this app.
+*service-account*.json
+*serviceAccount*.json
+*-adminsdk-*.json
 
 # typescript
 *.tsbuildinfo
