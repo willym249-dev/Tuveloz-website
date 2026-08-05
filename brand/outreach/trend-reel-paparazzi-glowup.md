@@ -23,6 +23,16 @@ dead-battery reel) by using a car "before/after" as the transition.
 
 Source: trend verified trending Aug 2026 — see notes at bottom.
 
+## Rendered draft (ready to post)
+
+`media/trend-reel-glowup-9x16.mp4` (9:16, 10s) and `media/trend-reel-glowup-1x1.mp4`
+(1:1) are a rendered no-credit cut built from the filed `ad-01-assets` stills:
+the grind (engine-bay work, graded down) → jumper-cable build → **hard cut on
+the drop** → the detailing glow-up (bright, glossy). Slow smooth push on each
+shot, no baked-in text or audio. Before posting: add the trending sound and the
+timed overlays below in-app, and — since the source stills are
+AI-generated — leave the platform's "AI-generated content" label ON.
+
 ## The video (two ways to shoot — pick one)
 
 **Option A — no face, car glow-up (recommended, matches our winner):**
