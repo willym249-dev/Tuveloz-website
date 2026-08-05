@@ -22,7 +22,7 @@ makes a few habits load-bearing:
 
 - **Read [`PROJECT_STATUS.md`](../PROJECT_STATUS.md) first.** It says what is
   done and what is deliberately left undone.
-- **Check [`decisions/`](decisions/) before reworking an approach.** If a
+- **Check [`DECISIONS.md`](DECISIONS.md) before reworking an approach.** If a
   decision looks wrong, write a new ADR that supersedes the old one — do not
   silently reverse it.
 - **Do not rewrite a completed feature without a stated reason.** Refactoring
@@ -105,7 +105,7 @@ Migrations are append-only. To change something, add a new numbered migration.
 
 ## Writing an ADR
 
-Copy the shape of an existing file in [`decisions/`](decisions/): Status,
+Copy the shape of an existing file in [`decisions/`](decisions/), then add a row to [`DECISIONS.md`](DECISIONS.md): Status,
 Context, Decision, Consequences, Alternatives considered. Number it in
 sequence. An ADR records _why_, so the next person does not have to re-derive
 it — or accidentally undo it.

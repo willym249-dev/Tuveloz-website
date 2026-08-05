@@ -94,5 +94,5 @@ mobile/
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit together
 - [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — tokens and UI primitives
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — conventions and workflow
-- [docs/ROADMAP.md](docs/ROADMAP.md) — the phased build order
-- [docs/decisions/](docs/decisions/) — architecture decision records
+- [ROADMAP.md](ROADMAP.md) — the phased build order
+- [docs/DECISIONS.md](docs/DECISIONS.md) — the decision log, indexing the ADRs in [docs/decisions/](docs/decisions/)

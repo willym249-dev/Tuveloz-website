@@ -7,7 +7,7 @@ before you change anything.
 
 1. [`PROJECT_STATUS.md`](PROJECT_STATUS.md) — what is built, what is verified,
    what is deliberately unfinished.
-2. [`docs/decisions/`](docs/decisions/) — decisions already made, and why.
+2. [`docs/DECISIONS.md`](docs/DECISIONS.md) — decisions already made, and why.
 3. [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — conventions.
 
 ## Hard rules
@@ -15,7 +15,7 @@ before you change anything.
 - **Never commit to `main`.** Branch, then open a PR.
 - **Run `npm run verify` before committing.** Typecheck, lint and format check.
 - **Do not rewrite working features** without a stated reason. If a decision in
-  `docs/decisions/` looks wrong, write a new ADR that supersedes it rather than
+  `docs/DECISIONS.md` looks wrong, write a new ADR that supersedes it rather than
   quietly reversing it.
 - **Do not delete existing work** unless it is genuinely obsolete — and say so
   in the commit message.

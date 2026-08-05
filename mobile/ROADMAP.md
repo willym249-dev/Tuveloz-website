@@ -2,7 +2,7 @@
 
 The phased build order. Each phase should leave the app in a shippable state.
 
-Current status per item lives in [`../PROJECT_STATUS.md`](../PROJECT_STATUS.md);
+Current status per item lives in [`PROJECT_STATUS.md`](PROJECT_STATUS.md);
 this file describes the plan and its reasoning.
 
 ---

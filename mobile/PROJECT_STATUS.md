@@ -73,13 +73,13 @@ In dependency order:
 5. **Quotes (read side).** Customers see quotes arrive against a request.
 6. **Chat and notifications.**
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phase plan.
+See [ROADMAP.md](ROADMAP.md) for the full phase plan.
 
 ---
 
 ## Decisions worth knowing before you change anything
 
-Full records in [docs/decisions/](docs/decisions/). The short version:
+Full records in [docs/DECISIONS.md](docs/DECISIONS.md). The short version:
 
 - The app lives in `mobile/` inside the website repository but shares **no
   code** with it, and can be extracted to its own repository with one command
