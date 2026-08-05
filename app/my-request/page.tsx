@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
+import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { SiteLanguageButton } from "../components/site-language";
 import { QuotePaymentCard } from "../components/quote-payment-card";
 import {
@@ -311,6 +312,12 @@ export default function MyRequestPage() {
             ))}
           </ol>
           <p>Refresh this private page to see the provider’s latest update.</p>
+        </section>
+      )}
+      {job && job.status !== "approved" && accessToken && (
+        <section className="customer-inspection" aria-label="Job inspection">
+          <span>Job inspection</span>
+          <JobInspectionPanel requestId={job.id} token={accessToken} />
         </section>
       )}
       {job?.hasCompletionImage && (

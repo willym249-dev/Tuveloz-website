@@ -630,6 +630,28 @@ export const jobReviews = sqliteTable(
   ],
 );
 
+// A service-aware inspection checklist the accepted provider fills in on a job.
+// Items are seeded from the job's service codes but fully editable; the customer
+// sees them read-only on their request. status is 'pending' | 'good' | 'attention'.
+export const jobInspectionItems = sqliteTable(
+  "job_inspection_items",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    providerEmail: text("provider_email").notNull(),
+    label: text("label").notNull(),
+    status: text("status").notNull().default("pending"),
+    note: text("note").notNull().default(""),
+    position: integer("position").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_inspection_items_request_id_idx").on(table.requestId),
+    index("job_inspection_items_provider_email_idx").on(table.providerEmail),
+  ],
+);
+
 export const customerProfiles = sqliteTable(
   "customer_profiles",
   {
