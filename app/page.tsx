@@ -929,11 +929,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="audience-grid">
           <article className="audience-card audience-customer-card">
             <span className="audience-label">For customers</span>
-            <h3>Compare your options. Choose what works.</h3>
+            <h3>Your car. Your call.</h3>
             <p>
-              Soon you&apos;ll request the service you need, compare local providers
-              and quotes side by side, and pick what works best — no pressure, no
-              obligation. We&apos;re almost there; check the launch status anytime.
+              Soon you&apos;ll say what your car needs, get real quotes from local
+              providers side by side, and pick the one that feels right — no pressure,
+              no obligation, no runaround. We&apos;re almost there; check the launch
+              status anytime.
             </p>
             <ul>
               <li><span aria-hidden="true">✓</span> Choose from available services</li>
@@ -1091,23 +1092,24 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           {view === "request" ? (
             <h1>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
+                ? "Set up now. Be first in line when we launch."
                 : "Post it once. Compare real quotes. No pressure."}
             </h1>
           ) : (
             <h2>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Create your account now. Request service after launch."
+                ? "Set up now. Be first in line when we launch."
                 : "Post it once. Compare real quotes. No pressure."}
             </h2>
           )}
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
-                Customer requests, quotes, bookings, and payments are currently closed.
-                You can create a customer account now, and provider applications remain
-                open. After launch approval, the server will share an exact-service
-                request only with providers whose current eligibility records match it.
+                We&apos;re putting the finishing touches on the marketplace, so requests
+                and payments aren&apos;t open just yet — but you can set up your customer
+                account today and be ready the moment we launch. When you post, your
+                request goes only to providers actually approved for that exact service,
+                so you&apos;re matched with the right pro, not spammed.
               </p>
               <div className="pilot-vision">
                 <strong>Our vision</strong>
