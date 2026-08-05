@@ -1590,6 +1590,85 @@ textarea:focus {
   background: white;
 }
 
+.provider-value {
+  margin-bottom: 44px;
+}
+
+.provider-value-lead {
+  color: var(--muted);
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.55;
+  margin-top: 14px;
+  max-width: 620px;
+}
+
+.provider-value-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 34px;
+}
+
+.provider-value-pair {
+  background: linear-gradient(135deg, #0b2235, #071726);
+  border-radius: 20px;
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  padding: 26px;
+}
+
+.provider-value-pair .pain {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-bottom: 14px;
+}
+
+.provider-value-pair .pain strong {
+  color: #adbbc7;
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.provider-value-pair .pain-tag,
+.provider-value-pair .fix-tag {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.provider-value-pair .pain-tag {
+  color: #ff8a2a;
+}
+
+.provider-value-pair .fix-tag {
+  color: var(--lime);
+}
+
+.provider-value-pair .fix strong {
+  display: block;
+  font-size: 19px;
+  line-height: 1.25;
+  margin-top: 8px;
+}
+
+.provider-value-pair .fix p {
+  color: #adbbc7;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 10px 0 0;
+}
+
+@media (max-width: 720px) {
+  .provider-value-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .provider-panel {
   background: linear-gradient(135deg, #0b2235, #071726);
   border-radius: 28px;

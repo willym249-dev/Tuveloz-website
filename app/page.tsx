@@ -179,8 +179,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [reviewSummary, setReviewSummary] = useState({ average: 0, count: 0 });
   const [selectedCustomerServices, setSelectedCustomerServices] = useState<string[]>([]);
   const [, setSelectedCustomerVehicle] = useState("");
-  const [partsSource, setPartsSource] = useState(PARTS_SOURCE_OPTIONS[2]);
-  const [partsPreference, setPartsPreference] = useState("No preference");
+  const [partsSource, setPartsSource] = useState<string>(PARTS_SOURCE_OPTIONS[2]);
+  const [partsPreference, setPartsPreference] = useState<string>("No preference");
   const [selectedCustomerLocations, setSelectedCustomerLocations] = useState<string[]>([]);
   const [priceGuidance, setPriceGuidance] = useState<PriceGuidanceItem[]>([]);
   const [priceGuidanceBusy, setPriceGuidanceBusy] = useState(false);
@@ -1406,6 +1406,60 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
 
       <section className="section providers" id="providers">
+        <div className="provider-value">
+          <span className="kicker">Why providers choose Tuveloz</span>
+          <h2>Fixing the car is hard enough.</h2>
+          <p className="provider-value-lead">
+            Getting the work and getting paid shouldn&apos;t be. Here&apos;s what
+            slows most shops down — and what we do about it.
+          </p>
+          <div className="provider-value-grid">
+            <div className="provider-value-pair">
+              <div className="pain">
+                <span className="pain-tag">The usual</span>
+                <strong>Apps skim a cut off every job.</strong>
+              </div>
+              <div className="fix">
+                <span className="fix-tag">On Tuveloz</span>
+                <strong>Keep 100% of your price.</strong>
+                <p>You set the price and keep all of it. The 5% service fee is the customer&apos;s, never yours.</p>
+              </div>
+            </div>
+            <div className="provider-value-pair">
+              <div className="pain">
+                <span className="pain-tag">The usual</span>
+                <strong>Signing up ties your hands.</strong>
+              </div>
+              <div className="fix">
+                <span className="fix-tag">On Tuveloz</span>
+                <strong>Free, and never exclusive.</strong>
+                <p>No subscription, no listing fee, no minimums. Keep working every other platform you&apos;re on.</p>
+              </div>
+            </div>
+            <div className="provider-value-pair">
+              <div className="pain">
+                <span className="pain-tag">The usual</span>
+                <strong>A pile of paperwork before job one.</strong>
+              </div>
+              <div className="fix">
+                <span className="fix-tag">On Tuveloz</span>
+                <strong>Only what your work requires.</strong>
+                <p>Pick your services and we show the exact documents each one legally needs — nothing extra.</p>
+              </div>
+            </div>
+            <div className="provider-value-pair">
+              <div className="pain">
+                <span className="pain-tag">The usual</span>
+                <strong>Slow days waiting on the phone.</strong>
+              </div>
+              <div className="fix">
+                <span className="fix-tag">On Tuveloz</span>
+                <strong>Local customers come to you.</strong>
+                <p>Nearby vehicle owners post what they need. You choose the jobs that fit and skip the rest.</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
             <span className="kicker light">For providers</span>
