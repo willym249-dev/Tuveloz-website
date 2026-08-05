@@ -57,7 +57,10 @@ export default function WelcomePage() {
             Tuveloz is an online marketplace. Independent providers—not Tuveloz—perform the vehicle services.
           </p>
         </section>
-        <FollowAlong source={isProvider ? "welcome_provider" : "welcome_customer"} />
+        <FollowAlong
+          source={isProvider ? "welcome_provider" : "welcome_customer"}
+          email={!isProvider}
+        />
       </section>
     </main>
   );

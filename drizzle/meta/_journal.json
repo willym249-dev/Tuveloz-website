@@ -365,6 +365,13 @@
       "when": 1785958277342,
       "tag": "0051_founding_provider_cohort",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "6",
+      "when": 1785959170530,
+      "tag": "0052_launch_update_subscribers",
+      "breakpoints": true
     }
   ]
 }

@@ -4,7 +4,17 @@ export type EmailEventClassification =
   | { kind: "protective"; category: string }
   | { kind: "isolated_test"; category: "isolated_test" }
   | { kind: "transaction"; category: string; action: MarketplaceAction }
+  // Consented marketing. Unlike protective mail it is never sent because the
+  // system needs to reach someone, and unlike transaction mail it is not gated
+  // on marketplace release state — it is gated on the recipient still being
+  // subscribed, which is re-checked at delivery rather than trusted from queue
+  // time. See lib/launch-updates.ts.
+  | { kind: "marketing"; category: "launch_updates" }
   | { kind: "quarantine"; category: "unknown" };
+
+export const MARKETING_EMAIL_EVENT_SQL_PATTERNS = [
+  "launch-updates:%",
+] as const;
 
 export const PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS = [
   "security:%",
@@ -177,6 +187,9 @@ export function classifyEmailEvent(rawEventKey: string): EmailEventClassificatio
   if (!eventKey) return { kind: "quarantine", category: "unknown" };
   if (eventKey.startsWith("test:") || eventKey.startsWith("marketplace:test:")) {
     return { kind: "isolated_test", category: "isolated_test" };
+  }
+  if (eventKey.startsWith("launch-updates:")) {
+    return { kind: "marketing", category: "launch_updates" };
   }
   if (startsWithAny(eventKey, DIRECT_PROTECTIVE_PREFIXES)) {
     return { kind: "protective", category: "account_or_protective" };

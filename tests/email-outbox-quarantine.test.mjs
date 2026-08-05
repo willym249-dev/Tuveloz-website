@@ -99,15 +99,23 @@ test("unknown outbox events fail closed and delivery checks happen before attemp
     assert.equal(emailEventAllowedByReleaseState(eventKey, true), false, eventKey);
   }
 
+  // Matched on the call and its early return rather than one exact line, so
+  // adding an argument does not fail a check that is really about ordering.
   const deliveryGate = emailNotifications.indexOf(
-    "if (!(await emailEventDeliveryIsAllowed(notification.eventKey))) return;",
+    "if (!(await emailEventDeliveryIsAllowed(",
   );
   const attemptIncrement = emailNotifications.indexOf(
     "const attempts = notification.attempts + 1;",
   );
   assert.ok(deliveryGate >= 0 && deliveryGate < attemptIncrement);
+  assert.match(
+    emailNotifications.slice(deliveryGate, attemptIncrement),
+    /\)\)\) return;/,
+    "the gate must return early, not fall through",
+  );
   assert.match(emailNotifications, /PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS/);
   assert.match(emailNotifications, /TRANSACTION_EMAIL_EVENT_SQL_PATTERNS/);
+  assert.match(emailNotifications, /MARKETING_EMAIL_EVENT_SQL_PATTERNS/);
   assert.match(emailNotifications, /CUSTOMER_JOB_POSTING_PAUSED/);
   assert.match(emailNotifications, /runtimeMarketplaceActionAllowed/);
 });

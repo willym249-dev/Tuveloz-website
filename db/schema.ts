@@ -754,6 +754,43 @@ export const emailNotificationOutbox = sqliteTable(
   ],
 );
 
+/**
+ * Pre-launch email list. Separate from every operational address the site
+ * already holds, because consent to be emailed marketing is a different thing
+ * from having applied or created an account — an applicant expects operational
+ * mail about their application, not launch announcements.
+ *
+ * The consent text and version are stored verbatim alongside the timestamp, so
+ * what someone actually agreed to can be produced later rather than inferred
+ * from whatever the form says today.
+ */
+export const launchUpdateSubscribers = sqliteTable(
+  "launch_update_subscribers",
+  {
+    // Normalized (trimmed, lowercased) email is the identity, so re-subscribing
+    // updates one row instead of creating duplicates that would double-send.
+    email: text("email").primaryKey(),
+    source: text("source").notNull().default(""),
+    language: text("language").notNull().default("en"),
+    consentText: text("consent_text").notNull().default(""),
+    consentVersion: text("consent_version").notNull().default(""),
+    consentedAt: text("consented_at").notNull().default(""),
+    // Unsubscribing keeps the row: an empty unsubscribedAt means subscribed.
+    // Deleting would let a later re-import silently resurrect the address.
+    unsubscribedAt: text("unsubscribed_at").notNull().default(""),
+    unsubscribeToken: text("unsubscribe_token").notNull(),
+    // Highest sequence step already queued for this subscriber. Steps only
+    // ever move forward, so a re-run of the cron cannot re-send a step.
+    lastStepSent: integer("last_step_sent").notNull().default(-1),
+    lastStepSentAt: text("last_step_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("launch_update_subscribers_token_unique").on(table.unsubscribeToken),
+    index("launch_update_subscribers_step_idx").on(table.unsubscribedAt, table.lastStepSent),
+  ],
+);
+
 export const providerPathwayProfiles = sqliteTable(
   "provider_pathway_profiles",
   {

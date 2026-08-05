@@ -1893,10 +1893,95 @@ footer > p {
   border-color: #3b281d;
 }
 
+.follow-along-email {
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-top: 16px;
+  width: 100%;
+}
+
+.launch-updates-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.launch-updates-email {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.launch-updates-email > span {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.launch-updates-email input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.launch-updates-consent {
+  align-items: flex-start;
+  display: flex;
+  font-size: 12px;
+  font-weight: 400;
+  gap: 9px;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+/* The global `input` rule is display:block/width:100%, which stretches a
+   checkbox across the row and pushes its label out of the block. Everything
+   here is undoing that for this one control. */
+.launch-updates-consent input[type="checkbox"] {
+  accent-color: var(--orange, #ff6a00);
+  align-self: flex-start;
+  border-radius: 3px;
+  display: inline-block;
+  flex: none;
+  height: 15px;
+  margin: 3px 0 0;
+  padding: 0;
+  width: 15px;
+}
+
+.launch-updates-consent > span {
+  color: #b8c7d4;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.follow-along-panel .launch-updates-consent > span {
+  color: #b3a79d;
+}
+
+.launch-updates-form .button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.launch-updates-done {
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
 @media (max-width: 560px) {
   .follow-along {
     justify-content: center;
     text-align: center;
+  }
+
+  .launch-updates-consent {
+    text-align: left;
   }
 }
 

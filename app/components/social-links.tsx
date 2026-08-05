@@ -1,5 +1,6 @@
 import type { SVGProps } from "react";
 import { track } from "../../lib/analytics";
+import { LaunchUpdatesForm } from "./launch-updates-form";
 
 type SocialPlatform = "facebook" | "instagram" | "x" | "tiktok" | "google";
 
@@ -74,11 +75,14 @@ export function FollowAlong({
   source,
   spanish = false,
   tone = "shell",
+  email = false,
 }: {
   source: string;
   spanish?: boolean;
   /** "shell" = navy account pages, "panel" = warm dark form cards. */
   tone?: "shell" | "panel";
+  /** Also offer the email list. Social is rented reach; the list is owned. */
+  email?: boolean;
 }) {
   return (
     <aside className={`follow-along follow-along-${tone}`}>
@@ -91,6 +95,11 @@ export function FollowAlong({
         </p>
       </div>
       <SocialLinks source={source} />
+      {email && (
+        <div className="follow-along-email">
+          <LaunchUpdatesForm source={source} spanish={spanish} />
+        </div>
+      )}
     </aside>
   );
 }
