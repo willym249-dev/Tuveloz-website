@@ -30,6 +30,11 @@ test("an expired document is the one case auto-dispatched — and only as a corr
   assert.equal(result.autoDispatch.status, "needs_correction");
   assert.equal(result.autoDispatch.reasonCode, "expired_or_invalid_date");
   assert.ok(result.autoDispatch.note.length > 0);
+  // The stored, provider-facing note is not re-localized on display, so it must
+  // carry both English and Spanish for TUVELOZ's bilingual providers.
+  assert.match(result.autoDispatch.note, /upload a current document/i);
+  assert.match(result.autoDispatch.note, /Español:/);
+  assert.match(result.autoDispatch.note, /documento vigente/i);
 });
 
 test("a required-but-missing expiration date is auto-corrected too", () => {

@@ -59,10 +59,16 @@ export type EvidencePrescreenFacts = {
   scanStatus: string;
 };
 
+// This note is stored verbatim as the provider-facing reason and is not
+// re-localized when displayed, so it is written bilingually (English + Spanish)
+// to match TUVELOZ's English/Spanish audience.
 const EXPIRED_NOTE =
   "This document is missing a valid expiration date or is not current through "
   + "today, so it cannot be accepted as-is. Please upload a current document "
-  + "that has not expired and we will review it.";
+  + "that has not expired and we will review it."
+  + "\n\nEspañol: Este documento no tiene una fecha de vencimiento válida o no "
+  + "está vigente hasta hoy, por lo que no se puede aceptar tal como está. Suba "
+  + "un documento vigente que no haya vencido y lo revisaremos.";
 
 export function prescreenEvidence(
   facts: EvidencePrescreenFacts,
