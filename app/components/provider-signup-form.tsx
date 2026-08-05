@@ -48,33 +48,174 @@ const PROVIDER_REVIEW_SERVICES = SERVICES.filter(
   (service) => service.code !== "general_auto_repair",
 );
 
+/**
+ * The provisional starter tier is a single approval level, but eleven jobs is a
+ * lot to scan at once, so it's shown as three everyday sub-groups. The split is
+ * purely visual: every code below shares the provisional_independent level, so
+ * the "one tier per application" lock still treats them as interchangeable.
+ */
+const ROADSIDE_HELP_CODES: readonly ServiceCode[] = [
+  "provisional_12v_jump_start",
+  "provisional_12v_battery_replacement",
+  "provisional_temporary_spare_install",
+];
+const QUICK_FIX_CODES: readonly ServiceCode[] = [
+  "provisional_wiper_blade_replacement",
+  "provisional_engine_or_cabin_air_filter",
+  "provisional_conventional_bulb_replacement",
+  "provisional_fluid_topoff_limited",
+];
+const CHECK_AND_CLEAN_CODES: readonly ServiceCode[] = [
+  "photo_documentation_only",
+  "provisional_visual_observation_report",
+  "provisional_obd_read_only",
+  "provisional_basic_detailing",
+];
+
 const PROVIDER_REVIEW_SERVICE_GROUPS = [
   {
-    id: "limited",
-    label: "Getting started — basic services",
-    description: "The simplest services to start with.",
+    id: "roadside",
+    label: "Roadside help (stuck on the road)",
+    labelEs: "Ayuda en la carretera (varado en el camino)",
+    description: "When someone's stuck — a jump, a battery, or the spare.",
+    descriptionEs: "Cuando alguien está varado — corriente, batería o la llanta de repuesto.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
-      service.allowedProviderLevels.includes("sponsored_trainee")
-      || service.allowedProviderLevels.includes("provisional_independent")
+      ROADSIDE_HELP_CODES.includes(service.code)
+    )),
+  },
+  {
+    id: "quick_fixes",
+    label: "Quick fixes",
+    labelEs: "Arreglos rápidos",
+    description: "Simple swaps like wipers, a filter, a bulb, or topping off fluids.",
+    descriptionEs: "Cambios sencillos como plumillas, un filtro, un foco o rellenar líquidos.",
+    services: PROVIDER_REVIEW_SERVICES.filter((service) => (
+      QUICK_FIX_CODES.includes(service.code)
+    )),
+  },
+  {
+    id: "check_clean",
+    label: "Check & clean (no repairs)",
+    labelEs: "Revisar y limpiar (sin reparaciones)",
+    description: "Photos, a look-over, reading a warning light, or interior cleaning.",
+    descriptionEs: "Fotos, una revisión, leer una luz de advertencia o limpieza interior.",
+    services: PROVIDER_REVIEW_SERVICES.filter((service) => (
+      CHECK_AND_CLEAN_CODES.includes(service.code)
     )),
   },
   {
     id: "standard",
-    label: "Standard services",
-    description: "Requires a registered provider business with matching coverage.",
+    label: "Everyday repair jobs",
+    labelEs: "Trabajos de reparación comunes",
+    description: "Bigger jobs like new tires, a battery, or a car wash.",
+    descriptionEs: "Trabajos más grandes como llantas nuevas, batería o lavado de carro.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("standard_provider")
     )),
   },
   {
     id: "specialty",
-    label: "Specialty services",
-    description: "Requires the listed licenses, permits, and approvals.",
+    label: "Special jobs",
+    labelEs: "Trabajos especiales",
+    description: "Jobs that need extra licenses or permits — like towing, window tint, or A/C.",
+    descriptionEs: "Trabajos que necesitan licencias o permisos adicionales — como remolque, polarizado o aire acondicionado.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("specialty_provider")
     )),
   },
 ] as const;
+
+/**
+ * Everyday, plain-language names for the signup service picker. The policy
+ * catalog keeps the exact legal label of record (shown in the "What's included"
+ * detail and used everywhere the requirement engine runs); applicants choosing
+ * services just see the ordinary name for the job. Any service without an entry
+ * here falls back to its catalog label.
+ */
+const PROVIDER_SERVICE_PLAIN_LABELS: Partial<
+  Record<ServiceCode, { en: string; es: string }>
+> = {
+  photo_documentation_only: { en: "Take photos of a car", es: "Tomar fotos de un carro" },
+  provisional_visual_observation_report: {
+    en: "Look over a car and note what you see",
+    es: "Revisar un carro y anotar lo que se ve",
+  },
+  provisional_obd_read_only: {
+    en: "Read the check-engine light",
+    es: "Leer la luz de check engine",
+  },
+  provisional_wiper_blade_replacement: {
+    en: "Change wiper blades",
+    es: "Cambiar las plumillas del limpiaparabrisas",
+  },
+  provisional_engine_or_cabin_air_filter: {
+    en: "Change an air filter",
+    es: "Cambiar un filtro de aire",
+  },
+  provisional_conventional_bulb_replacement: {
+    en: "Change a light bulb",
+    es: "Cambiar un foco",
+  },
+  provisional_fluid_topoff_limited: { en: "Top off fluids", es: "Rellenar líquidos" },
+  provisional_12v_jump_start: {
+    en: "Jump-start a dead battery",
+    es: "Dar corriente a una batería descargada",
+  },
+  provisional_12v_battery_replacement: {
+    en: "Change a car battery (simple starter job)",
+    es: "Cambiar la batería del carro (trabajo sencillo para empezar)",
+  },
+  provisional_temporary_spare_install: {
+    en: "Put on the spare tire",
+    es: "Poner la llanta de repuesto",
+  },
+  provisional_basic_detailing: {
+    en: "Clean the inside of a car",
+    es: "Limpiar el interior de un carro",
+  },
+  battery_replacement: {
+    en: "Change a car battery (full repair service)",
+    es: "Cambiar la batería del carro (servicio completo de reparación)",
+  },
+  tire_repair_or_installation: {
+    en: "Fix or put on tires",
+    es: "Reparar o poner llantas",
+  },
+  basic_vehicle_diagnostics: {
+    en: "Find out what's wrong with a car",
+    es: "Averiguar qué le pasa a un carro",
+  },
+  mobile_car_wash: { en: "Wash a car", es: "Lavar un carro" },
+  motor_vehicle_ac_service: {
+    en: "Fix the car's air conditioning",
+    es: "Arreglar el aire acondicionado del carro",
+  },
+  body_paint_refinishing: {
+    en: "Fix dents and repaint",
+    es: "Arreglar golpes y pintar",
+  },
+  window_tint_installation: {
+    en: "Put tint on the windows",
+    es: "Poner polarizado en las ventanas",
+  },
+  towing_or_storage: { en: "Tow or store a car", es: "Remolcar o guardar un carro" },
+  vehicle_lockout: {
+    en: "Unlock a car (keys locked inside)",
+    es: "Abrir un carro con las llaves adentro",
+  },
+  official_vehicle_inspection: {
+    en: "Official state inspection",
+    es: "Inspección oficial del estado",
+  },
+  fuel_delivery: {
+    en: "Bring gas to a stranded car",
+    es: "Llevar gasolina a un carro varado",
+  },
+  ev_high_voltage_service: {
+    en: "Work on an electric car's battery",
+    es: "Trabajar en la batería de un carro eléctrico",
+  },
+};
 
 /**
  * Strip the internal "Provisional " policy prefix for display. The policy
@@ -84,6 +225,20 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
 function serviceDisplayLabel(label: string) {
   const plain = label.replace(/^Provisional /, "");
   return plain.charAt(0).toUpperCase() + plain.slice(1);
+}
+
+/**
+ * Everyday name for a service, in the applicant's language, falling back to the
+ * cleaned-up catalog label when no plain-language entry exists.
+ */
+function providerServicePlainLabel(
+  code: ServiceCode,
+  fallbackLabel: string,
+  isSpanish: boolean,
+) {
+  const plain = PROVIDER_SERVICE_PLAIN_LABELS[code];
+  if (plain) return isSpanish ? plain.es : plain.en;
+  return serviceDisplayLabel(fallbackLabel);
 }
 
 function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
@@ -658,15 +813,21 @@ export function ProviderSignupForm() {
                 return (
                   <details
                     className="service-group"
-                    open={group.id === "limited" ? true : undefined}
+                    open={selectedCount > 0 ? true : undefined}
                     key={group.id}
                   >
                     <summary>
                       <span>
-                        <strong>{group.label}</strong>
-                        <small>{group.description}</small>
+                        <strong>{providerFormIsSpanish ? group.labelEs : group.label}</strong>
+                        <small>{providerFormIsSpanish ? group.descriptionEs : group.description}</small>
                       </span>
-                      <b>{selectedCount ? `${selectedCount} selected` : "View"}</b>
+                      <b>
+                        {selectedCount
+                          ? providerFormIsSpanish
+                            ? `${selectedCount} elegidos`
+                            : `${selectedCount} selected`
+                          : providerFormIsSpanish ? "Ver" : "View"}
+                      </b>
                     </summary>
                     <div className="service-options">
                       {groupServices.map((service) => {
@@ -690,7 +851,13 @@ export function ProviderSignupForm() {
                                 }}
                               />
                               <span>
-                                <strong>{serviceDisplayLabel(service.label)}</strong>
+                                <strong>
+                                  {providerServicePlainLabel(
+                                    service.code,
+                                    service.label,
+                                    providerFormIsSpanish,
+                                  )}
+                                </strong>
                               </span>
                             </label>
                             <details className="service-scope">
@@ -717,8 +884,9 @@ export function ProviderSignupForm() {
               </p>
             )}
             <small className="customer-service-note">
-              &ldquo;General auto repair&rdquo; is too broad to select — pick the exact services you
-              offer instead.
+              {providerFormIsSpanish
+                ? "No hay una opción de “reparación general” a propósito — solo elija los trabajos exactos que hace."
+                : "There's no all-in-one “general repair” choice on purpose — just pick the exact jobs you do."}
             </small>
           </fieldset>
           {providerLevel !== "provisional_independent" && (
@@ -745,7 +913,9 @@ export function ProviderSignupForm() {
               </p>
               {requiredDocumentsBySelection.map((entry) => (
                 <div key={entry.code} className="legal-requirement-note">
-                  <strong>{serviceDisplayLabel(entry.label)}</strong>
+                  <strong>
+                    {providerServicePlainLabel(entry.code, entry.label, providerFormIsSpanish)}
+                  </strong>
                   {entry.documents.map((doc) => (
                     <small key={doc.code}>
                       {doc.label}
