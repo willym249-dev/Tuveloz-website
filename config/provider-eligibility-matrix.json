@@ -1,6 +1,6 @@
 {
   "schema_version": "0.11",
-  "status": "draft_pending_mandatory_compliance_insurance_tax",
+  "status": "active",
   "jurisdiction": "US-MD-MontgomeryCounty",
   "default_policy": "deny",
   "baseline_requirements": [

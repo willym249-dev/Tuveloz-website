@@ -162,7 +162,10 @@ function assertProviderPolicyMatrix(
 ): asserts value is ProviderPolicyMatrix {
   if (!isRecord(value)) throw new Error("Provider policy matrix must be an object.");
   if (value.schema_version !== "0.11") throw new Error("Unexpected provider policy version.");
-  if (value.status !== "draft_pending_mandatory_compliance_insurance_tax") throw new Error("Unexpected provider policy status.");
+  if (
+    value.status !== "draft_pending_mandatory_compliance_insurance_tax"
+    && value.status !== "active"
+  ) throw new Error("Unexpected provider policy status.");
   if (value.jurisdiction !== "US-MD-MontgomeryCounty") throw new Error("Unexpected provider policy jurisdiction.");
   if (value.default_policy !== "deny") throw new Error("Provider policy must default to deny.");
 

@@ -8,7 +8,7 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
   const matrix = JSON.parse(await read("../config/provider-eligibility-matrix.json"));
   const services = Object.entries(matrix.services);
   assert.equal(matrix.schema_version, "0.11");
-  assert.equal(matrix.status, "draft_pending_mandatory_compliance_insurance_tax");
+  assert.equal(matrix.status, "active");
   assert.equal(matrix.default_policy, "deny");
   assert.equal(matrix.jurisdiction, "US-MD-MontgomeryCounty");
   assert.equal(services.length, 25);
