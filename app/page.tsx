@@ -14,6 +14,7 @@ import {
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { SERVICE_CODES } from "../lib/provider-policy";
 import { track } from "../lib/analytics";
+import { getVariant } from "../lib/experiments";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
@@ -300,6 +301,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     "checking" | "signed-out" | "customer" | "provider"
   >("checking");
   const [headerAccountDestination, setHeaderAccountDestination] = useState("");
+  // Control ("A") on first render so server and client match; the real assigned
+  // variant is set after mount in the provider-view effect below.
+  const [heroVariant, setHeroVariant] = useState("A");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -340,7 +344,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   );
 
   useEffect(() => {
-    if (view === "provider") track("provider_signup_started");
+    if (view === "provider") {
+      const variant = getVariant("provider_hero");
+      // Defer out of the effect's synchronous phase so it doesn't cascade
+      // renders; the assigned variant is stable for the whole session.
+      queueMicrotask(() => setHeroVariant(variant));
+      track("provider_signup_started", { experiment: "provider_hero", variant });
+    }
     if (view === "request") track("customer_request_started");
   }, [view]);
 
@@ -736,7 +746,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 Now onboarding · Montgomery County
               </div>
               <h1>
-                Your wrench. Your rules.
+                {heroVariant === "B" ? "Do great work. Get paid." : "Your wrench. Your rules."}
                 <br />
                 <span className="hero-value-line">
                   We handle the rest.

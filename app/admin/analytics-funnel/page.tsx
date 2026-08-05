@@ -14,6 +14,13 @@ type FunnelStage = {
   droppedFromPrev: number;
 };
 
+type HeroExperimentRow = {
+  variant: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
 type WindowPayload = {
   provider: FunnelStage[];
   customer: FunnelStage[];
@@ -22,8 +29,78 @@ type WindowPayload = {
     requirementsStepAbandoned: number;
     providerFirstQuoteSent: number;
   };
+  heroExperiment: HeroExperimentRow[];
   rawCounts: Array<{ event: string; count: number }>;
 };
+
+// Keep these labels in sync with the copy rendered for each variant in
+// app/page.tsx (the provider hero headline).
+const HERO_VARIANT_LABEL: Record<string, string> = {
+  A: "“Your wrench. Your rules.”",
+  B: "“Do great work. Get paid.”",
+};
+
+function HeroExperiment({ rows }: { rows: HeroExperimentRow[] }) {
+  const totalStarted = rows.reduce((sum, row) => sum + row.started, 0);
+  const leader = rows.reduce<HeroExperimentRow | null>((best, row) => {
+    if (row.started === 0) return best;
+    if (!best || row.conversion > best.conversion) return row;
+    return best;
+  }, null);
+  const enoughData = totalStarted >= 100 && rows.every((row) => row.started >= 30);
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Hero copy experiment</h2>
+      <p className="hint" style={{ margin: "0 0 0.75rem", fontSize: "0.82rem" }}>
+        Which provider-hero headline turns visitors into submitted applications. Real,
+        first-party conversion — no guesswork.
+      </p>
+      {totalStarted === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>No hero visits recorded in this window yet.</p>
+      ) : (
+        <>
+          <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 560 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0", opacity: 0.7 }}>Variant</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Visitors</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Submitted</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Conversion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const isLeader = enoughData && leader?.variant === row.variant;
+                return (
+                  <tr key={row.variant}>
+                    <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
+                      <strong>{row.variant}</strong> {HERO_VARIANT_LABEL[row.variant] ?? ""}
+                      {isLeader && <span style={{ marginLeft: "0.4rem" }}>★ leading</span>}
+                    </td>
+                    <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                      {row.started}
+                    </td>
+                    <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                      {row.submitted}
+                    </td>
+                    <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                      {row.conversion}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="hint" style={{ margin: "0.5rem 0 0", fontSize: "0.78rem" }}>
+            {enoughData
+              ? "Enough data to read a direction — but confirm the gap holds before you commit."
+              : "Small sample so far. Wait for at least ~30 visitors per variant before trusting the winner."}
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
 
 type FunnelResponse = {
   error?: string;
@@ -187,6 +264,8 @@ export default function AnalyticsFunnelPage() {
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />
+
+          <HeroExperiment rows={active.heroExperiment} />
 
           <p className="hint" style={{ marginTop: "0.75rem" }}>
             Requirements step (only shown for services that need proof or legal documents):{" "}

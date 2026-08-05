@@ -1,4 +1,4 @@
-import { count, gte } from "drizzle-orm";
+import { and, count, gte, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import { analyticsEvents } from "../../../../db/schema";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
@@ -96,7 +96,55 @@ async function countsSince(sinceValue: string | null): Promise<Map<string, numbe
   return map;
 }
 
-function windowPayload(counts: Map<string, number>) {
+type HeroExperimentRow = {
+  variant: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
+// Real conversion per hero-copy variant, so wording is judged by data, not
+// taste. Reads the `variant` prop that lib/experiments.ts stamps onto the
+// provider start/submit events. Rows without a valid A/B variant (legacy
+// events) are ignored rather than lumped into a misleading bucket.
+async function heroExperimentSince(sinceValue: string | null): Promise<HeroExperimentRow[]> {
+  const db = getDb();
+  const events = ["provider_signup_started", "provider_signup_completed"];
+  const eventFilter = inArray(analyticsEvents.event, events);
+  const rows = await db
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const tally = new Map<string, { started: number; submitted: number }>();
+  for (const row of rows) {
+    let variant = "";
+    try {
+      const props = JSON.parse(row.props ?? "{}") as { experiment?: unknown; variant?: unknown };
+      if (props.experiment === "provider_hero" && typeof props.variant === "string") {
+        variant = props.variant;
+      }
+    } catch {
+      // Malformed props — skip this row rather than guess.
+    }
+    if (variant !== "A" && variant !== "B") continue;
+    const bucket = tally.get(variant) ?? { started: 0, submitted: 0 };
+    if (row.event === "provider_signup_started") bucket.started += 1;
+    else bucket.submitted += 1;
+    tally.set(variant, bucket);
+  }
+
+  return [...tally.entries()]
+    .map(([variant, value]) => ({
+      variant,
+      started: value.started,
+      submitted: value.submitted,
+      conversion: pct(value.submitted, value.started),
+    }))
+    .sort((a, b) => a.variant.localeCompare(b.variant));
+}
+
+function windowPayload(counts: Map<string, number>, heroExperiment: HeroExperimentRow[]) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -106,6 +154,7 @@ function windowPayload(counts: Map<string, number>) {
       requirementsStepAbandoned: counts.get("provider_step2_abandoned") ?? 0,
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
+    heroExperiment,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -127,19 +176,24 @@ export async function GET(request: Request) {
 
   try {
     const now = Date.now();
-    const [allTime, last30, last7] = await Promise.all([
+    const since30 = threshold(30, now);
+    const since7 = threshold(7, now);
+    const [allTime, last30, last7, expAll, exp30, exp7] = await Promise.all([
       countsSince(null),
-      countsSince(threshold(30, now)),
-      countsSince(threshold(7, now)),
+      countsSince(since30),
+      countsSince(since7),
+      heroExperimentSince(null),
+      heroExperimentSince(since30),
+      heroExperimentSince(since7),
     ]);
     return Response.json(
       {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime),
-          last30: windowPayload(last30),
-          last7: windowPayload(last7),
+          allTime: windowPayload(allTime, expAll),
+          last30: windowPayload(last30, exp30),
+          last7: windowPayload(last7, exp7),
         },
       },
       { headers: { "cache-control": "no-store" } },

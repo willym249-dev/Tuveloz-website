@@ -31,6 +31,7 @@ import {
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
 import { track } from "../../lib/analytics";
+import { getVariant } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
@@ -599,7 +600,10 @@ export function ProviderSignupForm() {
         setLegalConfirmed(false);
         setStep(1);
         setApplicationSent(true);
-        track("provider_signup_completed");
+        track("provider_signup_completed", {
+          experiment: "provider_hero",
+          variant: getVariant("provider_hero"),
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Please try again.";
         setApplicationError(message);
