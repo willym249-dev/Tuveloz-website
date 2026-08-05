@@ -3,11 +3,11 @@
 -- cohort (never charged a provider membership fee), 1..10 are additionally
 -- spotlight-eligible. 0 means not in the cohort.
 --
--- Hand-written rather than drizzle-generated: snapshots 0048-0050 were also
+-- Hand-written rather than drizzle-generated: snapshots 0048-0051 were also
 -- hand-written and are absent from drizzle's metadata, so `drizzle-kit
 -- generate` re-emits those migrations. Only the two new columns and their
--- index belong here. The accompanying 0051 snapshot DOES capture the full
--- current schema, which clears that drift for future generates.
+-- index belong here. The snapshot drift past 0047 is left as-is; regenerating
+-- it here would have shipped a snapshot predating the 0051 phone tables.
 ALTER TABLE `provider_applications`
   ADD `founding_rank` integer NOT NULL DEFAULT 0;
 --> statement-breakpoint

@@ -133,7 +133,7 @@ function secret() {
   return value;
 }
 
-function randomDigits() {
+export function randomDigits() {
   const values = new Uint32Array(1);
   crypto.getRandomValues(values);
   return String(values[0] % 1_000_000).padStart(6, "0");
@@ -212,7 +212,7 @@ async function createPasswordHash(password: string) {
   };
 }
 
-async function hmacHex(value: string) {
+export async function hmacHex(value: string) {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret()),
@@ -230,7 +230,7 @@ async function hmacHex(value: string) {
     .join("");
 }
 
-function constantTimeEqual(left: string, right: string) {
+export function constantTimeEqual(left: string, right: string) {
   if (left.length !== right.length) return false;
   let mismatch = 0;
   for (let index = 0; index < left.length; index += 1) {
@@ -239,7 +239,7 @@ function constantTimeEqual(left: string, right: string) {
   return mismatch === 0;
 }
 
-function parseStoredDate(value: string) {
+export function parseStoredDate(value: string) {
   const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
     ? `${value.replace(" ", "T")}Z`
     : value;
@@ -873,6 +873,63 @@ export async function signInWithPassword(
     return { ok: false as const, rateLimited: true as const };
   }
   return { ok: true as const, challengeRequired: true as const };
+}
+
+export async function accountHasPassword(email: string) {
+  const [credential] = await getDb().select({ email: accountCredentials.email })
+    .from(accountCredentials)
+    .where(eq(accountCredentials.email, email))
+    .limit(1);
+  return Boolean(credential);
+}
+
+/**
+ * Step-up re-authentication for an already-signed-in session (for example,
+ * before adding or changing a phone number). It confirms the account password
+ * without opening a new email challenge and enforces the same lockout as
+ * signInWithPassword: each wrong guess increments failedAttempts and, at
+ * PASSWORD_LOGIN_MAX_ATTEMPTS, locks the account for PASSWORD_LOCKOUT_MS — so
+ * this endpoint cannot be used as an unthrottled password oracle. It never
+ * grants a session on its own.
+ */
+export async function accountPasswordMatches(email: string, password: string) {
+  const [credential] = await getDb().select().from(accountCredentials)
+    .where(eq(accountCredentials.email, email))
+    .limit(1);
+  const storedSalt = credential?.passwordSalt ?? DUMMY_PASSWORD_SALT;
+  const storedIterations = credential?.passwordIterations ?? PASSWORD_HASH_ITERATIONS;
+  const suppliedHash = await derivePasswordHash(password, storedSalt, storedIterations);
+  const lockExpiresAt = credential?.lockedUntil
+    ? parseStoredDate(credential.lockedUntil)
+    : 0;
+  const currentlyLocked = lockExpiresAt > Date.now();
+  const passwordMatches = Boolean(
+    credential && constantTimeEqual(credential.passwordHash, suppliedHash),
+  );
+
+  if (!credential || currentlyLocked || !passwordMatches) {
+    if (credential && !currentlyLocked && !passwordMatches) {
+      const previousAttempts = lockExpiresAt > 0 ? 0 : credential.failedAttempts;
+      const failedAttempts = previousAttempts + 1;
+      await getDb().update(accountCredentials).set({
+        failedAttempts: failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS ? 0 : failedAttempts,
+        lockedUntil: failedAttempts >= PASSWORD_LOGIN_MAX_ATTEMPTS
+          ? new Date(Date.now() + PASSWORD_LOCKOUT_MS).toISOString()
+          : "",
+        updatedAt: new Date().toISOString(),
+      }).where(eq(accountCredentials.email, email));
+    }
+    return false;
+  }
+
+  if (credential.failedAttempts > 0 || credential.lockedUntil) {
+    await getDb().update(accountCredentials).set({
+      failedAttempts: 0,
+      lockedUntil: "",
+      updatedAt: new Date().toISOString(),
+    }).where(eq(accountCredentials.email, email));
+  }
+  return true;
 }
 
 export async function verifyPasswordSignIn(

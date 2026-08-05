@@ -8368,6 +8368,23 @@ footer > p,
   margin: 0;
 }
 
+.account-owner-access {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  max-width: 620px;
+  text-align: center;
+}
+
+.account-owner-access p {
+  color: #8ea0af;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .account-customer-grid .account-card {
   min-height: 390px;
 }

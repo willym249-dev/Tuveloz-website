@@ -16,7 +16,7 @@ import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
 type Role = "customer" | "provider";
-type AuthMode = "signin" | "create" | "reset" | "code";
+type AuthMode = "signin" | "create" | "reset" | "code" | "phone";
 type PasswordPurpose = "create" | "reset";
 
 const PASSWORD_MIN_LENGTH = 10;
@@ -36,6 +36,9 @@ export default function AccountPage() {
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [code, setCode] = useState("");
   const [codeRequested, setCodeRequested] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [phoneCodeRequested, setPhoneCodeRequested] = useState(false);
+  const [phoneConsent, setPhoneConsent] = useState(false);
   const [passwordChallengeRequested, setPasswordChallengeRequested] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
@@ -90,6 +93,8 @@ export default function AccountPage() {
     setCode("");
     setCodeRequested(false);
     setPasswordChallengeRequested(false);
+    setPhoneCodeRequested(false);
+    setPhoneConsent(false);
     setMessage("");
     setError("");
   }
@@ -343,6 +348,65 @@ export default function AccountPage() {
     }
   }
 
+  async function requestPhoneSignInCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!phoneConsent) {
+      setError("Agree to receive an authentication text to continue.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch("/api/auth/phone/request-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const result = (await response.json()) as {
+        error?: string;
+        message?: string;
+      };
+      if (!response.ok) {
+        setError(result.error || "Unable to send a sign-in code.");
+        return;
+      }
+      setPhoneCodeRequested(true);
+      setCode("");
+      setMessage(result.message || "If that number can sign in, check your texts for a code.");
+    } catch {
+      setError("Text sign-in is temporarily unavailable. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyPhoneSignInCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/phone/verify-code", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone, role, code }),
+      });
+      const result = (await response.json()) as {
+        destination?: string;
+        error?: string;
+      };
+      if (!response.ok || !result.destination) {
+        setError(result.error || "Unable to verify this code.");
+        return;
+      }
+      window.location.replace(destinationAfterSignIn(result.destination));
+    } catch {
+      setError("Text sign-in is temporarily unavailable. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function signInWithPasskey() {
     setBusy(true);
     setError("");
@@ -535,9 +599,11 @@ export default function AccountPage() {
                 ? "Reset your password."
                 : mode === "code"
                   ? "Use an email code."
-                  : role === "customer"
-                    ? "Sign in as a customer"
-                    : "Sign in as a provider"}
+                  : mode === "phone"
+                    ? "Sign in with your phone."
+                    : role === "customer"
+                      ? "Sign in as a customer"
+                      : "Sign in as a provider"}
           </h2>
           <p>
             {mode === "create"
@@ -546,7 +612,9 @@ export default function AccountPage() {
                 ? "We'll verify your email before changing your password."
                 : mode === "code"
                   ? "We'll send a 6-digit code that expires in 10 minutes."
-                  : workspaceDescription}
+                  : mode === "phone"
+                    ? "We'll text a 6-digit code to a phone number already verified on your account. It expires in 10 minutes and can be used once."
+                    : workspaceDescription}
           </p>
 
           <div className="account-auth-modes" aria-label="Account options">
@@ -645,6 +713,14 @@ export default function AccountPage() {
                 type="button"
               >
                 Email me a one-time code instead
+              </button>
+              <button
+                className="account-code-backup"
+                disabled={busy}
+                onClick={() => chooseMode("phone")}
+                type="button"
+              >
+                Text me a one-time code instead
               </button>
             </form>
           )}
@@ -883,6 +959,84 @@ export default function AccountPage() {
               </button>
             </form>
           )}
+
+          {mode === "phone" && !phoneCodeRequested && (
+            <form className="account-login-form" onSubmit={requestPhoneSignInCode}>
+              <label>
+                Mobile phone number
+                <input
+                  autoComplete="tel"
+                  disabled={checking || busy}
+                  inputMode="tel"
+                  name="phone"
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="(555) 555-5555"
+                  required
+                  type="tel"
+                  value={phone}
+                />
+              </label>
+              <label className="policy-consent">
+                <input
+                  checked={phoneConsent}
+                  name="phone-consent"
+                  onChange={(event) => setPhoneConsent(event.target.checked)}
+                  required
+                  type="checkbox"
+                />
+                <span>
+                  Text me a one-time authentication code at this number. This is
+                  not marketing. Message and data rates may apply.
+                </span>
+              </label>
+              <button className="button primary" disabled={checking || busy} type="submit">
+                {checking ? "Checking…" : busy ? "Sending…" : "Text me a sign-in code"}
+              </button>
+              <button
+                className="account-text-button"
+                disabled={busy}
+                onClick={() => chooseMode("signin")}
+                type="button"
+              >
+                Back to password sign-in
+              </button>
+            </form>
+          )}
+
+          {mode === "phone" && phoneCodeRequested && (
+            <form className="account-login-form" onSubmit={verifyPhoneSignInCode}>
+              <label>
+                6-digit sign-in code
+                <input
+                  autoComplete="one-time-code"
+                  autoFocus
+                  inputMode="numeric"
+                  maxLength={6}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  required
+                  value={code}
+                />
+              </label>
+              <button className="button primary" disabled={busy || code.length !== 6} type="submit">
+                {busy ? "Signing in…" : "Sign in"}
+              </button>
+              <button
+                className="account-text-button"
+                disabled={busy}
+                onClick={() => {
+                  setPhoneCodeRequested(false);
+                  setCode("");
+                  setMessage("");
+                  setError("");
+                }}
+                type="button"
+              >
+                Use a different number
+              </button>
+            </form>
+          )}
             </>
           )}
 
@@ -908,6 +1062,17 @@ export default function AccountPage() {
           <p>New provider? Verification starts with an application.</p>
           <Link className="button secondary" href="/join">
             Apply to join <span>→</span>
+          </Link>
+        </div>
+
+        <div className="account-owner-access">
+          <p>
+            Owner and admin access is separate and protected by Cloudflare
+            Access. Customer or provider sign-in — by password, passkey, email
+            code, or phone code — never grants owner or admin access.
+          </p>
+          <Link className="account-text-button" href="/admin">
+            Owner/admin sign-in
           </Link>
         </div>
       </section>
