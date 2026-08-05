@@ -1663,6 +1663,35 @@ textarea:focus {
   margin: 10px 0 0;
 }
 
+.provider-value-reassure {
+  align-items: flex-start;
+  background: rgba(200, 255, 72, 0.1);
+  border: 1px solid rgba(200, 255, 72, 0.4);
+  border-left: 4px solid var(--lime);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 22px 24px;
+}
+
+.provider-value-reassure strong {
+  font-size: 19px;
+}
+
+.provider-value-reassure p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 620px;
+}
+
+.provider-value-reassure .button {
+  margin-top: 6px;
+}
+
 @media (max-width: 720px) {
   .provider-value-grid {
     grid-template-columns: 1fr;

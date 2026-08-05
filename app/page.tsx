@@ -1408,56 +1408,64 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section providers" id="providers">
         <div className="provider-value">
           <span className="kicker">Why providers choose Tuveloz</span>
-          <h2>Fixing the car is hard enough.</h2>
+          <h2>Fixing cars is your job. The rest is on us.</h2>
           <p className="provider-value-lead">
-            Getting the work and getting paid shouldn&apos;t be. Here&apos;s what
-            slows most shops down — and what we do about it.
+            You bring the skill — we bring you customers, handle the payment, and
+            stay out of your way. No games, no fine print. Here&apos;s the deal:
           </p>
           <div className="provider-value-grid">
             <div className="provider-value-pair">
               <div className="pain">
-                <span className="pain-tag">The usual</span>
-                <strong>Apps skim a cut off every job.</strong>
+                <span className="pain-tag">The old way</span>
+                <strong>Every app skims a cut off your pay.</strong>
               </div>
               <div className="fix">
-                <span className="fix-tag">On Tuveloz</span>
-                <strong>Keep 100% of your price.</strong>
-                <p>You set the price and keep all of it. The 5% service fee is the customer&apos;s, never yours.</p>
+                <span className="fix-tag">With Tuveloz</span>
+                <strong>You keep 100%.</strong>
+                <p>Your price is your price. Customers cover the small 5% fee — it never comes out of your pocket.</p>
               </div>
             </div>
             <div className="provider-value-pair">
               <div className="pain">
-                <span className="pain-tag">The usual</span>
-                <strong>Signing up ties your hands.</strong>
+                <span className="pain-tag">The old way</span>
+                <strong>Sign up and you&apos;re locked in.</strong>
               </div>
               <div className="fix">
-                <span className="fix-tag">On Tuveloz</span>
-                <strong>Free, and never exclusive.</strong>
-                <p>No subscription, no listing fee, no minimums. Keep working every other platform you&apos;re on.</p>
+                <span className="fix-tag">With Tuveloz</span>
+                <strong>Free to join, free to walk.</strong>
+                <p>No fees, no subscription, nothing to sign away. Keep working every other platform right alongside us.</p>
               </div>
             </div>
             <div className="provider-value-pair">
               <div className="pain">
-                <span className="pain-tag">The usual</span>
-                <strong>A pile of paperwork before job one.</strong>
+                <span className="pain-tag">The old way</span>
+                <strong>Piles of paperwork before you can start.</strong>
               </div>
               <div className="fix">
-                <span className="fix-tag">On Tuveloz</span>
-                <strong>Only what your work requires.</strong>
-                <p>Pick your services and we show the exact documents each one legally needs — nothing extra.</p>
+                <span className="fix-tag">With Tuveloz</span>
+                <strong>Just tell us what you do.</strong>
+                <p>We only ask for the papers a job really needs — and for plenty of jobs, that&apos;s none at all.</p>
               </div>
             </div>
             <div className="provider-value-pair">
               <div className="pain">
-                <span className="pain-tag">The usual</span>
+                <span className="pain-tag">The old way</span>
                 <strong>Slow days waiting on the phone.</strong>
               </div>
               <div className="fix">
-                <span className="fix-tag">On Tuveloz</span>
-                <strong>Local customers come to you.</strong>
-                <p>Nearby vehicle owners post what they need. You choose the jobs that fit and skip the rest.</p>
+                <span className="fix-tag">With Tuveloz</span>
+                <strong>Customers come to you.</strong>
+                <p>Neighbors nearby post what they need. You grab the jobs you want and skip the rest.</p>
               </div>
             </div>
+          </div>
+          <div className="provider-value-reassure">
+            <strong>You&apos;ve got nothing to lose.</strong>
+            <p>
+              Joining is free, there&apos;s no lock-in, and no job is yours until
+              you say yes. Set up your profile, see what comes in, and go from there.
+            </p>
+            <a className="button lime" href="#provider-apply">Start free — takes minutes <span>→</span></a>
           </div>
         </div>
         <div className="provider-panel" data-manual-language>
