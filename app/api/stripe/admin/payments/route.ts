@@ -139,7 +139,7 @@ export async function GET(request: Request) {
           && payment.status === "paid_pending_completion",
       };
     }),
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }
 
 export async function POST(request: Request) {
