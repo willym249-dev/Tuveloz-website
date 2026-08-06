@@ -482,7 +482,10 @@ function evaluateService(input: {
   serviceCode: ServiceCode;
   evidence: readonly EvidenceRow[];
   scans: ReadonlyMap<string, ScanRow>;
-  agreements: ReturnType<typeof currentAgreements>;
+  // currentAgreements is async, so its ReturnType is the Promise. Callers
+  // await it before passing it in, and this function reads the array
+  // directly, so unwrap it here.
+  agreements: Awaited<ReturnType<typeof currentAgreements>>;
   activation: ActivationRow | undefined;
   sponsorProvider?: typeof providerApplications.$inferSelect;
   sponsorEligibility?: EligibilityRow;
