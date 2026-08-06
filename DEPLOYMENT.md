@@ -333,6 +333,21 @@ In Cloudflare, attach the public domain to the deployed Worker. Attach the
 protected admin hostname to the same Worker, then confirm its Access policy is
 active before opening the owner dashboard.
 
+### ai.tuveloz.com
+
+`wrangler.jsonc` claims `ai.tuveloz.com` as a custom domain on this Worker, and
+`worker/index.ts` redirects that host's root to `/ai`. Every other path on the
+host is served normally, so links the assistant hands out (`/payments`,
+`/faq`) resolve without leaving the host the visitor is on.
+
+**Check this before the first deploy that includes the route.** If
+`ai.tuveloz.com` currently points at a different Worker, Pages project, or
+external service, deploying will take the hostname over. Confirm in the
+Cloudflare dashboard that the hostname is either unused or already pointed at
+this Worker. To deploy without claiming it, remove the `ai.tuveloz.com` entry
+from `routes` in `wrangler.jsonc`; the `/ai` route keeps working on the main
+domain either way.
+
 ## Required GitHub Actions deployment
 
 The repository includes `.github/workflows/verify.yml` and

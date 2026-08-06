@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 // The banner sits above every page, so it is the first voice a visitor hears.
 // It says the same two things the API-facing constants say — you cannot post a
 // job yet, and signing up books nothing and costs nothing — in the words a
@@ -12,8 +13,26 @@ const LAUNCH_BANNER_MESSAGE =
 const LAUNCH_BANNER_DETAIL =
   "Making an account today is free, and it doesn't book anything or charge you.";
 
+// Pages where a banner button would duplicate what the page already offers:
+// the provider pages carry "Apply free" in a sticky header, and /account is
+// itself the sign-up form the banner would be linking to. Signed-out provider
+// routes redirect to /account, so it has to be on this list or a mechanic
+// lands on a page telling them to create a customer account.
+const PAGES_WITH_THEIR_OWN_CTA = [
+  "/join",
+  "/account",
+  "/provider-onboarding",
+  "/provider-jobs",
+  "/provider-services",
+  "/provider-service-area",
+];
+
 export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
+  const pathname = usePathname();
+  const pageHasItsOwnCta = PAGES_WITH_THEIR_OWN_CTA.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 
   return (
     <>
@@ -142,10 +161,11 @@ export function JobPostingPauseNotice() {
           <span id="tuveloz-launch-pause-details">{LAUNCH_BANNER_MESSAGE}</span>
           <span>{LAUNCH_BANNER_DETAIL}</span>
         </div>
-        <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
-          <Link href="/account?role=customer&mode=create">Create customer account</Link>
-          <Link href="/join">Join as a provider — free</Link>
-        </nav>
+        {!pageHasItsOwnCta && (
+          <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
+            <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+          </nav>
+        )}
       </aside>
     </>
   );

@@ -768,7 +768,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   Save my spot — free <span>→</span>
                 </Link>
                 <Link className="button secondary" href="/join">
-                  I do car work — join free <span>→</span>
+                  I do car work — apply free <span>→</span>
                 </Link>
               </>
             ) : (
@@ -783,7 +783,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             )}
             {view !== "provider" && (
               <Link className="button ai" href="/ai">
-                Try Tuveloz AI <span>✦</span>
+                Open Tuveloz AI <span>✦</span>
               </Link>
             )}
           </div>
@@ -952,7 +952,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span aria-hidden="true">✓</span> Keep your own customers — you&apos;re not tied to us</li>
             </ul>
             <Link className="button secondary" href="/join">
-              Join free — apply now <span>→</span>
+              Apply free <span>→</span>
             </Link>
           </article>
         </div>
@@ -1171,7 +1171,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
             <div className="hero-actions">
               <Link className="button primary" href="/account?role=customer&mode=create">
-                Create customer account <span>→</span>
+                Save my spot — free <span>→</span>
               </Link>
               <Link className="button secondary" href="/join">
                 Apply as a provider
@@ -1939,7 +1939,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h2>Be first in line when Tuveloz opens.</h2>
             <div>
               <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
-              <Link className="button ghost" href="/join">I do car work — join free</Link>
+              <Link className="button ghost" href="/join">I do car work — apply free</Link>
             </div>
           </>
         )}

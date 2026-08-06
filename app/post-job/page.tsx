@@ -128,7 +128,7 @@ function CustomerLander() {
               See how it works <span>→</span>
             </a>
             <Link className="button ai" href="/ai">
-              Try Tuveloz AI <span>✦</span>
+              Open Tuveloz AI <span>✦</span>
             </Link>
           </div>
           <div className="hero-launch-note">
@@ -288,10 +288,10 @@ function CustomerLander() {
           </ul>
           <div className="hero-actions">
             <Link className="button primary" href="/account?role=customer&mode=create">
-              Create customer account <span>→</span>
+              Save my spot — free <span>→</span>
             </Link>
             <Link className="button secondary" href="/join">
-              I do car work — join free
+              I do car work — apply free
             </Link>
           </div>
         </div>

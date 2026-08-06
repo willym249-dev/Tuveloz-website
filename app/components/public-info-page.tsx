@@ -48,7 +48,7 @@ export function PublicInfoPage({
         <h2>Ready when you are.</h2>
         <div>
           <Link className="button primary" href="/post-job">Save my spot — free <span>→</span></Link>
-          <Link className="button secondary" href="/join">I do car work — join free</Link>
+          <Link className="button secondary" href="/join">I do car work — apply free</Link>
         </div>
       </section>
 

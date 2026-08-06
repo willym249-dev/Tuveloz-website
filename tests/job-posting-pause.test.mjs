@@ -48,7 +48,7 @@ test("customer signups stay open while new job requests and payments are paused"
   );
   assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
   assert.match(homepage, /Two minutes now\. First in line at launch\./);
-  assert.match(homepage, /Create customer account/);
+  assert.match(homepage, /Save my spot — free/);
   assert.match(homepage, /Apply as a provider/);
 });
 
@@ -70,6 +70,11 @@ test("the pause notice is visible sitewide and the homepage uses an explicit lau
   assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
   assert.doesNotMatch(pauseNotice, /display: none !important/);
-  assert.match(pauseNotice, /Create customer account/);
-  assert.match(pauseNotice, /Join as a provider/);
+  // The banner offers exactly one action, and stands down entirely on pages
+  // that already carry their own primary call to action in a sticky header —
+  // two buttons for the same job is what made the provider page confusing.
+  assert.match(pauseNotice, /Save my spot — free/);
+  assert.doesNotMatch(pauseNotice, /Join as a provider/);
+  assert.match(pauseNotice, /PAGES_WITH_THEIR_OWN_CTA/);
+  assert.match(pauseNotice, /!pageHasItsOwnCta && \(/);
 });
