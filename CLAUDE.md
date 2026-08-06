@@ -136,6 +136,16 @@ page, form, or marketing surface:
 - No referral, founding-provider, or paid benefit may affect search ranking,
   job routing, or quote order. See `brand/outreach/founding-provider-program.md`.
 
+## Where things stand
+
+`docs/STATUS.md` is the running snapshot: what is blocking launch, what is
+built but not deployed, what is outstanding, and which legal thresholds do not
+apply at this size yet. Read it before proposing work, and update it when
+something moves rather than starting a new list.
+
+Tuveloz is one person, pre-revenue, one county. Scale advice to that. A
+threshold that bites at 35,000 consumers is not a current problem.
+
 ## Project shape
 
 Next.js on Cloudflare Workers, D1 (Drizzle), R2. `npm test` runs a build plus
