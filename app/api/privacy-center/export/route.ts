@@ -139,6 +139,7 @@ async function customerExport(email: string) {
               launch_area AS launchArea,
               municipality,
               vehicle,
+              contact_phone AS contactPhone,
               service,
               parts_source AS partsSource,
               parts_preference AS partsPreference,

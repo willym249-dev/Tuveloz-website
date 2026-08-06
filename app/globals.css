@@ -9979,6 +9979,7 @@ footer > p,
   line-height: 1.45;
 }
 
+.request-sms-consent,
 .provider-sms-consent,
 .fleet-sms-consent {
   align-items: flex-start;
@@ -9988,6 +9989,7 @@ footer > p,
   grid-column: 1 / -1;
 }
 
+.request-sms-consent input[type="checkbox"],
 .provider-sms-consent input[type="checkbox"],
 .fleet-sms-consent input[type="checkbox"] {
   flex: 0 0 auto;
@@ -9996,6 +9998,7 @@ footer > p,
   width: 19px;
 }
 
+.request-sms-consent > span,
 .provider-sms-consent > span,
 .fleet-sms-consent > span {
   color: #a79284;

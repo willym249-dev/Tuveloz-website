@@ -21,6 +21,10 @@ export const customerRequests = sqliteTable(
     municipality: text("municipality").notNull().default(""),
     isTestJob: text("is_test_job").notNull().default("no"),
     vehicle: text("vehicle").notNull(),
+    // Optional. Given so Tuveloz and the chosen provider can reach the
+    // customer about this job; promotional texts need the separate opt-in
+    // recorded in phone_contact_consents.
+    contactPhone: text("contact_phone").notNull().default(""),
     service: text("service").notNull(),
     serviceCodes: text("service_codes").notNull().default("[]"),
     partsSource: text("parts_source").notNull().default("Not sure whether parts are needed — discuss with provider"),

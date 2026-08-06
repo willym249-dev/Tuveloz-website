@@ -34,6 +34,21 @@ export const PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN =
   "Tuveloz uses this number only to reach you about this request. "
   + "It is not used for marketing and is never sold or shared for advertising.";
 
+/**
+ * Customer wording. A customer's number reaches the provider they choose, not
+ * only Tuveloz, so the notice has to say so — describing it as Tuveloz-only
+ * would be inaccurate the moment a provider calls about the job.
+ */
+export const PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN =
+  "Tuveloz and the provider you choose use this number only to reach you about "
+  + "this job. It is not used for marketing and is never sold or shared for "
+  + "advertising.";
+
+export const PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_ES =
+  "Tuveloz y el proveedor que usted elija usan este número solo para "
+  + "comunicarse con usted sobre este trabajo. No se usa para publicidad y "
+  + "nunca se vende ni se comparte con fines publicitarios.";
+
 export const PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES =
   "Tuveloz usa este número solo para comunicarse con usted sobre esta "
   + "solicitud. No se usa para publicidad y nunca se vende ni se comparte con "

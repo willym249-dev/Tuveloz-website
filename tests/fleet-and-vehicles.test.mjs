@@ -228,3 +228,33 @@ test("every phone entry point records consent centrally and offers a way out", a
   assert.ok(optOut.includes("revokeMarketingSmsConsent"));
   assert.match(optOut, /await revokeMarketingSmsConsent\(token\);[\s\S]*return Response\.json\(\{ ok: true \}/);
 });
+
+test("a customer can be reached about their own job without opting into anything", async () => {
+  const [form, route, exportRoute, consent] = await Promise.all([
+    read("app/page.tsx"),
+    read("app/api/requests/route.ts"),
+    read("app/api/privacy-center/export/route.ts"),
+    read("lib/phone-consent-text.ts"),
+  ]);
+
+  // The field is optional and never required to post a job.
+  assert.ok(form.includes('name="contact-phone"'));
+  assert.ok(!/name="contact-phone"[\s\S]{0,200}required/.test(form));
+  // The opt-in appears only once a number is entered, and is never pre-ticked.
+  assert.match(form, /contactPhoneEntered && \([\s\S]*name="sms-marketing-consent"/);
+  assert.ok(form.includes("useState(false)"));
+
+  // A customer's number reaches the provider they choose, so the notice says
+  // so rather than claiming Tuveloz is the only caller.
+  assert.ok(form.includes("PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN"));
+  assert.ok(consent.includes("the provider you choose use this number only"));
+
+  assert.ok(route.includes("normalizeContactPhone(body.contactPhone)"));
+  assert.ok(route.includes('role: "customer"'));
+  // Consent is recorded only after the request and its agreement records are
+  // stored, and cannot roll them back.
+  assert.match(route, /throw error;\s*\}[\s\S]*recordPhoneContactConsent/);
+
+  // The number is the customer's own data and comes back in their export.
+  assert.ok(exportRoute.includes("contact_phone AS contactPhone"));
+});
