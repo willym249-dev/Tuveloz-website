@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { JobMessages } from "../components/job-messages";
+import { PolicyReacceptanceGate } from "../components/policy-reacceptance-gate";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
 import { StripeConnectPanel } from "../components/stripe-connect-panel";
@@ -27,6 +28,7 @@ import {
   type JobScopeFacts,
 } from "../../lib/job-scope-facts";
 import { CUSTOMER_JOB_POSTING_PAUSED, MARKETPLACE_MODE } from "../../lib/launch-status";
+import type { PolicyAcceptanceStatus } from "../../lib/policy-reacceptance";
 
 const MARKETPLACE_IS_ONBOARDING_ONLY = CUSTOMER_JOB_POSTING_PAUSED
   || String(MARKETPLACE_MODE) !== "live";
@@ -200,6 +202,8 @@ export default function ProviderJobsPage() {
   const [invoicesLoading, setInvoicesLoading] = useState(false);
   const [invoicesLoaded, setInvoicesLoaded] = useState(false);
   const [invoicesError, setInvoicesError] = useState("");
+  const [policyAcceptance, setPolicyAcceptance] =
+    useState<PolicyAcceptanceStatus | null>(null);
 
   useEffect(() => {
     async function loadWorkspace() {
@@ -209,6 +213,7 @@ export default function ProviderJobsPage() {
           error?: string;
           role?: string;
           availableRoles?: string[];
+          policyAcceptance?: PolicyAcceptanceStatus;
         };
         if (accountResponse.status === 401) {
           window.location.replace("/account?role=provider");
@@ -223,6 +228,7 @@ export default function ProviderJobsPage() {
         }
         setSignedIn(true);
         setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
+        setPolicyAcceptance(account.policyAcceptance ?? null);
 
         const response = await fetch("/api/jobs", { cache: "no-store" });
         const data = await response.json().catch(() => ({})) as {
@@ -562,6 +568,12 @@ export default function ProviderJobsPage() {
 
   return (
     <main className="portal-shell">
+      {policyAcceptance && (
+        <PolicyReacceptanceGate
+          onAccepted={setPolicyAcceptance}
+          status={policyAcceptance}
+        />
+      )}
       <header className="portal-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <span>Founding provider workspace</span>

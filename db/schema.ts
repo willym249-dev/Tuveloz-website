@@ -520,6 +520,28 @@ export const accountCredentials = sqliteTable(
   ],
 );
 
+// Append-only log of policy re-acceptances collected after a policy release
+// changes. Rows are never updated or deleted: each one is evidence that this
+// email affirmatively accepted the exact bundle version shown, with the exact
+// acceptance statement displayed at the time. Signup-time acceptance stays on
+// the record that captured it (account credentials, customer requests, and
+// provider applications); this table only adds later acceptances on top.
+export const policyAcceptances = sqliteTable(
+  "policy_acceptances",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    email: text("email").notNull(),
+    role: text("role").notNull(),
+    bundleVersion: text("bundle_version").notNull(),
+    acceptanceText: text("acceptance_text").notNull().default(""),
+    acceptedAt: text("accepted_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("policy_acceptances_email_idx").on(table.email),
+  ],
+);
+
 export const passwordVerificationCodes = sqliteTable(
   "password_verification_codes",
   {

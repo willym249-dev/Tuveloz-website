@@ -10,6 +10,7 @@ import {
   providerApplicationFor,
   providerAccountFor,
 } from "../../../lib/account-auth";
+import { policyAcceptanceStatusFor } from "../../../lib/policy-reacceptance-store";
 
 export async function GET(request: Request) {
   try {
@@ -20,6 +21,11 @@ export async function GET(request: Request) {
         { status: 401, headers: { "cache-control": "no-store" } },
       );
     }
+
+    const policyAcceptance = await policyAcceptanceStatusFor(
+      session.email,
+      session.role,
+    );
 
     if (session.role === "customer") {
       const requests = await getDb().select({
@@ -70,6 +76,7 @@ export async function GET(request: Request) {
         role: "customer",
         email: session.email,
         availableRoles: session.availableRoles,
+        policyAcceptance,
         requests: requests.map((item) => ({
           ...item,
           quoteCount: quoteCounts[item.id] ?? 0,
@@ -87,6 +94,7 @@ export async function GET(request: Request) {
           destination: "/provider-onboarding",
           email: session.email,
           availableRoles: session.availableRoles,
+          policyAcceptance,
           provider: {
             name: application.name,
             applicationStatus: application.status,
@@ -104,6 +112,7 @@ export async function GET(request: Request) {
       destination: "/provider-jobs",
       email: session.email,
       availableRoles: session.availableRoles,
+      policyAcceptance,
       provider: {
         name: provider.name,
         verificationStatus: provider.verificationStatus,

@@ -6,10 +6,12 @@ import { CustomerAccountTools } from "../components/customer-account-tools";
 import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
+import { PolicyReacceptanceGate } from "../components/policy-reacceptance-gate";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 import { parseJobServices } from "../../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
+import type { PolicyAcceptanceStatus } from "../../lib/policy-reacceptance";
 
 type CustomerRequest = {
   id: string;
@@ -46,6 +48,7 @@ type CustomerAccount = {
   role: "customer";
   email: string;
   availableRoles: Array<"customer" | "provider">;
+  policyAcceptance?: PolicyAcceptanceStatus;
   requests: CustomerRequest[];
   payments: CustomerPayment[];
 };
@@ -251,6 +254,12 @@ export default function CustomerPage() {
 
   return (
     <main className="account-shell">
+      {account?.policyAcceptance && (
+        <PolicyReacceptanceGate
+          onAccepted={(status) => setAccount({ ...account, policyAcceptance: status })}
+          status={account.policyAcceptance}
+        />
+      )}
       <header className="account-header">
         <Link className="brand" href="/" aria-label="Tuveloz home">
           <BrandMark />
