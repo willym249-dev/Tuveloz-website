@@ -576,19 +576,23 @@ export function providerLevelsForServices(
 export const RELATIONSHIP_EVIDENCE_REQUIREMENTS: Readonly<
   Record<ProviderPathway, readonly EvidenceRequirementCode[]>
 > = Object.freeze({
+  // Each array is annotated so its elements stay EvidenceRequirementCode. The
+  // contextual type does not reach through the outer Object.freeze, so without
+  // the annotation the elements widen to `string` and the declared type above
+  // rejects them.
   independent_startup: Object.freeze([
     "no_employee_attestation",
-  ]),
+  ] as EvidenceRequirementCode[]),
   sponsored_trainee_employee: Object.freeze([
     "workers_comp_coverage",
     "sponsored_personnel_roster",
     "sponsored_employment_attestation",
-  ]),
+  ] as EvidenceRequirementCode[]),
   provider_business_employee: Object.freeze([
     "workers_comp_coverage",
     "provider_personnel_roster",
     "provider_employee_record",
-  ]),
+  ] as EvidenceRequirementCode[]),
 });
 
 export function getEvidenceRequirements(
