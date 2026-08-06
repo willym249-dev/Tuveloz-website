@@ -103,6 +103,26 @@ Flag drift only where a real case exists — a company that was actually sued
 and lost or paid — or where there is a concrete improvement to make. Do not
 raise hypothetical concerns.
 
+## Voice: write to a person
+
+Customers and providers are people, not records to be processed. Copy should
+sound like a person who respects their time, not a compliance notice.
+
+- **Address them directly** and name what they are actually dealing with — a
+  car that will not start, a van sitting idle, a business they built.
+- **Say the limit plainly and kindly.** "We're not there yet, and we'd rather
+  tell you now than leave you waiting" respects someone. "Not eligible" does
+  not.
+- **Warmth is never vagueness.** It comes from talking to the person, not from
+  softening a fact or hinting at something that might not happen. A warm
+  sentence and an honest one are the same sentence.
+- **Never promise a date.** "Opening soon" is a commitment nobody can keep, and
+  someone who waits on a launch that never comes was not treated well. "If
+  Tuveloz opens where you are, you'll hear it from us directly" is warm and
+  true. A guard test enforces this on the out-of-area copy.
+- **Both languages.** The site is bilingual; warmth in English and a cold
+  literal translation in Spanish is not the same product.
+
 ## Honesty rules that apply to public-facing copy
 
 These come from `brand/outreach/provider-outreach-kit.md` and apply to any new

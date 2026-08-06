@@ -52,7 +52,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Mobile mechanic",
     title: "Mobile Mechanic in Montgomery County, MD",
     description:
-      "Tuveloz is building a marketplace of independent mobile mechanics across Montgomery County, MD. Compare real quotes and choose your own provider. Customer requests open soon.",
+      "Tuveloz is building a marketplace of independent mobile mechanics across Montgomery County, MD. Compare real quotes and choose your own provider. Customer requests open as each service clears review.",
     intro:
       "A mobile mechanic comes to your driveway, your office parking lot, or wherever the car is sitting, instead of you arranging a tow and losing a day to a shop visit. Tuveloz is assembling independent mobile providers across Montgomery County so you can describe the job once and compare real quotes from people who set their own prices.",
     relatedProviderServices: [
@@ -82,7 +82,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Car battery replacement",
     title: "Mobile Car Battery Replacement in Montgomery County, MD",
     description:
-      "Dead battery in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who replace batteries where your car is parked. Customer requests open soon.",
+      "Dead battery in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who replace batteries where your car is parked. Customer requests open as each service clears review.",
     intro:
       "A dead battery is the most common reason a car will not start, and it is the job best suited to someone coming to you — the car does not have to move. Tuveloz is onboarding independent providers across Montgomery County who handle battery testing, replacement, and jump starts at your location.",
     relatedProviderServices: ["Battery replacement", "Jump start"],
@@ -107,7 +107,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Mobile tire service",
     title: "Mobile Tire Repair and Installation in Montgomery County, MD",
     description:
-      "Flat tire or a spare that needs mounting in Montgomery County, MD? Tuveloz is building a marketplace of independent mobile tire providers. Customer requests open soon.",
+      "Flat tire or a spare that needs mounting in Montgomery County, MD? Tuveloz is building a marketplace of independent mobile tire providers. Customer requests open as each service clears review.",
     intro:
       "A flat does not have to mean a tow. Tuveloz is onboarding independent providers across Montgomery County who repair tires, mount replacements, and install temporary spares wherever the vehicle is.",
     relatedProviderServices: ["Tire repair or installation"],
@@ -127,7 +127,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Check engine light diagnostics",
     title: "Check Engine Light Diagnostics in Montgomery County, MD",
     description:
-      "Check engine light on in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who read codes and explain what they found. Customer requests open soon.",
+      "Check engine light on in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who read codes and explain what they found. Customer requests open as each service clears review.",
     intro:
       "A check engine light is information, not a diagnosis — the same code can mean a loose gas cap or a failing sensor. Tuveloz is onboarding independent providers across Montgomery County who read the codes, explain what they actually found, and quote any follow-up work separately so you decide what happens next.",
     relatedProviderServices: ["Basic vehicle diagnostics"],
@@ -152,7 +152,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Mobile car detailing",
     title: "Mobile Car Detailing and Washing in Montgomery County, MD",
     description:
-      "Mobile detailing and car washing in Montgomery County, MD. Tuveloz is building a marketplace of independent detailers who come to you. Customer requests open soon.",
+      "Mobile detailing and car washing in Montgomery County, MD. Tuveloz is building a marketplace of independent detailers who come to you. Customer requests open as each service clears review.",
     intro:
       "Detailing is the service people most often want done at home, and it is where independent operators consistently beat a chain. Tuveloz is onboarding independent detailers across Montgomery County, including waterless and low-water methods that fit local environmental rules.",
     relatedProviderServices: [
@@ -176,7 +176,7 @@ export const SERVICE_LANDING_PAGES: readonly ServiceLandingPage[] = [
     name: "Pre-purchase car inspection",
     title: "Pre-Purchase Car Inspection in Montgomery County, MD",
     description:
-      "Buying a used car in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who inspect a vehicle before you buy. Customer requests open soon.",
+      "Buying a used car in Montgomery County, MD? Tuveloz is building a marketplace of independent providers who inspect a vehicle before you buy. Customer requests open as each service clears review.",
     intro:
       "The cheapest hour you can spend on a used car is the one before you buy it. Tuveloz is onboarding independent providers across Montgomery County who will look over a vehicle you are considering and tell you what they see, with photos.",
     relatedProviderServices: ["Pre-purchase inspections"],
@@ -204,7 +204,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Silver Spring",
     title: "Mobile Vehicle Services in Silver Spring, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Silver Spring, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Silver Spring, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Silver Spring is where Tuveloz's provider onboarding started, and it is the densest part of Montgomery County for independent mobile operators.",
     nearby: ["Downtown Silver Spring", "Four Corners", "White Oak", "Colesville", "Takoma Park"],
@@ -215,7 +215,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Rockville",
     title: "Mobile Vehicle Services in Rockville, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Rockville, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Rockville, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Rockville sits at the center of the county, and providers based here typically cover a wide radius across the mid-county towns.",
     nearby: ["King Farm", "Twinbrook", "North Bethesda", "Derwood", "Potomac"],
@@ -226,7 +226,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Bethesda",
     title: "Mobile Vehicle Services in Bethesda, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Bethesda, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Bethesda, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Bethesda has heavy commuter traffic and limited residential parking, which is exactly where a provider coming to the vehicle saves the most time.",
     nearby: ["North Bethesda", "Chevy Chase", "Friendship Heights", "Cabin John", "Potomac"],
@@ -237,7 +237,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Gaithersburg",
     title: "Mobile Vehicle Services in Gaithersburg, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Gaithersburg, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Gaithersburg, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Gaithersburg and the surrounding up-county towns are a large service area with a strong base of independent operators.",
     nearby: ["Montgomery Village", "Washington Grove", "Germantown", "Darnestown", "Clarksburg"],
@@ -248,7 +248,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Germantown",
     title: "Mobile Vehicle Services in Germantown, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Germantown, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Germantown, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Germantown is one of the county's largest up-county communities, with most residents commuting by car every day.",
     nearby: ["Clarksburg", "Boyds", "Damascus", "Gaithersburg", "Montgomery Village"],
@@ -259,7 +259,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Wheaton",
     title: "Mobile Vehicle Services in Wheaton, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Wheaton, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Wheaton, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Wheaton and Glenmont have a deep bench of independent auto trades, including many Spanish-speaking businesses that Tuveloz supports in both languages.",
     nearby: ["Glenmont", "Kensington", "Aspen Hill", "Forest Glen", "Silver Spring"],
@@ -270,7 +270,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Takoma Park",
     title: "Mobile Vehicle Services in Takoma Park, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Takoma Park, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Takoma Park, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Takoma Park's tight streets and limited parking make an at-home service call considerably easier than a shop trip.",
     nearby: ["Silver Spring", "Long Branch", "Hillandale", "White Oak"],
@@ -281,7 +281,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Olney",
     title: "Mobile Vehicle Services in Olney, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Olney, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Olney, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Olney and the surrounding communities are further from the county's shop clusters, which is where a mobile provider saves the most driving.",
     nearby: ["Sandy Spring", "Brookeville", "Laytonsville", "Ashton", "Norwood"],
@@ -292,7 +292,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Potomac",
     title: "Mobile Vehicle Services in Potomac, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Potomac, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Potomac, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Potomac and North Potomac are largely residential with long driveways, which suits at-home service work well.",
     nearby: ["North Potomac", "Travilah", "Darnestown", "Cabin John", "Bethesda"],
@@ -303,7 +303,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Kensington",
     title: "Mobile Vehicle Services in Kensington, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Kensington, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Kensington, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Kensington sits between Wheaton, Bethesda, and Silver Spring, so providers based nearby usually serve all three.",
     nearby: ["Garrett Park", "Chevy Chase", "Wheaton", "North Bethesda"],
@@ -314,7 +314,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Montgomery Village",
     title: "Mobile Vehicle Services in Montgomery Village, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Montgomery Village, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Montgomery Village, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Montgomery Village's shared lots and townhome parking are a natural fit for a provider who comes to the car.",
     nearby: ["Gaithersburg", "Washington Grove", "Germantown", "Derwood"],
@@ -325,7 +325,7 @@ export const TOWN_LANDING_PAGES: readonly TownLandingPage[] = [
     name: "Clarksburg",
     title: "Mobile Vehicle Services in Clarksburg, MD",
     description:
-      "Tuveloz is onboarding independent vehicle-service providers in Clarksburg, MD. Compare real quotes, choose your own provider. Customer requests open soon.",
+      "Tuveloz is onboarding independent vehicle-service providers in Clarksburg, MD. Compare real quotes, choose your own provider. Customer requests open as each service clears review.",
     intro:
       "Clarksburg is one of the fastest-growing parts of the county and one of the furthest from its established shops.",
     nearby: ["Germantown", "Damascus", "Boyds", "Hyattstown"],

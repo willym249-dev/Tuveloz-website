@@ -110,9 +110,10 @@ test("fleet interest records interest only and never implies a booking", async (
   assert.ok(!route.match(/update\(fleetInquiries\)\.set\(\{[^}]*status:/));
 
   // The form states the limits on the form itself, not only after submitting.
-  assert.ok(form.includes("records your interest only"));
-  assert.ok(form.includes("does not create an account"));
-  assert.ok(!form.includes("book now"));
+  // Asserted by meaning, not phrasing, so the copy can stay human.
+  assert.match(form, /no account, no booking,\s*\n?\s*no charge/);
+  assert.match(form, /no promise that a service will be available/);
+  assert.ok(!/\bbook now\b/i.test(form));
 
   // The page must not claim customer requests are open.
   assert.ok(page.includes("not available yet"));
@@ -292,15 +293,24 @@ test("out-of-area interest is open to every state and promises no launch date", 
     );
   }
 
-  // It must say plainly that this is not an application and no work exists yet.
-  assert.ok(areas.includes("this is not an"));
-  assert.ok(areas.includes("We will email you if Tuveloz opens in your area."));
-  assert.ok(page.includes("registering is not an"));
+  // It must say plainly that this is not an application, that no work exists
+  // there yet, and that contact is conditional on actually opening.
+  assert.match(areas, /(is not|isn't) an\s*"?\s*\+?\s*"?application/);
+  assert.match(areas, /cannot send you work yet/);
+  assert.match(areas, /If Tuveloz opens where you are/);
+  // JSX escapes the apostrophe, so accept either form.
+  assert.match(page, /(is not|isn(&apos;|')t) an application/);
 
-  // The signup form points an out-of-area applicant somewhere real.
-  assert.ok(form.includes("Outside Montgomery County, Maryland?"));
-  assert.ok(form.includes("cannot be approved"));
+  // The signup form points an out-of-area applicant somewhere real rather than
+  // leaving them at a dead end.
+  assert.match(form, /Working outside Montgomery County, Maryland\?/);
+  assert.match(form, /can&apos;t approve an application or send you work/);
   assert.ok(form.includes('href="/#expansion"'));
   // Bilingual site: the note appears in Spanish too.
-  assert.ok(form.includes("¿Está fuera del Condado de Montgomery"));
+  assert.match(form, /¿Trabaja fuera del Condado de Montgomery/);
+
+  // Warmth is required, not optional: the copy acknowledges the person rather
+  // than only reciting the limit.
+  assert.match(areas, /would rather tell you that straight/);
+  assert.match(form, /rather tell you now than leave you waiting/);
 });

@@ -39,10 +39,20 @@ export function isCurrentLaunchArea(state: string, locality: string) {
 }
 
 export const EXPANSION_ALREADY_SERVED_MESSAGE =
-  "Tuveloz already serves Montgomery County. Use the customer or provider form to get started.";
+  "Good news — you're already in our area. Tuveloz serves Montgomery County, "
+  + "so use the customer or provider form instead and we can get you started "
+  + "properly.";
 
-/** What an out-of-area registrant is told. States the limit, promises no date. */
+/**
+ * What an out-of-area registrant is told.
+ *
+ * Warm and straight at the same time. Warmth comes from talking to the person
+ * and respecting their time, never from softening the limit or hinting at a
+ * date — someone who waits on a launch that never comes was not treated well.
+ */
 export const EXPANSION_RECORDED_MESSAGE =
-  "Your area is recorded. Tuveloz serves only Montgomery County, Maryland today, "
-  + "so there is no work available where you are yet and this is not an "
-  + "application. We will email you if Tuveloz opens in your area.";
+  "Thank you — we know where you are now. Tuveloz is only in Montgomery County, "
+  + "Maryland today, so we cannot send you work yet and this is not an "
+  + "application. We would rather tell you that straight than leave you "
+  + "waiting on us. If Tuveloz opens where you are, you will hear it from us "
+  + "directly.";

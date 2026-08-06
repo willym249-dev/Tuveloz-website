@@ -1372,18 +1372,20 @@ export function ProviderSignupForm() {
             <small className="provider-outside-area-note">
               {providerFormIsSpanish ? (
                 <>
-                  ¿Está fuera del Condado de Montgomery, Maryland? Tuveloz aún no
-                  opera en su área, así que esta solicitud no puede aprobarse
-                  todavía.{" "}
-                  <Link href="/#expansion">Registre su área</Link> y le escribiremos si
-                  Tuveloz abre allí.
+                  ¿Trabaja fuera del Condado de Montgomery, Maryland? Todavía no
+                  estamos allí, así que no podemos aprobar una solicitud ni
+                  enviarle trabajo — y preferimos decírselo ahora en vez de
+                  dejarlo esperando.{" "}
+                  <Link href="/#expansion">Díganos dónde trabaja</Link> y le
+                  escribiremos directamente si Tuveloz llega a su área.
                 </>
               ) : (
                 <>
-                  Outside Montgomery County, Maryland? Tuveloz does not operate in
-                  your area yet, so an application here cannot be approved.{" "}
-                  <Link href="/#expansion">Register your area</Link> and we&apos;ll email
-                  you if Tuveloz opens there.
+                  Working outside Montgomery County, Maryland? We&apos;re not there
+                  yet, so we can&apos;t approve an application or send you work — and
+                  we&apos;d rather tell you now than leave you waiting on us.{" "}
+                  <Link href="/#expansion">Tell us where you work</Link> and
+                  we&apos;ll reach out directly if Tuveloz opens near you.
                 </>
               )}
             </small>

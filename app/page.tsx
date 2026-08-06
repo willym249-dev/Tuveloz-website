@@ -1749,11 +1749,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">Future expansion</span>
           <h2>Bring Tuveloz to your area.</h2>
           <p>
-            Tuveloz serves Montgomery County, Maryland today. Customers and
-            providers anywhere else can register their area — there is no work
-            available outside Montgomery County yet, and registering is not an
-            application. We&apos;ll use combined demand to choose where to open
-            next, and email you if that is your area.
+            Tuveloz is in Montgomery County, Maryland today — that&apos;s the whole
+            map right now, and we&apos;d rather say so plainly than let you guess.
+            If you&apos;re somewhere else, tell us where. There&apos;s no work outside
+            Montgomery County yet and this isn&apos;t an application, but every area
+            someone names helps decide where we go, and you&apos;ll hear from us
+            directly if that turns out to be yours.
           </p>
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
@@ -1766,11 +1767,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           {expansionSent ? (
             <div className="success-message expansion-success" role="status">
               <span>✓</span>
-              <h3>Your area request is counted.</h3>
+              <h3>Thank you — we know where you are now.</h3>
               <p>
-                Tuveloz serves only Montgomery County, Maryland today, so there is no
-                work available where you are yet and this is not an application.
-                We&apos;ll email you if Tuveloz opens in your area.
+                We&apos;re only in Montgomery County, Maryland today, so we can&apos;t send
+                you work yet and this isn&apos;t an application. We&apos;d rather tell you
+                that straight than leave you waiting on us. If Tuveloz opens where
+                you are, you&apos;ll hear it from us directly.
               </p>
               <button type="button" onClick={() => setExpansionSent(false)}>
                 Request another area
@@ -1778,8 +1780,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
           ) : (
             <>
-              <h3>Request your area</h3>
-              <p>Four quick answers help us measure real local demand.</p>
+              <h3>Tell us where you are</h3>
+              <p>Four quick answers, and we&apos;ll know your area is worth a look.</p>
               <fieldset className="expansion-audience-fieldset">
                 <legend>I am a…</legend>
                 <div className="expansion-role-options">

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Fleet and Business Vehicle Services | Tuveloz",
     description:
-      "Multi-vehicle service from independent local providers in Montgomery County, MD. Customer requests open soon — tell Tuveloz about your fleet.",
+      "Multi-vehicle service from independent local providers in Montgomery County, MD. Customer requests open as each service clears review — tell Tuveloz about your fleet.",
     url: `${BASE_URL}/fleet`,
     type: "website",
   },
@@ -82,10 +82,11 @@ export default function FleetPage() {
           <h1>Keep the whole fleet moving, without sending vehicles out one at a time.</h1>
           <p>
             If your business runs vans, trucks, or a pool of company cars in Montgomery
-            County, the expensive part of maintenance is rarely the repair — it is the
-            vehicle sitting idle while somebody drives it to a shop and waits. Tuveloz is
-            building multi-vehicle service with independent local providers who come to
-            where your vehicles already are.
+            County, you already know the expensive part is rarely the repair — it&apos;s the
+            vehicle sitting idle while somebody drives it to a shop and waits out the
+            afternoon. We&apos;re building multi-vehicle service with independent local
+            providers who come to where your vehicles already are, so your day keeps
+            moving.
           </p>
         </section>
 
@@ -108,7 +109,8 @@ export default function FleetPage() {
             </p>
             <p>
               Fleets that tell us what they run now are the ones we design the first
-              multi-vehicle release around.
+              multi-vehicle release around. If that&apos;s you, we want to hear it in your
+              words, not guess at it from a spreadsheet.
             </p>
             <p>
               <Link href="/how-it-works">See how the marketplace will work →</Link>

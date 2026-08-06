@@ -29,11 +29,12 @@ export function FleetInquiryForm() {
   if (done) {
     return (
       <div className="fleet-form-done" role="status">
-        <strong>Recorded — thank you.</strong>
+        <strong>Thank you — we&apos;ve got your fleet.</strong>
         <p>
-          We have your fleet details. You will hear from Tuveloz when multi-vehicle
-          service opens in Montgomery County. Nothing has been booked or charged,
-          and this does not create an account.
+          Keeping vehicles on the road is the actual job, and knowing what you run
+          helps us build for it rather than guess. Nothing has been booked or
+          charged and this isn&apos;t an account — when multi-vehicle service opens in
+          Montgomery County, we&apos;ll come to you.
         </p>
       </div>
     );
@@ -77,7 +78,7 @@ export function FleetInquiryForm() {
       }}
     >
       <label>
-        <span>Business name</span>
+        <span>Your business</span>
         <input
           value={companyName}
           onChange={(event) => setCompanyName(event.target.value)}
@@ -147,7 +148,7 @@ export function FleetInquiryForm() {
         />
       </label>
       <label className="fleet-inquiry-wide">
-        <span>What do you need most? <small>(optional)</small></span>
+        <span>What gives you the most trouble? <small>(optional)</small></span>
         <textarea
           value={servicesNeeded}
           onChange={(event) => setServicesNeeded(event.target.value)}
@@ -169,9 +170,9 @@ export function FleetInquiryForm() {
       )}
 
       <p className="fleet-inquiry-note">
-        Sending this records your interest only. It does not create an account,
-        book a service, or charge anything, and it is not a promise that any
-        service will be available.
+        This tells us about your fleet and nothing more — no account, no booking,
+        no charge, and no promise that a service will be available. We&apos;d rather
+        be straight with you than have you waiting on a call we can&apos;t make yet.
       </p>
 
       {error && <p className="form-error" role="alert">{error}</p>}
