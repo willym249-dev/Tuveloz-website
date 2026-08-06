@@ -9973,6 +9973,19 @@ footer > p,
   margin: 0;
 }
 
+.provider-outside-area-note {
+  border-left: 2px solid #3b281d;
+  color: #a79284;
+  display: block;
+  margin-top: 6px;
+  padding-left: 10px;
+}
+
+.provider-outside-area-note a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .fleet-field-note {
   color: #a79284;
   font-size: 13px;

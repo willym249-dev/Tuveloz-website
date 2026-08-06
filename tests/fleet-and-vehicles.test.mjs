@@ -258,3 +258,49 @@ test("a customer can be reached about their own job without opting into anything
   // The number is the customer's own data and comes back in their export.
   assert.ok(exportRoute.includes("contact_phone AS contactPhone"));
 });
+
+test("out-of-area interest is open to every state and promises no launch date", async () => {
+  const [areas, route, page, form] = await Promise.all([
+    read("lib/expansion-areas.ts"),
+    read("app/api/expansion-interest/route.ts"),
+    read("app/page.tsx"),
+    read("app/components/provider-signup-form.tsx"),
+  ]);
+
+  // Every state plus DC, not just the two originally accepted.
+  assert.ok(areas.includes('"Alaska"') && areas.includes('"Wyoming"'));
+  assert.ok(areas.includes('"Washington, DC"'));
+  assert.ok(route.includes("isExpansionState"));
+  assert.ok(!route.includes("EXPANSION_AREAS"));
+
+  // Montgomery County still routes to the real application instead.
+  assert.ok(route.includes("isCurrentLaunchArea"));
+  assert.ok(areas.includes("EXPANSION_ALREADY_SERVED_MESSAGE"));
+
+  // No launch-date promise in copy anyone actually sees. "Soon" is a
+  // commitment nobody can keep and the outreach rules ban it. Comments are
+  // stripped first so the rule may be explained in the source without
+  // tripping its own guard.
+  const withoutComments = (source) => source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+  for (const [name, source] of [["expansion-areas", areas], ["page", page], ["signup form", form]]) {
+    assert.ok(
+      !/open(ing)?\s+soon|launch(ing)?\s+soon|coming\s+soon\s+to\s+your\s+area/i
+        .test(withoutComments(source)),
+      `${name} copy must not promise a launch date`,
+    );
+  }
+
+  // It must say plainly that this is not an application and no work exists yet.
+  assert.ok(areas.includes("this is not an"));
+  assert.ok(areas.includes("We will email you if Tuveloz opens in your area."));
+  assert.ok(page.includes("registering is not an"));
+
+  // The signup form points an out-of-area applicant somewhere real.
+  assert.ok(form.includes("Outside Montgomery County, Maryland?"));
+  assert.ok(form.includes("cannot be approved"));
+  assert.ok(form.includes('href="/#expansion"'));
+  // Bilingual site: the note appears in Spanish too.
+  assert.ok(form.includes("¿Está fuera del Condado de Montgomery"));
+});

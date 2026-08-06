@@ -5,6 +5,7 @@ import {
   PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN,
   SMS_MARKETING_CONSENT_TEXT_EN,
 } from "../lib/phone-consent-text";
+import { EXPANSION_STATES } from "../lib/expansion-areas";
 import Link from "next/link";
 import {
   CURRENT_LAUNCH_AREA,
@@ -1748,10 +1749,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">Future expansion</span>
           <h2>Bring Tuveloz to your area.</h2>
           <p>
-            Tuveloz provider onboarding currently focuses on Montgomery County,
-            Maryland. Customers and providers elsewhere in Maryland or Washington,
-            DC can request their area. We&apos;ll use combined demand to choose where
-            to launch next.
+            Tuveloz serves Montgomery County, Maryland today. Customers and
+            providers anywhere else can register their area — there is no work
+            available outside Montgomery County yet, and registering is not an
+            application. We&apos;ll use combined demand to choose where to open
+            next, and email you if that is your area.
           </p>
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
@@ -1765,7 +1767,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <div className="success-message expansion-success" role="status">
               <span>✓</span>
               <h3>Your area request is counted.</h3>
-              <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next launch area.</p>
+              <p>
+                Tuveloz serves only Montgomery County, Maryland today, so there is no
+                work available where you are yet and this is not an application.
+                We&apos;ll email you if Tuveloz opens in your area.
+              </p>
               <button type="button" onClick={() => setExpansionSent(false)}>
                 Request another area
               </button>
@@ -1813,8 +1819,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   State or district
                   <select required name="expansion-state" defaultValue="">
                     <option value="" disabled>Select one</option>
-                    <option>Maryland</option>
-                    <option>Washington, DC</option>
+                    {EXPANSION_STATES.map((stateName) => (
+                      <option key={stateName}>{stateName}</option>
+                    ))}
                   </select>
                 </label>
                 <label>
