@@ -3,8 +3,8 @@
     "releaseStatus": "active",
     "effectiveAt": "2026-08-06T05:24:08.212Z",
     "releaseId": "terms-2026-08-06",
-    "reviewBodyHash": "dfa4624d32ec195e5279390e3209caf984d5b81766a3f067763a8472e147ca55",
-    "canonicalBodyHash": "dfa4624d32ec195e5279390e3209caf984d5b81766a3f067763a8472e147ca55",
+    "reviewBodyHash": "3913fbd2bbf8f7b07f3e8ec2f29ffc8a0fe1c8cb6c83e0d20844bada7fbbd980",
+    "canonicalBodyHash": "3913fbd2bbf8f7b07f3e8ec2f29ffc8a0fe1c8cb6c83e0d20844bada7fbbd980",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {

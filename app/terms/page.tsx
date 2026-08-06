@@ -222,10 +222,17 @@ export default function TermsPage() {
         <h2>12. Liability</h2>
         <p>
           Tuveloz&apos;s role is limited to running the marketplace. To the
-          fullest extent Maryland law allows, Tuveloz&apos;s liability for any
-          claim is capped at the platform fee collected on the job the claim
-          is about. This cap doesn&apos;t remove a right, duty, or remedy the law
-          doesn&apos;t let us waive — and it isn&apos;t a claim that Tuveloz has zero
+          fullest extent Maryland law allows, Tuveloz&apos;s total liability for
+          claims arising out of the platform is capped at the greater of $100
+          or the total platform fees Tuveloz collected from you in the 12
+          months before the event the claim is about, and Tuveloz isn&apos;t
+          liable for indirect, incidental, or consequential damages like lost
+          profits or loss of use.
+        </p>
+        <p>
+          This cap doesn&apos;t apply to Tuveloz&apos;s own fraud or willful
+          misconduct, and it doesn&apos;t remove a right, duty, or remedy the law
+          doesn&apos;t let us limit — it isn&apos;t a claim that Tuveloz has zero
           liability.
         </p>
       </section>
