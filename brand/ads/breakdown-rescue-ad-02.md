@@ -11,6 +11,19 @@ follow along at tuveloz.com". Launch version: end card "Post your job at tuveloz
 Formats: 16:9 primary (YouTube/cinematic), 9:16 crop secondary.
 Credits target: 0 — all shots below exist as Artlist stock.
 
+## Continuity (read first — 2026-08-06)
+
+Generating shots independently ruins the story: car, driver, and light drift
+between clips. Ad 02 is generated in Higgsfield from the locked element
+sheets in [`character-sheets/`](character-sheets/README.md) — every recurring
+element (TUV-DRIVER-01, TUV-CAR-01, TUV-PROVIDER-01, TUV-VAN-01,
+TUV-WORLD-01, TUV-UI-01) has a sheet with a verbatim LOCKED BLOCK and a
+frozen reference set registered in Higgsfield. Every shot prompt = locked
+blocks of the elements in frame + shot action + the world block. Continuous
+shots chain frames (last frame of shot N = start frame of shot N+1). The ad
+ships as ONE master edit; 9:16 and 1:1 are crops of it — a story is never
+published in split parts.
+
 ## Storyboard (30s)
 
 | # | Time | Shot | Audio | Artlist search |

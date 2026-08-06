@@ -1,4 +1,27 @@
-# Ad production handoff — status as of 2026-08-04 (updated same day)
+# Ad production handoff — status as of 2026-08-04 (updated 2026-08-06)
+
+## Update 2026-08-06
+
+- **Artlist credits: 140 left** (verified via the Artlist connector, AI Suite
+  16500 plan, renews 2026-09-04). The ~15,960 figure below is stale — the
+  balance was burned between 8/4 and 8/6. Treat Artlist AI generation as
+  effectively unavailable until the Sept 4 renewal.
+- Correction to the 8/4 note: the Artlist connector IS available in Claude
+  Code sessions now (used to verify the balance above).
+- **Ad 02 pivots to Higgsfield** for generation (Wil's call), with a new
+  continuity system: locked character/element sheets in
+  [`character-sheets/`](character-sheets/README.md) — one sheet per
+  recurring element, master refs generated once and frozen, registered as
+  named Higgsfield characters/assets, every shot prompt built from the
+  sheets' verbatim locked blocks. Reason: independently generated shots
+  drift (different car/driver/light per clip) and the story falls apart for
+  the viewer.
+- **No-split rule** (Wil): a story ad is one master edit, published whole;
+  9:16 / 1:1 are crops of that master. Never separately generated variants,
+  never "part 1 / part 2" posts.
+- Next step: generate the reference sets listed in each sheet (in
+  Higgsfield), get Wil's approval, freeze them under
+  `character-sheets/refs/<ELEMENT-ID>/`, then start on the Ad 02 shots.
 
 CORRECTION (verified on artlist.io/account/plan-and-billings, logged in as
 hello@tuveloz.com): the plan is **AI Starter / AI Suite $19.99/mo**, NOT Max.
