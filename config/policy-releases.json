@@ -9,18 +9,18 @@
   },
   "customer_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T04:24:34.443Z",
-    "releaseId": "customer-agreement-2026-08-06-r2",
-    "reviewBodyHash": "5543ac14e1fb70d5ed135212042a009df27ac1fb8d341848b7faac138ca05dfa",
-    "canonicalBodyHash": "5543ac14e1fb70d5ed135212042a009df27ac1fb8d341848b7faac138ca05dfa",
+    "effectiveAt": "2026-08-06T04:27:00.279Z",
+    "releaseId": "customer-agreement-2026-08-06-r3",
+    "reviewBodyHash": "15e0424a4b163bada32edc582c5655b6729d77b1e67ba0d74a8d7fe29dfc93c3",
+    "canonicalBodyHash": "15e0424a4b163bada32edc582c5655b6729d77b1e67ba0d74a8d7fe29dfc93c3",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T04:24:34.443Z",
-    "releaseId": "provider-agreement-2026-08-06-r2",
-    "reviewBodyHash": "20f0a88ddb0e02766ddbfb444bfe00ffc090a9510aed6968b1f412078c917640",
-    "canonicalBodyHash": "20f0a88ddb0e02766ddbfb444bfe00ffc090a9510aed6968b1f412078c917640",
+    "effectiveAt": "2026-08-06T04:27:00.279Z",
+    "releaseId": "provider-agreement-2026-08-06-r3",
+    "reviewBodyHash": "31c8ec5a9d587ae9cd7738a6b5623013a009850fd1f9c1bd1b304cc53b997bda",
+    "canonicalBodyHash": "31c8ec5a9d587ae9cd7738a6b5623013a009850fd1f9c1bd1b304cc53b997bda",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {
@@ -41,10 +41,10 @@
   },
   "marketplace_conduct": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T04:24:34.443Z",
-    "releaseId": "marketplace-conduct-2026-08-06",
-    "reviewBodyHash": "4ad5f8e492f0b7c2f17e29f33d1318bcfb27871d91344c8356a2043150ea9c0c",
-    "canonicalBodyHash": "4ad5f8e492f0b7c2f17e29f33d1318bcfb27871d91344c8356a2043150ea9c0c",
+    "effectiveAt": "2026-08-06T04:27:00.279Z",
+    "releaseId": "marketplace-conduct-2026-08-06-r2",
+    "reviewBodyHash": "1bc6ccdc16001e1f1025eb2f4e9388d2dac81dea4467ab911a0f1fea7d4c249e",
+    "canonicalBodyHash": "1bc6ccdc16001e1f1025eb2f4e9388d2dac81dea4467ab911a0f1fea7d4c249e",
     "sourceFile": "app/marketplace-conduct/page.tsx"
   },
   "provisional_provider_policy": {

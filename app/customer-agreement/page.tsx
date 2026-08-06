@@ -112,10 +112,13 @@ export default function CustomerAgreementPage() {
           photo condition reports carry no workmanship warranty. Other
           providers offer a different written warranty or none at all. The
           provider&apos;s warranty choice must be disclosed to you before you
-          accept a quote and stated again on the final invoice. Any warranty
-          is provided and honored by the provider business, not by Tuveloz —
-          and a provider that refuses to honor a warranty it stated is
-          removed from Tuveloz.
+          accept a quote and stated again on the final invoice. A labor
+          warranty covers the provider&apos;s workmanship — not the failure of a
+          part you supplied, normal wear, or damage that happens after the
+          job — and a disputed claim is reviewed on the job records. Any
+          warranty is provided and honored by the provider business, not by
+          Tuveloz — and a provider that refuses to honor a claim confirmed
+          as covered by its stated warranty is removed from Tuveloz.
         </p>
       </section>
 

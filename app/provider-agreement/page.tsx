@@ -169,16 +169,29 @@ export default function ProviderAgreementPage() {
           <a href="/marketplace-conduct">Marketplace Conduct Policy</a>.
         </p>
         <p>
+          The standard labor warranty covers defects in your workmanship on
+          the labor you performed. It does not cover the failure of a
+          customer-supplied part itself, normal wear, a pre-existing
+          condition you documented before or during the job, damage from a
+          later accident, misuse, or neglect, work someone else altered
+          after you finished, or anything outside the covered labor. Your
+          own written warranty can be broader, but it must be equally clear
+          about what it covers and excludes.
+        </p>
+        <p>
           Whatever you choose must be disclosed to the customer before they
           accept your quote and stated again on the final invoice, including
           a clear statement when no written warranty is offered. A warranty
           you state is your business&apos;s commitment to the customer — Tuveloz
           does not provide, back, administer, or insure any provider
-          warranty. Refusing to honor a warranty you stated results in
-          immediate termination of your access to Tuveloz, in addition to
-          any remedy the customer has under applicable law. Nothing in this
-          section limits implied or statutory warranty rights that
-          applicable law provides on its own.
+          warranty. A good-faith disagreement about whether a claim is
+          covered is reviewed on the job records: the quote, the stated
+          warranty, the invoice, photos, and messages. Refusing to honor a
+          claim those records confirm is covered by the warranty you stated
+          results in immediate termination of your access to Tuveloz, in
+          addition to any remedy the customer has under applicable law.
+          Nothing in this section limits implied or statutory warranty
+          rights that applicable law provides on its own.
         </p>
       </section>
 

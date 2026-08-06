@@ -149,8 +149,10 @@ export default function MarketplaceConductPage() {
           the invoice, service warranty, required records, and final sign-off.
           State the business&apos;s warranty choice truthfully before the customer
           accepts the quote and again on the final invoice, and honor any
-          warranty the business stated. Refusing to honor a stated warranty
-          results in immediate termination of platform access.
+          warranty the business stated. A disputed claim is reviewed on the
+          job records; refusing to honor a claim confirmed as covered by the
+          stated warranty results in immediate termination of platform
+          access.
         </p>
         <p>
           Tuveloz transfers an eligible job payout to the provider business—not
@@ -188,9 +190,11 @@ export default function MarketplaceConductPage() {
           removal of a service, cancellation, payout review, suspension, or
           termination. Immediate blocking is appropriate for an unmet legal or
           insurance gate or a serious safety, identity, fraud, or credential risk.
-          Refusing to honor a warranty stated to a customer is not handled
-          through the graduated steps above — it results in immediate
-          termination.
+          Refusing to honor a warranty claim confirmed on the job records as
+          covered by the stated warranty is not handled through the graduated
+          steps above — it results in immediate termination. A good-faith
+          dispute about whether a claim is covered is reviewed on the records
+          first, not punished.
         </p>
         <p>
           When reasonably practical and legally appropriate, Tuveloz will state

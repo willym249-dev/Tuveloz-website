@@ -97,11 +97,15 @@ open decisions that actually matter before launch are **arbitration** and **warr
 > for inspections, diagnostics, and photo condition reports (nothing to
 > re-perform — accuracy is enforced by the Conduct Policy instead). The choice
 > must be disclosed to the customer before quote acceptance and on the final
-> invoice. **Refusing to honor a stated warranty is immediate termination**, not
-> the graduated enforcement ladder. Tuveloz backs nothing itself. Implemented in
-> Provider Agreement §8, Customer Agreement §6, and Marketplace Conduct Policy
-> v0.12 §§8/10; released as provider-agreement-2026-08-06-r2 /
-> customer-agreement-2026-08-06-r2 / marketplace-conduct-2026-08-06.
+> invoice. The warranty covers workmanship defects only — not customer-supplied
+> part failures, normal wear, documented pre-existing conditions, later
+> accident/misuse damage, or work altered by someone else. **Refusing to honor a
+> claim confirmed on the job records as covered is immediate termination**, not
+> the graduated enforcement ladder; good-faith coverage disputes are reviewed on
+> the records first. Tuveloz backs nothing itself. Implemented in Provider
+> Agreement §8, Customer Agreement §6, and Marketplace Conduct Policy v0.12
+> §§8/10; current releases provider-agreement-2026-08-06-r3 /
+> customer-agreement-2026-08-06-r3 / marketplace-conduct-2026-08-06-r2.
 
 **The question in one sentence:** when a repair goes bad two weeks later, who is on
 the hook to make it right — Tuveloz, the provider, or nobody?
