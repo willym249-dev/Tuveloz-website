@@ -18,29 +18,73 @@ Last verified: August 2026.
 
 Maryland's unemployment insurance law (Md. Code, Labor & Employment § 8-205)
 uses an **ABC test**. A worker is **presumed to be an employee**, and the
-business carries the burden of proving otherwise.
+business carries the burden of proving otherwise. All three prongs must be
+satisfied.
 
-All three prongs must be satisfied:
+Work is **not** covered employment if the Secretary is satisfied that:
 
-- **(A)** The individual is free from direction and control over performance of
-  the work.
-- **(B)** The individual is customarily engaged in an independent business or
-  occupation of the same nature as the work performed.
-- **(C)** The work is outside the usual course of business of the person it is
-  performed for, **or** the work is performed outside any place of business of
-  that person.
+> **(1)** the individual who performs the work is free from control and
+> direction over its performance **both in fact and under the contract**;
+>
+> **(2)** the individual **customarily is engaged in an independent business or
+> occupation of the same nature** as that involved in the work; and
+>
+> **(3)** the work is **either** outside of the usual course of business of the
+> person for whom the work is performed **or** performed outside of any place of
+> business of the person for whom the work is performed.
 
-Mechanically, prong C is disjunctive in Maryland — either branch satisfies it.
-That differs from California's version, where the equivalent prong has no "or"
-escape. Failing any single prong makes the worker an employee for unemployment
-insurance purposes regardless of what a contract says.
+Source: [Md. Labor & Employment § 8-205 (Justia, 2025)](https://law.justia.com/codes/maryland/labor-and-employment/title-8/subtitle-2/section-8-205/)
+
+### Three things about the Maryland wording that get misstated
+
+**Prong 3 is disjunctive.** The statute says "either … or." Work performed
+outside any place of business of the hiring party satisfies prong 3 on its own,
+even if the work is squarely within that party's usual course of business.
+California's Labor Code § 2775 and Massachusetts's version have **no "or"** —
+their equivalent prong requires the work to be outside the usual course of
+business, full stop. Summaries written for a national audience frequently
+import the California phrasing and drop Maryland's alternative. That is a
+material difference in what the business has to prove.
+
+**Prongs 2 and 3 are commonly swapped.** The "customarily engaged in an
+independent business" requirement is Maryland's **prong 2**, not prong 3. The
+"usual course of business" requirement is prong 3.
+
+**Prong 1 has two halves.** Freedom from control must exist **in fact** *and*
+**under the contract**. A contract reciting independence does not satisfy it if
+actual practice differs, and actual independence does not satisfy it if the
+contract reserves control. Maryland's UI appeals digest states the principle
+directly: an employee cannot be transformed into an independent contractor by
+contract, agreement, or fiat.
+
+Source: [Maryland UI Decisions Digest — Covered Employment](https://labor.maryland.gov/uiappeals/decisions/8-101.shtml)
+
+### Scope: which Maryland test applies to what
+
+- **§ 8-205 ABC test** — unemployment insurance. Applies across industries.
+- **Workplace Fraud Act** (Labor & Employment § 3-901 et seq.) — adds separate
+  penalties and recordkeeping duties, and applies **only to construction and
+  landscaping**. Vehicle services are outside its scope.
+- **Other Maryland purposes** — workers' compensation, wage payment and
+  collection, and tort/vicarious liability each use their own tests, generally
+  control-based rather than ABC. **I have not verified the specific test for
+  each of those.** Do not assume the ABC result carries across.
+
+Source: [Maryland Department of Labor — Worker Classification Protection FAQ](https://labor.maryland.gov/workplace/wfempfaqs.shtml)
 
 The **Workplace Fraud Act** (Labor & Employment § 3-901 et seq.), which adds
 separate penalties and recordkeeping duties, applies **only to the construction
 and landscaping industries**. Vehicle services are outside its scope.
 
-Source: [Maryland Department of Labor — Worker Classification Protection](https://labor.maryland.gov/workplace/wfempfaqs.shtml),
-[Are You Complying with the Workplace Fraud Act?](https://labor.maryland.gov/workplace/wcpcomplying.shtml)
+### Federal rules do not lower the state floor
+
+A business must satisfy every test that applies to it. A more permissive
+federal standard does not displace a stricter state one — the tests are
+independent, administered by different agencies, for different purposes. A
+worker can be a contractor for one and an employee for another, and each
+agency assesses its own liability on its own test.
+
+Source: [Are You Complying with the Workplace Fraud Act?](https://labor.maryland.gov/workplace/wcpcomplying.shtml)
 
 ### Federal: two separate tests
 
