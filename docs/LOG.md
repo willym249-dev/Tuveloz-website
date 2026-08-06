@@ -13,6 +13,36 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-06 — Two documentation efforts collided; constraints consolidated
+
+**What happened.** Opened PR #98 for the documentation structure and found PR
+#97 already adds a root `CLAUDE.md` and its own `docs/INDEX.md`. Merging both
+untouched would put two orientation files and two competing indexes on `main` —
+the exact confusion this work exists to prevent.
+
+**Decisions made.** The two sets of content are complementary, not duplicative,
+so nothing is being discarded. #97 carries constraint knowledge — the three
+fail-closed locks, the provider-classification never-build list, the Maryland
+§ 8-205 and § 14-1001 detail. This branch carries filing infrastructure — the
+filing guide, the records register, this log, the deadline register and its
+automation. Folded #97's constraints into `CLAUDE.md` here after verifying each
+claim against `main`: `PHONE_SMS_LIVE_MODE_ENABLED`, `automatic-job-routing.ts`,
+`maryland-repair-records.ts`, `evidence-review-assistant.ts`, and the `testOnly`
+short-circuit all exist as described.
+
+Deliberately left out #97's jurisdiction-scoped compliance section. It describes
+`imposed_by` and `local_requirements_reviewed` fields that #97 introduces and
+that are not in `config/provider-eligibility-matrix.json` on `main` yet. That
+section belongs in `CLAUDE.md` once #97 lands, not before.
+
+**Now open.** Whichever PR merges second should drop its own `CLAUDE.md` and
+index rather than adding a parallel one, so a single orientation file and a
+single index survive. #97's three strategy documents — pitch, competitive
+landscape, provider classification design — should get rows in `docs/README.md`
+when they land. Both are tracked in `OPEN-ITEMS.md`.
+
+---
+
 ## 2026-08-06 — Document organization system created
 
 **What happened.** Set up the documentation structure: an index (`README.md`),

@@ -80,6 +80,21 @@ is doing its job — not that the guard is wrong. Do not disable a check, loosen
 default-deny rule, or flip a live-mode switch to make a feature work. Those
 decisions belong to a human with the legal and compliance context.
 
+Three independent locks hold the marketplace closed. Never flip one to ship a
+feature:
+
+| Lock | File | State |
+| --- | --- | --- |
+| `CUSTOMER_JOB_POSTING_PAUSED` | `lib/launch-status.ts` | paused |
+| `STRIPE_LIVE_MODE_ENABLED` | `lib/stripe.ts` | false |
+| `PHONE_SMS_LIVE_MODE_ENABLED` | `lib/phone-auth.ts` | false |
+
+`marketplaceActionAllowed()` requires all of: not paused, `MARKETPLACE_MODE`
+set to `live`, and a fresh launch-readiness approval passed in by the caller.
+`testOnly: true` short-circuits the whole check — test records are isolated
+from real providers, customers, alerts, payments, and public profiles, so never
+reach for that flag to make a real path work.
+
 **Some files carry legal weight.** The seven policy pages under `app/` are
 pinned to reviewed content hashes in `config/policy-releases.json`, and the test
 suite fails the build if a released page's text changes without a new recorded
@@ -96,6 +111,48 @@ the source, not a copy.
 only; real values go through `wrangler secret put`. Customer and provider
 personal data, identity documents, and database exports do not belong in this
 repository under any circumstances.
+
+## Constraints that must not be violated
+
+### Providers are independent contractors — the never-build list
+
+That classification holds because of specific product facts, not because of a
+label. Maryland's ABC test (Md. Code, Lab. & Empl. § 8-205) has a disjunctive
+third prong — work outside the usual course of business **or** performed away
+from any place of business — and the second clause is satisfied because the work
+happens at the customer's location.
+
+Never add any of these. Each trades away a prong currently satisfied:
+
+1. **Never set or cap the price a provider quotes.** Guidance drawn from that
+   provider's own completed jobs is fine; a platform-set price is not.
+2. **Never assign a job.** `lib/automatic-job-routing.ts` decides whether a
+   request may skip per-job owner review; it must never become dispatch, pick a
+   provider, or penalize declining.
+3. **Never require exclusivity** or penalize providers for competing work.
+4. **Never mandate schedules or minimum acceptance rates.**
+5. **Never mandate uniforms, branded vehicles, or vehicle specifications.**
+6. **Never require providers to buy tools, phones, or fuel from the platform.**
+7. **Never let the platform supply, source, or price parts.**
+8. **Never control repair method.** Scope limits and safety gates are fine;
+   telling a provider how to perform a repair is control.
+
+Anything touching pricing, routing, or the Provider Agreement should be checked
+against this list before it is built, and legal questions go to counsel rather
+than being settled in a document.
+
+### Legal and evidence machinery
+
+- `lib/maryland-repair-records.ts` implements Md. Comm. Law § 14-1001: the
+  Customer's Rights text, the consent rule for exceeding an estimate, return of
+  replaced parts, itemized lines with part condition and labor, and test-drive
+  certification.
+- Every provider holds their own county registration, general liability
+  certificate, and business auto coverage. That is consumer safety first, and it
+  doubles as evidence for the classification prong above.
+- The owner evidence pre-screen in `lib/evidence-review-assistant.ts` can never
+  auto-accept. Its only automatic action is a reversible, bilingual correction
+  request for a provably expired document.
 
 ## Verifying your work
 
