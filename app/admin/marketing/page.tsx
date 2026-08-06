@@ -239,6 +239,43 @@ export default function MarketingPage() {
             )}
           </section>
 
+          <section style={{ marginTop: "1.75rem" }}>
+            <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Paid ads</h2>
+            <p className="hint" style={{ margin: "0 0 0.5rem", fontSize: "0.82rem" }}>
+              Status from <code>brand/ads/HANDOFF.md</code> (as of 2026-08-04) and the
+              playbook&rsquo;s Lever 4 rules. Update the handoff file when this changes.
+            </p>
+            <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.9rem", display: "grid", gap: "0.4rem" }}>
+              <li>
+                <strong>Ad 01 (provider recruitment) is rendered and ready</strong> — 9:16 and 1:1
+                with licensed music (&ldquo;On My Way&rdquo;, Ten Towers, Epidemic Sound).
+              </li>
+              <li>
+                <strong>Licensing window: publish by Aug 9, 2026.</strong> The Epidemic Sound Pro
+                plan is canceled and ends that day; their licensing generally covers content
+                published while the subscription is active. Launch the ad before then or
+                reactivate the plan — confirm their license terms before running paid ads after
+                cancellation.
+              </li>
+              <li>
+                Ad 02 (&ldquo;The Rescue&rdquo;, customer launch) is spec only — it stays on the
+                shelf until customer requests open.
+              </li>
+              <li>
+                Spend rules: only after the profile floor in playbook §2 is met. $5&ndash;10/day,
+                radius-fenced to Montgomery County, optimized for link clicks to <code>/join</code>{" "}
+                — not for follows. The goal at that spend is learning which hook and town convert
+                cheapest, not scale.
+              </li>
+              <li>
+                <strong>Attribution gap:</strong> the site doesn&rsquo;t record where a visitor
+                came from, so applications from ads can&rsquo;t be separated from organic here
+                yet. Until then, read ad impact as the change in form opens and submissions above
+                while an ad is running, alongside the ad platform&rsquo;s own click counts.
+              </li>
+            </ul>
+          </section>
+
           <p className="hint" style={{ marginTop: "1.75rem", fontSize: "0.78rem" }}>
             Not measurable here, per the playbook: follower locality, and saves and shares per
             post. Check Instagram and TikTok insights for those — if Montgomery County is not the
