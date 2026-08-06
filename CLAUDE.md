@@ -30,8 +30,14 @@ real path work.
 
 ## Key documents
 
+**`docs/INDEX.md` is the map — every written asset, what it settles, and where
+to add to it. Check it before starting a new document; add to the file that
+already owns a subject rather than restating it somewhere new.**
+
 | Doc | What it settles |
 | --- | --- |
+| `docs/INDEX.md` | The index of everything below, plus the brand and outreach material. Start here. |
+| `docs/PITCH.md` | The canonical pitch: the shared facts nobody may improvise beyond, and what we must never claim (no warranty, no reviews, not live for customers). |
 | `docs/PROVIDER_CLASSIFICATION_DESIGN.md` | Why providers are independent contractors and which features would break that. **Read before touching pricing, routing, or the Provider Agreement.** |
 | `docs/COMPETITIVE_LANDSCAPE.md` | Where we stand against Wrench, YourMechanic, AutoNation Mobile Service, Openbay, ClickMechanic. Table stakes we are missing. |
 | `docs/PROVIDER_ACTIVATION_RUNBOOK.md` | How a provider actually goes active. Several gates need an outside party and cannot be satisfied in software. |
