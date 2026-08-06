@@ -53,3 +53,8 @@ next-env.d.ts
 # ad-build intermediates (ffmpeg work dirs and unzipped source images)
 brand/ads/**/_work/
 brand/ads/**/_unzip/
+
+# private business document originals — insurance, formation, licenses, tax,
+# signed agreements. Track them as record cards in docs/records/ instead.
+# Never commit the originals; this rule is a safety net, not permission.
+/private-documents/
