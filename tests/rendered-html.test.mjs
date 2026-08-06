@@ -1182,6 +1182,7 @@ test("public claims scope credential records while real provider auth requires e
     adminActionSource,
     adminPageSource,
     publicApiSource,
+    publicAccessSource,
     publicPageSource,
     accountAuthSource,
   ] = await Promise.all([
@@ -1191,7 +1192,8 @@ test("public claims scope credential records while real provider auth requires e
     readFile(new URL("../app/api/admin/providers/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/public-provider/route.ts", import.meta.url), "utf8"),
-    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/public-provider-page.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/provider-storefront-client.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/account-auth.ts", import.meta.url), "utf8"),
   ]);
 
@@ -1225,10 +1227,13 @@ test("public claims scope credential records while real provider auth requires e
   assert.ok(adminPageSource.includes("Official lookup"));
   assert.ok(!adminPageSource.includes("Tuveloz verified badge"));
 
-  assert.ok(publicApiSource.includes("providerCredentialRecordIsCurrent"));
+  assert.ok(publicAccessSource.includes("providerCredentialRecordIsCurrent"));
+  assert.ok(publicAccessSource.includes("credentialRequirementsSatisfied"));
+  assert.ok(publicApiSource.includes("evaluateProviderPublicAccess"));
   assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
   assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
   assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
+  assert.ok(!publicAccessSource.includes("credentialIdentifier: record.credentialIdentifier"));
   assert.ok(publicPageSource.includes("Confirmed for this service"));
   assert.ok(publicPageSource.includes("No credential record displayed for this scope"));
   assert.ok(publicPageSource.includes("not a blanket licensed-provider claim"));
@@ -1251,7 +1256,7 @@ test("public claims scope credential records while real provider auth requires e
 test("public review and payout copy does not overstate platform verification", async () => {
   const [homeSource, publicPageSource, paymentCardSource] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/provider-storefront-client.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/quote-payment-card.tsx", import.meta.url), "utf8"),
   ]);
 

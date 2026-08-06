@@ -9891,6 +9891,27 @@ footer > p,
   justify-content: center;
 }
 
+.public-info-actions h2 + .landing-related-links {
+  margin-top: 4px;
+}
+
+.landing-related-links a {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #3b281d;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 15px;
+  padding: 10px 18px;
+  text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.landing-related-links a:hover,
+.landing-related-links a:focus-visible {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: #6b4a33;
+}
+
 @media (min-width: 1051px) and (max-width: 1380px) {
   .public-site .site-header,
   .public-info-shell .site-header {

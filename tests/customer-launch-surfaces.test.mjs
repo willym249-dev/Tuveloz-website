@@ -72,7 +72,7 @@ test("account and private-request surfaces describe launch mode without active-j
     source("app/my-request/page.tsx"),
     source("app/page.tsx"),
     source("app/how-it-works/page.tsx"),
-    source("app/providers/[slug]/page.tsx"),
+    source("app/providers/[slug]/provider-storefront-client.tsx"),
   ]);
 
   assert.match(account, /New job requests and payments are not open yet/);

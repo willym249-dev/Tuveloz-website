@@ -5,9 +5,10 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("provider-authored profile claims remain private until exact-version review", async () => {
-  const [profile, publicRoute, mediaRoute, ownerRoute, claims] = await Promise.all([
+  const [profile, publicRoute, publicAccess, mediaRoute, ownerRoute, claims] = await Promise.all([
     read("app/api/provider-profile/route.ts"),
     read("app/api/public-provider/route.ts"),
+    read("lib/public-provider-page.ts"),
     read("app/api/provider-media/route.ts"),
     read("app/api/admin/providers/route.ts"),
     read("lib/provider-profile-claims.ts"),
@@ -19,8 +20,14 @@ test("provider-authored profile claims remain private until exact-version review
   assert.match(profile, /upload-logo[\s\S]*publicStatus:[^\n]*"pending_review"/);
   assert.match(profile, /remove-gallery[\s\S]*publicStatus:[^\n]*"pending_review"/);
 
-  assert.ok(publicRoute.includes("providerProfileHasCurrentContentApproval"));
-  assert.match(publicRoute, /publicAccess = \([\s\S]*currentProfileContentApproved/);
+  // The public-access rule lives in lib/public-provider-page.ts so the served
+  // API and the indexable page metadata cannot disagree about visibility.
+  assert.ok(publicAccess.includes("providerProfileHasCurrentContentApproval"));
+  assert.match(publicAccess, /publicAccess = \([\s\S]*profileContentApproved/);
+  assert.ok(publicRoute.includes("evaluateProviderPublicAccess"));
+  assert.ok(publicAccess.includes("evaluateProviderPublicAccess"));
+  // Metadata and sitemap must refuse anything the API would refuse.
+  assert.match(publicAccess, /publicProviderSummary[\s\S]*if \(!access\.publicAccess\) return null/);
   assert.ok(mediaRoute.includes("providerProfileHasCurrentContentApproval"));
   assert.ok(claims.includes("contentFingerprint"));
   assert.ok(claims.includes("providerGalleryItems"));
