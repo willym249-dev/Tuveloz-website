@@ -529,6 +529,7 @@ export default function AdminPage() {
           <span>Private owner dashboard</span>
           <Link href="/admin/launch-readiness">Integrated launch review</Link>
           <Link href="/admin/analytics-funnel">Signup funnel</Link>
+          <Link href="/admin/marketing">Marketing</Link>
           <Link href="/admin/compliance-operations">Compliance operations</Link>
           <Link href="/admin/provider-compliance">Provider compliance queue</Link>
           <Link href="/">View site</Link>
