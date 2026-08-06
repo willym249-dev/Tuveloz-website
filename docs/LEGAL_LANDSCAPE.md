@@ -72,10 +72,6 @@ Source: [Maryland UI Decisions Digest — Covered Employment](https://labor.mary
 
 Source: [Maryland Department of Labor — Worker Classification Protection FAQ](https://labor.maryland.gov/workplace/wfempfaqs.shtml)
 
-The **Workplace Fraud Act** (Labor & Employment § 3-901 et seq.), which adds
-separate penalties and recordkeeping duties, applies **only to the construction
-and landscaping industries**. Vehicle services are outside its scope.
-
 ### Federal rules do not lower the state floor
 
 A business must satisfy every test that applies to it. A more permissive
