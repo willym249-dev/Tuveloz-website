@@ -28,6 +28,13 @@ here said otherwise; that was wrong.
    answers 403 to CONNECT), and no Meta access token exists anywhere in this
    repo. Meta/Instagram publishing is a manual upload by Wil until both are
    fixed. Do not promise automated posting.
+
+   `scripts/publish-ad.mjs` is ready for when they are — run it from a machine
+   with normal outbound access, with `META_ACCESS_TOKEN` (needs
+   `pages_manage_posts`, plus `instagram_content_publish` for IG) and
+   `META_PAGE_ID` / `META_IG_USER_ID` set. `--dry-run` prints the requests
+   without sending. Facebook takes the local mp4 directly; Instagram's API
+   only accepts a public HTTPS URL, so the file must be hosted first.
 2. **Artlist asset downloads are blocked the same way.**
    `cms-toolkit-artifacts.artlist.io` and `mcp.artlist.io` are also 403'd by
    the network policy. Consequence: a session can *generate* through the MCP
