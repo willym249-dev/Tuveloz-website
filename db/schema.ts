@@ -737,6 +737,13 @@ export const fleetInquiries = sqliteTable(
     companyName: text("company_name").notNull(),
     contactName: text("contact_name").notNull(),
     email: text("email").notNull(),
+    // Given for contact about this request. Promotional texts additionally
+    // require the recorded opt-in below — see lib/phone-contact-consent.ts.
+    contactPhone: text("contact_phone").notNull().default(""),
+    smsMarketingConsentText: text("sms_marketing_consent_text").notNull().default(""),
+    smsMarketingConsentVersion: text("sms_marketing_consent_version").notNull().default(""),
+    smsMarketingConsentedAt: text("sms_marketing_consented_at").notNull().default(""),
+    smsMarketingRevokedAt: text("sms_marketing_revoked_at").notNull().default(""),
     fleetSize: text("fleet_size").notNull(),
     vehicleTypes: text("vehicle_types").notNull().default(""),
     municipality: text("municipality").notNull().default(""),

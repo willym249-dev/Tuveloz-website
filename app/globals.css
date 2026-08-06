@@ -9973,6 +9973,33 @@ footer > p,
   margin: 0;
 }
 
+.fleet-field-note {
+  color: #a79284;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fleet-sms-consent {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  gap: 11px;
+  grid-column: 1 / -1;
+}
+
+.fleet-sms-consent input[type="checkbox"] {
+  flex: 0 0 auto;
+  height: 19px;
+  margin-top: 2px;
+  width: 19px;
+}
+
+.fleet-sms-consent > span {
+  color: #a79284;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .fleet-form-done {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid #3b281d;

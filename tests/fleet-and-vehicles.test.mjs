@@ -122,9 +122,49 @@ test("fleet interest records interest only and never implies a booking", async (
   // Fleets are never told a provider is a Tuveloz employee.
   assert.ok(page.includes("does not employ, train, assign, or supervise providers"));
 
-  // Fleet contact stays email-only: there is no SMS consent record to rely on.
-  assert.ok(!/\bphone\b/i.test(route));
-  assert.ok(!/\bphone\b/i.test(form));
+  // A phone number may be collected for contact about this request, but a
+  // promotional text needs its own affirmative, unchecked opt-in.
+  assert.ok(form.includes("PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN"));
+  assert.ok(form.includes("SMS_MARKETING_CONSENT_TEXT_EN"));
+  assert.match(form, /type="checkbox"[\s\S]*checked=\{smsMarketingConsent\}/);
+  // The box is never pre-ticked and never gates submission.
+  assert.ok(form.includes("useState(false)"));
+  assert.ok(!/required[\s\S]{0,120}smsMarketingConsent/.test(form));
+  assert.ok(route.includes("resolvePhoneContactConsent"));
+});
+
+test("a phone number is transactional until an explicit opt-in says otherwise", async () => {
+  const [consent, schema] = await Promise.all([
+    read("lib/phone-contact-consent.ts"),
+    read("db/schema.ts"),
+  ]);
+
+  // Consent wording and its version are stored, so what someone agreed to is
+  // provable later rather than asserted.
+  assert.ok(consent.includes("PHONE_CONTACT_CONSENT_VERSION"));
+  assert.ok(consent.includes("SMS_MARKETING_CONSENT_TEXT_EN"));
+  // Federal express-written-consent wording: automated system, rates, STOP,
+  // and that agreeing is not a condition of service.
+  for (const required of ["automatic system", "data rates", "STOP", "not a condition"]) {
+    assert.ok(
+      consent.includes(required),
+      `marketing consent text must state "${required}"`,
+    );
+  }
+  // A checked box with no number consents to nothing; an unchecked box leaves
+  // a real number transactional-only.
+  assert.match(consent, /if \(!phone\) return NO_CONSENT/);
+  assert.match(consent, /smsMarketingConsent !== true[\s\S]*NO_CONSENT, phone/);
+  // Sending requires a current, unrevoked, recorded consent.
+  assert.match(consent, /mayReceiveMarketingSms[\s\S]*!record\.smsMarketingRevokedAt/);
+
+  // Every stored contact phone sits beside a consent basis and a revocation
+  // field, so a number can never become a marketing list by existing.
+  assert.equal(
+    schema.includes('text("contact_phone")'),
+    schema.includes('text("sms_marketing_consented_at")'),
+  );
+  assert.ok(schema.includes('text("sms_marketing_revoked_at")'));
 });
 
 test("fleet size choices are shared by the form and the server", () => {

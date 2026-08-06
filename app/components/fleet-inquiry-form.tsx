@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { FLEET_SIZE_OPTIONS } from "../../lib/fleet-options";
+import {
+  PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
+  SMS_MARKETING_CONSENT_TEXT_EN,
+} from "../../lib/phone-contact-consent";
 
 /**
  * Fleet interest capture. Submitting records interest only — it creates no
@@ -12,6 +16,8 @@ export function FleetInquiryForm() {
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [smsMarketingConsent, setSmsMarketingConsent] = useState(false);
   const [fleetSize, setFleetSize] = useState("");
   const [vehicleTypes, setVehicleTypes] = useState("");
   const [municipality, setMunicipality] = useState("");
@@ -48,6 +54,8 @@ export function FleetInquiryForm() {
               companyName,
               contactName,
               email,
+              contactPhone,
+              smsMarketingConsent,
               fleetSize,
               vehicleTypes,
               municipality,
@@ -97,6 +105,17 @@ export function FleetInquiryForm() {
         />
       </label>
       <label>
+        <span>Phone <small>(optional — fastest way to reach you)</small></span>
+        <input
+          type="tel"
+          value={contactPhone}
+          onChange={(event) => setContactPhone(event.target.value)}
+          maxLength={40}
+          autoComplete="tel"
+        />
+        <small className="fleet-field-note">{PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN}</small>
+      </label>
+      <label>
         <span>How many vehicles?</span>
         <select
           value={fleetSize}
@@ -137,6 +156,17 @@ export function FleetInquiryForm() {
           placeholder="Scheduled maintenance, tires, batteries, diagnostics…"
         />
       </label>
+
+      {contactPhone.trim() && (
+        <label className="fleet-sms-consent">
+          <input
+            type="checkbox"
+            checked={smsMarketingConsent}
+            onChange={(event) => setSmsMarketingConsent(event.target.checked)}
+          />
+          <span>{SMS_MARKETING_CONSENT_TEXT_EN}</span>
+        </label>
+      )}
 
       <p className="fleet-inquiry-note">
         Sending this records your interest only. It does not create an account,

@@ -4,6 +4,7 @@ import { fleetInquiries } from "../../../db/schema";
 import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
 import { consumeFixedWindow, rateLimitKeyHash } from "../../../lib/public-write-rate-limit";
 import { isFleetSize } from "../../../lib/fleet-options";
+import { resolvePhoneContactConsent } from "../../../lib/phone-contact-consent";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string"
@@ -34,10 +35,18 @@ export async function POST(request: Request) {
     );
   }
   try {
+    const now = new Date().toISOString();
     const body = await request.json() as Record<string, unknown>;
     const companyName = clean(body.companyName, 120);
     const contactName = clean(body.contactName, 120);
     const email = clean(body.email, 180).toLowerCase();
+    // A number is stored for contact about this request. A promotional text
+    // needs the separate opt-in, and its absence is a refusal.
+    const phoneContact = resolvePhoneContactConsent({
+      phone: body.contactPhone,
+      smsMarketingConsent: body.smsMarketingConsent,
+      now,
+    });
     const fleetSize = clean(body.fleetSize, 40);
     const vehicleTypes = clean(body.vehicleTypes, 200);
     const municipality = clean(body.municipality, 120);
@@ -83,11 +92,14 @@ export async function POST(request: Request) {
       .where(eq(fleetInquiries.requestKey, requestKey))
       .limit(1);
 
-    const now = new Date().toISOString();
     if (existing) {
       // A resubmission refreshes the details but never resets owner triage.
       await db.update(fleetInquiries).set({
         contactName,
+        contactPhone: phoneContact.phone,
+        smsMarketingConsentText: phoneContact.smsMarketingConsentText,
+        smsMarketingConsentVersion: phoneContact.smsMarketingConsentVersion,
+        smsMarketingConsentedAt: phoneContact.smsMarketingConsentedAt,
         fleetSize,
         vehicleTypes,
         municipality,
@@ -101,6 +113,11 @@ export async function POST(request: Request) {
         companyName,
         contactName,
         email,
+        contactPhone: phoneContact.phone,
+        smsMarketingConsentText: phoneContact.smsMarketingConsentText,
+        smsMarketingConsentVersion: phoneContact.smsMarketingConsentVersion,
+        smsMarketingConsentedAt: phoneContact.smsMarketingConsentedAt,
+        smsMarketingRevokedAt: "",
         fleetSize,
         vehicleTypes,
         municipality,
