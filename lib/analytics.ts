@@ -8,6 +8,8 @@
  * to change.
  */
 
+import { attribution } from "./attribution";
+
 export type AnalyticsEvent =
   | "provider_signup_started"
   | "provider_step1_completed"
@@ -27,7 +29,15 @@ export type AnalyticsEvent =
 
 export function track(event: AnalyticsEvent, props: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
-  const payload = JSON.stringify({ event, props, at: new Date().toISOString() });
+  // Every event carries where the visitor came from, so the owner funnel can
+  // read conversion per channel. Merged here rather than at each call site so
+  // no event can be added later that quietly loses its attribution — and so a
+  // caller passing its own `from` cannot overwrite the real one.
+  const payload = JSON.stringify({
+    event,
+    props: { ...props, from: attribution() },
+    at: new Date().toISOString(),
+  });
   const sent = typeof navigator.sendBeacon === "function"
     && navigator.sendBeacon("/api/analytics", new Blob([payload], { type: "application/json" }));
   if (!sent) {

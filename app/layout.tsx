@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { AccountToolsDock } from "./components/account-tools-dock";
+import { AttributionCapture } from "./components/attribution-capture";
 import { JobPostingPauseNotice } from "./components/job-posting-pause-notice";
 import { ProviderPublicActions } from "./components/provider-public-actions";
 import { SiteLanguageProvider } from "./components/site-language";
@@ -70,6 +71,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         <SiteLanguageProvider>
+          <AttributionCapture />
           <StagingEnvironmentBanner />
           {CUSTOMER_JOB_POSTING_PAUSED && <JobPostingPauseNotice />}
           {children}

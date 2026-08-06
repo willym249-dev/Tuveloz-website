@@ -21,6 +21,15 @@ type ExperimentRow = {
   conversion: number;
 };
 
+type ChannelRow = {
+  key: string;
+  source: string;
+  medium: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
 type WindowPayload = {
   provider: FunnelStage[];
   customer: FunnelStage[];
@@ -30,6 +39,8 @@ type WindowPayload = {
     providerFirstQuoteSent: number;
   };
   experiments: Record<string, ExperimentRow[]>;
+  channels: ChannelRow[];
+  campaigns: ChannelRow[];
   rawCounts: Array<{ event: string; count: number }>;
 };
 
@@ -142,6 +153,102 @@ function Experiments({ windows }: { windows: WindowPayload["experiments"] }) {
           rows={windows[meta.name] ?? []}
         />
       ))}
+    </section>
+  );
+}
+
+function ChannelTable({
+  heading,
+  rows,
+  firstColumn,
+  empty,
+}: {
+  heading: string;
+  rows: ChannelRow[];
+  firstColumn: string;
+  empty: string;
+}) {
+  const best = rows.reduce<ChannelRow | null>((leader, row) => {
+    // Ignore tiny samples and the unlabeled bucket when calling a winner — a
+    // single application off two visits is not a channel worth funding.
+    if (row.started < 20 || row.source === "unlabeled") return leader;
+    if (!leader || row.conversion > leader.conversion) return row;
+    return leader;
+  }, null);
+  return (
+    <section style={{ marginTop: "1.5rem" }}>
+      <h3 style={{ fontSize: "0.98rem", margin: "0 0 0.35rem" }}>{heading}</h3>
+      {rows.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>{empty}</p>
+      ) : (
+        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 580 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0", opacity: 0.7 }}>{firstColumn}</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Visitors</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Applications</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Conversion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
+                  {row.key}
+                  {best?.key === row.key && <span style={{ marginLeft: "0.4rem" }}>★ best rate</span>}
+                </td>
+                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.started}
+                </td>
+                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.submitted}
+                </td>
+                <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.conversion}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
+function Channels({ channels, campaigns }: { channels: ChannelRow[]; campaigns: ChannelRow[] }) {
+  const unlabeled = channels.find((row) => row.source === "unlabeled");
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Where applications come from</h2>
+      <p className="hint" style={{ margin: "0 0 0.25rem", fontSize: "0.82rem" }}>
+        Applications by channel — the number the growth playbook says should decide
+        where effort goes. A channel earns credit for the visit that first brought
+        someone in, even if they came back later by typing the address.
+      </p>
+      <ChannelTable
+        heading="Channel"
+        firstColumn="Source · medium"
+        rows={channels}
+        empty="No provider-form visits recorded in this window yet."
+      />
+      <ChannelTable
+        heading="Campaign"
+        firstColumn="Campaign tag"
+        rows={campaigns}
+        empty="No tagged links used yet. Add ?r=flyer-wheaton (or utm_source) to the links you hand out and the runs show up here separately."
+      />
+      {unlabeled && (
+        <p className="hint" style={{ margin: "0.5rem 0 0", fontSize: "0.78rem" }}>
+          “unlabeled” is {unlabeled.started} visit(s) recorded before channel
+          tracking shipped, or from a browser blocking storage. They are kept
+          apart from “direct” rather than folded into it, so no channel looks
+          bigger than it was.
+        </p>
+      )}
+      <p className="hint" style={{ margin: "0.5rem 0 0", fontSize: "0.78rem" }}>
+        Untagged links still get classified by referrer, so social traffic is not
+        lost — but only a tagged link can tell two flyers or two towns apart.
+      </p>
     </section>
   );
 }
@@ -308,6 +415,8 @@ export default function AnalyticsFunnelPage() {
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />
+
+          <Channels channels={active.channels ?? []} campaigns={active.campaigns ?? []} />
 
           <Experiments windows={active.experiments} />
 

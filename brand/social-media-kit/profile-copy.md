@@ -21,6 +21,17 @@ Shared facts used everywhere:
 - Site: https://tuveloz.com · Provider signup: https://tuveloz.com/join
 - Email: hello@tuveloz.com
 
+**Tagged links.** Each profile's link carries a short channel code — `?r=ig`,
+`?r=tt`, `?r=fb`, `?r=gbp` — so `/admin/analytics-funnel` can show applications
+per platform instead of one undifferentiated pile. The code only changes what
+the funnel calls the visit; the page is identical either way, so a link that
+loses its tag still works.
+
+Two links below are deliberately untagged: the TikTok bio is at its exact
+80-character limit with no room for one, and the pinned post is reused on every
+platform, where a single code would credit the wrong one. Both still get
+classified by referrer, just at platform level rather than by placement.
+
 ---
 
 ## Instagram — @tuveloz (bio limit 150 chars)
@@ -29,7 +40,7 @@ Shared facts used everywhere:
 Skip the phone tag 🚗 Post your car job, compare real quotes, you choose.
 Montgomery County, MD · Providers join free ⬇️
 ```
-(122 chars. Website field: `https://tuveloz.com/join`)
+(122 chars. Website field: `https://tuveloz.com/join?r=ig`)
 
 ## TikTok — @tuveloz (bio limit 80 chars)
 
@@ -39,7 +50,7 @@ Vehicle services, your price, your call 🚗 MoCo, MD. Join free: tuveloz.com/jo
 (80 chars, live as of Aug 2026. URL is inline because the account has no
 website-link field — TikTok only offers one to business accounts / 1k+
 followers. Switch to `Providers: join free ⬇️` + website field
-`https://tuveloz.com/join` once the link field unlocks.)
+`https://tuveloz.com/join?r=tt` once the link field unlocks.)
 
 ## X — @TuvelozApp (bio limit 160 chars)
 
@@ -65,7 +76,7 @@ For providers (onboarding now): run your own business, not somebody else's route
 
 Customer choice. Provider freedom.
 
-Apply as a provider: https://tuveloz.com/join
+Apply as a provider: https://tuveloz.com/join?r=fb
 Questions: hello@tuveloz.com
 ```
 (Category suggestions: "Automotive Service" + "Internet Marketplace".)

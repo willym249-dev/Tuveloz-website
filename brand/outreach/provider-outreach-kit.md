@@ -39,7 +39,7 @@ Personalize the first line; never send it as-is in bulk.
 >
 > Straight up: customer requests aren't live yet. Applying now means your
 > review is done and you're ready on day one. Takes a few minutes:
-> tuveloz.com/join
+> tuveloz.com/join?r=dm
 >
 > Happy to answer anything — or if it's not for you, no worries at all.
 
@@ -55,7 +55,7 @@ Personalize the first line; never send it as-is in bulk.
 >
 > Para ser claros: las solicitudes de clientes todavía no están activas.
 > Aplicar ahora significa que su revisión queda lista para el primer día.
-> Toma unos minutos: tuveloz.com/join
+> Toma unos minutos: tuveloz.com/join?r=dm
 >
 > El formulario está disponible en español. Con gusto respondo cualquier
 > pregunta — y si no le interesa, no hay problema.
@@ -65,14 +65,14 @@ Personalize the first line; never send it as-is in bulk.
 EN:
 > Hey [name], just closing the loop — provider spots in [service] are under
 > review now for the Montgomery County launch. If you want in before day one,
-> the application's still open: tuveloz.com/join. Either way, good luck out
+> the application's still open: tuveloz.com/join?r=dm. Either way, good luck out
 > there!
 
 ES:
 > Hola [nombre], solo para cerrar el tema — las solicitudes de proveedores de
 > [servicio] ya están en revisión para el lanzamiento en el Condado de
 > Montgomery. Si quiere estar antes del primer día, la solicitud sigue
-> abierta: tuveloz.com/join. ¡De cualquier forma, mucho éxito!
+> abierta: tuveloz.com/join?r=dm. ¡De cualquier forma, mucho éxito!
 
 ## 4. Community group post (Nextdoor / local FB groups)
 
@@ -87,7 +87,7 @@ EN:
 > prices, keep 100% of what you quote — the customer pays the site's small
 > fee, not you. No exclusivity, no subscription. Customer requests open after
 > launch review, so applying now puts you at the front of the line.
-> Apply (English/Español): tuveloz.com/join
+> Apply (English/Español): tuveloz.com/join?r=dm
 
 ES:
 > **Mecánicos y detalladores del Condado de Montgomery — maneje su propio
@@ -98,12 +98,12 @@ ES:
 > quédese con el 100% de lo que cotiza — el cliente paga la pequeña tarifa
 > del sitio, no usted. Sin exclusividad, sin suscripción. Las solicitudes de
 > clientes abren después de la revisión de lanzamiento, así que aplicar ahora
-> lo pone al frente de la fila. Aplique (English/Español): tuveloz.com/join
+> lo pone al frente de la fila. Aplique (English/Español): tuveloz.com/join?r=dm
 
 ## 5. Flyer copy (print — parts stores, gas stations, laundromats, car washes)
 
 One page, both languages on the same sheet. Big QR code to
-https://tuveloz.com/join centered at the bottom.
+https://tuveloz.com/join?r=flyer centered at the bottom.
 
 EN (top half):
 > **MECHANICS · DETAILERS · ROADSIDE PROS**
@@ -126,7 +126,7 @@ ES (bottom half):
 > Las solicitudes de clientes abren después de la revisión de lanzamiento.
 > Aplique ahora y esté listo el primer día.
 
-QR caption / Leyenda del QR: **tuveloz.com/join** · Customer choice.
+QR caption / Leyenda del QR: **tuveloz.com/join?r=flyer** · Customer choice.
 Provider freedom.
 
 ## 6. Where to find providers (MoCo)

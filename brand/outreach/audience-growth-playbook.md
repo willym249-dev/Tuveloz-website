@@ -192,9 +192,10 @@ once customer launch is closer, and on the homepage email capture.
 
 Ignore follower count as a decision input. Weekly, look at:
 
-- **Provider applications, by source.** The funnel already lands in
-  `analytics_events` and is visible at `/admin/analytics-funnel`. This is the
-  only number that decides anything.
+- **Provider applications, by source.** Visible at `/admin/analytics-funnel`
+  under "Where applications come from", broken out by channel and by campaign
+  tag. This is the only number that decides anything — see §7 for how a link
+  earns its label.
 - **Follower *locality*.** Instagram and TikTok both break down audience by
   city. If MoCo isn't the top cluster, the content is reaching the wrong
   people and the hashtags are too broad.
@@ -208,6 +209,45 @@ and the budget belongs in 1:1 outreach and Google. Chasing follower count past
 that point is a way to feel busy while the marketplace stays empty.
 
 ---
+
+## 7. Tag every link you hand out
+
+Until now every channel — flyers, DMs, reels, bios, ads, Reddit — pointed at the
+same bare `tuveloz.com/join`, so applications arrived with no way to tell which
+one produced them. §6 calls applications-by-source the only number that decides
+anything, and that number could not actually be read.
+
+Now the first page a visitor lands on records where they came from, that label
+rides along on their application, and `/admin/analytics-funnel` reports
+conversion per channel. Untagged traffic is still classified by referrer, so
+nothing is lost — but only a tag can tell two flyers or two towns apart.
+
+**Short codes** (`?r=`), for anywhere a `utm_` string would be retyped or read
+aloud:
+
+| Code | Channel | Where it goes |
+|---|---|---|
+| `?r=flyer` | Print | Flyers, counter cards |
+| `?r=card` | Print | Business cards |
+| `?r=dm` | 1:1 outreach | Facebook/Instagram DMs, texts |
+| `?r=ig` `?r=tt` `?r=fb` `?r=yt` | Social | The link in each profile's bio |
+| `?r=rd` `?r=nd` | Community | Reddit, Nextdoor posts |
+| `?r=gbp` | Google | Google Business Profile |
+
+Add a detail after the channel to split a run: `?r=flyer-wheaton` and
+`?r=flyer-rockville` both count as the flyer channel and are also reported
+separately — which is what makes Lever 4's "which town converts cheapest"
+answerable instead of a guess. `node scripts/generate-flyer.mjs wheaton` prints
+a flyer whose QR already carries that code.
+
+**Paid ads** use full `utm_` parameters instead, since the ad platforms write
+them: `?utm_source=facebook&utm_medium=paid&utm_campaign=recruit-hook-a`. Give
+each hook its own campaign value and the funnel tells you which one to keep.
+
+An unrecognized code is still recorded rather than dropped, so a tag invented in
+the field shows up as its own row instead of disappearing. Codes only change
+what the funnel calls the visit — the page is the same, so a link that loses its
+tag still works.
 
 ## Honesty rules (carried over from the outreach kit)
 

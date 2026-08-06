@@ -161,7 +161,101 @@ async function experimentsSince(sinceValue: string | null): Promise<Record<strin
   return result;
 }
 
-function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
+type ChannelRow = {
+  key: string;
+  source: string;
+  medium: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
+// The bucket for events recorded before channel tracking shipped, and for any
+// event that arrives without attribution. Kept visibly separate from "direct"
+// — folding unlabeled history into a real channel would overstate it and send
+// the budget to the wrong place, which is the exact mistake this report exists
+// to prevent.
+const UNLABELED = "unlabeled";
+
+// Where a signup came from, as recorded by lib/attribution.ts on the first page
+// the visitor landed on.
+function readFrom(props: string | null) {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as { from?: Record<string, unknown> };
+    const from = parsed.from;
+    if (!from || typeof from !== "object") return null;
+    const source = typeof from.source === "string" ? from.source : "";
+    if (!source) return null;
+    return {
+      source,
+      medium: typeof from.medium === "string" ? from.medium : "unknown",
+      campaign: typeof from.campaign === "string" ? from.campaign : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function toRows(tally: Map<string, { source: string; medium: string; started: number; submitted: number }>) {
+  return [...tally.entries()]
+    .map(([key, value]) => ({
+      key,
+      source: value.source,
+      medium: value.medium,
+      started: value.started,
+      submitted: value.submitted,
+      conversion: pct(value.submitted, value.started),
+    }))
+    .sort((a, b) => b.started - a.started || b.submitted - a.submitted || a.key.localeCompare(b.key));
+}
+
+/**
+ * Provider applications broken down by where the visitor came from.
+ *
+ * This is the number the audience growth playbook calls the only one that
+ * decides anything. Campaigns are reported separately from channels so a
+ * per-town flyer run ("flyer-wheaton") can be compared against its siblings
+ * without splitting the channel total it belongs to.
+ */
+async function channelsSince(sinceValue: string | null) {
+  const db = getDb();
+  const events = ["provider_signup_started", "provider_signup_completed"];
+  const eventFilter = inArray(analyticsEvents.event, events);
+  const rows = await db
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const byChannel = new Map<string, { source: string; medium: string; started: number; submitted: number }>();
+  const byCampaign = new Map<string, { source: string; medium: string; started: number; submitted: number }>();
+
+  for (const row of rows) {
+    const from = readFrom(row.props);
+    const source = from?.source ?? UNLABELED;
+    const medium = from?.medium ?? "";
+    const started = row.event === "provider_signup_started";
+
+    const channelKey = medium ? `${source} · ${medium}` : source;
+    const channel = byChannel.get(channelKey) ?? { source, medium, started: 0, submitted: 0 };
+    if (started) channel.started += 1;
+    else channel.submitted += 1;
+    byChannel.set(channelKey, channel);
+
+    if (!from?.campaign) continue;
+    const campaign = byCampaign.get(from.campaign) ?? { source, medium, started: 0, submitted: 0 };
+    if (started) campaign.started += 1;
+    else campaign.submitted += 1;
+    byCampaign.set(from.campaign, campaign);
+  }
+
+  return { channels: toRows(byChannel), campaigns: toRows(byCampaign) };
+}
+
+function windowPayload(
+  counts: Map<string, number>,
+  experiments: Record<string, ExperimentRow[]>,
+  attribution: { channels: ChannelRow[]; campaigns: ChannelRow[] },
+) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -172,6 +266,8 @@ function windowPayload(counts: Map<string, number>, experiments: Record<string, 
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
     experiments,
+    channels: attribution.channels,
+    campaigns: attribution.campaigns,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -195,22 +291,25 @@ export async function GET(request: Request) {
     const now = Date.now();
     const since30 = threshold(30, now);
     const since7 = threshold(7, now);
-    const [allTime, last30, last7, expAll, exp30, exp7] = await Promise.all([
+    const [allTime, last30, last7, expAll, exp30, exp7, chanAll, chan30, chan7] = await Promise.all([
       countsSince(null),
       countsSince(since30),
       countsSince(since7),
       experimentsSince(null),
       experimentsSince(since30),
       experimentsSince(since7),
+      channelsSince(null),
+      channelsSince(since30),
+      channelsSince(since7),
     ]);
     return Response.json(
       {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime, expAll),
-          last30: windowPayload(last30, exp30),
-          last7: windowPayload(last7, exp7),
+          allTime: windowPayload(allTime, expAll, chanAll),
+          last30: windowPayload(last30, exp30, chan30),
+          last7: windowPayload(last7, exp7, chan7),
         },
       },
       { headers: { "cache-control": "no-store" } },
