@@ -21,8 +21,12 @@ applications are open. Three independent locks, all fail-closed:
 | `PHONE_SMS_LIVE_MODE_ENABLED` | `lib/phone-auth.ts` | false |
 
 Do not flip any of these to ship a feature. `MARKETPLACE_MODE` is
-`onboarding_only`, and `marketplaceActionAllowed()` requires all three of: not
-paused, mode `live`, and a fresh DB-backed launch-readiness approval.
+`onboarding_only`, and for a real action `marketplaceActionAllowed()` requires
+all three of: not paused, mode `live`, and a fresh DB-backed launch-readiness
+approval passed in by the server-side caller. `testOnly: true` short-circuits
+the whole check — test records are isolated from real providers, customers,
+alerts, payments, and public profiles, so never reach for that flag to make a
+real path work.
 
 ## Key documents
 
