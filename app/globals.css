@@ -10999,3 +10999,87 @@ footer > p,
     max-width: 100%;
   }
 }
+
+/* Customer-facing service list shown while job requests are paused. Dark
+   surface, so text carries the light ink rather than inheriting the page
+   orange. */
+.service-preview {
+  margin-top: 32px;
+}
+
+.service-preview-heading h2 {
+  color: #f7f3ef;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.03em;
+  margin: 10px 0 12px;
+}
+
+.service-preview-heading p {
+  color: #b6aaa1;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 640px;
+}
+
+.service-preview-list {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+}
+
+.service-preview-item {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.service-preview-item-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.service-preview-item strong {
+  color: #f7f3ef;
+  font-size: 15px;
+}
+
+.service-preview-item small {
+  color: #b6aaa1;
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+.service-preview-state {
+  border: 1px solid #34261d;
+  border-radius: 999px;
+  color: #b6aaa1;
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 4px 9px;
+  text-transform: uppercase;
+}
+
+.service-preview-state.is-available {
+  border-color: rgba(255, 106, 0, 0.5);
+  color: #ff9a55;
+}
+
+.service-preview-note {
+  color: #b6aaa1;
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 20px 0 0;
+  max-width: 640px;
+}

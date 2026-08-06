@@ -11,6 +11,10 @@ import {
   customerRequestPrivacyAgreementHash,
 } from "../../lib/customer-job-scope";
 import {
+  customerServicePreview,
+  customerServicePreviewCounts,
+} from "../../lib/customer-service-preview";
+import {
   CUSTOMER_JOB_POSTING_PAUSED,
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
   CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
@@ -26,6 +30,10 @@ export const metadata: Metadata = {
 };
 
 export default async function PostJobPage() {
+  const servicePreview = customerServicePreview();
+  const previewCounts = customerServicePreviewCounts();
+  const availableCount = previewCounts.available;
+
   if (CUSTOMER_JOB_POSTING_PAUSED) {
     return (
       <main className="account-shell">
@@ -73,6 +81,49 @@ export default async function PostJobPage() {
                 Open Tuveloz AI
               </Link>
             </div>
+          </section>
+
+          <section className="service-preview">
+            <div className="service-preview-heading">
+              <span className="account-role">The service list</span>
+              <h2>What you&apos;ll be able to request.</h2>
+              <p>
+                This is the full list of services Tuveloz is building toward, in
+                Montgomery County, Maryland. {availableCount > 0
+                  ? `${availableCount} of ${previewCounts.total} can be requested once job requests open.`
+                  : "None of them is open for requests yet."}{" "}
+                Each one turns on separately, only after the licensing,
+                insurance, and safety requirements for that exact service are
+                documented — so this list stays honest about where things
+                actually stand.
+              </p>
+            </div>
+
+            <ul className="service-preview-list">
+              {servicePreview.map((service) => (
+                <li key={service.code} className="service-preview-item">
+                  <div className="service-preview-item-head">
+                    <strong>{service.label}</strong>
+                    <span
+                      className={
+                        service.available
+                          ? "service-preview-state is-available"
+                          : "service-preview-state"
+                      }
+                    >
+                      {service.available ? "Open at launch" : "Not open yet"}
+                    </span>
+                  </div>
+                  <small>{service.summary}</small>
+                </li>
+              ))}
+            </ul>
+
+            <p className="service-preview-note">
+              Seeing a service here is not a promise that it is available, that a
+              provider is approved for it, or what it will cost. Nothing on this
+              page submits a request or charges you.
+            </p>
           </section>
         </section>
       </main>
