@@ -16,6 +16,35 @@ D1 for data, R2 for uploads, and Stripe for payments. It is in onboarding-only
 mode: applications are open, customer job posting and live payments are switched
 off in code.
 
+## When you are asked to write or save a document
+
+Anything meant to last — a plan, spec, research summary, decision record,
+runbook, or set of notes — belongs in this repository as a Markdown file, not
+only in the conversation. A chat window is not storage; the next session cannot
+read it.
+
+When the user asks you to save, write up, or "keep" something:
+
+1. Put it in the right folder from
+   [`docs/FILING-GUIDE.md`](docs/FILING-GUIDE.md) — `business`, `legal`,
+   `operations`, `product`, or `records`.
+2. Name it lowercase-with-hyphens, ending in `.md`.
+3. Start it with the status header: status, owner, last reviewed, and a
+   sentence saying what it is for.
+4. Add a row for it in [`docs/README.md`](docs/README.md) saying what question
+   it answers. A document missing from the index will not be found again.
+5. Commit it. Uncommitted work disappears when the session ends.
+
+If the user pastes in text that came from ChatGPT, Gemini, or another
+assistant, file it exactly the same way and note where it came from in the
+header. If a document on the same topic already exists, edit that one instead
+of creating a near-duplicate.
+
+Never file a document containing government identifiers, bank or account
+numbers, tax documents, identity scans, API keys, or customer and provider
+personal data. Those get a record card in `docs/records/` describing the
+document instead, with the original kept outside this repository.
+
 ## Before you change something
 
 **This codebase is intentionally fail-closed.** Services are denied unless
