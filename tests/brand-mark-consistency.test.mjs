@@ -77,6 +77,33 @@ test("the stylesheet keeps no leftovers of the deleted hand-drawn mark", async (
   }
 });
 
+// public/brand-badge.png — the logo on every page — was hand-exported and left
+// out of the generator, so regenerating from the master updated every favicon
+// and quietly skipped the header. Nothing caught it. This does.
+test("every logo file the app serves is produced by the brand generator", async () => {
+  const [generator, layout, icons, manifest, chrome] = await Promise.all([
+    read("scripts/generate-brand-assets.mjs"),
+    read("app/layout.tsx"),
+    read("app/components/tuveloz-icons.tsx"),
+    read("public/manifest.webmanifest"),
+    read("app/components/public-chrome.tsx"),
+  ]);
+
+  const referenced = new Set(
+    [layout, icons, manifest, chrome]
+      .flatMap((source) => [...source.matchAll(/["'(]\/([a-z0-9-]+\.(?:png|ico|svg))/g)])
+      .map((match) => match[1]),
+  );
+  assert.ok(referenced.has("brand-badge.png"), "expected the header mark to be referenced");
+
+  const missing = [...referenced].filter((asset) => !generator.includes(`"${asset}"`));
+  assert.deepEqual(
+    missing,
+    [],
+    `these logo files are served but never generated from the master: ${missing.join(", ")}`,
+  );
+});
+
 test("every installed icon points at the versioned master artwork", async () => {
   const [layout, manifest] = await Promise.all([
     read("app/layout.tsx"),
