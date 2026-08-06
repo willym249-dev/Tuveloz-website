@@ -35,9 +35,11 @@ export default function TermsPage() {
           <a href="/customer-agreement">Customer Agreement</a> also applies.
           If you&apos;re a provider, the{" "}
           <a href="/provider-agreement">Provider Agreement</a> also applies.
-          The <a href="/privacy">Privacy Policy</a> and the{" "}
-          <a href="/payments">Payment, Cancellation, and Refund Policy</a>{" "}
-          apply too.
+          The <a href="/privacy">Privacy Policy</a>, the{" "}
+          <a href="/payments">Payment, Cancellation, and Refund Policy</a>, the{" "}
+          <a href="/copyright">Copyright &amp; DMCA Policy</a>, and — if you opt
+          in to text messages — the <a href="/sms-terms">SMS Terms</a> apply
+          too.
         </p>
         <p>
           You must be at least 18, able to enter a binding agreement, and
@@ -100,6 +102,13 @@ export default function TermsPage() {
           access.
         </p>
         <p>
+          Tuveloz does not run criminal background checks on providers, their
+          employees, or their trainees, and being listed on Tuveloz is not a
+          character endorsement. If Tuveloz ever adds a screening step for a
+          specific service, this page will describe exactly what is checked
+          and nothing more.
+        </p>
+        <p>
           Right now, at this onboarding-only stage, no service is enabled for
           a real job — a service moves forward only after its legal
           requirements are documented, satisfied, and the corresponding
@@ -136,10 +145,16 @@ export default function TermsPage() {
           first.
         </p>
         <p>
-          If a provider offers a service or parts warranty, that&apos;s between
-          the customer and the provider — Tuveloz doesn&apos;t offer one just by
-          operating the marketplace. Nothing here cancels out a warranty or
-          right that the law says can&apos;t be waived.
+          Whether to offer a workmanship warranty is each independent provider
+          business&apos;s own decision — Tuveloz never requires one and never sets
+          its terms. Every quote shows either the provider&apos;s own written
+          warranty terms or a plain statement that none is offered, and a
+          customer who selects a no-warranty provider explicitly acknowledges
+          that choice before hiring them. Any warranty a provider offers is
+          that provider business&apos;s promise to the customer — Tuveloz doesn&apos;t
+          offer, back, or administer one just by operating the marketplace.
+          Nothing here cancels out a warranty or right that the law says can&apos;t
+          be waived.
         </p>
       </section>
 

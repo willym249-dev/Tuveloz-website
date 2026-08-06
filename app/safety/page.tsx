@@ -20,6 +20,10 @@ export default function SafetyPage() {
           points: ["Service-specific review", "Person- and location-specific checks", "Expired evidence prevents job access"],
         },
         {
+          title: "Background checks",
+          text: "Tuveloz confirms only the specific license, registration, or insurance the law requires for a given service. It does not run criminal background checks on providers or their personnel, and being listed on Tuveloz is not a character endorsement. If a screening step is ever added for a specific service, Tuveloz will describe exactly what is checked and nothing more.",
+        },
+        {
           title: "Customer privacy",
           text: "Providers receive only the information needed to decide whether to quote. Private contact and service-address details are limited to the selected provider.",
         },

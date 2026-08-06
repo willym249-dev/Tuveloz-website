@@ -6,7 +6,7 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers"
       title="Provider Agreement"
       summary="Plain-language terms for provider businesses working through Tuveloz."
-      updated="August 3, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Where this stands, and what else applies</h2>
@@ -147,6 +147,16 @@ export default function ProviderAgreementPage() {
           own purchase. If you&apos;re substituting a different performing person,
           you&apos;re responsible for making sure they&apos;re eligible, telling the
           customer, and getting their approval if needed.
+        </p>
+        <p>
+          Whether to offer a workmanship warranty is your business&apos;s own
+          decision — Tuveloz never requires one and never sets its terms. If
+          you offer one, state its exact terms on your quote (many shops use
+          12 months or 12,000 miles as a reference point) and honor it as your
+          own business&apos;s promise. If you don&apos;t, your quote plainly says so,
+          and the customer confirms in writing that they&apos;re hiring you without
+          one. Either way, the warranty position you state must be truthful —
+          misstating it is a serious breach of these terms.
         </p>
       </section>
 
