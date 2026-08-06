@@ -1090,7 +1090,8 @@ a {
   align-items: center;
   background: var(--blue);
   border-radius: 10px;
-  color: white;
+  /* Near-black reads at 7.1:1 on the brand orange; white sits at 2.87:1. */
+  color: #050505;
   display: flex;
   font-size: 11px;
   font-weight: 900;

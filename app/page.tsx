@@ -768,6 +768,41 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 exclusivity. Real jobs and payments open as we launch.
               </p>
             </>
+          ) : view === "about" ? (
+            <>
+              <div className="eyebrow">
+                <span className="pulse" />
+                About Tuveloz · Montgomery County
+              </div>
+              <h1>
+                Built for both sides.
+                <br />
+                <span className="hero-value-line">Honest about where we are.</span>
+              </h1>
+              <p>
+                Tuveloz is a local vehicle-services marketplace for Montgomery
+                County, Maryland — built so customers can compare real quotes and
+                independent providers can run their own business. We show what is
+                documented and say plainly what is not open yet.
+              </p>
+            </>
+          ) : view === "request" ? (
+            <>
+              <div className="eyebrow">
+                <span className="pulse" />
+                For customers · Montgomery County
+              </div>
+              <h1>
+                Describe it once.
+                <br />
+                <span className="hero-value-line">Compare real quotes.</span>
+              </h1>
+              <p>
+                {CUSTOMER_JOB_POSTING_PAUSED
+                  ? "Tuveloz is being built for people who'd rather not guess what a repair should cost. Requests aren't open yet — set up your account now and see exactly which services are coming."
+                  : "Tell us what your vehicle needs. Local independent providers send you real quotes. You pick the one that works — on your schedule, your price, your call."}
+              </p>
+            </>
           ) : CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <div className="eyebrow">
@@ -806,6 +841,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </a>
                 <Link className="button secondary" href="/how-it-works">
                   See how it works <span>→</span>
+                </Link>
+              </>
+            ) : view === "request" && CUSTOMER_JOB_POSTING_PAUSED ? (
+              <>
+                <Link className="button primary" href="/account?role=customer&mode=create">
+                  Create customer account <span>→</span>
+                </Link>
+                <Link className="button secondary" href="/post-job">
+                  See what you can request <span>→</span>
                 </Link>
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
@@ -930,15 +974,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
           <span className="kicker">Built for both sides</span>
-          {view === "about" ? (
-            <h1 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h1>
-          ) : (
-            <h2 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h2>
-          )}
+          {/* The hero owns each view's only h1, so this stays a heading
+              beneath it — including on /about, which otherwise ended up with
+              two competing h1s. */}
+          <h2 id="audience-heading">
+            One marketplace. Clear benefits for customers and providers.
+          </h2>
           <p>
             Tuveloz keeps customers in control of their vehicle-service
             decisions and independent providers in control of their business.
@@ -1108,19 +1149,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">
             {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "For customers"}
           </span>
-          {view === "request" ? (
-            <h1>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h1>
-          ) : (
-            <h2>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h2>
-          )}
+          {/* The customer landing hero owns the page's only h1, so this
+              section stays a heading beneath it on every view. */}
+          <h2>
+            {CUSTOMER_JOB_POSTING_PAUSED
+              ? "Set up now. Be first in line when we launch."
+              : "Post it once. Compare real quotes. No pressure."}
+          </h2>
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
@@ -1621,11 +1656,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
             <span className="kicker light">For providers</span>
-            {view === "provider" ? (
-              <h1>Your business. Your price. Your schedule.</h1>
-            ) : (
-              <h2>Your business. Your price. Your schedule.</h2>
-            )}
+            {/* The hero owns each landing page's only h1, so this section
+                stays a heading beneath it on every view. */}
+            <h2>Your business. Your price. Your schedule.</h2>
             <p>
               This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
               you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
