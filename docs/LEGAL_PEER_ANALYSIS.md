@@ -33,8 +33,10 @@ From the current Terms of Use, Provider Agreement, and Payments policy:
 - Labor-only quotes; no parts sales, parts reimbursement, or parts tax.
 - Payout released after completion review (Stripe Connect, owner-released
   transfers).
-- Liability capped at the platform fee for the job; **no arbitration clause,
-  no class-action waiver** (explicitly deferred pending legal review).
+- Liability capped at the platform fee for the job. *(Update, Aug 6 2026:
+  Terms §13 now contains an individual-arbitration section with a class
+  waiver, small-claims carve-out, 30-day opt-out, and mass-arbitration
+  batching — adopted without counsel; independent review still recommended.)*
 - Warranties are provider-offered only; Tuveloz offers none.
 - Pre-launch: every service stays off until its legal, insurance, and technical
   requirements are documented and satisfied.

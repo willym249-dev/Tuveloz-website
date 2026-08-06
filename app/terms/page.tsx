@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 3, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -233,16 +233,105 @@ export default function TermsPage() {
       <section>
         <h2>13. Resolving disputes with Tuveloz</h2>
         <p>
-          Before filing a claim against Tuveloz, email{" "}
-          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with what
-          happened and what you&apos;re asking for, so we can both try to work it
-          out first. That doesn&apos;t extend any legal filing deadline you have.
+          This section explains how a dispute between you and Tuveloz gets
+          resolved: we talk first, and if that fails, the dispute goes to
+          individual arbitration instead of a court or class action — with the
+          exceptions and the opt-out right described below. It applies to
+          disputes between you and Tuveloz only; a dispute with another
+          customer or provider is governed by your agreement with them.
+        </p>
+
+        <h3>Talk to us first — required</h3>
+        <p>
+          Before starting arbitration or a court case, email{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with your
+          name, your account email, what happened, and what you&apos;re asking
+          for. Tuveloz will do the same before starting a claim against you.
+          Both sides then have 60 days to try in good faith to work it out,
+          including one phone or video conference if either side asks for it.
+          Neither side may start arbitration or a lawsuit before that 60-day
+          window ends, and any legal filing deadline is paused while the
+          window runs.
+        </p>
+
+        <h3>Small claims court always stays open</h3>
+        <p>
+          Either you or Tuveloz can bring an individual claim in small claims
+          court instead of arbitration, for as long as the claim stays an
+          individual claim in that court.
+        </p>
+
+        <h3>Individual arbitration for everything else</h3>
+        <p>
+          If the dispute isn&apos;t resolved informally and isn&apos;t brought in small
+          claims court, you and Tuveloz agree to resolve it through binding
+          individual arbitration before a single arbitrator, administered by
+          the American Arbitration Association (AAA) under its Consumer
+          Arbitration Rules. The Federal Arbitration Act governs this
+          section. You can choose a hearing in the county where you live, a
+          video hearing, or — for claims under $10,000 — a decision on
+          documents only. A court, not the arbitrator, decides whether this
+          section is enforceable.
         </p>
         <p>
-          Tuveloz hasn&apos;t adopted a formal governing-law, forum-selection, or
-          arbitration clause for production yet, and this draft doesn&apos;t
-          require arbitration or waive your right to a class action.
-          Independent legal review is recommended before any of that changes.
+          For a consumer claim, your filing fee is capped at what it would
+          cost to file the same case in court, and Tuveloz pays the remaining
+          AAA and arbitrator fees. Each side pays its own attorney unless the
+          law or the AAA rules provide otherwise. The arbitrator can award
+          the same individual remedies a court could.
+        </p>
+
+        <h3>No class actions</h3>
+        <p>
+          You and Tuveloz each agree to bring claims against the other only
+          as an individual — not as a plaintiff or member of a class,
+          consolidated, or representative proceeding — and the arbitrator
+          can&apos;t combine one person&apos;s claim with anyone else&apos;s or preside over
+          a class. By agreeing to arbitration, both sides also give up a jury
+          trial for arbitrated claims. If a court finds this class waiver
+          unenforceable for a particular claim, that claim goes back to
+          court — not the arbitrator — and everything else stays in
+          arbitration.
+        </p>
+
+        <h3>If many similar demands arrive at once</h3>
+        <p>
+          If 25 or more arbitration demands raising similar claims are filed
+          by or with the help of coordinated counsel, the demands will be
+          resolved in staged batches of up to 50 under the AAA&apos;s
+          mass-arbitration procedures, with fees due per batch as those
+          procedures provide. After the first batch resolves, either side may
+          ask for a global mediation before further batches proceed. Filing
+          deadlines stay paused for demands waiting on a later batch.
+        </p>
+
+        <h3>Your 30-day opt-out</h3>
+        <p>
+          You can reject this arbitration section without losing access to
+          Tuveloz. Email{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with the
+          subject &quot;Arbitration opt-out&quot; from your account email within 30
+          days of first accepting these Terms. If you opt out, the rest of
+          these Terms still applies, and disputes go to the courts described
+          below.
+        </p>
+
+        <h3>What this section doesn&apos;t take away</h3>
+        <p>
+          Nothing here stops you from reporting a concern to a government
+          agency — like the FTC or the Maryland Attorney General — or waives
+          a right or remedy the law doesn&apos;t let you waive. This section
+          applies once you accept the version of these Terms that contains
+          it; it doesn&apos;t rewrite an acceptance you gave before it existed.
+          This section survives after you stop using Tuveloz.
+        </p>
+
+        <h3>Governing law and courts</h3>
+        <p>
+          These Terms are governed by Maryland law, without regard to its
+          conflict-of-law rules. Any dispute that isn&apos;t subject to
+          arbitration belongs in the state or federal courts located in
+          Maryland, and both sides consent to those courts.
         </p>
       </section>
 

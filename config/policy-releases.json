@@ -1,10 +1,10 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:12:24.189Z",
-    "releaseId": "terms-2026-08-04-r2",
-    "reviewBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
-    "canonicalBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
+    "effectiveAt": "2026-08-06T05:24:08.212Z",
+    "releaseId": "terms-2026-08-06",
+    "reviewBodyHash": "dfa4624d32ec195e5279390e3209caf984d5b81766a3f067763a8472e147ca55",
+    "canonicalBodyHash": "dfa4624d32ec195e5279390e3209caf984d5b81766a3f067763a8472e147ca55",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
