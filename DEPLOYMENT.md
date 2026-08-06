@@ -340,13 +340,34 @@ active before opening the owner dashboard.
 host is served normally, so links the assistant hands out (`/payments`,
 `/faq`) resolve without leaving the host the visitor is on.
 
-**Check this before the first deploy that includes the route.** If
-`ai.tuveloz.com` currently points at a different Worker, Pages project, or
-external service, deploying will take the hostname over. Confirm in the
-Cloudflare dashboard that the hostname is either unused or already pointed at
-this Worker. To deploy without claiming it, remove the `ai.tuveloz.com` entry
-from `routes` in `wrangler.jsonc`; the `/ai` route keeps working on the main
-domain either way.
+**Read this before the first deploy that includes the route.** As of August 6,
+2026, `ai.tuveloz.com` resolves through Cloudflare to
+`custom-domains.chatgpt.site` — an OpenAI custom-GPT domain, not this Worker.
+Deploying with the route above **takes that hostname over**, which is the
+intended direction (the in-app assistant at `/ai` replaces the external host),
+but it does retire whatever that custom GPT was serving. Confirm nobody still
+depends on it first.
+
+To deploy without claiming the hostname, delete the `ai.tuveloz.com` entry from
+`routes` in `wrangler.jsonc`. Nothing else depends on it: `/ai` keeps working on
+the main domain, and the redirect in `worker/index.ts` simply never fires.
+
+### Checking the assistant after a deploy
+
+```bash
+npm run ai:check -- https://tuveloz.com
+```
+
+Asks the live assistant four questions and fails if a policy answer comes back
+without its source link, if an answer about a provisional design (the fee, the
+payout, the launch state) reads as settled fact, or if a plain car question
+drags policy material in. Exits 0 with a note when the environment has no AI
+provider keys, so it is safe to run anywhere.
+
+The server enforces the same hedge rule at request time — a reply that loses it
+is replaced with the approved wording before it reaches anyone — so this check
+is a canary for prompt drift, not the only thing standing between a customer and
+a wrong answer about money.
 
 ## Required GitHub Actions deployment
 

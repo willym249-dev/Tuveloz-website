@@ -9,6 +9,8 @@ import { askCouncil, councilConfigured } from "../../../lib/ai-council-runtime";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../../lib/launch-status";
 import {
   findPolicyEntries,
+  replyKeepsRequiredHedges,
+  vettedAnswer,
   type PolicyAudience,
   type PolicyEntry,
 } from "../../../lib/ai/policy-knowledge";
@@ -140,8 +142,20 @@ export async function POST(request: Request) {
       mode: "quick",
       maxTokens: ANSWER_MAX_TOKENS,
     });
+    // The prompt asks the model to keep the policy's hedges. This makes it a
+    // rule rather than a request: if the question touched a design the business
+    // has only proposed, and the reply reads as settled fact, we serve the
+    // approved wording instead of the model's. Nobody has to review answers
+    // one by one for this to hold.
+    const hedgesHeld = replyKeepsRequiredHedges(result.answer, policyEntries);
+    if (!hedgesHeld) {
+      console.warn("Tuveloz AI reply dropped a required hedge; served vetted wording", {
+        entries: policyEntries.map((entry) => entry.id),
+      });
+    }
+
     return noStoreJson({
-      reply: result.answer,
+      reply: hedgesHeld ? result.answer : vettedAnswer(policyEntries),
       // The UI shows these as real links under the answer, so a person can
       // always check the policy instead of taking the assistant's word.
       sources: policyEntries.map((entry) => entry.source),

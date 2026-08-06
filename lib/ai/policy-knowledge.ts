@@ -29,11 +29,18 @@ export type PolicyEntry = {
   source: { label: string; href: string };
   /** Phrase that must still appear on the cited page. Guards against drift. */
   anchor: string;
+  /**
+   * True when the underlying policy calls this design proposed, provisional, or
+   * subject to approval. A reply that drops that qualifier states something the
+   * business has not committed to, so the route refuses to serve it.
+   */
+  hedged?: boolean;
 };
 
 export const POLICY_ENTRIES: readonly PolicyEntry[] = [
   {
     id: "customer-fee",
+    hedged: true,
     audience: "customer",
     question: "What does Tuveloz charge me?",
     keywords: ["fee", "cost", "charge", "commission", "5%", "price", "total", "surcharge"],
@@ -74,6 +81,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
   },
   {
     id: "customer-refunds",
+    hedged: true,
     audience: "customer",
     question: "What happens if something goes wrong with the work?",
     keywords: ["refund", "dispute", "complaint", "problem", "wrong", "bad job", "chargeback", "cancel"],
@@ -84,6 +92,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
   },
   {
     id: "provider-payout",
+    hedged: true,
     audience: "provider",
     question: "How and when do I get paid?",
     keywords: ["paid", "payout", "payment", "transfer", "stripe", "money", "deposit", "when"],
@@ -154,6 +163,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
   },
   {
     id: "both-launch-state",
+    hedged: true,
     audience: "both",
     question: "Can I use it right now?",
     keywords: ["when", "open", "launch", "live", "available", "yet", "start", "waiting"],
@@ -214,4 +224,50 @@ export function findPolicyEntries(
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((scored) => scored.entry);
+}
+
+
+/**
+ * Paraphrases that count as keeping a hedge. The model rewrites the vetted
+ * answer in its own words, so an exact-string match would fire constantly;
+ * these are the ways a reply can honestly signal "not settled yet".
+ */
+const HEDGE_MARKERS: readonly string[] = [
+  "under review",
+  "subject to",
+  "still going through",
+  "still being",
+  "still subject",
+  "not final",
+  "not locked in",
+  "not yet locked",
+  "proposed",
+  "the plan rather than",
+  "current design",
+  "may change",
+  "before you count on",
+  "not for real jobs yet",
+  "opens at launch",
+  "open at launch",
+  "when we open",
+  "once we",
+];
+
+/**
+ * True when a reply is safe to serve for these entries. If the question touched
+ * a hedged policy and the reply reads as settled fact, the caller should serve
+ * the vetted wording instead of the model's.
+ */
+export function replyKeepsRequiredHedges(
+  reply: string,
+  entries: readonly PolicyEntry[],
+): boolean {
+  if (!entries.some((entry) => entry.hedged)) return true;
+  const text = reply.toLowerCase();
+  return HEDGE_MARKERS.some((marker) => text.includes(marker));
+}
+
+/** The approved wording, used verbatim when a reply fails the hedge guard. */
+export function vettedAnswer(entries: readonly PolicyEntry[]) {
+  return entries.map((entry) => entry.answer).join("\n\n");
 }

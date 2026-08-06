@@ -5,7 +5,9 @@ import test from "node:test";
 import {
   POLICY_ENTRIES,
   findPolicyEntries,
+  replyKeepsRequiredHedges,
   starterQuestions,
+  vettedAnswer,
 } from "../lib/ai/policy-knowledge.ts";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
@@ -123,4 +125,55 @@ test("ai.tuveloz.com is served by this Worker and lands on the assistant", async
   assert.match(worker, /Response\.redirect\(target\.toString\(\), 302\)/);
   // Only the root redirects, so links the assistant hands out still resolve.
   assert.match(worker, /requestUrl\.pathname !== "\/"/);
+});
+
+// The prompt asks the model to keep the policy's hedges; this makes it a rule.
+// Without it, "the fee is 5%" — stated as settled fact about a design still in
+// compliance review — would go straight to a customer.
+test("a reply that drops a required hedge is replaced with the vetted wording", () => {
+  const feeEntries = findPolicyEntries("what do you charge in fees", "customer");
+  assert.ok(feeEntries.some((entry) => entry.hedged));
+
+  for (const settled of [
+    "Tuveloz charges a 5% service fee on your total.",
+    "You pay the labor price plus 5%. That is the fee.",
+  ]) {
+    assert.equal(replyKeepsRequiredHedges(settled, feeEntries), false, settled);
+  }
+
+  for (const hedged of [
+    "The current design adds a 5% fee on top of the labor price.",
+    "It is 5% today, but that is still under review.",
+    "Right now the plan rather than the promise is 5%.",
+  ]) {
+    assert.equal(replyKeepsRequiredHedges(hedged, feeEntries), true, hedged);
+  }
+
+  // The replacement is the approved text, and it carries its own hedge.
+  const fallback = vettedAnswer(feeEntries);
+  assert.match(fallback, /still going through compliance and tax review/);
+  assert.equal(replyKeepsRequiredHedges(fallback, feeEntries), true);
+});
+
+test("the hedge guard leaves ordinary vehicle chat alone", () => {
+  const none = findPolicyEntries("my brakes squeak in the morning", "customer");
+  assert.deepEqual(none, []);
+  // No hedged entry in play means any reply is fine — the guard must not
+  // start policing car advice.
+  assert.equal(replyKeepsRequiredHedges("Sounds like worn pads. Get them looked at.", none), true);
+});
+
+test("every hedged entry is one the policy itself calls provisional", () => {
+  const hedged = POLICY_ENTRIES.filter((entry) => entry.hedged).map((entry) => entry.id);
+  assert.deepEqual(
+    hedged.sort(),
+    ["both-launch-state", "customer-fee", "customer-refunds", "provider-payout"],
+  );
+});
+
+test("the route serves vetted wording instead of a reply that lost its hedge", async () => {
+  const route = await read("app/api/ai/route.ts");
+
+  assert.match(route, /replyKeepsRequiredHedges\(result\.answer, policyEntries\)/);
+  assert.match(route, /reply: hedgesHeld \? result\.answer : vettedAnswer\(policyEntries\)/);
 });
