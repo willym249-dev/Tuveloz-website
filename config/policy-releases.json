@@ -62,5 +62,29 @@
     "reviewBodyHash": "bd299b141473dc90bb0de38714955ef51fa2e4e0f71a56b91b9d5c132fd1fa3b",
     "canonicalBodyHash": "",
     "sourceFile": "app/parts-policy/page.tsx"
+  },
+  "verification_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "f24901ced52f59ebf3b4ceafc4341a1596243c560d988a5ee6248b9b06fa8d86",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/verification-policy/page.tsx"
+  },
+  "review_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "17f652d5e3d76faac5979d32ec9f7f68e98121c9b298fca042ae56930cffd2a1",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/review-policy/page.tsx"
+  },
+  "pricing_policy": {
+    "releaseStatus": "draft",
+    "effectiveAt": "",
+    "releaseId": "",
+    "reviewBodyHash": "b88b7cfaacb32b1db1a8169c43df1cf6a298f93641d08755e9d858ff58351a57",
+    "canonicalBodyHash": "",
+    "sourceFile": "app/pricing-policy/page.tsx"
   }
 }

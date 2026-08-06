@@ -84,6 +84,9 @@ const POLICY_RELEASE_PRESENTATION: Record<PolicyReleaseKey, {
   marketplace_conduct: { title: "Marketplace conduct and review policy", href: "/marketplace-conduct" },
   provisional_provider_policy: { title: "Provisional provider policy", href: "/provisional-provider-policy" },
   parts_policy: { title: "Parts policy", href: "/parts-policy" },
+  verification_policy: { title: "Verification policy", href: "/verification-policy" },
+  review_policy: { title: "Review policy", href: "/review-policy" },
+  pricing_policy: { title: "No-surprise pricing policy", href: "/pricing-policy" },
 };
 
 function launchStateReason(state: string) {
