@@ -152,7 +152,8 @@ test("relationship gates prevent blanket or borrowed-credential approval", async
   assert.match(policy, /"provider_personnel_roster"/);
   assert.match(policy, /"provider_employee_record"/);
   assert.match(route, /sponsoring_provider_not_eligible_for_exact_service/);
-  assert.match(route, /provider_of_record_assignment_not_implemented/);
+  assert.match(route, /provider_of_record_model_not_approved/);
+  assert.match(route, /providerOfRecordGate\?\.approved/);
   assert.match(route, /employeeAttestationsComplete/);
   assert.match(route, /eligibleServices\.length > 0/);
   assert.match(route, /approvedServices: serializeProviderServices\(eligibleServices\)/);

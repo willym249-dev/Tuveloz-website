@@ -158,7 +158,8 @@ test("every operational stage uses the central eligibility model and no real pro
   assert.ok(engine.includes("customer_assignment_acceptance_required"));
   assert.ok(engine.includes("supervision_checkpoint_missing"));
   assert.ok(engine.includes("sponsoring_provider_not_eligible_for_exact_service"));
-  assert.ok(engine.includes("provider_of_record_assignment_not_implemented"));
+  assert.ok(engine.includes("provider_of_record_model_not_approved"));
+  assert.match(engine, /employeeTraineeProviderOfRecordApproval\(\s*options\.through\.getTime\(\)/);
   assert.ok(engine.includes("owner_operator_registration_binding_missing"));
   assert.ok(policy.includes("RELATIONSHIP_EVIDENCE_REQUIREMENTS"));
   assert.match(policy, /independent_startup: Object\.freeze\(\[\s*"no_employee_attestation"/);

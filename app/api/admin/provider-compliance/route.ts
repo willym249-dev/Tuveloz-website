@@ -72,7 +72,11 @@ import {
   type ServiceCode,
 } from "../../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../../lib/request-security";
-import { runtimeProviderActivationPrerequisitesDecision } from "../../../../lib/runtime-launch-readiness";
+import {
+  employeeTraineeProviderOfRecordApproval,
+  runtimeProviderActivationPrerequisitesDecision,
+  type EmployeeTraineeProviderOfRecordApproval,
+} from "../../../../lib/runtime-launch-readiness";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
 import {
   parseProviderServices,
@@ -486,6 +490,7 @@ function evaluateService(input: {
   activation: ActivationRow | undefined;
   sponsorProvider?: typeof providerApplications.$inferSelect;
   sponsorEligibility?: EligibilityRow;
+  providerOfRecordGate?: EmployeeTraineeProviderOfRecordApproval;
 }) {
   const {
     provider,
@@ -498,6 +503,7 @@ function evaluateService(input: {
     activation,
     sponsorProvider,
     sponsorEligibility,
+    providerOfRecordGate,
   } = input;
   const reasons: string[] = [];
   const pathway = profile && isProviderPathway(profile.relationshipPath)
@@ -557,7 +563,11 @@ function evaluateService(input: {
     if (profile?.providerPersonId !== person?.personId) reasons.push("owner_operator_person_mismatch");
   }
   if (pathway === "sponsored_trainee_employee" || pathway === "provider_business_employee") {
-    reasons.push("provider_of_record_assignment_not_implemented");
+    // Open only while the employee-and-trainee provider-of-record launch gate
+    // holds a current approval from its outside authorities. Fail-closed.
+    if (!providerOfRecordGate?.approved) {
+      reasons.push("provider_of_record_model_not_approved");
+    }
     const expectedRelationship = pathway === "sponsored_trainee_employee" ? "trainee" : "employee";
     if (person?.relationshipType !== expectedRelationship) reasons.push("employee_relationship_missing");
     if (!profile?.sponsoringProviderId || profile.registrationHolderId !== profile.sponsoringProviderId) {
@@ -617,6 +627,9 @@ function evaluateService(input: {
     .filter((row): row is EvidenceRow => Boolean(row));
   const validThrough = earliestDate([
     activation?.validThrough ?? "",
+    (pathway === "sponsored_trainee_employee" || pathway === "provider_business_employee")
+      ? providerOfRecordGate?.validThrough ?? ""
+      : "",
     ...acceptedEvidence.map((row) => row.expiresAt),
     ...acceptedEvidence.map((row) => row.authenticityValidThrough),
     person?.identityVerificationValidThrough ?? "",
@@ -687,6 +700,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
   const agreements = await currentAgreements(acceptanceRows);
   const scans = latestScanMap(scanRows);
   const activations = latestActivations(activationRows);
+  const providerOfRecordGate = await employeeTraineeProviderOfRecordApproval();
   const serviceCodes = parseProviderServices(provider.service)
     .filter(isServiceCode)
     .filter((serviceCode) => serviceCode !== "general_auto_repair");
@@ -704,6 +718,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
       row.serviceCode === serviceCode
       && row.jurisdiction === POLICY_JURISDICTION
     )),
+    providerOfRecordGate,
   }));
   const now = new Date().toISOString();
   for (const evaluation of evaluations) {
@@ -888,6 +903,7 @@ async function complianceResponse() {
   const personnel = latestPersonnel(personnelRows);
   const scans = latestScanMap(scanRows);
   const activations = latestActivations(activationRows);
+  const providerOfRecordGate = await employeeTraineeProviderOfRecordApproval();
   const applications = await Promise.all(providers.map(async (provider) => {
     const profile = profiles.get(provider.id);
     const providerPeople = personnel.filter((person) => person.providerId === provider.id);
@@ -918,6 +934,7 @@ async function complianceResponse() {
             && item.jurisdiction === POLICY_JURISDICTION
           ))
         : undefined,
+      providerOfRecordGate,
     }));
     return {
       id: provider.id,
