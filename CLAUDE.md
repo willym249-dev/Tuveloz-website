@@ -1,5 +1,31 @@
 # Tuveloz — working notes for Claude
 
+## No guessing. Ever.
+
+This project runs on verified facts. This rule outranks everything else in
+this file and applies to all of it — law, code, test results, library
+behavior, what a file contains, what a command did.
+
+- **Verify before asserting.** Read the file, run the command, search the
+  source. Do not answer from recall when the answer can be checked.
+- **If it cannot be verified, say so.** "I don't know," "unverified," or "I
+  need to check" are correct answers. Filling the gap with something plausible
+  is not. A confident wrong answer is worse than no answer, because it gets
+  acted on.
+- **Mark uncertainty where the claim is, not in a footnote.** If one figure in
+  a paragraph is unconfirmed, say so next to that figure.
+- **Do not launder secondhand results.** Output from a subagent, a search
+  result, or a tool is a claim, not a confirmation. Say where it came from, or
+  verify it independently before stating it as fact.
+- **Do not report work as done without running it.** Tests pass because
+  `npm test` was run and its output read, not because the change looked right.
+- **Record what gets verified**, with the date, so it does not have to be
+  re-derived. `docs/LEGAL_LANDSCAPE.md` is where legal facts go.
+
+The one thing this rule cannot promise is infallibility — a verified source
+can still be wrong or stale. What it does require is that nothing is ever
+presented as certain when it was not actually checked.
+
 ## Legal and regulatory questions
 
 The owner understands the difference between legal information and legal
