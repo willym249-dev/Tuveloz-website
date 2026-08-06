@@ -79,6 +79,23 @@ npm test
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete GitHub and Cloudflare setup.
 
+## Company notes
+
+`docs/company-notes.md` holds the things that stay true between sessions: how
+Tuveloz measures success (awareness → interest → consideration → decision), the
+content mistakes it has decided to avoid, and ideas worth trying. Every question
+asked through `npm run ai` is grounded in that file in full, so what is written
+there shapes later answers instead of being re-explained each time.
+
+Add to it with `npm run note -- "what we learned"`, or
+`npm run note -- --section "Ideas worth trying" "the idea"`. Editing the file
+by hand works the same way — it is plain markdown and git-tracked, so a note is
+reviewed like any other change.
+
+This is separate from `ai-council-log.jsonl`, which records recent council
+answers and is only shown a few entries deep. Anything meant to be remembered
+permanently belongs in the notes file, not the log.
+
 ## Account safety and notifications
 
 - Every saved customer request queues an owner notification with the request ID

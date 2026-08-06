@@ -37,6 +37,7 @@ import {
   type CouncilMode,
   type CouncilResult,
 } from "../lib/ai/council.ts";
+import { formatNotesForContext } from "../lib/ai/company-notes.ts";
 import {
   parseLogLines,
   serializeLogEntry,
@@ -56,6 +57,7 @@ const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL_PATH = path.join(REPO_ROOT, ".env.local");
 const CACHE_PATH = path.join(REPO_ROOT, ".ai-council-cache.json");
 const LOG_PATH = path.join(REPO_ROOT, "ai-council-log.jsonl");
+export const NOTES_PATH = path.join(REPO_ROOT, "docs", "company-notes.md");
 const MAX_CACHE_ENTRIES = 200;
 const LOG_CONTEXT_ENTRIES = 8;
 const MAX_FILE_CHARS = 6000;
@@ -92,6 +94,15 @@ async function loadDecisionLog(): Promise<DecisionLogEntry[]> {
     return parseLogLines(await readFile(LOG_PATH, "utf8"));
   } catch {
     return [];
+  }
+}
+
+async function loadStandingNotes(): Promise<string> {
+  try {
+    return formatNotesForContext(await readFile(NOTES_PATH, "utf8"));
+  } catch {
+    // No notes file yet — every other kind of context still works.
+    return "";
   }
 }
 
@@ -217,14 +228,18 @@ async function main() {
     return;
   }
 
-  const [priorDecisions, gitContext, fileExcerpts] = await Promise.all([
+  const [priorDecisions, standingNotes, gitContext, fileExcerpts] = await Promise.all([
     args.noLog ? Promise.resolve([]) : loadDecisionLog(),
+    loadStandingNotes(),
     args.noGit ? Promise.resolve("") : gatherGitContext(),
     readFileExcerpts(args.files),
   ]);
   const teamContext = summarizeForContext(priorDecisions, LOG_CONTEXT_ENTRIES);
   const fileAppendix = formatFileAppendix(fileExcerpts);
-  const system = [PROJECT_BRIEF, gitContext, teamContext, fileAppendix, args.system]
+  // Standing notes sit right behind the project brief and are always sent in
+  // full. Unlike the decision log they are not a rolling window: how the
+  // company measures success should not age out after a few questions.
+  const system = [PROJECT_BRIEF, standingNotes, gitContext, teamContext, fileAppendix, args.system]
     .filter(Boolean)
     .join("\n\n") || undefined;
 
