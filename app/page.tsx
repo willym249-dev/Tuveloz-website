@@ -1610,6 +1610,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               a real voice in how Tuveloz works. Free to apply, no subscription, no
               exclusivity — there&apos;s no better time to bet on yourself.
             </p>
+            {/* The banner sells "founding provider" but the terms live on their
+                own page, which nothing else on the site links to. Kept a text
+                link so the lime button stays the one call to action — it is
+                what the founding_cta experiment measures. */}
+            <Link className="text-link" href="/founding-providers">
+              See what founding providers get →
+            </Link>
           </div>
           <a className="button lime" href="#provider-apply">
             {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>

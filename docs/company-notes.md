@@ -116,9 +116,12 @@ judged rather than just felt good about.
   the founding-cohort count and what has to be true before launch turns the
   objection into a reason to be early. *Stage 3.*
 
-- **Link `/founding-providers` from somewhere.** It is in the sitemap and
-  reachable from outreach, but nothing in the site links to it — a live example
-  of mistake 3. The page already exists; the fix is a link. *Stage 3.*
+- ~~**Link `/founding-providers` from somewhere.**~~ Done 2026-08-06: the
+  founding banner now carries "See what founding providers get". Kept a text
+  link rather than a second button so the `founding_cta` experiment still
+  measures one call to action. *Watch interest → consideration on the funnel:
+  explaining the offer should lift it, and the extra exit could cost it. This
+  is the first change we can settle with data instead of taste.*
 
 - **One honest post to r/montgomerycountymd and Nextdoor.** These are hostile
   to marketing and receptive to a founder being straight with them: "I'm

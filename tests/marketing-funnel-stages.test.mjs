@@ -90,6 +90,20 @@ test("awareness and consideration are actually fired by the app", async () => {
   assert.match(ingest, /"provider_form_engaged"/);
 });
 
+test("the founding-provider terms are reachable from the site, not just outreach", async () => {
+  const [page, sitemap] = await Promise.all([
+    source("app/page.tsx"),
+    source("app/sitemap.ts"),
+  ]);
+  assert.match(sitemap, /path: "\/founding-providers"/);
+  // The banner sells the founding offer; a provider weighing it has to be able
+  // to read the terms without leaving for a search engine.
+  assert.match(page, /href="\/founding-providers"/);
+  // A text link, not a second button: the lime CTA is what the founding_cta
+  // experiment measures, and a competing button would split it.
+  assert.match(page, /className="text-link" href="\/founding-providers"/);
+});
+
 test("each channel is measured on the same four stages", async () => {
   const [api, page] = await Promise.all([
     source("app/api/admin/analytics-funnel/route.ts"),

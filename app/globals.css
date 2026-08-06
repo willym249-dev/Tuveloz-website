@@ -4460,6 +4460,12 @@ label > small {
   white-space: nowrap;
 }
 
+/* Sits under the paragraph inside the banner, so the default standalone
+   spacing is too much here. */
+.founding-banner .text-link {
+  margin-top: 16px;
+}
+
 @media (max-width: 900px) {
   .pitch-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
