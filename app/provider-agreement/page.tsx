@@ -153,13 +153,20 @@ export default function ProviderAgreementPage() {
       <section>
         <h2>8. Your warranty choice</h2>
         <p>
-          You choose whether to offer the Tuveloz standard labor warranty: a
-          written warranty from your business on your workmanship for 12
-          months or 12,000 miles, whichever comes first, honored by
-          re-performing the covered labor at no additional labor charge.
-          Offering it is optional — you can offer the standard labor
-          warranty, your own different written warranty, or no written
-          warranty at all.
+          You choose whether to offer the Tuveloz standard labor warranty
+          for your type of work, your own different written warranty, or no
+          written warranty at all. The standard labor warranty is your
+          business&apos;s written warranty on your workmanship, honored by
+          re-performing the covered labor at no additional labor charge,
+          and its period depends on the work performed: 12 months or 12,000
+          miles, whichever comes first, for repair and replacement work; 90
+          days or 3,000 miles, whichever comes first, for maintenance and
+          consumable services such as oil changes, filters, wiper blades,
+          and bulbs; and 7 days for cosmetic work such as detailing.
+          Inspections, diagnostics, and photo condition reports carry no
+          workmanship warranty — there is no labor to re-perform — and are
+          covered instead by the accuracy and care duties in the{" "}
+          <a href="/marketplace-conduct">Marketplace Conduct Policy</a>.
         </p>
         <p>
           Whatever you choose must be disclosed to the customer before they
@@ -167,10 +174,11 @@ export default function ProviderAgreementPage() {
           a clear statement when no written warranty is offered. A warranty
           you state is your business&apos;s commitment to the customer — Tuveloz
           does not provide, back, administer, or insure any provider
-          warranty. Refusing to honor a warranty you stated is treated as a
-          violation of the <a href="/marketplace-conduct">Marketplace Conduct
-          Policy</a>. Nothing in this section limits implied or statutory
-          warranty rights that applicable law provides on its own.
+          warranty. Refusing to honor a warranty you stated results in
+          immediate termination of your access to Tuveloz, in addition to
+          any remedy the customer has under applicable law. Nothing in this
+          section limits implied or statutory warranty rights that
+          applicable law provides on its own.
         </p>
       </section>
 

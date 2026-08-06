@@ -103,13 +103,19 @@ export default function CustomerAgreementPage() {
         <p>
           Each provider business chooses its own written warranty. Some
           providers offer the Tuveloz standard labor warranty — the provider
-          business&apos;s written warranty on its workmanship for 12 months or
-          12,000 miles, whichever comes first, honored by re-performing the
-          covered labor at no additional labor charge. Others offer a
-          different written warranty or none at all. The provider&apos;s warranty
-          choice must be disclosed to you before you accept a quote and
-          stated again on the final invoice. Any warranty is provided and
-          honored by the provider business, not by Tuveloz.
+          business&apos;s written warranty on its workmanship, honored by
+          re-performing the covered labor at no additional labor charge. Its
+          period depends on the type of work: 12 months or 12,000 miles,
+          whichever comes first, for repair and replacement work; 90 days or
+          3,000 miles for maintenance and consumable services; and 7 days
+          for cosmetic work such as detailing. Inspections, diagnostics, and
+          photo condition reports carry no workmanship warranty. Other
+          providers offer a different written warranty or none at all. The
+          provider&apos;s warranty choice must be disclosed to you before you
+          accept a quote and stated again on the final invoice. Any warranty
+          is provided and honored by the provider business, not by Tuveloz —
+          and a provider that refuses to honor a warranty it stated is
+          removed from Tuveloz.
         </p>
       </section>
 

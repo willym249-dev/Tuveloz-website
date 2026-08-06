@@ -87,14 +87,21 @@ open decisions that actually matter before launch are **arbitration** and **warr
 
 ## The warranty question (the decision to make)
 
-> **DECIDED (August 6, 2026): Option B, made optional.** Providers may choose to
-> offer the Tuveloz standard labor warranty (12 months / 12,000 miles on labor,
-> honored by re-performing the covered labor at no additional labor charge), a
-> different written warranty, or none — but the choice must be disclosed to the
-> customer before quote acceptance and on the final invoice, and a stated warranty
-> must be honored (enforceable under the Marketplace Conduct Policy). Tuveloz backs
-> nothing itself. Implemented in Provider Agreement §8 and Customer Agreement §6,
-> released as provider-agreement-2026-08-06 / customer-agreement-2026-08-06.
+> **DECIDED (August 6, 2026): Option B, made optional, with tiered periods.**
+> Providers may choose to offer the Tuveloz standard labor warranty, a different
+> written warranty, or none. The standard labor warranty is honored by
+> re-performing the covered labor at no additional labor charge, with a period
+> tiered by work type: 12 months / 12,000 miles for repair and replacement work;
+> 90 days / 3,000 miles for maintenance and consumables (oil changes, filters,
+> wipers, bulbs); 7 days for cosmetic work (detailing); no workmanship warranty
+> for inspections, diagnostics, and photo condition reports (nothing to
+> re-perform — accuracy is enforced by the Conduct Policy instead). The choice
+> must be disclosed to the customer before quote acceptance and on the final
+> invoice. **Refusing to honor a stated warranty is immediate termination**, not
+> the graduated enforcement ladder. Tuveloz backs nothing itself. Implemented in
+> Provider Agreement §8, Customer Agreement §6, and Marketplace Conduct Policy
+> v0.12 §§8/10; released as provider-agreement-2026-08-06-r2 /
+> customer-agreement-2026-08-06-r2 / marketplace-conduct-2026-08-06.
 
 **The question in one sentence:** when a repair goes bad two weeks later, who is on
 the hook to make it right — Tuveloz, the provider, or nobody?

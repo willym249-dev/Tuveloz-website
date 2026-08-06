@@ -3,15 +3,15 @@ import { PolicyPage } from "../components/policy-page";
 export default function MarketplaceConductPage() {
   return (
     <PolicyPage
-      eyebrow="Providers • Operational review draft v0.11"
+      eyebrow="Providers • Operational review draft v0.12"
       title="Marketplace Conduct Policy"
       summary="Draft conduct rules for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="August 4, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Draft status and scope</h2>
         <p>
-          Version 0.11 is an operational review draft. It is not legal advice,
+          Version 0.12 is an operational review draft. It is not legal advice,
           proof of compliance, active production policy, or authorization to
           perform a service. Tuveloz&apos;s owner may elect not to hire private
           counsel, but every applicable legal requirement remains mandatory. It
@@ -147,6 +147,10 @@ export default function MarketplaceConductPage() {
           records, manipulate a refund or chargeback, or misuse a customer&apos;s
           payment method. The provider business controls and is responsible for
           the invoice, service warranty, required records, and final sign-off.
+          State the business&apos;s warranty choice truthfully before the customer
+          accepts the quote and again on the final invoice, and honor any
+          warranty the business stated. Refusing to honor a stated warranty
+          results in immediate termination of platform access.
         </p>
         <p>
           Tuveloz transfers an eligible job payout to the provider business—not
@@ -184,6 +188,9 @@ export default function MarketplaceConductPage() {
           removal of a service, cancellation, payout review, suspension, or
           termination. Immediate blocking is appropriate for an unmet legal or
           insurance gate or a serious safety, identity, fraud, or credential risk.
+          Refusing to honor a warranty stated to a customer is not handled
+          through the graduated steps above — it results in immediate
+          termination.
         </p>
         <p>
           When reasonably practical and legally appropriate, Tuveloz will state
