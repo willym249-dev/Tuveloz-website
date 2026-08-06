@@ -2,6 +2,9 @@
 
 ## Update 2026-08-06
 
+- **STANDING RULE (Wil): no AI generations — video, image, or voice — on any
+  platform unless Wil explicitly says go.** Planning, specs, and sheets are
+  fine; spending credits is not.
 - **Artlist credits: 140 left** (verified via the Artlist connector, AI Suite
   16500 plan, renews 2026-09-04). The ~15,960 figure below is stale — the
   balance was burned between 8/4 and 8/6. Treat Artlist AI generation as
