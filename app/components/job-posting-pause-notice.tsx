@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CUSTOMER_JOB_POSTING_PAUSED_DETAIL } from "../../lib/launch-status";
-
-// The banner sits above every page, so it leads with where Tuveloz is headed
-// rather than with what is switched off. The substance is unchanged: requests
-// and payments are not live, and signing up neither books nor charges anything.
+// The banner sits above every page, so it is the first voice a visitor hears.
+// It says the same two things the API-facing constants say — you cannot post a
+// job yet, and signing up books nothing and costs nothing — in the words a
+// person would actually use.
 const LAUNCH_BANNER_MESSAGE =
-  "Providers are signing up across Montgomery County, Maryland right now. Customer service requests and payments open once launch review is complete.";
+  "Mechanics near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.";
+
+const LAUNCH_BANNER_DETAIL =
+  "Making an account today is free, and it doesn't book anything or charge you.";
 
 export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
@@ -126,7 +128,7 @@ export function JobPostingPauseNotice() {
       >
         <div className="tuveloz-launch-pause-copy">
           <div className="tuveloz-launch-pause-heading">
-            <strong>Opening soon · Montgomery County, MD</strong>
+            <strong>Almost open · Montgomery County, MD</strong>
             <button
               aria-controls="tuveloz-launch-pause-details"
               aria-expanded={expanded}
@@ -138,7 +140,7 @@ export function JobPostingPauseNotice() {
             </button>
           </div>
           <span id="tuveloz-launch-pause-details">{LAUNCH_BANNER_MESSAGE}</span>
-          <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
+          <span>{LAUNCH_BANNER_DETAIL}</span>
         </div>
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
           <Link href="/account?role=customer&mode=create">Create customer account</Link>

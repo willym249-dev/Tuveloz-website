@@ -44,7 +44,7 @@ export const LAUNCH_SERVICES: ReadonlyArray<{
   {
     icon: "diagnostics",
     title: "Find out what's wrong",
-    text: "A local provider checks your car on-site to see what's going on.",
+    text: "A local mechanic comes to your car and figures out what's going on.",
     serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
   },
 ];
@@ -64,17 +64,17 @@ export const CUSTOMER_STEPS: ReadonlyArray<{
 }> = [
   {
     number: "01",
-    title: "Say what your car needs",
-    text: "Your vehicle, the problem, and when you'd like it handled. A short description is plenty.",
+    title: "Tell us what's going on",
+    text: "Your car, what it's doing, and when you'd like it looked at. A sentence or two is plenty — you don't need to know what's wrong.",
   },
   {
     number: "02",
-    title: "Real quotes come to you",
-    text: "Local independent providers who are approved for that exact service send their own price.",
+    title: "Prices come to you",
+    text: "Local mechanics who are cleared for that exact job send you their own price. No calling around.",
   },
   {
     number: "03",
-    title: "Choose what works",
-    text: "Compare the quotes side by side and pick one — or don't accept any. It's your call either way.",
+    title: "Pick who you like",
+    text: "Line the prices up, pick the one that feels right — or pick nobody. Either way, it costs you nothing.",
   },
 ];

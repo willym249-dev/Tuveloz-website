@@ -20,76 +20,76 @@ import { TuvelozIcon } from "../components/tuveloz-icons";
 export const metadata: Metadata = {
   title: "For Customers — Real Quotes From Local Pros",
   description:
-    "Say what your car needs once and compare real quotes from independent local providers in Montgomery County, MD. Free to post, free to compare, no obligation.",
+    "Tell us what your car needs once and compare real prices from local mechanics in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
 };
 
 const valueProps = [
   {
     icon: "quote" as const,
     title: "Real prices, side by side",
-    text: "No “bring it in and we'll see.” You get actual numbers from actual local providers, and you read them all before you commit to anything.",
+    text: "No more “bring it in and we'll take a look.” You get actual numbers from actual local mechanics, and you read them all before you agree to anything.",
   },
   {
     icon: "open-jobs" as const,
-    title: "Only the pros who fit",
-    text: "Your request reaches providers approved for that exact service in your area — not a call list. Less phone tag, better matches.",
+    title: "Only the right people see it",
+    text: "Your job goes to mechanics near you who are cleared for that exact work — not to a giant call list. Way less phone tag.",
   },
   {
     icon: "active-job" as const,
     title: "They come to your car",
-    text: "Mobile mechanics and service trucks work where your car already sits: your driveway, your office lot, your street.",
+    text: "Plenty of them are mobile, so they work where your car already is — your driveway, the office lot, wherever it broke down.",
   },
 ];
 
 const trustPoints = [
   {
-    title: "You are never locked in",
-    text: "Posting is free, comparing is free, and you can accept nothing at all. There is no fee for walking away.",
+    title: "You're never stuck",
+    text: "Asking is free, comparing is free, and you can walk away from every single price you get. It costs you nothing to say no thanks.",
   },
   {
-    title: "Independent local businesses",
-    text: "Providers are their own businesses, not Tuveloz employees. They set their own price, schedule, and methods — and you see exactly who you picked.",
+    title: "Real local businesses",
+    text: "Everyone here runs their own shop or truck — they don't work for us. They set their own prices and hours, and you'll see exactly who you picked.",
   },
   {
     title: "Your address stays yours",
-    text: "Providers see only what they need in order to decide whether to quote. Your exact address and contact details go to the one provider you select.",
+    text: "Mechanics see only enough to give you a price. Your exact address and phone number go to the one person you choose, and nobody else.",
   },
   {
-    title: "The fee is on the screen",
-    text: "Tuveloz adds an itemized 5% customer service fee to the total, shown before you confirm. It is never buried inside the provider's labor price.",
+    title: "Our fee is right on the screen",
+    text: "We add 5% to the total, listed as its own line before you confirm. It's never quietly folded into the mechanic's price.",
   },
 ];
 
 const faqs = [
   {
-    question: "What does it cost me?",
+    question: "What does this cost me?",
     answer:
-      "Posting a request and comparing quotes is free. You pay only for work you accept: the provider's quoted labor price plus an itemized 5% Tuveloz service fee, both shown before you confirm.",
+      "Asking and comparing is free. You only pay for work you say yes to: the mechanic's price for the labor, plus our 5% fee listed separately. You see both before you confirm anything.",
   },
   {
-    question: "Do I have to accept a quote?",
+    question: "Do I have to say yes to any of them?",
     answer:
-      "No. Read every quote, ask questions, and accept none of them if nothing fits. There is no obligation and no charge for deciding not to book.",
+      "Nope. Read them all, ask questions, and turn every one of them down if nothing feels right. It costs you nothing to walk away.",
   },
   {
     question: "Who actually does the work?",
     answer:
-      "An independent local provider you choose. Tuveloz is the marketplace that connects you and keeps the paperwork straight; the work itself is a direct agreement between you and that provider.",
+      "A local mechanic you picked yourself. We introduce the two of you and keep the paperwork straight — the work itself is between you and them.",
   },
   {
     question: "What about parts?",
     answer:
-      "Tuveloz quotes cover labor. You buy the part separately, and the request flow is built to line up the exact part before the appointment so a wrong part does not waste anyone's trip.",
+      "Prices here cover the labor, so you buy the part yourself. We'll help you pin down the exact part before the appointment, so nobody wastes a trip on the wrong one.",
   },
   {
     question: "When can I post a job?",
     answer:
-      "Providers are onboarding in Montgomery County, Maryland right now, and customer requests and payments switch on once launch review is complete. Create your account today and you are first in line — signing up does not submit a request, contact a provider, book service, or charge you.",
+      "Very soon. Mechanics across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.",
   },
   {
-    question: "My car needs something that is not listed. Now what?",
+    question: "My car needs something that's not on the list. Now what?",
     answer:
-      "Tell us anyway. The services people ask for most are the ones we open next, and area requests decide where Tuveloz launches after Montgomery County.",
+      "Tell us anyway! The jobs people ask about most are the ones we add next, and the areas people ask about decide where we go after Montgomery County.",
   },
 ];
 
@@ -103,26 +103,26 @@ function CustomerLander() {
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="pulse" />
-            Early access · Montgomery County, MD
+            Almost open · Montgomery County, MD
           </div>
           <h1>
             Car trouble.
             <br />
-            <span className="hero-value-line">Real quotes. Zero guesswork.</span>
+            <span className="hero-value-line">Real prices. Zero guesswork.</span>
           </h1>
           <p>
-            Say what your car needs once. Independent local providers send you their
-            own price, you put those prices side by side, and you pick. No calling
-            five shops, no mystery number at pickup.
+            Tell us what&apos;s going on with your car. Local mechanics send you their
+            price, you line them up next to each other, and you pick. No calling five
+            shops, no surprise number when you go to pay.
           </p>
           <ul className="hero-highlights">
-            <li><span aria-hidden="true">✓</span> Free to post, free to compare</li>
-            <li><span aria-hidden="true">✓</span> Real local providers, not a call center</li>
-            <li><span aria-hidden="true">✓</span> Accept a quote only if it fits</li>
+            <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
+            <li><span aria-hidden="true">✓</span> Real local mechanics, not a call center</li>
+            <li><span aria-hidden="true">✓</span> Say yes only if the price feels right</li>
           </ul>
           <div className="hero-actions">
             <Link className="button primary" href="/account?role=customer&mode=create">
-              Get early access — free <span>→</span>
+              Save my spot — free <span>→</span>
             </Link>
             <a className="button secondary" href="#how-it-works">
               See how it works <span>→</span>
@@ -133,8 +133,8 @@ function CustomerLander() {
           </div>
           <div className="hero-launch-note">
             <strong>
-              Providers are joining now. Customer requests open at launch — early-access
-              accounts go first.
+              Mechanics are joining now. You&apos;ll be able to post a job the day we
+              open, and early sign-ups go first.
             </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
           </div>
@@ -167,16 +167,16 @@ function CustomerLander() {
             </article>
           </div>
           <p className="hero-visual-caption">
-            Concept preview — not a live job. Customer requests and quotes open at launch.
+            A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch.
           </p>
         </div>
       </section>
 
       <section className="proof-strip" aria-label="What Tuveloz promises customers">
-        <span><b>Free</b> to post and to compare quotes</span>
-        <span><b>No obligation</b> — accept a quote only if it fits</span>
-        <span><b>5% fee</b> itemized before you confirm</span>
-        <span><b>Montgomery County</b> Maryland, with more areas next</span>
+        <span><b>Free</b> to ask and to compare prices</span>
+        <span><b>No pressure</b> — say yes only if you want to</span>
+        <span><b>5% fee</b> shown on its own line before you confirm</span>
+        <span><b>Montgomery County</b> Maryland, more areas next</span>
       </section>
 
       <section className="section lander-value" aria-labelledby="lander-value-heading">
@@ -186,8 +186,9 @@ function CustomerLander() {
             <h2 id="lander-value-heading">Stop guessing what a repair should cost.</h2>
           </div>
           <p>
-            The worst part of car trouble is not the repair — it is not knowing whether
-            the price is fair. Tuveloz puts the answer in front of you before you commit.
+            The worst part of car trouble usually isn&apos;t the repair — it&apos;s not
+            knowing if the price is fair. We put that answer in front of you before you
+            agree to anything.
           </p>
         </div>
         <div className="lander-value-grid">
@@ -206,12 +207,12 @@ function CustomerLander() {
       <section className="section how" id="how-it-works">
         <div className="how-intro">
           <span className="kicker light">How it works</span>
-          <h2>Three steps. That is the whole thing.</h2>
+          <h2>Three steps. That&apos;s the whole thing.</h2>
           <p>
-            Requests and quotes switch on at launch. Set up your account now and step one
-            takes about a minute on the day it opens.
+            You can&apos;t post a job just yet. Set up your account now and step one
+            takes about a minute the day we open.
           </p>
-          <Link className="text-link" href="/how-it-works">Read the full flow →</Link>
+          <Link className="text-link" href="/how-it-works">See it in more detail →</Link>
         </div>
         <div className="steps">
           {CUSTOMER_STEPS.map((step) => (
@@ -233,9 +234,9 @@ function CustomerLander() {
             <h2>The everyday stuff, handled where you park.</h2>
           </div>
           <p>
-            These are the first services opening in Montgomery County. Each one switches
-            on for real jobs as it clears launch review, and early-access customers hear
-            the moment it does.
+            These are the jobs we&apos;re starting with in Montgomery County. We turn
+            them on one at a time as we&apos;re ready, and we&apos;ll email you the
+            moment yours is live.
           </p>
         </div>
         <div className="service-cards">
@@ -254,10 +255,10 @@ function CustomerLander() {
       <section className="trust-section" aria-labelledby="lander-trust-heading">
         <div className="trust-intro">
           <span className="kicker light">Straight answers</span>
-          <h2 id="lander-trust-heading">Nothing about this is designed to trap you.</h2>
+          <h2 id="lander-trust-heading">There&apos;s no catch here.</h2>
           <p className="trust-intro-text">
-            Here is where Tuveloz&apos;s responsibility starts and stops, in plain words,
-            before you sign up for anything.
+            Before you sign up for anything, here&apos;s exactly what we do and what we
+            don&apos;t — in plain words.
           </p>
         </div>
         <div className="trust-grid lander-trust-grid">
@@ -272,18 +273,18 @@ function CustomerLander() {
 
       <section className="section early-access" id="early-access">
         <div className="early-access-copy">
-          <span className="kicker">Early access</span>
-          <h2>Be first in line when requests open.</h2>
+          <span className="kicker">Save your spot</span>
+          <h2>Be first in line when we open.</h2>
           <p>
-            Creating a customer account takes about two minutes and keeps your
-            vehicle and contact details ready, so the day requests open you post
-            instead of filling out forms. Nothing on this page submits a
+            Making an account takes about two minutes and saves your car and
+            contact details, so the day we open you can just post instead of
+            filling out forms. Nothing on this page submits a
             request, contacts a provider, books service, or processes a payment.
           </p>
           <ul>
-            <li><span aria-hidden="true">✓</span> Your account is ready the second requests open</li>
-            <li><span aria-hidden="true">✓</span> Requests reach only providers approved for that exact service</li>
-            <li><span aria-hidden="true">✓</span> You decide whether to accept a quote — every time</li>
+            <li><span aria-hidden="true">✓</span> Ready to go the second we open</li>
+            <li><span aria-hidden="true">✓</span> Only mechanics cleared for that exact job see it</li>
+            <li><span aria-hidden="true">✓</span> Saying yes to a price is always your call</li>
           </ul>
           <div className="hero-actions">
             <Link className="button primary" href="/account?role=customer&mode=create">
@@ -296,10 +297,10 @@ function CustomerLander() {
         </div>
 
         <div className="early-access-form">
-          <h3>Just want the launch email?</h3>
+          <h3>Just want an email when we open?</h3>
           <p>
-            Drop your address and we will write once, when customer requests open in
-            Montgomery County. No account required.
+            Leave your address and we&apos;ll write you once, the day we open in
+            Montgomery County. No account needed.
           </p>
           <LaunchUpdatesForm source="customer-lander" />
         </div>
@@ -309,11 +310,11 @@ function CustomerLander() {
         <div className="section-heading">
           <div>
             <span className="kicker">Questions people actually ask</span>
-            <h2 id="lander-faq-heading">The short answers.</h2>
+            <h2 id="lander-faq-heading">Straight answers, no fine print.</h2>
           </div>
           <p>
-            Anything not covered here lives in the <Link className="text-link" href="/faq">full FAQ</Link>,
-            or email us at <a className="text-link" href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+            Don&apos;t see yours? There&apos;s more in the <Link className="text-link" href="/faq">full FAQ</Link>,
+            or just email us at <a className="text-link" href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> — a real person answers.
           </p>
         </div>
         <div className="lander-faq-list">
@@ -331,12 +332,12 @@ function CustomerLander() {
         <h2>Your car. Your quotes. Your call.</h2>
         <div>
           <Link className="button lime" href="/account?role=customer&mode=create">
-            Get early access — free <span>→</span>
+            Save my spot — free <span>→</span>
           </Link>
           <Link className="button ghost" href="/how-it-works">See how it works</Link>
         </div>
         <p className="final-cta-note">
-          Free to join. Job requests and payments switch on at launch.
+          Free to join. Posting a job and paying through us starts the day we open.
         </p>
       </section>
 
@@ -362,10 +363,10 @@ export default async function PostJobPage() {
       <section className="account-main">
         <div className="account-welcome">
           <span className="account-kicker">Request service</span>
-          <h1>Tell us what your vehicle needs.</h1>
+          <h1>Tell us what your car needs.</h1>
           <p>
-            Post your request, compare quotes from local independent providers,
-            and choose the one that works — or accept nothing at all.
+            Post it once, compare prices from local mechanics, and pick the one you
+            like — or none of them. Up to you.
           </p>
           <small>
             TUVELOZ does not employ, hire, train, assign, or place anyone on

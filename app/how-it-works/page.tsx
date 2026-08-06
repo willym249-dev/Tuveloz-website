@@ -4,35 +4,35 @@ import { PublicInfoPage } from "../components/public-info-page";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "How Tuveloz works: post what your vehicle needs once, compare real quotes from local independent providers, and choose the one that works for you.",
+    "How Tuveloz works: tell us what your car needs once, compare real prices from local mechanics, and pick the one you like.",
 };
 
 export default function HowItWorksPage() {
   return (
     <PublicInfoPage
       kicker="How it works"
-      title="Post once. Compare real quotes. Choose what works."
-      intro="Providers across Montgomery County are signing up now, and customer requests open at launch. Here is exactly how a job runs — start to finish, with no surprises in the middle."
+      title="Ask once. Compare real prices. Pick who you like."
+      intro="Mechanics across Montgomery County are signing up now, and you'll be able to post a job the day we open. Here's how the whole thing goes, from your first message to the last."
       sections={[
         {
-          title: "1. Tell us what your vehicle needs",
-          text: "You pick a service available in your area and describe the vehicle, the timing that suits you, and how you want parts handled. A short description is plenty. This step opens to customers at launch.",
+          title: "1. Tell us what your car needs",
+          text: "Pick the job, tell us about your car, when you'd like it done, and how you want to handle the part. A sentence or two is plenty — you don't need to know what's wrong. This step opens to customers at launch.",
         },
         {
-          title: "2. Tuveloz sends it only to the right providers",
-          text: "Tuveloz intends to share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards — so you hear from the right pro instead of everyone. Meeting these standards does not guarantee safety, quality, or results.",
+          title: "2. We only show it to the right mechanics",
+          text: "Not everyone sees your job. We pass it only to mechanics who work in your area, are cleared for that exact work, and have already handed us whatever the law asks for. That means fewer, better replies instead of a pile of phone calls. It does not mean we can promise safety, quality, or results — nobody honestly can.",
         },
         {
-          title: "3. Providers remain separate businesses",
-          text: "TUVELOZ does not employ, train, sponsor, assign, or supervise providers or provider personnel. Any employee or trainee works for a separate provider business that handles hiring, payroll, training, supervision, and job assignment.",
+          title: "3. Mechanics work for themselves, not for us",
+          text: "Everyone on Tuveloz runs their own business. TUVELOZ does not employ, train, sponsor, assign, or supervise providers or provider personnel. If a mechanic brings a helper, that person works for the mechanic's business, which handles their hiring, payroll, training, and supervision.",
         },
         {
-          title: "4. Real quotes come back to you",
-          text: "Eligible providers decide whether to respond and set their own price. You compare the available quotes and precise evidence labels side by side, before anyone touches your vehicle. This step opens to customers at launch.",
+          title: "4. Their prices come back to you",
+          text: "Each mechanic decides whether to answer and sets their own price — we never set it for them. You read the prices next to each other, and see who's behind each one, before anybody touches your car. This step opens to customers at launch.",
         },
         {
-          title: "5. You choose — and you can choose nothing",
-          text: "Accept the quote that fits and the disclosed provider and assigned worker come with it, or accept none at all. Tuveloz checks eligibility again at each later job and payment stage. This step opens to customers at launch.",
+          title: "5. You pick — and picking nobody is fine",
+          text: "Say yes to the one you like and you'll see exactly which business and which person is coming. Or say no to all of them; that costs you nothing. We re-check that a mechanic is still cleared at every step after that, right through payment. This step opens to customers at launch.",
         },
       ]}
     />

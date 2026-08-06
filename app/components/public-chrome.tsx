@@ -53,7 +53,7 @@ export function PublicSiteHeader({
           <Link className="header-cta" href="/join">Apply free</Link>
         ) : (
           <Link className="header-cta" href="/account?role=customer&mode=create">
-            Get early access
+            Save my spot
           </Link>
         )}
       </div>
@@ -89,7 +89,7 @@ export function PublicSiteFooter() {
       <div className="footer-bottom">
         <SocialLinks />
         <span>© 2026 Tuveloz. All rights reserved.</span>
-        <span>Now onboarding providers and early-access customers in Montgomery County, Maryland.</span>
+        <span>Signing up mechanics and customers in Montgomery County, Maryland.</span>
       </div>
     </footer>
   );
