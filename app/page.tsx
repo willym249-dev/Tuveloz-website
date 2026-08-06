@@ -756,10 +756,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             {view === "provider" ? (
               <>
                 <a className="button primary" href="#provider-apply">
-                  Join free — apply now <span>→</span>
+                  Apply free <span>→</span>
                 </a>
-                <Link className="button secondary" href="/how-it-works">
-                  See how it works <span>→</span>
+                <Link className="text-link hero-text-link" href="/how-it-works">
+                  See how it works →
                 </Link>
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
@@ -781,9 +781,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </Link>
               </>
             )}
-            <Link className="button ai" href="/ai">
-              Try Tuveloz AI <span>✦</span>
-            </Link>
+            {view !== "provider" && (
+              <Link className="button ai" href="/ai">
+                Try Tuveloz AI <span>✦</span>
+              </Link>
+            )}
           </div>
           <div className="hero-launch-note">
             <strong>
@@ -1017,7 +1019,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
           {CUSTOMER_JOB_POSTING_PAUSED && (
             <Link className="text-link" href={view === "provider" ? "/join" : "/post-job"}>
-              {view === "provider" ? "Claim a founding spot →" : "Save my spot →"}
+              {view === "provider" ? "Apply free →" : "Save my spot →"}
             </Link>
           )}
         </div>
@@ -1613,13 +1615,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               exclusivity — there&apos;s no better time to bet on yourself.
             </p>
           </div>
-          {view === "provider" ? (
-            <a className="button lime" href="#provider-apply">
-              {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
-            </a>
-          ) : (
+          {view !== "provider" && (
             <Link className="button lime" href="/join">
-              {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
+              {foundingCtaVariant === "B" ? "Claim my spot" : "Apply free"} <span>→</span>
             </Link>
           )}
         </div>
@@ -1643,21 +1641,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
-            <a className="button primary" href="#provider-apply">Join free <span>→</span></a>
-            <section className="provider-eligibility-guide" aria-labelledby="provider-guide-title">
-              <div className="eligibility-guide-heading">
-                <span id="provider-guide-title">How applying works</span>
-              </div>
-              <ol>
-                <li>Tell us which services you offer.</li>
-                <li>See exactly what&apos;s required, only if anything is — skipped entirely otherwise.</li>
-                <li>Give us your business details and verify your email to submit.</li>
-              </ol>
-              <div className="legal-requirement-note" aria-label="Service status note">
-                <strong>Poke around and pick whatever you want — nothing&apos;s locked in.</strong>
-                <small>Each job switches on for real work once the legal and insurance basics are sorted, and we&apos;ll walk you through anything you need.</small>
-              </div>
-            </section>
             <section className="provider-handles" aria-labelledby="provider-handles-title">
               <div className="provider-handles-heading">
                 <span className="kicker light">Show up. Do the work.</span>
@@ -1948,8 +1931,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <>
             <h2>The county is wide open. Take your spot.</h2>
             <div>
-              <a className="button lime" href="#provider-apply">Apply free — about 10 minutes <span>→</span></a>
-              <Link className="button ghost" href="/how-it-works">See how it works</Link>
+              <a className="button lime" href="#provider-apply">Apply free <span>→</span></a>
             </div>
           </>
         ) : (
