@@ -44,8 +44,9 @@ const declared = (selector, property) => {
 // is a light form panel. Text on those must use light-surface ink; text on the
 // dark surfaces must not. Getting this backwards is invisible to a reader of
 // the CSS but renders as same-on-same colour, so pin the actual ratios.
+// selector, property, the surface it renders against, label, and the minimum
+// ratio — 4.5 for body text, 3 where the text is large enough to qualify.
 const CASES = [
-  // selector, property, the surface it renders against, label
   [".quote-ticket strong", "color", "#ffffff", "quote ticket service name"],
   [".qt-head", "color", "#ffffff", "quote ticket job number"],
   [".quote-ticket small", "color", "#ffffff", "quote ticket footnote"],
@@ -57,16 +58,25 @@ const CASES = [
   [".customer-service-note", "color", "#111111", "customer service note"],
   [".expansion-form > small", "color", "#111111", "expansion form footnote"],
   [".account-welcome small", "color", "#07182d", "account welcome footnote"],
+  // Light cards whose text would otherwise inherit the page's orange.
+  [".repeat-booking-banner > strong", "color", "#eef5ff", "repeat booking heading"],
+  [".repeat-vehicle-fieldset > strong", "color", "#f7f9fb", "repeat vehicle summary"],
+  [".price-guidance-heading strong", "color", "#f7fbf4", "price guidance heading"],
+  [".price-guidance-list article > strong", "color", "#f7fbf4", "price guidance item"],
+  [".vin-result-heading small", "color", "#ffffff", "VIN result note"],
+  [".vin-result-summary small", "color", "#f3f6f8", "VIN summary label"],
+  [".header-sign-in:hover", "color", "#fff6ef", "header sign-in hover"],
+  [".success-message > span", "color", "#e8f7f0", "success badge glyph", 3],
 ];
 
 test("body text keeps a readable contrast against the surface it sits on", () => {
-  for (const [selector, property, surface, label] of CASES) {
+  for (const [selector, property, surface, label, minimum = 4.5] of CASES) {
     const value = declared(selector, property);
     assert.match(value, /^#[0-9a-f]{3,6}$/i, `${label} should use a literal colour, not an inherited token`);
     const ratio = contrast(value, surface);
     assert.ok(
-      ratio >= 4.5,
-      `${label} (${selector}) is ${ratio.toFixed(2)}:1 against ${surface}; WCAG AA needs 4.5:1`,
+      ratio >= minimum,
+      `${label} (${selector}) is ${ratio.toFixed(2)}:1 against ${surface}; WCAG AA needs ${minimum}:1`,
     );
   }
 });

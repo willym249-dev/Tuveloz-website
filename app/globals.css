@@ -173,7 +173,7 @@ a {
 .header-sign-in:hover {
   background: #fff6ef;
   border-color: #ff6a00;
-  color: #d95700;
+  color: #a33f00;
 }
 
 .header-actions {
@@ -1434,7 +1434,7 @@ textarea:focus {
 }
 
 .vin-result-heading small {
-  color: #72818d;
+  color: #5f6e7a;
   font-size: 9px;
   margin-top: 2px;
 }
@@ -1459,7 +1459,7 @@ textarea:focus {
 }
 
 .vin-result-summary small {
-  color: #7d8b96;
+  color: #5f6e7a;
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1555,7 +1555,7 @@ textarea:focus {
   align-items: center;
   background: #e8f7f0;
   border-radius: 50%;
-  color: #12a26f;
+  color: #0f8257;
   display: flex;
   font-size: 24px;
   font-weight: 900;
@@ -3773,6 +3773,7 @@ label > small {
 }
 
 .repeat-booking-banner > strong {
+  color: #1b3346;
   display: block;
   font-size: 18px;
   margin-top: 5px;
@@ -3800,6 +3801,7 @@ label > small {
   background: #f7f9fb;
   border: 1px solid var(--line);
   border-radius: 10px;
+  color: #1b3346;
   display: block;
   font-size: 12px;
   line-height: 1.5;
@@ -3823,6 +3825,7 @@ label > small {
 }
 
 .price-guidance-heading strong {
+  color: #1b3346;
   display: block;
   font-size: 17px;
   margin-top: 4px;
@@ -3854,6 +3857,7 @@ label > small {
 }
 
 .price-guidance-list article > strong {
+  color: #1b3346;
   font-size: 12px;
 }
 
