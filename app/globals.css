@@ -447,6 +447,7 @@ a {
 }
 
 .quote-ticket strong {
+  color: #071726;
   display: block;
   font-size: 17px;
   margin-bottom: 8px;
@@ -454,7 +455,7 @@ a {
 
 .qt-head {
   align-items: center;
-  color: #7d8b96;
+  color: #55636e;
   display: flex;
   font-size: 11px;
   font-weight: 700;
@@ -481,7 +482,7 @@ a {
 }
 
 .quote-ticket small {
-  color: #7d8b96;
+  color: #55636e;
   display: block;
   font-size: 11px;
   margin-top: 6px;
@@ -521,7 +522,7 @@ a {
   border: 2px solid var(--lime);
   border-radius: 6px;
   bottom: 12px;
-  color: var(--blue-dark);
+  color: #a33f00;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -4010,7 +4011,7 @@ label > small {
 }
 
 .service-group > summary small {
-  color: #687b8a;
+  color: #5f6e7a;
   font-size: 10px;
   font-weight: 500;
   line-height: 1.4;
@@ -4095,7 +4096,7 @@ label > small {
 }
 
 .service-scope small {
-  color: #687b8a;
+  color: #5f6e7a;
   display: block;
   font-size: 10px;
   font-weight: 500;
@@ -4147,7 +4148,7 @@ label > small {
 }
 
 .customer-service-note {
-  color: #687b8a;
+  color: #91a4b4;
   display: block;
   font-size: 10px;
   line-height: 1.55;
@@ -4206,8 +4207,14 @@ label > small {
   display: block;
 }
 
+/* These option cards stay light on a dark page, so their text needs the
+   light-surface ink rather than the brand orange the page inherits. */
+.service-options strong {
+  color: #172b3c;
+}
+
 .service-options small {
-  color: #687b8a;
+  color: #5f6e7a;
   font-size: 10px;
   font-weight: 500;
   line-height: 1.45;
@@ -7872,7 +7879,7 @@ footer > p,
 }
 
 .expansion-form > small {
-  color: #786d65;
+  color: #b6aaa1;
   font-size: 10px;
   line-height: 1.5;
 }
@@ -8008,7 +8015,7 @@ footer > p,
 }
 
 .account-welcome small {
-  color: #776d66;
+  color: #b6aaa1;
   display: block;
   font-size: 11px;
   margin-top: 14px;
