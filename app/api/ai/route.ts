@@ -7,6 +7,7 @@
 
 import { askCouncil, councilConfigured } from "../../../lib/ai-council-runtime";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../../lib/launch-status";
+import { recordAssistantAnswer } from "../../../lib/ai/assistant-telemetry";
 import {
   findPolicyEntries,
   replyKeepsRequiredHedges,
@@ -153,6 +154,11 @@ export async function POST(request: Request) {
         entries: policyEntries.map((entry) => entry.id),
       });
     }
+
+    // Records the shape of the answer, never its content, so the owner can see
+    // what people ask about and whether the guard is firing. Deliberately not
+    // awaited: telemetry must never delay or fail an answer.
+    void recordAssistantAnswer(audience, policyEntries, hedgesHeld);
 
     return noStoreJson({
       reply: hedgesHeld ? result.answer : vettedAnswer(policyEntries),

@@ -21,6 +21,8 @@ const LAUNCH_BANNER_DETAIL =
 const PAGES_WITH_THEIR_OWN_CTA = [
   "/join",
   "/account",
+  // Owner tooling. A "save my spot" button on the private dashboard is noise.
+  "/admin",
   "/provider-onboarding",
   "/provider-jobs",
   "/provider-services",
