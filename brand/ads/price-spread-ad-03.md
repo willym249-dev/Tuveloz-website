@@ -79,40 +79,70 @@ That is precisely what Tuveloz is. The ad earns the pitch instead of making it.
 
 ---
 
-## The footage
+## The footage — BUILT, no new generation needed
 
-**Generated 2026-08-06 via the Artlist MCP connector** (Seedream 5.0, 9:16, 2K).
+`build-ad-03.py` renders the whole ad from footage **already in this repo**. No
+Artlist credits, no licensed music, no external dependency beyond ffmpeg and
+Pillow:
 
-- `ad-03-assets/hero-9x16.jpg` — **primary asset.** Golden-hour suburban
-  driveway, a woman beside her silver SUV with the hood up, phone to her ear,
-  visibly deflated. Lower third is open asphalt and stays shaded — caption-safe.
-  Works as the reel's opening frame, as a standalone static post, and as the
-  carousel cover.
-- `ad-03-assets/pushin-16x9-480p.mp4` — 4s motion pass (Seedance 2.0 Mini). The
-  model forced 16:9 480p and cropped the vertical framing, so **this is not the
-  vertical hero clip** — treat it as landscape B-roll only.
+```bash
+python3 brand/ads/build-ad-03.py
+```
 
-### Outstanding: the vertical motion pass
+Outputs:
 
-The 9:16 clip still needs generating and the Artlist balance ran out (140
-credits left; the cheapest image-to-video run is 280). Once topped up, animate
-the existing hero still rather than regenerating it — and pass the settings
-explicitly, because these models silently default to 16:9:
+| File | What |
+|---|---|
+| `ad-03-9x16.mp4` | Main cut, 43s, 1080×1920, silent |
+| `ad-03-short-9x16.mp4` | TikTok cut, 14s, 1080×1920, silent |
+| `ad-03-assets/cards/*.png` | 13 overlay cards, 1080×1920 with alpha |
 
-> Slow, subtle handheld push-in. The woman lowers the phone from her ear,
-> exhales, and glances back at the open hood with a small resigned shake of the
-> head. Leaves stir gently in the golden-hour breeze behind her, warm low
-> sunlight flickering through the trees. Camera drifts almost imperceptibly
-> closer. Natural, unhurried, documentary realism. No text, no logos, no
-> on-screen graphics. Keep the lower third of the frame clean and shaded.
+Sources: `tuveloz-reel-deadbattery-v2.mp4` carries the hook (dashboard warning
+lights at golden hour — the exact moment the ad is about), the mechanic reel
+carries the turn, and the price cards are drawn on brand navy.
 
-Settings that must be set by hand: `aspect_ratio: 9:16`, `resolution: 1080p`,
-`duration: 5` (or 10). Negative prompt: `text, watermark, logo, subtitles,
-distorted hands, extra fingers, warped face, morphing`.
+The card PNGs are a deliberate second deliverable. They're full-frame with
+alpha and numbered in running order, so the whole ad can be rebuilt on a
+**DaVinci Resolve** timeline — drop them on V2 over the two source reels — or
+re-cut on davinci.ai without re-typesetting a word.
 
-**Until then the ad ships as a static/carousel post**, which is a legitimate
-format for this pillar — price lists get *saved*, and saves and shares are what
-push a post to non-followers. Video is the upgrade, not the requirement.
+### Both cuts are silent on purpose
+
+Feed video is watched muted and this ad is text-driven, so silence costs it
+nothing — and it keeps an evergreen post clear of the Epidemic Sound licensing
+window, which only covers content published while that subscription is active
+(see `HANDOFF.md`). Add a track natively in the Instagram/TikTok editor, which
+also attaches the post to a trending audio. To mux a licensed track instead:
+
+```bash
+ffmpeg -i ad-03-9x16.mp4 -i music.mp3 -map 0:v -map 1:a \
+  -af 'afade=t=out:st=37:d=2' -c:v copy -c:a aac -b:a 192k -shortest out.mp4
+```
+
+### Optional upgrade: a purpose-shot hook clip
+
+The dead-battery reel works, but a driver standing at an open hood on the phone
+is the more literal read of the hook. A hero still for exactly that was
+generated 2026-08-06 (Seedream 5.0, 9:16, 2K) and is retrievable from the
+Artlist account. The matching motion pass was **not** completed — the model
+silently defaulted to 16:9 480p and the credit balance ran out (140 left, 280
+minimum). Prompt, if it gets picked up later on davinci.ai or a topped-up
+Artlist balance:
+
+> Slow, subtle handheld push-in. A woman lowers a phone from her ear, exhales,
+> and glances back at the open hood of her SUV in a leafy suburban driveway with
+> a small resigned shake of the head. Golden-hour light, leaves stirring, camera
+> drifting almost imperceptibly closer. Natural, unhurried, documentary realism.
+> No text, no logos. Keep the lower third clean and shaded.
+
+**Set aspect ratio, resolution and duration by hand every time** — these models
+default to 16:9 and a landscape render of a vertical ad is a full-price
+mistake. Want: `9:16`, `1080p`, `5s` or `10s`. Negative prompt: `text,
+watermark, logo, subtitles, distorted hands, extra fingers, warped face,
+morphing`.
+
+Drop-in replacement: swap the new clip in as `BED` at the top of
+`build-ad-03.py` and re-run. Nothing else changes.
 
 ### AI disclosure
 

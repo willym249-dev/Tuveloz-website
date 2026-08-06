@@ -20,15 +20,23 @@ Cost note for the next session: image-to-video models silently default to
 explicitly on every call — a vertical generation that comes back landscape is a
 full-price mistake, which is exactly how Ad 03's motion pass was lost.
 
-### Ad 03 (price transparency, broad reach) — NEW
+### Ad 03 (price transparency, broad reach) — BUILT AND POSTABLE
 Spec: [price-spread-ad-03.md](price-spread-ad-03.md).
 Captions: `../outreach/media/captions-ad03-copy-paste.txt`.
-- ✅ Hero still generated (Seedream 5.0, 9:16, 2K) — the primary asset, ships
-  as a static/carousel post as-is.
-- ⚠ Vertical motion pass NOT done — came back 16:9 480p and credits ran out.
-  The exact prompt and the settings to force are in the spec.
-- ⬜ Neither asset is filed in `ad-03-assets/` yet — blocked on the egress
-  policy above.
+Build: `python3 build-ad-03.py` (ffmpeg + Pillow, no credits, no licensed music).
+- ✅ `ad-03-9x16.mp4` — main cut, 43s, silent.
+- ✅ `ad-03-short-9x16.mp4` — TikTok cut, 14s, silent.
+- ✅ `ad-03-assets/cards/` — 13 overlay PNGs, 1080x1920 with alpha, numbered in
+  running order. Doubles as the DaVinci Resolve / davinci.ai rebuild set.
+- ⚪ Optional: a purpose-shot hook clip of a driver at an open hood. Hero still
+  exists in the Artlist account; the motion pass was lost to a 16:9 default and
+  the credit wall. Prompt and settings are in the spec. Not a blocker — the
+  dead-battery reel carries the hook fine.
+
+Note the build deliberately reuses `tuveloz-reel-deadbattery-v2.mp4` and
+`tuveloz-reel-mechanic.mp4` rather than generating anything new. Those two reels
+were already paid for and, per the growth playbook's pre-flight checklist, had
+never been posted.
 
 ---
 
@@ -113,9 +121,12 @@ green lawns, vertical 9:16, no text, no logos
 installed via winget). Drop assets into `brand/ads/ad-01-assets/` as
 `scene1.*` (mechanic) / `scene2.*` (detailing) / `scene3.*` (jumper cables) /
 `scene4.*` (aerial video or 4th image) / `music.mp3`, re-run the script, done.
-Missing files render as labeled placeholder slates — current
-`ad-01-9x16.mp4` / `ad-01-1x1.mp4` are placeholder drafts (captions + branded
-end card verified, no music).
+Missing files render as labeled placeholder slates.
+
+CORRECTED 2026-08-06: `ad-01-9x16.mp4` and `ad-01-1x1.mp4` are NOT placeholder
+drafts. Both were verified frame by frame on 08-06 — real footage, burned
+captions, branded end card, music muxed, 15s. **Ad 01 is finished and postable
+as it stands.** See the Aug 9 publish window on the Epidemic track above.
 
 ### Assembly plan (no credits — local edit)
 15s vertical: hook "Tired of working somebody else's route?" → 3 images with
