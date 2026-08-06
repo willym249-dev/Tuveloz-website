@@ -302,6 +302,15 @@ export default function TermsPage() {
           deadlines stay paused for demands waiting on a later batch.
         </p>
 
+        <h3>Time limit to bring a claim</h3>
+        <p>
+          Any claim against Tuveloz has to be started within one year after
+          the claim first arises, or it&apos;s permanently barred — unless the law
+          that applies to that claim doesn&apos;t allow a shortened deadline, in
+          which case the legal deadline applies instead. The 60-day informal
+          window above doesn&apos;t count against this year.
+        </p>
+
         <h3>Your 30-day opt-out</h3>
         <p>
           You can reject this arbitration section without losing access to
@@ -333,7 +342,101 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>14. Changes to these Terms</h2>
+        <h2>14. Copyright and takedown requests</h2>
+        <p>
+          Tuveloz respects copyright. If you believe something on Tuveloz
+          copies your work without permission, email{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with:
+          identification of the work, a link to the material you want removed,
+          your contact information, a statement that you believe in good faith
+          the use isn&apos;t authorized, a statement under penalty of perjury that
+          your notice is accurate and that you&apos;re the owner or authorized to
+          act for the owner, and your physical or electronic signature.
+        </p>
+        <p>
+          Tuveloz removes or disables material that&apos;s the subject of a valid
+          notice, tells the person who posted it, and gives them a chance to
+          send a counter-notice with the same kind of detail. Tuveloz ends the
+          accounts of users who repeatedly infringe.
+        </p>
+      </section>
+
+      <section>
+        <h2>15. Tuveloz&apos;s own content and brand</h2>
+        <p>
+          The Tuveloz platform, its software, design, and the Tuveloz name and
+          logo belong to Tuveloz. You get a limited, personal, revocable,
+          non-transferable permission to use the platform for its intended
+          purpose while you follow these Terms. You may not copy, resell,
+          reverse-engineer, or scrape the platform, or use the Tuveloz name or
+          logo in a way that suggests a partnership or endorsement that
+          doesn&apos;t exist.
+        </p>
+        <p>
+          If you send Tuveloz a suggestion or idea about the platform, Tuveloz
+          can use it without owing you payment or confidentiality. This
+          doesn&apos;t apply to the content you post, which section 8 covers.
+        </p>
+      </section>
+
+      <section>
+        <h2>16. Third-party services</h2>
+        <p>
+          Tuveloz uses outside services to operate — payments and payouts run
+          through Stripe, and the platform may link to maps, messaging, or
+          other tools. Using them means agreeing to their terms too: a
+          provider who sets up payouts is entering an agreement directly with
+          Stripe, in addition to this one. Tuveloz doesn&apos;t control those
+          services and isn&apos;t responsible for them, though this doesn&apos;t
+          reduce any duty the law places directly on Tuveloz.
+        </p>
+      </section>
+
+      <section>
+        <h2>17. General terms</h2>
+        <p>
+          <strong>Electronic communications and notices.</strong> You agree to
+          receive agreements, disclosures, and notices from Tuveloz
+          electronically — by email to your account address, or posted in your
+          account — and that they satisfy any requirement that they be in
+          writing. You can request a paper copy by emailing{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>. Keep your
+          email address current. Legal notices to Tuveloz go to that same
+          address.
+        </p>
+        <p>
+          <strong>The whole agreement.</strong> These Terms, together with the
+          other policies they link to, are the entire agreement between you
+          and Tuveloz about the platform, and they replace earlier
+          understandings about it. Advertising, help articles, and other
+          general marketing aren&apos;t part of them and aren&apos;t promises Tuveloz
+          makes to you — but this doesn&apos;t excuse fraud or a knowingly false
+          statement.
+        </p>
+        <p>
+          <strong>Transfers.</strong> Tuveloz may transfer these Terms to
+          another company as part of a merger, acquisition, financing, or sale
+          of its business, and these Terms continue to apply. You can&apos;t
+          transfer your account or your rights under these Terms without
+          Tuveloz&apos;s written permission.
+        </p>
+        <p>
+          <strong>Events outside our control.</strong> Tuveloz isn&apos;t
+          responsible for a delay or failure caused by something genuinely
+          outside its reasonable control — a natural disaster, war, epidemic,
+          strike, utility or network outage, or a government order. This
+          doesn&apos;t excuse an obligation to refund money you&apos;re owed.
+        </p>
+        <p>
+          <strong>Who can enforce these Terms.</strong> These Terms are
+          between you and Tuveloz. Nobody else can enforce them, except that
+          the people and companies protected by the disclaimers, liability
+          cap, and indemnity sections may rely on those specific sections.
+        </p>
+      </section>
+
+      <section>
+        <h2>18. Changes to these Terms</h2>
         <p>
           We&apos;ll post material changes with a new date, and ask you to accept
           them again before a new transaction if that&apos;s legally required. A
