@@ -77,7 +77,7 @@ function systemPrompt(language: "en" | "es", audience: PolicyAudience, entries: 
     ? "Tuveloz is in provider-onboarding mode: customer service requests, quotes, bookings, and payments are not open yet. Never promise service, a provider, a price, a booking, or a timeline."
     : "Never promise a specific provider, price, booking, or timeline.";
   const role = audience === "provider"
-    ? "You are helping a provider — a mechanic, service-truck operator, or shop — understand how working through Tuveloz is meant to run."
+    ? "You are helping a provider — a mechanic, detailer, tint installer, service-truck operator, or shop — understand how working through Tuveloz is meant to run."
     : "You are helping a customer put words to what their vehicle is doing, and understand how using Tuveloz is meant to work.";
   return [
     "You are Tuveloz AI, a bilingual (English/Spanish) assistant for Tuveloz, a local vehicle-service marketplace in Montgomery County, Maryland.",

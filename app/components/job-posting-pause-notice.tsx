@@ -7,7 +7,7 @@ import Link from "next/link";
 // job yet, and signing up books nothing and costs nothing — in the words a
 // person would actually use.
 const LAUNCH_BANNER_MESSAGE =
-  "Mechanics near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.";
+  "Local pros near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.";
 
 const LAUNCH_BANNER_DETAIL =
   "Making an account today is free, and it doesn't book anything or charge you.";

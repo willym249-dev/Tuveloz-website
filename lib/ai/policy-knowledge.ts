@@ -38,7 +38,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "What does Tuveloz charge me?",
     keywords: ["fee", "cost", "charge", "commission", "5%", "price", "total", "surcharge"],
     answer:
-      "The mechanic sets their own price for the labor. On top of that, the current design adds a 5% Tuveloz service fee to your total, shown as its own line before you confirm — never folded into the mechanic's price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
+      "The pro sets their own price for the labor. On top of that, the current design adds a 5% Tuveloz service fee to your total, shown as its own line before you confirm — never folded into the pro's price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
     anchor: "5% customer service fee",
   },
@@ -48,7 +48,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "Who buys the parts?",
     keywords: ["part", "parts", "oem", "aftermarket", "buy", "supply", "battery", "labor only"],
     answer:
-      "You do. Prices on Tuveloz cover labor only, so any part is something you purchase separately — it is not included in the mechanic's quote and Tuveloz does not sell, source, or pay for it. The request flow is built to pin down the exact part before the appointment so nobody wastes a trip on the wrong one.",
+      "You do. Prices on Tuveloz cover labor only, so any part is something you purchase separately — it is not included in the pro's quote and Tuveloz does not sell, source, or pay for it. The request flow is built to pin down the exact part before the appointment so nobody wastes a trip on the wrong one.",
     source: { label: "Customer Agreement", href: "/customer-agreement" },
     anchor: "labor-only",
   },
@@ -58,7 +58,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "Do I have to accept a quote?",
     keywords: ["obligation", "accept", "decline", "say no", "reject", "commit", "cancel"],
     answer:
-      "No. Asking is free, comparing is free, and you can turn down every price you get. Choosing a mechanic is always your decision, and walking away costs you nothing.",
+      "No. Asking is free, comparing is free, and you can turn down every price you get. Choosing who does the work is always your decision, and walking away costs you nothing.",
     source: { label: "Customer Agreement", href: "/customer-agreement" },
     anchor: "Your freedom to choose",
   },
@@ -68,7 +68,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "Who can see my address and phone number?",
     keywords: ["address", "privacy", "phone", "contact", "location", "data", "personal", "share"],
     answer:
-      "Mechanics deciding whether to quote see only enough to make that decision. Your exact address and contact details go to the one mechanic you pick, and to nobody else. You can also review, export, or ask us to delete your information from the Privacy Center.",
+      "Pros deciding whether to quote see only enough to make that decision. Your exact address and contact details go to the one pro you pick, and to nobody else. You can also review, export, or ask us to delete your information from the Privacy Center.",
     source: { label: "Privacy Policy", href: "/privacy" },
     anchor: "Exact location and staged sharing",
   },
@@ -78,7 +78,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "What happens if something goes wrong with the work?",
     keywords: ["refund", "dispute", "complaint", "problem", "wrong", "bad job", "chargeback", "cancel"],
     answer:
-      "Raise it with the mechanic first, since the work is a direct agreement between the two of you. Tuveloz keeps the job record, the written authorization, and the payment trail, and the payment policy sets out how cancellations, refunds, and disputes are meant to be handled. Those protections are part of the payment design that is still under review, so read the policy page rather than relying on a summary.",
+      "Raise it with the pro first, since the work is a direct agreement between the two of you. Tuveloz keeps the job record, the written authorization, and the payment trail, and the payment policy sets out how cancellations, refunds, and disputes are meant to be handled. Those protections are part of the payment design that is still under review, so read the policy page rather than relying on a summary.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
     anchor: "Refunds and corrections",
   },
@@ -88,7 +88,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "How and when do I get paid?",
     keywords: ["paid", "payout", "payment", "transfer", "stripe", "money", "deposit", "when"],
     answer:
-      "You quote your own labor price and that stays your subtotal — the 5% service fee is added to the customer's total rather than taken out of what you quoted. Payment runs through the platform via Stripe, and the design releases your transfer after the job is completed and your completion evidence is in. The payout mechanics are still subject to processor, insurance, and accounting sign-off, so check the policy page before you count on a specific timing.",
+      "You quote your own labor price and that stays your subtotal — the 5% service fee is added to the customer's total rather than taken out of what you quoted. Payment runs through the platform via Stripe, and the design releases your transfer after the job is completed and your completion evidence is in. The payout details are still subject to processor, insurance, and accounting sign-off, so check the policy page before you count on a specific timing.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
     anchor: "Proposed provider transfers",
   },
@@ -148,7 +148,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "What exactly is Tuveloz?",
     keywords: ["what is", "marketplace", "who are you", "how does this work", "company"],
     answer:
-      "Tuveloz is a local vehicle-service marketplace in Montgomery County, Maryland. We introduce customers to independent local mechanics and keep the paperwork — quotes, authorizations, records, invoices, payment — in one place. We do not fix cars ourselves, and the work is a direct agreement between the customer and the mechanic they chose.",
+      "Tuveloz is a local vehicle-service marketplace in Montgomery County, Maryland. We introduce customers to independent local pros: mechanics, detailers, tint installers, mobile service trucks, and shops. We keep the paperwork — quotes, authorizations, records, invoices, payment — in one place. We do not fix cars ourselves, and the work is a direct agreement between the customer and the pro they chose.",
     source: { label: "Terms of Use", href: "/terms" },
     anchor: "marketplace",
   },
@@ -158,7 +158,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "Can I use it right now?",
     keywords: ["when", "open", "launch", "live", "available", "yet", "start", "waiting"],
     answer:
-      "Not for real jobs yet. Mechanics are signing up across Montgomery County right now, and accounts are open for customers and mechanics both — but posting a job, quoting, booking, and paying stay switched off until each service clears its legal and operational checks. Making an account today books nothing and costs nothing.",
+      "Not for real jobs yet. Local pros are signing up across Montgomery County right now, and accounts are open for customers and pros both — but posting a job, quoting, booking, and paying stay switched off until each service clears its legal and operational checks. Making an account today books nothing and costs nothing.",
     source: { label: "How it works", href: "/how-it-works" },
     anchor: "opens to customers at launch",
   },

@@ -89,7 +89,7 @@ export function PublicSiteFooter() {
       <div className="footer-bottom">
         <SocialLinks />
         <span>© 2026 Tuveloz. All rights reserved.</span>
-        <span>Signing up mechanics and customers in Montgomery County, Maryland.</span>
+        <span>Signing up local pros and customers in Montgomery County, Maryland.</span>
       </div>
     </footer>
   );

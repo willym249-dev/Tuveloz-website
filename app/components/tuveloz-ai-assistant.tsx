@@ -19,8 +19,8 @@ const VEHICLE_STARTERS = [
 ];
 
 const AUDIENCES: ReadonlyArray<{ id: PolicyAudience; label: string; hint: string }> = [
-  { id: "customer", label: "I need my car looked at", hint: "Describe a problem, or ask how using Tuveloz works." },
-  { id: "provider", label: "I fix cars", hint: "Ask how quoting, getting paid, and the paperwork work." },
+  { id: "customer", label: "I need work done on my car", hint: "Describe a problem, or ask how using Tuveloz works." },
+  { id: "provider", label: "I do car work", hint: "Repairs, detailing, tint — ask how quoting, getting paid, and the paperwork work." },
 ];
 
 export function TuvelozAiAssistant() {

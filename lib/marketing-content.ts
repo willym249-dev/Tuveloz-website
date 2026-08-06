@@ -70,7 +70,7 @@ export const CUSTOMER_STEPS: ReadonlyArray<{
   {
     number: "02",
     title: "Prices come to you",
-    text: "Local mechanics who are cleared for that exact job send you their own price. No calling around.",
+    text: "Local pros who are cleared for that exact job send you their own price. No calling around.",
   },
   {
     number: "03",

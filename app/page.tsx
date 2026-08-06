@@ -102,7 +102,7 @@ const providerDifferences: Array<{
   {
     icon: "active-job",
     title: "Made for mobile, not just the front desk",
-    text: "Appointments, records, and photo evidence work from any phone at the customer's location — built for mobile mechanics and service trucks, not only walk-in shops.",
+    text: "Appointments, records, and photo evidence work from any phone at the customer's location — built for mobile pros and service trucks, not only walk-in shops.",
   },
 ];
 
@@ -732,13 +732,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </span>
               </h1>
               <p>
-                Tell us what&apos;s going on with your car. Local mechanics send you
+                Tell us what&apos;s going on with your car. Local pros send you
                 their price, you see them next to each other, and you pick the one you
                 like. No calling around, no pressure.
               </p>
               <ul className="hero-highlights">
                 <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
-                <li><span aria-hidden="true">✓</span> Real local mechanics, not a call center</li>
+                <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
                 <li><span aria-hidden="true">✓</span> Pick one, or none. Totally up to you</li>
               </ul>
             </>
@@ -768,7 +768,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   Save my spot — free <span>→</span>
                 </Link>
                 <Link className="button secondary" href="/join">
-                  I fix cars — join free <span>→</span>
+                  I do car work — join free <span>→</span>
                 </Link>
               </>
             ) : (
@@ -841,7 +841,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <>
             <span><b>Free</b> to ask and to compare prices</span>
             <span><b>No pressure</b> — say yes only if you want to</span>
-            <span><b>Local</b> mechanics, prices side by side</span>
+            <span><b>Local</b> pros, prices side by side</span>
             <span><b>Sign up now</b> · post your first job when we open</span>
           </>
         )}
@@ -860,7 +860,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <article className="trust-card">
             <span className="trust-card-label">We introduce you — we don&apos;t fix cars</span>
             <p>
-              Tuveloz brings you and a local mechanic together, and payment runs
+              Tuveloz brings you and a local pro together, and payment runs
               safely through us. The actual work is between you and the person you
               picked.
             </p>
@@ -923,7 +923,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For customers</span>
             <h3>Your car. Your call.</h3>
             <p>
-              Say what your car needs once. Local mechanics come back with real prices
+              Say what your car needs once. Local pros come back with real prices
               you can line up side by side, and you pick whoever feels right. No
               pressure, no runaround. Sign up now and you&apos;re first in line the day
               we open.
@@ -942,7 +942,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For providers</span>
             <h3>Run your work on your terms.</h3>
             <p>
-              Mobile mechanics, service trucks, and shops are claiming founding spots
+              Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots
               now. Pick the jobs you want, send us anything the law asks for, and your
               workspace is set up before the first customer shows up.
             </p>
@@ -988,7 +988,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="kicker">Coming next</span>
             <h3>Send a photo of that dent, get prices back.</h3>
             <p>
-              Dents, scuffs, and paint aren&apos;t ready yet — we want the mechanics and
+              Dents, scuffs, and paint aren&apos;t ready yet — we want the right pros and
               the paperwork sorted first. The jobs people ask for most are the ones we
               add next, so tell us if this is yours.
             </p>
@@ -1091,12 +1091,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <article>
               <strong>Nobody can pay to look better</strong>
               <p>
-                A mechanic can&apos;t buy a higher rating or a spot at the top of your
+                A pro can&apos;t buy a higher rating or a spot at the top of your
                 list. That isn&apos;t for sale here.
               </p>
             </article>
             <article>
-              <strong>It belongs to the mechanic</strong>
+              <strong>It belongs to the pro</strong>
               <p>
                 Do good work and it follows you, job after job. That reputation is
                 theirs to keep.
@@ -1130,19 +1130,19 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <p>
                 Set it up now and it&apos;s ready when you need it — nobody wants to
                 fill out forms while their car is sitting dead in a parking lot. And
-                when you do post, only mechanics cleared for that exact job can see it,
+                when you do post, only pros cleared for that exact job can see it,
                 so you hear from the right person instead of twenty phone calls.
               </p>
               <div className="pilot-vision">
                 <strong>Our vision</strong>
                 <p>
-                  We want to change how the mechanic industry works: give customers
+                  We want to change how the car-service industry works: give customers
                   clearer choices and help independent providers grow.
                 </p>
               </div>
               <ul>
                 <li><span>✓</span> Ready to go the second we open</li>
-                <li><span>✓</span> Only mechanics cleared for that exact job see it</li>
+                <li><span>✓</span> Only pros cleared for that exact job see it</li>
                 <li><span>✓</span> Saying yes to a price is always your call</li>
                 <li><span>✓</span> Signing up books nothing and costs nothing</li>
               </ul>
@@ -1178,7 +1178,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </Link>
             </div>
             <small>
-              Accounts are open today, for customers and mechanics both. Posting jobs
+              Accounts are open today, for customers and pros both. Posting jobs
               and paying through us starts when we open.
             </small>
           </div>
@@ -1581,7 +1581,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section provider-pitch" id="why-join">
         <div className="section-heading">
           <div>
-            <span className="kicker">Why mechanics join Tuveloz</span>
+            <span className="kicker">Why local pros join Tuveloz</span>
             <h2>
               {pitchVariant === "B"
                 ? "Your customers. Your prices. Your call."
@@ -1610,7 +1610,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="kicker light">Founding providers · Montgomery County</span>
             <h3>Be first. Own your corner of the county.</h3>
             <p>
-              The first mechanics into Montgomery County get first pick of jobs and
+              The first pros into Montgomery County get first pick of jobs and
               a real voice in how Tuveloz works. Free to apply, no subscription, no
               exclusivity — there&apos;s no better time to bet on yourself.
             </p>
@@ -1719,7 +1719,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
             <span>Providers</span>
-            <span>Mobile mechanics &amp; service trucks</span>
+            <span>Mechanics, detailers &amp; service trucks</span>
           </div>
         </div>
 
@@ -1939,7 +1939,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h2>Be first in line when Tuveloz opens.</h2>
             <div>
               <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
-              <Link className="button ghost" href="/join">I fix cars — join free</Link>
+              <Link className="button ghost" href="/join">I do car work — join free</Link>
             </div>
           </>
         )}
@@ -1979,7 +1979,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="footer-bottom">
           <SocialLinks />
           <span>© 2026 Tuveloz. All rights reserved.</span>
-          <span>Signing up mechanics and customers in Montgomery County, Maryland.</span>
+          <span>Signing up local pros and customers in Montgomery County, Maryland.</span>
         </div>
       </footer>
     </main>

@@ -20,19 +20,19 @@ import { TuvelozIcon } from "../components/tuveloz-icons";
 export const metadata: Metadata = {
   title: "For Customers — Real Quotes From Local Pros",
   description:
-    "Tell us what your car needs once and compare real prices from local mechanics in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
+    "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
 };
 
 const valueProps = [
   {
     icon: "quote" as const,
     title: "Real prices, side by side",
-    text: "No more “bring it in and we'll take a look.” You get actual numbers from actual local mechanics, and you read them all before you agree to anything.",
+    text: "No more “bring it in and we'll take a look.” You get actual numbers from actual local pros, and you read them all before you agree to anything.",
   },
   {
     icon: "open-jobs" as const,
     title: "Only the right people see it",
-    text: "Your job goes to mechanics near you who are cleared for that exact work — not to a giant call list. Way less phone tag.",
+    text: "Your job goes to pros near you who are cleared for that exact work — not to a giant call list. Way less phone tag.",
   },
   {
     icon: "active-job" as const,
@@ -52,11 +52,11 @@ const trustPoints = [
   },
   {
     title: "Your address stays yours",
-    text: "Mechanics see only enough to give you a price. Your exact address and phone number go to the one person you choose, and nobody else.",
+    text: "Pros see only enough to give you a price. Your exact address and phone number go to the one person you choose, and nobody else.",
   },
   {
     title: "Our fee is right on the screen",
-    text: "We add 5% to the total, listed as its own line before you confirm. It's never quietly folded into the mechanic's price.",
+    text: "We add 5% to the total, listed as its own line before you confirm. It's never quietly folded into the pro's price.",
   },
 ];
 
@@ -64,7 +64,7 @@ const faqs = [
   {
     question: "What does this cost me?",
     answer:
-      "Asking and comparing is free. You only pay for work you say yes to: the mechanic's price for the labor, plus our 5% fee listed separately. You see both before you confirm anything.",
+      "Asking and comparing is free. You only pay for work you say yes to: the pro's price for the labor, plus our 5% fee listed separately. You see both before you confirm anything.",
   },
   {
     question: "Do I have to say yes to any of them?",
@@ -74,7 +74,7 @@ const faqs = [
   {
     question: "Who actually does the work?",
     answer:
-      "A local mechanic you picked yourself. We introduce the two of you and keep the paperwork straight — the work itself is between you and them.",
+      "A local pro you picked yourself. We introduce the two of you and keep the paperwork straight — the work itself is between you and them.",
   },
   {
     question: "What about parts?",
@@ -84,7 +84,7 @@ const faqs = [
   {
     question: "When can I post a job?",
     answer:
-      "Very soon. Mechanics across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.",
+      "Very soon. Local pros across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.",
   },
   {
     question: "My car needs something that's not on the list. Now what?",
@@ -111,13 +111,13 @@ function CustomerLander() {
             <span className="hero-value-line">Real prices. Zero guesswork.</span>
           </h1>
           <p>
-            Tell us what&apos;s going on with your car. Local mechanics send you their
+            Tell us what&apos;s going on with your car. Local pros send you their
             price, you line them up next to each other, and you pick. No calling five
             shops, no surprise number when you go to pay.
           </p>
           <ul className="hero-highlights">
             <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
-            <li><span aria-hidden="true">✓</span> Real local mechanics, not a call center</li>
+            <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
             <li><span aria-hidden="true">✓</span> Say yes only if the price feels right</li>
           </ul>
           <div className="hero-actions">
@@ -133,7 +133,7 @@ function CustomerLander() {
           </div>
           <div className="hero-launch-note">
             <strong>
-              Mechanics are joining now. You&apos;ll be able to post a job the day we
+              Local pros are joining now. You&apos;ll be able to post a job the day we
               open, and early sign-ups go first.
             </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
@@ -283,7 +283,7 @@ function CustomerLander() {
           </p>
           <ul>
             <li><span aria-hidden="true">✓</span> Ready to go the second we open</li>
-            <li><span aria-hidden="true">✓</span> Only mechanics cleared for that exact job see it</li>
+            <li><span aria-hidden="true">✓</span> Only pros cleared for that exact job see it</li>
             <li><span aria-hidden="true">✓</span> Saying yes to a price is always your call</li>
           </ul>
           <div className="hero-actions">
@@ -291,7 +291,7 @@ function CustomerLander() {
               Create customer account <span>→</span>
             </Link>
             <Link className="button secondary" href="/join">
-              I fix cars — join free
+              I do car work — join free
             </Link>
           </div>
         </div>
@@ -365,7 +365,7 @@ export default async function PostJobPage() {
           <span className="account-kicker">Request service</span>
           <h1>Tell us what your car needs.</h1>
           <p>
-            Post it once, compare prices from local mechanics, and pick the one you
+            Post it once, compare prices from local pros, and pick the one you
             like — or none of them. Up to you.
           </p>
           <small>
