@@ -3,18 +3,15 @@ import { PolicyPage } from "../components/policy-page";
 export default function MarketplaceConductPage() {
   return (
     <PolicyPage
-      eyebrow="Providers • Operational review draft v0.11"
+      eyebrow="Providers"
       title="Marketplace Conduct Policy"
-      summary="Draft conduct rules for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="August 4, 2026"
+      summary="Conduct rules for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees."
+      updated="August 6, 2026"
     >
       <section>
-        <h2>1. Draft status and scope</h2>
+        <h2>1. Scope</h2>
         <p>
-          Version 0.11 is an operational review draft. It is not legal advice,
-          proof of compliance, active production policy, or authorization to
-          perform a service. Tuveloz&apos;s owner may elect not to hire private
-          counsel, but every applicable legal requirement remains mandatory. It
+          This policy is not by itself authorization to perform a service. It
           applies to a provider business, its owner-operators, trainees,
           employees, supervisors, and anyone using its account or acting on its
           behalf. The <a href="/provider-agreement">Provider Agreement</a> and{" "}
@@ -204,10 +201,8 @@ export default function MarketplaceConductPage() {
           Candidate services and policy labels are not permission to work.
         </p>
         <p>
-          Provider duties, insurance, and marketplace enforcement do not guarantee
-          that Tuveloz has zero liability. Nothing in this policy waives Tuveloz&apos;s
-          own marketplace, payment, privacy, or other responsibility imposed by
-          applicable law.
+          Nothing in this policy waives Tuveloz&apos;s own marketplace, payment,
+          privacy, or other responsibility imposed by applicable law.
         </p>
       </section>
     </PolicyPage>

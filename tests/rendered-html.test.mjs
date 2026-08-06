@@ -601,7 +601,7 @@ test("build preserves the proposed 5 percent test configuration and fee snapshot
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
   assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 5% in test)"));
-  assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 5%"));
+  assert.ok(paymentPolicySource.includes("customer service fee equal to 5% of the provider"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
   assert.ok(contents.includes("Accepted service fees"));
   assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 500"));

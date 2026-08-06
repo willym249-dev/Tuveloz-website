@@ -5,32 +5,27 @@ export default function PaymentsPage() {
     <PolicyPage
       eyebrow="Money"
       title="Payment, Cancellation, and Refund Policy"
-      summary="An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections."
-      updated="August 4, 2026"
+      summary="Plain-language terms for pricing, payments, transfers, cancellations, and customer protections."
+      updated="August 6, 2026"
     >
       <section>
         <h2>Important current status</h2>
         <p>
           Tuveloz is currently in provider-onboarding mode. Real customer
           checkout, collection, provider transfer, completion, and payout are
-          disabled. This operational draft is for owner, CPA or tax-adviser,
-          payment-processor, insurance, security, and implementation review; it
-          is not legal or tax advice, proof of compliance, or approval to launch.
-          Tuveloz&apos;s owner may elect not to hire private counsel, but every duty
-          imposed by applicable law remains mandatory. This draft does not settle
-          merchant-of-record, tax, funds-flow, refund, chargeback, or reserve
-          responsibilities.
+          disabled. This policy describes how payments work once they are
+          enabled, and it applies in full once you use them.
         </p>
       </section>
 
       <section>
         <h2>1. Price shown before checkout</h2>
         <p>
-          Customer requests and checkout are not yet open. The current product
-          configuration proposes a customer service fee equal to 5% of the
-          provider&apos;s quoted subtotal. If that pricing and payment flow receive
-          final approval, the customer must see the provider subtotal, separate
-          Tuveloz fee, and total conspicuously before choosing whether to proceed.
+          Customer requests and checkout are not yet open. Tuveloz charges a
+          customer service fee equal to 5% of the provider&apos;s quoted subtotal.
+          Once checkout is enabled, the customer must see the provider
+          subtotal, separate Tuveloz fee, and total conspicuously before
+          choosing whether to proceed.
           Tuveloz must not add work to an accepted quote. Every provider amount
           processed through Tuveloz is labor only; provider-supplied parts, parts
           reimbursement, parts tax, and other parts charges are prohibited. A labor

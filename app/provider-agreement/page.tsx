@@ -6,18 +6,16 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers"
       title="Provider Agreement"
       summary="Plain-language terms for provider businesses working through Tuveloz."
-      updated="August 3, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Where this stands, and what else applies</h2>
         <p>
-          This is an operational document, not a final legal contract, legal
-          advice, or approval to perform a vehicle service through Tuveloz
-          yet. Tuveloz&apos;s owner may proceed without private counsel for now,
-          but that doesn&apos;t reduce any legal requirement. Before any service
-          goes live, Tuveloz has to document and satisfy every applicable
-          federal, Maryland, local, insurance, tax, payment, privacy, and
-          service-specific requirement.
+          Being approved for an account isn&apos;t by itself approval to perform a
+          vehicle service through Tuveloz. Before any service goes live,
+          Tuveloz documents and satisfies every applicable federal, Maryland,
+          local, insurance, tax, payment, privacy, and service-specific
+          requirement for that exact service.
         </p>
         <p>
           This agreement works together with the <a href="/terms">Terms of Use</a>,
@@ -238,10 +236,7 @@ export default function ProviderAgreementPage() {
           your negligence, or an inaccurate statement you make about your
           experience, credentials, or insurance — this doesn&apos;t apply to
           Tuveloz&apos;s own fraud or willful misconduct, or anything the law
-          doesn&apos;t let you take on. None of this means Tuveloz has zero
-          responsibility of its own — Tuveloz remains responsible for its own
-          marketplace, payment, and privacy duties wherever the law requires
-          it.
+          doesn&apos;t let you take on.
         </p>
       </section>
 

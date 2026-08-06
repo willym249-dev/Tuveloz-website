@@ -19,12 +19,6 @@ export default function TermsPage() {
           and satisfied. This page describes how Tuveloz works once a service
           is enabled, and it applies in full once you use one.
         </p>
-        <p>
-          These Terms are an operational document, not a substitute for legal
-          advice or proof of compliance. Tuveloz&apos;s owner may choose to proceed
-          without private counsel for now, but that choice doesn&apos;t reduce any
-          duty the law places on Tuveloz.
-        </p>
       </section>
 
       <section>
@@ -146,13 +140,10 @@ export default function TermsPage() {
       <section>
         <h2>7. Fees</h2>
         <p>
-          Once enabled, Tuveloz plans to charge a 5% fee on completed jobs,
-          added to the provider&apos;s quoted price and shown to the customer
-          before they accept. There&apos;s no fee to browse, post a request, apply
-          as a provider, or send a quote. That 5% figure is Tuveloz&apos;s
-          proposed pricing — it still needs final sign-off from a tax
-          adviser, the payment processor, and Tuveloz&apos;s insurance broker
-          before it&apos;s final.
+          Once enabled, Tuveloz charges a 5% fee on completed jobs, added to
+          the provider&apos;s quoted price and shown to the customer before they
+          accept. There&apos;s no fee to browse, post a request, apply as a
+          provider, or send a quote.
         </p>
         <p>
           Once payments are turned on, they&apos;ll be governed by the{" "}
@@ -209,7 +200,7 @@ export default function TermsPage() {
       <section>
         <h2>11. Disclaimers</h2>
         <p>
-          If adopted, the platform is provided &quot;as is&quot; and &quot;as available.&quot;
+          The platform is provided &quot;as is&quot; and &quot;as available.&quot;
           Tuveloz doesn&apos;t promise uninterrupted access, a certain number of
           quotes, that user statements are accurate, or a particular outcome
           from a provider&apos;s work — you make your own call about who and
@@ -232,8 +223,7 @@ export default function TermsPage() {
         <p>
           This cap doesn&apos;t apply to Tuveloz&apos;s own fraud or willful
           misconduct, and it doesn&apos;t remove a right, duty, or remedy the law
-          doesn&apos;t let us limit — it isn&apos;t a claim that Tuveloz has zero
-          liability.
+          doesn&apos;t let us limit.
         </p>
       </section>
 

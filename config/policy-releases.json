@@ -1,26 +1,26 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T05:24:08.212Z",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
     "releaseId": "terms-2026-08-06",
-    "reviewBodyHash": "3913fbd2bbf8f7b07f3e8ec2f29ffc8a0fe1c8cb6c83e0d20844bada7fbbd980",
-    "canonicalBodyHash": "3913fbd2bbf8f7b07f3e8ec2f29ffc8a0fe1c8cb6c83e0d20844bada7fbbd980",
+    "reviewBodyHash": "93386883f9299cdf659ab265017a9298a21d821febc3ebfd08bcd36265366878",
+    "canonicalBodyHash": "93386883f9299cdf659ab265017a9298a21d821febc3ebfd08bcd36265366878",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:21:00.675Z",
-    "releaseId": "customer-agreement-2026-08-04",
-    "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
-    "canonicalBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
+    "releaseId": "customer-agreement-2026-08-06",
+    "reviewBodyHash": "f762e5dda751a2ae62b8ded99b928f39f7edcee3f495a138aa538492f226a9e6",
+    "canonicalBodyHash": "f762e5dda751a2ae62b8ded99b928f39f7edcee3f495a138aa538492f226a9e6",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:16:46.736Z",
-    "releaseId": "provider-agreement-2026-08-04",
-    "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
-    "canonicalBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
+    "releaseId": "provider-agreement-2026-08-06",
+    "reviewBodyHash": "2c5ab75d7281a3cf800e2757398aedb1dac842a15f54ab76690228c2f74134d5",
+    "canonicalBodyHash": "2c5ab75d7281a3cf800e2757398aedb1dac842a15f54ab76690228c2f74134d5",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {
@@ -33,26 +33,26 @@
   },
   "payment_policy": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:22:43.156Z",
-    "releaseId": "payment-policy-2026-08-04",
-    "reviewBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
-    "canonicalBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
+    "releaseId": "payment-policy-2026-08-06",
+    "reviewBodyHash": "0774fd0682038824de4759bdd93b51ba5418d02e3d1075135e8d947c5a046ec9",
+    "canonicalBodyHash": "0774fd0682038824de4759bdd93b51ba5418d02e3d1075135e8d947c5a046ec9",
     "sourceFile": "app/payments/page.tsx"
   },
   "marketplace_conduct": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:52:38.993Z",
-    "releaseId": "marketplace-conduct-2026-08-04",
-    "reviewBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
-    "canonicalBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
+    "releaseId": "marketplace-conduct-2026-08-06",
+    "reviewBodyHash": "8a86581d418084bc5ec80d23e2d186994d42d12070b8529fa2757e6e689e1c31",
+    "canonicalBodyHash": "8a86581d418084bc5ec80d23e2d186994d42d12070b8529fa2757e6e689e1c31",
     "sourceFile": "app/marketplace-conduct/page.tsx"
   },
   "provisional_provider_policy": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:38:44.656Z",
-    "releaseId": "provisional-provider-policy-2026-08-04",
-    "reviewBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
-    "canonicalBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
+    "effectiveAt": "2026-08-06T11:44:21.941Z",
+    "releaseId": "provisional-provider-policy-2026-08-06",
+    "reviewBodyHash": "424e6adfbf2150d98ecff5e9df19844b5b3e64065e56f0317a831bfc8ec05e5b",
+    "canonicalBodyHash": "424e6adfbf2150d98ecff5e9df19844b5b3e64065e56f0317a831bfc8ec05e5b",
     "sourceFile": "app/provisional-provider-policy/page.tsx"
   }
 }

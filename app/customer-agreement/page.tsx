@@ -5,20 +5,18 @@ export default function CustomerAgreementPage() {
     <PolicyPage
       eyebrow="Customers"
       title="Customer Agreement"
-      summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="August 4, 2026"
+      summary="Plain-language terms about your choices and your direct agreement with the provider business you select."
+      updated="August 6, 2026"
     >
       <section>
         <h2>Important current status</h2>
         <p>
-          This Customer Agreement is an operational draft, not legal advice,
-          proof of compliance, or approval to launch. Tuveloz&apos;s owner may elect
-          to proceed without hiring private counsel, but that choice does not
-          waive or reduce any duty imposed by applicable law. Tuveloz is currently
-          in provider-onboarding mode, so customers cannot post, book, pay for,
-          start, or complete a real job. Every exact service remains disabled
-          until its mandatory legal, government, insurance, tax, payment,
-          security, and technical launch controls are documented and satisfied.
+          Tuveloz is currently in provider-onboarding mode, so customers cannot
+          post, book, pay for, start, or complete a real job. Every exact
+          service remains disabled until its legal, government, insurance, tax,
+          payment, security, and technical launch controls are documented and
+          satisfied. This Agreement describes how Tuveloz works once a service
+          is enabled, and it applies in full once you use one.
         </p>
       </section>
 

@@ -3,21 +3,19 @@ import { PolicyPage } from "../components/policy-page";
 export default function ProvisionalProviderPolicyPage() {
   return (
     <PolicyPage
-      eyebrow="Providers • Operational review draft v0.11"
+      eyebrow="Providers"
       title="Provisional Provider and Trainee Policy"
-      summary="A deny-by-default draft for independent startup owner-operators, sponsored trainee employees, and regular provider-business employees."
-      updated="August 4, 2026"
+      summary="A deny-by-default policy for independent startup owner-operators, sponsored trainee employees, and regular provider-business employees."
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Status and controlling rule</h2>
         <p>
-          Version 0.11 is an operational review draft. It is not legal advice,
-          proof of compliance, active production policy, a finding that any
-          service is lawful or insured, or permission to perform customer work.
-          Tuveloz&apos;s owner may elect not to hire private counsel, but every
-          applicable legal requirement remains mandatory. This policy must be
-          reviewed with the <a href="/provider-agreement">Provider Agreement</a>{" "}
-          and <a href="/marketplace-conduct">Marketplace Conduct Policy</a>.
+          An account, an application, or a selected candidate service is never
+          a finding that a service is lawful or insured, or permission to
+          perform customer work. This policy applies together with the{" "}
+          <a href="/provider-agreement">Provider Agreement</a> and the{" "}
+          <a href="/marketplace-conduct">Marketplace Conduct Policy</a>.
         </p>
         <p>
           This policy defaults to deny. Every exact service remains disabled until
@@ -25,8 +23,7 @@ export default function ProvisionalProviderPolicyPage() {
           requirements are documented and satisfied; Tuveloz&apos;s insurance broker
           confirms exact-operation coverage; and the relationship pathway,
           evidence, exclusions, supervision, location, incident, and operating
-          procedure are implemented in production. No policy can guarantee that
-          Tuveloz will have zero liability.
+          procedure are implemented in production.
         </p>
       </section>
 
