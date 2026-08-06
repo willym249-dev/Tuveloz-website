@@ -4,7 +4,10 @@ import { fleetInquiries } from "../../../db/schema";
 import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
 import { consumeFixedWindow, rateLimitKeyHash } from "../../../lib/public-write-rate-limit";
 import { isFleetSize } from "../../../lib/fleet-options";
-import { resolvePhoneContactConsent } from "../../../lib/phone-contact-consent";
+import {
+  recordPhoneContactConsent,
+  resolvePhoneContactConsent,
+} from "../../../lib/phone-contact-consent";
 
 function clean(value: unknown, max: number) {
   return typeof value === "string"
@@ -129,6 +132,16 @@ export async function POST(request: Request) {
         updatedAt: now,
       });
     }
+
+    // The inquiry row keeps the submitted snapshot; the central record is what
+    // any promotional sender must consult.
+    await recordPhoneContactConsent({
+      role: "fleet",
+      email,
+      phone: body.contactPhone,
+      smsMarketingConsent: body.smsMarketingConsent,
+      source: "fleet-inquiry",
+    });
 
     return Response.json({
       ok: true,

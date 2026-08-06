@@ -806,6 +806,35 @@ export const referralSignups = sqliteTable(
   ],
 );
 
+/**
+ * The one place that answers "may Tuveloz send this person a promotional
+ * text?" for every entry point. Transactional contact about someone's own
+ * request never consults this table — see lib/phone-contact-consent.ts.
+ */
+export const phoneContactConsents = sqliteTable(
+  "phone_contact_consents",
+  {
+    id: text("id").primaryKey(),
+    role: text("role").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    source: text("source").notNull().default(""),
+    smsMarketingConsentText: text("sms_marketing_consent_text").notNull().default(""),
+    smsMarketingConsentVersion: text("sms_marketing_consent_version").notNull().default(""),
+    smsMarketingConsentedAt: text("sms_marketing_consented_at").notNull().default(""),
+    smsMarketingRevokedAt: text("sms_marketing_revoked_at").notNull().default(""),
+    revokeToken: text("revoke_token").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("phone_contact_consents_role_email_unique").on(table.role, table.email),
+    uniqueIndex("phone_contact_consents_revoke_token_unique").on(table.revokeToken),
+    index("phone_contact_consents_marketing_idx")
+      .on(table.smsMarketingRevokedAt, table.smsMarketingConsentedAt),
+  ],
+);
+
 export const jobMessages = sqliteTable(
   "job_messages",
   {

@@ -134,7 +134,8 @@ test("fleet interest records interest only and never implies a booking", async (
 });
 
 test("a phone number is transactional until an explicit opt-in says otherwise", async () => {
-  const [consent, schema] = await Promise.all([
+  const [consent, store, schema] = await Promise.all([
+    read("lib/phone-consent-text.ts"),
     read("lib/phone-contact-consent.ts"),
     read("db/schema.ts"),
   ]);
@@ -158,6 +159,21 @@ test("a phone number is transactional until an explicit opt-in says otherwise", 
   // Sending requires a current, unrevoked, recorded consent.
   assert.match(consent, /mayReceiveMarketingSms[\s\S]*!record\.smsMarketingRevokedAt/);
 
+  // One central record answers "may we text this person a promotion?" for
+  // every entry point, and recording it can never fail the submission it
+  // came from.
+  assert.ok(store.includes("recordPhoneContactConsent"));
+  assert.match(store, /recordPhoneContactConsent[\s\S]*catch \(error\)[\s\S]*return null/);
+  // Re-submitting without ticking the box never silently upgrades a record.
+  assert.match(store, /optedInNow[\s\S]*\? \{[\s\S]*smsMarketingRevokedAt: "",[\s\S]*\}[\s\S]*: \{\}/);
+  // Opting in again lifts an earlier revocation, because they just asked.
+  assert.ok(store.includes("Asking again is a fresh opt-in"));
+  // Revocation needs only the token — no sign-in — and keeps the number so
+  // transactional contact about a live job still works.
+  assert.ok(store.includes("revokeMarketingSmsConsent"));
+  assert.ok(!/revokeMarketingSmsConsent[\s\S]{0,400}getAccountSession/.test(store));
+  assert.ok(!/revokeMarketingSmsConsent[\s\S]{0,400}phone: ""/.test(store));
+
   // Every stored contact phone sits beside a consent basis and a revocation
   // field, so a number can never become a marketing list by existing.
   assert.equal(
@@ -180,4 +196,35 @@ test("the owner can see fleet interest without a new dashboard", async () => {
   const adminRoute = await read("app/api/admin/route.ts");
   assert.ok(adminRoute.includes("fleetInquiries"));
   assert.match(adminRoute, /\{ requests: safeRequests[\s\S]*fleet \}/);
+});
+
+test("every phone entry point records consent centrally and offers a way out", async () => {
+  const [providerRoute, providerForm, fleetRoute, optOut] = await Promise.all([
+    read("app/api/providers/route.ts"),
+    read("app/components/provider-signup-form.tsx"),
+    read("app/api/fleet-inquiry/route.ts"),
+    read("app/api/sms-preferences/route.ts"),
+  ]);
+
+  // Provider applications already collected a phone number; now the
+  // promotional permission for it is recorded rather than assumed.
+  assert.ok(providerRoute.includes('role: "provider"'));
+  assert.ok(providerRoute.includes("recordPhoneContactConsent"));
+  // Consent is recorded after the application's atomic batch, so it can never
+  // fail or alter a legal application record.
+  assert.match(providerRoute, /await db\.batch\(\[[\s\S]*\] as const\);[\s\S]*recordPhoneContactConsent/);
+  assert.ok(providerForm.includes('name="provider-sms-marketing-consent"'));
+  assert.ok(providerForm.includes('type="checkbox"'));
+  // Bilingual site: the applicant is shown the wording in their own language.
+  assert.ok(providerForm.includes("SMS_MARKETING_CONSENT_TEXT_ES"));
+  assert.ok(providerForm.includes("PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES"));
+
+  assert.ok(fleetRoute.includes('role: "fleet"'));
+  assert.ok(fleetRoute.includes("recordPhoneContactConsent"));
+
+  // Opting out takes no sign-in and answers the same either way, so it cannot
+  // be used to test whether a token exists.
+  assert.ok(!optOut.includes("getAccountSession"));
+  assert.ok(optOut.includes("revokeMarketingSmsConsent"));
+  assert.match(optOut, /await revokeMarketingSmsConsent\(token\);[\s\S]*return Response\.json\(\{ ok: true \}/);
 });

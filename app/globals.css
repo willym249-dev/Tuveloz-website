@@ -9979,6 +9979,7 @@ footer > p,
   line-height: 1.45;
 }
 
+.provider-sms-consent,
 .fleet-sms-consent {
   align-items: flex-start;
   display: flex;
@@ -9987,6 +9988,7 @@ footer > p,
   grid-column: 1 / -1;
 }
 
+.provider-sms-consent input[type="checkbox"],
 .fleet-sms-consent input[type="checkbox"] {
   flex: 0 0 auto;
   height: 19px;
@@ -9994,6 +9996,7 @@ footer > p,
   width: 19px;
 }
 
+.provider-sms-consent > span,
 .fleet-sms-consent > span {
   color: #a79284;
   font-size: 14px;

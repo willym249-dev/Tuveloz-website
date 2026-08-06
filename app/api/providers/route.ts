@@ -38,6 +38,7 @@ import {
   POLICY_VERSION,
 } from "../../../lib/provider-policy";
 import { PROVIDER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
+import { recordPhoneContactConsent } from "../../../lib/phone-contact-consent";
 import { recordReferralSignup } from "../../../lib/referrals";
 import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
 
@@ -457,6 +458,18 @@ export async function POST(request: Request) {
     // recorded after the legal-record transaction, is not part of the
     // normalized application or its payload hash, and cannot fail the
     // application if it errors.
+    // Promotional-text permission only. Reaching an applicant about their own
+    // application never depends on this record, and a failure here must never
+    // fail the application itself.
+    await recordPhoneContactConsent({
+      role: "provider",
+      email: application.email,
+      phone: application.phone,
+      smsMarketingConsent: body.smsMarketingConsent,
+      source: "provider-application",
+      spanish: application.preferredLanguage === "es",
+    });
+
     await recordReferralSignup({
       rawCode: body.referralCode,
       referredRole: "provider",

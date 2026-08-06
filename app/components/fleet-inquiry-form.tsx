@@ -5,7 +5,7 @@ import { FLEET_SIZE_OPTIONS } from "../../lib/fleet-options";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   SMS_MARKETING_CONSENT_TEXT_EN,
-} from "../../lib/phone-contact-consent";
+} from "../../lib/phone-consent-text";
 
 /**
  * Fleet interest capture. Submitting records interest only — it creates no
