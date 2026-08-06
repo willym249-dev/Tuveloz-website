@@ -287,6 +287,7 @@ export default function ProviderQuoteToolkitPage() {
                 <Link className="button primary" href="/provider-jobs">Return to provider workspace</Link>
                 <Link className="button secondary" href="/provider-jobs/parts">Parts checklist</Link>
                 <Link className="button secondary" href="/provider-jobs/warranty">Warranty helper</Link>
+                <Link className="button secondary" href="/provider-jobs/pricing">Price helper</Link>
                 <Link className="button secondary" href="/job-authorizations">Job agreements</Link>
                 <Link className="button secondary" href="/job-authorizations/documents">Invoices and receipts</Link>
                 <Link className="button secondary" href="/appointments">Appointments</Link>
