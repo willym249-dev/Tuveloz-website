@@ -7,9 +7,10 @@ const source = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8"
 test("phone sign-in stays fail-closed until SMS is configured and the lock is released", async () => {
   const lib = await source("lib/phone-auth.ts");
 
-  // Production SMS delivery is code-locked off by default, mirroring the
-  // fail-closed Stripe live-mode pattern.
-  assert.match(lib, /export const PHONE_SMS_LIVE_MODE_ENABLED = false;/);
+  // The code lock is released, so the deployment's secrets are the only thing
+  // standing between a user and a real text. The AND-gate below is therefore
+  // the whole safety property, not a second line of defence.
+  assert.match(lib, /export const PHONE_SMS_LIVE_MODE_ENABLED = true;/);
 
   // Sending requires BOTH the released lock and every SMS secret present.
   assert.match(

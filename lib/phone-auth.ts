@@ -15,16 +15,22 @@ import {
 import { sendAccountSecurityAlert } from "./email-notifications";
 
 /**
- * Launch boundary. Production SMS delivery stays code-locked off until a vetted
- * SMS sender/verification service, billing/rate caps, consent wording, privacy
- * treatment, and abuse controls are configured and reviewed. This mirrors the
- * fail-closed `STRIPE_LIVE_MODE_ENABLED = false` pattern: with the lock off,
- * every send path throws "not configured" and no text is ever delivered, so the
- * flow cannot be exercised in production by accident. Phone sign-in never grants
- * or elevates owner/admin access — owner access stays on the separate Cloudflare
- * Access application and is unaffected by anything in this module.
+ * Launch boundary. The code lock is released, so SMS delivery now depends
+ * entirely on the deployment: `smsIsConfigured()` still requires every SMS
+ * secret to be present, and the sender throws rather than silently no-ops when
+ * any is missing. Nothing is delivered until SMS_PROVIDER, SMS_API_URL,
+ * SMS_API_KEY and SMS_SENDER_ID are all set in the environment.
+ *
+ * Because this lock is off, setting those secrets is now the only remaining
+ * step before real texts go out — there is no second code review in the way.
+ * US delivery also needs the sending brand and campaign registered with the
+ * carriers (A2P 10DLC) or traffic is filtered regardless of these settings.
+ *
+ * Phone sign-in never grants or elevates owner/admin access — owner access
+ * stays on the separate Cloudflare Access application and is unaffected by
+ * anything in this module.
  */
-export const PHONE_SMS_LIVE_MODE_ENABLED = false;
+export const PHONE_SMS_LIVE_MODE_ENABLED = true;
 
 const CODE_LIFETIME_MS = 10 * 60 * 1000;
 const SEND_RATE_WINDOW_MS = 15 * 60 * 1000;
