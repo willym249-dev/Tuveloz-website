@@ -46,16 +46,44 @@ Source: [Maryland Department of Labor — Worker Classification Protection](http
 
 - **FLSA** (wage and hour) uses an *economic realities* multifactor test asking
   whether the worker is economically dependent on the business or in business
-  for themselves. The Department of Labor issued a rule in 2024 revising how
-  the factors are weighted; that rule drew litigation and administrative
-  reconsideration. **I am not certain of its current operative status** — this
-  is one to confirm directly before relying on it.
+  for themselves. Which version of that test applies currently depends on **who
+  is asking** — see the timeline below.
 - **IRS** uses a *common-law control* test grouped into behavioral control,
   financial control, and type of relationship. A business or worker can request
   an IRS determination on Form SS-8. Section 530 of the Revenue Act of 1978
   provides safe-harbor relief from employment tax liability where a business
   had a reasonable basis for treating workers as contractors, filed all
   required 1099s, and treated similar workers consistently.
+
+### FLSA rule status — the split between enforcement and litigation
+
+The operative test currently differs depending on who is applying it. Verified
+August 2026:
+
+| Date | Event |
+|---|---|
+| Jan 2024 | DOL 2024 final rule takes effect — six-factor totality-of-the-circumstances analysis, no factor predetermined to carry more weight. |
+| — | Five lawsuits filed challenging the rule. **All five stayed**, on the Department's representation that it intended to reconsider the rule. |
+| **May 1, 2025** | DOL issues **Field Assistance Bulletin 2025-1**, instructing Wage and Hour Division field staff to **stop applying** the 2024 rule in investigations. |
+| — | For enforcement, DOL reverts to **Fact Sheet #13 (July 2008)** and **Opinion Letter FLSA2019-6**. Applies to any matter where back wages or civil money penalties were unpaid as of May 1, 2025. |
+| **Feb 26–27, 2026** | DOL announces and publishes an **NPRM (RIN 1235-AA46)** to rescind and replace the 2024 rule. Proposed framework restores the **2021 rule's** test: two core factors — **control over the work** and **opportunity for profit or loss** — carrying greater weight and generally determinative. |
+| **Apr 28, 2026** | 60-day comment period closes. |
+| As of Aug 2026 | **No final rule located.** Searches surface only the NPRM and commentary on it. This is an absence of evidence, not confirmation that no final rule issued — check the [DOL rulemaking page](https://www.dol.gov/agencies/whd/flsa/misclassification/2026rulemaking) directly. |
+
+**The operative split:**
+
+- **DOL investigations** — 2008 Fact Sheet #13 economic-realities framework.
+- **Private FLSA lawsuits** — the **2024 rule remains in effect**. It is still
+  on the books until a final rule replaces it, and a private plaintiff can
+  invoke it. Ceasing enforcement did not repeal it.
+
+That distinction is the practical one: a worker suing directly is not bound by
+the DOL's enforcement posture.
+
+Sources: [FAB 2025-1 (DOL PDF)](https://www.dol.gov/sites/dolgov/files/WHD/fab/fab2025-1.pdf),
+[Morgan Lewis on the rollback](https://www.morganlewis.com/pubs/2025/07/us-department-of-labor-rolls-back-biden-era-flsa-practices),
+[Jackson Lewis on the 2026 proposed rule](https://www.jacksonlewis.com/insights/dols-proposed-2026-independent-contractor-rule-what-employers-need-know),
+[Federal Register, NPRM 2026-03962](https://www.federalregister.gov/documents/2026/02/27/2026-03962/employee-or-independent-contractor-status-under-the-fair-labor-standards-act-family-and-medical)
 
 ### How exposure accrues
 
