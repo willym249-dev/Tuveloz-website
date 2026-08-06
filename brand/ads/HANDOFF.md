@@ -1,4 +1,38 @@
-# Ad production handoff — status as of 2026-08-04 (updated same day)
+# Ad production handoff — status as of 2026-08-06
+
+## Update 2026-08-06 — Artlist MCP now works here, and credits are nearly out
+
+Two things changed since the 08-04 notes below.
+
+1. **The Artlist MCP connector IS available in Claude Code sessions now.** The
+   standing limitation recorded further down is out of date — image and video
+   generation ran end to end from a Claude Code session on 08-06. What is still
+   blocked is the *network*: this environment's egress policy 403s
+   `cms-toolkit-artifacts.artlist.io` and `mcp.artlist.io`, so generated media
+   **cannot be downloaded into the repo from a session**. Generation is
+   automated; filing the asset is still manual (Wil pulls the download URL).
+2. **Credits are nearly exhausted: 140 left of 16,500**, renewing 2026-09-04.
+   The cheapest image-to-video run costs 280, so **no further video generation
+   is possible until renewal or a top-up.** Text-to-image ran 100 credits.
+
+Cost note for the next session: image-to-video models silently default to
+`aspect_ratio: 16:9`. Pass `aspect_ratio`, `resolution` and `duration`
+explicitly on every call — a vertical generation that comes back landscape is a
+full-price mistake, which is exactly how Ad 03's motion pass was lost.
+
+### Ad 03 (price transparency, broad reach) — NEW
+Spec: [price-spread-ad-03.md](price-spread-ad-03.md).
+Captions: `../outreach/media/captions-ad03-copy-paste.txt`.
+- ✅ Hero still generated (Seedream 5.0, 9:16, 2K) — the primary asset, ships
+  as a static/carousel post as-is.
+- ⚠ Vertical motion pass NOT done — came back 16:9 480p and credits ran out.
+  The exact prompt and the settings to force are in the spec.
+- ⬜ Neither asset is filed in `ad-03-assets/` yet — blocked on the egress
+  policy above.
+
+---
+
+# Original handoff — status as of 2026-08-04 (updated same day)
 
 CORRECTION (verified on artlist.io/account/plan-and-billings, logged in as
 hello@tuveloz.com): the plan is **AI Starter / AI Suite $19.99/mo**, NOT Max.
