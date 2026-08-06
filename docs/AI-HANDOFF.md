@@ -151,6 +151,24 @@ locks, and optional SMS sign-in.
 See [`README.md`](README.md) in this folder for the full index, and
 [`FILING-GUIDE.md`](FILING-GUIDE.md) for where to put a new one.
 
+## How sessions stay connected
+
+No chat session remembers another one, and this project is worked on across
+several tools. Two files carry the context between them, and they are the first
+thing to read when catching up:
+
+- [`LOG.md`](LOG.md) — a running record of what happened and what was decided,
+  newest entry at the top. Read the top few entries and you know where things
+  stand.
+- [`OPEN-ITEMS.md`](OPEN-ITEMS.md) — commitments and deadlines. A weekly GitHub
+  workflow reads it and opens an issue when something is overdue or falls due
+  within 30 days, so expirations get chased rather than remembered.
+
+If you are an assistant helping with this project, ask for both files alongside
+this brief. If you produce a decision, a plan, or anything with a deadline, say
+explicitly that it should be written into the log or the deadline register —
+advice that stays in the chat window is lost when the tab closes.
+
 ---
 
 ## Using this with ChatGPT or Gemini
@@ -169,6 +187,8 @@ path on the end:
 | To share | Path to append |
 | --- | --- |
 | This brief | `docs/AI-HANDOFF.md` |
+| What recently happened and was decided | `docs/LOG.md` |
+| Commitments and deadlines | `docs/OPEN-ITEMS.md` |
 | The document index | `docs/README.md` |
 | Install and run | `README.md` |
 | Deployment and Cloudflare setup | `DEPLOYMENT.md` |

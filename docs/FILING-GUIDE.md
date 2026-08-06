@@ -81,6 +81,12 @@ short on purpose: one line per document saying what question it answers.
 
 ## Working across several chat tabs
 
+No session remembers another. [`LOG.md`](LOG.md) and
+[`OPEN-ITEMS.md`](OPEN-ITEMS.md) are how they stay connected — one holds what
+happened and was decided, the other holds what is outstanding and when it falls
+due. Whichever tool you are in, reading those two files is how you catch up, and
+writing to them is how the next session inherits what you learned.
+
 Different tools have different reach, and it matters:
 
 **Claude Code sessions on this repository** can write files directly. They load

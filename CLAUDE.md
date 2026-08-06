@@ -16,6 +16,31 @@ D1 for data, R2 for uploads, and Stripe for payments. It is in onboarding-only
 mode: applications are open, customer job posting and live payments are switched
 off in code.
 
+## Shared memory between sessions
+
+Chat sessions do not remember each other. Two files carry context across them,
+and keeping them current is part of the work, not an extra:
+
+- [`docs/LOG.md`](docs/LOG.md) — what happened and what was decided, newest
+  entry at the top.
+- [`docs/OPEN-ITEMS.md`](docs/OPEN-ITEMS.md) — commitments and deadlines. A
+  weekly workflow reads it and opens a GitHub issue when something is overdue or
+  due within 30 days.
+
+**Read the top of the log before you start** anything substantial. It tells you
+what recently changed and what was left unfinished, which is usually not
+obvious from the code.
+
+**Write an entry before you finish** if something happened a future session
+would be wrong not to know — a decision, a launch step, a policy or vendor
+change, an incident, a change of direction. Skip it for routine edits; a log
+padded with trivia stops being read.
+
+**Anything with a deadline goes in `OPEN-ITEMS.md` with a real date.** Undated
+rows are invisible to the automated check, so nothing will chase them. If the
+user mentions a renewal, an expiration, or something they must not forget, add
+the row rather than only replying about it.
+
 ## When you are asked to write or save a document
 
 Anything meant to last — a plan, spec, research summary, decision record,

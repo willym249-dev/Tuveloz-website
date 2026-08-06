@@ -10,6 +10,8 @@ self-contained page.
 | Document | What it answers |
 | --- | --- |
 | [`AI-HANDOFF.md`](AI-HANDOFF.md) | What is Tuveloz, how does it work, what state is it in? Written to be pasted into any AI assistant. |
+| [`LOG.md`](LOG.md) | What has recently happened and been decided? The shared memory between sessions — read the top before starting, add an entry before finishing. |
+| [`OPEN-ITEMS.md`](OPEN-ITEMS.md) | What is outstanding and what falls due soon? Checked weekly by automation that opens an issue when something is overdue. |
 | [`FILING-GUIDE.md`](FILING-GUIDE.md) | Where does a new document go, what do I name it, and what must never be committed? |
 | [`../README.md`](../README.md) | How do I install and run this locally? |
 | [`../DEPLOYMENT.md`](../DEPLOYMENT.md) | How do I set up GitHub and Cloudflare and deploy it? |
