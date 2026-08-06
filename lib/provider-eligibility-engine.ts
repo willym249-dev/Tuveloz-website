@@ -50,7 +50,8 @@ import {
   externalIdentityAgeVerificationIsCurrent,
 } from "./provider-verification-evidence";
 import {
-  getEvidenceRequirements,
+  getEvidenceRequirementsInJurisdiction,
+  jurisdictionIsOpenForService,
   isPathwayLevelCompatible,
   isProviderLevel,
   isProviderPathway,
@@ -435,6 +436,16 @@ async function evaluateOneService(options: {
   if (!jurisdictions.includes(options.jurisdiction)) {
     reasons.push({ code: "jurisdiction_not_allowed", detail: "This service is not approved for the job jurisdiction.", serviceCode: options.serviceCode });
   }
+  // Independent of the service's own list: requirements are resolved from the
+  // jurisdiction, so a place whose law has not been read resolves to an empty
+  // requirement set. Deny it here rather than let an empty set read as "clear".
+  if (!jurisdictionIsOpenForService(options.jurisdiction)) {
+    reasons.push({
+      code: "jurisdiction_requirements_not_reviewed",
+      detail: "Local legal requirements for this jurisdiction have not been reviewed and recorded.",
+      serviceCode: options.serviceCode,
+    });
+  }
   if (pathway && !service.allowedPathways.includes(pathway)) {
     reasons.push({ code: "pathway_not_allowed_for_service", detail: "This pathway cannot perform the selected service.", serviceCode: options.serviceCode });
   }
@@ -563,8 +574,12 @@ async function evaluateOneService(options: {
     }
   }
 
-  const requirements = pathway
-    ? getEvidenceRequirements(options.serviceCode, pathway)
+  // Requirements follow the law of the place the work happens: the platform
+  // baseline everywhere, plus whatever the federal, state, and county layers of
+  // this jurisdiction impose. A provider outside Montgomery County is never
+  // asked for a Montgomery County certificate, and never loses the baseline.
+  const requirements = pathway && jurisdictionIsOpenForService(options.jurisdiction)
+    ? getEvidenceRequirementsInJurisdiction(options.serviceCode, pathway, options.jurisdiction)
     : [];
   const evidenceRows = requirements.length
     ? await db.select().from(providerEvidenceSubmissions)
