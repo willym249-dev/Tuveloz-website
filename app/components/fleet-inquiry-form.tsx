@@ -1,0 +1,154 @@
+"use client";
+
+import { useState } from "react";
+import { FLEET_SIZE_OPTIONS } from "../../lib/fleet-options";
+
+/**
+ * Fleet interest capture. Submitting records interest only — it creates no
+ * account, books nothing, and promises no service. The copy says so on the
+ * form itself, not just in the confirmation.
+ */
+export function FleetInquiryForm() {
+  const [companyName, setCompanyName] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [email, setEmail] = useState("");
+  const [fleetSize, setFleetSize] = useState("");
+  const [vehicleTypes, setVehicleTypes] = useState("");
+  const [municipality, setMunicipality] = useState("");
+  const [servicesNeeded, setServicesNeeded] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  if (done) {
+    return (
+      <div className="fleet-form-done" role="status">
+        <strong>Recorded — thank you.</strong>
+        <p>
+          We have your fleet details. You will hear from Tuveloz when multi-vehicle
+          service opens in Montgomery County. Nothing has been booked or charged,
+          and this does not create an account.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="fleet-inquiry-form"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setError("");
+        setBusy(true);
+        try {
+          const response = await fetch("/api/fleet-inquiry", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              companyName,
+              contactName,
+              email,
+              fleetSize,
+              vehicleTypes,
+              municipality,
+              servicesNeeded,
+            }),
+          });
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({})) as { error?: string };
+            throw new Error(payload.error || "We could not save your fleet request.");
+          }
+          setDone(true);
+        } catch (submitError) {
+          setError(submitError instanceof Error
+            ? submitError.message
+            : "We could not save your fleet request.");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <label>
+        <span>Business name</span>
+        <input
+          value={companyName}
+          onChange={(event) => setCompanyName(event.target.value)}
+          maxLength={120}
+          required
+        />
+      </label>
+      <label>
+        <span>Your name</span>
+        <input
+          value={contactName}
+          onChange={(event) => setContactName(event.target.value)}
+          maxLength={120}
+          required
+        />
+      </label>
+      <label>
+        <span>Email</span>
+        <input
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          maxLength={180}
+          required
+        />
+      </label>
+      <label>
+        <span>How many vehicles?</span>
+        <select
+          value={fleetSize}
+          onChange={(event) => setFleetSize(event.target.value)}
+          required
+        >
+          <option value="">Choose one</option>
+          {FLEET_SIZE_OPTIONS.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </label>
+      <label>
+        <span>Vehicle types <small>(optional)</small></span>
+        <input
+          value={vehicleTypes}
+          onChange={(event) => setVehicleTypes(event.target.value)}
+          maxLength={200}
+          placeholder="Cargo vans, box trucks, sedans…"
+        />
+      </label>
+      <label>
+        <span>Where are the vehicles kept? <small>(optional)</small></span>
+        <input
+          value={municipality}
+          onChange={(event) => setMunicipality(event.target.value)}
+          maxLength={120}
+          placeholder="Rockville, Silver Spring…"
+        />
+      </label>
+      <label className="fleet-inquiry-wide">
+        <span>What do you need most? <small>(optional)</small></span>
+        <textarea
+          value={servicesNeeded}
+          onChange={(event) => setServicesNeeded(event.target.value)}
+          maxLength={300}
+          rows={3}
+          placeholder="Scheduled maintenance, tires, batteries, diagnostics…"
+        />
+      </label>
+
+      <p className="fleet-inquiry-note">
+        Sending this records your interest only. It does not create an account,
+        book a service, or charge anything, and it is not a promise that any
+        service will be available.
+      </p>
+
+      {error && <p className="form-error" role="alert">{error}</p>}
+
+      <button className="button primary" type="submit" disabled={busy}>
+        {busy ? "Sending…" : "Tell Tuveloz about our fleet"}
+      </button>
+    </form>
+  );
+}

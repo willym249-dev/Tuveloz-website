@@ -111,6 +111,7 @@ async function customerExport(email: string) {
     quotes,
     appointments,
     savedProviders,
+    savedVehicles,
     reviews,
     authorizations,
     payments,
@@ -209,6 +210,16 @@ async function customerExport(email: string) {
       [email],
     ),
     rows(
+      `SELECT id, label, year, make, model, trim, color, plate, vin, notes,
+              archived,
+              created_at AS createdAt,
+              updated_at AS updatedAt
+         FROM customer_vehicles
+        WHERE lower(customer_email) = lower(?)
+        ORDER BY datetime(created_at) DESC`,
+      [email],
+    ),
+    rows(
       `SELECT review.id,
               review.request_id AS requestId,
               review.provider_name AS providerName,
@@ -299,6 +310,7 @@ async function customerExport(email: string) {
     quotesReceived: quotes,
     appointments,
     savedProviders,
+    savedVehicles,
     reviewsSubmitted: reviews,
     jobAuthorizations: authorizations,
     paymentSummaries: payments,

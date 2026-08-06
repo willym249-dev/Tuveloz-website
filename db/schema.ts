@@ -697,6 +697,63 @@ export const savedProviders = sqliteTable(
   ],
 );
 
+/**
+ * Vehicles a customer account has saved so a repeat or multi-vehicle customer
+ * does not retype them. A fleet customer is simply an account with several of
+ * these; the rows carry no pricing, routing, or eligibility meaning.
+ */
+export const customerVehicles = sqliteTable(
+  "customer_vehicles",
+  {
+    id: text("id").primaryKey(),
+    customerEmail: text("customer_email").notNull(),
+    label: text("label").notNull().default(""),
+    year: text("year").notNull().default(""),
+    make: text("make").notNull(),
+    model: text("model").notNull(),
+    trim: text("trim").notNull().default(""),
+    color: text("color").notNull().default(""),
+    plate: text("plate").notNull().default(""),
+    vin: text("vin").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    archived: text("archived").notNull().default("no"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("customer_vehicles_email_idx").on(table.customerEmail, table.archived),
+    index("customer_vehicles_created_at_idx").on(table.createdAt),
+  ],
+);
+
+/**
+ * Businesses that want multi-vehicle service when the marketplace opens.
+ * Recording interest is not an account, a contract, or a promise of service.
+ */
+export const fleetInquiries = sqliteTable(
+  "fleet_inquiries",
+  {
+    id: text("id").primaryKey(),
+    companyName: text("company_name").notNull(),
+    contactName: text("contact_name").notNull(),
+    email: text("email").notNull(),
+    fleetSize: text("fleet_size").notNull(),
+    vehicleTypes: text("vehicle_types").notNull().default(""),
+    municipality: text("municipality").notNull().default(""),
+    servicesNeeded: text("services_needed").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    status: text("status").notNull().default("new"),
+    requestKey: text("request_key").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("fleet_inquiries_request_key_unique").on(table.requestKey),
+    index("fleet_inquiries_status_idx").on(table.status, table.createdAt),
+    index("fleet_inquiries_created_at_idx").on(table.createdAt),
+  ],
+);
+
 export const jobMessages = sqliteTable(
   "job_messages",
   {
