@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="August 4, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -99,6 +99,17 @@ export default function CustomerAgreementPage() {
           should identify the customer-supplied part and any applicable workmanship
           limitation in the service records. Implied or statutory warranty rights
           and duties remain governed by applicable law.
+        </p>
+        <p>
+          Each provider business chooses its own written warranty. Some
+          providers offer the Tuveloz standard labor warranty — the provider
+          business&apos;s written warranty on its workmanship for 12 months or
+          12,000 miles, whichever comes first, honored by re-performing the
+          covered labor at no additional labor charge. Others offer a
+          different written warranty or none at all. The provider&apos;s warranty
+          choice must be disclosed to you before you accept a quote and
+          stated again on the final invoice. Any warranty is provided and
+          honored by the provider business, not by Tuveloz.
         </p>
       </section>
 

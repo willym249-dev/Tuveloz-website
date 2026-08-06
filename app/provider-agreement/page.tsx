@@ -6,7 +6,7 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers"
       title="Provider Agreement"
       summary="Plain-language terms for provider businesses working through Tuveloz."
-      updated="August 3, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Where this stands, and what else applies</h2>
@@ -151,7 +151,31 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>8. Your responsibilities</h2>
+        <h2>8. Your warranty choice</h2>
+        <p>
+          You choose whether to offer the Tuveloz standard labor warranty: a
+          written warranty from your business on your workmanship for 12
+          months or 12,000 miles, whichever comes first, honored by
+          re-performing the covered labor at no additional labor charge.
+          Offering it is optional — you can offer the standard labor
+          warranty, your own different written warranty, or no written
+          warranty at all.
+        </p>
+        <p>
+          Whatever you choose must be disclosed to the customer before they
+          accept your quote and stated again on the final invoice, including
+          a clear statement when no written warranty is offered. A warranty
+          you state is your business&apos;s commitment to the customer — Tuveloz
+          does not provide, back, administer, or insure any provider
+          warranty. Refusing to honor a warranty you stated is treated as a
+          violation of the <a href="/marketplace-conduct">Marketplace Conduct
+          Policy</a>. Nothing in this section limits implied or statutory
+          warranty rights that applicable law provides on its own.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. Your responsibilities</h2>
         <p>
           You&apos;re solely responsible for performing services safely and
           lawfully; holding every license, registration, permit, or insurance
@@ -169,7 +193,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>9. What we require from you</h2>
+        <h2>10. What we require from you</h2>
         <p>
           Tuveloz will only ever ask for documentation tied to a specific
           legal requirement for the service(s) you&apos;ve selected. We won&apos;t ask
@@ -179,7 +203,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>10. Customer information</h2>
+        <h2>11. Customer information</h2>
         <p>
           Use a customer&apos;s contact, vehicle, photo, or location information
           only to quote, schedule, perform, document, and support their job —
@@ -192,7 +216,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>11. Payment</h2>
+        <h2>12. Payment</h2>
         <p>
           You get your full quoted price; Tuveloz&apos;s 5% fee is charged
           separately to the customer. Payment is released after the job is
@@ -205,7 +229,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>12. Taxes</h2>
+        <h2>13. Taxes</h2>
         <p>
           You&apos;ll provide a completed W-9 when you sign up, and Tuveloz will
           issue a 1099 for applicable annual earnings.
@@ -213,7 +237,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>13. Review, suspension, and ending access</h2>
+        <h2>14. Review, suspension, and ending access</h2>
         <p>
           You can stop using Tuveloz any time, with no penalty, notice
           period, or fee, subject to any jobs, payments, or disputes still
@@ -232,7 +256,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>14. If something goes wrong</h2>
+        <h2>15. If something goes wrong</h2>
         <p>
           You agree to cover Tuveloz for claims that come from your work,
           your negligence, or an inaccurate statement you make about your
@@ -246,7 +270,7 @@ export default function ProviderAgreementPage() {
       </section>
 
       <section>
-        <h2>15. Terms that continue</h2>
+        <h2>16. Terms that continue</h2>
         <p>
           Payment adjustments, tax duties, confidentiality, customer-data
           limits, warranty responsibilities, incident cooperation, and
