@@ -68,9 +68,20 @@ consent across every entry point.
 
 **Not code, higher leverage**
 
-- Google Business Profile is not started. The audience playbook calls it the
-  highest-intent channel, and verification takes weeks, so it is the long pole
-  regardless of everything else.
+- **Google Business Profile — submitted, awaiting decision.** Video
+  verification recorded and sent (Aug 2026). Nothing to do but wait. Not yet
+  publicly indexed, which is expected before approval.
+
+  When the acceptance email arrives: uncomment the Google entry in
+  `app/components/social-links.tsx` (lines 12–13) and drop in the share link.
+  It then appears in the footer and in every follow prompt at once. Also
+  update `brand/outreach/audience-growth-playbook.md`, which still lists this
+  as the missing top lever.
+
+  If it is rejected: service-area businesses with no storefront draw extra
+  scrutiny, and a re-record usually needs one continuous unedited take showing
+  an office or admin area, signage, and business documents. Rejection is
+  common and appealable, not final.
 - One attorney pass on the provider agreement and Terms of Use before money
   moves, mainly to add an arbitration clause with a class-action waiver.
   `app/provider-agreement/page.tsx` says in its own text that it is an
