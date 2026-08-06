@@ -84,27 +84,12 @@ a {
   width: 40px;
 }
 
-.brand-mark svg,
-.mini-mark svg {
-  height: 24px;
-  overflow: visible;
-  width: 24px;
-}
-
 .brand-mark img,
 .mini-mark img {
   display: block;
   height: 100%;
   width: 100%;
   object-fit: contain;
-}
-
-.brand-mark .brand-funnel,
-.brand-mark .brand-fuel-drop,
-.mini-mark .brand-funnel,
-.mini-mark .brand-fuel-drop {
-  fill: currentColor;
-  stroke: none;
 }
 
 .tuveloz-icon {
@@ -412,9 +397,7 @@ a {
 
 .mini-mark {
   align-items: center;
-  background: #07182d;
-  border-radius: 7px;
-  box-shadow: inset 0 0 0 2px #ff6a00;
+  border-radius: 6px;
   color: #ff6a00;
   display: flex;
   font-size: 11px;
@@ -422,11 +405,6 @@ a {
   height: 25px;
   justify-content: center;
   width: 25px;
-}
-
-.mini-mark svg {
-  height: 18px;
-  width: 18px;
 }
 
 .quote-board {
