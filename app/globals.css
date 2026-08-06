@@ -11257,3 +11257,117 @@ footer > p,
     width: 360px;
   }
 }
+
+/* ---------------------------------------------------------------
+   Tuveloz AI — audience picker and grounded policy sources
+   --------------------------------------------------------------- */
+
+.ai-audience {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 28px;
+  max-width: 660px;
+}
+
+.ai-audience-option {
+  background: #101010;
+  border: 1px solid #34261d;
+  border-radius: 16px;
+  cursor: pointer;
+  display: grid;
+  gap: 5px;
+  padding: 16px 18px;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ai-audience-option:hover {
+  border-color: rgba(255, 106, 0, 0.5);
+}
+
+.ai-audience-option strong {
+  color: #f7f3ef;
+  font-size: 15.5px;
+  letter-spacing: -0.02em;
+}
+
+.ai-audience-option small {
+  color: #9f8e82;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ai-audience-option.is-active {
+  background: rgba(255, 106, 0, 0.1);
+  border-color: #ff6a00;
+}
+
+.ai-audience-option.is-active strong {
+  color: #ff8a2a;
+}
+
+.ai-starter-policy {
+  border-style: dashed;
+}
+
+.ai-sources {
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+.ai-sources span {
+  color: #9f8e82;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ai-sources a {
+  border: 1px solid rgba(255, 106, 0, 0.4);
+  border-radius: 999px;
+  color: #ff8a2a;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 12px;
+}
+
+.ai-sources a:hover {
+  background: rgba(255, 106, 0, 0.12);
+}
+
+@media (max-width: 640px) {
+  .ai-audience {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The AI page sits on the dark shell, but these three were authored against
+   the light theme and inherited near-black text on a near-black panel — the
+   safety notice, the one telling people to call 911, was effectively invisible
+   at about 1.02:1 contrast. */
+.ai-safety-note {
+  color: #f2e6dc;
+}
+
+.ai-safety-note strong {
+  color: #ff8a2a;
+}
+
+.ai-starter {
+  background: #141414;
+  border-color: #34261d;
+  color: #e4ddd7;
+}
+
+.ai-starter:hover {
+  background: #1b1b1b;
+  border-color: rgba(255, 106, 0, 0.55);
+  color: #fff6ef;
+}

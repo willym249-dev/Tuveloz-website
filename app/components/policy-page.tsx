@@ -49,6 +49,7 @@ export function PolicyPage({
         <div className="policy-content">{children}</div>
         <footer className="policy-contact">
           <strong>Questions?</strong>
+          <Link href="/ai">Ask Tuveloz AI about this page</Link>
           <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
         </footer>
       </article>
