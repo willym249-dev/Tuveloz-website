@@ -32,17 +32,31 @@ The owner understands the difference between legal information and legal
 advice, and does not need it restated. Do not preface answers with "I can't
 give legal advice," and do not append disclaimers to routine answers.
 
+### Where Tuveloz operates — verified from the code, August 2026
+
+| Fact | Value | Source in repo |
+|---|---|---|
+| Jurisdiction code | `US-MD-MontgomeryCounty` | `config/provider-eligibility-matrix.json` → `POLICY_JURISDICTION` in `lib/provider-policy.ts` |
+| Launch area label | `Montgomery County, Maryland` | `CURRENT_LAUNCH_AREA` in `lib/service-matching.ts` |
+| Municipalities served | 36 named places | `lib/service-matching.ts` |
+| ZIP codes | 45 | `MONTGOMERY_COUNTY_MD_ZIP_CODES` in `lib/service-matching.ts` |
+| Expansion interest accepted for | Maryland, Washington DC | `app/api/expansion-interest/route.ts` |
+| Policy matrix status | `draft_pending_mandatory_compliance_insurance_tax` | `config/provider-eligibility-matrix.json` |
+
+Every enabled service in the matrix carries exactly one jurisdiction:
+`US-MD-MontgomeryCounty`. There is no second jurisdiction in the system.
+
 **Maryland governs. Quote Maryland's own text.**
 
-The operative jurisdictions are Maryland and Montgomery County. Never state
-another state's version of a rule as though it were Maryland's — the wording
-differs in ways that change what has to be proven. Md. Labor & Employment
-§ 8-205(a)(3) is disjunctive ("either … or"); California Labor Code § 2775 and
-the Massachusetts equivalent are not. National summaries routinely import the
-California phrasing.
+Never state another state's version of a rule as though it were Maryland's —
+the wording differs in ways that change what has to be proven. Md. Labor &
+Employment § 8-205(a)(3) is disjunctive ("either … or"); California Labor Code
+§ 2775 and the Massachusetts equivalent are not. National summaries routinely
+import the California phrasing.
 
 Pull the Maryland statute and quote it. Another state's rule may be cited only
 as explicit contrast, labeled as that state's, never as the governing text.
+The same applies to Montgomery County ordinances versus other counties'.
 
 Give facts, not judgment. The owner makes the decisions.
 

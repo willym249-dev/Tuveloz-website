@@ -1,9 +1,16 @@
 # Legal landscape — reference facts
 
+**Jurisdiction: Montgomery County, Maryland — `US-MD-MontgomeryCounty`.** That
+is the only jurisdiction in the system; every enabled service in
+`config/provider-eligibility-matrix.json` carries it and no other.
+
 Statutes, tests, thresholds, and penalties that apply to a vehicle-service
-marketplace operating in Montgomery County, Maryland. Each entry states what
-triggers the law, how it operates mechanically, who enforces it, and what the
-exposure is.
+marketplace operating there. Each entry states what triggers the law, how it
+operates mechanically, who enforces it, and what the exposure is.
+
+Maryland statutes are quoted from Maryland's own code. Where another state's
+version appears, it is labeled as that state's and included only to show a
+contrast — it is never the governing rule here.
 
 This file records facts, not recommendations. Sources are linked so every
 figure can be checked. Rules change — verify anything before relying on it.
