@@ -30,7 +30,7 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
-import { track } from "../../lib/analytics";
+import { track, trackOnce } from "../../lib/analytics";
 import { activeVariants } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
@@ -670,6 +670,10 @@ export function ProviderSignupForm() {
     <form
       className="provider-form"
       onChange={(event) => {
+        // Consideration: the first edit to any field. Opening the page this
+        // form sits on is not the same decision as starting to fill it in,
+        // and the gap between the two is where most people leave.
+        trackOnce("provider_form_engaged", { variants: activeVariants() });
         // Capture only the draft fields rendered right now, so navigating
         // between steps never erases values saved from another step.
         const formData = new FormData(event.currentTarget);

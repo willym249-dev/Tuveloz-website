@@ -25,12 +25,15 @@ type ChannelRow = {
   key: string;
   source: string;
   medium: string;
-  started: number;
-  submitted: number;
-  conversion: number;
+  awareness: number;
+  interest: number;
+  consideration: number;
+  decision: number;
+  conversion: number | null;
 };
 
 type WindowPayload = {
+  stages: FunnelStage[];
   provider: FunnelStage[];
   customer: FunnelStage[];
   context: {
@@ -171,8 +174,8 @@ function ChannelTable({
   const best = rows.reduce<ChannelRow | null>((leader, row) => {
     // Ignore tiny samples and the unlabeled bucket when calling a winner — a
     // single application off two visits is not a channel worth funding.
-    if (row.started < 20 || row.source === "unlabeled") return leader;
-    if (!leader || row.conversion > leader.conversion) return row;
+    if (row.awareness < 20 || row.conversion === null || row.source === "unlabeled") return leader;
+    if (!leader || row.conversion > (leader.conversion ?? 0)) return row;
     return leader;
   }, null);
   return (
@@ -181,13 +184,15 @@ function ChannelTable({
       {rows.length === 0 ? (
         <p className="hint" style={{ margin: 0 }}>{empty}</p>
       ) : (
-        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 580 }}>
+        <table style={{ borderCollapse: "collapse", width: "100%", maxWidth: 760 }}>
           <thead>
             <tr>
               <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0", opacity: 0.7 }}>{firstColumn}</th>
-              <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Visitors</th>
-              <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Applications</th>
-              <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Conversion</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.5rem", opacity: 0.7 }}>Aware</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.5rem", opacity: 0.7 }}>Interest</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.5rem", opacity: 0.7 }}>Consid.</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0.5rem", opacity: 0.7 }}>Decision</th>
+              <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Aware→Dec.</th>
             </tr>
           </thead>
           <tbody>
@@ -197,14 +202,20 @@ function ChannelTable({
                   {row.key}
                   {best?.key === row.key && <span style={{ marginLeft: "0.4rem" }}>★ best rate</span>}
                 </td>
-                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                  {row.started}
+                <td style={{ padding: "0.3rem 0.5rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.awareness}
                 </td>
-                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                  {row.submitted}
+                <td style={{ padding: "0.3rem 0.5rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.interest}
+                </td>
+                <td style={{ padding: "0.3rem 0.5rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.consideration}
+                </td>
+                <td style={{ padding: "0.3rem 0.5rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.decision}
                 </td>
                 <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                  {row.conversion}%
+                  {row.conversion === null ? "—" : `${row.conversion}%`}
                 </td>
               </tr>
             ))}
@@ -229,7 +240,7 @@ function Channels({ channels, campaigns }: { channels: ChannelRow[]; campaigns: 
         heading="Channel"
         firstColumn="Source · medium"
         rows={channels}
-        empty="No provider-form visits recorded in this window yet."
+        empty="No visits recorded in this window yet."
       />
       <ChannelTable
         heading="Campaign"
@@ -239,7 +250,7 @@ function Channels({ channels, campaigns }: { channels: ChannelRow[]; campaigns: 
       />
       {unlabeled && (
         <p className="hint" style={{ margin: "0.5rem 0 0", fontSize: "0.78rem" }}>
-          “unlabeled” is {unlabeled.started} visit(s) recorded before channel
+          “unlabeled” is {unlabeled.awareness + unlabeled.interest} event(s) recorded before channel
           tracking shipped, or from a browser blocking storage. They are kept
           apart from “direct” rather than folded into it, so no channel looks
           bigger than it was.
@@ -411,7 +422,21 @@ export default function AnalyticsFunnelPage() {
           </div>
 
           <Funnel
-            title="Provider applications"
+            title="Awareness → Interest → Consideration → Decision"
+            stages={active.stages}
+            empty="No visits recorded in this window yet."
+          />
+          <p className="hint" style={{ marginTop: "0.5rem", fontSize: "0.78rem" }}>
+            Each stage is a separate act, not the same person counted again:
+            a visit arrived, the provider page was opened on purpose, the
+            application was actually started, and it was sent. Awareness counts
+            browser sessions rather than page loads, so refreshes do not inflate
+            the number everything else is measured against. Stages only have data
+            from the day this shipped.
+          </p>
+
+          <Funnel
+            title="Inside the application form"
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />

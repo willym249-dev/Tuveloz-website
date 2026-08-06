@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { trackOnce } from "../../lib/analytics";
 import { attribution } from "../../lib/attribution";
 
 /**
@@ -17,7 +18,11 @@ import { attribution } from "../../lib/attribution";
  */
 export function AttributionCapture() {
   useEffect(() => {
+    // Order matters: settle where the visit came from before the first event
+    // is sent, so Awareness itself is attributed to a channel rather than
+    // being the one stage that cannot be broken down.
     attribution();
+    trackOnce("site_visited");
   }, []);
   return null;
 }

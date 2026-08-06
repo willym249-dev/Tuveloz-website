@@ -196,6 +196,22 @@ Ignore follower count as a decision input. Weekly, look at:
   under "Where applications come from", broken out by channel and by campaign
   tag. This is the only number that decides anything — see §7 for how a link
   earns its label.
+- **Which stage is leaking.** The same page reports four stages, and each one
+  fails for a different reason, so the fix depends on where the drop is:
+
+  | Stage | What it counts | A drop here means |
+  |---|---|---|
+  | Awareness | Sessions that arrived | Nobody is seeing it — a reach problem, not a copy problem |
+  | Interest | Opened the provider page | The channel is reaching the wrong people, or the hook oversells |
+  | Consideration | Started filling in the application | The offer reads fine but the form looks like work |
+  | Decision | Submitted it | Something inside the form is blocking — check the form funnel below it |
+
+  Each stage is a distinct act, not the same person counted again. Awareness
+  counts browser sessions rather than page loads, so refreshes cannot inflate
+  the number every rate is measured against. Read the stages per channel before
+  concluding a channel is bad: a channel with strong awareness and no interest
+  is a targeting problem, and one with strong interest and no decisions is a
+  problem with the form, not the channel.
 - **Follower *locality*.** Instagram and TikTok both break down audience by
   city. If MoCo isn't the top cluster, the content is reaching the wrong
   people and the hashtags are too broad.

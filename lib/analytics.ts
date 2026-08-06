@@ -9,9 +9,15 @@
  */
 
 import { attribution } from "./attribution";
+import { firstTimeThisSession } from "./once";
 
 export type AnalyticsEvent =
+  // Awareness. One per browser session, not per page load — see trackOnce.
+  | "site_visited"
   | "provider_signup_started"
+  // Consideration: the first real edit to the application, which is a
+  // different act from opening the page it sits on.
+  | "provider_form_engaged"
   | "provider_step1_completed"
   | "provider_step2_completed"
   | "provider_step2_abandoned"
@@ -26,6 +32,16 @@ export type AnalyticsEvent =
   // prompts actually convert, so audience growth is judged on data rather
   // than on follower count alone.
   | "social_follow_clicked";
+
+/**
+ * Record a funnel stage the first time it happens in this browser session, so
+ * stage counts measure people rather than page loads. See lib/once.ts for why
+ * that distinction decides whether any rate on the funnel page means anything.
+ */
+export function trackOnce(event: AnalyticsEvent, props: Record<string, unknown> = {}) {
+  if (!firstTimeThisSession(event)) return;
+  track(event, props);
+}
 
 export function track(event: AnalyticsEvent, props: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;

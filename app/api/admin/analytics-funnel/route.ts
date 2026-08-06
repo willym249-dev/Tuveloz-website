@@ -20,6 +20,27 @@ const PROVIDER_FUNNEL: StepDef[] = [
   { key: "submitted", event: "provider_signup_completed", label: "Submitted the application" },
 ];
 
+/**
+ * The marketing funnel, in the four stages the business is steered by.
+ *
+ * Each stage is a distinct act rather than a re-render of the one before it:
+ * a visit landed, the provider page was deliberately opened, the application
+ * was actually started, and it was submitted. Awareness counts sessions, not
+ * page loads (see trackOnce in lib/analytics.ts) — as the denominator for
+ * everything below, it would otherwise sink every rate on this page whenever
+ * someone refreshed.
+ *
+ * The detailed PROVIDER_FUNNEL above stays as-is: it answers a different
+ * question (where inside the form people stall) and is the base the copy
+ * experiments have always measured against.
+ */
+const PROVIDER_STAGES: StepDef[] = [
+  { key: "awareness", event: "site_visited", label: "Awareness — arrived on the site" },
+  { key: "interest", event: "provider_signup_started", label: "Interest — opened the provider page" },
+  { key: "consideration", event: "provider_form_engaged", label: "Consideration — started the application" },
+  { key: "decision", event: "provider_signup_completed", label: "Decision — submitted it" },
+];
+
 const CUSTOMER_FUNNEL: StepDef[] = [
   { key: "started", event: "customer_request_started", label: "Started a request" },
   { key: "posted", event: "customer_request_posted", label: "Posted the request" },
@@ -27,7 +48,9 @@ const CUSTOMER_FUNNEL: StepDef[] = [
 
 // Everything we track, for a raw count table below the funnels.
 const ALL_EVENTS = [
+  "site_visited",
   "provider_signup_started",
+  "provider_form_engaged",
   "provider_step1_completed",
   "provider_step2_completed",
   "provider_step2_abandoned",
@@ -161,13 +184,28 @@ async function experimentsSince(sinceValue: string | null): Promise<Record<strin
   return result;
 }
 
-type ChannelRow = {
-  key: string;
+type StageTally = {
   source: string;
   medium: string;
-  started: number;
-  submitted: number;
-  conversion: number;
+  awareness: number;
+  interest: number;
+  consideration: number;
+  decision: number;
+};
+
+type ChannelRow = StageTally & {
+  key: string;
+  /** Decision ÷ awareness, or null when this channel has no awareness data. */
+  conversion: number | null;
+};
+
+// Which stage each event advances, so a channel is measured on the same four
+// stages the headline funnel uses.
+const STAGE_OF_EVENT: Record<string, keyof Omit<StageTally, "source" | "medium">> = {
+  site_visited: "awareness",
+  provider_signup_started: "interest",
+  provider_form_engaged: "consideration",
+  provider_signup_completed: "decision",
 };
 
 // The bucket for events recorded before channel tracking shipped, and for any
@@ -196,17 +234,21 @@ function readFrom(props: string | null) {
   }
 }
 
-function toRows(tally: Map<string, { source: string; medium: string; started: number; submitted: number }>) {
+function toRows(tally: Map<string, StageTally>): ChannelRow[] {
   return [...tally.entries()]
     .map(([key, value]) => ({
       key,
-      source: value.source,
-      medium: value.medium,
-      started: value.started,
-      submitted: value.submitted,
-      conversion: pct(value.submitted, value.started),
+      ...value,
+      // Rows recorded before awareness tracking shipped have decisions but no
+      // sessions to divide by. Reporting 0% there would read as a dead channel
+      // rather than as missing data, so say nothing instead.
+      conversion: value.awareness > 0 ? pct(value.decision, value.awareness) : null,
     }))
-    .sort((a, b) => b.started - a.started || b.submitted - a.submitted || a.key.localeCompare(b.key));
+    .sort((a, b) =>
+      b.awareness - a.awareness
+      || b.decision - a.decision
+      || b.interest - a.interest
+      || a.key.localeCompare(b.key));
 }
 
 /**
@@ -219,32 +261,38 @@ function toRows(tally: Map<string, { source: string; medium: string; started: nu
  */
 async function channelsSince(sinceValue: string | null) {
   const db = getDb();
-  const events = ["provider_signup_started", "provider_signup_completed"];
-  const eventFilter = inArray(analyticsEvents.event, events);
+  const eventFilter = inArray(analyticsEvents.event, Object.keys(STAGE_OF_EVENT));
   const rows = await db
     .select({ event: analyticsEvents.event, props: analyticsEvents.props })
     .from(analyticsEvents)
     .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
 
-  const byChannel = new Map<string, { source: string; medium: string; started: number; submitted: number }>();
-  const byCampaign = new Map<string, { source: string; medium: string; started: number; submitted: number }>();
+  const byChannel = new Map<string, StageTally>();
+  const byCampaign = new Map<string, StageTally>();
+  const blank = (source: string, medium: string): StageTally => ({
+    source,
+    medium,
+    awareness: 0,
+    interest: 0,
+    consideration: 0,
+    decision: 0,
+  });
 
   for (const row of rows) {
+    const stage = STAGE_OF_EVENT[row.event];
+    if (!stage) continue;
     const from = readFrom(row.props);
     const source = from?.source ?? UNLABELED;
     const medium = from?.medium ?? "";
-    const started = row.event === "provider_signup_started";
 
     const channelKey = medium ? `${source} · ${medium}` : source;
-    const channel = byChannel.get(channelKey) ?? { source, medium, started: 0, submitted: 0 };
-    if (started) channel.started += 1;
-    else channel.submitted += 1;
+    const channel = byChannel.get(channelKey) ?? blank(source, medium);
+    channel[stage] += 1;
     byChannel.set(channelKey, channel);
 
     if (!from?.campaign) continue;
-    const campaign = byCampaign.get(from.campaign) ?? { source, medium, started: 0, submitted: 0 };
-    if (started) campaign.started += 1;
-    else campaign.submitted += 1;
+    const campaign = byCampaign.get(from.campaign) ?? blank(source, medium);
+    campaign[stage] += 1;
     byCampaign.set(from.campaign, campaign);
   }
 
@@ -257,6 +305,7 @@ function windowPayload(
   attribution: { channels: ChannelRow[]; campaigns: ChannelRow[] },
 ) {
   return {
+    stages: buildFunnel(PROVIDER_STAGES, counts),
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
     context: {

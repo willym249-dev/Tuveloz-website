@@ -10,7 +10,9 @@ import { consumeFixedWindow, rateLimitKeyHash } from "../../../lib/public-write-
 import { isSameOriginRequest } from "../../../lib/request-security";
 
 const KNOWN_EVENTS = new Set([
+  "site_visited",
   "provider_signup_started",
+  "provider_form_engaged",
   "provider_step1_completed",
   "provider_step2_completed",
   "provider_step2_abandoned",
