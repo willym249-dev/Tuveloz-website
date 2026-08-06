@@ -33,17 +33,21 @@ test("customer signups stay open while new job requests and payments are paused"
     launchStatus,
     /not accepting customer service requests or payments yet/,
   );
-  assert.match(postJobPage, /Customer service requests are not yet available/);
+  assert.match(postJobPage, /Customer requests and quotes open at launch/);
+  assert.match(
+    postJobPage,
+    /requests and payments switch on once launch review is complete/,
+  );
   assert.match(postJobPage, /account\?role=customer&mode=create/);
   assert.match(postJobPage, /href="\/join"/);
-  assert.match(postJobPage, /Customer accounts are open\. Job requests are not\./);
+  assert.match(postJobPage, /Be first in line when requests open\./);
   assert.match(postJobPage, /Nothing on this page submits a[\s\S]*request, contacts a provider, books service, or processes a payment/);
   assert.ok(
     postJobPage.indexOf("if (CUSTOMER_JOB_POSTING_PAUSED)")
       < postJobPage.indexOf("customerRequestAgreementHash()"),
   );
   assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
-  assert.match(homepage, /Prepare for launch without submitting a job/);
+  assert.match(homepage, /Two minutes now\. First in line at launch\./);
   assert.match(homepage, /Create customer account/);
   assert.match(homepage, /Apply as a provider/);
 });

@@ -322,10 +322,13 @@ test("homepage uses clear launch language and keeps its service icons visible", 
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
-  assert.ok(homeSource.includes('aria-label="Current Tuveloz launch status"'));
-  assert.ok(homeSource.includes("<b>Customer requests</b> are not yet available"));
-  assert.ok(homeSource.includes("<b>Service activation</b> requires approval"));
-  assert.ok(homeSource.includes("<b>Provider applications</b> are open now"));
+  assert.ok(homeSource.includes('aria-label="What Tuveloz promises today"'));
+  // The strip leads with what a visitor gets, and still says plainly that
+  // requests are not live yet rather than implying they are.
+  assert.ok(homeSource.includes("<b>Free</b> to post and to compare quotes"));
+  assert.ok(homeSource.includes("<b>No obligation</b>"));
+  assert.ok(homeSource.includes("requests open at launch"));
+  assert.ok(homeSource.includes("<b>Keep 100%</b> of your quoted price"));
   assert.ok(!styles.includes(".public-view-home > .services,"));
   assert.match(
     styles,

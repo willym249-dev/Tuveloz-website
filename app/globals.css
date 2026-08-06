@@ -9735,7 +9735,9 @@ footer > p,
   padding: 2px 7px;
 }
 
-.public-view-home > .how,
+/* The homepage keeps the three-step flow so a first-time visitor can see the
+   whole path before choosing a side; the deeper customer and provider
+   sections live on their own landers. */
 .public-view-home > .reviews-section,
 .public-view-home > .request-section,
 .public-view-home > .providers,
@@ -9765,21 +9767,17 @@ footer > p,
   display: none;
 }
 
-.public-view-provider > .hero,
-.public-view-provider > .proof-strip,
+/* The provider lander keeps a full funnel of its own: hero, proof, how the
+   work reaches them, the pitch, the application, and a closing call to
+   action. Only the customer-side sections are dropped. */
 .public-view-provider > .audience-section,
-.public-view-provider > .services,
-.public-view-provider > .how,
 .public-view-provider > .reviews-section,
-.public-view-provider > .request-section,
 .public-view-provider > .expansion-section,
-.public-view-provider > .feedback-section,
-.public-view-provider > .final-cta {
+.public-view-provider > .feedback-section {
   display: none;
 }
 
 .public-view-request > .request-section,
-.public-view-provider > .providers,
 .public-view-about > .audience-section {
   min-height: calc(100vh - 78px);
 }
@@ -10986,5 +10984,298 @@ footer > p,
 
   .ai-message {
     max-width: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Marketing landers
+   Appended last so these sit on top of the dark-theme overrides.
+   --------------------------------------------------------------- */
+
+.hero-highlights {
+  display: grid;
+  gap: 11px;
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+}
+
+.hero-highlights li {
+  align-items: start;
+  color: #d9d1cb;
+  display: flex;
+  font-size: 15px;
+  font-weight: 600;
+  gap: 11px;
+  line-height: 1.5;
+}
+
+.hero-highlights li span {
+  align-items: center;
+  background: rgba(255, 106, 0, 0.14);
+  border: 1px solid rgba(255, 106, 0, 0.42);
+  border-radius: 50%;
+  color: #ff8a2a;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 900;
+  height: 21px;
+  justify-content: center;
+  width: 21px;
+}
+
+.trust-intro-text {
+  color: #b6aaa1;
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 16px 0 0;
+}
+
+.final-cta-note {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 28px 0 0;
+  max-width: 540px;
+}
+
+/* Shown in place of job-linked reviews until real ones exist. */
+.review-promise {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 44px;
+}
+
+.review-promise article {
+  background: linear-gradient(145deg, #121212, #0b0b0b);
+  border: 1px solid #2f2119;
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.review-promise strong {
+  color: #f7f3ef;
+  display: block;
+  font-size: 17.5px;
+  letter-spacing: -0.025em;
+}
+
+.review-promise p {
+  color: #b6aaa1;
+  font-size: 14px;
+  line-height: 1.68;
+  margin: 11px 0 0;
+}
+
+.lander-value {
+  background: #090909;
+}
+
+.lander-value-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 56px;
+}
+
+.lander-value-grid article {
+  background: linear-gradient(145deg, #121212, #0b0b0b);
+  border: 1px solid #34261d;
+  border-radius: 20px;
+  padding: 34px;
+}
+
+.lander-value-icon {
+  align-items: center;
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.32);
+  border-radius: 14px;
+  color: #ff8a2a;
+  display: inline-flex;
+  height: 50px;
+  justify-content: center;
+  width: 50px;
+}
+
+.lander-value-grid h3 {
+  color: #f7f3ef;
+  font-size: 21px;
+  letter-spacing: -0.03em;
+  margin: 24px 0 0;
+}
+
+.lander-value-grid p {
+  color: #b6aaa1;
+  font-size: 14.5px;
+  line-height: 1.7;
+  margin: 11px 0 0;
+}
+
+.lander-trust-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.early-access {
+  align-items: center;
+  background: #0b0b0b;
+  display: grid;
+  gap: 56px;
+  grid-template-columns: 1.05fr 0.95fr;
+}
+
+.early-access-copy h2 {
+  color: #f7f3ef;
+  font-size: clamp(32px, 3.8vw, 50px);
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.early-access-copy > p {
+  color: #b6aaa1;
+  font-size: 16.5px;
+  line-height: 1.75;
+  margin: 18px 0 0;
+}
+
+.early-access-copy ul {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 26px 0 0;
+  padding: 0;
+}
+
+.early-access-copy li {
+  align-items: start;
+  color: #e4ddd7;
+  display: flex;
+  font-size: 15px;
+  gap: 11px;
+  line-height: 1.5;
+}
+
+.early-access-copy li span {
+  color: var(--lime);
+  font-weight: 900;
+}
+
+.early-access-form {
+  background: #111111;
+  border: 1px solid #3b281d;
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  padding: 34px;
+}
+
+.early-access-form h3 {
+  color: #f7f3ef;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.early-access-form > p {
+  color: #b6aaa1;
+  font-size: 14.5px;
+  line-height: 1.7;
+  margin: 12px 0 22px;
+}
+
+.lander-faq {
+  background: #090909;
+}
+
+.lander-faq-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 52px;
+}
+
+.lander-faq-list details {
+  background: #101010;
+  border: 1px solid #2f2119;
+  border-radius: 16px;
+  padding: 0 24px;
+}
+
+.lander-faq-list summary {
+  color: #f7f3ef;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  list-style: none;
+  padding: 22px 36px 22px 0;
+  position: relative;
+}
+
+.lander-faq-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.lander-faq-list summary::after {
+  color: #ff8a2a;
+  content: "+";
+  font-size: 22px;
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lander-faq-list details[open] summary::after {
+  content: "−";
+}
+
+.lander-faq-list p {
+  border-top: 1px solid #241a14;
+  color: #b6aaa1;
+  font-size: 15px;
+  line-height: 1.75;
+  margin: 0;
+  padding: 20px 0 24px;
+}
+
+.lander-faq .section-heading > p .text-link {
+  margin-top: 0;
+}
+
+@media (max-width: 980px) {
+  .early-access {
+    gap: 36px;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .lander-value-grid,
+  .lander-trust-grid,
+  .review-promise {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Decorative wash behind the hero. It has to leave the grid flow: as an
+   in-flow child it takes the first cell and shoves the copy and the visual
+   into the wrong columns. */
+.hero-glow {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 106, 0, 0.2), transparent 62%);
+  height: 660px;
+  left: -14%;
+  pointer-events: none;
+  position: absolute;
+  top: -12%;
+  width: 660px;
+  z-index: 0;
+}
+
+@media (max-width: 780px) {
+  .hero-glow {
+    height: 360px;
+    left: -30%;
+    width: 360px;
   }
 }

@@ -12,7 +12,7 @@ import {
   PARTS_SOURCE_OPTIONS,
 } from "../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
-import { SERVICE_CODES } from "../lib/provider-policy";
+import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
@@ -29,54 +29,6 @@ import { LegalHelp } from "./components/legal-help";
 import { ProviderSignupForm, SIGNUP_DRAFT_KEY } from "./components/provider-signup-form";
 import { SocialLinks } from "./components/social-links";
 
-// Homepage launches with only the easy-entry, no-license services — the
-// simplest onboarding path. Specialized/proof-required services (tire
-// repair, A/C service, towing, etc.) are added as separate categories once
-// the marketplace is ready to expand, not shown here yet. Each group's
-// serviceCodes must be real entries from lib/provider-policy.ts's catalog,
-// checked below, so this list can't silently drift from what actually exists.
-const services: Array<{
-  icon: TuvelozIconName;
-  title: string;
-  text: string;
-  serviceCodes: readonly string[];
-}> = [
-  {
-    icon: "battery",
-    title: "Battery & jump start",
-    text: "Back on the road when your battery quits.",
-    serviceCodes: ["provisional_12v_jump_start", "provisional_12v_battery_replacement"],
-  },
-  {
-    icon: "services",
-    title: "Wipers & bulbs",
-    text: "New wiper blades and burnt-out bulbs, swapped fast.",
-    serviceCodes: ["provisional_wiper_blade_replacement", "provisional_conventional_bulb_replacement"],
-  },
-  {
-    icon: "services",
-    title: "Top off fluids",
-    text: "A quick top-up to keep your car running right.",
-    serviceCodes: ["provisional_fluid_topoff_limited"],
-  },
-  {
-    icon: "detailing",
-    title: "Car cleaning",
-    text: "An outside wash, inside cleaning, or both.",
-    serviceCodes: ["provisional_basic_detailing"],
-  },
-  {
-    icon: "diagnostics",
-    title: "Find out what's wrong",
-    text: "A local provider checks your car on-site to see what's going on.",
-    serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
-  },
-];
-
-const KNOWN_SERVICE_CODES: readonly string[] = SERVICE_CODES;
-if (services.some((service) => service.serviceCodes.some((code) => !KNOWN_SERVICE_CODES.includes(code)))) {
-  throw new Error("Homepage services list references an unknown service code.");
-}
 
 // What the platform is built to carry so a provider can, as much as possible,
 // just show up and do the work. Each item maps to a real workspace tool
@@ -184,18 +136,6 @@ const providerReasons: Array<{
     title: "Grow on real work",
     text: "Reviews are tied to completed jobs, not gameable star clicks. Your track record is yours to build and keep.",
   },
-];
-
-const liveSteps = [
-  ["01", "Post what you need", "A quick description is enough."],
-  ["02", "Get quotes", "Independent providers respond with their price."],
-  ["03", "Choose what works", "Compare and pick, or don't accept anything at all."],
-];
-
-const steps = [
-  ["01", "Post your job", "Tell us about your vehicle, what you need, and your preferred timing."],
-  ["02", "Receive quotes", "Interested local providers review the details and send a price."],
-  ["03", "Choose what works", "Compare your options and accept a quote only when it feels right."],
 ];
 
 const feedbackJobOptions = [
@@ -721,12 +661,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </button>
 
         <nav className={menuOpen ? "nav open" : "nav"} id="main-navigation" aria-label="Main navigation">
-          <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
-          <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
-          <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
+          <Link href="/post-job" onClick={() => setMenuOpen(false)}>For customers</Link>
+          <Link href="/join" onClick={() => setMenuOpen(false)}>For providers</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>
           <Link href="/faq" onClick={() => setMenuOpen(false)}>FAQ</Link>
+          <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
         </nav>
 
         <div className="header-actions">
@@ -739,9 +679,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           >
             {accountLabel}
           </Link>
-          <Link className="header-cta" href="/post-job">
-            Launch status
-          </Link>
+          {view === "provider" ? (
+            <a className="header-cta" href="#provider-apply">
+              Apply free
+            </a>
+          ) : (
+            <Link className="header-cta" href="/post-job">
+              Get early access
+            </Link>
+          )}
         </div>
       </header>
 
@@ -758,35 +704,42 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 {heroVariant === "B" ? "Do great work. Get paid." : "Your wrench. Your rules."}
                 <br />
                 <span className="hero-value-line">
-                  We handle the rest.
+                  We bring the customers.
                 </span>
               </h1>
               <p>
-                Tuveloz is a local vehicle-services marketplace launching in Montgomery
-                County, Maryland. You bring the skills — we bring the customers and knock
-                out the paperwork. Join free, keep 100% of your quoted price, no
-                exclusivity. Real jobs and payments open as we launch.
+                You bring the skills — Tuveloz brings the customers and knocks out the
+                paperwork. Free to join, keep 100% of your quoted price, no exclusivity,
+                no lead fees.
               </p>
+              <ul className="hero-highlights">
+                <li><span aria-hidden="true">✓</span> Free to apply — takes about 10 minutes</li>
+                <li><span aria-hidden="true">✓</span> You set your price and your schedule</li>
+                <li><span aria-hidden="true">✓</span> Quotes, invoices, and records in one place</li>
+              </ul>
             </>
           ) : CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <div className="eyebrow">
                 <span className="pulse" />
-                Provider onboarding is open
+                Opening in Montgomery County, MD
               </div>
               <h1>
-                Vehicle services.
+                Any car issue.
                 <br />
                 <span className="hero-value-line">
-                  Choice for customers. Freedom for providers.
+                  Real quotes from local pros. You choose.
                 </span>
               </h1>
               <p>
-                Tuveloz is a local vehicle-services marketplace launching in Montgomery
-                County, Maryland. Independent providers can apply now — join free, keep
-                100% of your quoted price, no exclusivity. Customer requests, payments,
-                and real jobs open after launch review.
+                Say what your car needs once. Independent local providers come back
+                with their own price — side by side, no calling around, no obligation.
               </p>
+              <ul className="hero-highlights">
+                <li><span aria-hidden="true">✓</span> Free to post, free to compare</li>
+                <li><span aria-hidden="true">✓</span> Independent local providers, not a call center</li>
+                <li><span aria-hidden="true">✓</span> You pick the quote — or none at all</li>
+              </ul>
             </>
           ) : (
             <>
@@ -810,11 +763,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
-                <Link className="button primary" href="/join">
-                  Join as a provider — free <span>→</span>
+                <Link className="button primary" href="/post-job">
+                  Get early access — free <span>→</span>
                 </Link>
-                <Link className="button secondary" href="/post-job">
-                  Customer launch status <span>→</span>
+                <Link className="button secondary" href="/join">
+                  I fix cars — join free <span>→</span>
                 </Link>
               </>
             ) : (
@@ -834,7 +787,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <div className="hero-launch-note">
             <strong>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Now onboarding providers in Montgomery County, Maryland"
+                ? "Providers are signing up now in Montgomery County, Maryland. Customer requests open at launch."
                 : "Now serving Montgomery County, Maryland. More areas coming soon."}
             </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
@@ -864,24 +817,41 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </article>
           </div>
           <p className="hero-visual-caption">
-            {CUSTOMER_JOB_POSTING_PAUSED
-              ? "Concept preview — not a live job. Customer requests and quotes open after launch."
-              : "Example preview of a real quote comparison."}
+            {!CUSTOMER_JOB_POSTING_PAUSED
+              ? "Example preview of a real quote comparison."
+              : view === "provider"
+                ? "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch."
+                : "Concept preview — not a live job. Customer requests and quotes open after launch."}
           </p>
         </div>
       </section>
 
-      <section className="proof-strip" aria-label="Current Tuveloz launch status">
-        <span><b>Launch area</b> Montgomery County, Maryland</span>
-        <span><b>Customer requests</b> are not yet available</span>
-        <span><b>Service activation</b> requires approval</span>
-        <span><b>Provider applications</b> are open now</span>
+      <section className="proof-strip" aria-label="What Tuveloz promises today">
+        {view === "provider" ? (
+          <>
+            <span><b>Keep 100%</b> of your quoted price</span>
+            <span><b>$0</b> to apply — no subscription, no lead fees</span>
+            <span><b>You set</b> price, schedule, and service area</span>
+            <span><b>Founding spots</b> open in Montgomery County, MD</span>
+          </>
+        ) : (
+          <>
+            <span><b>Free</b> to post and to compare quotes</span>
+            <span><b>No obligation</b> — accept a quote only if it fits</span>
+            <span><b>Local</b> independent providers, side by side</span>
+            <span><b>Early access</b> open now · requests open at launch</span>
+          </>
+        )}
       </section>
 
       <section className="trust-section" aria-labelledby="trust-heading">
         <div className="trust-intro">
           <span className="kicker light">Trust, stated plainly</span>
-          <h2 id="trust-heading">We show what&apos;s documented. Nothing more.</h2>
+          <h2 id="trust-heading">You always know exactly who you&apos;re dealing with.</h2>
+          <p className="trust-intro-text">
+            No mystery middleman, no bait pricing. Here is precisely how Tuveloz works
+            and where our responsibility starts and stops.
+          </p>
         </div>
         <div className="trust-grid">
           <article className="trust-card">
@@ -950,18 +920,18 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For customers</span>
             <h3>Your car. Your call.</h3>
             <p>
-              Soon you&apos;ll say what your car needs, get real quotes from local
-              providers side by side, and pick the one that feels right — no pressure,
-              no obligation, no runaround. We&apos;re almost there; check the launch
-              status anytime.
+              Say what your car needs once. Local providers come back with real prices
+              you can put side by side, and you pick the one that feels right — no
+              pressure, no obligation, no runaround. Claim early access now and
+              you&apos;re first in line the day requests open.
             </p>
             <ul>
-              <li><span aria-hidden="true">✓</span> Choose from available services</li>
-              <li><span aria-hidden="true">✓</span> Compare providers and quotes</li>
-              <li><span aria-hidden="true">✓</span> You make the final decision</li>
+              <li><span aria-hidden="true">✓</span> One request, several real prices</li>
+              <li><span aria-hidden="true">✓</span> Compare providers before anyone touches your car</li>
+              <li><span aria-hidden="true">✓</span> You make the final decision — always</li>
             </ul>
             <Link className="button primary" href="/post-job">
-              Check customer launch status <span>→</span>
+              Get early access — free <span>→</span>
             </Link>
           </article>
 
@@ -969,36 +939,38 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <span className="audience-label">For providers</span>
             <h3>Run your work on your terms.</h3>
             <p>
-              Mobile mechanics, service-truck operators, and shop-based
-              providers can apply now, select specific services for review, and
-              upload the required evidence. Job access begins only after the provider
-              and each selected service pass every required review.
+              Mobile mechanics, service-truck operators, and shop-based providers are
+              claiming founding spots now. Pick the services you want to offer, send
+              anything those services legally require, and your workspace is ready
+              before the first customer request lands.
             </p>
             <ul>
-              <li><span aria-hidden="true">✓</span> Work on your schedule</li>
-              <li><span aria-hidden="true">✓</span> Use one simple job workspace</li>
-              <li><span aria-hidden="true">✓</span> Request tools that help you grow</li>
+              <li><span aria-hidden="true">✓</span> Work on your schedule, at your price</li>
+              <li><span aria-hidden="true">✓</span> One workspace for quotes, records, and invoices</li>
+              <li><span aria-hidden="true">✓</span> Keep your own customers — no exclusivity</li>
             </ul>
             <Link className="button secondary" href="/join">
-              See provider benefits <span>→</span>
+              Join free — apply now <span>→</span>
             </Link>
           </article>
         </div>
       </section>
 
+      {view !== "provider" && (
       <section className="section services" id="services">
         <div className="section-heading">
           <div>
-            <span className="kicker">What we&apos;re building</span>
-            <h2>Vehicle help, without the runaround.</h2>
+            <span className="kicker">Services we open with</span>
+            <h2>The everyday stuff, handled where you park.</h2>
           </div>
           <p>
-            These services are planned and are not yet available. Each one must
-            complete Tuveloz&apos;s launch review before it can open to customers.
+            These are the first services opening in Montgomery County. Each one
+            switches on for real jobs as it clears launch review, and early-access
+            customers hear the moment it does.
           </p>
         </div>
         <div className="service-cards">
-          {services.map((service) => (
+          {LAUNCH_SERVICES.map((service) => (
             <article key={service.title}>
               <div className="service-icon">
                 <TuvelozIcon name={service.icon} />
@@ -1011,46 +983,51 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="quote-banner">
           <div className="quote-icon"><TuvelozIcon name="quote" /></div>
           <div>
-            <span className="kicker">Planned quote workflow</span>
-            <h3>Cosmetic-repair quotes are not yet available.</h3>
+            <span className="kicker">Coming next</span>
+            <h3>Cosmetic repair quotes, straight from a photo.</h3>
             <p>
-              This service will remain unavailable until its requirements,
-              provider evidence, and launch approvals are complete.
+              Dents, scuffs, and paint work priced from a picture. It opens once its
+              provider requirements and launch review are complete — and the services
+              people ask for most are the ones we open next.
             </p>
           </div>
-          <Link className="button secondary" href="/post-job">
-            View launch status <span>→</span>
+          <Link className="button secondary" href="/about#feedback">
+            Tell us what to build next <span>→</span>
           </Link>
         </div>
       </section>
+      )}
 
       <section className="section how" id="how-it-works">
         <div className="how-intro">
           <span className="kicker light">
-            {CUSTOMER_JOB_POSTING_PAUSED ? "Planned customer workflow" : "How it works"}
+            {view === "provider" ? "Where your jobs come from" : "How it works"}
           </span>
           <h2>
-            {CUSTOMER_JOB_POSTING_PAUSED
-              ? "After launch, request a specific service and compare eligible providers."
+            {view === "provider"
+              ? "A customer posts once. You quote. They choose you."
               : "Post it once. Compare real quotes. Choose what works."}
           </h2>
           {CUSTOMER_JOB_POSTING_PAUSED && (
             <p>
-              The request-and-quote flow shown here is a product preview. Requests,
-              quotes, bookings, payments, and payouts are not yet available.
+              {view === "provider"
+                ? "Three steps, start to finish. Requests and quotes switch on at launch — get your profile ready now so you can quote from day one."
+                : "Three steps, start to finish. Requests and quotes switch on at launch — claim early access and you're first through the door."}
             </p>
           )}
           {CUSTOMER_JOB_POSTING_PAUSED && (
-            <Link className="text-link" href="/post-job">See customer launch status →</Link>
+            <Link className="text-link" href={view === "provider" ? "/join" : "/post-job"}>
+              {view === "provider" ? "Claim a founding spot →" : "Get early access →"}
+            </Link>
           )}
         </div>
         <div className="steps">
-          {(CUSTOMER_JOB_POSTING_PAUSED ? steps : liveSteps).map(([number, title, text]) => (
-            <article key={number}>
-              <span>{number}</span>
+          {CUSTOMER_STEPS.map((step) => (
+            <article key={step.number}>
+              <span>{step.number}</span>
               <div>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
               </div>
             </article>
           ))}
@@ -1061,7 +1038,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="reviews-heading">
           <div>
             <span className="kicker">Reviews linked to a completed Tuveloz job</span>
-            <h2>Read customer feedback tied to Tuveloz job records.</h2>
+            <h2>
+              {reviews.length > 0
+                ? "Read customer feedback tied to Tuveloz job records."
+                : "Every review here comes from a finished job."}
+            </h2>
             <p>
               A completed-job link confirms a platform record; it does not independently verify
               every statement, certify repair quality, or guarantee future performance.
@@ -1096,17 +1077,37 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             ))}
           </div>
         ) : (
-          <div className="reviews-empty">
-            <strong>No public reviews yet.</strong>
-            <p>Job-linked reviews will appear after customers complete Tuveloz jobs.</p>
+          <div className="review-promise">
+            <article>
+              <strong>Tied to real work</strong>
+              <p>
+                Only the customer whose job was completed on Tuveloz can leave a review.
+                No anonymous drive-bys, no review farms.
+              </p>
+            </article>
+            <article>
+              <strong>Never bought, never boosted</strong>
+              <p>
+                A provider cannot pay for placement or a better rating. Position in your
+                results is not for sale.
+              </p>
+            </article>
+            <article>
+              <strong>A record that belongs to the provider</strong>
+              <p>
+                Good work compounds. The track record a provider builds here is theirs,
+                job after job.
+              </p>
+            </article>
           </div>
         )}
       </section>
 
+      {view !== "provider" && (
       <section className="section request-section" id="request">
         <div className="request-copy">
           <span className="kicker">
-            {CUSTOMER_JOB_POSTING_PAUSED ? "Customer accounts are open" : "For customers"}
+            {CUSTOMER_JOB_POSTING_PAUSED ? "Early access · Customer accounts open" : "For customers"}
           </span>
           {view === "request" ? (
             <h1>
@@ -1124,11 +1125,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
-                We&apos;re putting the finishing touches on the marketplace, so requests
-                and payments aren&apos;t open just yet — but you can set up your customer
-                account today and be ready the moment we launch. When you post, your
-                request goes only to providers actually approved for that exact service,
-                so you&apos;re matched with the right pro, not spammed.
+                Set up your account today and you&apos;re ready the moment requests open —
+                no forms to dig through when your car actually needs help. And when you
+                post, your request goes only to providers approved for that exact
+                service, so you get the right pro instead of a flood of calls.
               </p>
               <div className="pilot-vision">
                 <strong>Our vision</strong>
@@ -1138,10 +1138,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </p>
               </div>
               <ul>
-                <li><span>✕</span> Customer posting is not open yet</li>
-                <li><span>✓</span> Future jobs must use enabled exact service codes</li>
-                <li><span>✓</span> Customers will choose whether to accept a quote</li>
-                <li><span>⏳</span> Final fees and tax treatment remain under mandatory legal and CPA or tax-adviser review</li>
+                <li><span>✓</span> Your account is ready the second requests open</li>
+                <li><span>✓</span> Requests reach only providers approved for that exact service</li>
+                <li><span>✓</span> You decide whether to accept a quote — every time</li>
+                <li><span>✓</span> Signing up books nothing and charges nothing</li>
               </ul>
             </>
           ) : (
@@ -1158,11 +1158,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <div className="form-heading">
               <span>✓</span>
               <div>
-                <h3>Prepare for launch without submitting a job</h3>
+                <h3>Two minutes now. First in line at launch.</h3>
                 <p>
-                  Create your customer account to keep your information together and
-                  return when customer service requests open. No job, provider contact,
-                  booking, or payment is created now.
+                  Create your customer account to keep your vehicle and contact
+                  details together, then walk straight into posting when requests
+                  open. No job, provider contact, booking, or payment is created now.
                 </p>
               </div>
             </div>
@@ -1175,8 +1175,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </Link>
             </div>
             <small>
-              Customer account signup and provider applications are open. Customer
-              jobs and payments remain server-blocked.
+              Customer accounts and provider applications are open today. Job requests
+              and payments switch on at launch.
             </small>
           </div>
         ) : (
@@ -1573,6 +1573,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </form>
         )}
       </section>
+      )}
 
       <section className="section provider-pitch" id="why-join">
         <div className="section-heading">
@@ -1611,9 +1612,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               exclusivity — there&apos;s no better time to bet on yourself.
             </p>
           </div>
-          <a className="button lime" href="#provider-apply">
-            {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
-          </a>
+          {view === "provider" ? (
+            <a className="button lime" href="#provider-apply">
+              {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
+            </a>
+          ) : (
+            <Link className="button lime" href="/join">
+              {foundingCtaVariant === "B" ? "Claim my spot" : "Join free"} <span>→</span>
+            </Link>
+          )}
         </div>
       </section>
 
@@ -1935,12 +1942,28 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
 
       <section className="final-cta">
-        <span className="kicker light">Tuveloz</span>
-        <h2>Provider applications are open. Customer service requests are not yet available.</h2>
-        <div>
-          <Link className="button lime" href="/post-job">See customer launch status <span>→</span></Link>
-          <Link className="button ghost" href="/join">Join the provider network</Link>
-        </div>
+        <span className="kicker light">Montgomery County, Maryland</span>
+        {view === "provider" ? (
+          <>
+            <h2>The county is wide open. Take your spot.</h2>
+            <div>
+              <a className="button lime" href="#provider-apply">Apply free — about 10 minutes <span>→</span></a>
+              <Link className="button ghost" href="/how-it-works">See how it works</Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2>Be first in line when Tuveloz opens.</h2>
+            <div>
+              <Link className="button lime" href="/post-job">Get early access — free <span>→</span></Link>
+              <Link className="button ghost" href="/join">I fix cars — join free</Link>
+            </div>
+          </>
+        )}
+        <p className="final-cta-note">
+          Free to join, for customers and providers alike. Job requests and payments
+          switch on at launch.
+        </p>
       </section>
 
       <footer>
@@ -1949,10 +1972,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </Link>
         <p>Vehicle services built around customer choice and provider freedom.</p>
         <div className="footer-links">
-          <Link href="/about">Learn about Tuveloz</Link>
+          <Link href="/about">About Tuveloz</Link>
           <Link href="/ai">Tuveloz AI</Link>
-          <Link href="/post-job">Customer launch status</Link>
-          <Link href="/join">Join as a provider</Link>
+          <Link href="/post-job">For customers</Link>
+          <Link href="/join">For providers</Link>
           <Link href="/how-it-works">How it works</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
@@ -1973,7 +1996,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="footer-bottom">
           <SocialLinks />
           <span>© 2026 Tuveloz. All rights reserved.</span>
-          <span>Provider onboarding is open in Montgomery County, Maryland.</span>
+          <span>Now onboarding providers and early-access customers in Montgomery County, Maryland.</span>
         </div>
       </footer>
     </main>

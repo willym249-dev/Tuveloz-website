@@ -4,35 +4,35 @@ import { PublicInfoPage } from "../components/public-info-page";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "How the Tuveloz marketplace will work: request a service, compare quotes from local independent providers, and choose what works for you.",
+    "How Tuveloz works: post what your vehicle needs once, compare real quotes from local independent providers, and choose the one that works for you.",
 };
 
 export default function HowItWorksPage() {
   return (
     <PublicInfoPage
       kicker="How it works"
-      title="The planned marketplace flow."
-      intro="Provider onboarding and evidence review are open. The customer experience below will remain unavailable until each service and every launch requirement receive written approval."
+      title="Post once. Compare real quotes. Choose what works."
+      intro="Providers across Montgomery County are signing up now, and customer requests open at launch. Here is exactly how a job runs — start to finish, with no surprises in the middle."
       sections={[
         {
-          title: "1. After launch: request an available service",
-          text: "After launch, the customer will choose a service available in their location and describe the vehicle, preferred timing, and parts preference.",
+          title: "1. Tell us what your vehicle needs",
+          text: "You pick a service available in your area and describe the vehicle, the timing that suits you, and how you want parts handled. A short description is plenty. This step opens to customers at launch.",
         },
         {
-          title: "2. Tuveloz checks eligibility",
-          text: "Tuveloz intends to share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards. Meeting these standards does not guarantee safety, quality, or results.",
+          title: "2. Tuveloz sends it only to the right providers",
+          text: "Tuveloz intends to share a request only with providers whose service, assigned worker, evidence, agreements, work area, date, and any supervision requirements meet the applicable standards — so you hear from the right pro instead of everyone. Meeting these standards does not guarantee safety, quality, or results.",
         },
         {
           title: "3. Providers remain separate businesses",
           text: "TUVELOZ does not employ, train, sponsor, assign, or supervise providers or provider personnel. Any employee or trainee works for a separate provider business that handles hiring, payroll, training, supervision, and job assignment.",
         },
         {
-          title: "4. After launch: compare quotes",
-          text: "Eligible providers will choose whether to respond and set their own price. Customers will compare available quotes and precise evidence labels.",
+          title: "4. Real quotes come back to you",
+          text: "Eligible providers decide whether to respond and set their own price. You compare the available quotes and precise evidence labels side by side, before anyone touches your vehicle. This step opens to customers at launch.",
         },
         {
-          title: "5. After launch: choose and track",
-          text: "After launch, the customer will choose a quote and accept the disclosed provider and assigned worker. Tuveloz will check eligibility again at each later job and payment stage.",
+          title: "5. You choose — and you can choose nothing",
+          text: "Accept the quote that fits and the disclosed provider and assigned worker come with it, or accept none at all. Tuveloz checks eligibility again at each later job and payment stage. This step opens to customers at launch.",
         },
       ]}
     />
