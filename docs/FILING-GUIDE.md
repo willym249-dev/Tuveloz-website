@@ -88,12 +88,25 @@ Different tools have different reach, and it matters:
 you only need to say "save this" and it lands in the right place. If a session
 starts drafting into the chat instead, point it at this guide by name.
 
-**ChatGPT and Gemini cannot write to this repository.** They have no access to
-the files unless you have connected them to GitHub yourself. Treat them as
-drafting partners: give them [`AI-HANDOFF.md`](AI-HANDOFF.md) plus whatever
-document you are working on, ask for the revised version as one complete
-Markdown file, then bring that text back to a Claude Code session — or paste it
-into GitHub's web editor — to actually save it.
+**ChatGPT and Gemini can read these documents but cannot write them.** Reading
+takes no setup at all: the repository is public, so sending a raw GitHub link
+lets any assistant with web access fetch the file itself. See the link format in
+[`AI-HANDOFF.md`](AI-HANDOFF.md).
+
+Saving their changes is the part that needs a hand. Three ways, cheapest first:
+
+- **Bring the text back.** Ask for the revised document as one complete Markdown
+  file, then hand it to a Claude Code session to save and commit. Best for
+  ordinary edits.
+- **Edit on GitHub directly.** Open the file on github.com, use the pencil icon,
+  paste, and commit from the browser. No local setup, works from a phone.
+- **Use a coding agent that has repository access.** OpenAI's and Google's
+  coding agents connect to GitHub and open pull requests you review before
+  merging. Worth setting up only if you are doing this constantly; for occasional
+  document edits the first two options are faster.
+
+Whichever you use, the document is not really saved until it is committed and
+merged into the default branch.
 
 To get a filing-ready draft out of any assistant, paste this with your request:
 

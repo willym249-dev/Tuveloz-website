@@ -155,21 +155,45 @@ See [`README.md`](README.md) in this folder for the full index, and
 
 ## Using this with ChatGPT or Gemini
 
-This file is plain Markdown with no repository-specific tooling, so it works
-anywhere. Two ways to use it:
+**This repository is public, so just send the link.** Any assistant that can
+browse the web will fetch these documents itself — no pasting, no uploads, no
+connectors, no account linking:
 
-**Paste or upload it.** Copy this file into the chat, or upload it as a file,
-and say what you want help with. It gives the assistant the business model, the
-architecture, the launch posture, and the vocabulary in one pass.
+```
+https://raw.githubusercontent.com/willym249-dev/Tuveloz-website/main/docs/AI-HANDOFF.md
+```
 
-**Add the specific documents you need.** This brief is a map, not the territory.
-If the question is about provider eligibility, also attach
-`config/provider-eligibility-matrix.json`. If it is about deployment, attach
-`DEPLOYMENT.md`. If it is about a legal policy, attach the page file itself.
+Every file in the repository works the same way. Keep the prefix and change the
+path on the end:
 
-**What not to paste.** Do not paste real secrets, customer or provider personal
-data, database exports, or identity documents into any external AI tool. The
-placeholder names in `.env.example` are safe to share; the values are not.
+| To share | Path to append |
+| --- | --- |
+| This brief | `docs/AI-HANDOFF.md` |
+| The document index | `docs/README.md` |
+| Install and run | `README.md` |
+| Deployment and Cloudflare setup | `DEPLOYMENT.md` |
+| Provider service permissions | `config/provider-eligibility-matrix.json` |
+| Go-live gates | `lib/launch-readiness.ts` |
+| A legal policy page | `app/terms/page.tsx` and siblings |
+
+A phrasing that works well: "Read
+https://raw.githubusercontent.com/willym249-dev/Tuveloz-website/main/docs/AI-HANDOFF.md
+and then help me with X." For anything beyond a general question, send the
+specific file too — this brief is a map, not the territory.
+
+Two things to know. Links point at `main`, so a document only becomes reachable
+once it is merged there; until then swap `main` for the branch name. And some
+assistants cannot browse the web at all, or have it switched off — if the link
+comes back empty, fall back to pasting or uploading the file, which works
+everywhere.
+
+**What not to share.** Because the repository is public, everything committed
+here is already world-readable, so the real rule is upstream of any chat window:
+never commit secrets, customer or provider personal data, database exports, or
+identity documents in the first place. The placeholder names in `.env.example`
+are safe to share; real values belong in `wrangler secret put` and nowhere else.
+Nothing you would not want a stranger to read should be in this repository, and
+therefore nothing sensitive should ever be in a link you send.
 
 Worth saying plainly to whichever assistant you are talking to: this codebase is
 deliberately fail-closed and heavily gated because it handles vehicle repair
