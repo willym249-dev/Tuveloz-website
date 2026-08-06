@@ -94,6 +94,12 @@ Summary of what's there:
 
 ## Hashtags — refreshed for August 2026
 
+> **Superseded 2026-08-06.** Instagram hard-capped hashtags at five per post in
+> December 2025 — over-capped posts stop being surfaced in Explore, hashtag
+> browse, and Reels recommendations, and moving the overflow to the first
+> comment does not get around it. The full sets below are kept for reference
+> only. Use the 5-tag sets in `media/captions/` instead.
+
 Same three-intent strategy as v1/v2 (local + trade-identity + work-intent),
 now with a few **high-reach automotive tags** mixed in for wider distribution.
 TikTok stays at ~5 tags (it deprioritizes tag-stuffed posts); Instagram gets

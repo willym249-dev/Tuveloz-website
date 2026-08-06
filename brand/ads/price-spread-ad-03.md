@@ -193,8 +193,13 @@ Five cards, brand navy on brand black, orange numerals:
 
 ## Captions
 
-Copy-paste block (EN + ES, all four platforms):
-`../outreach/media/captions-ad03-copy-paste.txt`
+Ready to publish, one file per post, five hashtags each:
+`../outreach/media/captions/ad-03-{ig,tiktok}-{en,es}.txt`
+
+Instagram hard-capped hashtags at five per post in December 2025, so the 26-tag
+block in the older `captions-ad03-copy-paste.txt` would now suppress this post's
+reach rather than widen it. That file is flagged out of date; its body copy is
+still current. Selection formula: `../outreach/media/captions/README.md`.
 
 ---
 

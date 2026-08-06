@@ -162,8 +162,12 @@ beats one that posts daily for three weeks and dies.
 - **Week 4** — Provider spotlight ×2, price transparency ×1, launch-countdown
   teaser ×1
 
-Hashtags: heavy stack on Instagram, ~5 on TikTok (tag-stuffing gets buried) —
-both sets are already written in `media/captions-copy-paste.txt`.
+Hashtags: **five, both platforms.** Instagram hard-capped hashtags at five per
+post in December 2025 and stopped surfacing over-capped posts in Explore,
+hashtag browse, and Reels recommendations; TikTok's optimum is the same 3–5.
+This reverses the "heavy stack on Instagram" advice this playbook used to carry.
+Ready-made 5-tag captions, one file per post, are in `media/captions/` — see
+that folder's README for the selection formula.
 
 ---
 

@@ -1,3 +1,20 @@
+!! OUT OF DATE — HASHTAG BLOCKS BELOW ARE NO LONGER SAFE TO USE !!
+====================================================================
+Instagram capped hashtags at FIVE per post in December 2025 (Mosseri,
+official). Posts carrying more than five are no longer surfaced in
+Explore, hashtag browse pages, or Reels recommendations — so the 25-30
+tag blocks below now actively SUPPRESS reach instead of widening it.
+Putting them in the first comment does not get around the cap.
+
+TikTok's optimum is also 3-5; tag-stuffing is deprioritized there too.
+
+Use the 5-tag captions in `captions/` instead — one file per post, ready
+to pipe straight into scripts/publish-social.py. The body copy below is
+still good; only the hashtag blocks are wrong.
+
+Verified 2026-08-06. See captions/README.md for the selection formula.
+====================================================================
+
 TUVELOZ REEL v3 — COPY-PASTE KIT  ("This could be your Tuesday")
 ================================================================
 New provider-recruitment reel. Post AFTER the two existing clips so the
