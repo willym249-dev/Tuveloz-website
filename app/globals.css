@@ -10834,14 +10834,14 @@ footer > p,
   background: rgba(255, 106, 0, 0.08);
   border: 1px solid rgba(255, 106, 0, 0.35);
   border-radius: 14px;
-  color: var(--ink);
+  color: #f7f3ef;
   font-size: 14px;
   line-height: 1.6;
   padding: 14px 18px;
 }
 
 .ai-safety-note strong {
-  color: #b64500;
+  color: #ff8a2a;
 }
 
 .ai-thread {
@@ -10873,7 +10873,7 @@ footer > p,
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--ink);
+  color: #f7f3ef;
   cursor: pointer;
   font-size: 13px;
   padding: 9px 14px;
@@ -10923,7 +10923,7 @@ footer > p,
 .ai-message-assistant p {
   background: var(--paper);
   border: 1px solid var(--line);
-  color: var(--ink);
+  color: #f7f3ef;
 }
 
 .ai-message-pending p {
@@ -10932,7 +10932,7 @@ footer > p,
 }
 
 .ai-error {
-  color: #c0392b;
+  color: #ffd4c7;
   font-size: 14px;
   margin: 0;
 }
@@ -10947,7 +10947,7 @@ footer > p,
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 14px;
-  color: var(--ink);
+  color: #f7f3ef;
   flex: 1;
   font-family: inherit;
   font-size: 15px;
