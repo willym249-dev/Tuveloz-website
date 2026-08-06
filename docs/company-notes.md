@@ -70,6 +70,20 @@ the customer decision — judge customer content on that, not on job requests.
    specific action, and the honest one for this phase: providers apply now,
    customers join the launch list. Never imply customers can book or pay today.
 
+## How changes get made
+
+When Claude spots something that would help, it proposes it and waits — it does
+not go ahead and build it. The owner approves first. Small and reversible is
+still a proposal; "it's only a link" is not a reason to skip the ask.
+
+Anything worth a second opinion before it is built can go to the AI council
+first: `npm run ai "the question"`. The council reads API keys from the
+environment or `.env.local`, so it only runs where those keys are — a session
+without them cannot consult it, and should say so rather than imply it did.
+
+Findings that are not yet approved live in **Ideas worth trying** below, so a
+proposal that was not taken up is still on the record instead of being lost.
+
 ## Ideas worth trying
 
 Each one names the stage it serves and how it would be measured, so it can be
