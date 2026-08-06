@@ -10099,6 +10099,57 @@ footer > p,
   gap: 10px;
 }
 
+.referral-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2f2118;
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+
+.referral-panel h3 {
+  margin: 6px 0 10px;
+}
+
+.referral-panel > p {
+  color: #a79284;
+  margin: 0 0 16px;
+}
+
+.referral-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.referral-link-row input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #3b281d;
+  border-radius: 10px;
+  color: inherit;
+  flex: 1 1 260px;
+  font: inherit;
+  font-size: 15px;
+  padding: 11px 13px;
+}
+
+.referral-count {
+  font-size: 15px;
+  margin: 16px 0 0;
+}
+
+.referral-count strong {
+  font-size: 22px;
+  margin-right: 6px;
+}
+
+.referral-disclaimer {
+  border-top: 1px solid #2f2118;
+  color: #a79284;
+  font-size: 14px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+}
+
 @media (min-width: 1051px) and (max-width: 1380px) {
   .public-site .site-header,
   .public-info-shell .site-header {

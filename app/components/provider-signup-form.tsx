@@ -38,6 +38,16 @@ import { useSiteLanguage } from "./site-language";
 import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
+import { normalizeReferralCode } from "../../lib/referral-code";
+
+/**
+ * A share code arriving as ?ref= on the join link. Read at submit time rather
+ * than stored, so a malformed or absent value simply attributes nothing.
+ */
+function referralCode() {
+  if (typeof window === "undefined") return "";
+  return normalizeReferralCode(new URL(window.location.href).searchParams.get("ref"));
+}
 
 /**
  * New provider signups only ever create independent-contractor accounts.
@@ -560,6 +570,10 @@ export function ProviderSignupForm() {
             ...pendingApplicationPayload,
             challengeId: applicationChallengeId,
             verificationCode: applicationVerificationCode,
+            // Attribution only. Never part of the verified application payload
+            // or its hash — the server records it after the application is
+            // stored, and it changes nothing about review or eligibility.
+            referralCode: referralCode(),
           }),
         });
         const result = (await response.json()) as { error?: string };

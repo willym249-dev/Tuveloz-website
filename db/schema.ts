@@ -754,6 +754,51 @@ export const fleetInquiries = sqliteTable(
   ],
 );
 
+/**
+ * One share code per account. A referral is attribution only — it carries no
+ * payment, no ranking weight, and no routing preference.
+ */
+export const referralCodes = sqliteTable(
+  "referral_codes",
+  {
+    code: text("code").primaryKey(),
+    ownerRole: text("owner_role").notNull(),
+    ownerEmail: text("owner_email").notNull(),
+    status: text("status").notNull().default("active"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("referral_codes_owner_unique").on(table.ownerRole, table.ownerEmail),
+    index("referral_codes_status_idx").on(table.status),
+  ],
+);
+
+/**
+ * A signup credited to a share code. The referred person's email is stored
+ * only as a one-way key for deduplication — the joined record itself is the
+ * link the owner reviews, so a referrer never gains access to who signed up.
+ */
+export const referralSignups = sqliteTable(
+  "referral_signups",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull(),
+    referrerRole: text("referrer_role").notNull(),
+    referrerEmail: text("referrer_email").notNull(),
+    referredRole: text("referred_role").notNull(),
+    referredEntityId: text("referred_entity_id").notNull().default(""),
+    referredKey: text("referred_key").notNull(),
+    status: text("status").notNull().default("recorded"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("referral_signups_referred_unique").on(table.referredRole, table.referredKey),
+    index("referral_signups_code_idx").on(table.code, table.createdAt),
+    index("referral_signups_referrer_idx").on(table.referrerRole, table.referrerEmail),
+  ],
+);
+
 export const jobMessages = sqliteTable(
   "job_messages",
   {

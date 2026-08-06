@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CustomerAccountTools } from "../components/customer-account-tools";
 import { CustomerVehiclesTools } from "../components/customer-vehicles-tools";
+import { ReferralPanel } from "../components/referral-panel";
 import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
@@ -51,7 +52,7 @@ type CustomerAccount = {
   payments: CustomerPayment[];
 };
 
-type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | "payments" | "saved" | "vehicles" | "settings";
+type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | "payments" | "saved" | "vehicles" | "share" | "settings";
 
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
@@ -65,6 +66,7 @@ const CUSTOMER_VIEWS = new Set<CustomerView>([
   "payments",
   "saved",
   "vehicles",
+  "share",
   "settings",
 ]);
 
@@ -112,6 +114,11 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
     title: "My vehicles",
     emptyTitle: "No saved vehicles yet",
     emptyText: "Save the vehicles you own so you do not retype them on every request.",
+  },
+  share: {
+    title: "Share Tuveloz",
+    emptyTitle: "Share your link",
+    emptyText: "Send your link to someone who needs vehicle work in Montgomery County.",
   },
   settings: {
     title: "Profile & settings",
@@ -254,9 +261,11 @@ export default function CustomerPage() {
         ? "Customer providers"
         : activeView === "vehicles"
           ? "Customer vehicles"
-          : activeView === "settings"
-            ? "Customer profile"
-            : "Customer requests";
+          : activeView === "share"
+            ? "Customer sharing"
+            : activeView === "settings"
+              ? "Customer profile"
+              : "Customer requests";
 
   return (
     <main className="account-shell">
@@ -317,6 +326,7 @@ export default function CustomerPage() {
                 ["payments", "Payments"],
                 ["saved", "Saved providers"],
                 ["vehicles", "My vehicles"],
+                ["share", "Share Tuveloz"],
                 ["settings", "Profile & settings"],
               ] as Array<[CustomerView, string]>).map(([view, label]) => (
                 <button
@@ -345,6 +355,8 @@ export default function CustomerPage() {
                 <JobMessages audience="customer" />
               ) : activeView === "vehicles" ? (
                 <CustomerVehiclesTools />
+              ) : activeView === "share" ? (
+                <ReferralPanel role="customer" />
               ) : activeView === "saved" || activeView === "settings" ? (
                 <CustomerAccountTools view={activeView} />
               ) : activeView === "payments" ? (

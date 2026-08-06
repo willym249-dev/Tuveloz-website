@@ -38,6 +38,7 @@ import {
   POLICY_VERSION,
 } from "../../../lib/provider-policy";
 import { PROVIDER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
+import { recordReferralSignup } from "../../../lib/referrals";
 import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
 
 const NO_STORE_HEADERS = { "cache-control": "private, no-store" };
@@ -451,6 +452,17 @@ export async function POST(request: Request) {
       }
       return genericCompleteResponse();
     }
+
+    // Attribution is marketing data, never application evidence: it is
+    // recorded after the legal-record transaction, is not part of the
+    // normalized application or its payload hash, and cannot fail the
+    // application if it errors.
+    await recordReferralSignup({
+      rawCode: body.referralCode,
+      referredRole: "provider",
+      referredEmail: application.email,
+      referredEntityId: providerId,
+    });
 
     // Delivery is best-effort and remains outside the legal-record transaction.
     await notifyProviderApplicationReceived({
