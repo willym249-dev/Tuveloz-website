@@ -13,6 +13,57 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-06 — Captured what the five open pull requests settle
+
+**What happened.** Recorded the state of every open pull request in one place,
+so the context survives when the chat sessions that produced them are deleted.
+Deleting a conversation does not delete a branch, a pull request, or its
+description — the work and the reasoning behind it are in Git and on GitHub, not
+in the chat window. What was missing was a single place to see it together.
+
+**The five open pull requests, oldest first.**
+
+- **#90 — email exhaustion alerts and an open-work handoff.** A queued
+  notification that used all five delivery attempts was dropped from every later
+  retry batch silently, which for verification and compliance mail meant
+  protective messages could go quietly undelivered. Now raises an owner incident
+  on the exhausting attempt, deduplicated per event, inserted rather than sent
+  inline, with a guard so an incident never raises an incident about itself. The
+  dashboard counts `exhausted` separately from `failed` because the first never
+  recovers on its own. Also adds `docs/OPEN_WORK_HANDOFF.md`.
+- **#93 — the mobile app foundation. Must never be merged.** A complete Expo /
+  React Native Phase 1 foundation under `mobile/`, sharing no code with the
+  website. It belongs in a separate `tuveloz-app` repository; creating that
+  repository returned `403 Resource not accessible by integration`, so the code
+  was preserved here rather than discarded. Extraction is documented and was
+  rehearsed in `mobile/docs/EXTRACTION.md`.
+- **#95 — local-search pages and one name for the Customer Service Fee.** The
+  fee had five different labels across the site, the agreements, and the Stripe
+  receipt line; the economics never differed but nobody comparing two surfaces
+  could know that. One name now, defined once, with a test that fails the build
+  if a second name reappears. Adds 17 local-search URLs behind an explicit
+  allowlist rather than a cross product, because two lists multiplied together
+  produce doorway pages.
+- **#96 — the `/providers` directory.** Stacked on #95 and based on its branch,
+  so #95 must merge first. The directory is gated on the same `discovery` action
+  that closes customer requests, because a directory listing providers while
+  discovery is closed would be a way around that control.
+- **#97 — jurisdiction-scoped compliance requirements, plus strategy
+  documents.** Requirements now resolve from where the work happens rather than
+  applying uniformly, failing closed in both directions.
+
+**Also recorded.** Added the three migration traps to `CLAUDE.md` after
+verifying them against `main`: numbers collide at `0053`, the generated
+snapshots are stale past `0047` (35 snapshots for 54 migrations), and tests must
+never pin the newest journal entry. Three branches have already been lost to
+these.
+
+**Now open.** Merge order matters and is not obvious from the pull request list:
+#95 before #96, and #93 never. Both are in `OPEN-ITEMS.md`, along with the
+launch blockers #90 surfaced.
+
+---
+
 ## 2026-08-06 — Two documentation efforts collided; constraints consolidated
 
 **What happened.** Opened PR #98 for the documentation structure and found PR

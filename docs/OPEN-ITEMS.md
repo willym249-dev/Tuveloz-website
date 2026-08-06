@@ -38,6 +38,25 @@ When you close something significant, write a matching entry in
 | — | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
 | — | Confirm the current state of the 18 launch gates in the owner dashboard; the decisions live in the database, not in this repository | hello@tuveloz.com | open |
 
+## Pull requests in flight
+
+Merge order matters here and is not visible from the pull request list.
+
+| Due | Item | Owner | Status |
+| --- | --- | --- | --- |
+| — | Merge PR #95 **before** PR #96 — #96 is stacked on #95's branch, not on `main` | hello@tuveloz.com | open |
+| — | **Never merge PR #93.** Create the `tuveloz-app` repository, move `mobile/` there following `mobile/docs/EXTRACTION.md`, then close #93, delete its branch, and remove the temporary "Related project" pointer from the root `README.md` | hello@tuveloz.com | open |
+| — | Repository creation for `tuveloz-app` previously failed with `403 Resource not accessible by integration` — it needs owner permissions, not another attempt from a session | hello@tuveloz.com | open |
+| — | Re-release Terms of Use and the Payment, Cancellation and Refund Policy so they carry the renamed Customer Service Fee; both are SHA-pinned, so this is an owner-approved release, not an edit (tracked by a test in #95 that fails once they are re-released) | hello@tuveloz.com | open |
+| — | Re-cut the features stranded on PR #33's unmergeable branch, and PR #46 | hello@tuveloz.com | open |
+
+## Blocked on something outside the code
+
+| Due | Item | Owner | Status |
+| --- | --- | --- | --- |
+| — | `LAUNCH_UPDATES_POSTAL_ADDRESS` is empty, which keeps the launch-update email sequence inert. Marketing email cannot send without a physical postal address | hello@tuveloz.com | open |
+| — | SMS sign-in is code-locked behind `PHONE_SMS_LIVE_MODE_ENABLED = false` in addition to its environment configuration | hello@tuveloz.com | open |
+
 ## Recurring reviews
 
 These come around again rather than being finished once. When you complete one,

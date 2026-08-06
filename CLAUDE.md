@@ -166,6 +166,29 @@ build breakage. Deployment happens through GitHub Actions on push to `main`;
 running `npm run deploy` by hand skips the release stamping and health
 verification and is documented as emergency-only in `DEPLOYMENT.md`.
 
+## Traps that have already cost pull requests
+
+Three separate branches have been lost to the migration tooling. Verified
+against `main` on 2026-08-06:
+
+- **Migration numbers collide.** `drizzle/` runs to `0053` across 54 files, and
+  two branches that each add "the next" migration produce the same number. Check
+  the highest number on `main` immediately before generating, and rebase rather
+  than renumbering by hand after the fact.
+- **The generated snapshots are stale past `0047`.** There are 35 snapshots in
+  `drizzle/meta/` for 54 migrations, so `drizzle-kit generate` reconstructs
+  state from `0047` and emits a migration that does not match what the database
+  actually looks like. Write the SQL by hand rather than trusting a generated
+  diff, unless you are also refreshing the snapshots deliberately.
+- **Never assert on the newest journal entry.** `drizzle/meta/_journal.json` has
+  54 entries and its last tag changes whenever anyone adds a migration. A test
+  pinned to the newest entry passes on the branch that wrote it and fails for
+  everyone after. Assert on the entry you care about by tag.
+
+The lint suite reports one pre-existing warning in
+`app/components/tuveloz-icons.tsx` about `<img>` versus `next/image`. It is not
+yours; compare against `main` before assuming a warning is new.
+
 ## Conventions
 
 Existing code style is the guide — match the file you are editing. New
