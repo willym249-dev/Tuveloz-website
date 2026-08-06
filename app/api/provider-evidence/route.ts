@@ -83,13 +83,17 @@ function expirationReminderSchedule(expiresAt: string, now: Date) {
   if (!expiresAt) return [];
   const expirationTime = Date.parse(`${expiresAt}T14:00:00.000Z`);
   if (!Number.isFinite(expirationTime) || expirationTime <= now.getTime()) return [];
-  const schedule = EXPIRATION_REMINDER_DAYS
-    .map((days) => ({
-      reminderType: `evidence_expiration_${days}_day`,
-      dueAt: new Date(expirationTime - days * DAY_MS).toISOString(),
-      days,
-    }))
-    .filter((item) => Date.parse(item.dueAt) > now.getTime());
+  // Declared rather than inferred from the map: the window-entered entry
+  // unshifted below carries days: 0 as a sentinel, which is deliberately not
+  // one of EXPIRATION_REMINDER_DAYS.
+  const schedule: { reminderType: string; dueAt: string; days: number }[] =
+    EXPIRATION_REMINDER_DAYS
+      .map((days) => ({
+        reminderType: `evidence_expiration_${days}_day`,
+        dueAt: new Date(expirationTime - days * DAY_MS).toISOString(),
+        days,
+      }))
+      .filter((item) => Date.parse(item.dueAt) > now.getTime());
   if ((expirationTime - now.getTime()) / DAY_MS <= 60) {
     schedule.unshift({
       reminderType: "evidence_expiration_window_entered",
