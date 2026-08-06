@@ -30,22 +30,21 @@ Then set these, ideally in .dev.vars or your shell profile - never commit them:
     export FB_PAGE_ID="1015..."
 
 --------------------------------------------------------------------------------
-THE VIDEO HAS TO BE AT A PUBLIC URL
+THE VIDEO HAS TO BE AT A PUBLIC URL - already handled
 --------------------------------------------------------------------------------
 Meta's API does not accept file uploads for Reels - it fetches the media from a
-URL you give it. So each MP4 needs to be publicly reachable over HTTPS first.
+URL you give it, so each MP4 has to be publicly reachable over HTTPS first.
 
-We already have Cloudflare R2 wired up, which is the easiest host:
+The ads are already staged in `public/media/`, which the site serves as static
+assets. Merge to main, let the deploy workflow run, and they are live at
+https://tuveloz.com/media/<file> - which is what MEDIA_BASE_URL defaults to.
+Nothing else to set up.
 
-    npx wrangler r2 object put <bucket>/ads/ad-01-9x16.mp4 \
-        --file brand/ads/ad-01-9x16.mp4 --remote
+Do NOT make the `tuveloz-uploads` R2 bucket public as an alternative. That
+bucket holds customer uploads.
 
-Then set MEDIA_BASE_URL to the public bucket URL (or any https host you control):
-
-    export MEDIA_BASE_URL="https://media.tuveloz.com"
-
-The URL must be publicly readable, HTTPS, and stay up until publishing finishes.
-It can come straight back down afterwards - Meta copies the file.
+Delete `public/media/` once the posts are live - Meta copies the file at publish
+time, so the URL only needs to be up during the API call.
 """
 from __future__ import annotations
 
@@ -62,33 +61,35 @@ from pathlib import Path
 GRAPH = "https://graph.facebook.com/v21.0"
 ROOT = Path(__file__).resolve().parents[1]
 
-# Each post: the rendered file, and the caption file its copy lives in.
-# Captions stay in brand/ so the marketing kit remains the single source of truth.
+# Each post: the rendered file, and the ready-to-publish caption for each
+# platform. Captions live in brand/ so the marketing kit stays the single source
+# of truth, and each carries exactly five hashtags (Instagram's cap since Dec 2025).
+CAPS = "brand/outreach/media/captions"
 POSTS: dict[str, dict[str, str]] = {
     "ad-01": {
         "file": "brand/ads/ad-01-9x16.mp4",
-        "captions": "brand/outreach/media/captions-copy-paste.txt",
+        "caption": f"{CAPS}/ad-01-ig.txt",
         "note": "Provider recruitment. Captions burned in. Epidemic music - publish before Aug 9.",
     },
     "reel-deadbattery": {
         "file": "brand/outreach/media/tuveloz-reel-deadbattery-v2.mp4",
-        "captions": "brand/outreach/media/captions-copy-paste.txt",
-        "note": "Needs on-screen text added in the app editor before posting.",
-    },
-    "reel-mechanic": {
-        "file": "brand/outreach/media/tuveloz-reel-mechanic.mp4",
-        "captions": "brand/outreach/media/captions-copy-paste.txt",
+        "caption": f"{CAPS}/reel-deadbattery-ig.txt",
         "note": "Needs on-screen text added in the app editor before posting.",
     },
     "ad-03": {
         "file": "brand/ads/ad-03-9x16.mp4",
-        "captions": "brand/outreach/media/captions-ad03-copy-paste.txt",
-        "note": "Price transparency, 43s. Silent - add a trending sound natively if posting manually.",
+        "caption": f"{CAPS}/ad-03-ig-en.txt",
+        "note": "Price transparency, 43s. Silent - add a trending sound if posting manually.",
+    },
+    "ad-03-es": {
+        "file": "brand/ads/ad-03-9x16.mp4",
+        "caption": f"{CAPS}/ad-03-ig-es.txt",
+        "note": "Spanish price transparency. Post as its own reel, not a re-caption.",
     },
     "ad-03-short": {
         "file": "brand/ads/ad-03-short-9x16.mp4",
-        "captions": "brand/outreach/media/captions-ad03-copy-paste.txt",
-        "note": "TikTok cut, 14s.",
+        "caption": f"{CAPS}/ad-03-tiktok-en.txt",
+        "note": "TikTok cut, 14s. TikTok has no API path here - this is for IG/FB reuse.",
     },
 }
 
@@ -176,33 +177,33 @@ def main() -> None:
     if not media.exists():
         sys.exit(f"Missing video: {media}\nRun the build script for this ad first.")
 
-    url = args.media_url or f"{os.environ.get('MEDIA_BASE_URL', '').rstrip('/')}/{media.name}"
+    base = os.environ.get("MEDIA_BASE_URL", "https://tuveloz.com/media").rstrip("/")
+    url = args.media_url or f"{base}/{media.name}"
     if not url.startswith("https://"):
-        sys.exit(
-            "No public media URL. Meta fetches the video by URL - it does not accept\n"
-            "uploads for Reels. Upload the file somewhere public first:\n\n"
-            f"  npx wrangler r2 object put <bucket>/ads/{media.name} \\\n"
-            f"      --file {post['file']} --remote\n\n"
-            "then set MEDIA_BASE_URL, or pass --media-url."
-        )
+        sys.exit(f"MEDIA_BASE_URL must be an https:// origin; got {url!r}")
 
-    if args.caption_file:
-        caption = Path(args.caption_file).read_text().strip()
-    elif sys.stdin.isatty():
+    # Default to the post's own caption file; --caption-file overrides for
+    # one-offs. Deliberately no implicit stdin read - it blocks forever wherever
+    # stdin is not a terminal (CI, cron, a non-interactive shell).
+    caption_path = Path(args.caption_file) if args.caption_file else ROOT / post["caption"]
+    if not caption_path.exists():
+        sys.exit(f"Missing caption file: {caption_path}")
+    caption = caption_path.read_text().strip()
+
+    tags = caption.count("#")
+    if tags > 5:
         sys.exit(
-            f"No caption given. Copy is in {post['captions']}.\n"
-            "Pass --caption-file <path>, or pipe it:\n"
-            f"  cat caption.txt | python3 scripts/publish-social.py --post {args.post}"
+            f"{tags} hashtags in the caption. Instagram caps posts at five and stops\n"
+            "surfacing over-capped posts in Explore, hashtag browse, and Reels\n"
+            f"recommendations. Trim it, or use the ready sets in {CAPS}/."
         )
-    else:
-        caption = sys.stdin.read().strip()
 
     targets = [t.strip() for t in args.targets.split(",") if t.strip()]
     print(f"\n{args.post}: {media.name}  ({media.stat().st_size / 1e6:.1f} MB)")
     print(f"note:    {post['note']}")
     print(f"url:     {url}")
     print(f"targets: {', '.join(targets)}")
-    print(f"caption: {len(caption)} chars, first line - {caption.splitlines()[0][:70]}...")
+    print(f"caption: {len(caption)} chars, {tags} hashtags — {caption.splitlines()[0][:60]}...")
 
     if args.dry_run:
         print("\nDry run. Nothing published.")
