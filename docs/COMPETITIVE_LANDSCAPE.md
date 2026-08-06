@@ -42,9 +42,58 @@ category does. That combination does not currently exist in the US market.
 - ***Provost v. YourMechanic*** (Cal. App. 2020) is the standing warning: a
   platform that sets the price, assigns the job, and controls the workflow
   invites a misclassification claim. **Our provider-sets-their-own-quote design
-  is a legal asset, not just a philosophical one.** Maryland's tests differ from
-  California's; counsel should review the Provider Agreement against the
-  Maryland Workplace Fraud Act before live jobs.
+  is a legal asset, not just a philosophical one.** But the case is California
+  law and does not control here — see the classification note below, which is
+  the more useful read.
+
+### Classification: Maryland is not California, and the difference is decisive
+
+- The **Maryland Workplace Fraud Act does not apply to us.** It reaches the
+  **construction and landscaping industries only**. Vehicle repair is outside
+  it. (An earlier draft of this doc flagged the MWFA; that was the wrong
+  statute.)
+- The statute that does apply to a marketplace like ours is the unemployment
+  insurance test, **Md. Code, Lab. & Empl. § 8-205**, an ABC test. Work is not
+  covered employment if the business proves all three: (1) the individual is
+  free from control and direction over performance, in fact and under the
+  contract; (2) the individual is customarily engaged in an independent business
+  or occupation of the same nature as the work; and (3) the work is **(i)
+  outside the usual course of business of the person for whom it is performed,
+  *or* (ii) performed outside of any place of business of the person for whom
+  it is performed.**
+- **That "or" in prong (3) is the whole difference.** California's AB5/*Dynamex*
+  prong B has no alternative — the work must be outside the hiring entity's
+  usual course of business, full stop. Repairing cars is obviously YourMechanic's
+  usual course of business, so in California there was no route out. Maryland
+  gives a second route, and a mobile marketplace satisfies it on physical facts:
+  all work is performed at the customer's location or approved private property,
+  and Tuveloz operates no place of business where vehicle work happens.
+- **Prongs (1) and (2) are already satisfied by design, and the compliance stack
+  is the documentary proof:**
+  - (1) Providers write their own quotes, set their own prices, choose which
+    requests to answer, and set their own service area. We never set a price or
+    assign a job. `lib/automatic-job-routing.ts` must stay *notification of
+    eligible providers* and never become dispatch — that is the single change
+    most likely to damage this position.
+  - (2) Every provider must hold their **own** Montgomery County Chapter 31A
+    Certificate of Registration, their own general liability COI, and their own
+    business auto coverage before any service goes eligible. A person holding
+    their own county repair registration *is* customarily engaged in an
+    independent repair business. No competitor collects this, and it is close to
+    ideal evidence on prong (2).
+- **The real complication is that "Maryland's test" is four tests.** Unemployment
+  insurance uses ABC (§ 8-205); workers' compensation uses a right-to-control
+  test; Maryland wage-and-hour and the IRS each use their own. Same facts, four
+  forums. This is not a reason to restructure — it is a reason not to add
+  platform-set pricing or auto-assignment later.
+- Maryland has **no marketplace-contractor safe-harbor statute** of the kind a
+  dozen or so states have passed, so we win on facts rather than on a statutory
+  shortcut. Federally the wind is favorable: DOL stopped enforcing the 2024
+  independent-contractor rule in May 2025 and proposed rescinding it in
+  February 2026 to restore the more contractor-friendly 2021 approach.
+- Counsel should still confirm this before live jobs, but the question to bring
+  them is narrow: does our provider agreement and product behavior hold up under
+  § 8-205 prong (1), given that prongs (2) and (3) are strong.
 - **ClickMechanic (UK)** — closest international model match — takes **20% of the
   booking**, buried inside the quoted price, and its worst reviews are
   specifically that the platform disclaims responsibility for the mechanic's
@@ -90,7 +139,18 @@ and no cavalry coming.
    carry standard battery work and specialty A/C at the same time and be gated
    independently on each. No competitor models competence this granularly —
    Wrench assigns whoever is nearest.
-2. **County compliance is already in the product.** Montgomery County Chapter 31A
+2. **State and county repair law is already in the product.** `lib/maryland-repair-records.ts`
+   implements the Md. Comm. Law § 14-1001 repair-record regime directly: the
+   Customer's Rights text, the 10%-over-estimate consent rule, return of replaced
+   parts, the no-unauthorized-repairs rule, itemized lines typed as
+   labor/part/sublet/other/tax with part condition (new/used/rebuilt/
+   reconditioned), labor minutes, mechanic identifier, the NHTSA special-policy
+   notice, an E-SIGN-style electronic signature consent, and a provider
+   test-drive certification. We also require a written estimate on *every* job,
+   which is stricter than the statutory dollar threshold and removes the
+   threshold question entirely. **This is built to Maryland law, not adapted from
+   somewhere else** — and it is the reason the classification analysis above
+   lands where it does. Montgomery County Chapter 31A
    requires any motor-vehicle repair merchant to hold an OCP Certificate of
    Registration, and requires a mobile mechanic to carry it on their person while
    working. `ocp_vehicle_service_registration` is a hard requirement on every
