@@ -188,10 +188,13 @@ Carried from `provider-outreach-kit.md`, plus two that only apply here:
   application and required evidence passed review. A spotlight is an
   introduction, not a recommendation, and the caption should never read like
   one.
-- Don't state or imply credentials — licenses, certifications, insurance —
-  unless that specific credential is verified in their record. "Been doing
-  this 12 years" is their claim, in their voice, and is fine. "Licensed and
-  insured" is a factual assertion Tuveloz would be making.
+- Don't state credentials — licenses, certifications, insurance — in
+  Tuveloz's voice unless that specific credential is verified in their
+  record. A bare "Licensed and insured" in the caption is a factual
+  assertion Tuveloz would be making. The provider's own words, quoted and
+  attributed ("'ASE-certified since 2015' — Maria"), are their claim in
+  their voice and are fine, same as "Been doing this 12 years" — just
+  don't quote a credential claim you have reason to doubt.
 - No income claims, theirs or implied.
 
 ## Cadence

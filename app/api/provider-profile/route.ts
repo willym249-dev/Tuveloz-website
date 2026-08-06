@@ -389,7 +389,7 @@ export async function POST(request: Request) {
       });
       if (prohibitedClaims.length) {
         return Response.json({
-          error: "Provider-written profile copy cannot claim TUVELOZ approval, licensing, insurance, screening, certification, guarantees, warranties, or absolute safety. Remove those claims; dated evidence records are displayed separately after review.",
+          error: "You can describe your own licenses, insurance, certifications, and warranty in your own words — keep every claim accurate and name the specific credential. Profile copy cannot claim TUVELOZ approval, verification, screening, or affiliation, use badge-style words like \"verified\" or \"vetted,\" or promise absolute safety. TUVELOZ-confirmed records are displayed separately.",
           code: "PROVIDER_PROFILE_PROHIBITED_CLAIM",
           prohibitedClaims,
         }, { status: 409, headers: NO_STORE_HEADERS });
@@ -490,7 +490,7 @@ export async function POST(request: Request) {
     const prohibitedCaptionClaims = prohibitedProviderWrittenClaims([caption]);
     if (prohibitedCaptionClaims.length) {
       return Response.json({
-        error: "Gallery captions cannot claim TUVELOZ approval, licensing, insurance, screening, certification, guarantees, warranties, or absolute safety.",
+        error: "Gallery captions can describe your own work and credentials accurately, but cannot claim TUVELOZ approval, verification, screening, or affiliation, use badge-style words like \"verified\" or \"vetted,\" or promise absolute safety.",
         code: "PROVIDER_PROFILE_PROHIBITED_CLAIM",
         prohibitedClaims: prohibitedCaptionClaims,
       }, { status: 409, headers: NO_STORE_HEADERS });

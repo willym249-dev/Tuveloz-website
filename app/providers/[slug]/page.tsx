@@ -185,7 +185,9 @@ export default function ProviderStorefrontPage() {
             <small>
               Business name, logo, headline, availability, experience, hours, service areas,
               description, and gallery content are supplied by the provider unless specifically
-              labeled as a Tuveloz platform record.
+              labeled as a Tuveloz platform record. Any licensing, insurance, certification,
+              background-check, or warranty statement in that content is the provider&apos;s own
+              claim — Tuveloz confirms only what appears in the dated records below.
             </small>
           </div>
         </div>

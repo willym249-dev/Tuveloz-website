@@ -428,6 +428,12 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
                 value={profile.about}
                 onChange={(event) => setField("about", event.target.value)}
               />
+              <small>
+                You may describe your own licenses, insurance, certifications, and warranty —
+                name the specific credential and keep every claim accurate. Don&apos;t claim TUVELOZ
+                approval or use badge words like &quot;verified&quot;; TUVELOZ-confirmed records appear
+                separately on your public page.
+              </small>
             </label>
             <label>
               Experience
