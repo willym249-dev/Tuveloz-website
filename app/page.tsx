@@ -15,6 +15,7 @@ import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
+import { campaignProps } from "../lib/campaign-source";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
@@ -287,7 +288,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
   useEffect(() => {
     if (view === "provider") {
-      track("provider_signup_started", { variants: activeVariants() });
+      track("provider_signup_started", { variants: activeVariants(), ...campaignProps() });
     }
     if (view === "request") track("customer_request_started");
   }, [view]);

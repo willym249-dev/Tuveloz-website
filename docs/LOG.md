@@ -13,6 +13,48 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Campaign attribution, and an August posting queue
+
+**What happened.** Asked what to post on Instagram and TikTok right now. Three
+things came out of it.
+
+**The playbook was asking for a number nothing produced.** The audience growth
+playbook says to watch "provider applications, by source." That was not
+measurable: `analytics_events.props` accepted arbitrary JSON and the A/B system
+wrote copy variants into it, but nothing ever recorded where a visitor came
+from, so every application looked identical no matter which post produced it.
+Platform view counts cannot close that gap — they can say a reel was watched,
+never that a watcher applied. Added `lib/campaign-source.ts` (reads `?src=` off
+the inbound link, first-touch, localStorage, same shape as `lib/experiments.ts`),
+stamped it onto `provider_signup_started` and `provider_signup_completed`, and
+added a "Where applications came from" table to `/admin/analytics-funnel`
+alongside the existing copy experiments. First touch wins deliberately: someone
+who sees a reel, leaves, and returns directly a week later is still that reel's
+application. Untagged visitors are shown as their own row rather than dropped,
+so the numbers reconcile with the funnel above them.
+
+**The posting queue is `brand/outreach/post-now-august-2026.md`.** Four posts,
+two weeks, with a dated trend read and a two-week test design. The governing
+constraint is that customer job posting is paused, so everything is aimed at
+providers — a customer who taps through a great reel today finds a door that
+does not open, and that is the hardest audience to win back at launch. Top pick
+is the "Preparing for my Netflix documentary" format, because it is a confession
+format and we have a real confession to make: we are not open yet, on purpose.
+When these trends go stale, replace that file rather than adding a fourth one
+next to it.
+
+**Ad 03 is half-built and blocked on credits.** Generated the hero frame for the
+"This could be your Tuesday" reel that `reel-provider-recruitment-v3.md` specced
+but never rendered. It cost 130 credits and the plan only had 140 — down from
+the 15,960 recorded on 2026-08-04 — leaving 10, which is not enough for the
+image-to-video pass. Plan renews 2026-09-04. Recorded in
+`brand/ads/tuesday-reel-ad-03.md` with the generation ID and prompt so it can be
+finished rather than regenerated. Two lessons: generate hero frames at 1K on a
+cheaper model and save the budget for the video pass, and note that this
+environment's network policy denies `artlist.io` hosts (403 on CONNECT), so
+generated files still have to be downloaded manually — the same manual step
+`brand/ads/HANDOFF.md` already records for ad 01.
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,

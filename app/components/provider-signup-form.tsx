@@ -32,6 +32,7 @@ import {
 } from "../../lib/provider-policy-acceptance";
 import { track } from "../../lib/analytics";
 import { activeVariants } from "../../lib/experiments";
+import { campaignProps } from "../../lib/campaign-source";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
@@ -578,7 +579,7 @@ export function ProviderSignupForm() {
         setLegalConfirmed(false);
         setStep(1);
         setApplicationSent(true);
-        track("provider_signup_completed", { variants: activeVariants() });
+        track("provider_signup_completed", { variants: activeVariants(), ...campaignProps() });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Please try again.";
         setApplicationError(message);

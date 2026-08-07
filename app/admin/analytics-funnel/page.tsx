@@ -30,7 +30,15 @@ type WindowPayload = {
     providerFirstQuoteSent: number;
   };
   experiments: Record<string, ExperimentRow[]>;
+  sources: SourceRow[];
   rawCounts: Array<{ event: string; count: number }>;
+};
+
+type SourceRow = {
+  source: string;
+  started: number;
+  submitted: number;
+  conversion: number;
 };
 
 // Keep these titles/labels in sync with the copy rendered for each variant in
@@ -142,6 +150,53 @@ function Experiments({ windows }: { windows: WindowPayload["experiments"] }) {
           rows={windows[meta.name] ?? []}
         />
       ))}
+    </section>
+  );
+}
+
+// Which inbound link produced applications. Tags come from `?src=` on the link
+// (see lib/campaign-source.ts); "untagged" is everyone who arrived without one,
+// shown rather than hidden so these rows add up to the funnel above.
+function Sources({ rows }: { rows: SourceRow[] }) {
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Where applications came from</h2>
+      <p className="hint" style={{ margin: "0 0 0.5rem", fontSize: "0.82rem" }}>
+        Per inbound link, tagged with <code>?src=</code>. Platform view counts cannot
+        tell you whether a view became an application; this can.
+      </p>
+      {rows.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>No provider signups have started in this window yet.</p>
+      ) : (
+        <table style={{ borderCollapse: "collapse", fontSize: "0.85rem" }}>
+          <thead>
+            <tr>
+              <th style={{ padding: "0.3rem 0.6rem 0.3rem 0", textAlign: "left" }}>Source</th>
+              <th style={{ padding: "0.3rem 0.6rem", textAlign: "right" }}>Opened</th>
+              <th style={{ padding: "0.3rem 0.6rem", textAlign: "right" }}>Submitted</th>
+              <th style={{ padding: "0.3rem 0", textAlign: "right" }}>Conversion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.source}>
+                <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
+                  <strong>{row.source}</strong>
+                </td>
+                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.started}
+                </td>
+                <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.submitted}
+                </td>
+                <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.conversion}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }
@@ -428,6 +483,8 @@ export default function AnalyticsFunnelPage() {
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />
+
+          <Sources rows={active.sources ?? []} />
 
           <Experiments windows={active.experiments} />
 

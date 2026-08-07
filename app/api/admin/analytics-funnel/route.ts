@@ -163,7 +163,64 @@ async function experimentsSince(sinceValue: string | null): Promise<Record<strin
   return result;
 }
 
-function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
+type SourceRow = {
+  source: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
+// Which link produced the application. Events carry props.src, written by
+// lib/campaign-source.ts from a `?src=` tag on the inbound link. Visitors who
+// arrived without a tag are counted under "untagged" rather than dropped, so
+// the column totals still reconcile with the funnel above it.
+function readSource(props: string | null): string {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as { src?: unknown };
+    if (typeof parsed.src === "string" && parsed.src) return parsed.src;
+  } catch {
+    // Malformed props — treat as untagged.
+  }
+  return "untagged";
+}
+
+// Real conversion per inbound link, so "which post worked" is answered from
+// the funnel rather than from platform-side view counts, which cannot see
+// whether a view became an application.
+async function sourcesSince(sinceValue: string | null): Promise<SourceRow[]> {
+  const db = getDb();
+  const eventFilter = inArray(analyticsEvents.event, [
+    "provider_signup_started",
+    "provider_signup_completed",
+  ]);
+  const rows = await db
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const tally = new Map<string, { started: number; submitted: number }>();
+  for (const row of rows) {
+    const source = readSource(row.props);
+    const bucket = tally.get(source) ?? { started: 0, submitted: 0 };
+    if (row.event === "provider_signup_started") bucket.started += 1;
+    else bucket.submitted += 1;
+    tally.set(source, bucket);
+  }
+  return [...tally.entries()]
+    .map(([source, value]) => ({
+      source,
+      started: value.started,
+      submitted: value.submitted,
+      conversion: pct(value.submitted, value.started),
+    }))
+    .sort((a, b) => b.started - a.started || a.source.localeCompare(b.source));
+}
+
+function windowPayload(
+  counts: Map<string, number>,
+  experiments: Record<string, ExperimentRow[]>,
+  sources: SourceRow[],
+) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -174,6 +231,7 @@ function windowPayload(counts: Map<string, number>, experiments: Record<string, 
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
     experiments,
+    sources,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -299,6 +357,7 @@ export async function GET(request: Request) {
     const since7 = threshold(7, now);
     const [
       allTime, last30, last7, expAll, exp30, exp7,
+      srcAll, src30, src7,
       assistantAll, assistant7, launchList,
     ] = await Promise.all([
       countsSince(null),
@@ -307,6 +366,9 @@ export async function GET(request: Request) {
       experimentsSince(null),
       experimentsSince(since30),
       experimentsSince(since7),
+      sourcesSince(null),
+      sourcesSince(since30),
+      sourcesSince(since7),
       assistantSummary(null),
       assistantSummary(since7),
       launchListSummary(since7),
@@ -316,9 +378,9 @@ export async function GET(request: Request) {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime, expAll),
-          last30: windowPayload(last30, exp30),
-          last7: windowPayload(last7, exp7),
+          allTime: windowPayload(allTime, expAll, srcAll),
+          last30: windowPayload(last30, exp30, src30),
+          last7: windowPayload(last7, exp7, src7),
         },
         assistant: { allTime: assistantAll, last7: assistant7 },
         launchList,

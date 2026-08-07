@@ -54,6 +54,10 @@ Merge order matters here and is not visible from the pull request list.
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-09-04 | Artlist AI credits are exhausted (10 left of 16,500; the ad 03 hero frame took 130). Plan renews this date — finish the image-to-video pass for `brand/ads/tuesday-reel-ad-03.md` then, or top up sooner | hello@tuveloz.com | blocked |
+| 2026-08-09 | Epidemic Sound Pro plan ends. Pick and download a track before this date or reactivate — licensing generally covers content published while the subscription is active, so paid ads behind catalog music are the exposure | hello@tuveloz.com | open |
+| — | Download the ad 03 hero frame from the Artlist toolkit into `brand/ads/ad-03-assets/` — this environment's network policy denies `artlist.io` hosts, so it cannot be pulled from a session | hello@tuveloz.com | open |
+| — | Start Google Business Profile verification — highest-intent channel available, takes days to weeks, and still not live. Description already written in `brand/social-media-kit/profile-copy.md` | hello@tuveloz.com | open |
 | — | `LAUNCH_UPDATES_POSTAL_ADDRESS` is empty, which keeps the launch-update email sequence inert. Marketing email cannot send without a physical postal address | hello@tuveloz.com | open |
 | — | SMS sign-in is code-locked behind `PHONE_SMS_LIVE_MODE_ENABLED = false` in addition to its environment configuration | hello@tuveloz.com | open |
 
