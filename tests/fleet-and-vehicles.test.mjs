@@ -356,11 +356,17 @@ test("the arbitration clause keeps every element that makes it hold up", async (
   // Mutual, not one-sided.
   assert.match(terms, /binds Tuveloz exactly\s*\n?\s*as much as it binds you/);
 
-  // A real opt-out: 30 days, a stated method, free, and no retaliation.
+  // A real opt-out: 30 days, free, no retaliation, and two stated methods
+  // that count the same — a form and an email address.
   assert.match(terms, /Arbitration opt-out/);
-  assert.match(terms, /within\{" "\}\s*\n?\s*<strong>30 days<\/strong>/);
+  assert.match(terms, /<strong>30 days<\/strong>\{" "\}\s*\n?\s*of first accepting these Terms/);
+  assert.match(terms, /\/arbitration-opt-out/);
+  assert.match(terms, /hello@tuveloz\.com/);
   assert.match(terms, /costs nothing/);
   assert.match(terms, /won&apos;t treat you differently for it/);
+  // An opt-out is scoped to the version accepted, and a new version restarts
+  // the window rather than silently binding someone who already declined.
+  assert.match(terms, /fresh 30 days to decline arbitration\s*\n?\s*under that one/);
 
   // Carve-outs that keep it from being unconscionable or unlawful.
   assert.match(terms, /small-claims court/);
@@ -369,8 +375,10 @@ test("the arbitration clause keeps every element that makes it hold up", async (
 
   // Cost allocation — the consumer never pays more than court would cost.
   assert.match(terms, /Tuveloz pays the AAA/);
-  assert.match(terms, /exceed what\s*\n?\s*it would have cost you to file the same claim in court/);
-  assert.match(terms, /never\s*\n?\s*required to pay Tuveloz&apos;s legal fees/);
+  assert.match(terms, /exceed what it would have\s*\n?\s*cost you to file the same claim in court/);
+  // The fee promise reaches provider businesses too, not only "consumers".
+  assert.match(terms, /whether you are\s*\n?\s*an individual or a provider business/);
+  assert.match(terms, /never required to\s+pay Tuveloz&apos;s legal fees/);
 
   // Hearing in the user's county, not the company's.
   assert.match(terms, /county where you live/);

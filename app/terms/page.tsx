@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PolicyPage } from "../components/policy-page";
 
 export default function TermsPage() {
@@ -30,8 +31,10 @@ export default function TermsPage() {
           most disputes with Tuveloz to go to individual arbitration instead of
           court, and gives up your right to a jury trial and to join a class
           action. <strong>You have 30 days to opt out</strong> and keep those
-          rights — section 13 says exactly how, and opting out costs you
-          nothing and changes nothing else about your account.
+          rights. Opting out costs you nothing and changes nothing else about
+          your account — the form is at{" "}
+          <Link href="/arbitration-opt-out">tuveloz.com/arbitration-opt-out</Link>,
+          and section 13 explains the rest.
         </p>
       </section>
 
@@ -299,15 +302,33 @@ export default function TermsPage() {
 
         <h3>How to opt out — 30 days, no cost</h3>
         <p>
-          You can decline arbitration entirely. Email{" "}
-          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with the
-          subject <strong>&quot;Arbitration opt-out&quot;</strong> and the email
-          address or phone number on your account, within{" "}
-          <strong>30 days</strong> of first accepting these Terms. That&apos;s all
-          it takes. It costs nothing, we&apos;ll confirm in writing, and it has no
-          effect on your account, your pricing, or how your jobs are handled —
-          we won&apos;t treat you differently for it. If you opt out, disputes go
-          to the Montgomery County courts described above.
+          You can decline arbitration entirely, within <strong>30 days</strong>{" "}
+          of first accepting these Terms. Either of these works, and they count
+          the same:
+        </p>
+        <ul>
+          <li>
+            Use the form at{" "}
+            <Link href="/arbitration-opt-out">tuveloz.com/arbitration-opt-out</Link>{" "}
+            — one field, and it&apos;s recorded immediately.
+          </li>
+          <li>
+            Or email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>{" "}
+            with the subject <strong>&quot;Arbitration opt-out&quot;</strong> and
+            the email address or phone number on your account.
+          </li>
+        </ul>
+        <p>
+          That&apos;s all it takes. It costs nothing, we&apos;ll confirm in
+          writing, and it has no effect on your account, your pricing, or how
+          your jobs are handled — we won&apos;t treat you differently for it. If
+          you opt out, disputes go to the Montgomery County courts described
+          above.
+        </p>
+        <p>
+          An opt-out applies to the version of these Terms you accepted. If we
+          publish a new version, you get a fresh 30 days to decline arbitration
+          under that one.
         </p>
 
         <h3>No class actions</h3>
@@ -329,11 +350,15 @@ export default function TermsPage() {
 
         <h3>Costs</h3>
         <p>
-          For any claim you bring as a consumer, <strong>Tuveloz pays the AAA
-          filing, administrative, and arbitrator fees</strong> that exceed what
-          it would have cost you to file the same claim in court. You are never
-          required to pay Tuveloz&apos;s legal fees as a condition of arbitrating,
-          and nothing here limits what the law lets you recover.
+          <strong>Tuveloz pays the AAA filing, administrative, and arbitrator
+          fees</strong> on any claim you bring that exceed what it would have
+          cost you to file the same claim in court. This applies whether you are
+          an individual or a provider business — we are not drawing a line
+          between &quot;consumers&quot; and &quot;businesses&quot; here, because a
+          one-person provider business facing our filing costs is in exactly the
+          position this paragraph exists to prevent. You are never required to
+          pay Tuveloz&apos;s legal fees as a condition of arbitrating, and nothing
+          here limits what the law lets you recover.
         </p>
 
         <h3>If part of this doesn&apos;t hold up</h3>

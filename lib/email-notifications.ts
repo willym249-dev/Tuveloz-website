@@ -253,6 +253,45 @@ export async function sendMarketplaceUpdateEmail(input: {
   });
 }
 
+/**
+ * The written confirmation section 13 of the Terms promises to anyone who
+ * declines arbitration.
+ *
+ * It is queued under `dispute:` so it classifies as protective mail: it is
+ * sent regardless of marketplace release state and regardless of any marketing
+ * preference, because it is the record of a legal right the person just
+ * exercised, not a message about the business. The event key is scoped to the
+ * address and Terms version so a resubmission never sends a second copy.
+ */
+export async function sendArbitrationOptOutConfirmation(input: {
+  recipientEmail: string;
+  termsVersion: string;
+  recordedAt: string;
+}) {
+  const recipientEmail = cleanEmail(input.recipientEmail);
+  await queueNotification({
+    eventKey: `dispute:arbitration-opt-out:${recipientEmail}:${input.termsVersion}`,
+    recipientEmail,
+    subject: "Your Tuveloz arbitration opt-out is on file",
+    textBody: [
+      "You told us you don't want the arbitration agreement in the Tuveloz Terms of Use to apply to you. It doesn't. This email is your confirmation — keep it.",
+      "",
+      `Recorded: ${input.recordedAt}`,
+      `Terms of Use version: ${input.termsVersion}`,
+      "",
+      "What this means: any dispute between you and Tuveloz under this version of the Terms goes to the state or federal courts in Montgomery County, Maryland, not to arbitration, and the class-action waiver does not apply to you either.",
+      "",
+      "What it does not change: nothing about your account, your pricing, or how your jobs are handled. We won't treat you differently for it.",
+      "",
+      "One thing worth knowing: this opt-out is tied to the version above. If we publish a new version of the Terms, you get a fresh 30 days to decline arbitration under that one, and you'd need to tell us again.",
+      "",
+      `The Terms: ${siteUrl()}/terms`,
+      "",
+      "Questions, or want this withdrawn? Reply to this email or write to hello@tuveloz.com.",
+    ].join("\n"),
+  });
+}
+
 export async function sendNewCustomerRequestAlert(requestId: string) {
   await queueNotification({
     eventKey: `owner:new-request:${requestId}`,

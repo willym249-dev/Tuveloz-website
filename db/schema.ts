@@ -839,6 +839,37 @@ export const phoneContactConsents = sqliteTable(
   ],
 );
 
+/**
+ * Section 13 of the Terms promises anyone 30 days to decline arbitration, at
+ * no cost and with a written confirmation. This table is how that promise is
+ * kept: it is the record that decides, years later, whether a given person is
+ * bound by the arbitration agreement.
+ *
+ * Rows are never edited or deleted. The unique key is (email, terms version)
+ * because opting out of one version of the Terms is not an opt-out of a later
+ * one — a new version restarts the 30 days and gets its own row.
+ */
+export const arbitrationOptOuts = sqliteTable(
+  "arbitration_opt_outs",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    /** Self-reported, display only: "customer", "provider", or "". */
+    role: text("role").notNull().default(""),
+    /** Which version of the Terms this opt-out is against. */
+    termsVersion: text("terms_version").notNull(),
+    /** "form" or "email" — the Terms accept both. */
+    method: text("method").notNull(),
+    recordedAt: text("recorded_at").notNull(),
+    confirmationSentAt: text("confirmation_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("arbitration_opt_outs_email_terms_version_unique")
+      .on(table.email, table.termsVersion),
+  ],
+);
+
 export const jobMessages = sqliteTable(
   "job_messages",
   {

@@ -23,6 +23,7 @@ const PUBLIC_PAGES: PublicPage[] = [
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/privacy", changeFrequency: "monthly", priority: 0.5 },
   { path: "/terms", changeFrequency: "monthly", priority: 0.5 },
+  { path: "/arbitration-opt-out", changeFrequency: "monthly", priority: 0.5 },
   { path: "/customer-agreement", changeFrequency: "monthly", priority: 0.5 },
   { path: "/provider-agreement", changeFrequency: "monthly", priority: 0.5 },
   { path: "/marketplace-conduct", changeFrequency: "monthly", priority: 0.5 },
