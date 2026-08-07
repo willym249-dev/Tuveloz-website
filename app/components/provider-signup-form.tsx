@@ -736,6 +736,44 @@ export function ProviderSignupForm() {
         <div data-signup-step="1">
           <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
           <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
+          {/* Applicants decide whether to start based on cost, time, and what
+              they have to dig up. Every marketplace that recruits tradespeople
+              answers those three before the first field; leaving them to be
+              discovered mid-form is what makes people quit at step 3. */}
+          <section className="signup-primer" aria-labelledby="signup-primer-title">
+            <strong id="signup-primer-title">
+              {providerFormIsSpanish
+                ? "Antes de empezar — toma unos 5 minutos"
+                : "Before you start — takes about 5 minutes"}
+            </strong>
+            <ul className="signup-primer-points">
+              <li>
+                {providerFormIsSpanish
+                  ? "Gratis. Sin cuota mensual y sin pagar por contactos — usted se queda con el precio que cotiza."
+                  : "Free. No monthly fee and no paying for leads — you keep the price you quote."}
+              </li>
+              <li>
+                {providerFormIsSpanish
+                  ? "Sin exclusividad. Siga trabajando en otras plataformas y con sus propios clientes."
+                  : "No exclusivity. Keep working other platforms and your own customers."}
+              </li>
+              <li>
+                {providerFormIsSpanish
+                  ? "No necesita documentos ahora. Elija sus servicios y le decimos exactamente qué pide cada uno."
+                  : "No documents needed right now. Pick your services and we'll tell you exactly what each one asks for."}
+              </li>
+              <li>
+                {providerFormIsSpanish
+                  ? "Se guarda solo. Puede cerrar esto y continuar después en el mismo dispositivo."
+                  : "It saves itself. You can close this and pick it back up on the same device."}
+              </li>
+            </ul>
+            <small>
+              {providerFormIsSpanish
+                ? "Lo único que hay que tener a la mano: su nombre legal como aparece en su identificación y un correo electrónico que revise."
+                : "The only things to have handy: your legal name as it appears on your ID, and an email you check."}
+            </small>
+          </section>
           <div className="legal-requirement-note" role="status">
             <strong>
               {providerFormIsSpanish
@@ -815,6 +853,33 @@ export function ProviderSignupForm() {
                       </b>
                     </summary>
                     <div className="service-options">
+                      {/* A provider who does roadside work almost always does
+                          all three roadside jobs. One tap beats three, and the
+                          same control clears the group when they overshoot. */}
+                      {groupServices.length > 1 && (
+                        <div className="service-group-bulk">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const groupCodes = groupServices.map((service) => service.code);
+                              setSelectedProviderServices((current) => (
+                                selectedCount === groupServices.length
+                                  ? current.filter((code) => !groupCodes.includes(code))
+                                  : [
+                                    ...current.filter((code) => !groupCodes.includes(code)),
+                                    ...groupCodes,
+                                  ]
+                              ));
+                            }}
+                          >
+                            {selectedCount === groupServices.length
+                              ? (providerFormIsSpanish ? "Quitar todos" : "Clear all")
+                              : (providerFormIsSpanish
+                                ? `Elegir los ${groupServices.length}`
+                                : `Select all ${groupServices.length}`)}
+                          </button>
+                        </div>
+                      )}
                       {groupServices.map((service) => {
                         const isSelected = selectedProviderServices.includes(service.code);
                         return (
@@ -872,6 +937,42 @@ export function ProviderSignupForm() {
                 : "There's no all-in-one “general repair” choice on purpose — just pick the exact jobs you do."}
             </small>
           </fieldset>
+          {/* The picker is five collapsed groups, so what's chosen scrolls out
+              of sight. Showing the running selection — removable in place —
+              keeps people from reopening every group to check themselves. */}
+          {selectedProviderServices.length > 0 && (
+            <div className="selected-services-summary" aria-live="polite">
+              <span>
+                {providerFormIsSpanish
+                  ? `Eligió ${selectedProviderServices.length} ${selectedProviderServices.length === 1 ? "servicio" : "servicios"}`
+                  : `You picked ${selectedProviderServices.length} ${selectedProviderServices.length === 1 ? "service" : "services"}`}
+              </span>
+              <ul>
+                {selectedProviderServices.map((code) => {
+                  const service = PROVIDER_REVIEW_SERVICES.find((entry) => entry.code === code);
+                  if (!service) return null;
+                  const label = providerServicePlainLabel(
+                    service.code,
+                    service.label,
+                    providerFormIsSpanish,
+                  );
+                  return (
+                    <li key={code}>
+                      <button
+                        type="button"
+                        aria-label={providerFormIsSpanish ? `Quitar ${label}` : `Remove ${label}`}
+                        onClick={() => setSelectedProviderServices((current) => (
+                          current.filter((item) => item !== code)
+                        ))}
+                      >
+                        {label} <span aria-hidden="true">×</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
           {providerLevels.length > 0 && (
             <div className="provider-mode-preview" aria-live="polite">
               <span>

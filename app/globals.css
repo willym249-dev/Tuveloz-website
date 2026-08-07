@@ -4650,6 +4650,123 @@ label > small {
   padding: 12px;
 }
 
+/* "Before you start" panel — cost, time, and what to have handy, answered
+   above the first field instead of discovered at step three. */
+.signup-primer {
+  background: #122a3b;
+  border: 1px solid #355064;
+  border-radius: 10px;
+  margin: 0 0 14px;
+  padding: 12px;
+}
+
+.signup-primer > strong {
+  color: #f2f7fb;
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.signup-primer-points {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.signup-primer-points li {
+  color: #cddced;
+  font-size: 11px;
+  line-height: 1.5;
+  padding-left: 18px;
+  position: relative;
+}
+
+.signup-primer-points li::before {
+  color: #9af2ba;
+  content: "✓";
+  font-weight: 900;
+  left: 0;
+  position: absolute;
+}
+
+.signup-primer > small {
+  color: #9fb4c6;
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* Running selection, removable in place, so a collapsed picker never hides
+   what the applicant already chose. */
+.selected-services-summary {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.selected-services-summary > span {
+  color: #9fb4c6;
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.selected-services-summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.selected-services-summary button {
+  background: #17384d;
+  border: 1px solid #3d6480;
+  border-radius: 999px;
+  color: #dce7ef;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.selected-services-summary button span {
+  color: #9fb4c6;
+  margin-left: 4px;
+}
+
+.selected-services-summary button:hover {
+  border-color: #6f93ad;
+  color: #ffffff;
+}
+
+/* One tap for a whole group — most providers who do one roadside job do all
+   of them. */
+.service-group-bulk {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.service-group-bulk button {
+  background: transparent;
+  border: 1px solid #b8c9d6;
+  border-radius: 999px;
+  color: #2c4a60;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 10px;
+}
+
+.service-group-bulk button:hover {
+  background: #eaf2ff;
+  border-color: #6f93ad;
+}
+
 .legal-check-status {
   border-radius: 8px;
   font-size: 10px;
