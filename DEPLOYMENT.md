@@ -92,6 +92,18 @@ npx wrangler secret put STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET
 npx wrangler secret put STRIPE_CONNECT_WEBHOOK_SECRET
 ```
 
+Tuveloz AI needs at least one model key. Without one, tuveloz.com/ai still
+answers questions about how Tuveloz works — those come from the vetted policy
+entries in `lib/ai/policy-knowledge.ts` and need no model — but anything else
+returns "Tuveloz AI can't answer that one yet." Set any one of these to turn the
+rest of the assistant on:
+
+```bash
+npx wrangler secret put OPENAI_API_KEY
+npx wrangler secret put GEMINI_API_KEY
+npx wrangler secret put ANTHROPIC_API_KEY
+```
+
 `AUTH_CODE_SECRET` protects stored one-time codes and session tokens. Rotating
 it signs every customer and provider out. The Stripe values must be sandbox
 `sk_test_...`, `rk_test_...`, and `whsec_...` values during testing. Do not add any real secret

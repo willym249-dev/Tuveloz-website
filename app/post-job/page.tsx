@@ -15,6 +15,7 @@ import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../../lib/marketing-content";
 import { CustomerRequestForm } from "../components/customer-request-form";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
 import { PublicSiteFooter, PublicSiteHeader } from "../components/public-chrome";
+import { QuoteBoard } from "../components/quote-board";
 import { TuvelozIcon } from "../components/tuveloz-icons";
 
 export const metadata: Metadata = {
@@ -140,36 +141,7 @@ function CustomerLander() {
           </div>
         </div>
 
-        <div
-          className="hero-visual"
-          aria-label="Preview of the planned Tuveloz quote comparison"
-          role="img"
-        >
-          <div className="quote-board">
-            <article className="quote-ticket qt-1">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$118</span>
-              <small>Ramirez Mobile Auto · concept preview</small>
-            </article>
-            <article className="quote-ticket qt-2">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Silver Spring Auto Care · concept preview</small>
-            </article>
-            <article className="quote-ticket qt-3 qt-selected">
-              <div className="qt-head"><span>JOB #4471</span><b>Planned pick</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Silver Spring Auto Care · concept preview</small>
-              <span className="qt-stamp">YOU CHOOSE</span>
-            </article>
-          </div>
-          <p className="hero-visual-caption">
-            A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch.
-          </p>
-        </div>
+        <QuoteBoard caption="A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch." />
       </section>
 
       <section className="proof-strip" aria-label="What Tuveloz promises customers">

@@ -17,6 +17,7 @@ import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
+import { QuoteBoard } from "./components/quote-board";
 import VehicleSelector from "./components/vehicle-selector";
 import { SiteLanguageButton } from "./components/site-language";
 import {
@@ -207,7 +208,37 @@ function dollars(cents: number | undefined) {
 
 export type PublicView = "home" | "about" | "request" | "provider";
 
+type PublicSection =
+  | "hero"
+  | "proof"
+  | "audience"
+  | "reviews"
+  | "request"
+  | "providers"
+  | "expansion"
+  | "feedback"
+  | "finalCta";
+
+/**
+ * Sections each view leaves out.
+ *
+ * This used to be a wall of `display: none` in the stylesheet, which meant a
+ * visitor downloaded — and assistive tech and in-page search walked past — a
+ * whole customer request form and review board they could never see. Same
+ * result, but now the markup is never built.
+ */
+const HIDDEN_SECTIONS: Record<PublicView, readonly PublicSection[]> = {
+  // The homepage shows the shared path and sends people to their own lander.
+  home: ["reviews", "request", "providers", "expansion", "feedback"],
+  about: ["hero", "proof", "request", "providers", "finalCta"],
+  request: ["hero", "proof", "audience", "reviews", "providers", "expansion", "feedback", "finalCta"],
+  // The provider lander keeps a full funnel; only customer-side sections go.
+  provider: ["audience", "reviews", "request", "expansion", "feedback"],
+};
+
 export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
+  const hiddenSections = new Set<PublicSection>(HIDDEN_SECTIONS[view]);
+  const shows = (section: PublicSection) => !hiddenSections.has(section);
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
@@ -691,161 +722,144 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-glow" />
-        <div className="hero-copy">
-          {view === "provider" ? (
-            <>
-              <div className="eyebrow">
-                <span className="pulse" />
-                Now onboarding · Montgomery County
-              </div>
-              <h1>
-                {heroVariant === "B" ? "Do great work. Get paid." : "Your wrench. Your rules."}
-                <br />
-                <span className="hero-value-line">
-                  We bring the customers.
-                </span>
-              </h1>
-              <p>
-                You bring the skills — Tuveloz brings the customers and knocks out the
-                paperwork. Free to join, keep 100% of your quoted price, no exclusivity,
-                no lead fees.
-              </p>
-              <ul className="hero-highlights">
-                <li><span aria-hidden="true">✓</span> Free to apply, about 10 minutes</li>
-                <li><span aria-hidden="true">✓</span> You set your prices and your hours</li>
-                <li><span aria-hidden="true">✓</span> Quotes, invoices, and records in one place</li>
-              </ul>
-            </>
-          ) : CUSTOMER_JOB_POSTING_PAUSED ? (
-            <>
-              <div className="eyebrow">
-                <span className="pulse" />
-                Opening in Montgomery County, MD
-              </div>
-              <h1>
-                Any car issue.
-                <br />
-                <span className="hero-value-line">
-                  Real quotes from local pros. You choose.
-                </span>
-              </h1>
-              <p>
-                Tell us what&apos;s going on with your car. Local pros send you
-                their price, you see them next to each other, and you pick the one you
-                like. No calling around, no pressure.
-              </p>
-              <ul className="hero-highlights">
-                <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
-                <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
-                <li><span aria-hidden="true">✓</span> Pick one, or none. Totally up to you</li>
-              </ul>
-            </>
-          ) : (
-            <>
-              <h1>Any car issue. Multiple quotes. You choose.</h1>
-              <p>
-                Tell us what your vehicle needs. Local independent providers send you
-                real quotes. You pick the one that works — on your schedule, your
-                price, your call.
-              </p>
-            </>
-          )}
-          <div className="hero-actions">
+      {shows("hero") && (
+        <section className="hero" id="top">
+          <div className="hero-glow" />
+          <div className="hero-copy">
             {view === "provider" ? (
               <>
-                <a className="button primary" href="#provider-apply">
-                  Apply free <span>→</span>
-                </a>
-                <Link className="text-link hero-text-link" href="/how-it-works">
-                  See how it works →
-                </Link>
+                <div className="eyebrow">
+                  <span className="pulse" />
+                  Now onboarding · Montgomery County
+                </div>
+                <h1>
+                  {heroVariant === "B" ? "Do great work. Get paid." : "Your wrench. Your rules."}
+                  <br />
+                  <span className="hero-value-line">
+                    We bring the customers.
+                  </span>
+                </h1>
+                <p>
+                  You bring the skills — Tuveloz brings the customers and knocks out the
+                  paperwork. Free to join, keep 100% of your quoted price, no exclusivity,
+                  no lead fees.
+                </p>
+                <ul className="hero-highlights">
+                  <li><span aria-hidden="true">✓</span> Free to apply, about 10 minutes</li>
+                  <li><span aria-hidden="true">✓</span> You set your prices and your hours</li>
+                  <li><span aria-hidden="true">✓</span> Quotes, invoices, and records in one place</li>
+                </ul>
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
-                <Link className="button primary" href="/post-job">
-                  Save my spot — free <span>→</span>
-                </Link>
-                <Link className="button secondary" href="/join">
-                  I do car work — apply free <span>→</span>
-                </Link>
+                <div className="eyebrow">
+                  <span className="pulse" />
+                  Opening in Montgomery County, MD
+                </div>
+                <h1>
+                  Any car issue.
+                  <br />
+                  <span className="hero-value-line">
+                    Real quotes from local pros. You choose.
+                  </span>
+                </h1>
+                <p>
+                  Tell us what&apos;s going on with your car. Local pros send you
+                  their price, you see them next to each other, and you pick the one you
+                  like. No calling around, no pressure.
+                </p>
+                <ul className="hero-highlights">
+                  <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
+                  <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
+                  <li><span aria-hidden="true">✓</span> Pick one, or none. Totally up to you</li>
+                </ul>
               </>
             ) : (
               <>
-                <Link className="button primary" href="/post-job">
-                  Get started — free <span>→</span>
-                </Link>
-                <Link className="button secondary" href="/join">
-                  Join as a provider — free <span>→</span>
-                </Link>
+                <h1>Any car issue. Multiple quotes. You choose.</h1>
+                <p>
+                  Tell us what your vehicle needs. Local independent providers send you
+                  real quotes. You pick the one that works — on your schedule, your
+                  price, your call.
+                </p>
               </>
             )}
-            {view !== "provider" && (
-              <Link className="button ai" href="/ai">
-                Open Tuveloz AI <span>✦</span>
-              </Link>
-            )}
+            <div className="hero-actions">
+              {view === "provider" ? (
+                <>
+                  <a className="button primary" href="#provider-apply">
+                    Apply free <span>→</span>
+                  </a>
+                  <Link className="text-link hero-text-link" href="/how-it-works">
+                    See how it works →
+                  </Link>
+                </>
+              ) : CUSTOMER_JOB_POSTING_PAUSED ? (
+                <>
+                  <Link className="button primary" href="/post-job">
+                    Save my spot — free <span>→</span>
+                  </Link>
+                  <Link className="button secondary" href="/join">
+                    I do car work — apply free <span>→</span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link className="button primary" href="/post-job">
+                    Get started — free <span>→</span>
+                  </Link>
+                  <Link className="button secondary" href="/join">
+                    Join as a provider — free <span>→</span>
+                  </Link>
+                </>
+              )}
+              {view !== "provider" && (
+                <Link className="button ai" href="/ai">
+                  Open Tuveloz AI <span>✦</span>
+                </Link>
+              )}
+            </div>
+            <div className="hero-launch-note">
+              <strong>
+                {CUSTOMER_JOB_POSTING_PAUSED
+                  ? "Mechanics near you are signing up now. You'll be able to post your first job the day we open."
+                  : "Now serving Montgomery County, Maryland. More areas coming soon."}
+              </strong>
+              <Link href="/about#expansion">Outside the county? Request your area →</Link>
+            </div>
           </div>
-          <div className="hero-launch-note">
-            <strong>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Mechanics near you are signing up now. You'll be able to post your first job the day we open."
-                : "Now serving Montgomery County, Maryland. More areas coming soon."}
-            </strong>
-            <Link href="/about#expansion">Outside the county? Request your area →</Link>
-          </div>
-        </div>
 
-        <div className="hero-visual" aria-label="Preview of the planned Tuveloz service-request experience" role="img">
-          <div className="quote-board">
-            <article className="quote-ticket qt-1">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$118</span>
-              <small>Ramirez Mobile Auto · concept preview</small>
-            </article>
-            <article className="quote-ticket qt-2">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Silver Spring Auto Care · concept preview</small>
-            </article>
-            <article className="quote-ticket qt-3 qt-selected">
-              <div className="qt-head"><span>JOB #4471</span><b>Planned pick</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Silver Spring Auto Care · concept preview</small>
-              <span className="qt-stamp">YOU CHOOSE</span>
-            </article>
-          </div>
-          <p className="hero-visual-caption">
-            {!CUSTOMER_JOB_POSTING_PAUSED
-              ? "Example preview of a real quote comparison."
-              : view === "provider"
-                ? "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch."
-                : "Concept preview — not a live job. Customer requests and quotes open after launch."}
-          </p>
-        </div>
-      </section>
+          <QuoteBoard
+            caption={
+              !CUSTOMER_JOB_POSTING_PAUSED
+                ? "Example preview of a real quote comparison."
+                : view === "provider"
+                  ? "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch."
+                  : "Concept preview — not a live job. Customer requests and quotes open after launch."
+            }
+          />
+        </section>
+      )}
 
-      <section className="proof-strip" aria-label="What Tuveloz promises today">
-        {view === "provider" ? (
-          <>
-            <span><b>Keep 100%</b> of the price you quote</span>
-            <span><b>$0</b> to apply — no subscription, no lead fees</span>
-            <span><b>You set</b> your prices, hours, and area</span>
-            <span><b>Founding spots</b> open in Montgomery County, MD</span>
-          </>
-        ) : (
-          <>
-            <span><b>Free</b> to ask and to compare prices</span>
-            <span><b>No pressure</b> — say yes only if you want to</span>
-            <span><b>Local</b> pros, prices side by side</span>
-            <span><b>Sign up now</b> · post your first job when we open</span>
-          </>
-        )}
-      </section>
+      {shows("proof") && (
+        <section className="proof-strip" aria-label="What Tuveloz promises today">
+          {view === "provider" ? (
+            <>
+              <span><b>Keep 100%</b> of the price you quote</span>
+              <span><b>$0</b> to apply — no subscription, no lead fees</span>
+              <span><b>You set</b> your prices, hours, and area</span>
+              <span><b>Founding spots</b> open in Montgomery County, MD</span>
+            </>
+          ) : (
+            <>
+              <span><b>Free</b> to ask and to compare prices</span>
+              <span><b>No pressure</b> — say yes only if you want to</span>
+              <span><b>Local</b> pros, prices side by side</span>
+              <span><b>Sign up now</b> · post your first job when we open</span>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="trust-section" aria-labelledby="trust-heading">
         <div className="trust-intro">
@@ -900,63 +914,65 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </section>
       )}
 
-      <section className="audience-section" aria-labelledby="audience-heading">
-        <div className="audience-intro">
-          <span className="kicker">Built for both sides</span>
-          {view === "about" ? (
-            <h1 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h1>
-          ) : (
-            <h2 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h2>
-          )}
-          <p>
-            Tuveloz keeps customers in control of their vehicle-service
-            decisions and independent providers in control of their business.
-          </p>
-        </div>
-
-        <div className="audience-grid">
-          <article className="audience-card audience-customer-card">
-            <span className="audience-label">For customers</span>
-            <h3>Your car. Your call.</h3>
+      {shows("audience") && (
+        <section className="audience-section" aria-labelledby="audience-heading">
+          <div className="audience-intro">
+            <span className="kicker">Built for both sides</span>
+            {view === "about" ? (
+              <h1 id="audience-heading">
+                One marketplace. Clear benefits for customers and providers.
+              </h1>
+            ) : (
+              <h2 id="audience-heading">
+                One marketplace. Clear benefits for customers and providers.
+              </h2>
+            )}
             <p>
-              Say what your car needs once. Local pros come back with real prices
-              you can line up side by side, and you pick whoever feels right. No
-              pressure, no runaround. Sign up now and you&apos;re first in line the day
-              we open.
+              Tuveloz keeps customers in control of their vehicle-service
+              decisions and independent providers in control of their business.
             </p>
-            <ul>
-              <li><span aria-hidden="true">✓</span> One question, several real prices</li>
-              <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
-              <li><span aria-hidden="true">✓</span> The last word is always yours</li>
-            </ul>
-            <Link className="button primary" href="/post-job">
-              Save my spot — free <span>→</span>
-            </Link>
-          </article>
+          </div>
 
-          <article className="audience-card audience-provider-card">
-            <span className="audience-label">For providers</span>
-            <h3>Run your work on your terms.</h3>
-            <p>
-              Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots
-              now. Pick the jobs you want, send us anything the law asks for, and your
-              workspace is set up before the first customer shows up.
-            </p>
-            <ul>
-              <li><span aria-hidden="true">✓</span> Your hours, your prices</li>
-              <li><span aria-hidden="true">✓</span> Quotes, records, and invoices in one place</li>
-              <li><span aria-hidden="true">✓</span> Keep your own customers — you&apos;re not tied to us</li>
-            </ul>
-            <Link className="button secondary" href="/join">
-              Apply free <span>→</span>
-            </Link>
-          </article>
-        </div>
-      </section>
+          <div className="audience-grid">
+            <article className="audience-card audience-customer-card">
+              <span className="audience-label">For customers</span>
+              <h3>Your car. Your call.</h3>
+              <p>
+                Say what your car needs once. Local pros come back with real prices
+                you can line up side by side, and you pick whoever feels right. No
+                pressure, no runaround. Sign up now and you&apos;re first in line the day
+                we open.
+              </p>
+              <ul>
+                <li><span aria-hidden="true">✓</span> One question, several real prices</li>
+                <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
+                <li><span aria-hidden="true">✓</span> The last word is always yours</li>
+              </ul>
+              <Link className="button primary" href="/post-job">
+                Save my spot — free <span>→</span>
+              </Link>
+            </article>
+
+            <article className="audience-card audience-provider-card">
+              <span className="audience-label">For providers</span>
+              <h3>Run your work on your terms.</h3>
+              <p>
+                Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots
+                now. Pick the jobs you want, send us anything the law asks for, and your
+                workspace is set up before the first customer shows up.
+              </p>
+              <ul>
+                <li><span aria-hidden="true">✓</span> Your hours, your prices</li>
+                <li><span aria-hidden="true">✓</span> Quotes, records, and invoices in one place</li>
+                <li><span aria-hidden="true">✓</span> Keep your own customers — you&apos;re not tied to us</li>
+              </ul>
+              <Link className="button secondary" href="/join">
+                Apply free <span>→</span>
+              </Link>
+            </article>
+          </div>
+        </section>
+      )}
 
       {view !== "provider" && (
       <section className="section services" id="services">
@@ -1036,546 +1052,548 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </section>
 
-      <section className="section reviews-section" id="reviews">
-        <div className="reviews-heading">
-          <div>
-            <span className="kicker">Reviews linked to a completed Tuveloz job</span>
-            <h2>
-              {reviews.length > 0
-                ? "Read customer feedback tied to Tuveloz job records."
-                : "Every review here comes from a finished job."}
-            </h2>
-            <p>
-              A completed-job link confirms the job really happened here. It
-              does not independently verify every word someone wrote, judge how
-              good the repair was, or promise the next job goes the same way.
-            </p>
-          </div>
-          {reviewSummary.count > 0 && (
-            <div className="reviews-summary" aria-label={`${reviewSummary.average} out of 5 stars across ${reviewSummary.count} reviews`}>
-              <strong>{reviewSummary.average.toFixed(1)}</strong>
-              <span aria-hidden="true">★★★★★</span>
-              <small>{reviewSummary.count} completed-job {reviewSummary.count === 1 ? "review" : "reviews"}</small>
+      {shows("reviews") && (
+        <section className="section reviews-section" id="reviews">
+          <div className="reviews-heading">
+            <div>
+              <span className="kicker">Reviews linked to a completed Tuveloz job</span>
+              <h2>
+                {reviews.length > 0
+                  ? "Read customer feedback tied to Tuveloz job records."
+                  : "Every review here comes from a finished job."}
+              </h2>
+              <p>
+                A completed-job link confirms the job really happened here. It
+                does not independently verify every word someone wrote, judge how
+                good the repair was, or promise the next job goes the same way.
+              </p>
             </div>
-          )}
-        </div>
-        {reviews.length > 0 ? (
-          <div className="public-review-grid">
-            {reviews.map((review) => (
-              <article key={review.id}>
-                <div className="public-review-stars" aria-label={`${review.rating} out of 5 stars`}>
-                  <span aria-hidden="true">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</span>
-                  <strong>{review.rating}.0</strong>
-                </div>
-                <blockquote>{review.comment}</blockquote>
-                <div className="review-byline">
-                  <div><strong>{review.customerDisplayName}</strong><span>Completed job record</span></div>
-                  <div>
-                    <strong>{review.providerName}</strong>
-                    {review.providerVerified && <span className="verified-inline">Provider account was active for this job</span>}
-                    <span>{review.service}</span>
+            {reviewSummary.count > 0 && (
+              <div className="reviews-summary" aria-label={`${reviewSummary.average} out of 5 stars across ${reviewSummary.count} reviews`}>
+                <strong>{reviewSummary.average.toFixed(1)}</strong>
+                <span aria-hidden="true">★★★★★</span>
+                <small>{reviewSummary.count} completed-job {reviewSummary.count === 1 ? "review" : "reviews"}</small>
+              </div>
+            )}
+          </div>
+          {reviews.length > 0 ? (
+            <div className="public-review-grid">
+              {reviews.map((review) => (
+                <article key={review.id}>
+                  <div className="public-review-stars" aria-label={`${review.rating} out of 5 stars`}>
+                    <span aria-hidden="true">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</span>
+                    <strong>{review.rating}.0</strong>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="review-promise">
-            <article>
-              <strong>Only from people who were there</strong>
-              <p>
-                You can only leave a review if you actually had the work done here. No
-                strangers, no bought-and-paid-for five stars.
-              </p>
-            </article>
-            <article>
-              <strong>Nobody can pay to look better</strong>
-              <p>
-                A pro can&apos;t buy a higher rating or a spot at the top of your
-                list. That isn&apos;t for sale here.
-              </p>
-            </article>
-            <article>
-              <strong>It belongs to the pro</strong>
-              <p>
-                Do good work and it follows you, job after job. That reputation is
-                theirs to keep.
-              </p>
-            </article>
-          </div>
-        )}
-      </section>
-
-      {view !== "provider" && (
-      <section className="section request-section" id="request">
-        <div className="request-copy">
-          <span className="kicker">
-            {CUSTOMER_JOB_POSTING_PAUSED ? "Accounts are open" : "For customers"}
-          </span>
-          {view === "request" ? (
-            <h1>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h1>
-          ) : (
-            <h2>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h2>
-          )}
-          {CUSTOMER_JOB_POSTING_PAUSED ? (
-            <>
-              <p>
-                Set it up now and it&apos;s ready when you need it — nobody wants to
-                fill out forms while their car is sitting dead in a parking lot. And
-                when you do post, only pros cleared for that exact job can see it,
-                so you hear from the right person instead of twenty phone calls.
-              </p>
-              <div className="pilot-vision">
-                <strong>Our vision</strong>
-                <p>
-                  We want to change how the car-service industry works: give customers
-                  clearer choices and help independent providers grow.
-                </p>
-              </div>
-              <ul>
-                <li><span>✓</span> Ready to go the second we open</li>
-                <li><span>✓</span> Only pros cleared for that exact job see it</li>
-                <li><span>✓</span> Saying yes to a price is always your call</li>
-                <li><span>✓</span> Signing up books nothing and costs nothing</li>
-              </ul>
-            </>
-          ) : (
-            <ul>
-              <li><span>✓</span> Describe what&apos;s wrong — no rigid categories required</li>
-              <li><span>✓</span> Independent local providers send you their price</li>
-              <li><span>✓</span> You decide — no fee to post, no fee to compare, no obligation to accept</li>
-            </ul>
-          )}
-        </div>
-
-        {CUSTOMER_JOB_POSTING_PAUSED ? (
-          <div className="lead-form">
-            <div className="form-heading">
-              <span>✓</span>
-              <div>
-                <h3>Two minutes now. First in line at launch.</h3>
-                <p>
-                  Save your car and contact details once, then walk straight
-                  into posting the day we open. No job, provider contact,
-                  booking, or payment is created now.
-                </p>
-              </div>
-            </div>
-            <div className="hero-actions">
-              <Link className="button primary" href="/account?role=customer&mode=create">
-                Save my spot — free <span>→</span>
-              </Link>
-              <Link className="button secondary" href="/join">
-                Apply as a provider
-              </Link>
-            </div>
-            <small>
-              Accounts are open today, for customers and pros both. Posting jobs
-              and paying through us starts when we open.
-            </small>
-          </div>
-        ) : (
-        <form
-          className="lead-form"
-          key={`${vehicleResetVersion}:${repeatBooking?.token ?? "new"}`}
-          onChange={() => pendingSubmission === "request" && setPendingSubmission("")}
-          onSubmit={handleSubmit}
-        >
-          <LocationDatalists />
-          {requestSent ? (
-            <div className="success-message" role="status">
-              <span>✓</span>
-              <h3>Your request is in review.</h3>
-              <p>
-                If it matches our pilot services and areas, we&apos;ll send it to
-                eligible local providers. Tuveloz is new, so quotes may take longer
-                while our network grows. Thank you for your patience.
-              </p>
-              {requestToken && (
-                <>
-                  <a className="button primary" href={`/my-request?token=${requestToken}`}>
-                    View your private request
-                  </a>
-                  <small>
-                    Save this private link. It opens your request details and quotes.
-                  </small>
-                </>
-              )}
-              <a className="button secondary" href="/account?role=customer&mode=create">
-                Save these records in an account
-              </a>
-              <small>
-                After you verify the same email, your requests and quotes appear in your
-                customer workspace.
-              </small>
-              <button type="button" onClick={() => setRequestSent(false)}>Post another job</button>
-            </div>
-          ) : (
-            <>
-              <div className="form-heading">
-                <span>01</span>
-                <div><h3>Planned exact-service request</h3><p>After launch, qualifying requests route automatically to providers eligible for every selected service.</p></div>
-              </div>
-              {repeatBooking && (
-                <div className="repeat-booking-banner">
-                  <span>Book again</span>
-                  <strong>Request {repeatBooking.providerName} again</strong>
-                  <p>
-                    After Tuveloz reviews the request, it will go only to this provider.
-                    Availability and a new quote are not guaranteed.
-                  </p>
-                  <input name="rebook-token" type="hidden" value={repeatBooking.token} />
-                  <button type="button" onClick={cancelRepeatBooking}>
-                    Compare all matching providers instead
-                  </button>
-                </div>
-              )}
-              {repeatBookingError && (
-                <p className="form-error" role="alert">{repeatBookingError}</p>
-              )}
-              <label>
-                Your name
-                <input
-                  defaultValue={repeatBooking?.customerName ?? ""}
-                  required
-                  name="name"
-                  placeholder="Full name"
-                />
-              </label>
-              <label>
-                Email address
-                <input
-                  defaultValue={repeatBooking?.customerEmail ?? ""}
-                  required
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                />
-              </label>
-              {repeatBooking && (
-                <fieldset className="area-fieldset repeat-vehicle-fieldset">
-                  <legend>Which vehicle is this for?</legend>
-                  <div className="area-options">
-                    <label>
-                      <input
-                        checked={useSameVehicle}
-                        name="repeat-vehicle-choice"
-                        onChange={() => {
-                          setUseSameVehicle(true);
-                          setSelectedCustomerVehicle(repeatBooking.vehicle);
-                        }}
-                        type="radio"
-                      />
-                      Use the same vehicle
-                    </label>
-                    <label>
-                      <input
-                        checked={!useSameVehicle}
-                        name="repeat-vehicle-choice"
-                        onChange={() => {
-                          setUseSameVehicle(false);
-                          setSelectedCustomerVehicle("");
-                        }}
-                        type="radio"
-                      />
-                      Choose a different vehicle
-                    </label>
-                  </div>
-                  {useSameVehicle && <strong>{repeatBooking.vehicle}</strong>}
-                </fieldset>
-              )}
-              {repeatBooking && useSameVehicle ? (
-                <input name="vehicle" type="hidden" value={repeatBooking.vehicle} />
-              ) : (
-                <VehicleSelector
-                  key={vehicleResetVersion}
-                  onVehicleChange={setSelectedCustomerVehicle}
-                />
-              )}
-              <input name="launch-area" type="hidden" value={CURRENT_LAUNCH_AREA} />
-              <div className="field-row">
-                <div className="fixed-launch-area">
-                  <span>Current service area</span>
-                  <strong>Montgomery County, Maryland</strong>
-                  <Link href="/about#expansion">Outside the county? Request your area</Link>
-                </div>
-                <label>
-                  City, town, or municipality
-                  <input
-                    defaultValue={repeatBooking?.municipality ?? ""}
-                    required
-                    list={MUNICIPALITY_DATALIST_ID}
-                    name="municipality"
-                    placeholder="Example: Rockville or Silver Spring"
-                  />
-                </label>
-              </div>
-              <label>
-                ZIP code
-                <input
-                  defaultValue={repeatBooking?.zip ?? ""}
-                  required
-                  list={ZIP_DATALIST_ID}
-                  name="zip"
-                  inputMode="numeric"
-                  placeholder="20901"
-                />
-              </label>
-              <fieldset className="area-fieldset service-fieldset customer-service-fieldset">
-                <legend>What does your vehicle need?</legend>
-                <p>Choose one or more. One provider must be able to handle the complete request.</p>
-                <div className="service-groups customer-service-groups">
-                  {CUSTOMER_SERVICE_GROUPS.map((group) => {
-                    const selectedCount = group.options.filter((option) => (
-                      selectedCustomerServices.includes(option.value)
-                    )).length;
-                    return (
-                      <details
-                        className="service-group"
-                        open={selectedCount > 0 ? true : undefined}
-                        key={group.id}
-                      >
-                        <summary>
-                          <span>
-                            <strong>{group.label}</strong>
-                            <small>{group.description}</small>
-                          </span>
-                          <b>{selectedCount ? `${selectedCount} selected` : "View"}</b>
-                        </summary>
-                        <div className="service-options customer-service-options">
-                          {group.options.map((option) => (
-                            <label
-                              className={selectedCustomerServices.includes(option.value) ? "selected" : ""}
-                              key={option.value}
-                            >
-                              <input
-                                checked={selectedCustomerServices.includes(option.value)}
-                                name="service"
-                                type="checkbox"
-                                value={option.value}
-                                onChange={(event) => {
-                                  setPriceGuidanceBusy(true);
-                                  setSelectedCustomerServices((current) => (
-                                    event.target.checked
-                                      ? [...current, option.value]
-                                      : current.filter((service) => service !== option.value)
-                                  ));
-                                }}
-                              />
-                              <span>{option.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </details>
-                    );
-                  })}
-                </div>
-                <small className="customer-service-note">
-                  Availability depends on a provider having current approval for that exact service.
-                  Rain guards include vent visors and window deflectors; window tint is separate.
-                </small>
-              </fieldset>
-              {selectedCustomerServices.length > 0 && (
-                <section className="price-guidance-card" aria-live="polite">
-                  <div className="price-guidance-heading">
+                  <blockquote>{review.comment}</blockquote>
+                  <div className="review-byline">
+                    <div><strong>{review.customerDisplayName}</strong><span>Completed job record</span></div>
                     <div>
-                      <span>Real completed-job data</span>
-                      <strong>Observed Tuveloz price guide</strong>
+                      <strong>{review.providerName}</strong>
+                      {review.providerVerified && <span className="verified-inline">Provider account was active for this job</span>}
+                      <span>{review.service}</span>
                     </div>
-                    <small>Not a promised quote</small>
                   </div>
-                  {priceGuidanceBusy ? (
-                    <p>Checking completed Tuveloz jobs…</p>
-                  ) : (
-                    <div className="price-guidance-list">
-                      {priceGuidance.map((item) => (
-                        <article key={item.service}>
-                          <strong>{item.service}</strong>
-                          {item.available ? (
-                            <>
-                              <span>Average {dollars(item.averageCents)}</span>
-                              <small>
-                                Observed range {dollars(item.lowCents)}–{dollars(item.highCents)}
-                                {" · "}{item.sampleCount} completed jobs
-                              </small>
-                            </>
-                          ) : (
-                            <span>
-                              {item.message
-                                ?? "Not enough real completed jobs yet to publish a trustworthy price."}
-                            </span>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                  <p>
-                    Numbers appear only after at least 3 real, non-test, completed
-                    single-service jobs. Combined jobs may price differently.
-                  </p>
-                </section>
-              )}
-              <fieldset className="area-fieldset">
-                <legend>Parts arrangement for this labor-only request</legend>
-                <div className="area-options parts-source-options">
-                  {PARTS_SOURCE_OPTIONS.map((option) => (
-                    <label key={option}>
-                      <input
-                        checked={partsSource === option}
-                        name="parts-source"
-                        required
-                        type="radio"
-                        value={option}
-                        onChange={(event) => setPartsSource(event.target.value)}
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-                <small className="parts-equipment-note">{PARTS_COMMUNICATION_NOTICE}</small>
-              </fieldset>
-              <label>
-                <span className="field-label-with-help">
-                  Customer-supplied parts preference
-                  <LegalHelp
-                    label="What do OEM and aftermarket mean here?"
-                    text="OEM and aftermarket are communication preferences for a part the customer purchases separately. Tuveloz does not sell, source, verify, reimburse, or process payment for the part."
-                  />
-                </span>
-                <select
-                  name="parts-preference"
-                  value={partsPreference}
-                  onChange={(event) => setPartsPreference(event.target.value)}
-                >
-                  {PARTS_PREFERENCE_OPTIONS.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="policy-consent">
-                <input
-                  name="labor-only-parts-acknowledged"
-                  required
-                  type="checkbox"
-                  value="yes"
-                />
-                <span>
-                  I understand that Tuveloz quotes and payments are labor only. Any
-                  required part must be purchased separately by me and cannot be
-                  included as a provider-supplied part or parts charge.
-                </span>
-              </label>
-              <fieldset className="area-fieldset location-fieldset">
-                <legend>Where can the service happen?</legend>
-                <p>Choose one or both.</p>
-                <div className="area-options">
-                  {CUSTOMER_SERVICE_LOCATION_OPTIONS.map((option) => (
-                    <label key={option}>
-                      <input
-                        checked={selectedCustomerLocations.includes(option)}
-                        name="service-location"
-                        type="checkbox"
-                        value={option}
-                        onChange={(event) => setSelectedCustomerLocations((current) => (
-                          event.target.checked
-                            ? [...current, option]
-                            : current.filter((item) => item !== option)
-                        ))}
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-              {customerAllowsProviderTravel && (
-                <label>
-                  Service address
-                  <AddressAutocompleteInput
-                    defaultValue={repeatBooking?.serviceAddress ?? ""}
-                    required
-                    name="service-address"
-                    placeholder="Street address"
-                  />
-                  <small>Only the provider you select will receive this address.</small>
-                </label>
-              )}
-              <label>
-                Describe the job
-                <textarea
-                  required
-                  name="job-details"
-                  placeholder="Describe the problem, condition, preferred timing, and anything else the provider should know."
-                  rows={4}
-                />
-                <small>
-                  Include a budget here only if you want providers to see one.
-                </small>
-              </label>
-              <label className="photo-field">
-                Photo of the issue <span>(optional)</span>
-                <input name="issue-photo" type="file" accept="image/jpeg,image/png,image/webp" />
-                <small>JPG, PNG, or WebP · maximum 8 MB. Don&apos;t upload payment details or sensitive documents.</small>
-              </label>
-              <label className="policy-consent">
-                <input required name="terms-accepted" type="checkbox" value="yes" />
-                <span>
-                  I am 18 or older and agree to the <a href="/terms">Terms</a> and{" "}
-                  <a href="/customer-agreement">Customer Agreement</a>, and
-                  acknowledge the <a href="/privacy">Privacy Policy</a>.
-                </span>
-              </label>
-              <label className="policy-consent optional-consent">
-                <input name="remember-email-consent" type="checkbox" value="yes" />
-                <span>
-                  Create a reusable guest profile so Tuveloz can match this request to a
-                  future account after I verify this email. <strong>Optional.</strong>
-                </span>
-              </label>
-              <label className="policy-consent optional-consent">
-                <input name="marketing-consent" type="checkbox" value="yes" />
-                <span>
-                  Email me occasional Tuveloz promotions and service updates. Optional;
-                  I can unsubscribe anytime.
-                </span>
-              </label>
-              <small>
-                We&apos;ll use your email to manage this request and send related updates.
-                Promotions are sent only if you opt in. Don&apos;t include payment details
-                or sensitive documents.
-              </small>
-              {pendingSubmission === "request" ? (
-                <ConfirmAction
-                  busy={requestBusy}
-                  busyLabel="Posting…"
-                  confirmLabel="Confirm and post"
-                  confirmType="submit"
-                  message="Review the information above. Nothing is posted until you confirm."
-                  onBack={() => setPendingSubmission("")}
-                  title="Post this job?"
-                />
-              ) : (
-                <button className="button primary form-button" type="submit" disabled={requestBusy}>
-                  {requestBusy ? "Saving…" : "Submit request"} <span>→</span>
-                </button>
-              )}
-              {requestError && <p className="form-error" role="alert">{requestError}</p>}
-              <small>
-                We use this information only to review your request and contact you about Tuveloz.
-                Don&apos;t include payment details or sensitive documents.
-              </small>
-            </>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="review-promise">
+              <article>
+                <strong>Only from people who were there</strong>
+                <p>
+                  You can only leave a review if you actually had the work done here. No
+                  strangers, no bought-and-paid-for five stars.
+                </p>
+              </article>
+              <article>
+                <strong>Nobody can pay to look better</strong>
+                <p>
+                  A pro can&apos;t buy a higher rating or a spot at the top of your
+                  list. That isn&apos;t for sale here.
+                </p>
+              </article>
+              <article>
+                <strong>It belongs to the pro</strong>
+                <p>
+                  Do good work and it follows you, job after job. That reputation is
+                  theirs to keep.
+                </p>
+              </article>
+            </div>
           )}
-        </form>
-        )}
-      </section>
+        </section>
+      )}
+
+      {shows("request") && (
+        <section className="section request-section" id="request">
+          <div className="request-copy">
+            <span className="kicker">
+              {CUSTOMER_JOB_POSTING_PAUSED ? "Accounts are open" : "For customers"}
+            </span>
+            {view === "request" ? (
+              <h1>
+                {CUSTOMER_JOB_POSTING_PAUSED
+                  ? "Set up now. Be first in line when we launch."
+                  : "Post it once. Compare real quotes. No pressure."}
+              </h1>
+            ) : (
+              <h2>
+                {CUSTOMER_JOB_POSTING_PAUSED
+                  ? "Set up now. Be first in line when we launch."
+                  : "Post it once. Compare real quotes. No pressure."}
+              </h2>
+            )}
+            {CUSTOMER_JOB_POSTING_PAUSED ? (
+              <>
+                <p>
+                  Set it up now and it&apos;s ready when you need it — nobody wants to
+                  fill out forms while their car is sitting dead in a parking lot. And
+                  when you do post, only pros cleared for that exact job can see it,
+                  so you hear from the right person instead of twenty phone calls.
+                </p>
+                <div className="pilot-vision">
+                  <strong>Our vision</strong>
+                  <p>
+                    We want to change how the car-service industry works: give customers
+                    clearer choices and help independent providers grow.
+                  </p>
+                </div>
+                <ul>
+                  <li><span>✓</span> Ready to go the second we open</li>
+                  <li><span>✓</span> Only pros cleared for that exact job see it</li>
+                  <li><span>✓</span> Saying yes to a price is always your call</li>
+                  <li><span>✓</span> Signing up books nothing and costs nothing</li>
+                </ul>
+              </>
+            ) : (
+              <ul>
+                <li><span>✓</span> Describe what&apos;s wrong — no rigid categories required</li>
+                <li><span>✓</span> Independent local providers send you their price</li>
+                <li><span>✓</span> You decide — no fee to post, no fee to compare, no obligation to accept</li>
+              </ul>
+            )}
+          </div>
+
+          {CUSTOMER_JOB_POSTING_PAUSED ? (
+            <div className="lead-form">
+              <div className="form-heading">
+                <span>✓</span>
+                <div>
+                  <h3>Two minutes now. First in line at launch.</h3>
+                  <p>
+                    Save your car and contact details once, then walk straight
+                    into posting the day we open. No job, provider contact,
+                    booking, or payment is created now.
+                  </p>
+                </div>
+              </div>
+              <div className="hero-actions">
+                <Link className="button primary" href="/account?role=customer&mode=create">
+                  Save my spot — free <span>→</span>
+                </Link>
+                <Link className="button secondary" href="/join">
+                  Apply as a provider
+                </Link>
+              </div>
+              <small>
+                Accounts are open today, for customers and pros both. Posting jobs
+                and paying through us starts when we open.
+              </small>
+            </div>
+          ) : (
+          <form
+            className="lead-form"
+            key={`${vehicleResetVersion}:${repeatBooking?.token ?? "new"}`}
+            onChange={() => pendingSubmission === "request" && setPendingSubmission("")}
+            onSubmit={handleSubmit}
+          >
+            <LocationDatalists />
+            {requestSent ? (
+              <div className="success-message" role="status">
+                <span>✓</span>
+                <h3>Your request is in review.</h3>
+                <p>
+                  If it matches our pilot services and areas, we&apos;ll send it to
+                  eligible local providers. Tuveloz is new, so quotes may take longer
+                  while our network grows. Thank you for your patience.
+                </p>
+                {requestToken && (
+                  <>
+                    <a className="button primary" href={`/my-request?token=${requestToken}`}>
+                      View your private request
+                    </a>
+                    <small>
+                      Save this private link. It opens your request details and quotes.
+                    </small>
+                  </>
+                )}
+                <a className="button secondary" href="/account?role=customer&mode=create">
+                  Save these records in an account
+                </a>
+                <small>
+                  After you verify the same email, your requests and quotes appear in your
+                  customer workspace.
+                </small>
+                <button type="button" onClick={() => setRequestSent(false)}>Post another job</button>
+              </div>
+            ) : (
+              <>
+                <div className="form-heading">
+                  <span>01</span>
+                  <div><h3>Planned exact-service request</h3><p>After launch, qualifying requests route automatically to providers eligible for every selected service.</p></div>
+                </div>
+                {repeatBooking && (
+                  <div className="repeat-booking-banner">
+                    <span>Book again</span>
+                    <strong>Request {repeatBooking.providerName} again</strong>
+                    <p>
+                      After Tuveloz reviews the request, it will go only to this provider.
+                      Availability and a new quote are not guaranteed.
+                    </p>
+                    <input name="rebook-token" type="hidden" value={repeatBooking.token} />
+                    <button type="button" onClick={cancelRepeatBooking}>
+                      Compare all matching providers instead
+                    </button>
+                  </div>
+                )}
+                {repeatBookingError && (
+                  <p className="form-error" role="alert">{repeatBookingError}</p>
+                )}
+                <label>
+                  Your name
+                  <input
+                    defaultValue={repeatBooking?.customerName ?? ""}
+                    required
+                    name="name"
+                    placeholder="Full name"
+                  />
+                </label>
+                <label>
+                  Email address
+                  <input
+                    defaultValue={repeatBooking?.customerEmail ?? ""}
+                    required
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                  />
+                </label>
+                {repeatBooking && (
+                  <fieldset className="area-fieldset repeat-vehicle-fieldset">
+                    <legend>Which vehicle is this for?</legend>
+                    <div className="area-options">
+                      <label>
+                        <input
+                          checked={useSameVehicle}
+                          name="repeat-vehicle-choice"
+                          onChange={() => {
+                            setUseSameVehicle(true);
+                            setSelectedCustomerVehicle(repeatBooking.vehicle);
+                          }}
+                          type="radio"
+                        />
+                        Use the same vehicle
+                      </label>
+                      <label>
+                        <input
+                          checked={!useSameVehicle}
+                          name="repeat-vehicle-choice"
+                          onChange={() => {
+                            setUseSameVehicle(false);
+                            setSelectedCustomerVehicle("");
+                          }}
+                          type="radio"
+                        />
+                        Choose a different vehicle
+                      </label>
+                    </div>
+                    {useSameVehicle && <strong>{repeatBooking.vehicle}</strong>}
+                  </fieldset>
+                )}
+                {repeatBooking && useSameVehicle ? (
+                  <input name="vehicle" type="hidden" value={repeatBooking.vehicle} />
+                ) : (
+                  <VehicleSelector
+                    key={vehicleResetVersion}
+                    onVehicleChange={setSelectedCustomerVehicle}
+                  />
+                )}
+                <input name="launch-area" type="hidden" value={CURRENT_LAUNCH_AREA} />
+                <div className="field-row">
+                  <div className="fixed-launch-area">
+                    <span>Current service area</span>
+                    <strong>Montgomery County, Maryland</strong>
+                    <Link href="/about#expansion">Outside the county? Request your area</Link>
+                  </div>
+                  <label>
+                    City, town, or municipality
+                    <input
+                      defaultValue={repeatBooking?.municipality ?? ""}
+                      required
+                      list={MUNICIPALITY_DATALIST_ID}
+                      name="municipality"
+                      placeholder="Example: Rockville or Silver Spring"
+                    />
+                  </label>
+                </div>
+                <label>
+                  ZIP code
+                  <input
+                    defaultValue={repeatBooking?.zip ?? ""}
+                    required
+                    list={ZIP_DATALIST_ID}
+                    name="zip"
+                    inputMode="numeric"
+                    placeholder="20901"
+                  />
+                </label>
+                <fieldset className="area-fieldset service-fieldset customer-service-fieldset">
+                  <legend>What does your vehicle need?</legend>
+                  <p>Choose one or more. One provider must be able to handle the complete request.</p>
+                  <div className="service-groups customer-service-groups">
+                    {CUSTOMER_SERVICE_GROUPS.map((group) => {
+                      const selectedCount = group.options.filter((option) => (
+                        selectedCustomerServices.includes(option.value)
+                      )).length;
+                      return (
+                        <details
+                          className="service-group"
+                          open={selectedCount > 0 ? true : undefined}
+                          key={group.id}
+                        >
+                          <summary>
+                            <span>
+                              <strong>{group.label}</strong>
+                              <small>{group.description}</small>
+                            </span>
+                            <b>{selectedCount ? `${selectedCount} selected` : "View"}</b>
+                          </summary>
+                          <div className="service-options customer-service-options">
+                            {group.options.map((option) => (
+                              <label
+                                className={selectedCustomerServices.includes(option.value) ? "selected" : ""}
+                                key={option.value}
+                              >
+                                <input
+                                  checked={selectedCustomerServices.includes(option.value)}
+                                  name="service"
+                                  type="checkbox"
+                                  value={option.value}
+                                  onChange={(event) => {
+                                    setPriceGuidanceBusy(true);
+                                    setSelectedCustomerServices((current) => (
+                                      event.target.checked
+                                        ? [...current, option.value]
+                                        : current.filter((service) => service !== option.value)
+                                    ));
+                                  }}
+                                />
+                                <span>{option.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </details>
+                      );
+                    })}
+                  </div>
+                  <small className="customer-service-note">
+                    Availability depends on a provider having current approval for that exact service.
+                    Rain guards include vent visors and window deflectors; window tint is separate.
+                  </small>
+                </fieldset>
+                {selectedCustomerServices.length > 0 && (
+                  <section className="price-guidance-card" aria-live="polite">
+                    <div className="price-guidance-heading">
+                      <div>
+                        <span>Real completed-job data</span>
+                        <strong>Observed Tuveloz price guide</strong>
+                      </div>
+                      <small>Not a promised quote</small>
+                    </div>
+                    {priceGuidanceBusy ? (
+                      <p>Checking completed Tuveloz jobs…</p>
+                    ) : (
+                      <div className="price-guidance-list">
+                        {priceGuidance.map((item) => (
+                          <article key={item.service}>
+                            <strong>{item.service}</strong>
+                            {item.available ? (
+                              <>
+                                <span>Average {dollars(item.averageCents)}</span>
+                                <small>
+                                  Observed range {dollars(item.lowCents)}–{dollars(item.highCents)}
+                                  {" · "}{item.sampleCount} completed jobs
+                                </small>
+                              </>
+                            ) : (
+                              <span>
+                                {item.message
+                                  ?? "Not enough real completed jobs yet to publish a trustworthy price."}
+                              </span>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                    <p>
+                      Numbers appear only after at least 3 real, non-test, completed
+                      single-service jobs. Combined jobs may price differently.
+                    </p>
+                  </section>
+                )}
+                <fieldset className="area-fieldset">
+                  <legend>Parts arrangement for this labor-only request</legend>
+                  <div className="area-options parts-source-options">
+                    {PARTS_SOURCE_OPTIONS.map((option) => (
+                      <label key={option}>
+                        <input
+                          checked={partsSource === option}
+                          name="parts-source"
+                          required
+                          type="radio"
+                          value={option}
+                          onChange={(event) => setPartsSource(event.target.value)}
+                        />
+                        {option}
+                      </label>
+                    ))}
+                  </div>
+                  <small className="parts-equipment-note">{PARTS_COMMUNICATION_NOTICE}</small>
+                </fieldset>
+                <label>
+                  <span className="field-label-with-help">
+                    Customer-supplied parts preference
+                    <LegalHelp
+                      label="What do OEM and aftermarket mean here?"
+                      text="OEM and aftermarket are communication preferences for a part the customer purchases separately. Tuveloz does not sell, source, verify, reimburse, or process payment for the part."
+                    />
+                  </span>
+                  <select
+                    name="parts-preference"
+                    value={partsPreference}
+                    onChange={(event) => setPartsPreference(event.target.value)}
+                  >
+                    {PARTS_PREFERENCE_OPTIONS.map((option) => (
+                      <option key={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="policy-consent">
+                  <input
+                    name="labor-only-parts-acknowledged"
+                    required
+                    type="checkbox"
+                    value="yes"
+                  />
+                  <span>
+                    I understand that Tuveloz quotes and payments are labor only. Any
+                    required part must be purchased separately by me and cannot be
+                    included as a provider-supplied part or parts charge.
+                  </span>
+                </label>
+                <fieldset className="area-fieldset location-fieldset">
+                  <legend>Where can the service happen?</legend>
+                  <p>Choose one or both.</p>
+                  <div className="area-options">
+                    {CUSTOMER_SERVICE_LOCATION_OPTIONS.map((option) => (
+                      <label key={option}>
+                        <input
+                          checked={selectedCustomerLocations.includes(option)}
+                          name="service-location"
+                          type="checkbox"
+                          value={option}
+                          onChange={(event) => setSelectedCustomerLocations((current) => (
+                            event.target.checked
+                              ? [...current, option]
+                              : current.filter((item) => item !== option)
+                          ))}
+                        />
+                        {option}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                {customerAllowsProviderTravel && (
+                  <label>
+                    Service address
+                    <AddressAutocompleteInput
+                      defaultValue={repeatBooking?.serviceAddress ?? ""}
+                      required
+                      name="service-address"
+                      placeholder="Street address"
+                    />
+                    <small>Only the provider you select will receive this address.</small>
+                  </label>
+                )}
+                <label>
+                  Describe the job
+                  <textarea
+                    required
+                    name="job-details"
+                    placeholder="Describe the problem, condition, preferred timing, and anything else the provider should know."
+                    rows={4}
+                  />
+                  <small>
+                    Include a budget here only if you want providers to see one.
+                  </small>
+                </label>
+                <label className="photo-field">
+                  Photo of the issue <span>(optional)</span>
+                  <input name="issue-photo" type="file" accept="image/jpeg,image/png,image/webp" />
+                  <small>JPG, PNG, or WebP · maximum 8 MB. Don&apos;t upload payment details or sensitive documents.</small>
+                </label>
+                <label className="policy-consent">
+                  <input required name="terms-accepted" type="checkbox" value="yes" />
+                  <span>
+                    I am 18 or older and agree to the <a href="/terms">Terms</a> and{" "}
+                    <a href="/customer-agreement">Customer Agreement</a>, and
+                    acknowledge the <a href="/privacy">Privacy Policy</a>.
+                  </span>
+                </label>
+                <label className="policy-consent optional-consent">
+                  <input name="remember-email-consent" type="checkbox" value="yes" />
+                  <span>
+                    Create a reusable guest profile so Tuveloz can match this request to a
+                    future account after I verify this email. <strong>Optional.</strong>
+                  </span>
+                </label>
+                <label className="policy-consent optional-consent">
+                  <input name="marketing-consent" type="checkbox" value="yes" />
+                  <span>
+                    Email me occasional Tuveloz promotions and service updates. Optional;
+                    I can unsubscribe anytime.
+                  </span>
+                </label>
+                <small>
+                  We&apos;ll use your email to manage this request and send related updates.
+                  Promotions are sent only if you opt in. Don&apos;t include payment details
+                  or sensitive documents.
+                </small>
+                {pendingSubmission === "request" ? (
+                  <ConfirmAction
+                    busy={requestBusy}
+                    busyLabel="Posting…"
+                    confirmLabel="Confirm and post"
+                    confirmType="submit"
+                    message="Review the information above. Nothing is posted until you confirm."
+                    onBack={() => setPendingSubmission("")}
+                    title="Post this job?"
+                  />
+                ) : (
+                  <button className="button primary form-button" type="submit" disabled={requestBusy}>
+                    {requestBusy ? "Saving…" : "Submit request"} <span>→</span>
+                  </button>
+                )}
+                {requestError && <p className="form-error" role="alert">{requestError}</p>}
+                <small>
+                  We use this information only to review your request and contact you about Tuveloz.
+                  Don&apos;t include payment details or sensitive documents.
+                </small>
+              </>
+            )}
+          </form>
+          )}
+        </section>
       )}
 
       <section className="section provider-pitch" id="why-join">
@@ -1623,58 +1641,60 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </section>
 
-      <section className="section providers" id="providers">
-        <div className="provider-panel" data-manual-language>
-          <div className="provider-copy">
-            <span className="kicker light">For providers</span>
-            {view === "provider" ? (
-              <h1>Your business. Your price. Your schedule.</h1>
-            ) : (
-              <h2>Your business. Your price. Your schedule.</h2>
-            )}
-            <p>
-              This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
-              you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
-            </p>
-            <div className="provider-benefits">
-              <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
-              <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
-              <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
+      {shows("providers") && (
+        <section className="section providers" id="providers">
+          <div className="provider-panel" data-manual-language>
+            <div className="provider-copy">
+              <span className="kicker light">For providers</span>
+              {view === "provider" ? (
+                <h1>Your business. Your price. Your schedule.</h1>
+              ) : (
+                <h2>Your business. Your price. Your schedule.</h2>
+              )}
+              <p>
+                This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
+                you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
+              </p>
+              <div className="provider-benefits">
+                <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
+                <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
+                <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
+              </div>
+              <section className="provider-handles" aria-labelledby="provider-handles-title">
+                <div className="provider-handles-heading">
+                  <span className="kicker light">Show up. Do the work.</span>
+                  <h3 id="provider-handles-title">You fix the vehicle. We knock out the paperwork.</h3>
+                  <p>
+                    Booking dates, quotes, records, invoices, getting paid — the admin
+                    that eats everyone else&apos;s evenings lives in one workspace here.
+                    Spend your time under the hood, not buried in office work.
+                  </p>
+                </div>
+                <div className="provider-handles-grid">
+                  {providerHandled.map((item) => (
+                    <article key={item.title}>
+                      <span className="provider-handles-icon">
+                        <TuvelozIcon name={item.icon} />
+                      </span>
+                      <strong>{item.title}</strong>
+                      <p>{item.text}</p>
+                    </article>
+                  ))}
+                </div>
+                <small className="provider-handles-note">
+                  Get set up and poke around now — these tools go live for real jobs
+                  when we open, and we&apos;ll keep you posted. You&apos;re always your own
+                  business: we never set your prices, your hours, or how you work.
+                </small>
+              </section>
             </div>
-            <section className="provider-handles" aria-labelledby="provider-handles-title">
-              <div className="provider-handles-heading">
-                <span className="kicker light">Show up. Do the work.</span>
-                <h3 id="provider-handles-title">You fix the vehicle. We knock out the paperwork.</h3>
-                <p>
-                  Booking dates, quotes, records, invoices, getting paid — the admin
-                  that eats everyone else&apos;s evenings lives in one workspace here.
-                  Spend your time under the hood, not buried in office work.
-                </p>
-              </div>
-              <div className="provider-handles-grid">
-                {providerHandled.map((item) => (
-                  <article key={item.title}>
-                    <span className="provider-handles-icon">
-                      <TuvelozIcon name={item.icon} />
-                    </span>
-                    <strong>{item.title}</strong>
-                    <p>{item.text}</p>
-                  </article>
-                ))}
-              </div>
-              <small className="provider-handles-note">
-                Get set up and poke around now — these tools go live for real jobs
-                when we open, and we&apos;ll keep you posted. You&apos;re always your own
-                business: we never set your prices, your hours, or how you work.
-              </small>
-            </section>
-          </div>
 
-          <div id="provider-apply">
-            <ProviderSignupForm />
+            <div id="provider-apply">
+              <ProviderSignupForm />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="section difference-section" id="what-makes-us-different">
         <div className="section-heading">
@@ -1706,248 +1726,254 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </p>
       </section>
 
-      <section className="section expansion-section" id="expansion">
-        <div className="expansion-copy">
-          <span className="kicker">Future expansion</span>
-          <h2>Bring Tuveloz to your area.</h2>
-          <p>
-            Tuveloz provider onboarding currently focuses on Montgomery County,
-            Maryland. Customers and providers elsewhere in Maryland or Washington,
-            DC can request their area. We&apos;ll use combined demand to choose where
-            to launch next.
-          </p>
-          <div className="expansion-signals" aria-label="Expansion demand groups">
-            <span>Customers</span>
-            <span>Providers</span>
-            <span>Mechanics, detailers &amp; service trucks</span>
-          </div>
-        </div>
-
-        <form className="expansion-form" onSubmit={handleExpansionSubmit}>
-          {expansionSent ? (
-            <div className="success-message expansion-success" role="status">
-              <span>✓</span>
-              <h3>Your area request is counted.</h3>
-              <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next launch area.</p>
-              <button type="button" onClick={() => setExpansionSent(false)}>
-                Request another area
-              </button>
+      {shows("expansion") && (
+        <section className="section expansion-section" id="expansion">
+          <div className="expansion-copy">
+            <span className="kicker">Future expansion</span>
+            <h2>Bring Tuveloz to your area.</h2>
+            <p>
+              Tuveloz provider onboarding currently focuses on Montgomery County,
+              Maryland. Customers and providers elsewhere in Maryland or Washington,
+              DC can request their area. We&apos;ll use combined demand to choose where
+              to launch next.
+            </p>
+            <div className="expansion-signals" aria-label="Expansion demand groups">
+              <span>Customers</span>
+              <span>Providers</span>
+              <span>Mechanics, detailers &amp; service trucks</span>
             </div>
-          ) : (
-            <>
-              <h3>Request your area</h3>
-              <p>Four quick answers help us measure real local demand.</p>
-              <fieldset className="expansion-audience-fieldset">
-                <legend>I am a…</legend>
-                <div className="expansion-role-options">
-                  {["Customer", "Provider", "Both"].map((option) => (
-                    <label
-                      className={expansionAudience === option ? "selected" : ""}
-                      key={option}
-                    >
-                      <input
-                        checked={expansionAudience === option}
-                        name="expansion-audience"
-                        onChange={() => setExpansionAudience(option)}
-                        required
-                        type="radio"
-                        value={option}
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
+          </div>
+
+          <form className="expansion-form" onSubmit={handleExpansionSubmit}>
+            {expansionSent ? (
+              <div className="success-message expansion-success" role="status">
+                <span>✓</span>
+                <h3>Your area request is counted.</h3>
+                <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next launch area.</p>
+                <button type="button" onClick={() => setExpansionSent(false)}>
+                  Request another area
+                </button>
+              </div>
+            ) : (
+              <>
+                <h3>Request your area</h3>
+                <p>Four quick answers help us measure real local demand.</p>
+                <fieldset className="expansion-audience-fieldset">
+                  <legend>I am a…</legend>
+                  <div className="expansion-role-options">
+                    {["Customer", "Provider", "Both"].map((option) => (
+                      <label
+                        className={expansionAudience === option ? "selected" : ""}
+                        key={option}
+                      >
+                        <input
+                          checked={expansionAudience === option}
+                          name="expansion-audience"
+                          onChange={() => setExpansionAudience(option)}
+                          required
+                          type="radio"
+                          value={option}
+                        />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                {(expansionAudience === "Provider" || expansionAudience === "Both") && (
+                  <label>
+                    Provider type
+                    <select required name="expansion-provider-type" defaultValue="">
+                      <option value="" disabled>Select one</option>
+                      <option>Mobile mechanic or service truck</option>
+                      <option>Shop-based mechanic</option>
+                      <option>Mobile detailer</option>
+                      <option>Window tint provider</option>
+                      <option>Other vehicle-service provider</option>
+                    </select>
+                  </label>
+                )}
+                <div className="field-row">
+                  <label>
+                    State or district
+                    <select required name="expansion-state" defaultValue="">
+                      <option value="" disabled>Select one</option>
+                      <option>Maryland</option>
+                      <option>Washington, DC</option>
+                    </select>
+                  </label>
+                  <label>
+                    County or independent city
+                    <input
+                      name="expansion-locality"
+                      placeholder="Example: Prince George's County"
+                      required
+                    />
+                  </label>
                 </div>
-              </fieldset>
-              {(expansionAudience === "Provider" || expansionAudience === "Both") && (
                 <label>
-                  Provider type
-                  <select required name="expansion-provider-type" defaultValue="">
-                    <option value="" disabled>Select one</option>
-                    <option>Mobile mechanic or service truck</option>
-                    <option>Shop-based mechanic</option>
-                    <option>Mobile detailer</option>
-                    <option>Window tint provider</option>
-                    <option>Other vehicle-service provider</option>
-                  </select>
-                </label>
-              )}
-              <div className="field-row">
-                <label>
-                  State or district
-                  <select required name="expansion-state" defaultValue="">
-                    <option value="" disabled>Select one</option>
-                    <option>Maryland</option>
-                    <option>Washington, DC</option>
-                  </select>
-                </label>
-                <label>
-                  County or independent city
+                  Email address
                   <input
-                    name="expansion-locality"
-                    placeholder="Example: Prince George's County"
+                    name="expansion-email"
+                    placeholder="you@example.com"
                     required
+                    type="email"
                   />
                 </label>
-              </div>
-              <label>
-                Email address
-                <input
-                  name="expansion-email"
-                  placeholder="you@example.com"
-                  required
-                  type="email"
-                />
-              </label>
-              <button className="button primary form-button" disabled={expansionBusy} type="submit">
-                {expansionBusy ? "Saving…" : "Request my area"} <span>→</span>
-              </button>
-              {expansionError && <p className="form-error" role="alert">{expansionError}</p>}
-              <small>
-                An area request shows interest; it does not promise a launch date.
-                Don&apos;t include payment details or sensitive information.
-              </small>
-            </>
-          )}
-        </form>
-      </section>
+                <button className="button primary form-button" disabled={expansionBusy} type="submit">
+                  {expansionBusy ? "Saving…" : "Request my area"} <span>→</span>
+                </button>
+                {expansionError && <p className="form-error" role="alert">{expansionError}</p>}
+                <small>
+                  An area request shows interest; it does not promise a launch date.
+                  Don&apos;t include payment details or sensitive information.
+                </small>
+              </>
+            )}
+          </form>
+        </section>
+      )}
 
-      <section className="section feedback-section" id="feedback">
-        <div className="feedback-copy">
-          <span className="kicker">Your feedback matters</span>
-          <h2>Help shape what Tuveloz builds next</h2>
-          <p>
-            Choose the services, customer improvements, and provider tools you
-            want us to add as Tuveloz grows.
-          </p>
-          <div className="feedback-points">
-            <span><b>01</b> Suggest services</span>
-            <span><b>02</b> Request provider tools</span>
-            <span><b>03</b> Improve customer choices</span>
-          </div>
-        </div>
-
-        <form
-          className="feedback-form"
-          onChange={() => pendingSubmission === "feedback" && setPendingSubmission("")}
-          onSubmit={handleFeedbackSubmit}
-        >
-          {feedbackSent ? (
-            <div className="success-message" role="status">
-              <span>✓</span>
-              <h3>Thanks for your feedback.</h3>
-              <p>We saved your ideas for review as Tuveloz grows.</p>
-              <button type="button" onClick={() => setFeedbackSent(false)}>Share another idea</button>
+      {shows("feedback") && (
+        <section className="section feedback-section" id="feedback">
+          <div className="feedback-copy">
+            <span className="kicker">Your feedback matters</span>
+            <h2>Help shape what Tuveloz builds next</h2>
+            <p>
+              Choose the services, customer improvements, and provider tools you
+              want us to add as Tuveloz grows.
+            </p>
+            <div className="feedback-points">
+              <span><b>01</b> Suggest services</span>
+              <span><b>02</b> Request provider tools</span>
+              <span><b>03</b> Improve customer choices</span>
             </div>
+          </div>
+
+          <form
+            className="feedback-form"
+            onChange={() => pendingSubmission === "feedback" && setPendingSubmission("")}
+            onSubmit={handleFeedbackSubmit}
+          >
+            {feedbackSent ? (
+              <div className="success-message" role="status">
+                <span>✓</span>
+                <h3>Thanks for your feedback.</h3>
+                <p>We saved your ideas for review as Tuveloz grows.</p>
+                <button type="button" onClick={() => setFeedbackSent(false)}>Share another idea</button>
+              </div>
+            ) : (
+              <>
+                <h3>Share your feedback</h3>
+                <p>Required questions are marked below. Email is optional.</p>
+                <label>
+                  I&apos;m answering as
+                  <select required name="audience" defaultValue="">
+                    <option value="" disabled>Select one</option>
+                    <option>Customer</option>
+                    <option>Provider</option>
+                    <option>Both</option>
+                  </select>
+                </label>
+                <fieldset className="feedback-choice-group">
+                  <legend>Which jobs should Tuveloz add or feature next?</legend>
+                  <p>Select every service you would like to see.</p>
+                  <div className="feedback-options">
+                    {feedbackJobOptions.map((option) => (
+                      <label key={option}>
+                        <input name="jobs-wanted" type="checkbox" value={option} />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <label className="feedback-other">
+                    Other job or service <span className="optional-label">(optional)</span>
+                    <input name="jobs-wanted-other" placeholder="Tell us what should be added" />
+                  </label>
+                </fieldset>
+                <fieldset className="feedback-choice-group">
+                  <legend>Which tools would make a provider&apos;s work easier?</legend>
+                  <p>Pick the tools that would genuinely help.</p>
+                  <div className="feedback-options">
+                    {feedbackProviderOptions.map((option) => (
+                      <label key={option}>
+                        <input name="provider-features" type="checkbox" value={option} />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <label className="feedback-other">
+                    Other provider tool <span className="optional-label">(optional)</span>
+                    <input name="provider-features-other" placeholder="Suggest another provider feature" />
+                  </label>
+                </fieldset>
+                <fieldset className="feedback-choice-group">
+                  <legend>What would make Tuveloz better for customers?</legend>
+                  <p>Select the improvements that matter most.</p>
+                  <div className="feedback-options">
+                    {feedbackCustomerOptions.map((option) => (
+                      <label key={option}>
+                        <input name="customer-improvements" type="checkbox" value={option} />
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <label className="feedback-other">
+                    Other customer improvement <span className="optional-label">(optional)</span>
+                    <input name="customer-improvements-other" placeholder="Suggest another improvement" />
+                  </label>
+                </fieldset>
+                <label>
+                  Email for follow-up <span className="optional-label">(optional)</span>
+                  <input name="feedback-email" type="email" placeholder="you@example.com" />
+                </label>
+                {pendingSubmission === "feedback" ? (
+                  <ConfirmAction
+                    busy={feedbackBusy}
+                    busyLabel="Sending…"
+                    confirmLabel="Confirm and send"
+                    confirmType="submit"
+                    message="Review your feedback above. It is not sent until you confirm."
+                    onBack={() => setPendingSubmission("")}
+                    title="Send this feedback?"
+                  />
+                ) : (
+                  <button className="button primary form-button" type="submit" disabled={feedbackBusy}>
+                    {feedbackBusy ? "Saving…" : "Send feedback"} <span>→</span>
+                  </button>
+                )}
+                {feedbackError && <p className="form-error" role="alert">{feedbackError}</p>}
+                <small>Don&apos;t include payment details, identification numbers, or sensitive documents.</small>
+              </>
+            )}
+          </form>
+        </section>
+      )}
+
+      {shows("finalCta") && (
+        <section className="final-cta">
+          <span className="kicker light">Montgomery County, Maryland</span>
+          {view === "provider" ? (
+            <>
+              <h2>The county is wide open. Take your spot.</h2>
+              <div>
+                <a className="button lime" href="#provider-apply">Apply free <span>→</span></a>
+              </div>
+            </>
           ) : (
             <>
-              <h3>Share your feedback</h3>
-              <p>Required questions are marked below. Email is optional.</p>
-              <label>
-                I&apos;m answering as
-                <select required name="audience" defaultValue="">
-                  <option value="" disabled>Select one</option>
-                  <option>Customer</option>
-                  <option>Provider</option>
-                  <option>Both</option>
-                </select>
-              </label>
-              <fieldset className="feedback-choice-group">
-                <legend>Which jobs should Tuveloz add or feature next?</legend>
-                <p>Select every service you would like to see.</p>
-                <div className="feedback-options">
-                  {feedbackJobOptions.map((option) => (
-                    <label key={option}>
-                      <input name="jobs-wanted" type="checkbox" value={option} />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-                <label className="feedback-other">
-                  Other job or service <span className="optional-label">(optional)</span>
-                  <input name="jobs-wanted-other" placeholder="Tell us what should be added" />
-                </label>
-              </fieldset>
-              <fieldset className="feedback-choice-group">
-                <legend>Which tools would make a provider&apos;s work easier?</legend>
-                <p>Pick the tools that would genuinely help.</p>
-                <div className="feedback-options">
-                  {feedbackProviderOptions.map((option) => (
-                    <label key={option}>
-                      <input name="provider-features" type="checkbox" value={option} />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-                <label className="feedback-other">
-                  Other provider tool <span className="optional-label">(optional)</span>
-                  <input name="provider-features-other" placeholder="Suggest another provider feature" />
-                </label>
-              </fieldset>
-              <fieldset className="feedback-choice-group">
-                <legend>What would make Tuveloz better for customers?</legend>
-                <p>Select the improvements that matter most.</p>
-                <div className="feedback-options">
-                  {feedbackCustomerOptions.map((option) => (
-                    <label key={option}>
-                      <input name="customer-improvements" type="checkbox" value={option} />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-                <label className="feedback-other">
-                  Other customer improvement <span className="optional-label">(optional)</span>
-                  <input name="customer-improvements-other" placeholder="Suggest another improvement" />
-                </label>
-              </fieldset>
-              <label>
-                Email for follow-up <span className="optional-label">(optional)</span>
-                <input name="feedback-email" type="email" placeholder="you@example.com" />
-              </label>
-              {pendingSubmission === "feedback" ? (
-                <ConfirmAction
-                  busy={feedbackBusy}
-                  busyLabel="Sending…"
-                  confirmLabel="Confirm and send"
-                  confirmType="submit"
-                  message="Review your feedback above. It is not sent until you confirm."
-                  onBack={() => setPendingSubmission("")}
-                  title="Send this feedback?"
-                />
-              ) : (
-                <button className="button primary form-button" type="submit" disabled={feedbackBusy}>
-                  {feedbackBusy ? "Saving…" : "Send feedback"} <span>→</span>
-                </button>
-              )}
-              {feedbackError && <p className="form-error" role="alert">{feedbackError}</p>}
-              <small>Don&apos;t include payment details, identification numbers, or sensitive documents.</small>
+              <h2>Be first in line when Tuveloz opens.</h2>
+              <div>
+                <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
+                <Link className="button ghost" href="/join">I do car work — apply free</Link>
+              </div>
             </>
           )}
-        </form>
-      </section>
-
-      <section className="final-cta">
-        <span className="kicker light">Montgomery County, Maryland</span>
-        {view === "provider" ? (
-          <>
-            <h2>The county is wide open. Take your spot.</h2>
-            <div>
-              <a className="button lime" href="#provider-apply">Apply free <span>→</span></a>
-            </div>
-          </>
-        ) : (
-          <>
-            <h2>Be first in line when Tuveloz opens.</h2>
-            <div>
-              <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
-              <Link className="button ghost" href="/join">I do car work — apply free</Link>
-            </div>
-          </>
-        )}
-        <p className="final-cta-note">
-          Free for everyone. You&apos;ll be able to post a job and pay through us as
-          soon as we open.
-        </p>
-      </section>
+          <p className="final-cta-note">
+            Free for everyone. You&apos;ll be able to post a job and pay through us as
+            soon as we open.
+          </p>
+        </section>
+      )}
 
       <footer>
         <Link className="brand footer-brand" href="/">

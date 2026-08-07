@@ -796,10 +796,12 @@ const spanishText: Record<string, string> = {
   "I do car work — apply free": "Yo trabajo en carros — aplique gratis",
   "Mechanics near you are signing up now. You'll be able to post your first job the day we open.": "Los mecánicos cerca de usted se están registrando. Podrá publicar su primer trabajo el día que abramos.",
   "Preview": "Vista previa",
-  "Planned pick": "Selección prevista",
-  "YOU CHOOSE": "USTED ELIGE",
-  "Ramirez Mobile Auto · concept preview": "Ramirez Mobile Auto · vista conceptual",
-  "Silver Spring Auto Care · concept preview": "Silver Spring Auto Care · vista conceptual",
+  "You choose": "Usted elige",
+  // Shop names in the concept preview are made up, and a name stays a name in
+  // either language — listed so the coverage check sees them as handled.
+  "Ramirez Mobile Auto": "Ramirez Mobile Auto",
+  "Kensington Auto Works": "Kensington Auto Works",
+  "Silver Spring Auto Care": "Silver Spring Auto Care",
   "Concept preview — not a live job. Customer requests and quotes open after launch.": "Vista conceptual: no es un trabajo real. Las solicitudes y cotizaciones de clientes abren después del lanzamiento.",
   "A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch.": "Un adelanto, no un trabajo real: así se verá comparar precios. Las solicitudes y cotizaciones abren en el lanzamiento.",
   "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch.": "Vista conceptual: esto es lo que ve un cliente cuando llega su cotización. Las solicitudes y cotizaciones abren en el lanzamiento.",

@@ -126,10 +126,24 @@ export async function POST(request: Request) {
     return noStoreJson({ error: "Type what your vehicle is doing to get started." }, 400);
   }
 
+  // No model key configured. Policy questions do not need one — the vetted
+  // answers are written down — so keep answering those rather than turning the
+  // whole page into an error. Only questions that genuinely need the model
+  // fall through to the notice.
   if (!councilConfigured()) {
+    if (policyEntries.length > 0) {
+      void recordAssistantAnswer(audience, policyEntries, true);
+      return noStoreJson({
+        reply: vettedAnswer(policyEntries),
+        sources: policyEntries.map((entry) => entry.source),
+        consulted: [],
+        cached: false,
+      });
+    }
     return noStoreJson(
       {
-        error: "Tuveloz AI is not available right now. Please try again later.",
+        error:
+          "Tuveloz AI can't answer that one yet. For anything about how Tuveloz works, ask here and you'll get the answer straight from our policies — for anything else, email hello@tuveloz.com and a person will get back to you.",
         code: "AI_UNCONFIGURED",
       },
       503,
