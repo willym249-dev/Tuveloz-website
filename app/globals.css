@@ -2,7 +2,7 @@
 
 :root {
   --ink: #071726;
-  --ink-2: #0d2336;
+  --ink-2: #111111;
   --blue: #1268ff;
   --blue-dark: #0754da;
   --lime: #c8ff48;
@@ -69,13 +69,16 @@ a {
   width: max-content;
 }
 
+/* public/brand-badge.png is the whole badge: orange keyline, brand-navy
+   interior, transparent rounded corners. Painting a navy fill and a second
+   inset keyline here drew a badge behind the badge — the container's square
+   corners showed through the artwork's rounded ones, and the two keylines sat
+   at different radii. Only the box and the outer glow belong to the container.
+   .mini-mark was corrected earlier; this is the 40px header mark. */
 .brand-mark {
   align-items: center;
-  background: #07182d;
   border-radius: 9px;
-  box-shadow:
-    inset 0 0 0 2px #ff6a00,
-    0 5px 14px rgba(255, 106, 0, 0.16);
+  box-shadow: 0 5px 14px rgba(255, 106, 0, 0.16);
   color: #ff6a00;
   display: inline-flex;
   font-size: 17px;
@@ -145,7 +148,7 @@ a {
   background: #ffffff;
   border: 1px solid rgba(255, 106, 0, 0.55);
   border-radius: 11px;
-  color: #07182d;
+  color: #0a0705;
   display: inline-flex;
   font-size: 13px;
   font-weight: 800;
@@ -847,7 +850,7 @@ a {
 
 .service-icon {
   align-items: center;
-  background: #eaf2ff;
+  background: rgba(255, 106, 0, 0.12);
   border-radius: 12px;
   color: var(--blue);
   display: flex;
@@ -1840,7 +1843,7 @@ footer > p {
 
 /* Navy account shell (/welcome) — matches .account-card. */
 .follow-along-shell {
-  background: rgba(13, 35, 54, 0.96);
+  background: #111111;
   border: 1px solid rgba(255, 106, 0, 0.22);
 }
 
@@ -1849,7 +1852,7 @@ footer > p {
 }
 
 .follow-along-shell p {
-  color: #b8c7d4;
+  color: #b6aaa1;
 }
 
 /* Warm dark form panel (application received, inside .provider-form). The
@@ -1934,7 +1937,7 @@ footer > p {
 }
 
 .launch-updates-consent > span {
-  color: #b8c7d4;
+  color: #b6aaa1;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -3777,8 +3780,8 @@ label > small {
 }
 
 .repeat-booking-banner {
-  background: #eef5ff;
-  border: 1px solid #b9d2ff;
+  background: #141110;
+  border: 1px solid #3c291d;
   border-radius: 16px;
   margin-bottom: 20px;
   padding: 18px;
@@ -3801,7 +3804,7 @@ label > small {
 }
 
 .repeat-booking-banner p {
-  color: #40576c;
+  color: #b6aaa1;
   font-size: 12px;
   line-height: 1.55;
   margin: 7px 0 12px;
@@ -3928,10 +3931,10 @@ label > small {
 }
 
 .repeat-badge {
-  background: #eaf2ff;
-  border: 1px solid #9fc1ff;
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.38);
   border-radius: 999px;
-  color: #0d57c8;
+  color: #ffa869;
   display: inline-flex;
   font-size: 10px;
   font-weight: 900;
@@ -4041,9 +4044,9 @@ label > small {
 }
 
 .service-group > summary b {
-  background: #edf3f8;
+  background: rgba(255, 106, 0, 0.12);
   border-radius: 999px;
-  color: #34536c;
+  color: #ff9a55;
   flex: 0 0 auto;
   font-size: 9px;
   letter-spacing: 0.03em;
@@ -4057,7 +4060,7 @@ label > small {
 }
 
 .service-group[open] > summary b {
-  background: #dce9f4;
+  background: rgba(255, 106, 0, 0.22);
 }
 
 .service-group > .service-options {
@@ -4194,10 +4197,10 @@ label > small {
 }
 
 .provider-mode-badge {
-  background: #eaf2ff;
-  border: 1px solid #9fc1ff;
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.38);
   border-radius: 999px;
-  color: #0d57c8;
+  color: #ffa869;
   display: inline-flex;
   font-size: 10px;
   font-weight: 900;
@@ -4238,7 +4241,7 @@ label > small {
 }
 
 .provider-eligibility-guide {
-  background: #0c1d2a;
+  background: #0d0d0d;
   border-radius: 14px;
   color: white;
   margin-top: 18px;
@@ -4359,7 +4362,7 @@ label > small {
 
 .difference-icon {
   align-items: center;
-  background: #eaf2ff;
+  background: rgba(255, 106, 0, 0.12);
   border-radius: 12px;
   color: var(--blue);
   display: flex;
@@ -4421,7 +4424,7 @@ label > small {
 
 .pitch-icon {
   align-items: center;
-  background: #eaf2ff;
+  background: rgba(255, 106, 0, 0.12);
   border-radius: 12px;
   color: var(--blue);
   display: flex;
@@ -4689,7 +4692,7 @@ label > small {
 }
 
 .legal-requirement-note {
-  background: #122a3b;
+  background: #141110;
   border: 1px solid #355064;
   border-radius: 10px;
   padding: 12px;
@@ -7970,14 +7973,14 @@ footer > p,
 .account-shell {
   background:
     radial-gradient(circle at 82% 8%, rgba(255, 106, 0, 0.17), transparent 34%),
-    #07182d;
+    #070707;
   color: #ffffff;
   min-height: 100vh;
 }
 
 .account-header {
   align-items: center;
-  background: rgba(7, 24, 45, 0.94);
+  background: rgba(7, 7, 7, 0.94);
   border-bottom: 1px solid rgba(255, 106, 0, 0.24);
   display: flex;
   height: 78px;
@@ -8024,7 +8027,7 @@ footer > p,
 }
 
 .account-welcome p {
-  color: #b8c7d4;
+  color: #b6aaa1;
   font-size: clamp(17px, 2vw, 20px);
   line-height: 1.6;
   margin: 0;
@@ -8045,7 +8048,7 @@ footer > p,
 }
 
 .account-card {
-  background: rgba(13, 35, 54, 0.96);
+  background: #111111;
   border: 1px solid rgba(255, 106, 0, 0.22);
   border-radius: 22px;
   display: flex;
@@ -8085,7 +8088,7 @@ footer > p,
 
 .account-card > p,
 .account-owner-card p {
-  color: #adbdca;
+  color: #b6aaa1;
   font-size: 14px;
   line-height: 1.65;
   margin: 0;
@@ -8099,8 +8102,8 @@ footer > p,
 
 .account-request {
   align-items: center;
-  background: #07182d;
-  border: 1px solid #29435a;
+  background: #0b0b0b;
+  border: 1px solid #34261d;
   border-radius: 13px;
   display: flex;
   gap: 14px;
@@ -8149,7 +8152,7 @@ footer > p,
 }
 
 .account-empty {
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px dashed #36536b;
   border-radius: 14px;
   display: grid;
@@ -8225,7 +8228,7 @@ footer > p,
 }
 
 .account-login-card {
-  background: rgba(13, 35, 54, 0.98);
+  background: #111111;
   border: 1px solid rgba(255, 106, 0, 0.28);
   border-radius: 22px;
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.24);
@@ -8242,15 +8245,15 @@ footer > p,
 }
 
 .account-login-card > p {
-  color: #adbdca;
+  color: #b6aaa1;
   font-size: 14px;
   line-height: 1.65;
   margin: 0;
 }
 
 .account-role-tabs {
-  background: #07182d;
-  border: 1px solid #29435a;
+  background: #0b0b0b;
+  border: 1px solid #34261d;
   border-radius: 14px;
   display: grid;
   gap: 6px;
@@ -8263,7 +8266,7 @@ footer > p,
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
-  color: #9badbb;
+  color: #9a8a7e;
   cursor: pointer;
   font: inherit;
   font-size: 13px;
@@ -8279,7 +8282,7 @@ footer > p,
 }
 
 .account-auth-modes {
-  border-bottom: 1px solid #29435a;
+  border-bottom: 1px solid #34261d;
   display: grid;
   grid-template-columns: 1fr 1fr;
   margin-top: 26px;
@@ -8289,7 +8292,7 @@ footer > p,
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  color: #9badbb;
+  color: #9a8a7e;
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -8318,7 +8321,7 @@ footer > p,
 }
 
 .account-login-form label {
-  color: #dbe5ec;
+  color: #e8ded6;
   display: grid;
   font-size: 12px;
   font-weight: 750;
@@ -8326,8 +8329,8 @@ footer > p,
 }
 
 .account-login-form input {
-  background: #061524;
-  border: 1px solid #35536c;
+  background: #080808;
+  border: 1px solid #493123;
   border-radius: 11px;
   color: #ffffff;
   font: inherit;
@@ -8371,7 +8374,7 @@ footer > p,
 
 .account-code-backup {
   background: transparent;
-  border: 1px solid #35536c;
+  border: 1px solid #493123;
   border-radius: 11px;
   color: #ff9a55;
   cursor: pointer;
@@ -8390,7 +8393,7 @@ footer > p,
   background: #f7fafc;
   border: 1px solid #d9e3ea;
   border-radius: 12px;
-  color: #07182d;
+  color: #0a0705;
   cursor: pointer;
   font: inherit;
   font-size: 14px;
@@ -8406,7 +8409,7 @@ footer > p,
 
 .account-passkey-hint,
 .account-passkey-privacy {
-  color: #9badbb;
+  color: #9a8a7e;
   display: block;
   font-size: 10px;
   line-height: 1.55;
@@ -8415,7 +8418,7 @@ footer > p,
 
 .account-signin-divider {
   align-items: center;
-  color: #7f94a5;
+  color: #8d7b6e;
   display: flex;
   font-size: 10px;
   gap: 12px;
@@ -8425,7 +8428,7 @@ footer > p,
 
 .account-signin-divider::before,
 .account-signin-divider::after {
-  background: #29435a;
+  background: #34261d;
   content: "";
   flex: 1;
   height: 1px;
@@ -8447,7 +8450,7 @@ footer > p,
 }
 
 .account-passkey-setup p {
-  color: #adbdca;
+  color: #b6aaa1;
   font-size: 14px;
   line-height: 1.65;
 }
@@ -8463,7 +8466,7 @@ footer > p,
 }
 
 .account-password-guidance {
-  color: #9badbb;
+  color: #9a8a7e;
   font-size: 10px;
   line-height: 1.55;
   margin-top: -4px;
@@ -8486,7 +8489,7 @@ footer > p,
 }
 
 .account-remember-note {
-  color: #9badbb;
+  color: #9a8a7e;
   font-size: 10px;
   line-height: 1.45;
   margin-top: -8px;
@@ -8575,7 +8578,7 @@ footer > p,
 
 .provider-requirement-list details {
   background: rgba(255, 255, 255, 0.035);
-  border: 1px solid #29435a;
+  border: 1px solid #34261d;
   border-radius: 12px;
   padding: 13px;
 }
@@ -8623,8 +8626,8 @@ footer > p,
 
 .account-login-help {
   align-items: center;
-  background: rgba(13, 35, 54, 0.82);
-  border: 1px solid #29435a;
+  background: #111111;
+  border: 1px solid #34261d;
   border-radius: 16px;
   display: flex;
   gap: 18px;
@@ -8635,7 +8638,7 @@ footer > p,
 }
 
 .account-login-help p {
-  color: #adbdca;
+  color: #b6aaa1;
   font-size: 12px;
   line-height: 1.5;
   margin: 0;
@@ -8663,7 +8666,7 @@ footer > p,
 }
 
 .account-customer-guide p {
-  color: #adbdca;
+  color: #b6aaa1;
   font-size: 13px;
   line-height: 1.65;
   margin: 0;
@@ -8876,7 +8879,7 @@ footer > p,
 
 /* Clear, mobile-first policy pages */
 .policy-shell {
-  background: #07182d;
+  background: #070707;
   color: #f7fbff;
   min-height: 100vh;
 }
@@ -8955,8 +8958,8 @@ footer > p,
 }
 
 .policy-links {
-  border-bottom: 1px solid #29435a;
-  border-top: 1px solid #29435a;
+  border-bottom: 1px solid #34261d;
+  border-top: 1px solid #34261d;
   display: flex;
   gap: 8px;
   margin: 38px 0 12px;
@@ -8987,7 +8990,7 @@ footer > p,
 }
 
 .policy-content section {
-  border-bottom: 1px solid #29435a;
+  border-bottom: 1px solid #34261d;
   padding: 30px 0;
 }
 
@@ -9036,7 +9039,7 @@ footer > p,
 }
 
 .policy-content .job-operations-console {
-  border-bottom: 1px solid #29435a;
+  border-bottom: 1px solid #34261d;
   padding: 30px 0;
 }
 
@@ -9213,7 +9216,7 @@ footer > p,
 }
 
 .job-operation-form form {
-  border-top: 1px solid #29435a;
+  border-top: 1px solid #34261d;
   display: grid;
   gap: 11px;
   margin-top: 13px;
@@ -10093,7 +10096,7 @@ footer > p,
 .customer-settings-panel,
 .customer-payment-methods-panel,
 .saved-provider-panel {
-  background: linear-gradient(145deg, rgba(7, 24, 45, 0.96), rgba(10, 31, 48, 0.96));
+  background: linear-gradient(145deg, #131010, #0d0d0d);
   border: 1px solid #36536b;
   border-radius: 20px;
   color: #f7fbff;
@@ -10158,7 +10161,7 @@ footer > p,
 
 .customer-payment-method-list article {
   align-items: center;
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px solid #29475f;
   border-radius: 14px;
   display: flex;
@@ -10185,7 +10188,7 @@ footer > p,
 }
 
 .job-message-threads button {
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px solid #36536b;
   border-radius: 14px;
   color: #f7fbff;
@@ -10331,14 +10334,14 @@ footer > p,
 }
 
 .customer-security-note {
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px solid #29475f;
   border-radius: 14px;
   padding: 16px;
 }
 
 .customer-launch-callout {
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px solid rgba(255, 106, 0, 0.5);
   border-radius: 16px;
   display: grid;
@@ -10355,7 +10358,7 @@ footer > p,
 }
 
 .customer-launch-callout p {
-  color: #b8c7d4;
+  color: #b6aaa1;
   font-size: 15px;
   line-height: 1.55;
   margin: 0;
@@ -10372,7 +10375,7 @@ footer > p,
 }
 
 .customer-launch-callout .launch-updates-done {
-  color: #b8c7d4;
+  color: #b6aaa1;
   margin-top: 10px;
 }
 
@@ -10401,7 +10404,7 @@ footer > p,
 }
 
 .saved-provider-grid article {
-  background: #07182d;
+  background: #0b0b0b;
   border: 1px solid #29475f;
   border-radius: 16px;
   display: grid;
@@ -12267,4 +12270,86 @@ footer > p,
   margin-left: 7px;
   padding: 3px 8px;
   text-transform: uppercase;
+}
+
+/* --- Policy acceptance --------------------------------------------------- */
+
+/* The checkbox states what is being agreed to; the list underneath is how you
+   go and read it. Keeping them separate means opening a document can no longer
+   toggle the agreement, and the names shown are the names of record. */
+.policy-acceptance {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  margin-top: 12px;
+  padding: 13px;
+}
+
+.policy-acceptance:has(input:checked) {
+  border-color: rgba(255, 106, 0, 0.5);
+}
+
+.policy-acceptance > .policy-consent {
+  background: none;
+  border: 0;
+  margin-top: 0;
+  padding: 0;
+}
+
+.policy-document-list {
+  border-top: 1px solid #2c211a;
+  margin-top: 13px;
+  padding-top: 12px;
+}
+
+.policy-document-list > span {
+  color: #8d7b6e;
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-bottom: 9px;
+  text-transform: uppercase;
+}
+
+.policy-document-list ul {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.policy-document-list a {
+  align-items: baseline;
+  background: #111;
+  border: 1px solid #34261d;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 11px 12px;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.policy-document-list a:hover {
+  background: rgba(255, 106, 0, 0.08);
+  border-color: #ff6a00;
+}
+
+.policy-document-list strong {
+  color: #ffa869;
+  font-size: 12.5px;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.policy-document-list small {
+  color: #8d7b6e;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }

@@ -68,9 +68,11 @@ test("the stylesheet keeps no leftovers of the deleted hand-drawn mark", async (
   assert.doesNotMatch(styles, /\.(brand|mini)-mark svg/);
 
   // The master badge already contains the navy fill and orange keyline, so the
-  // container must not paint a second badge around it.
-  const containers = styles.match(/\.mini-mark \{[^}]*\}/g) ?? [];
-  assert.ok(containers.length > 0);
+  // container must not paint a second badge around it. This held for .mini-mark
+  // while .brand-mark — the 40px mark in the header of every page — kept doing
+  // exactly that, so both containers are checked now.
+  const containers = styles.match(/\.(?:mini|brand)-mark \{[^}]*\}/g) ?? [];
+  assert.ok(containers.length > 1, "expected both mark containers to be styled");
   for (const block of containers) {
     assert.doesNotMatch(block, /background: #07182d/);
     assert.doesNotMatch(block, /inset 0 0 0 2px/);

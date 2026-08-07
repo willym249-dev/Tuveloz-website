@@ -18,7 +18,7 @@ export async function StagingEnvironmentBanner() {
       role="status"
       style={{
         background: "#ff6a00",
-        color: "#07182d",
+        color: "#0a0705",
         fontSize: ".82rem",
         fontWeight: 900,
         letterSpacing: ".04em",

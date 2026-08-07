@@ -49,7 +49,7 @@ const stageOrder: LabStage[] = [
 ];
 
 const pageStyle: CSSProperties = {
-  background: "#07182d",
+  background: "#070707",
   color: "#f7f4f1",
   minHeight: "100vh",
   padding: "clamp(1rem, 4vw, 3rem)",
@@ -66,7 +66,7 @@ const buttonStyle: CSSProperties = {
   background: "#ff6a00",
   border: 0,
   borderRadius: ".75rem",
-  color: "#07182d",
+  color: "#0a0705",
   cursor: "pointer",
   fontWeight: 900,
   minHeight: "2.8rem",

@@ -27,6 +27,7 @@ import {
   needsProofStep,
 } from "../../lib/service-tiers";
 import {
+  PROVIDER_ACCEPTANCE_DOCUMENTS,
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
@@ -241,6 +242,49 @@ function providerServicePlainLabel(
   const plain = PROVIDER_SERVICE_PLAIN_LABELS[code];
   if (plain) return isSpanish ? plain.es : plain.en;
   return serviceDisplayLabel(fallbackLabel);
+}
+
+/**
+ * The documents behind each acceptance checkbox, named and versioned exactly as
+ * the acceptance record stores them. Splitting by `control` keeps each list tied
+ * to the checkbox that actually covers it, so adding or releasing a document in
+ * lib/provider-policy-acceptance.ts updates what applicants see.
+ */
+const termsBundleDocuments = PROVIDER_ACCEPTANCE_DOCUMENTS.filter(
+  (document) => document.control === "terms-bundle",
+);
+const privacyDocuments = PROVIDER_ACCEPTANCE_DOCUMENTS.filter(
+  (document) => document.control === "privacy-acknowledgment",
+);
+
+function PolicyDocumentList({
+  documents,
+  spanish,
+}: {
+  documents: readonly (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number][];
+  spanish: boolean;
+}) {
+  return (
+    <div className="policy-document-list">
+      <span>
+        {spanish
+          ? "Lo que está aceptando — cada uno se abre en una pestaña nueva"
+          : "What you're agreeing to — each opens in a new tab"}
+      </span>
+      <ul>
+        {documents.map((document) => (
+          <li key={document.key}>
+            <a href={document.href} rel="noreferrer" target="_blank">
+              <strong>{document.title}</strong>
+              <small>
+                {spanish ? "Versión" : "Version"} {document.version}
+              </small>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 type SignupStep = 1 | 2 | 3;
@@ -1537,24 +1581,34 @@ export function ProviderSignupForm() {
               </span>
             </label>
           </fieldset>
-          <label className="policy-consent">
-            <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
-              Review the <a href="/terms">Terms</a>,{" "}
-              <a href="/provider-agreement">Provider Agreement</a>,{" "}
-              <a href="/payments">Payment Policy</a>,{" "}
-              <a href="/marketplace-conduct">Conduct Policy</a>, and{" "}
-              <a href="/provisional-provider-policy">Provider Pathway Policy</a>.
-            </span>
-          </label>
-          <label className="policy-consent">
-            <input required name="privacy-acknowledged" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
-              Review the <a href="/privacy">Privacy Policy</a>.
-            </span>
-          </label>
+          {/* The documents sit outside the label on purpose. A link inside a
+              <label> toggles the checkbox it belongs to, so opening a policy
+              silently ticked or unticked the agreement it belongs to. They are
+              also listed straight from PROVIDER_ACCEPTANCE_DOCUMENTS, under the
+              exact titles and versions the acceptance record stores — the
+              hand-written row here called them "Payment Policy", "Conduct
+              Policy", and "Provider Pathway Policy", which matched neither the
+              record nor the page a provider landed on. */}
+          <div className="policy-acceptance">
+            <label className="policy-consent">
+              <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
+              <span>{PROVIDER_TERMS_ACCEPTANCE_TEXT}</span>
+            </label>
+            <PolicyDocumentList
+              documents={termsBundleDocuments}
+              spanish={providerFormIsSpanish}
+            />
+          </div>
+          <div className="policy-acceptance">
+            <label className="policy-consent">
+              <input required name="privacy-acknowledged" type="checkbox" value="yes" />
+              <span>{PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}</span>
+            </label>
+            <PolicyDocumentList
+              documents={privacyDocuments}
+              spanish={providerFormIsSpanish}
+            />
+          </div>
           {applicationChallengeId ? (
             <section
               className="verify-code-panel"

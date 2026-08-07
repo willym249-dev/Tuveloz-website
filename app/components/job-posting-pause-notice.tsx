@@ -48,7 +48,7 @@ export function JobPostingPauseNotice() {
           gap: 1rem;
           padding: 0.85rem clamp(1rem, 4vw, 3rem);
           border-bottom: 1px solid rgba(255, 106, 0, 0.5);
-          background: #07182d;
+          background: #0b0b0b;
           color: white;
         }
 
@@ -115,7 +115,7 @@ export function JobPostingPauseNotice() {
         .tuveloz-launch-pause-actions a:first-child {
           border-color: #ff6a00;
           background: #ff6a00;
-          color: #07182d;
+          color: #0a0705;
         }
 
         @media (max-width: 760px) {

@@ -13,6 +13,71 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Put the whole site on the brand palette, fixed the logo, and named the policy documents correctly in signup
+
+**The brand of record.** `brand/social-media-kit/README.md` is the authority:
+the badge interior is brand **navy `#07182D`**, the page canvas is brand
+**black `#050505`**, the accent is orange `#FF6A00`. Navy belongs to the badge
+and to printed artwork — never to a page background. Read that file before
+changing any colour.
+
+**The logo was drawing itself twice.** `public/brand-badge.png` already contains
+the orange keyline, the navy interior, and transparent rounded corners.
+`.brand-mark` — the 40px mark in the header of every page — also painted a navy
+fill and a second 2px inset orange keyline behind it, so the container's square
+corners showed through the artwork's rounded ones and the two keylines sat at
+different radii. `.mini-mark` had been corrected before; `.brand-mark` had not,
+and `tests/brand-mark-consistency.test.mjs` only checked `.mini-mark`. The
+container now contributes only the box and the outer glow, and that test covers
+both marks.
+
+**Everything off-brand navy is now brand black.** About 60 declarations across
+`/account` (sign-in and the account dashboards), `.policy-shell` — which is all
+seven legal pages — the customer workspace panels, the job-posting pause banner,
+the staging banner, and the admin test lab. Also cleared the last pre-rebrand
+pale-blue leftovers: the `.difference-icon` and `.pitch-icon` tiles on the
+marketing pages, `.repeat-badge`, `.repeat-booking-banner`, and `--ink-2`.
+A provider no longer crosses a colour seam going from `/join` to signing in to
+reading the Terms.
+
+**Still navy on purpose:** `.provider-business-card` and its QR panel,
+`app/repair-records/repair-records.css`, and the printed job-authorization
+document. Navy ink on white paper is correct brand usage; leave them.
+
+**The signup consent row named the documents three different ways.** It
+hand-wrote "Payment Policy", "Conduct Policy", and "Provider Pathway Policy",
+while the acceptance record stores "Payment, Cancellation and Refund Policy",
+"Marketplace Conduct and Review Policy", and "Provisional Provider and Trainee
+Policy" — and the pages themselves carry a third set of titles. The row is now
+generated from `PROVIDER_ACCEPTANCE_DOCUMENTS`, so each document appears under
+the exact title and version the acceptance record stores, and it cannot drift
+again. Providers can see they are accepting **Terms of Use version
+2026-08-07-r2** — the courts-based version from the arbitration decision below.
+
+**A consent bug went with it.** Those policy links sat *inside* the `<label>`
+of the checkbox they belonged to, so clicking a policy to read it toggled the
+agreement. The documents now sit outside the label. The two acceptance texts
+themselves are untouched, and the visible checkbox label is now exactly the
+`presentedText` that gets recorded — it used to carry an extra "Review the …"
+sentence that the record never contained.
+
+**Verified about the terms change.** The arbitration decision (PR #103) is fully
+propagated: `TERMS_VERSION` is `2026-08-07-r2`, the hash-bound release
+`terms-2026-08-07-r2` is active, the clause is preserved in
+`docs/ARBITRATION_CLAUSE_RESERVE.md`, and nothing outside the Terms page and
+that reserve file mentions arbitration. Privacy and Payment show a version
+older than their release id; that is the convention, not a gap — the version
+tracks content and both were bumped when their content last changed.
+
+**Two things left for a human with the legal context.** The acceptance record's
+title for two documents does not match the page it opens: the record says
+"Marketplace Conduct and Review Policy" where the page is titled "Marketplace
+Conduct Policy", and "Payment, Cancellation and Refund Policy" where the page
+is "Payment, Cancellation, and Refund Policy". Both are recorded in immutable
+acceptance evidence and the pages are hash-pinned, so aligning them is a
+release process, not an edit. Nothing blocks signup meanwhile — the checkbox
+text and the document list now agree with each other.
+
 ## 2026-08-07 — Redesigned the provider signup and the quote composer
 
 **What happened.** The two screens a provider judges us by — applying to join,
