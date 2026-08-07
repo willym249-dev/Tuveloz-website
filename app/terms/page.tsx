@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 3, 2026"
+      updated="August 7, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -35,9 +35,11 @@ export default function TermsPage() {
           <a href="/customer-agreement">Customer Agreement</a> also applies.
           If you&apos;re a provider, the{" "}
           <a href="/provider-agreement">Provider Agreement</a> also applies.
-          The <a href="/privacy">Privacy Policy</a> and the{" "}
-          <a href="/payments">Payment, Cancellation, and Refund Policy</a>{" "}
-          apply too.
+          The <a href="/privacy">Privacy Policy</a>, the{" "}
+          <a href="/payments">Payment, Cancellation, and Refund Policy</a>, the{" "}
+          <a href="/copyright">Copyright &amp; DMCA Policy</a>, and — if you opt
+          in to text messages — the <a href="/sms-terms">SMS Terms</a> apply
+          too.
         </p>
         <p>
           You must be at least 18, able to enter a binding agreement, and
@@ -100,6 +102,13 @@ export default function TermsPage() {
           access.
         </p>
         <p>
+          Tuveloz does not run criminal background checks on providers, their
+          employees, or their trainees, and being listed on Tuveloz is not a
+          character endorsement. If Tuveloz ever adds a screening step for a
+          specific service, this page will describe exactly what is checked
+          and nothing more.
+        </p>
+        <p>
           Right now, at this onboarding-only stage, no service is enabled for
           a real job — a service moves forward only after its legal
           requirements are documented, satisfied, and the corresponding
@@ -136,10 +145,16 @@ export default function TermsPage() {
           first.
         </p>
         <p>
-          If a provider offers a service or parts warranty, that&apos;s between
-          the customer and the provider — Tuveloz doesn&apos;t offer one just by
-          operating the marketplace. Nothing here cancels out a warranty or
-          right that the law says can&apos;t be waived.
+          Whether to offer a workmanship warranty is each independent provider
+          business&apos;s own decision — Tuveloz never requires one and never sets
+          its terms. Every quote shows either the provider&apos;s own written
+          warranty terms or a plain statement that none is offered, and a
+          customer who selects a no-warranty provider explicitly acknowledges
+          that choice before hiring them. Any warranty a provider offers is
+          that provider business&apos;s promise to the customer — Tuveloz doesn&apos;t
+          offer, back, or administer one just by operating the marketplace.
+          Nothing here cancels out a warranty or right that the law says can&apos;t
+          be waived.
         </p>
       </section>
 
@@ -219,7 +234,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>12. Liability</h2>
+        <h2>12. Liability and indemnification</h2>
         <p>
           Tuveloz&apos;s role is limited to running the marketplace. To the
           fullest extent Maryland law allows, Tuveloz&apos;s liability for any
@@ -228,21 +243,66 @@ export default function TermsPage() {
           doesn&apos;t let us waive — and it isn&apos;t a claim that Tuveloz has zero
           liability.
         </p>
+        <p>
+          The other side of that: if a third party brings a claim against
+          Tuveloz because of something you did — content you posted without
+          the right to share it, a job you weren&apos;t authorized to request,
+          credentials or a warranty position you misstated, a law you broke,
+          or a service your business performed — you agree to defend Tuveloz
+          against that claim and cover the reasonable legal fees, costs, and
+          damages that result. This doesn&apos;t apply to the portion of a claim
+          caused by Tuveloz&apos;s own conduct, Tuveloz will tell you promptly
+          about any claim it expects you to cover, and nothing here waives a
+          right the law doesn&apos;t allow to be waived.
+        </p>
       </section>
 
       <section>
         <h2>13. Resolving disputes with Tuveloz</h2>
         <p>
-          Before filing a claim against Tuveloz, email{" "}
-          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with what
-          happened and what you&apos;re asking for, so we can both try to work it
-          out first. That doesn&apos;t extend any legal filing deadline you have.
+          Before starting arbitration or any other claim against Tuveloz,
+          email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with
+          what happened and what you&apos;re asking for, and give us 60 days to
+          try to work it out with you informally. That doesn&apos;t extend any
+          legal filing deadline you have.
         </p>
         <p>
-          Tuveloz hasn&apos;t adopted a formal governing-law, forum-selection, or
-          arbitration clause for production yet, and this draft doesn&apos;t
-          require arbitration or waive your right to a class action.
-          Independent legal review is recommended before any of that changes.
+          If we can&apos;t resolve it informally, you and Tuveloz agree to
+          resolve any dispute between you and Tuveloz through binding
+          individual arbitration instead of a court trial. The arbitration
+          is administered by the American Arbitration Association under its
+          Consumer Arbitration Rules, is governed by the Federal Arbitration
+          Act, and can award you the same individual relief a court could.
+          Either side may instead bring an individual claim in small-claims
+          court if it qualifies there.
+        </p>
+        <p>
+          You and Tuveloz each waive the right to a jury trial and to
+          participate in a class, collective, consolidated, or
+          representative action against the other. If that class-action
+          waiver turns out to be unenforceable for a particular claim, that
+          claim goes to court instead of arbitration. This section covers
+          disputes with Tuveloz only — a dispute between a customer and a
+          provider belongs to their own service agreement.
+        </p>
+        <p>
+          You can opt out of this arbitration agreement by emailing{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> within 30
+          days of first accepting these Terms, with your name, your account
+          email, and a statement that you&apos;re opting out of arbitration.
+          Opting out doesn&apos;t change any other part of these Terms. Nothing
+          in this section stops either side from asking a court for
+          emergency relief to protect the platform or its users, and nothing
+          here waives a right the law says can&apos;t be waived — including your
+          right to raise a concern with a government agency.
+        </p>
+        <p>
+          These Terms are governed by Maryland law, excluding its
+          conflict-of-law rules, except that the Federal Arbitration Act
+          governs this arbitration agreement. Any claim that belongs in
+          court must be brought in the state or federal courts covering
+          Montgomery County, Maryland, and both sides consent to those
+          courts.
         </p>
       </section>
 

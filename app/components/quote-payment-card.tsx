@@ -26,6 +26,7 @@ type CheckoutAcceptance = {
     scheduledFor: string;
     performingPersonId: string;
     supervisorPersonId: string;
+    workmanshipWarranty: string;
     laborAmountCents: number;
     partsAmountCents: number;
     taxAmountCents: number;
@@ -240,6 +241,13 @@ function ActiveQuotePaymentCard({
                 <div><dt>Scheduled time</dt><dd>{checkoutAcceptance.scope.scheduledFor}</dd></div>
                 <div><dt>Performing person ID</dt><dd>{checkoutAcceptance.scope.performingPersonId}</dd></div>
                 <div><dt>Supervisor person ID</dt><dd>{checkoutAcceptance.scope.supervisorPersonId || "none"}</dd></div>
+                <div>
+                  <dt>Workmanship warranty</dt>
+                  <dd>
+                    {checkoutAcceptance.scope.workmanshipWarranty?.trim()
+                      || "None offered — you confirmed this when you selected the provider"}
+                  </dd>
+                </div>
                 <div><dt>Labor</dt><dd>{dollars(checkoutAcceptance.scope.laborAmountCents)}</dd></div>
                 <div><dt>Parts</dt><dd>{dollars(checkoutAcceptance.scope.partsAmountCents)}</dd></div>
                 <div><dt>Tax</dt><dd>{dollars(checkoutAcceptance.scope.taxAmountCents)}</dd></div>

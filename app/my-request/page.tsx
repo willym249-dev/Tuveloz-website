@@ -29,6 +29,7 @@ type Quote = {
   partType: string;
   availability: string;
   message: string;
+  workmanshipWarranty: string;
   status: string;
   declineReason: string;
   ratingAverage: number;
@@ -354,6 +355,14 @@ export default function MyRequestPage() {
             <div className="quote-summary">
               <span>What this quote includes</span>
               <p>{quote.message}</p>
+            </div>
+            <div className="quote-summary">
+              <span>Workmanship warranty</span>
+              <p>
+                {quote.workmanshipWarranty?.trim()
+                  ? quote.workmanshipWarranty
+                  : "This provider doesn't offer a workmanship warranty for this job. Offering one is each provider's own choice — if you select this quote, you'll confirm you're okay with that."}
+              </p>
             </div>
             <details className="quote-provider-details">
               <summary>View provider details</summary>

@@ -99,6 +99,7 @@ export const providerQuotes = sqliteTable(
     availability: text("availability").notNull(),
     scheduledFor: text("scheduled_for").notNull().default(""),
     message: text("message").notNull(),
+    workmanshipWarranty: text("workmanship_warranty").notNull().default(""),
     scopeVersion: integer("scope_version").notNull().default(0),
     authorizationDecisionId: text("authorization_decision_id").notNull().default(""),
     status: text("status").notNull().default("submitted"),
