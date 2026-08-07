@@ -317,6 +317,7 @@ export default function CustomerPage() {
           <div className="account-grid account-customer-grid">
             <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
               <Link className="workspace-nav-primary" href="/post-job">Customer launch status</Link>
+              <Link className="workspace-nav-primary" href="/ai">Ask Tuveloz AI</Link>
               {([
                 ["requests", "My requests"],
                 ["quotes", "Quotes received"],

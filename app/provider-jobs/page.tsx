@@ -661,6 +661,7 @@ export default function ProviderJobsPage() {
           <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
           <button aria-pressed={activeView === "performance"} className={activeView === "performance" ? "is-active" : ""} onClick={() => setActiveView("performance")} type="button">Performance tools</button>
           <button aria-pressed={activeView === "share"} className={activeView === "share" ? "is-active" : ""} onClick={() => setActiveView("share")} type="button">Share Tuveloz</button>
+          <Link href="/ai?for=provider">Ask Tuveloz AI</Link>
         </nav>
       )}
       {workspaceReady && activeView === "share" && (

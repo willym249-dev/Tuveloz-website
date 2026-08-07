@@ -1580,22 +1580,16 @@ export function ProviderSignupForm() {
               >
                 {applicationBusy ? "Verifying..." : "Verify email and continue"}
               </button>
-              <button
-                className="button secondary form-button"
-                disabled={applicationBusy}
-                onClick={resendProviderApplicationCode}
-                type="button"
-              >
-                Send the code again
-              </button>
-              <button
-                className="button secondary form-button"
-                disabled={applicationBusy}
-                onClick={resetChallenge}
-                type="button"
-              >
-                Edit application
-              </button>
+              {/* One button to press. The two ways out stay available as plain
+                  links so they cannot be mistaken for the thing to do next. */}
+              <div className="form-alt-actions">
+                <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
+                  Send the code again
+                </button>
+                <button disabled={applicationBusy} onClick={resetChallenge} type="button">
+                  Go back and edit
+                </button>
+              </div>
             </section>
           ) : confirmingSubmit ? (
             <ConfirmAction
