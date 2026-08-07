@@ -8,7 +8,17 @@
 yuv420p, AAC, faststart. Posts to Instagram Reels and TikTok as-is.
 
 Built entirely from code — Chromium renders the four frames from
-`ad-04-assets/build-frames.html`, ffmpeg adds a slow push and crossfades. **No
+`ad-04-assets/build-frames.html`, ffmpeg adds a slow push and crossfades.
+
+**Branding comes from the masters, not from a redraw.** The badge SVG in
+`build-frames.html` is copied verbatim from `brand/tuveloz-icon.svg`, and the
+lockup matches `brand/tuveloz-lockup-horizontal.svg` — badge, "Tuveloz" in
+orange, tagline in orange. Palette is badge orange `#FF6A00` and brand navy
+`#07182D` grading into brand black `#050505`, per
+`brand/social-media-kit/README.md`. The first cut typed the wordmark out as
+plain text, which breaks that README's rule that the logo is never hand-drawn;
+if you edit these frames, keep the badge markup in sync with the icon master
+rather than adjusting it by eye. **No
 AI-generated footage, so no AI-content label is needed**, and no stock music, so
 the licensing situation in `HANDOFF.md` does not apply. Zero generation credits.
 

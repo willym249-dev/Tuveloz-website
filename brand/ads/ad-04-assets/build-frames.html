@@ -3,106 +3,93 @@
 <head>
 <meta charset="utf-8">
 <style>
-  @font-face { font-family: 'X'; src: local('DejaVu Sans'); }
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body {
     width: 1080px; height: 1920px;
     background: #050505;
-    font-family: 'DejaVu Sans', system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+  /* Brand: badge orange #FF6A00, brand navy #07182D, brand black #050505.
+     Badge interior is navy, page/canvas stays black — per the brand kit. */
   .stage {
     position: relative;
     width: 1080px; height: 1920px;
-    background:
-      radial-gradient(ellipse 900px 700px at 50% 22%, rgba(255,106,0,0.20) 0%, rgba(255,106,0,0) 62%),
-      linear-gradient(168deg, #0b2340 0%, #07182D 46%, #050505 100%);
+    background: linear-gradient(172deg, #07182D 0%, #07182D 38%, #061323 62%, #050505 100%);
     overflow: hidden;
   }
-  /* warm light rake, like late sun across a driveway */
-  .rake {
-    position:absolute; inset:0;
-    background: linear-gradient(103deg, rgba(255,150,60,0) 34%, rgba(255,150,60,0.13) 50%, rgba(255,150,60,0) 66%);
-  }
-  .grain { position:absolute; inset:0; opacity:.05;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>"); }
+  .keyline { position:absolute; left:0; right:0; top:0; height:12px; background:#FF6A00; }
+  .glow { position:absolute; inset:0;
+    background: radial-gradient(ellipse 820px 620px at 50% 18%, rgba(255,106,0,0.13) 0%, rgba(255,106,0,0) 60%); }
   .vig { position:absolute; inset:0;
-    background: radial-gradient(ellipse 1000px 1400px at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,.66) 100%); }
+    background: radial-gradient(ellipse 1000px 1400px at 50% 46%, rgba(0,0,0,0) 42%, rgba(0,0,0,.58) 100%); }
 
-  .inner {
-    position:absolute; inset:0;
-    padding: 168px 104px 150px;
-    display:flex; flex-direction:column;
-  }
-  .eyebrow {
-    font-size: 33px; letter-spacing: .30em; text-transform: uppercase;
-    color: #FF8A33; font-weight: 700;
-  }
-  .rule { width: 96px; height: 6px; background:#FF6A00; border-radius:3px; margin: 40px 0 0; }
+  .inner { position:absolute; inset:0; padding: 150px 100px 132px; display:flex; flex-direction:column; }
 
-  .headline {
-    margin-top: 74px;
-    font-size: 116px; line-height: 1.035; font-weight: 800;
-    color: #FFFFFF; letter-spacing: -.022em;
-  }
-  .headline .accent { color: #FF8A33; }
-  .headline.small { font-size: 94px; line-height: 1.08; }
+  .badge-top { width: 132px; height:132px; margin-bottom: 60px; }
 
-  .sub {
-    margin-top: 56px;
-    font-size: 47px; line-height: 1.42; color: rgba(255,255,255,.80); font-weight: 400;
-    max-width: 800px;
-  }
+  .eyebrow { font-size: 33px; letter-spacing:.30em; text-transform:uppercase; color:#FF6A00; font-weight:700; }
+  .rule { width: 96px; height:6px; background:#FF6A00; border-radius:3px; margin-top: 36px; }
 
-  ul.points { margin-top: 66px; list-style:none; }
-  ul.points li {
-    font-size: 50px; line-height: 1.30; color:#fff; font-weight:600;
-    padding-left: 74px; position:relative; margin-bottom: 50px;
-  }
-  ul.points li:before {
-    content:""; position:absolute; left:0; top:20px;
-    width:30px; height:30px; border-radius:8px; background:#FF6A00;
-  }
-  ul.points li span { display:block; font-size:36px; font-weight:400; color:rgba(255,255,255,.62); margin-top:12px; line-height:1.34; }
+  .headline { margin-top: 66px; font-size: 112px; line-height:1.045; font-weight:800; color:#fff; letter-spacing:-.022em; }
+  .headline .accent { color:#FF6A00; }
+  .headline.small { font-size: 92px; line-height:1.09; }
+
+  .sub { margin-top: 52px; font-size:46px; line-height:1.42; color:rgba(255,255,255,.80); max-width:810px; }
+
+  ul.points { margin-top: 58px; list-style:none; }
+  ul.points li { font-size:49px; line-height:1.30; color:#fff; font-weight:700; padding-left:72px; position:relative; margin-bottom:46px; }
+  ul.points li:before { content:""; position:absolute; left:0; top:19px; width:30px; height:30px; border-radius:8px; background:#FF6A00; }
+  ul.points li span { display:block; font-size:35px; font-weight:400; color:rgba(255,255,255,.62); margin-top:11px; line-height:1.34; }
 
   .spacer { flex:1; }
 
-  .note {
-    font-size: 35px; line-height:1.45; color: rgba(255,255,255,.56);
-    border-left: 5px solid rgba(255,106,0,.75); padding-left: 30px; max-width: 810px;
-  }
+  .note { font-size:34px; line-height:1.45; color:rgba(255,255,255,.58);
+    border-left:5px solid #FF6A00; padding-left:28px; max-width:820px; }
 
-  .cta {
-    margin-top: 62px;
-    display:inline-block; align-self:flex-start;
-    background:#FF6A00; color:#0A0A0A;
-    font-size: 50px; font-weight:800; letter-spacing:-.01em;
-    padding: 34px 62px; border-radius: 22px;
-  }
-  .wordmark {
-    margin-top: 66px;
-    font-size: 41px; font-weight:800; color:#fff; letter-spacing:.03em;
-  }
-  .wordmark span { display:block; color:rgba(255,255,255,.50); font-weight:400; margin-top:16px; font-size:34px; letter-spacing:.01em; }
-  .big-cta { font-size: 66px; padding: 44px 74px; }
+  .cta { margin-top:56px; align-self:flex-start; background:#FF6A00; color:#07182D;
+    font-size:62px; font-weight:800; letter-spacing:-.01em; padding:40px 68px; border-radius:22px; }
+
+  /* Lockup: the real badge + wordmark, exactly as brand/tuveloz-lockup-horizontal.svg */
+  .lockup { margin-top:60px; display:flex; align-items:center; gap:30px; }
+  .lockup .mark { width:104px; height:104px; flex:none; }
+  .lockup .words { line-height:1; }
+  .lockup .name { font-size:62px; font-weight:700; color:#FF6A00; letter-spacing:-.005em; }
+  .lockup .tag { font-size:29px; color:#FF6A00; margin-top:14px; }
 </style>
 </head>
 <body>
   <div class="stage">
-    <div class="rake"></div>
-    <div class="grain"></div>
+    <div class="glow"></div>
     <div class="vig"></div>
+    <div class="keyline"></div>
     <div class="inner" id="inner"></div>
   </div>
 <script>
+  // The badge, verbatim from brand/tuveloz-icon.svg — not redrawn.
+  const BADGE = `<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="31" y="31" width="450" height="450" rx="102" fill="#07182D" stroke="#FF6A00" stroke-width="30"/>
+    <path d="M146 150 L366 150 L300 254 L300 342 L212 342 L212 254 Z" fill="#FF6A00" stroke="#FF6A00" stroke-width="26" stroke-linejoin="round"/>
+    <path d="M256 380 C241 401 227 417 227 431 A29 29 0 0 0 285 431 C285 417 271 401 256 380 Z" fill="#FF6A00"/>
+  </svg>`;
+
+  const LOCKUP = `<div class="lockup">
+    <div class="mark">${BADGE}</div>
+    <div class="words">
+      <div class="name">Tuveloz</div>
+      <div class="tag">Customer choice. Provider freedom.</div>
+    </div>
+  </div>`;
+
+  const TOPBADGE = `<div class="badge-top">${BADGE}</div>`;
+
   const FRAMES = {
-    f1: `
+    f1: `<div class="spacer"></div>
       <div class="eyebrow">Montgomery County, MD</div>
       <div class="rule"></div>
       <div class="headline">You already<br>do the work.<br><span class="accent">Now get found.</span></div>
       <div class="sub">A new local marketplace for vehicle services — built for independent providers.</div>
-      <div class="spacer"></div>
-      <div class="wordmark">TUVELOZ <span>Customer choice. Provider freedom.</span></div>`,
+      <div class="spacer"></div>` + LOCKUP,
     f2: `
       <div class="eyebrow">What you get</div>
       <div class="rule"></div>
@@ -112,24 +99,21 @@
         <li>No exclusivity<span>Keep every platform and client you already have.</span></li>
         <li>You pick the jobs<span>No schedule. No minimum acceptance rate.</span></li>
       </ul>
-      <div class="spacer"></div>
-      <div class="wordmark">TUVELOZ <span>English o español</span></div>`,
+      <div class="spacer"></div>` + LOCKUP,
     f3: `
       <div class="eyebrow">Straight up</div>
       <div class="rule"></div>
       <div class="headline small">We're not open to<br>customers yet.<br><span class="accent">On purpose.</span></div>
       <div class="sub">A marketplace where you post a job and nobody answers is worse than no marketplace. So we're signing up providers first.</div>
       <div class="spacer"></div>
-      <div class="note">Applying now means your review is done and you're first in line on day one.</div>
-      <div class="wordmark">TUVELOZ</div>`,
-    f4: `
+      <div class="note">Applying now means your review is done and you're first in line on day one.</div>` + LOCKUP,
+    f4: `<div class="spacer"></div>
       <div class="eyebrow">Fix cars for a living?</div>
       <div class="rule"></div>
       <div class="headline">Your wrench.<br><span class="accent">Your rules.</span></div>
       <div class="sub">Apply in minutes — English o español.</div>
       <div class="spacer"></div>
-      <div class="cta big-cta">tuveloz.com/join</div>
-      <div class="wordmark">TUVELOZ <span>Montgomery County, MD</span></div>`
+      <div class="cta">tuveloz.com/join</div>` + LOCKUP
   };
   const key = new URLSearchParams(location.search).get('f') || 'f1';
   document.getElementById('inner').innerHTML = FRAMES[key];
