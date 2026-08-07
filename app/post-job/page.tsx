@@ -15,6 +15,7 @@ import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../../lib/marketing-content";
 import { CustomerRequestForm } from "../components/customer-request-form";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
 import { PublicSiteFooter, PublicSiteHeader } from "../components/public-chrome";
+import { SignedInReturnNote } from "../components/signed-in-return-note";
 import { TuvelozIcon } from "../components/tuveloz-icons";
 
 export const metadata: Metadata = {
@@ -101,6 +102,7 @@ function CustomerLander() {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
+          <SignedInReturnNote />
           <div className="eyebrow">
             <span className="pulse" />
             Almost open · Montgomery County, MD

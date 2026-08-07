@@ -246,6 +246,14 @@ test("build provides secure password sign-in with verified email setup and a cod
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
+  const accountHeaderStateSource = await readFile(
+    new URL("../app/components/account-header-state.ts", import.meta.url),
+    "utf8",
+  );
+  const publicChromeSource = await readFile(
+    new URL("../app/components/public-chrome.tsx", import.meta.url),
+    "utf8",
+  );
   const authSource = await readFile(
     new URL("../lib/account-auth.ts", import.meta.url),
     "utf8",
@@ -275,10 +283,15 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
   assert.ok(contents.includes("Save this private link."));
   assert.ok(homeSource.includes("header-sign-in"));
-  assert.ok(homeSource.includes('fetch("/api/account"'));
-  assert.ok(homeSource.includes('"signed-out"'));
-  assert.ok(homeSource.includes('"Customer account"'));
-  assert.ok(homeSource.includes('"Provider account"'));
+  assert.ok(homeSource.includes("useAccountHeaderState()"));
+  assert.ok(accountHeaderStateSource.includes('fetch("/api/account"'));
+  assert.ok(accountHeaderStateSource.includes('"signed-out"'));
+  assert.ok(accountHeaderStateSource.includes('"Customer account"'));
+  assert.ok(accountHeaderStateSource.includes('"Provider account"'));
+  // Every public page header resolves the live session too, so a signed-in
+  // visitor is never shown signed-out wording on a public page.
+  assert.ok(publicChromeSource.includes("useAccountHeaderState()"));
+  assert.ok(publicChromeSource.includes("signedIn ? accountLabel"));
   assert.ok(homeSource.includes('href={accountHref}'));
   assert.ok(homeSource.includes("<Link href={accountHref}>{accountLabel}</Link>"));
   assert.ok(authSource.includes('"Path=/"'));

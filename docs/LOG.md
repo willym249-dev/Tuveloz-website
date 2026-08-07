@@ -13,6 +13,34 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Public pages no longer look like a sign-out to a signed-in visitor
+
+**What happened.** A signed-in customer who clicked "Customer launch status" in
+their workspace landed on `/post-job` and saw "Sign in" and "Save my spot — free"
+in the header, with no link back to their account. It read as being signed out.
+
+**No session was ever destroyed.** Cookies are only cleared by
+`/api/auth/logout`; nothing on that path touches `authSessions`. The cause was
+that `PublicSiteHeader` rendered fixed signed-out wording on every public page,
+while the homepage had its own separate, session-aware header. Worth keeping in
+mind before chasing an auth bug next time: check whether the page simply never
+asks who is looking at it.
+
+**What changed.** The session lookup that the homepage header already did was
+lifted into `app/components/account-header-state.ts` and is now used by both the
+homepage and `PublicSiteHeader`, so every public page shows the visitor's own
+workspace once a session is present. `SignedInReturnNote` puts an explicit route
+back to the account at the top of the customer launch status page, and renders
+nothing for a visitor without a session, so the marketing page is unchanged for
+everyone else.
+
+**A second, real sign-out is fixed as a side effect.** Sessions carry a
+30-minute idle timeout refreshed only when a route calls `getAccountSession`.
+Public pages called nothing, so reading them for half an hour genuinely expired
+the session. The header lookup now touches it on every public page load.
+
+---
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,

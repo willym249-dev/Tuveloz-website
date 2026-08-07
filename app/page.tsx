@@ -15,6 +15,7 @@ import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
+import { useAccountHeaderState } from "./components/account-header-state";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
@@ -237,50 +238,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [repeatBookingError, setRepeatBookingError] = useState("");
   const [useSameVehicle, setUseSameVehicle] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [headerAccountState, setHeaderAccountState] = useState<
-    "checking" | "signed-out" | "customer" | "provider"
-  >("checking");
-  const [headerAccountDestination, setHeaderAccountDestination] = useState("");
+  const { accountHref, accountLabel } = useAccountHeaderState();
   // Control ("A") on first render so server and client match; the real assigned
   // A/B variants are set after mount in the experiment effect below.
   const [heroVariant, setHeroVariant] = useState("A");
   const [pitchVariant, setPitchVariant] = useState("A");
   const [foundingCtaVariant, setFoundingCtaVariant] = useState("A");
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/account", { cache: "no-store", signal: controller.signal })
-      .then(async (response) => {
-        if (response.status === 401) {
-          setHeaderAccountState("signed-out");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Account status unavailable.");
-        }
-
-        const result = (await response.json()) as {
-          role?: "customer" | "provider";
-          destination?: string;
-        };
-
-        if (result.role === "customer" || result.role === "provider") {
-          setHeaderAccountState(result.role);
-          setHeaderAccountDestination(result.destination ?? "");
-          return;
-        }
-
-        setHeaderAccountState("checking");
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setHeaderAccountState("checking");
-      });
-
-    return () => controller.abort();
-  }, []);
   const customerAllowsProviderTravel = selectedCustomerLocations.includes(
     CUSTOMER_SERVICE_LOCATION_OPTIONS[0],
   );
@@ -624,22 +588,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       setExpansionBusy(false);
     }
   }
-
-  const accountHref = headerAccountDestination || (
-    headerAccountState === "customer"
-      ? "/customer"
-      : headerAccountState === "provider"
-        ? "/provider-onboarding"
-        : "/account"
-  );
-  const accountLabel =
-    headerAccountState === "customer"
-      ? "Customer account"
-      : headerAccountState === "provider"
-        ? "Provider account"
-        : headerAccountState === "signed-out"
-          ? "Sign up or sign in"
-          : "Account";
 
   return (
     <main className={`public-site public-view-${view}`}>
