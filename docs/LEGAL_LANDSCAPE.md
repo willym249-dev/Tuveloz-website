@@ -358,7 +358,81 @@ are filed at once and per-case arbitration fees fall on the business.
 
 ---
 
-## 10. Section 230 — what it does and does not cover
+## 10. Marketplace liability for provider conduct
+
+### The general Maryland rule
+
+The employer of an independent contractor is **not** liable for the
+contractor's negligence. That is the starting point, and it is why the
+classification work in section 1 matters twice over — it decides tax and wage
+exposure, and it decides whether provider negligence reaches Tuveloz at all.
+
+### The exceptions, as Maryland groups them
+
+Maryland recognizes three broad categories where the hiring entity is liable
+anyway:
+
+1. **Negligence in selecting, instructing, or supervising** the contractor.
+   Note the scope: it is not only negligent *hiring*. Instructing and
+   supervising sit in the same exception, so the control that creates
+   classification risk creates tort exposure through the same conduct.
+2. **A non-delegable duty** owed to the public or to the specific plaintiff.
+   Duties affecting public safety are the usual example.
+3. **Work described in the contract that falls into certain specified
+   categories** — inherently dangerous work being the standard example.
+
+Separately, **apparent agency** can attach liability where the hiring entity
+holds the contractor out in a way that leads a reasonable person to believe
+they are dealing with the entity itself. Maryland's developed case law on this
+is largely in the hospital and medical-malpractice line.
+
+Sources: [Decaro Doran on Maryland contractor liability](https://www.decarodoran.com/newsletters/spring-2019/independent-contractors-when-is-the-contracting-entity-liable-for-the-acts-of-subcontractors/),
+[Maryland apparent-agency discussion](https://www.baltimoremedicalmalpracticelawyer.net/maryland-court-discusses-a-hospitals-vicarious-liability-under-the-doctrine-of-apparent-agency/)
+
+### Products liability — Maryland runs opposite to California
+
+National summaries describe a trend of courts pulling online marketplaces into
+the "stream of commerce" and holding them strictly liable for defective
+third-party goods. That describes California — *Bolger v. Amazon* and the cases
+following it. **It is not the law in Maryland's circuit.**
+
+**Erie Insurance Co. v. Amazon.com, Inc.**, 925 F.3d 135 (4th Cir. 2019),
+applying **Maryland law**:
+
+- A third-party seller listed a headlamp. Amazon stored it, collected payment,
+  deducted its fee, boxed it, and shipped it. The third party set the price and
+  wrote the description, and **Amazon never held title**.
+- The headlamp caused a house fire, roughly $300,000 in damage.
+- **Held:** Amazon was **not a "seller"** under Maryland law and was not liable
+  in products liability, because it never held title.
+- **Also held:** the district court was **wrong** that Amazon had Communications
+  Decency Act immunity. The Fourth Circuit **reversed** that part. Amazon won
+  on the seller question and **lost** the Section 230 shield.
+
+Two things follow. Title is the hinge in this circuit — a marketplace that
+never takes title to goods is in a materially different position from one that
+does. And winning on "not a seller" is not the same as being immune; the
+Section 230 defense failed in the same opinion.
+
+This bears on the storefront if it ever sells physical goods rather than
+provider-listed services. It does not bear on service negligence, which runs
+through the contractor rules above.
+
+Sources: [Erie Ins. Co. v. Amazon.com (Justia, full opinion)](https://law.justia.com/cases/federal/appellate-courts/ca4/18-1198/18-1198-2019-05-22.html),
+[Fourth Circuit published opinion, No. 18-1198](https://www.ca4.uscourts.gov/opinions/181198.P.pdf),
+[Eric Goldman on the Section 230 holding](https://blog.ericgoldman.org/archives/2019/05/amazon-isnt-liable-for-defective-marketplace-sale-no-thanks-to-section-230-erie-insurance-v-amazon.htm)
+
+### Trademark and IP
+
+A marketplace can face contributory or vicarious trademark infringement when it
+acts as more than a "mere facilitator" — profiting from counterfeit listings
+while ignoring red flags. **Not verified against Maryland or Fourth Circuit
+authority.** Low relevance while the storefront lists services rather than
+branded goods.
+
+---
+
+## 11. Section 230 — what it does and does not cover
 
 47 U.S.C. § 230 bars treating an interactive computer service as the publisher
 or speaker of information provided by another content provider.
@@ -375,3 +449,10 @@ intellectual-property claims.
 
 Practically, it protects what a provider writes on their profile. It does not
 protect a statement Tuveloz makes about that provider.
+
+**Worked example in this circuit:** in *Erie Ins. Co. v. Amazon.com* (section
+10 above), the Fourth Circuit **reversed** the district court's finding that
+Amazon had Section 230 immunity, while still holding Amazon was not a seller
+under Maryland law. Amazon won the case on a different ground. Section 230 is
+narrower than it is often assumed to be, and a marketplace should not plan
+around it as a general shield.
