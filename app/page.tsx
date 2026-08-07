@@ -17,6 +17,7 @@ import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { useAccountHeaderState } from "./components/account-header-state";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
+import { SaveMySpotButton } from "./components/save-my-spot-button";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
 import { SiteLanguageButton } from "./components/site-language";
@@ -712,9 +713,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
-                <Link className="button primary" href="/post-job">
-                  Save my spot — free <span>→</span>
-                </Link>
+                <SaveMySpotButton href="/post-job" />
                 <Link className="button secondary" href="/join">
                   I do car work — apply free <span>→</span>
                 </Link>
@@ -881,9 +880,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
               <li><span aria-hidden="true">✓</span> The last word is always yours</li>
             </ul>
-            <Link className="button primary" href="/post-job">
-              Save my spot — free <span>→</span>
-            </Link>
+            <SaveMySpotButton href="/post-job" />
           </article>
 
           <article className="audience-card audience-provider-card">
@@ -1118,9 +1115,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
             </div>
             <div className="hero-actions">
-              <Link className="button primary" href="/account?role=customer&mode=create">
-                Save my spot — free <span>→</span>
-              </Link>
+              <SaveMySpotButton />
               <Link className="button secondary" href="/join">
                 Apply as a provider
               </Link>
@@ -1886,7 +1881,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <>
             <h2>Be first in line when Tuveloz opens.</h2>
             <div>
-              <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
+              <SaveMySpotButton className="button lime" href="/post-job" />
               <Link className="button ghost" href="/join">I do car work — apply free</Link>
             </div>
           </>

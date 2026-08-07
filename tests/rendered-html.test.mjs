@@ -1378,3 +1378,63 @@ test("automatic provider alerts, security notifications, and idle session expiry
   assert.ok(schema.includes("email_notification_outbox"));
   assert.ok(migration.includes("email_notification_outbox_event_key_unique"));
 });
+
+test("a signed-in visitor is never shown sign-up wording on a public page", async () => {
+  const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  const [headerState, publicChrome, saveMySpot, returnNote, banner, landerPage, customerPage, providerPage, accountPage, spanish] =
+    await Promise.all([
+      read("app/components/account-header-state.ts"),
+      read("app/components/public-chrome.tsx"),
+      read("app/components/save-my-spot-button.tsx"),
+      read("app/components/signed-in-return-note.tsx"),
+      read("app/components/job-posting-pause-notice.tsx"),
+      read("app/post-job/page.tsx"),
+      read("app/customer/page.tsx"),
+      read("app/provider-jobs/page.tsx"),
+      read("app/account/page.tsx"),
+      read("app/components/site-language.tsx"),
+    ]);
+
+  // Every public surface that used to hardcode signed-out wording now asks who
+  // is looking. A signed-in customer opening the customer launch status page
+  // from their workspace was shown "Sign in" and "Save my spot — free", which
+  // reads as having been signed out.
+  for (const source of [publicChrome, saveMySpot, returnNote, banner]) {
+    assert.ok(source.includes("useAccountHeaderState()"));
+  }
+  assert.ok(publicChrome.includes("signedIn ? accountLabel"));
+  assert.ok(saveMySpot.includes('"Save my spot — free"'));
+  assert.ok(saveMySpot.includes('"Go to your account"'));
+  assert.ok(banner.includes("SIGNED_IN_BANNER_DETAIL"));
+
+  // The launch status page is the exact page reached from the workspace: no
+  // hardcoded account-creation call to action may remain on it.
+  assert.ok(!landerPage.includes("Save my spot — free"));
+  assert.ok(landerPage.includes("<SaveMySpotButton"));
+  assert.ok(landerPage.includes("<SignedInReturnNote />"));
+
+  // One shared lookup, so a page with a header, a banner, and three calls to
+  // action makes a single request instead of one per component.
+  assert.ok(headerState.includes("useSyncExternalStore"));
+  assert.ok(headerState.includes("if (inFlight) return inFlight"));
+
+  // The cached answer must be established on sign-in and retired on sign-out,
+  // or a public page would keep claiming a session that has ended.
+  assert.ok(customerPage.includes('primeAccountHeaderState("customer"'));
+  assert.ok(providerPage.includes('primeAccountHeaderState("provider"'));
+  assert.ok(accountPage.includes('primeAccountHeaderState("signed-out")'));
+  for (const source of [customerPage, providerPage]) {
+    const signOutBlock = source.slice(source.indexOf("async function signOut()"));
+    assert.ok(signOutBlock.includes('primeAccountHeaderState("signed-out")'));
+  }
+
+  // Spanish pages must not fall back to English for the signed-in wording.
+  for (const phrase of [
+    '"My workspace":',
+    '"Go to your account":',
+    '"Go to your provider workspace":',
+    '"Back to your account →":',
+  ]) {
+    assert.ok(spanish.includes(phrase), phrase);
+  }
+});
