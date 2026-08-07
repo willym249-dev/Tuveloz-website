@@ -79,6 +79,18 @@ npm test
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete GitHub and Cloudflare setup.
 
+## Documentation
+
+All project documentation is indexed in [docs/README.md](docs/README.md).
+
+- [docs/AI-HANDOFF.md](docs/AI-HANDOFF.md) explains the whole project in one
+  self-contained page. Read it first, or paste it into any AI assistant.
+- [docs/FILING-GUIDE.md](docs/FILING-GUIDE.md) says where a new document goes
+  and what must never be committed.
+- [docs/records/](docs/records/) is the register of real-world business
+  documents — insurance, formation, licenses, approvals — tracking what exists
+  and where the originals are kept, without storing them here.
+
 ## Account safety and notifications
 
 - Every saved customer request queues an owner notification with the request ID
