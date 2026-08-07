@@ -207,3 +207,40 @@ test("an invalid field inside a collapsed panel is revealed instead of silently 
   // The guard keeps reportValidity from re-entering its own invalid event.
   assert.ok(form.includes("invalidFieldRevealed.current"));
 });
+
+test("the requirements wall comes after the business step, and no field is lost between steps", async () => {
+  const form = await read("../app/components/provider-signup-form.tsx");
+
+  // Step 2 is the business step; the requirements reading sits at step 3 so an
+  // applicant gives their name and email before meeting a wall of legal text.
+  assert.ok(form.includes('{visibleStep === 2 && (\n        <div data-signup-step="2">'));
+  assert.ok(form.includes('{visibleStep === 3 && showStep2 && (\n        <div data-signup-step="3">'));
+
+  // Only one step is mounted at a time, so the payload has to fall back to the
+  // autosaved draft for fields typed on an earlier step.
+  assert.ok(form.includes("...draftFields,"));
+  assert.ok(form.includes("...Object.fromEntries(formData.entries()),"));
+
+  // Acknowledgments render with the submit controls, on whichever step is last,
+  // so they are always in the form when the payload is built.
+  assert.ok(form.includes('{((visibleStep === 2 && !showStep2) || (visibleStep === 3 && showStep2)) && ('));
+  const submitSection = form.slice(form.indexOf('<div data-signup-submit="1">'));
+  for (const field of [
+    "performing-person-identity-acknowledged",
+    "adult-acknowledged",
+    "employment-work-authorization-acknowledged",
+    "terms-bundle-accepted",
+    "privacy-acknowledged",
+  ]) {
+    assert.ok(submitSection.includes(`name="${field}"`), `${field} submits with the form`);
+  }
+
+  // Advancing out of the business step validates it; otherwise a blank email
+  // would only surface at the very end of the application.
+  assert.ok(form.includes(`document.querySelector("[data-signup-step='2']")`));
+  assert.ok(form.includes("invalid.reportValidity()"));
+
+  // A restored draft naming step 3 must not render a blank form when the
+  // restored services need no requirements step.
+  assert.ok(form.includes("const visibleStep = step === 3 && !showStep2 ? 2 : step;"));
+});

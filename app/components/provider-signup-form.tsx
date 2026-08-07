@@ -433,6 +433,10 @@ export function ProviderSignupForm() {
     PROVIDER_PATHWAY,
   );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
+  // A restored draft can name step 3 while the services it restores turn out to
+  // need no requirements step. Clamp for rendering so that never shows a blank
+  // form; the stored step itself is left alone.
+  const visibleStep = step === 3 && !showStep2 ? 2 : step;
 
   function resetChallenge() {
     setApplicationChallengeId("");
@@ -459,16 +463,21 @@ export function ProviderSignupForm() {
     setStepError("");
     resetChallenge();
     track("provider_step1_completed");
-    setStep(showStep2 ? 2 : 3);
+    setStep(2);
   }
 
+  // Requirements come after the business step, so this "Continue" is the only
+  // point where the business fields would otherwise go unchecked until the very
+  // end. Ask the browser to validate them here instead of letting someone fill
+  // the whole application and only then learn their email was blank.
   function goToStep3() {
-    if (hasVisibleLegalRequirements && !legalConfirmed) {
-      setStepError(
-        providerFormIsSpanish
-          ? "Confirme que entiende los requisitos legales mostrados."
-          : "Confirm you understand the legal requirements shown above.",
-      );
+    const businessStep = document.querySelector("[data-signup-step='2']");
+    const invalid = businessStep
+      ? [...businessStep.querySelectorAll<HTMLInputElement>("input, select, textarea")]
+        .find((field) => !field.checkValidity())
+      : undefined;
+    if (invalid) {
+      invalid.reportValidity();
       return;
     }
     setStepError("");
@@ -481,7 +490,13 @@ export function ProviderSignupForm() {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
-    const values = Object.fromEntries(formData.entries());
+    // Only the current step is mounted, so FormData alone would drop everything
+    // typed on an earlier one. The autosaved draft carries those text fields;
+    // live values win wherever a field is on screen right now.
+    const values: Record<string, FormDataEntryValue> = {
+      ...draftFields,
+      ...Object.fromEntries(formData.entries()),
+    };
 
     if (selectedProviderWorkLocations.length === 0) {
       setApplicationError(
@@ -493,6 +508,17 @@ export function ProviderSignupForm() {
     }
 
     const legalRequirementsAccepted = !hasVisibleLegalRequirements || legalConfirmed;
+    // The requirements step is now the last one, so this confirmation is caught
+    // here rather than on the way into it. The server rejects the application
+    // without it; saying so before the round trip is friendlier.
+    if (!legalRequirementsAccepted) {
+      setApplicationError(
+        providerFormIsSpanish
+          ? "Confirme que entiende los requisitos legales mostrados."
+          : "Confirm you understand the legal requirements shown above.",
+      );
+      return;
+    }
     // One-person businesses enter their name once; the signer and legal
     // business name derive from it instead of being asked again.
     const soloFullName = [values["performing-person-first-name"], values["performing-person-last-name"]]
@@ -715,7 +741,7 @@ export function ProviderSignupForm() {
         // edits anything after requesting a code — the payload above is
         // recomputed from current field values, so a stale challenge would
         // otherwise verify code against an outdated application.
-        if ((event.target as HTMLElement).closest("[data-signup-step='3']")) {
+        if ((event.target as HTMLElement).closest("[data-signup-step]")) {
           if (applicationChallengeId) {
             setChallengeResetNotice(providerFormIsSpanish
               ? "Cambió su solicitud, así que el código anterior ya no es válido. Envíe de nuevo para recibir un código nuevo."
@@ -727,22 +753,22 @@ export function ProviderSignupForm() {
       onSubmit={handleFinalSubmit}
     >
       <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
+        <span className={visibleStep === 1 ? "on" : ""}>
           1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
         </span>
+        <span className={visibleStep === 2 ? "on" : ""}>
+          2. {providerFormIsSpanish ? "Su negocio" : "Your business"}
+        </span>
         {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
+          <span className={visibleStep === 3 ? "on" : ""}>
+            3. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
           </span>
         )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
-        </span>
       </div>
       <p className="hint step-progress" aria-live="polite">
         {providerFormIsSpanish
-          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
-          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+          ? `Paso ${visibleStep} de ${showStep2 ? 3 : 2}`
+          : `Step ${visibleStep} of ${showStep2 ? 3 : 2}`}
       </p>
 
       {draftRestored && !applicationChallengeId && (
@@ -755,7 +781,7 @@ export function ProviderSignupForm() {
 
       {stepError && <p className="form-error" role="alert">{stepError}</p>}
 
-      {step === 1 && (
+      {visibleStep === 1 && (
         <div data-signup-step="1">
           <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
           <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
@@ -915,8 +941,8 @@ export function ProviderSignupForm() {
         </div>
       )}
 
-      {step === 2 && showStep2 && (
-        <div data-signup-step="2">
+      {visibleStep === 3 && showStep2 && (
+        <div data-signup-step="3">
           {requiredDocumentsBySelection.length > 0 && (
             <>
               <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
@@ -1144,19 +1170,11 @@ export function ProviderSignupForm() {
               </label>
             </section>
           )}
-          <div className="form-nav">
-            <button type="button" className="button secondary" onClick={goToStep1}>
-              ← {providerFormIsSpanish ? "Regresar" : "Back"}
-            </button>
-            <button type="button" className="button lime form-button" onClick={goToStep3}>
-              {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
-            </button>
-          </div>
         </div>
       )}
 
-      {step === 3 && (
-        <div data-signup-step="3">
+      {visibleStep === 2 && (
+        <div data-signup-step="2">
           <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
           <p>
             {providerFormIsSpanish
@@ -1426,6 +1444,26 @@ export function ProviderSignupForm() {
                 : "Outside the county? Request your area"}
             </Link>
           </div>
+          {showStep2 && (
+            <div className="form-nav">
+              <button type="button" className="button secondary" onClick={goToStep1}>
+                ← {providerFormIsSpanish ? "Regresar" : "Back"}
+              </button>
+              <button type="button" className="button lime form-button" onClick={goToStep3}>
+                {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* The submit controls belong to whichever step is last: the business
+          step when no requirements apply, otherwise the requirements step. */}
+      {((visibleStep === 2 && !showStep2) || (visibleStep === 3 && showStep2)) && (
+        <div data-signup-submit="1">
+          {/* Signing belongs with submitting: these acknowledgments render on
+              whichever step is last, so they are mounted in the form when the
+              payload is built. */}
           <fieldset className="area-fieldset">
             <legend>
               {providerFormIsSpanish
@@ -1575,7 +1613,7 @@ export function ProviderSignupForm() {
             />
           ) : (
             <div className="form-nav">
-              <button type="button" className="button secondary" onClick={showStep2 ? () => setStep(2) : goToStep1}>
+              <button type="button" className="button secondary" onClick={visibleStep === 3 ? () => setStep(2) : goToStep1}>
                 ← {providerFormIsSpanish ? "Regresar" : "Back"}
               </button>
               <button className="button lime form-button" type="submit" disabled={applicationBusy}>
