@@ -6,6 +6,12 @@ Audience: MoCo solo mobile mechanics, detailers, roadside/jump-start operators.
 Companion to [provider-recruitment-ad-01.md](provider-recruitment-ad-01.md) (the
 15s recruitment reel) and `../outreach/audience-growth-playbook.md` §3 Lever 4.
 
+**Narrative source of truth: `brand/SALES_PITCH.md` §5, §7, and §14.** Every
+claim below is drawn from it. Its §14 claim guardrails bind this document and
+win any disagreement. ⚠ That file currently lives only on the unmerged branch
+`claude/sales-pitch-document-test-k2cm9k` with **no PR open** — until it lands,
+the link above dangles.
+
 **What's different about these.** Ad 01 sells a feeling — *be your own boss*.
 Every operator in MoCo has been sold that feeling by four platforms already, and
 it slides off. These units lead with **one verified number** instead, in the
@@ -149,8 +155,13 @@ ES:
 > tuveloz.com/join
 
 Caption add-on (both): *You set your price and keep 100% of what you quote —
-the customer pays the site's 5% fee, not you. Customer requests open after
-launch review, so applying now means you're ready on day one.*
+the customer pays the site's small service fee, not you. Customer requests open
+after launch review, so applying now means you're ready on day one.*
+
+> **Why the caption says "small service fee" and not "5%."** The 5% is
+> **proposed**, pending tax-adviser, payment-processor, and insurance sign-off —
+> every legal page says so. Ad copy is exactly where a proposed number gets read
+> as a committed price. State the rate only where "proposed" fits alongside it.
 
 ### M2 — "12.8 years" (argument B)
 
@@ -205,6 +216,40 @@ ES: **+4.9%** — El precio de la reparación automotriz, solo este año.
 ES: **76%** — de los trabajadores independientes ya lo consideran una carrera,
 no algo temporal. / **Entonces debería tener condiciones que usted ponga.**
 
+### M7 — "$0" — chargebacks and processing (argument A, second wave)
+
+From `SALES_PITCH.md` §7: Tuveloz is set as both `fees_collector` and
+`losses_collector` on Connect, so **the platform absorbs Stripe fees and
+chargeback losses instead of clawing them back from providers.** No incumbent
+lead-gen platform can say this, and no operator expects it — which is exactly
+what makes it stop a scroll on the second exposure, after M1 has established
+the fee contrast.
+
+> **$0**
+> What a chargeback costs you on Tuveloz.
+> **The platform absorbs processing fees and chargeback losses. Not deducted
+> from your payout.**
+> tuveloz.com/join
+
+ES: **$0** — Lo que le cuesta un contracargo en Tuveloz. / **La plataforma
+absorbe las comisiones de procesamiento y las pérdidas por contracargos. No se
+descuentan de su pago.**
+
+### M8 — "Labor only" (argument A, differentiator)
+
+> **You never front the parts.**
+> Quotes on Tuveloz are labor-only — the customer buys the part.
+> **No parts markup, no inventory, no eating a wrong-part trip.**
+> tuveloz.com/join
+
+Enforced server-side (`LABOR_ONLY_QUOTE_REQUIRED`), so this is a product fact,
+not a positioning line. Do **not** extend it into "Tuveloz sources the part" —
+§14 forbids any claim that Tuveloz sells, sources, verifies, or handles payment
+for parts.
+
+ES: **Usted nunca adelanta las piezas.** — Las cotizaciones en Tuveloz son solo
+de mano de obra; el cliente compra la pieza.
+
 ### M6 — "$140/hr" — **customer-facing only, do not run in the provider set**
 
 > **~$140/hr** is the going independent-shop labor rate in 2026.
@@ -218,8 +263,8 @@ CTA it reads as an earnings claim, which the honesty rules forbid.
 
 ## 6. Claim safety — read before editing any copy
 
-Inherited verbatim from `../outreach/provider-outreach-kit.md` and
-`../social-media-kit/profile-copy.md`. These override anything above.
+`SALES_PITCH.md` §14 is the full binding list and overrides anything here. The
+ones that bite hardest in ad copy specifically:
 
 - Never imply customers can book or pay today. Every provider unit carries the
   pre-launch line in the caption if not on the card.
@@ -229,6 +274,16 @@ Inherited verbatim from `../outreach/provider-outreach-kit.md` and
   implies earnings — check any new one against this before it ships.
 - Never promise founding-provider perks beyond what `/founding-providers`
   publishes. Linking that page is fine and encouraged; inventing a perk is not.
+- **Never say founding providers get "first pick of jobs"** or any routing or
+  ranking advantage. They deliberately get none — it's barred in
+  `lib/founding-cohort.ts`. See the live site contradiction flagged in §8.
+- Never state the 5% as final. It is **proposed** (§14). Prefer "small service
+  fee" in creative.
+- Never say "escrow," "trust account," or "deposit" for held funds.
+- Never imply Tuveloz sells, sources, verifies, or handles payment for parts.
+- **Publicity consent is never implied.** The Provider Agreement has no likeness
+  clause — a provider's name, business name, or photo needs explicit written
+  permission, asked every time. This governs every spotlight creative.
 - Launch services only: battery/jump start, wipers & bulbs, fluid top-off,
   detailing, basic diagnostics. No towing, tires, or A/C.
 - Every stat on a card keeps its visible source line and stays inside its cited
@@ -249,6 +304,14 @@ file first.
 
 Budget per playbook Lever 4: **$5–10/day**, radius-fenced to Montgomery County,
 optimizing for link clicks to `/join` — not follows, not video views.
+
+**Fence it to the served area, not to "Maryland."** The product enforces
+**45 ZIP codes and 36 municipalities** under jurisdiction
+`US-MD-MontgomeryCounty` (`lib/service-matching.ts`). Anchor the ad geo on
+Silver Spring, Rockville, Gaithersburg, Germantown, Wheaton, Bethesda, Takoma
+Park, Montgomery Village, Aspen Hill, Olney, Kensington, Damascus. A click from
+a provider outside the fence costs the same and can never convert — he'd apply
+and be turned away, which is worse than never reaching him.
 
 Pre-flight: the §2 profile floor in `audience-growth-playbook.md` must be met
 first. Traffic hitting a three-post grid is money spent twice.
@@ -286,7 +349,26 @@ Business Profile, exactly as the playbook §6 says.
 
 ---
 
-## 8. To do
+## 8. Blocking issue — fix before spending
+
+**The homepage founding banner contradicts the founding program and the code.**
+It reads *"The first mechanics into Montgomery County get first pick of jobs…"*
+Founding rank is barred from influencing routing or ranking
+(`lib/founding-cohort.ts`), and `founding-provider-program.md` refuses that perk
+in writing as the one that would turn "customer choice" into paid placement.
+
+This is the only claim on the site that cannot be delivered, and driving paid
+traffic to it means paying to send providers to a promise we will have to walk
+back — to the exact 20 people the marketplace depends on, who talk to each
+other. Reword the banner to the perks that are real (permanent membership-fee
+exemption, spotlight, tenure badge, first access to new categories, direct line
+to the owner) **before** the first dollar of spend.
+
+Surfaced in `SALES_PITCH.md` §14; not fixed by this campaign.
+
+---
+
+## 9. To do
 
 - [ ] Pull MoCo vehicle registrations from Maryland Open Data (`db8v-9ewn`) —
       blocked by the network proxy in-session, needs a manual pull. Then
