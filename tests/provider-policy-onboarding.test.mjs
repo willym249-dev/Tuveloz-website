@@ -186,3 +186,24 @@ test("policy migration adds only the new provider-control layer", async () => {
   assert.ok(!migration.includes("CREATE TABLE `stripe_customers`"));
   assert.ok(!migration.includes("ADD `remember_email_consent`"));
 });
+
+test("an invalid field inside a collapsed panel is revealed instead of silently blocking submit", async () => {
+  const form = await read("../app/components/provider-signup-form.tsx");
+
+  // The business-details panel is collapsed for one-person businesses, and it
+  // holds required fields. Without the reveal, the browser blocks submit on a
+  // field it cannot display a message for and the applicant sees a dead button.
+  assert.ok(form.includes('className="business-details-disclosure"'));
+  assert.ok(form.includes('open={businessDetailsOpen || !soloBusiness}'));
+  const stateField = form.slice(
+    form.indexOf('name="business-formation-state"') - 400,
+    form.indexOf('name="business-formation-state"'),
+  );
+  assert.ok(stateField.includes("required"), "business-formation-state is still a required field");
+
+  assert.ok(form.includes("onInvalidCapture={(event) => {"));
+  assert.ok(form.includes("if (parent instanceof HTMLDetailsElement) parent.open = true;"));
+  assert.ok(form.includes("reportValidity?.()"));
+  // The guard keeps reportValidity from re-entering its own invalid event.
+  assert.ok(form.includes("invalidFieldRevealed.current"));
+});

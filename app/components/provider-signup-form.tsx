@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   emptyProviderSelfAssessment,
@@ -322,6 +322,8 @@ export function ProviderSignupForm() {
   const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
+  // Guards against re-entering the reveal while reportValidity re-fires invalid.
+  const invalidFieldRevealed = useRef(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
 
@@ -669,6 +671,27 @@ export function ProviderSignupForm() {
   return (
     <form
       className="provider-form"
+      // A required field can sit inside a collapsed <details> — the business
+      // details panel is closed by default for one-person businesses. The
+      // browser refuses to submit but cannot show its message on a field it
+      // cannot reach, so the applicant just sees a button that does nothing.
+      // Open every collapsed ancestor of the first invalid field and focus it.
+      onInvalidCapture={(event) => {
+        const field = event.target as HTMLElement | null;
+        if (!field || invalidFieldRevealed.current) return;
+        invalidFieldRevealed.current = true;
+        let parent = field.parentElement;
+        while (parent) {
+          if (parent instanceof HTMLDetailsElement) parent.open = true;
+          parent = parent.parentElement;
+        }
+        window.requestAnimationFrame(() => {
+          field.scrollIntoView({ block: "center" });
+          (field as HTMLInputElement).focus?.();
+          (field as HTMLInputElement).reportValidity?.();
+          invalidFieldRevealed.current = false;
+        });
+      }}
       onChange={(event) => {
         // Capture only the draft fields rendered right now, so navigating
         // between steps never erases values saved from another step.
