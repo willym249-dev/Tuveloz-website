@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   emptyProviderSelfAssessment,
@@ -324,6 +324,12 @@ export function ProviderSignupForm() {
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
+  const [serviceQuery, setServiceQuery] = useState("");
+
+  // Only a deliberate step change scrolls and moves focus. Restoring a draft or
+  // re-rendering the current step must never yank the page around.
+  const stepScrollPending = useRef(false);
+  const stepHeadingRef = useRef<HTMLDivElement | null>(null);
 
   // Restore an unfinished application from this device. Runs once after mount
   // so server-rendered markup stays identical to the first client render; the
@@ -431,6 +437,53 @@ export function ProviderSignupForm() {
     PROVIDER_PATHWAY,
   );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
+  /**
+   * The requirements step exists only for selections that trigger it, so a
+   * restored draft (or a service change) can leave `step` pointing at a step
+   * that no longer renders. Deriving the visible step keeps that from turning
+   * into a blank form with no way forward.
+   */
+  const activeStep: SignupStep = step === 2 && !showStep2 ? 3 : step;
+  const totalSteps = showStep2 ? 3 : 2;
+  const stepNumber = activeStep === 3 && !showStep2 ? 2 : activeStep;
+
+  const selectedServiceDetails = PROVIDER_REVIEW_SERVICES.filter((service) => (
+    selectedProviderServices.includes(service.code)
+  ));
+
+  const normalizedServiceQuery = serviceQuery.trim().toLowerCase();
+  function serviceMatchesQuery(service: (typeof PROVIDER_REVIEW_SERVICES)[number]) {
+    if (!normalizedServiceQuery) return true;
+    // A selected service always stays visible — filtering must never hide a box
+    // the applicant already checked.
+    if (selectedProviderServices.includes(service.code)) return true;
+    return [
+      providerServicePlainLabel(service.code, service.label, providerFormIsSpanish),
+      serviceDisplayLabel(service.label),
+      service.description,
+    ].join(" ").toLowerCase().includes(normalizedServiceQuery);
+  }
+
+  const visibleServiceCount = PROVIDER_REVIEW_SERVICE_GROUPS.reduce((total, group) => (
+    total + group.services.filter((service) => (
+      service.allowedPathways.includes(PROVIDER_PATHWAY) && serviceMatchesQuery(service)
+    )).length
+  ), 0);
+
+  // Scroll and focus only after a navigation, once the new step has rendered.
+  useEffect(() => {
+    if (!stepScrollPending.current) return;
+    stepScrollPending.current = false;
+    const heading = stepHeadingRef.current;
+    if (!heading) return;
+    heading.scrollIntoView({ behavior: "smooth", block: "start" });
+    heading.focus({ preventScroll: true });
+  }, [activeStep]);
+
+  function moveToStep(next: SignupStep) {
+    stepScrollPending.current = true;
+    setStep(next);
+  }
 
   function resetChallenge() {
     setApplicationChallengeId("");
@@ -442,7 +495,7 @@ export function ProviderSignupForm() {
   function goToStep1() {
     resetChallenge();
     setStepError("");
-    setStep(1);
+    moveToStep(1);
   }
 
   function goToStep2() {
@@ -457,7 +510,39 @@ export function ProviderSignupForm() {
     setStepError("");
     resetChallenge();
     track("provider_step1_completed");
-    setStep(showStep2 ? 2 : 3);
+    moveToStep(showStep2 ? 2 : 3);
+  }
+
+  /**
+   * Going backwards from the step indicator is always safe — nothing is
+   * validated on the way back, and every answer stays in state.
+   */
+  function goBackToStep(target: SignupStep) {
+    if (target >= activeStep) return;
+    resetChallenge();
+    setStepError("");
+    moveToStep(target);
+  }
+
+  /**
+   * Clears the saved draft and every answer. Step 3's text inputs are
+   * uncontrolled, so they reset by unmounting when we return to step 1.
+   */
+  function discardDraft() {
+    clearSignupDraft();
+    setDraftFields({});
+    setDraftRestored(false);
+    setSelectedProviderServices([]);
+    setSelectedProviderWorkLocations([]);
+    setProviderAssessment(emptyProviderSelfAssessment);
+    setSoloBusiness(true);
+    setLegalConfirmed(false);
+    setServiceQuery("");
+    setStepError("");
+    setApplicationError("");
+    setChallengeResetNotice("");
+    resetChallenge();
+    moveToStep(1);
   }
 
   function goToStep3() {
@@ -472,8 +557,12 @@ export function ProviderSignupForm() {
     setStepError("");
     resetChallenge();
     track("provider_step2_completed");
-    setStep(3);
+    moveToStep(3);
   }
+
+  const retryMessage = providerFormIsSpanish
+    ? "Inténtelo de nuevo."
+    : "Please try again.";
 
   async function handleFinalSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -547,7 +636,9 @@ export function ProviderSignupForm() {
 
     if (applicationChallengeId) {
       if (!pendingApplicationPayload || !/^\d{6}$/.test(applicationVerificationCode)) {
-        setApplicationError("Enter the 6-digit code sent to the application email.");
+        setApplicationError(providerFormIsSpanish
+          ? "Escriba el código de 6 dígitos enviado al correo de la solicitud."
+          : "Enter the 6-digit code sent to the application email.");
         return;
       }
       setApplicationBusy(true);
@@ -563,7 +654,7 @@ export function ProviderSignupForm() {
           }),
         });
         const result = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(result.error || "Please try again.");
+        if (!response.ok) throw new Error(result.error || retryMessage);
         form.reset();
         clearSignupDraft();
         setDraftFields({});
@@ -576,11 +667,12 @@ export function ProviderSignupForm() {
         setSelectedProviderWorkLocations([]);
         setProviderAssessment(emptyProviderSelfAssessment);
         setLegalConfirmed(false);
+        setServiceQuery("");
         setStep(1);
         setApplicationSent(true);
         track("provider_signup_completed", { variants: activeVariants() });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Please try again.";
+        const message = error instanceof Error ? error.message : retryMessage;
         setApplicationError(message);
       } finally {
         setApplicationBusy(false);
@@ -603,9 +695,11 @@ export function ProviderSignupForm() {
         body: JSON.stringify(payload),
       });
       const result = (await response.json()) as { error?: string; challengeId?: string };
-      if (!response.ok) throw new Error(result.error || "Please try again.");
+      if (!response.ok) throw new Error(result.error || retryMessage);
       if (!result.challengeId) {
-        throw new Error("A verification code could not be prepared. Please try again.");
+        throw new Error(providerFormIsSpanish
+          ? "No se pudo preparar un código de verificación. Inténtelo de nuevo."
+          : "A verification code could not be prepared. Please try again.");
       }
       setConfirmingSubmit(false);
       setPendingApplicationPayload(payload);
@@ -614,7 +708,7 @@ export function ProviderSignupForm() {
       setChallengeResetNotice("");
     } catch (error) {
       setConfirmingSubmit(false);
-      const message = error instanceof Error ? error.message : "Please try again.";
+      const message = error instanceof Error ? error.message : retryMessage;
       setApplicationError(message);
     } finally {
       setApplicationBusy(false);
@@ -633,12 +727,14 @@ export function ProviderSignupForm() {
       });
       const result = (await response.json()) as { error?: string; challengeId?: string };
       if (!response.ok || !result.challengeId) {
-        throw new Error(result.error || "A new code could not be requested.");
+        throw new Error(result.error || (providerFormIsSpanish
+          ? "No se pudo solicitar un código nuevo."
+          : "A new code could not be requested."));
       }
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
     } catch (error) {
-      setApplicationError(error instanceof Error ? error.message : "Please try again.");
+      setApplicationError(error instanceof Error ? error.message : retryMessage);
     } finally {
       setApplicationBusy(false);
     }
@@ -703,37 +799,57 @@ export function ProviderSignupForm() {
       }}
       onSubmit={handleFinalSubmit}
     >
-      <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
-          1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
-        </span>
-        {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
-          </span>
-        )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
-        </span>
-      </div>
+      <nav
+        className="step-indicator"
+        aria-label={providerFormIsSpanish ? "Pasos de la solicitud" : "Application steps"}
+      >
+        {([
+          { step: 1 as SignupStep, number: 1, label: providerFormIsSpanish ? "Sus servicios" : "Your services" },
+          ...(showStep2
+            ? [{ step: 2 as SignupStep, number: 2, label: providerFormIsSpanish ? "Requisitos" : "Requirements" }]
+            : []),
+          { step: 3 as SignupStep, number: showStep2 ? 3 : 2, label: providerFormIsSpanish ? "Su negocio" : "Your business" },
+        ]).map((entry) => {
+          const isCurrent = activeStep === entry.step;
+          const isDone = entry.step < activeStep;
+          return (
+            <button
+              aria-current={isCurrent ? "step" : undefined}
+              className={`${isCurrent ? "on" : ""}${isDone ? " done" : ""}`}
+              disabled={!isDone}
+              key={entry.step}
+              onClick={() => goBackToStep(entry.step)}
+              type="button"
+            >
+              <b aria-hidden="true">{isDone ? "✓" : entry.number}</b>
+              <span>{entry.label}</span>
+            </button>
+          );
+        })}
+      </nav>
       <p className="hint step-progress" aria-live="polite">
         {providerFormIsSpanish
-          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
-          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+          ? `Paso ${stepNumber} de ${totalSteps}`
+          : `Step ${stepNumber} of ${totalSteps}`}
       </p>
 
       {draftRestored && !applicationChallengeId && (
-        <p className="hint" role="status">
-          {providerFormIsSpanish
-            ? "Bienvenido de nuevo — guardamos su avance en este dispositivo. Puede continuar donde quedó."
-            : "Welcome back — we saved your progress on this device. Pick up where you left off."}
-        </p>
+        <div className="draft-restored-note" role="status">
+          <p>
+            {providerFormIsSpanish
+              ? "Bienvenido de nuevo — guardamos su avance en este dispositivo. Puede continuar donde quedó."
+              : "Welcome back — we saved your progress on this device. Pick up where you left off."}
+          </p>
+          <button type="button" onClick={discardDraft}>
+            {providerFormIsSpanish ? "Empezar de nuevo" : "Start over"}
+          </button>
+        </div>
       )}
 
       {stepError && <p className="form-error" role="alert">{stepError}</p>}
 
-      {step === 1 && (
-        <div data-signup-step="1">
+      {activeStep === 1 && (
+        <div data-signup-step="1" ref={stepHeadingRef} tabIndex={-1}>
           <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
           <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
           <div className="legal-requirement-note" role="status">
@@ -786,10 +902,39 @@ export function ProviderSignupForm() {
           </div>
           <fieldset className="area-fieldset service-fieldset">
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
+            <div className="service-search">
+              <label>
+                {providerFormIsSpanish ? "Buscar un trabajo" : "Search for a job"}
+                <input
+                  name="provider-service-search"
+                  onChange={(event) => setServiceQuery(event.target.value)}
+                  placeholder={providerFormIsSpanish
+                    ? "Ej.: batería, llanta, polarizado"
+                    : "e.g. battery, tire, tint"}
+                  type="search"
+                  value={serviceQuery}
+                />
+              </label>
+              <p aria-live="polite">
+                {selectedProviderServices.length > 0
+                  ? providerFormIsSpanish
+                    ? `${selectedProviderServices.length} servicio(s) elegido(s)`
+                    : `${selectedProviderServices.length} service${selectedProviderServices.length === 1 ? "" : "s"} selected`
+                  : providerFormIsSpanish
+                    ? "Todavía no ha elegido ningún servicio"
+                    : "No services selected yet"}
+                {selectedProviderServices.length > 0 && (
+                  <button type="button" onClick={() => setSelectedProviderServices([])}>
+                    {providerFormIsSpanish ? "Borrar todo" : "Clear all"}
+                  </button>
+                )}
+              </p>
+            </div>
             <div className="service-groups provider-service-groups">
               {PROVIDER_REVIEW_SERVICE_GROUPS.map((group) => {
                 const groupServices = group.services.filter((service) => (
                   service.allowedPathways.includes(PROVIDER_PATHWAY)
+                    && serviceMatchesQuery(service)
                 ));
                 if (groupServices.length === 0) return null;
                 const selectedCount = groupServices.filter((service) => (
@@ -798,7 +943,7 @@ export function ProviderSignupForm() {
                 return (
                   <details
                     className="service-group"
-                    open={selectedCount > 0 ? true : undefined}
+                    open={selectedCount > 0 || normalizedServiceQuery ? true : undefined}
                     key={group.id}
                   >
                     <summary>
@@ -858,6 +1003,13 @@ export function ProviderSignupForm() {
                   </details>
                 );
               })}
+              {visibleServiceCount === 0 && (
+                <p className="hint" role="status">
+                  {providerFormIsSpanish
+                    ? `Ningún servicio coincide con “${serviceQuery.trim()}”. Borre la búsqueda para ver todos.`
+                    : `No services match “${serviceQuery.trim()}”. Clear the search to see them all.`}
+                </p>
+              )}
             </div>
             {hasSpecialtySelection && (
               <p className="tier-swap-notice" role="status">
@@ -892,8 +1044,8 @@ export function ProviderSignupForm() {
         </div>
       )}
 
-      {step === 2 && showStep2 && (
-        <div data-signup-step="2">
+      {activeStep === 2 && showStep2 && (
+        <div data-signup-step="2" ref={stepHeadingRef} tabIndex={-1}>
           {requiredDocumentsBySelection.length > 0 && (
             <>
               <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
@@ -1132,14 +1284,49 @@ export function ProviderSignupForm() {
         </div>
       )}
 
-      {step === 3 && (
-        <div data-signup-step="3">
+      {activeStep === 3 && (
+        <div data-signup-step="3" ref={stepHeadingRef} tabIndex={-1}>
           <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
           <p>
             {providerFormIsSpanish
               ? "Unos datos sobre usted y su negocio. La configuración de pago viene después de la aprobación."
               : "A few details about you and your business. Payout setup comes after approval."}
           </p>
+          {/* The confirm dialog asks the applicant to check their answers, so the
+              services they picked two steps back have to be visible here. */}
+          {selectedServiceDetails.length > 0 && (
+            <section className="signup-review-summary">
+              <div className="signup-review-heading">
+                <strong>
+                  {providerFormIsSpanish
+                    ? `Servicios que eligió (${selectedServiceDetails.length})`
+                    : `Services you picked (${selectedServiceDetails.length})`}
+                </strong>
+                <button type="button" onClick={goToStep1}>
+                  {providerFormIsSpanish ? "Cambiar" : "Edit"}
+                </button>
+              </div>
+              <ul>
+                {selectedServiceDetails.map((service) => (
+                  <li key={service.code}>
+                    {providerServicePlainLabel(
+                      service.code,
+                      service.label,
+                      providerFormIsSpanish,
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {providerLevels.length > 0 && (
+                <p>
+                  {providerFormIsSpanish
+                    ? providerLevels.length > 1 ? "Niveles de la solicitud: " : "Nivel de la solicitud: "
+                    : providerLevels.length > 1 ? "Application tiers: " : "Application tier: "}
+                  {providerLevels.map((level) => PROVIDER_LEVEL_LABELS[level]).join(", ")}
+                </p>
+              )}
+            </section>
+          )}
           <fieldset className="area-fieldset">
             <legend>{providerFormIsSpanish ? "¿Quién solicita?" : "Who's applying?"}</legend>
             <div className="area-options">
@@ -1503,7 +1690,9 @@ export function ProviderSignupForm() {
                   : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
-                6-digit verification code
+                {providerFormIsSpanish
+                  ? "Código de verificación de 6 dígitos"
+                  : "6-digit verification code"}
                 <input
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -1523,16 +1712,18 @@ export function ProviderSignupForm() {
                 disabled={applicationBusy || applicationVerificationCode.length !== 6}
                 type="submit"
               >
-                {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                {applicationBusy
+                  ? (providerFormIsSpanish ? "Verificando…" : "Verifying...")
+                  : (providerFormIsSpanish ? "Verificar correo y continuar" : "Verify email and continue")}
               </button>
               {/* One button to press. The two ways out stay available as plain
                   links so they cannot be mistaken for the thing to do next. */}
               <div className="form-alt-actions">
                 <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
-                  Send the code again
+                  {providerFormIsSpanish ? "Enviar el código otra vez" : "Send the code again"}
                 </button>
                 <button disabled={applicationBusy} onClick={resetChallenge} type="button">
-                  Go back and edit
+                  {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
                 </button>
               </div>
             </section>
@@ -1552,7 +1743,7 @@ export function ProviderSignupForm() {
             />
           ) : (
             <div className="form-nav">
-              <button type="button" className="button secondary" onClick={showStep2 ? () => setStep(2) : goToStep1}>
+              <button type="button" className="button secondary" onClick={() => goBackToStep(showStep2 ? 2 : 1)}>
                 ← {providerFormIsSpanish ? "Regresar" : "Back"}
               </button>
               <button className="button lime form-button" type="submit" disabled={applicationBusy}>

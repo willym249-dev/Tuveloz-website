@@ -3644,6 +3644,81 @@ footer > p {
   margin-top: 16px;
 }
 
+/* The provider application is three steps long, and the applicant needs to see
+   where they are and be able to walk back without losing answers. Completed
+   steps are real buttons; steps not yet reached are disabled so the control
+   never promises a jump that would skip validation. */
+.step-indicator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.step-indicator button {
+  align-items: center;
+  background: #f2f4f6;
+  border: 1px solid #dbe3e9;
+  border-radius: 999px;
+  color: #687b8a;
+  cursor: default;
+  display: inline-flex;
+  flex: 1 1 auto;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.step-indicator button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.step-indicator button > b {
+  align-items: center;
+  background: #dbe3e9;
+  border-radius: 999px;
+  color: #34536c;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.step-indicator button.done {
+  cursor: pointer;
+}
+
+.step-indicator button.done:hover {
+  border-color: #b9c6d1;
+  color: #34536c;
+}
+
+.step-indicator button.done > b {
+  background: #cfe6cf;
+  color: #24632a;
+}
+
+/* The step you are on has to be the loudest thing in the row — using a plain
+   dark pill let the completed steps outshine it on the dark provider form. The
+   accent variables flip with the palette, so this stays legible in both. */
+.step-indicator button.on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+
+.step-indicator button.on > b {
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--white);
+}
+
 .step-progress {
   color: var(--muted);
   font-size: 11px;
@@ -3651,6 +3726,156 @@ footer > p {
   letter-spacing: 0.04em;
   margin: 8px 0 0;
   text-transform: uppercase;
+}
+
+/* Back and Continue belong on one row; unstyled they stacked as two full-width
+   buttons and "Back" sat directly under the primary action. */
+.form-nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.form-nav .button {
+  flex: 1 1 160px;
+  margin-top: 0;
+}
+
+.form-nav .button.secondary {
+  flex: 0 1 auto;
+}
+
+/* Saved progress is only reassuring if it can also be thrown away. */
+.draft-restored-note {
+  align-items: center;
+  background: #f5f8fb;
+  border: 1px solid #dbe3e9;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 10px 12px;
+}
+
+.draft-restored-note p {
+  color: #34536c;
+  flex: 1 1 220px;
+  font-size: 12px;
+  margin: 0;
+}
+
+.draft-restored-note button {
+  background: none;
+  border: 0;
+  color: #526b7d;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.draft-restored-note button:hover {
+  color: #172b3c;
+}
+
+/* Twenty-odd services across five accordions is a lot to scan for the one job
+   you came to add. */
+.service-search {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.service-search label {
+  margin: 0;
+}
+
+.service-search p {
+  align-items: center;
+  color: #687b8a;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 10px;
+  margin: 0;
+}
+
+.service-search p button {
+  background: none;
+  border: 0;
+  color: #526b7d;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.service-search p button:hover {
+  color: #172b3c;
+}
+
+/* The confirmation step asks "does this look right?", so the services chosen
+   two steps earlier have to be readable without navigating back. */
+.signup-review-summary {
+  background: #f5f8fb;
+  border: 1px solid #dbe3e9;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+}
+
+.signup-review-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.signup-review-heading strong {
+  color: #172b3c;
+  font-size: 12px;
+}
+
+.signup-review-heading button {
+  background: none;
+  border: 0;
+  color: #526b7d;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.signup-review-heading button:hover {
+  color: #172b3c;
+}
+
+.signup-review-summary ul {
+  color: #34536c;
+  display: grid;
+  font-size: 12px;
+  gap: 3px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.signup-review-summary > p {
+  color: #687b8a;
+  font-size: 11px;
+  font-weight: 700;
+  margin: 8px 0 0;
 }
 
 .business-details-disclosure {
