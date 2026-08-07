@@ -13,6 +13,42 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Redesigned the provider signup and the quote composer
+
+**What happened.** The two screens a provider judges us by — applying to join,
+and quoting a job — were the last places still wearing the pre-rebrand light
+theme, and several structural classes had never been styled at all. Visual
+only: nothing about what is asked, required, gated, or disclosed changed, and
+no guard was touched.
+
+**What was actually wrong.** `.step-indicator`, `.hint`, and `.form-nav` had no
+CSS in the stylesheet, so the progress steps rendered as three runs of plain
+text, every piece of helper text rendered at body size, and Back and Continue
+stacked as two full-width blocks. The service picker, fieldsets, business
+disclosure, legal-help bubble, and requirement `select`s were still white,
+slate, and navy on a near-black form; the badge for the provider mode and the
+focus ring on every input on the site were still the old blue. The requirements
+step had no heading when a selection produced legal questions but no documents,
+and the step error rendered above the heading instead of next to the control it
+blocked.
+
+**What replaced it.** A numbered progress track with done/current states; the
+whole provider path rethemed to the black-and-orange system; selected services
+visibly selected with a running "3 services selected" chip strip you can remove
+from; a 12–13px floor on helper text that was 9–10px; two-column grids dropped
+to one where the form column is only ~500px wide. The quote composer is now a
+framed panel with a heading, real labels on the availability and scope fields
+(they were placeholder-only), a `$`-prefixed money field, and a live restatement
+of what the provider is paid versus what the customer is shown, computed from
+`lib/customer-fee.ts`. That last panel reads only the provider's own entry — it
+does not propose, cap, or suggest an amount, which the never-build list forbids.
+
+**Left alone, worth knowing.** `/account` — the sign-in page in the middle of
+the provider journey — is still on its own navy palette rather than the site
+theme, so a provider moving from `/join` to signing in crosses a visible seam.
+The customer request form shares the classes rethemed here and improves with
+them, but it cannot be seen while job posting is paused.
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,

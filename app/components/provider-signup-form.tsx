@@ -432,6 +432,42 @@ export function ProviderSignupForm() {
   );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
 
+  // The progress track. The requirements step only exists for some selections,
+  // so the last step is numbered from whether it is there.
+  const stepMarks = [
+    {
+      number: 1,
+      label: providerFormIsSpanish ? "Sus servicios" : "Your services",
+      current: step === 1,
+      done: step > 1,
+    },
+    ...(showStep2
+      ? [{
+          number: 2,
+          label: providerFormIsSpanish ? "Requisitos" : "Requirements",
+          current: step === 2,
+          done: step > 2,
+        }]
+      : []),
+    {
+      number: showStep2 ? 3 : 2,
+      label: providerFormIsSpanish ? "Su negocio" : "Your business",
+      current: step === 3,
+      done: false,
+    },
+  ];
+
+  // A running list of what has been picked, so the service catalog never leaves
+  // an applicant scrolling back to check what they chose.
+  const selectedServiceChips = selectedProviderServices.flatMap((code) => {
+    const service = PROVIDER_REVIEW_SERVICES.find((item) => item.code === code);
+    if (!service) return [];
+    return [{
+      code,
+      label: providerServicePlainLabel(code, service.label, providerFormIsSpanish),
+    }];
+  });
+
   function resetChallenge() {
     setApplicationChallengeId("");
     setApplicationVerificationCode("");
@@ -703,19 +739,23 @@ export function ProviderSignupForm() {
       }}
       onSubmit={handleFinalSubmit}
     >
-      <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
-          1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
-        </span>
-        {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
-          </span>
-        )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
-        </span>
-      </div>
+      <ol
+        className="step-indicator"
+        aria-label={providerFormIsSpanish ? "Pasos de la solicitud" : "Application steps"}
+      >
+        {stepMarks.map((mark) => (
+          <li
+            aria-current={mark.current ? "step" : undefined}
+            className={mark.current ? "is-current" : mark.done ? "is-done" : ""}
+            key={mark.number}
+          >
+            <span aria-hidden="true" className="step-mark">
+              {mark.done ? "✓" : mark.number}
+            </span>
+            <span className="step-name">{mark.label}</span>
+          </li>
+        ))}
+      </ol>
       <p className="hint step-progress" aria-live="polite">
         {providerFormIsSpanish
           ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
@@ -729,8 +769,6 @@ export function ProviderSignupForm() {
             : "Welcome back — we saved your progress on this device. Pick up where you left off."}
         </p>
       )}
-
-      {stepError && <p className="form-error" role="alert">{stepError}</p>}
 
       {step === 1 && (
         <div data-signup-step="1">
@@ -818,7 +856,10 @@ export function ProviderSignupForm() {
                       {groupServices.map((service) => {
                         const isSelected = selectedProviderServices.includes(service.code);
                         return (
-                          <div className="service-option" key={service.code}>
+                          <div
+                            className={isSelected ? "service-option is-selected" : "service-option"}
+                            key={service.code}
+                          >
                             <label>
                               <input
                                 checked={isSelected}
@@ -872,6 +913,32 @@ export function ProviderSignupForm() {
                 : "There's no all-in-one “general repair” choice on purpose — just pick the exact jobs you do."}
             </small>
           </fieldset>
+          {selectedServiceChips.length > 0 && (
+            <div className="selection-summary" aria-live="polite">
+              <span>
+                {providerFormIsSpanish
+                  ? `${selectedServiceChips.length} ${selectedServiceChips.length === 1 ? "servicio elegido" : "servicios elegidos"}`
+                  : `${selectedServiceChips.length} ${selectedServiceChips.length === 1 ? "service selected" : "services selected"}`}
+              </span>
+              <div className="selection-chips">
+                {selectedServiceChips.map((chip) => (
+                  <button
+                    aria-label={providerFormIsSpanish
+                      ? `Quitar ${chip.label}`
+                      : `Remove ${chip.label}`}
+                    key={chip.code}
+                    onClick={() => setSelectedProviderServices((current) => (
+                      current.filter((item) => item !== chip.code)
+                    ))}
+                    type="button"
+                  >
+                    {chip.label}
+                    <span aria-hidden="true">×</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {providerLevels.length > 0 && (
             <div className="provider-mode-preview" aria-live="polite">
               <span>
@@ -886,6 +953,7 @@ export function ProviderSignupForm() {
               ))}
             </div>
           )}
+          {stepError && <p className="form-error" role="alert">{stepError}</p>}
           <button type="button" className="button lime form-button" onClick={goToStep2}>
             {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
           </button>
@@ -894,14 +962,17 @@ export function ProviderSignupForm() {
 
       {step === 2 && showStep2 && (
         <div data-signup-step="2">
+          {/* The heading belongs to the step, not to the document list — a
+              selection with legal questions but no documents left this step
+              starting with no title at all. */}
+          <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
+          <p>
+            {providerFormIsSpanish
+              ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
+              : "We only ask for the one document each law actually requires — nothing extra."}
+          </p>
           {requiredDocumentsBySelection.length > 0 && (
             <>
-              <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
-              <p className="hint">
-                {providerFormIsSpanish
-                  ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
-                  : "We only ask for the one document each law actually requires — nothing extra."}
-              </p>
               {requiredDocumentsBySelection.map((entry) => (
                 <div key={entry.code} className="legal-requirement-note">
                   <strong>
@@ -1121,6 +1192,7 @@ export function ProviderSignupForm() {
               </label>
             </section>
           )}
+          {stepError && <p className="form-error" role="alert">{stepError}</p>}
           <div className="form-nav">
             <button type="button" className="button secondary" onClick={goToStep1}>
               ← {providerFormIsSpanish ? "Regresar" : "Back"}
@@ -1261,14 +1333,16 @@ export function ProviderSignupForm() {
             onToggle={(event) => setBusinessDetailsOpen(event.currentTarget.open)}
           >
             <summary>
-              <strong>{providerFormIsSpanish ? "Detalles del negocio" : "Business details"}</strong>
-              {soloBusiness && (
-                <small>
-                  {providerFormIsSpanish
-                    ? " — lo configuramos como negocio de una sola persona en Maryland. Ábralo solo si registró una LLC o corporación."
-                    : " — we've set this up as a one-person Maryland business. Only open this if you registered an LLC or corporation."}
-                </small>
-              )}
+              <span>
+                <strong>{providerFormIsSpanish ? "Detalles del negocio" : "Business details"}</strong>
+                {soloBusiness && (
+                  <small>
+                    {providerFormIsSpanish
+                      ? "Lo configuramos como negocio de una sola persona en Maryland. Ábralo solo si registró una LLC o corporación."
+                      : "We've set this up as a one-person Maryland business. Only open this if you registered an LLC or corporation."}
+                  </small>
+                )}
+              </span>
             </summary>
             <fieldset className="area-fieldset" key={soloBusiness ? "solo-business" : "team-business"}>
               {!soloBusiness && (
@@ -1483,7 +1557,7 @@ export function ProviderSignupForm() {
           </label>
           {applicationChallengeId ? (
             <section
-              className="legal-requirement-note"
+              className="verify-code-panel"
               aria-labelledby="provider-email-code-title"
               onChange={(event) => event.stopPropagation()}
             >
@@ -1503,7 +1577,9 @@ export function ProviderSignupForm() {
                   : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
-                6-digit verification code
+                {providerFormIsSpanish
+                  ? "Código de verificación de 6 dígitos"
+                  : "6-digit verification code"}
                 <input
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -1523,16 +1599,20 @@ export function ProviderSignupForm() {
                 disabled={applicationBusy || applicationVerificationCode.length !== 6}
                 type="submit"
               >
-                {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                {applicationBusy
+                  ? (providerFormIsSpanish ? "Verificando…" : "Verifying...")
+                  : (providerFormIsSpanish
+                    ? "Verificar correo y continuar"
+                    : "Verify email and continue")}
               </button>
               {/* One button to press. The two ways out stay available as plain
                   links so they cannot be mistaken for the thing to do next. */}
               <div className="form-alt-actions">
                 <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
-                  Send the code again
+                  {providerFormIsSpanish ? "Enviar el código otra vez" : "Send the code again"}
                 </button>
                 <button disabled={applicationBusy} onClick={resetChallenge} type="button">
-                  Go back and edit
+                  {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
                 </button>
               </div>
             </section>

@@ -1115,7 +1115,9 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(18,104,255,0.1);
+  /* The glow follows the brand accent; the old value was the pre-rebrand blue,
+     which read as a focus bug on an orange site. */
+  box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.18);
 }
 
 .field-row {
@@ -3670,6 +3672,49 @@ footer > p {
   display: none;
 }
 
+/* Both disclosures looked like static cards. A chevron says it opens. */
+.service-group > summary::after,
+.business-details-disclosure > summary::after {
+  border-bottom: 2px solid #8d7b6e;
+  border-right: 2px solid #8d7b6e;
+  content: "";
+  flex: 0 0 auto;
+  height: 7px;
+  margin-left: 2px;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 160ms ease, border-color 160ms ease;
+  width: 7px;
+}
+
+.service-group[open] > summary::after,
+.business-details-disclosure[open] > summary::after {
+  border-color: #ff8a2a;
+  transform: rotate(225deg) translateY(-2px);
+}
+
+/* The summary was a plain block with the label and its aside running together
+   as one sentence; they are now stacked, with a row for the chevron. */
+.business-details-disclosure > summary {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.business-details-disclosure > summary > span {
+  display: block;
+  min-width: 0;
+}
+
+.business-details-disclosure > summary strong,
+.business-details-disclosure > summary small {
+  display: block;
+}
+
+.business-details-disclosure > summary small {
+  margin-top: 4px;
+}
+
 .business-details-disclosure > summary strong {
   color: #172b3c;
   font-size: 13px;
@@ -4473,7 +4518,7 @@ label > small {
 .eligibility-questions {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   margin-top: 14px;
 }
 
@@ -4578,10 +4623,10 @@ label > small {
 
 .legal-help summary {
   align-items: center;
-  background: #29475c;
-  border: 1px solid #5c778a;
+  background: rgba(255, 106, 0, 0.14);
+  border: 1px solid rgba(255, 106, 0, 0.42);
   border-radius: 50%;
-  color: white;
+  color: #ffa869;
   cursor: pointer;
   display: inline-flex;
   font-size: 10px;
@@ -4600,27 +4645,27 @@ label > small {
 .legal-help summary:hover,
 .legal-help summary:focus-visible,
 .legal-help[open] summary {
-  background: var(--lime);
-  color: #0c1d2a;
+  background: #ff6a00;
+  color: #0a0705;
   outline: none;
   transform: translateY(-1px);
 }
 
 .legal-help summary:focus-visible {
-  box-shadow: 0 0 0 3px rgba(190, 255, 48, 0.28);
+  box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.28);
 }
 
 .legal-help > span {
-  background: #f7fbfd;
-  border: 1px solid #c7d7e2;
-  border-radius: 9px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-  color: #142b3c;
+  background: #1a1614;
+  border: 1px solid #4a3324;
+  border-radius: 11px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+  color: #e8ded6;
   display: block;
-  font-size: 10px;
-  font-weight: 650;
-  line-height: 1.5;
-  padding: 10px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  padding: 12px 13px;
   position: absolute;
   right: 0;
   top: 26px;
@@ -4629,12 +4674,12 @@ label > small {
 }
 
 .eligibility-questions select {
-  background: #132b3d;
-  border-color: #365267;
-  color: white;
-  font-size: 11px;
-  margin-top: 8px;
-  padding: 10px;
+  background: #080808;
+  border-color: #493123;
+  color: #f7c6a2;
+  font-size: 13px;
+  margin-top: 10px;
+  padding: 12px;
 }
 
 .eligibility-empty {
@@ -11448,4 +11493,778 @@ footer > p,
   .site-header .nav a {
     font-size: 13.5px;
   }
+}
+
+/* ============================================================================
+   Provider application and quote composer
+   ----------------------------------------------------------------------------
+   Both surfaces were assembled before the site moved to the black-and-orange
+   theme, so they carried light-mode panels (white service cards, navy legal
+   panel, blue badges) on a near-black form, and several structural classes
+   (.step-indicator, .hint, .form-nav) had no styling at all. This section is
+   the design pass for the two screens a provider actually judges us by:
+   applying to join, and quoting a job.
+
+   Nothing here changes what is asked, required, or disclosed — only how it
+   reads.
+   ============================================================================ */
+
+/* --- Step progress -------------------------------------------------------- */
+
+/* A numbered track, the way every multi-step signup worth copying does it:
+   where you are, what is behind you, and how much is left, in one glance. */
+.step-indicator {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+}
+
+.step-indicator li {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  position: relative;
+}
+
+/* The connector belongs between two marks, so it hangs off the later one and
+   is drawn under both. */
+.step-indicator li + li::before {
+  background: #34261d;
+  content: "";
+  height: 2px;
+  left: -50%;
+  position: absolute;
+  right: 50%;
+  top: 15px;
+}
+
+.step-indicator li.is-done::before,
+.step-indicator li.is-current::before {
+  background: #ff6a00;
+}
+
+.step-mark {
+  align-items: center;
+  background: #111;
+  border: 2px solid #34261d;
+  border-radius: 999px;
+  color: #8d7b6e;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 900;
+  height: 32px;
+  justify-content: center;
+  position: relative;
+  width: 32px;
+  z-index: 1;
+}
+
+.step-indicator li.is-done .step-mark {
+  border-color: #ff6a00;
+  color: #ff8a2a;
+}
+
+.step-indicator li.is-current .step-mark {
+  background: #ff6a00;
+  border-color: #ff6a00;
+  box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.16);
+  color: #0a0705;
+}
+
+.step-name {
+  color: #8d7b6e;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.step-indicator li.is-done .step-name {
+  color: #b6aaa1;
+}
+
+.step-indicator li.is-current .step-name {
+  color: #f7f3ef;
+}
+
+/* "Step 2 of 3" duplicated the track for sighted users but is the only version
+   a screen reader can follow, so it stays in the accessibility tree only. */
+.step-progress {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* --- Application form frame ---------------------------------------------- */
+
+.provider-form h3 {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+[data-signup-step] > h3 {
+  margin: 0 0 7px;
+}
+
+[data-signup-step] > p:not(.hint) {
+  color: #b6aaa1;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+
+/* Helper text had no styling at all, so every aside rendered at body size and
+   competed with the question it was explaining. */
+.hint {
+  color: #9a8a7e;
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 12px 0 0;
+}
+
+.provider-form > .hint:first-of-type {
+  margin-top: 0;
+}
+
+.lead-form > small,
+.provider-form > small {
+  color: #7d6e63;
+  font-size: 11.5px;
+  line-height: 1.6;
+  margin-top: 22px;
+  text-align: left;
+}
+
+/* Back beside Continue: the primary takes the room, the way out stays small. */
+.form-nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.form-nav .button {
+  min-height: 52px;
+}
+
+.form-nav .button.secondary {
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 16px 18px;
+}
+
+.form-nav .form-button {
+  flex: 1 1 200px;
+  margin-top: 0;
+  width: auto;
+}
+
+/* --- Fieldsets and disclosures ------------------------------------------- */
+
+.area-fieldset {
+  background: #0d0d0d;
+  border: 1px solid #34261d;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.area-fieldset legend {
+  color: #ff9a55;
+  font-size: 12.5px;
+  padding: 0 7px;
+}
+
+.area-fieldset > p {
+  color: #b6aaa1;
+  font-size: 13px;
+}
+
+/* Two fixed columns squeezed sentence-long options into two words per line at
+   the width this form column actually gets. Let them fall to one column. */
+.area-options {
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+}
+
+/* Whole-row targets rather than a checkbox with a caption beside it. */
+.area-options label {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  color: #e8ded6;
+  cursor: pointer;
+  min-height: 50px;
+  padding: 12px 13px;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.area-options label:hover {
+  border-color: #57402f;
+}
+
+.area-options label:has(input:checked) {
+  background: rgba(255, 106, 0, 0.08);
+  border-color: #ff6a00;
+  color: #fff5ed;
+}
+
+.area-options input,
+.service-options input,
+.legal-confirmation input {
+  accent-color: #ff6a00;
+  height: 18px;
+  min-height: 18px;
+  width: 18px;
+}
+
+.business-details-disclosure {
+  border: 1px solid #34261d;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.business-details-disclosure > summary strong {
+  color: #f7f3ef;
+  font-size: 13.5px;
+}
+
+.business-details-disclosure > summary small {
+  color: #9a8a7e;
+  font-size: 12px;
+}
+
+.business-details-disclosure[open] > summary {
+  background: #141110;
+  border-bottom: 1px solid #34261d;
+  border-radius: 0;
+}
+
+.business-details-disclosure > .area-fieldset {
+  background: none;
+  padding: 6px 15px 15px;
+}
+
+/* --- Service picker ------------------------------------------------------ */
+
+.service-groups {
+  gap: 11px;
+}
+
+.service-group {
+  background: #0d0d0d;
+  border: 1px solid #34261d;
+  border-radius: 14px;
+}
+
+.service-group > summary {
+  min-height: 60px;
+  padding: 14px 15px;
+}
+
+.service-group > summary:hover {
+  background: #131010;
+}
+
+.service-group > summary strong {
+  color: #f7f3ef;
+  font-size: 14px;
+}
+
+.service-group > summary small {
+  color: #9a8a7e;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.service-group > summary b {
+  background: rgba(255, 106, 0, 0.12);
+  border: 1px solid rgba(255, 106, 0, 0.3);
+  color: #ff9a55;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  padding: 6px 10px;
+}
+
+.service-group[open] > summary {
+  background: #141110;
+  border-bottom: 1px solid #34261d;
+}
+
+.service-group[open] > summary b {
+  background: rgba(255, 106, 0, 0.22);
+  color: #ffb37a;
+}
+
+.service-group > .service-options {
+  padding: 11px;
+}
+
+.service-options label {
+  background: #0b0b0b;
+  border-color: #34261d;
+  cursor: pointer;
+}
+
+.service-option {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.service-option:hover {
+  border-color: #57402f;
+}
+
+/* A picked service should be readable as picked from across the list, not by
+   squinting at a 17px checkbox. */
+.service-option.is-selected {
+  background: rgba(255, 106, 0, 0.07);
+  border-color: #ff6a00;
+}
+
+.service-options span strong {
+  color: #f0e6de;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.service-option.is-selected span strong {
+  color: #fff5ed;
+}
+
+.service-options small {
+  color: #9a8a7e;
+  font-size: 12px;
+}
+
+.service-scope {
+  margin: 0 13px 11px 41px;
+}
+
+.service-scope > summary {
+  color: #ff9a55;
+  font-size: 12px;
+}
+
+.service-scope small {
+  color: #9a8a7e;
+  font-size: 12px;
+}
+
+.customer-service-note {
+  color: #8d7b6e;
+  font-size: 12px;
+}
+
+/* Running list of what has been picked, so a long catalog never leaves an
+   applicant scrolling back to check. */
+.selection-summary {
+  border-top: 1px solid #34261d;
+  margin-top: 16px;
+  padding-top: 14px;
+}
+
+.selection-summary > span {
+  color: #8d7b6e;
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.selection-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selection-chips button {
+  align-items: center;
+  background: rgba(255, 106, 0, 0.1);
+  border: 1px solid rgba(255, 106, 0, 0.35);
+  border-radius: 999px;
+  color: #ffb37a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 750;
+  gap: 8px;
+  padding: 7px 11px;
+  text-align: left;
+}
+
+.selection-chips button:hover {
+  background: rgba(255, 106, 0, 0.18);
+  color: #fff2e6;
+}
+
+.selection-chips button > span {
+  color: #d68b4c;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.tier-swap-notice {
+  background: rgba(255, 106, 0, 0.08);
+  border-color: rgba(255, 106, 0, 0.32);
+  color: #e2c3a9;
+  font-size: 12.5px;
+  padding: 12px 13px;
+}
+
+.provider-mode-preview {
+  border-top-color: #34261d;
+}
+
+.provider-mode-preview > span {
+  color: #9a8a7e;
+  font-size: 12px;
+}
+
+/* The blue badge was the last of the old palette left on the provider path. */
+.provider-mode-badge {
+  background: rgba(255, 106, 0, 0.12);
+  border-color: rgba(255, 106, 0, 0.38);
+  color: #ffa869;
+  font-size: 10.5px;
+  padding: 7px 11px;
+}
+
+/* --- Requirements step --------------------------------------------------- */
+
+.legal-requirement-note {
+  background: #141110;
+  border: 1px solid #3c291d;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.legal-requirement-note strong {
+  color: #f7f3ef;
+  font-size: 13px;
+}
+
+.legal-requirement-note small {
+  color: #ab9c91;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.legal-note-details > summary {
+  color: #ff9a55;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.provider-eligibility-guide {
+  background: #0d0d0d;
+  border: 1px solid #3c291d;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.eligibility-guide-heading > span {
+  color: #ff8a2a;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.eligibility-questions .legal-question {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  color: #d9cdc4;
+  font-size: 12px;
+  padding: 13px;
+}
+
+.legal-question-heading > strong {
+  color: #f7f3ef;
+  font-size: 13px;
+}
+
+.eligibility-questions .legal-question > small {
+  color: #9a8a7e;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.legal-check-status {
+  font-size: 12.5px;
+  padding: 11px 13px;
+}
+
+.legal-confirmation {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  color: #e8ded6;
+  font-size: 13px;
+  gap: 11px;
+  line-height: 1.55;
+  padding: 13px;
+}
+
+.legal-confirmation:has(input:checked) {
+  background: rgba(255, 106, 0, 0.07);
+  border-color: #ff6a00;
+}
+
+/* --- Signature and consent ---------------------------------------------- */
+
+.policy-consent {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  color: #e8ded6;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin-top: 12px;
+  padding: 13px;
+}
+
+.policy-consent:has(input:checked) {
+  border-color: rgba(255, 106, 0, 0.5);
+}
+
+/* The arrival check reuses .policy-consent inside a job card, where the card
+   already supplies the frame. */
+.portal-card .policy-consent {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+/* --- Emailed verification code ------------------------------------------- */
+
+.verify-code-panel {
+  background: #141110;
+  border: 1px solid #ff6a00;
+  border-radius: 16px;
+  margin-top: 20px;
+  padding: 20px;
+}
+
+.verify-code-panel > strong {
+  color: #f7f3ef;
+  display: block;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.verify-code-panel > small {
+  color: #ab9c91;
+  display: block;
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 9px;
+}
+
+.verify-code-panel > label {
+  color: #ff9a55;
+  margin-top: 18px;
+}
+
+.verify-code-panel input {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  padding: 15px 14px;
+  text-align: center;
+}
+
+/* --- Quote composer (provider workspace) -------------------------------- */
+
+/* The quote form ran straight on from the read-only job details with no frame,
+   no field labels, and no sight of what the customer would be shown. */
+.quote-form-panel {
+  background: #0d0d0d;
+  border: 1px solid #3c291d;
+  border-radius: 16px;
+  margin-top: 18px;
+  padding: 17px;
+}
+
+.quote-form-heading {
+  border-bottom: 1px solid #2c211a;
+  margin-bottom: 15px;
+  padding-bottom: 13px;
+}
+
+.quote-form-heading > strong {
+  color: #f7f3ef;
+  display: block;
+  font-size: 16px;
+}
+
+.quote-form-heading > small {
+  color: #9a8a7e;
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 5px;
+}
+
+.quote-form-panel form {
+  gap: 15px;
+}
+
+.quote-form-panel label {
+  color: #ff9a55;
+  display: grid;
+  font-size: 12.5px;
+  gap: 7px;
+  margin-top: 0;
+}
+
+/* The consent line is a sentence, not a field label, so it keeps the body
+   colour rather than the orange label colour the panel sets. */
+.quote-form-panel .policy-consent {
+  color: #d9cdc4;
+}
+
+.quote-form-panel .policy-consent span {
+  color: #d9cdc4;
+  font-weight: 500;
+}
+
+.quote-form-panel label > small {
+  color: #8d7b6e;
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+.quote-form-panel input,
+.quote-form-panel textarea {
+  margin-top: 0;
+}
+
+/* A currency field should say so before the number is typed. */
+.money-input {
+  position: relative;
+}
+
+.money-input > span {
+  color: #8d7b6e;
+  font-size: 15px;
+  font-weight: 800;
+  left: 14px;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.money-input input {
+  font-size: 17px;
+  font-weight: 800;
+  padding-left: 30px;
+}
+
+/* What the provider is paid and what the customer is shown, from the number
+   the provider just typed. Tuveloz never proposes the number itself. */
+.quote-earn-preview {
+  background: #0b0b0b;
+  border: 1px solid #34261d;
+  border-radius: 12px;
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.quote-earn-preview > div {
+  align-items: baseline;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 11px 13px;
+}
+
+.quote-earn-preview > div + div {
+  border-top: 1px solid #2c211a;
+}
+
+.quote-earn-preview dt,
+.quote-earn-preview > div > span {
+  color: #a6978c;
+  font-size: 12px;
+}
+
+.quote-earn-preview strong {
+  color: #f5e8de;
+  flex: 0 0 auto;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.quote-earn-preview .yours {
+  background: #1d120b;
+}
+
+.quote-earn-preview .yours > span {
+  color: #ffb37a;
+}
+
+.quote-earn-preview .yours strong {
+  color: #ff8a2a;
+  font-size: 22px;
+}
+
+.quote-earn-preview > small {
+  border-top: 1px solid #2c211a;
+  color: #8d7b6e;
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 11px 13px;
+}
+
+.quote-form-panel .button {
+  justify-content: center;
+  margin-top: 3px;
+  min-height: 52px;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .step-indicator {
+    gap: 0;
+  }
+
+  .step-name {
+    font-size: 11px;
+  }
+
+  .form-nav .button,
+  .form-nav .button.secondary,
+  .form-nav .form-button {
+    flex: 1 1 100%;
+  }
+}
+
+/* An optional field should say so in the label, not only in the helper text. */
+.field-optional {
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  border-radius: 999px;
+  color: #9a8a7e;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin-left: 7px;
+  padding: 3px 8px;
+  text-transform: uppercase;
 }

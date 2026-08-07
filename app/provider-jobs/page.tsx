@@ -27,6 +27,7 @@ import {
   type JobScopeFacts,
 } from "../../lib/job-scope-facts";
 import { CUSTOMER_JOB_POSTING_PAUSED, MARKETPLACE_MODE } from "../../lib/launch-status";
+import { CUSTOMER_SERVICE_FEE_PERCENT, customerPriceFor } from "../../lib/customer-fee";
 
 const MARKETPLACE_IS_ONBOARDING_ONLY = CUSTOMER_JOB_POSTING_PAUSED
   || String(MARKETPLACE_MODE) !== "live";
@@ -165,6 +166,19 @@ function durationLabel(totalSeconds: number) {
   return `${hours}h ${minutes}m`;
 }
 
+/**
+ * Restates a typed labor amount as the two numbers that matter to a provider:
+ * what they are paid, and what the customer is shown. It only ever reads the
+ * provider's own entry — Tuveloz never proposes, caps, or suggests the amount.
+ * Returns null until the entry is a usable price, so the panel stays quiet
+ * while the field is empty or mid-typing.
+ */
+function quotePreviewFor(laborDraft: string | undefined) {
+  const laborDollars = Number(laborDraft);
+  if (!Number.isFinite(laborDollars) || laborDollars <= 0) return null;
+  return customerPriceFor(Math.round(laborDollars * 100));
+}
+
 function actionErrorMessage(reason: unknown, fallback: string) {
   return reason instanceof Error && reason.message ? reason.message : fallback;
 }
@@ -187,6 +201,9 @@ export default function ProviderJobsPage() {
   const [updatingJobId, setUpdatingJobId] = useState("");
   const [submittingQuoteId, setSubmittingQuoteId] = useState("");
   const [pendingQuote, setPendingQuote] = useState<PendingQuote | null>(null);
+  // Typed labor amounts, per job, so the quote panel can show what the customer
+  // will see while the provider is still deciding.
+  const [laborDrafts, setLaborDrafts] = useState<Record<string, string>>({});
   const [pendingStatus, setPendingStatus] = useState<PendingStatus | null>(null);
   const [completionPhoto, setCompletionPhoto] = useState<File | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -1191,7 +1208,9 @@ export default function ProviderJobsPage() {
       )}
       {activeView === "available" && (
       <section className="portal-grid">
-        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !provider ? null : openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => (
+        {loading ? <p className="admin-note">Checking for matching jobs…</p> : !provider ? null : openJobs.length === 0 ? <p className="admin-note">No matching approved jobs are currently open for a new quote.</p> : openJobs.map((job) => {
+          const quotePreview = quotePreviewFor(laborDrafts[job.id]);
+          return (
           <article className="portal-card" key={job.id}>
             <span className="portal-service">{parseJobServices(job.service).join(" + ")}</span>
             {job.isTestJob === "yes" && <span className="test-badge">TEST JOB</span>}
@@ -1222,51 +1241,128 @@ export default function ProviderJobsPage() {
             )}
             {job.quoteSubmitted || sent === job.id ? <div className="portal-success">✓ Quote submitted for customer review.</div> : (
               <>
-                <form onSubmit={(event) => reviewQuote(event, job.id)}>
-                  <div className="quote-breakdown-fields">
+                <div className="quote-form-panel">
+                  <div className="quote-form-heading">
+                    <strong>Send your quote</strong>
+                    <small>
+                      The amount is yours. Tuveloz never sets, caps, or suggests
+                      what you charge.
+                    </small>
+                  </div>
+                  <form onSubmit={(event) => reviewQuote(event, job.id)}>
+                    <div className="quote-breakdown-fields">
+                      <label>
+                        Labor-only amount
+                        <div className="money-input">
+                          <span aria-hidden="true">$</span>
+                          <input
+                            disabled={pendingQuote?.requestId === job.id}
+                            required
+                            name="laborPrice"
+                            onChange={(event) => setLaborDrafts((current) => ({
+                              ...current,
+                              [job.id]: event.target.value,
+                            }))}
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={laborDrafts[job.id] ?? ""}
+                          />
+                        </div>
+                        <small>Labor only — no parts, no parts tax.</small>
+                      </label>
+                      <div className="fixed-launch-area">
+                        <span>Parts charged through Tuveloz</span>
+                        <strong>$0.00</strong>
+                      </div>
+                    </div>
+                    {/* What the customer will be shown, worked out from the
+                        number the provider just typed. Nothing here proposes an
+                        amount. */}
+                    {quotePreview && (
+                      <div className="quote-earn-preview" aria-live="polite">
+                        <div className="yours">
+                          <span>You&apos;re paid</span>
+                          <strong>${(quotePreview.providerQuoteCents / 100).toFixed(2)}</strong>
+                        </div>
+                        <div>
+                          <span>
+                            Tuveloz customer service fee ({CUSTOMER_SERVICE_FEE_PERCENT}%), added
+                            for the customer
+                          </span>
+                          <strong>${(quotePreview.customerFeeCents / 100).toFixed(2)}</strong>
+                        </div>
+                        <div>
+                          <span>Customer total</span>
+                          <strong>${(quotePreview.customerTotalCents / 100).toFixed(2)}</strong>
+                        </div>
+                        <small>
+                          The fee is added on top of your amount, never taken out of it.
+                          The current test configuration proposes this 5% fee; final
+                          pricing and tax treatment remain under legal and CPA or
+                          tax-adviser review.
+                        </small>
+                      </div>
+                    )}
                     <label>
-                      Labor-only amount ($)
+                      When you can do it
                       <input
                         disabled={pendingQuote?.requestId === job.id}
                         required
-                        name="laborPrice"
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        placeholder="0.00"
+                        name="availability"
+                        placeholder="e.g. Saturday 10–2"
                       />
+                      <small>The customer confirms exact timing with you after accepting.</small>
                     </label>
-                    <div className="fixed-launch-area">
-                      <span>Parts charged through Tuveloz</span>
-                      <strong>$0.00</strong>
-                    </div>
-                  </div>
-                  <input disabled={pendingQuote?.requestId === job.id} required name="availability" placeholder="Availability, e.g. Saturday 10–2" />
-                  <textarea disabled={pendingQuote?.requestId === job.id} required name="message" rows={3} placeholder="Explain the labor included, exclusions, timing, and any customer-supplied-part assumptions. Do not include a parts price." />
-                  <label>
-                    Workmanship warranty (optional — your business&apos;s own promise)
-                    <input
-                      disabled={pendingQuote?.requestId === job.id}
-                      name="workmanshipWarranty"
-                      maxLength={300}
-                      placeholder="e.g. 12 months / 12,000 miles on workmanship. Leave blank if you don't offer one."
-                    />
-                  </label>
-                  <label className="policy-consent">
-                    <input
-                      disabled={pendingQuote?.requestId === job.id}
-                      name="laborOnlyConfirmed"
-                      required
-                      type="checkbox"
-                      value="yes"
-                    />
-                    <span>
-                      I confirm this quote is for labor only. It contains no provider-supplied
-                      part, parts reimbursement, parts tax, or other parts charge.
-                    </span>
-                  </label>
-                  {pendingQuote?.requestId !== job.id && <button className="button primary" type="submit">Review quote →</button>}
-                </form>
+                    <label>
+                      What your quote covers
+                      <textarea
+                        disabled={pendingQuote?.requestId === job.id}
+                        required
+                        name="message"
+                        rows={4}
+                        placeholder="Explain the labor included, exclusions, timing, and any customer-supplied-part assumptions. Do not include a parts price."
+                      />
+                      <small>
+                        The clearest quote usually wins the job. Say what is included,
+                        what is not, and what you need the customer to have ready.
+                      </small>
+                    </label>
+                    <label>
+                      {/* One grid item, so the pill sits on the label's line
+                          instead of dropping to a row of its own. */}
+                      <span>
+                        Workmanship warranty
+                        <span className="field-optional">optional</span>
+                      </span>
+                      <input
+                        disabled={pendingQuote?.requestId === job.id}
+                        name="workmanshipWarranty"
+                        maxLength={300}
+                        placeholder="e.g. 12 months / 12,000 miles on workmanship"
+                      />
+                      <small>
+                        Your business&apos;s own promise. Leave it blank if you
+                        don&apos;t offer one — the customer sees that stated either way.
+                      </small>
+                    </label>
+                    <label className="policy-consent">
+                      <input
+                        disabled={pendingQuote?.requestId === job.id}
+                        name="laborOnlyConfirmed"
+                        required
+                        type="checkbox"
+                        value="yes"
+                      />
+                      <span>
+                        I confirm this quote is for labor only. It contains no provider-supplied
+                        part, parts reimbursement, parts tax, or other parts charge.
+                      </span>
+                    </label>
+                    {pendingQuote?.requestId !== job.id && <button className="button primary" type="submit">Review quote →</button>}
+                  </form>
+                </div>
                 {pendingQuote?.requestId === job.id && (
                   <div className="quote-confirm action-confirm" role="group" aria-label="Confirm quote submission">
                     <strong>Submit this quote?</strong>
@@ -1299,7 +1395,8 @@ export default function ProviderJobsPage() {
               </>
             )}
           </article>
-        ))}
+          );
+        })}
       </section>
       )}
     </main>
