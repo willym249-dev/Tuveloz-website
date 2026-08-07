@@ -36,6 +36,7 @@ When you close something significant, write a matching entry in
 | — | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |
 | — | Take stock of which business documents already exist — insurance, LLC formation, EIN, Maryland registrations, licenses — and file a record card for each in `records/` | hello@tuveloz.com | open |
 | — | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
+| — | Name the legal entity in the three agreements. Terms of Use, the Customer Agreement, and the Provider Agreement never say which entity a user is contracting with — only the Privacy Notice names `TUVELOZ LLC`. Confirm the exact registered styling against the Maryland SDAT filing first, then fold the change into the fee-rename re-release rather than opening a second policy release | hello@tuveloz.com | open |
 | — | Confirm the current state of the 18 launch gates in the owner dashboard; the decisions live in the database, not in this repository | hello@tuveloz.com | open |
 
 ## Pull requests in flight
