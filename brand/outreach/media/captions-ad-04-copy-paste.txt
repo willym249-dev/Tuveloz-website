@@ -300,3 +300,49 @@ Trim so the track starts on a build, not mid-phrase; aim the lift at the third
 card and let it carry into the CTA. Full volume is fine — no voiceover to
 compete with. Do not expect the sound to move reach: on a 9.5s post,
 watch-through and sends do the work.
+
+
+=====================================================================
+POST 2 — "SO WHAT'S THE CATCH?" (objection handling)
+=====================================================================
+Files:  brand/ads/tuveloz-whats-the-catch.mp4        (English)
+        brand/ads/tuveloz-cual-es-la-trampa-es.mp4   (Spanish)
+
+A different post, not a re-cut of post 1. Post 1 makes the pitch; this one
+answers the three objections an independent mechanic actually has — a platform
+skimming their price, exclusivity, and forced dispatch. Every answer is a real
+product fact, and the last two are constraints the business is built on rather
+than promises: no exclusivity and no forced assignment are hard rules in
+CLAUDE.md's never-build list, not policies that can quietly change.
+
+Run post 1 first, then this 2-3 days later. It reads as the follow-up to the
+question post 1 provokes.
+
+BILINGUAL CAPTION (IG + TikTok):
+"So what's the catch?" — fair question, we get it every time.
+
+EN / Three things mechanics ask us. 1) Do you take a cut of my price? No — you
+keep 100% of what you quote, the 5% sits on top and the customer pays it.
+2) Do I have to work only for you? No exclusivity, ever — keep every platform
+and client you have. 3) Do I have to take the jobs you send? No. You pick. No
+schedule, no minimum acceptance rate, no penalty for saying no.
+
+ES / Tres cosas que nos preguntan los mecánicos. 1) ¿Se quedan con parte de mi
+precio? No — te quedas con el 100% de lo que cotizas, el 5% va por encima y lo
+paga el cliente. 2) ¿Tengo que trabajar solo con ustedes? Sin exclusividad,
+nunca — conserva cada plataforma y cliente que tienes. 3) ¿Tengo que aceptar los
+trabajos que me manden? No. Tú eliges. Sin horario, sin tasa mínima, sin castigo
+por decir que no.
+
+Still onboarding providers — customer requests aren't live yet.
+Aún inscribiendo proveedores — las solicitudes de clientes no están activas.
+
+tuveloz.com/join
+
+HASHTAGS (5):
+#MobileMechanic #MecanicoMovil #MechanicLife #MechanicsOfInstagram #MontgomeryCountyMD
+(TikTok: swap #MechanicsOfInstagram for #MechanicsOfTikTok)
+
+Link tag: ?src=catch-04 (EN) / ?src=catch-04-es (ES)
+
+Render with: build-frames.html?set=2&f=f1..f4 (add &lang=es for Spanish).

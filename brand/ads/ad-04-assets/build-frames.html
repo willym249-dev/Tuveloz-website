@@ -56,6 +56,12 @@
   .lockup .words { line-height:1; }
   .lockup .name { font-size:62px; font-weight:700; color:#FF6A00; letter-spacing:-.005em; }
   .lockup .tag { font-size:29px; color:#FF6A00; margin-top:14px; }
+  .q { font-size:56px; font-weight:800; color:#fff; line-height:1.18; margin-top:70px; }
+  .q:before { content:"Q"; display:inline-block; background:#FF6A00; color:#07182D;
+    font-size:34px; width:56px; height:56px; line-height:56px; text-align:center;
+    border-radius:14px; margin-right:22px; vertical-align:6px; }
+  .a { font-size:44px; line-height:1.38; color:rgba(255,255,255,.80); margin-top:26px; padding-left:78px; }
+  .a b { color:#FF6A00; font-weight:800; }
 </style>
 </head>
 <body>
@@ -148,9 +154,68 @@
       <div class="spacer"></div>
       <div class="cta">tuveloz.com/join</div>` + LOCKUP
   };
+
+  const FRAMES2 = {
+    f1: `<div class="spacer"></div>
+      <div class="eyebrow">What mechanics ask us first</div>
+      <div class="rule"></div>
+      <div class="headline">&ldquo;So what's<br><span class="accent">the catch?&rdquo;</span></div>
+      <div class="sub">Fair question. Here are the three we get every time.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f2: `
+      <div class="eyebrow">Question one</div>
+      <div class="rule"></div>
+      <div class="q">Do you take a cut of my price?</div>
+      <div class="a"><b>No.</b> You keep 100% of what you quote. The 5% service fee sits on top and the customer pays it — it never comes out of your number.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f3: `
+      <div class="eyebrow">Question two</div>
+      <div class="rule"></div>
+      <div class="q">Do I have to work only for you?</div>
+      <div class="a"><b>No.</b> No exclusivity, ever. Keep every platform, every shop, every client you already have.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f4: `
+      <div class="eyebrow">Question three</div>
+      <div class="rule"></div>
+      <div class="q">Do I have to take the jobs you send?</div>
+      <div class="a"><b>No.</b> You pick. No schedule, no minimum acceptance rate, no penalty for saying no.</div>
+      <div class="spacer"></div>
+      <div class="cta">tuveloz.com/join</div>` + LOCKUP
+  };
+
+  const FRAMES2_ES = {
+    f1: `<div class="spacer"></div>
+      <div class="eyebrow">Lo que preguntan los mecánicos</div>
+      <div class="rule"></div>
+      <div class="headline">&ldquo;¿Cuál es<br><span class="accent">la trampa?&rdquo;</span></div>
+      <div class="sub">Buena pregunta. Estas son las tres que siempre nos hacen.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f2: `
+      <div class="eyebrow">Pregunta uno</div>
+      <div class="rule"></div>
+      <div class="q">¿Se quedan con parte de mi precio?</div>
+      <div class="a"><b>No.</b> Te quedas con el 100% de lo que cotizas. La tarifa del 5% va por encima y la paga el cliente — nunca sale de tu número.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f3: `
+      <div class="eyebrow">Pregunta dos</div>
+      <div class="rule"></div>
+      <div class="q">¿Tengo que trabajar solo con ustedes?</div>
+      <div class="a"><b>No.</b> Sin exclusividad, nunca. Conserva cada plataforma, cada taller y cada cliente que ya tienes.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f4: `
+      <div class="eyebrow">Pregunta tres</div>
+      <div class="rule"></div>
+      <div class="q">¿Tengo que aceptar los trabajos que me manden?</div>
+      <div class="a"><b>No.</b> Tú eliges. Sin horario, sin tasa mínima de aceptación, sin castigo por decir que no.</div>
+      <div class="spacer"></div>
+      <div class="cta">tuveloz.com/join</div>` + LOCKUP
+  };
+
   const params = new URLSearchParams(location.search);
   const key = params.get('f') || 'f1';
-  const set = params.get('lang') === 'es' ? FRAMES_ES : FRAMES;
+  const es = params.get('lang') === 'es';
+  const two = params.get('set') === '2';
+  const set = two ? (es ? FRAMES2_ES : FRAMES2) : (es ? FRAMES_ES : FRAMES);
   document.getElementById('inner').innerHTML = set[key];
 </script>
 </body>
