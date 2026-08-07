@@ -12,12 +12,20 @@ Update it when something moves. Delete lines that stop being true.
 
 Every service is `disabled_pending_*` and the catalog status is
 `draft_pending_mandatory_compliance_insurance_tax`. No customer request, quote,
-or payment can happen until that changes, and it changes only when the launch
-gates receive sign-offs that **cannot be self-issued**:
+or payment can happen until that changes, and it changes only when the required
+launch gates receive sign-offs that **cannot be self-issued**:
 
-- insurance broker or carrier
 - CPA or tax adviser
+- payment processor
 - an official legal or licensing source, per service
+- a security or screening reviewer, per the gate
+
+**Insurance is tracked, not blocking** (owner decision, August 2026). No
+Maryland statute requires platform coverage, so
+`platform_and_service_insurance_bound` is `required: false` and does not gate
+the stage. The exposure it covers — a customer naming both the provider and
+Tuveloz over work done at their location — does not go away with the flag.
+Set `required: true` in `lib/launch-readiness.ts` to make it blocking again.
 
 Those are appointments and phone calls, not commits. Nothing else in this file
 produces revenue until they are done.

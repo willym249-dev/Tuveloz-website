@@ -182,9 +182,12 @@ export const LAUNCH_GATE_CATALOG: readonly LaunchGateDefinition[] = [
     stage: "transaction_pilot",
     category: "insurance",
     title: "TUVELOZ coverage and launch-service risk approved",
-    plainLanguage: "The broker or carrier confirms bound platform coverage and approves every service that will be enabled, including mobile work and any exclusions.",
+    plainLanguage: "The broker or carrier confirms bound platform coverage and approves every service that will be enabled, including mobile work and any exclusions. Tracked, not blocking — no Maryland statute requires platform coverage, so this is an owner decision rather than a legal gate. The exposure it covers is a customer suing both the provider and Tuveloz over work performed at their location.",
     authority: ["Insurance broker or carrier"],
-    required: true,
+    // Owner decision, August 2026: tracked rather than blocking. Flip back to
+    // true to make bound coverage a precondition for the transaction-pilot
+    // stage again.
+    required: false,
     requiresValidThrough: true,
   },
   {
