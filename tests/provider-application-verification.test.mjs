@@ -300,7 +300,16 @@ test("provider UI freezes the reviewed payload and preserves the challenge while
   assert.match(page, /\.\.\.pendingApplicationPayload,[\s\S]*challengeId: applicationChallengeId,[\s\S]*verificationCode: applicationVerificationCode/);
   assert.match(page, /onChange=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.match(page, /Last step: enter the code we emailed you/);
-  assert.match(page, /This proves email control only/);
+  // The screen must scope itself to the email and nothing more. The long list
+  // of things a code does not prove moved to the Provider Agreement, so this
+  // guards the claim rather than the old wording: it may say the email is
+  // confirmed, and must never imply identity or eligibility were checked.
+  assert.match(page, /This just confirms the email is yours/);
+  assert.match(page, /Esto solo confirma que el correo es suyo/);
+  assert.doesNotMatch(
+    page,
+    /confirms your identity|identity (is )?verified|verifies (your )?identity|proves who you are/i,
+  );
   assert.match(page, /Verify email and continue/);
   assert.match(page, /If an application already existed for this email, that one was kept/);
   assert.doesNotMatch(page, /Verify email and submit application|Application saved\./);

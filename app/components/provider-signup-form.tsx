@@ -28,7 +28,9 @@ import {
 } from "../../lib/service-tiers";
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
+  PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
+  PROVIDER_TERMS_ACCEPTANCE_TEXT_ES,
 } from "../../lib/provider-policy-acceptance";
 import { track } from "../../lib/analytics";
 import { activeVariants } from "../../lib/experiments";
@@ -432,6 +434,13 @@ export function ProviderSignupForm() {
   );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
 
+  // Fallback shown when a request fails without a server message. Server-sent
+  // errors (result.error) still arrive in English — translating those belongs
+  // with the API routes that produce them.
+  const retryMessage = providerFormIsSpanish
+    ? "Por favor intente de nuevo."
+    : retryMessage;
+
   function resetChallenge() {
     setApplicationChallengeId("");
     setApplicationVerificationCode("");
@@ -547,7 +556,9 @@ export function ProviderSignupForm() {
 
     if (applicationChallengeId) {
       if (!pendingApplicationPayload || !/^\d{6}$/.test(applicationVerificationCode)) {
-        setApplicationError("Enter the 6-digit code sent to the application email.");
+        setApplicationError(providerFormIsSpanish
+          ? "Escriba el código de 6 dígitos que enviamos al correo de la solicitud."
+          : "Enter the 6-digit code sent to the application email.");
         return;
       }
       setApplicationBusy(true);
@@ -563,7 +574,7 @@ export function ProviderSignupForm() {
           }),
         });
         const result = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(result.error || "Please try again.");
+        if (!response.ok) throw new Error(result.error || retryMessage);
         form.reset();
         clearSignupDraft();
         setDraftFields({});
@@ -580,7 +591,7 @@ export function ProviderSignupForm() {
         setApplicationSent(true);
         track("provider_signup_completed", { variants: activeVariants() });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Please try again.";
+        const message = error instanceof Error ? error.message : retryMessage;
         setApplicationError(message);
       } finally {
         setApplicationBusy(false);
@@ -603,9 +614,11 @@ export function ProviderSignupForm() {
         body: JSON.stringify(payload),
       });
       const result = (await response.json()) as { error?: string; challengeId?: string };
-      if (!response.ok) throw new Error(result.error || "Please try again.");
+      if (!response.ok) throw new Error(result.error || retryMessage);
       if (!result.challengeId) {
-        throw new Error("A verification code could not be prepared. Please try again.");
+        throw new Error(providerFormIsSpanish
+          ? "No se pudo preparar un código de verificación. Por favor intente de nuevo."
+          : "A verification code could not be prepared. Please try again.");
       }
       setConfirmingSubmit(false);
       setPendingApplicationPayload(payload);
@@ -614,7 +627,7 @@ export function ProviderSignupForm() {
       setChallengeResetNotice("");
     } catch (error) {
       setConfirmingSubmit(false);
-      const message = error instanceof Error ? error.message : "Please try again.";
+      const message = error instanceof Error ? error.message : retryMessage;
       setApplicationError(message);
     } finally {
       setApplicationBusy(false);
@@ -633,12 +646,14 @@ export function ProviderSignupForm() {
       });
       const result = (await response.json()) as { error?: string; challengeId?: string };
       if (!response.ok || !result.challengeId) {
-        throw new Error(result.error || "A new code could not be requested.");
+        throw new Error(result.error || (providerFormIsSpanish
+          ? "No se pudo solicitar un código nuevo."
+          : "A new code could not be requested."));
       }
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
     } catch (error) {
-      setApplicationError(error instanceof Error ? error.message : "Please try again.");
+      setApplicationError(error instanceof Error ? error.message : retryMessage);
     } finally {
       setApplicationBusy(false);
     }
@@ -792,24 +807,30 @@ export function ProviderSignupForm() {
                   : "Why, and what Montgomery County requires"}
               </summary>
               <small>
-                Applications and service selections are accepted for review only. Activation requires
-                documented compliance with applicable law, insurer approval, and every required government,
-                agency, environmental, tax, payment, privacy, security, and service-specific control.
+                {providerFormIsSpanish
+                  ? "Las solicitudes y las selecciones de servicios se aceptan solo para revisión. La activación requiere cumplimiento documentado de la ley aplicable, aprobación del asegurador y cada control gubernamental, de agencia, ambiental, fiscal, de pago, de privacidad, de seguridad y específico del servicio que corresponda."
+                  : "Applications and service selections are accepted for review only. Activation requires documented compliance with applicable law, insurer approval, and every required government, agency, environmental, tax, payment, privacy, security, and service-specific control."}
               </small>
               <small>
-                <strong>Montgomery County has no unregistered simple-repair lane.</strong>{" "}
-                A mobile repair or maintenance business must hold the County OCP registration.
-                An independent owner-operator needs a real business, current OCP registration, and
-                broker-confirmed coverage for each exact service.
+                <strong>
+                  {providerFormIsSpanish
+                    ? "El Condado de Montgomery no tiene una vía sin registro para reparaciones sencillas."
+                    : "Montgomery County has no unregistered simple-repair lane."}
+                </strong>{" "}
+                {providerFormIsSpanish
+                  ? "Un negocio móvil de reparación o mantenimiento debe tener el registro OCP del condado. Un dueño-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por un corredor para cada servicio exacto."
+                  : "A mobile repair or maintenance business must hold the County OCP registration. An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service."}
               </small>
               <small>
-                Official sources: {" "}
+                {providerFormIsSpanish ? "Fuentes oficiales: " : "Official sources: "}{" "}
                 <a
                   href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Montgomery County OCP registration guidance
+                  {providerFormIsSpanish
+                    ? "Guía de registro OCP del Condado de Montgomery"
+                    : "Montgomery County OCP registration guidance"}
                 </a>
                 {" · "}
                 <a
@@ -817,7 +838,9 @@ export function ProviderSignupForm() {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  County Code Chapter 31A
+                  {providerFormIsSpanish
+                    ? "Código del Condado, Capítulo 31A"
+                    : "County Code Chapter 31A"}
                 </a>
               </small>
             </details>
@@ -1011,7 +1034,11 @@ export function ProviderSignupForm() {
                   {entry.documents.map((doc) => (
                     <small key={doc.code}>
                       {doc.label}
-                      {doc.requiresExpiration === true ? " (must include an expiration date)" : ""}
+                      {doc.requiresExpiration === true
+                        ? (providerFormIsSpanish
+                          ? " (debe incluir una fecha de vencimiento)"
+                          : " (must include an expiration date)")
+                        : ""}
                     </small>
                   ))}
                 </div>
@@ -1556,16 +1583,28 @@ export function ProviderSignupForm() {
                 type="checkbox"
                 value="yes"
               />
+              {/* Same responsibility either way, but a one-person business has
+                  no payroll, no workers' comp, and nobody to supervise. Listing
+                  those at them is noise they have to decode before agreeing, so
+                  this branches on soloBusiness like every other field here. */}
               <span>
-                I understand that the provider business—not Tuveloz—is responsible for lawful
-                employment classification, work authorization, wages, payroll taxes, workers&apos;
-                compensation, supervision, and personnel records. An independent owner-operator
-                remains responsible for their own business and work authorization obligations.
+                {soloBusiness
+                  ? (providerFormIsSpanish
+                    ? "Aquí soy mi propio jefe. Mis impuestos y mi permiso para trabajar me corresponden a mí, no a Tuveloz."
+                    : "I'm my own boss here. My own taxes and my right to work are mine to handle, not Tuveloz's.")
+                  : (providerFormIsSpanish
+                    ? "Manejo mi propio negocio. Mis impuestos — y el pago, los impuestos y el seguro de cualquier persona que contrate — me corresponden a mí, no a Tuveloz."
+                    : "I run my own business. My taxes — and the pay, taxes, and insurance for anyone I hire — are mine to handle, not Tuveloz's.")}
               </span>
             </label>
           </fieldset>
           <label className="policy-consent">
             <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
+            {/* The English is the text of record — it is what gets written to
+                the acceptance evidence as presentedText, so it stays on screen
+                in both languages. The Spanish sits beneath it as a labeled
+                translation rather than replacing it, which keeps the recorded
+                "here is what this person was shown" true for Spanish users. */}
             <span>
               {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
               Review the <a href="/terms">Terms</a>,{" "}
@@ -1573,6 +1612,17 @@ export function ProviderSignupForm() {
               <a href="/payments">Payment Policy</a>,{" "}
               <a href="/marketplace-conduct">Conduct Policy</a>, and{" "}
               <a href="/provisional-provider-policy">Provider Pathway Policy</a>.
+              {providerFormIsSpanish && (
+                <small className="policy-consent-translation" lang="es">
+                  <b>Traducción (el texto en inglés es el que rige):</b>{" "}
+                  {PROVIDER_TERMS_ACCEPTANCE_TEXT_ES}{" "}
+                  Revise los <a href="/terms">Términos</a>,{" "}
+                  <a href="/provider-agreement">el Acuerdo de Proveedor</a>,{" "}
+                  <a href="/payments">la Política de Pago</a>,{" "}
+                  <a href="/marketplace-conduct">la Política de Conducta</a> y{" "}
+                  <a href="/provisional-provider-policy">la Política de Ruta del Proveedor</a>.
+                </small>
+              )}
             </span>
           </label>
           <label className="policy-consent">
@@ -1580,6 +1630,13 @@ export function ProviderSignupForm() {
             <span>
               {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
               Review the <a href="/privacy">Privacy Policy</a>.
+              {providerFormIsSpanish && (
+                <small className="policy-consent-translation" lang="es">
+                  <b>Traducción (el texto en inglés es el que rige):</b>{" "}
+                  {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES}{" "}
+                  Revise la <a href="/privacy">Política de Privacidad</a>.
+                </small>
+              )}
             </span>
           </label>
           {applicationChallengeId ? (
@@ -1594,9 +1651,13 @@ export function ProviderSignupForm() {
                   : "Last step: enter the code we emailed you"}
               </strong>
               <small>
+                {/* What this screen does for the applicant: confirms the email
+                    and starts a clock. The list of things a code does not prove
+                    is written for a regulator, not for someone reading their
+                    inbox — it lives in the Provider Agreement instead. */}
                 {providerFormIsSpanish
-                  ? "Escriba el código de 6 dígitos enviado al correo anterior. El código vence en 10 minutos. Solo confirma el control del correo; no verifica identidad, edad, autoridad, registro del negocio, licencias, seguros, calificaciones ni elegibilidad para trabajos."
-                  : "Enter the 6-digit code sent to the email above. The code expires in 10 minutes. This proves email control only; it does not verify identity, age, authority, business registration, licensing, insurance, qualifications, or job eligibility."}
+                  ? "Escriba el código de 6 dígitos que enviamos al correo de arriba. Vence en 10 minutos. Esto solo confirma que el correo es suyo."
+                  : "Enter the 6-digit code we sent to the email above. It expires in 10 minutes. This just confirms the email is yours."}
               </small>
               <small className="hint">
                 {providerFormIsSpanish
@@ -1604,7 +1665,7 @@ export function ProviderSignupForm() {
                   : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
-                6-digit verification code
+                {providerFormIsSpanish ? "Código de 6 dígitos" : "6-digit verification code"}
                 <input
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -1624,16 +1685,18 @@ export function ProviderSignupForm() {
                 disabled={applicationBusy || applicationVerificationCode.length !== 6}
                 type="submit"
               >
-                {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                {applicationBusy
+                  ? (providerFormIsSpanish ? "Verificando…" : "Verifying...")
+                  : (providerFormIsSpanish ? "Verificar el correo y continuar" : "Verify email and continue")}
               </button>
               {/* One button to press. The two ways out stay available as plain
                   links so they cannot be mistaken for the thing to do next. */}
               <div className="form-alt-actions">
                 <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
-                  Send the code again
+                  {providerFormIsSpanish ? "Enviar el código otra vez" : "Send the code again"}
                 </button>
                 <button disabled={applicationBusy} onClick={resetChallenge} type="button">
-                  Go back and edit
+                  {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
                 </button>
               </div>
             </section>

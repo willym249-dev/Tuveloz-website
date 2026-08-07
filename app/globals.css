@@ -4767,6 +4767,22 @@ label > small {
   border-color: #6f93ad;
 }
 
+/* Spanish courtesy translation under an acceptance text. Set apart from the
+   English above it, which is the version of record. */
+.policy-consent-translation {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: #b9cad8;
+  display: block;
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.policy-consent-translation b {
+  color: #dce7ef;
+}
+
 .legal-check-status {
   border-radius: 8px;
   font-size: 10px;

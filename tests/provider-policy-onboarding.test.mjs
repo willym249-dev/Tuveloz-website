@@ -105,7 +105,24 @@ test("public onboarding and agreements clearly deny TUVELOZ employment or traini
   const providerAgreement = await read("../app/provider-agreement/page.tsx");
   const faq = await read("../app/faq/page.tsx");
   assert.ok(homepage.includes("Tuveloz doesn&apos;t employ, train, or assign work to providers"));
-  assert.match(signupForm, /provider business—not Tuveloz—is responsible for lawful\s+employment classification/);
+  // The applicant carries this responsibility whether or not they hire anyone,
+  // so both branches of the checkbox must disclaim Tuveloz, in both languages.
+  assert.match(signupForm, /My own taxes and my right to work are mine to handle, not Tuveloz's\./);
+  assert.match(
+    signupForm,
+    /the pay, taxes, and insurance for anyone I hire — are mine to handle, not Tuveloz's\./,
+  );
+  assert.match(signupForm, /me corresponden a mí, no a Tuveloz\./);
+  assert.equal(
+    signupForm.match(/not Tuveloz's\./g)?.length,
+    2,
+    "solo and employer variants must both disclaim Tuveloz",
+  );
+  assert.equal(
+    signupForm.match(/no a Tuveloz\./g)?.length,
+    2,
+    "both Spanish variants must disclaim Tuveloz",
+  );
   assert.ok(terms.includes("doesn&apos;t hire, employ, train, sponsor, assign"));
   assert.ok(providerAgreement.includes("doesn&apos;t promise you any customer work"));
   assert.ok(faq.includes("Applicant-only accounts receive no training or jobs."));

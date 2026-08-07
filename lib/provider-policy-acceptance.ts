@@ -15,6 +15,24 @@ export const PROVIDER_TERMS_ACCEPTANCE_TEXT =
 export const PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT =
   "I separately acknowledge that I reviewed the Privacy Policy and understand how TUVELOZ handles provider-application, identity, credential, insurance, personnel, and service-eligibility information.";
 
+/**
+ * Courtesy translations of the two acceptance texts above.
+ *
+ * These are shown beside the English, never instead of it. The English strings
+ * are the `presentedText` written into the immutable acceptance record, so the
+ * English has to stay on screen for that record to be a true statement of what
+ * the person was shown. Swapping the display to Spanish while still recording
+ * the English would make every Spanish acceptance record false.
+ *
+ * Deliberately not referenced by PROVIDER_ACCEPTANCE_DOCUMENTS: changing a
+ * translation must never change an evidence hash.
+ */
+export const PROVIDER_TERMS_ACCEPTANCE_TEXT_ES =
+  "Tengo al menos 18 años y autorización para actuar en nombre del solicitante o del negocio proveedor. Acepto los Términos de Uso, el Acuerdo de Proveedor, la Política de Pago, Cancelación y Reembolso, la Política de Conducta y Reseñas del Mercado, y la Política de Proveedor Provisional y Aprendiz que se muestran para esta solicitud. Certifico que la información de la solicitud está completa y vigente, y entiendo que no se otorga acceso a ningún servicio ni trabajo de cliente hasta que se registre cada aprobación requerida.";
+
+export const PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES =
+  "Reconozco por separado que revisé la Política de Privacidad y entiendo cómo TUVELOZ maneja la información de solicitud de proveedor, identidad, credenciales, seguros, personal y elegibilidad de servicios.";
+
 export const PROVIDER_ACCEPTANCE_EVIDENCE_SCHEMA_VERSION = "2";
 
 export const PROVIDER_ACCEPTANCE_PURPOSES = [
