@@ -63,7 +63,7 @@ Know someone who fixes cars for a living? Send them this.
 Apply in minutes, English o español → link in bio
 
 HASHTAGS (5, in the caption — not the first comment):
-#MobileMechanic #MontgomeryCountyMD #AutoRepair #SilverSpringMD #MechanicLife
+#MobileMechanic #MechanicLife #AutoTechnician #MechanicsOfInstagram #MontgomeryCountyMD
 
 
 =====================================================================
@@ -76,7 +76,7 @@ signing up now puts you first in line. Send this to a mechanic you know.
 tuveloz.com/join
 
 HASHTAGS (5):
-#MobileMechanic #MontgomeryCountyMD #CarTok #MechanicsOfTikTok #AutoRepair
+#MechanicsOfTikTok #MobileMechanic #MechanicLife #AutoTechnician #MontgomeryCountyMD
 
 
 =====================================================================
@@ -113,7 +113,7 @@ Send this to a mechanic you know. Mándaselo a un mecánico que conozcas.
 tuveloz.com/join
 
 HASHTAGS (5, both languages):
-#MobileMechanic #MecanicoMovil #MontgomeryCountyMD #CarTok #AutoRepair
+#MobileMechanic #MecanicoMovil #MechanicLife #MechanicsOfTikTok #MontgomeryCountyMD
 
 
 =====================================================================
@@ -156,7 +156,7 @@ Know someone who fixes cars for a living? Send them this.
 Apply in minutes / Solicita en minutos — link in bio
 
 HASHTAGS (5):
-#MobileMechanic #MecanicoMovil #MontgomeryCountyMD #SilverSpringMD #MechanicLife
+#MobileMechanic #MecanicoMovil #MechanicLife #MechanicsOfInstagram #MontgomeryCountyMD
 
 
 =====================================================================
@@ -170,17 +170,34 @@ Target NICHE and MID-SIZE tags: roughly 10K–500K posts. Hyperlocal tags report
 up to 3x the engagement of broad ones for small businesses, and Instagram's own
 guidance of 3–5 highly relevant tags outperforms 10+ loose ones by around 25%.
 
-The shape that works here, 5 slots:
-  1-2  TRADE, niche      #MobileMechanic  #MecanicoMovil  #MechanicLife
-  2    GEO, specific     #MontgomeryCountyMD  #SilverSpringMD  #RockvilleMD
-                         #GaithersburgMD  #WheatonMD  #GermantownMD
-  1    COMMUNITY         #MechanicLife  #WrenchLife  #LatinosEnMaryland
+THE AUDIENCE IS PROVIDERS, NOT CUSTOMERS. That decides the whole set.
 
-ROTATE THE TOWN each post. Match it to the location tag on that post, and work
-across the county rather than hammering one town.
+Tags split into two crowds, and only one of them is the target:
+  MECHANICS TALKING TO MECHANICS  #MechanicLife  #MechanicsOfInstagram
+    #MechanicsOfTikTok  #AutoTechnician  #WrenchLife  #ShopLife
+    #MecanicoMovil  #TallerMovil  #MecanicoADomicilio
+  CUSTOMERS AND ENTHUSIASTS  #AutoRepair  #CarTok  #CarsOfInstagram
+    #CarCommunity — these reach people who want a mechanic, or who just like
+    cars. Neither applies to a job posting they cannot make yet.
+
+Spend the slots on the first crowd. #MobileMechanic straddles both and earns
+its place because mechanics use it on their own work.
+
+The shape that works here, 5 slots:
+  3-4  TRADE COMMUNITY   from the first list above
+  1    GEO, county-level #MontgomeryCountyMD
+
+Only ONE geo tag, and no town tag. The post's LOCATION TAG already does the
+local work — it is a stronger local signal than a hashtag and costs no slot.
+Rotate the town on the location tag instead, and keep the hashtags on the trade.
 
 NEVER use: #cars #carsofinstagram #automotive #auto #carporn #supercars
 #smallbusiness — all too large to reach anyone local.
+
+Worth remembering: hashtags are a weak channel for reaching this audience at
+all. Independent mechanics in MoCo are far easier to find in local Facebook
+groups, on Marketplace, and by DM — see provider-outreach-kit.md and
+moco-outreach-worklist.md. Social is the supporting act here, not the plan.
 
 Volume check: post counts move, and they cannot be read from outside the app.
 Before locking a set, type each tag into Instagram search and look at the count.
@@ -214,7 +231,7 @@ día uno.
 Solicita en minutos, English o español → enlace en bio
 
 HASHTAGS (5):
-#MecanicoMovil #MontgomeryCountyMD #MecanicoADomicilio #LatinosEnMaryland #TallerMovil
+#MecanicoMovil #TallerMovil #MecanicoADomicilio #LatinosEnMaryland #MontgomeryCountyMD
 
 
 =====================================================================
@@ -227,7 +244,7 @@ solicitudes de clientes aún no están activas; inscribirte ahora te pone primer
 en la fila. Mándaselo a un mecánico que conozcas. tuveloz.com/join
 
 HASHTAGS (5):
-#MecanicoMovil #MontgomeryCountyMD #LatinosEnMaryland #CarTok #MecanicoADomicilio
+#MecanicoMovil #MecanicoADomicilio #TallerMovil #LatinosEnMaryland #MontgomeryCountyMD
 
 
 =====================================================================
