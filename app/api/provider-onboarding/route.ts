@@ -618,9 +618,16 @@ async function responseData(
       item.acceptedForApplicationReview
     )),
     allAgreementsEligibilityCurrent: agreementStatuses.every((item) => item.eligibilityCurrent),
+    // Read as a to-do list by someone who has just signed in for the first
+    // time, so every line has to be something they can still act on. The old
+    // first step told them to choose a pathway; signup stopped offering that
+    // choice and now always creates an independent owner-operator, so it asked
+    // for an action with nowhere to perform it. Selecting services happens
+    // during the application rather than here, so it is stated as done.
     guide: [
-      "Choose the pathway that matches the real working relationship.",
-      "Choose exact services; a broad general-mechanic category is never accepted.",
+      "You applied as an independent owner-operator working under your own business. Nothing to choose here.",
+      "Your exact services came from your application; a broad general-mechanic category is never accepted.",
+      "Verify your identity and adult status above before evidence review can finish.",
       "Upload only the evidence requested for each exact service. Every file stays quarantined until its malware scan reports clean.",
       "TUVELOZ reviews each clean item; an upload or appeal alone does not create eligibility.",
       "Accept every current provider agreement with the authorized signer name and title.",

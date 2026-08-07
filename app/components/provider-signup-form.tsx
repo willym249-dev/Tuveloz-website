@@ -748,9 +748,14 @@ export function ProviderSignupForm() {
         <p>{providerFormIsSpanish
           ? "Esto es lo que sigue: (1) inicie sesión con el mismo correo, (2) suba la evidencia requerida para sus servicios, (3) nuestro equipo revisa y usted puede seguir el estado en su panel. Le avisaremos por correo en cada paso."
           : "Here's what happens next: (1) sign in with the same email, (2) upload the evidence required for your services, (3) our team reviews and you can track the status from your dashboard. We'll email you at each step."}</p>
+        {/* Resubmitting for an email that already has an application keeps the
+            original untouched, and nothing on the signed-in side can edit the
+            selected services — there is no PATCH for them. Promising "changes
+            happen after you sign in" sent people looking for a screen that does
+            not exist, so this points at the path that actually works. */}
         <p><small>{providerFormIsSpanish
-          ? "Si ya existía una solicitud para este correo, se conservó esa solicitud; los cambios se hacen después de iniciar sesión."
-          : "If an application already existed for this email, that one was kept — changes happen after you sign in."}</small></p>
+          ? "Si ya existía una solicitud para este correo, se conservó sin cambios. Para cambiar sus servicios, escríbanos a hello@tuveloz.com. La evidencia y la verificación de identidad sí se completan después de iniciar sesión."
+          : "If an application already existed for this email, it was kept as it was. To change your services, email hello@tuveloz.com. Evidence and identity verification are what you complete after signing in."}</small></p>
         <Link className="button primary" href="/account?role=provider">
           {providerFormIsSpanish ? "Continuar con la verificación" : "Continue provider verification"}
         </Link>
@@ -1736,8 +1741,8 @@ export function ProviderSignupForm() {
               confirmStyle="lime"
               confirmType="submit"
               message={providerFormIsSpanish
-                ? "Écheles un vistazo a los datos de arriba — ¿todo bien? Le enviaremos un código de un solo uso para confirmar que es usted. Esto inicia una solicitud nueva solo si aún no tiene una para este correo; si ya la tiene, puede actualizarla después de iniciar sesión."
-                : "Take a quick look above — all set? We'll email you a one-time code to confirm it's you. This starts a new application only if you don't already have one for this email; if you do, you can update it after signing in."}
+                ? "Écheles un vistazo a los datos de arriba — ¿todo bien? Le enviaremos un código de un solo uso para confirmar que es usted. Esto inicia una solicitud nueva solo si aún no tiene una para este correo; si ya la tiene, se conserva sin cambios y puede escribirnos para ajustarla."
+                : "Take a quick look above — all set? We'll email you a one-time code to confirm it's you. This starts a new application only if you don't already have one for this email; if you do, it stays as it is and you can email us to adjust it."}
               onBack={() => setConfirmingSubmit(false)}
               title={providerFormIsSpanish ? "¿Listo para enviarla?" : "Ready to send it in?"}
             />

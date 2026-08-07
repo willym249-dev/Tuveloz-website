@@ -809,8 +809,14 @@ export default function ProviderOnboardingPage() {
 
             <section className="account-card">
               <div className="account-card-heading">
-                <div><span className="account-role">Easy provider guide</span><h2>Seven steps</h2></div>
-                <span className="account-count">7</span>
+                {/* Derived, not hard-coded: the heading and the count read
+                    "Seven"/"7" while the list itself was served from the API,
+                    so editing the guide silently made them disagree. */}
+                <div>
+                  <span className="account-role">Easy provider guide</span>
+                  <h2>{data.guide.length} steps</h2>
+                </div>
+                <span className="account-count">{data.guide.length}</span>
               </div>
               <ol className="provider-onboarding-guide">
                 {data.guide.map((step, index) => <li key={step}><strong>{index + 1}.</strong> {step}</li>)}
@@ -826,7 +832,25 @@ export default function ProviderOnboardingPage() {
                 <div><span className="account-role">Exact service checklist</span><h2>Selected services</h2></div>
                 <span className="account-count">{data.services.length}</span>
               </div>
-              {data.services.length === 0 && <p>No exact services are on this application.</p>}
+              {data.services.length === 0 && (
+                /* This was a bare sentence with no action, on a page whose only
+                   two links are the logo and the account home — so a provider
+                   who landed here with no services had nowhere at all to go.
+                   Services are set during the application and cannot be changed
+                   from any provider-facing screen, so email is the real path
+                   and it needs to be said out loud. */
+                <>
+                  <p>No exact services are on this application.</p>
+                  <p>
+                    Every application should carry at least one. If yours is empty, or you need to
+                    add or remove a service, email{" "}
+                    <a href="mailto:hello@tuveloz.com?subject=Change%20the%20services%20on%20my%20provider%20application">
+                      hello@tuveloz.com
+                    </a>{" "}
+                    and we&apos;ll update it — services can&apos;t be changed from this page yet.
+                  </p>
+                </>
+              )}
               <div className="account-request-list">
                 {data.services.map((service) => (
                   <article className="account-request provider-onboarding-service" key={service.code}>

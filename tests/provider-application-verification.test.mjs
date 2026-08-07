@@ -302,7 +302,11 @@ test("provider UI freezes the reviewed payload and preserves the challenge while
   assert.match(page, /Last step: enter the code we emailed you/);
   assert.match(page, /This proves email control only/);
   assert.match(page, /Verify email and continue/);
-  assert.match(page, /If an application already existed for this email, that one was kept/);
+  // The API keeps an existing application untouched, and nothing on the
+  // signed-in side can edit its services, so the success copy has to say both:
+  // that the original survived, and where to actually go to change it.
+  assert.match(page, /If an application already existed for this email, it was kept as it was/);
+  assert.match(page, /To change your services, email hello@tuveloz\.com/);
   assert.doesNotMatch(page, /Verify email and submit application|Application saved\./);
 });
 
