@@ -5,9 +5,9 @@
  *   badge master:  brand/social-media-kit/tuveloz-profile-master-1024.png
  *   lockup master: brand/social-media-kit/Tuveloz Logo.png
  *
- * Outputs to public/: favicon.ico (16/32/48), favicon.svg,
- * tuveloz-favicon-v2.svg, apple-touch-icon.png (180), icon-192.png,
- * icon-512.png, og-image.png (1200x630).
+ * Outputs to public/: brand-badge.png (the header/footer mark), favicon.ico
+ * (16/32/48), favicon.svg, tuveloz-favicon-v2.svg, apple-touch-icon.png (180),
+ * icon-192.png, icon-512.png, og-image.png (1200x630).
  *
  * Run from the repo root:  node scripts/generate-brand-assets.mjs
  * Then bump the ?v= query strings in app/layout.tsx and
@@ -47,6 +47,13 @@ while (stack.length) {
 }
 for (let p = 0; p < W * H; p++) if (outside[p]) data[p * 4 + 3] = 0;
 const badgePng = await sharp(data, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer();
+
+// --- Header/footer mark: the badge trimmed edge-to-edge ---
+// This is the logo every page renders through <BrandMark>, so it has to come
+// out of the same master as the favicons. It is trimmed to the keyline because
+// the container gives it its own spacing, unlike the app icons below.
+await sharp(badgePng).trim().resize(256, 256).png().toFile(join(pub, "brand-badge.png"));
+console.log("wrote brand-badge.png");
 
 // --- PNG icons ---
 for (const [size, out] of [[180, "apple-touch-icon.png"], [192, "icon-192.png"], [512, "icon-512.png"]]) {

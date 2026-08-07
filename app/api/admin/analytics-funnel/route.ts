@@ -1,7 +1,9 @@
 import { and, count, gte, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { analyticsEvents } from "../../../../db/schema";
+import { analyticsEvents, launchUpdateSubscribers } from "../../../../db/schema";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
+import { ASSISTANT_EVENT, type AssistantEventProps } from "../../../../lib/ai/assistant-telemetry";
+import { POLICY_ENTRIES } from "../../../../lib/ai/policy-knowledge";
 
 // Owner-only read of the first-party funnel events collected in the
 // analytics_events D1 table (see lib/analytics.ts). Nothing here is sent to a
@@ -176,6 +178,106 @@ function windowPayload(counts: Map<string, number>, experiments: Record<string, 
   };
 }
 
+const TOPIC_LABELS = new Map(POLICY_ENTRIES.map((entry) => [entry.id, entry.question]));
+
+/**
+ * What the assistant has been asked and whether its money answers stayed
+ * hedged. Reads the shape-only rows written by lib/ai/assistant-telemetry.ts —
+ * there is no question or answer text in this table to read.
+ */
+async function assistantSummary(since: string | null) {
+  const where = since
+    ? and(eqEvent(), gte(analyticsEvents.createdAt, since))
+    : eqEvent();
+  const rows = await getDb()
+    .select({ props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(where);
+
+  const topics = new Map<string, number>();
+  let answered = 0;
+  let grounded = 0;
+  let guardReplaced = 0;
+  const byAudience = { customer: 0, provider: 0 };
+
+  for (const row of rows) {
+    answered += 1;
+    let props: Partial<AssistantEventProps> = {};
+    try {
+      props = JSON.parse(row.props) as Partial<AssistantEventProps>;
+    } catch {
+      continue;
+    }
+    if (props.audience === "provider") byAudience.provider += 1;
+    else byAudience.customer += 1;
+    if (props.grounded) grounded += 1;
+    if (props.guard === "replaced") guardReplaced += 1;
+    for (const topic of props.topics ?? []) {
+      topics.set(topic, (topics.get(topic) ?? 0) + 1);
+    }
+  }
+
+  return {
+    answered,
+    grounded,
+    vehicleOnly: answered - grounded,
+    byAudience,
+    // A non-zero count means the model stated a provisional design as settled
+    // fact and the vetted wording was served instead. Worth a look at the
+    // prompt, not a customer-facing incident.
+    guardReplaced,
+    topTopics: [...topics.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([id, askCount]) => ({ id, label: TOPIC_LABELS.get(id) ?? id, count: askCount })),
+  };
+}
+
+function eqEvent() {
+  return inArray(analyticsEvents.event, [ASSISTANT_EVENT]);
+}
+
+/**
+ * The pre-launch email list. Nothing here shows an address: the owner needs the
+ * size and the shape of the list, and the addresses themselves live behind the
+ * privacy tooling.
+ */
+async function launchListSummary(since: string | null) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      source: launchUpdateSubscribers.source,
+      unsubscribedAt: launchUpdateSubscribers.unsubscribedAt,
+      consentedAt: launchUpdateSubscribers.consentedAt,
+    })
+    .from(launchUpdateSubscribers);
+
+  const bySource = new Map<string, number>();
+  let subscribed = 0;
+  let unsubscribed = 0;
+  let recent = 0;
+
+  for (const row of rows) {
+    if (row.unsubscribedAt) {
+      unsubscribed += 1;
+      continue;
+    }
+    subscribed += 1;
+    const source = row.source || "unknown";
+    bySource.set(source, (bySource.get(source) ?? 0) + 1);
+    if (since && row.consentedAt && row.consentedAt >= since) recent += 1;
+  }
+
+  return {
+    subscribed,
+    unsubscribed,
+    recent,
+    bySource: [...bySource.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([source, subscriberCount]) => ({ source, count: subscriberCount })),
+  };
+}
+
 export async function GET(request: Request) {
   const verification = await verifyOwnerRequest(request);
   if (!verification.ok) {
@@ -195,13 +297,19 @@ export async function GET(request: Request) {
     const now = Date.now();
     const since30 = threshold(30, now);
     const since7 = threshold(7, now);
-    const [allTime, last30, last7, expAll, exp30, exp7] = await Promise.all([
+    const [
+      allTime, last30, last7, expAll, exp30, exp7,
+      assistantAll, assistant7, launchList,
+    ] = await Promise.all([
       countsSince(null),
       countsSince(since30),
       countsSince(since7),
       experimentsSince(null),
       experimentsSince(since30),
       experimentsSince(since7),
+      assistantSummary(null),
+      assistantSummary(since7),
+      launchListSummary(since7),
     ]);
     return Response.json(
       {
@@ -212,6 +320,8 @@ export async function GET(request: Request) {
           last30: windowPayload(last30, exp30),
           last7: windowPayload(last7, exp7),
         },
+        assistant: { allTime: assistantAll, last7: assistant7 },
+        launchList,
       },
       { headers: { "cache-control": "no-store" } },
     );

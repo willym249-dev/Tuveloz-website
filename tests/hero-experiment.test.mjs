@@ -27,9 +27,10 @@ test("hero and pitch each render both variants and tag the start event", async (
   // Pitch variants.
   assert.match(page, /You’ve got the skills/);
   assert.match(page, /Your customers\. Your prices\. Your call\./);
-  // Founding-banner CTA variants.
+  // Founding-banner CTA variants. Control matches the site-wide "Apply free"
+  // wording; the variant tests a different phrasing against it.
   assert.match(page, /Claim my spot/);
-  assert.match(page, /"Join free"/);
+  assert.match(page, /"Apply free"/);
   // Start event carries the per-visitor variant map.
   assert.match(page, /track\("provider_signup_started",\s*\{\s*variants: activeVariants\(\)/);
 });

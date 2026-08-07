@@ -26,6 +26,14 @@ type IconProps = SVGProps<SVGSVGElement> & {
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <span className={compact ? "mini-mark" : "brand-mark"} aria-hidden="true">
+      {/* Deliberately a plain <img>, not next/image. The badge is an 11KB PNG
+          drawn at a fixed 40px (25px compact) in the header of every page, so
+          there is no responsive sizing to gain — and routing it through the
+          Worker's image optimizer would add a request hop and Cloudflare Images
+          usage per page load for an asset smaller than the request overhead.
+          It also sits above the fold, where next/image's lazy loading is the
+          wrong default. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/brand-badge.png?v=1" alt="" />
     </span>
   );

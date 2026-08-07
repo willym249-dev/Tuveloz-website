@@ -146,6 +146,22 @@ function Experiments({ windows }: { windows: WindowPayload["experiments"] }) {
   );
 }
 
+type AssistantSummary = {
+  answered: number;
+  grounded: number;
+  vehicleOnly: number;
+  byAudience: { customer: number; provider: number };
+  guardReplaced: number;
+  topTopics: Array<{ id: string; label: string; count: number }>;
+};
+
+type LaunchList = {
+  subscribed: number;
+  unsubscribed: number;
+  recent: number;
+  bySource: Array<{ source: string; count: number }>;
+};
+
 type FunnelResponse = {
   error?: string;
   generatedAt: string;
@@ -155,7 +171,109 @@ type FunnelResponse = {
     last30: WindowPayload;
     last7: WindowPayload;
   };
+  assistant?: { allTime: AssistantSummary; last7: AssistantSummary };
+  launchList?: LaunchList;
 };
+
+/**
+ * Two things the owner had no way to see: how many people are on the pre-launch
+ * list, and what Tuveloz AI is being asked. Neither panel shows an email address
+ * or anyone's question — the assistant only records the shape of an answer.
+ */
+function LaunchListPanel({ list }: { list: LaunchList }) {
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2>Launch email list</h2>
+      <p className="admin-section-copy">
+        People who asked to hear when customer requests open. Addresses are not shown
+        here; this is the size and shape of the list.
+      </p>
+      <div className="admin-stats">
+        <div><strong>{list.subscribed}</strong><span>Subscribed</span></div>
+        <div><strong>{list.recent}</strong><span>Joined in the last 7 days</span></div>
+        <div><strong>{list.unsubscribed}</strong><span>Unsubscribed</span></div>
+      </div>
+      {list.bySource.length > 0 && (
+        <table style={{ borderCollapse: "collapse", marginTop: "1rem" }}>
+          <tbody>
+            {list.bySource.map((row) => (
+              <tr key={row.source}>
+                <td style={{ padding: "0.3rem 0.6rem 0.3rem 0", fontFamily: "monospace", fontSize: "0.82rem" }}>
+                  {row.source}
+                </td>
+                <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                  {row.count}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
+function AssistantPanel({ assistant }: { assistant: { allTime: AssistantSummary; last7: AssistantSummary } }) {
+  const { allTime, last7 } = assistant;
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2>Tuveloz AI</h2>
+      <p className="admin-section-copy">
+        What the assistant has been asked, and whether its answers about money kept
+        the policy&rsquo;s hedges. Questions and answers are never stored — only which
+        vetted topic matched.
+      </p>
+      <div className="admin-stats">
+        <div><strong>{allTime.answered}</strong><span>Answers all time</span></div>
+        <div><strong>{last7.answered}</strong><span>Last 7 days</span></div>
+        <div><strong>{allTime.grounded}</strong><span>Policy questions</span></div>
+        <div><strong>{allTime.vehicleOnly}</strong><span>Car questions</span></div>
+      </div>
+
+      {allTime.guardReplaced > 0 ? (
+        <p className="form-error" role="status" style={{ marginTop: "1rem" }}>
+          The hedge guard replaced {allTime.guardReplaced}{" "}
+          {allTime.guardReplaced === 1 ? "answer" : "answers"} ({last7.guardReplaced} in the
+          last 7 days). Each one was a reply that stated a provisional design — the fee,
+          payouts, refunds, or the launch state — as settled fact, so the approved wording
+          was served instead. Customers were not shown a wrong answer; this is a signal
+          the prompt or the model has drifted and is worth a look.
+        </p>
+      ) : (
+        <p className="hint" style={{ marginTop: "1rem" }}>
+          The hedge guard has not had to replace an answer. Every reply about a
+          provisional design kept its qualifier.
+        </p>
+      )}
+
+      <p className="hint" style={{ marginTop: "0.75rem", fontSize: "0.82rem" }}>
+        Asked by: {allTime.byAudience.customer} customer · {allTime.byAudience.provider} provider
+      </p>
+
+      {allTime.topTopics.length > 0 && (
+        <>
+          <h3 style={{ marginTop: "1.25rem", fontSize: "1rem" }}>Most asked</h3>
+          <table style={{ borderCollapse: "collapse", marginTop: "0.5rem" }}>
+            <tbody>
+              {allTime.topTopics.map((topic) => (
+                <tr key={topic.id}>
+                  <td style={{ padding: "0.3rem 0.9rem 0.3rem 0", fontSize: "0.9rem" }}>{topic.label}</td>
+                  <td style={{ padding: "0.3rem 0", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+                    {topic.count}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="hint" style={{ marginTop: "0.6rem", fontSize: "0.78rem" }}>
+            What people ask most is the clearest signal of what the site is not
+            explaining well enough on its own.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
 
 type WindowKey = "last7" | "last30" | "allTime";
 
@@ -264,10 +382,12 @@ export default function AnalyticsFunnelPage() {
 
       <section className="admin-intro">
         <span className="kicker">Owner control center</span>
-        <h1>Signup funnel</h1>
+        <h1>Funnel, launch list &amp; AI</h1>
         <p>
-          Where people drop off between opening a form and finishing it. Data comes only from
-          this site&rsquo;s own event log — nothing is shared with a third party.
+          Where people drop off between opening a form and finishing it, how many are
+          waiting on the launch list, and what Tuveloz AI is being asked. Data comes only
+          from this site&rsquo;s own event log — nothing is shared with a third party, and
+          no email address or visitor question is stored here.
         </p>
       </section>
 
@@ -350,6 +470,9 @@ export default function AnalyticsFunnelPage() {
               </tbody>
             </table>
           </details>
+
+          {data.launchList && <LaunchListPanel list={data.launchList} />}
+          {data.assistant && <AssistantPanel assistant={data.assistant} />}
 
           <p className="hint" style={{ marginTop: "1.5rem", fontSize: "0.78rem" }}>
             Generated {new Date(data.generatedAt).toLocaleString()}.

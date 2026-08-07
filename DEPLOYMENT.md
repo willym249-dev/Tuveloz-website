@@ -333,6 +333,60 @@ In Cloudflare, attach the public domain to the deployed Worker. Attach the
 protected admin hostname to the same Worker, then confirm its Access policy is
 active before opening the owner dashboard.
 
+### ai.tuveloz.com
+
+`wrangler.jsonc` claims `ai.tuveloz.com` as a custom domain on this Worker, and
+`worker/index.ts` redirects that host's root to `/ai`. Every other path on the
+host is served normally, so links the assistant hands out (`/payments`,
+`/faq`) resolve without leaving the host the visitor is on.
+
+**Read this before the first deploy that includes the route.** As of August 6,
+2026, `ai.tuveloz.com` resolves through Cloudflare to
+`custom-domains.chatgpt.site` — an OpenAI custom-GPT domain, not this Worker.
+Deploying with the route above **takes that hostname over**, which is the
+intended direction (the in-app assistant at `/ai` replaces the external host),
+but it does retire whatever that custom GPT was serving. Confirm nobody still
+depends on it first.
+
+To deploy without claiming the hostname, delete the `ai.tuveloz.com` entry from
+`routes` in `wrangler.jsonc`. Nothing else depends on it: `/ai` keeps working on
+the main domain, and the redirect in `worker/index.ts` simply never fires.
+
+### Checking Spanish coverage
+
+```bash
+npm run dev            # in one shell
+npm run i18n:check     # in another
+```
+
+Walks every page in `SPANISH_READY_PATHS` the way the runtime translator does
+and fails if any visible string on a Spanish-ready page has no dictionary entry.
+Run it after changing public copy: adding an English sentence to a translated
+page is exactly how the site ended up English-only the first time. Either add
+the Spanish or drop the page from the ready list — the point is that a page
+either offers Spanish completely or does not offer it at all.
+
+Legal pages are deliberately excluded. They stay English and do not show the
+language toggle, because a half-translated agreement is worse than an English
+one.
+
+### Checking the assistant after a deploy
+
+```bash
+npm run ai:check -- https://tuveloz.com
+```
+
+Asks the live assistant four questions and fails if a policy answer comes back
+without its source link, if an answer about a provisional design (the fee, the
+payout, the launch state) reads as settled fact, or if a plain car question
+drags policy material in. Exits 0 with a note when the environment has no AI
+provider keys, so it is safe to run anywhere.
+
+The server enforces the same hedge rule at request time — a reply that loses it
+is replaced with the approved wording before it reaches anyone — so this check
+is a canary for prompt drift, not the only thing standing between a customer and
+a wrong answer about money.
+
 ## Required GitHub Actions deployment
 
 The repository includes `.github/workflows/verify.yml` and
