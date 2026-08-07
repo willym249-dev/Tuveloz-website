@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useState,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -14,21 +15,25 @@ const LANGUAGE_KEY = "tuveloz-language";
 const LANGUAGE_EVENT = "tuveloz-language-change";
 
 const spanishText: Record<string, string> = {
-  "Customer launch update": "Actualización del lanzamiento para clientes",
   "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.": "Tuveloz aún no acepta solicitudes de servicio ni pagos de clientes. Primero estamos incorporando y revisando negocios proveedores locales para que los clientes tengan buenas opciones cuando abra el mercado.",
   "Customer and provider accounts are available now. Creating an account does not submit a service request or charge you.": "Las cuentas de clientes y proveedores ya están disponibles. Crear una cuenta no envía una solicitud de servicio ni genera ningún cargo.",
-  "Create customer account": "Crear una cuenta de cliente",
   "Learn about Tuveloz": "Conozca Tuveloz",
-  "Customer launch status": "Estado del lanzamiento para clientes",
   "Safety & trust": "Seguridad y confianza",
-  "Launch status": "Estado del lanzamiento",
   "Tuveloz home": "Página principal de Tuveloz",
   "Sign up or sign in": "Registrarse / entrar",
-  "Provider onboarding is open": "La incorporación de proveedores está abierta",
   "Tuveloz is building a local marketplace for vehicle services. Provider applications and evidence review are open. Customer service requests and payments are not yet available, so providers cannot accept jobs through Tuveloz yet.": "Tuveloz está creando un mercado local de servicios para vehículos. Las solicitudes de proveedores y la revisión de documentos están abiertas. Las solicitudes de servicio y los pagos de clientes aún no están disponibles, por lo que los proveedores todavía no pueden aceptar trabajos a través de Tuveloz.",
-  "See customer launch status": "Ver el estado del lanzamiento para clientes",
   "Try Tuveloz AI": "Probar Tuveloz AI",
   "Ask Tuveloz AI": "Preguntar a Tuveloz AI",
+  "Ask us anything. In English or Spanish.": "Pregúntenos lo que sea. En inglés o español.",
+  "Stuck describing what your car is doing? Wondering how the fee, the parts, or getting paid actually work? Ask here and get a straight answer, with a link to the page it came from. Tuveloz AI does not diagnose your vehicle, dispatch help, guarantee pricing, or choose a provider.": "¿No sabe cómo describir lo que hace su carro? ¿Tiene dudas sobre la tarifa, las piezas o cómo se le paga? Pregunte aquí y reciba una respuesta clara, con el enlace a la página de donde viene. Tuveloz AI no diagnostica su vehículo, no envía ayuda, no garantiza precios ni elige un proveedor.",
+  "Open now · Tuveloz AI": "Disponible ahora · Tuveloz AI",
+  "I need work done on my car": "Necesito trabajo en mi carro",
+  "Describe a problem, or ask how using Tuveloz works.": "Describa un problema o pregunte cómo funciona Tuveloz.",
+  "I do car work": "Yo trabajo en carros",
+  "Repairs, detailing, tint — ask how quoting, getting paid, and the paperwork work.": "Reparación, detallado, polarizado: pregunte cómo funcionan las cotizaciones, los pagos y el papeleo.",
+  "Read it yourself:": "Léalo usted mismo:",
+  "Ask how quoting, paperwork, or getting paid works…": "Pregunte cómo funcionan las cotizaciones, el papeleo o los pagos…",
+  "Ask Tuveloz AI about this page": "Pregunte a Tuveloz AI sobre esta página",
   "Describe what your vehicle needs, clearly.": "Describa lo que necesita su vehículo, con claridad.",
   "Get bilingual, safety-first guidance that helps you organize what your vehicle is doing and prepare for a future service request. Tuveloz AI does not diagnose your vehicle, dispatch help, guarantee pricing, or choose a provider.": "Reciba orientación bilingüe centrada en la seguridad que le ayuda a organizar lo que hace su vehículo y a prepararse para una futura solicitud de servicio. Tuveloz AI no diagnostica su vehículo, no envía ayuda, no garantiza precios ni elige un proveedor.",
   "Safety first.": "La seguridad primero.",
@@ -59,16 +64,13 @@ const spanishText: Record<string, string> = {
   "Available now · Tuveloz AI": "Disponible ahora · Tuveloz AI",
   "A clearer way to describe what your vehicle needs.": "Una forma más clara de describir lo que necesita su vehículo.",
   "Get bilingual, safety-first guidance that helps you organize observations and prepare for future service requests. It does not diagnose, dispatch help, guarantee pricing, or choose a provider.": "Reciba orientación bilingüe centrada en la seguridad para organizar sus observaciones y prepararse para futuras solicitudes de servicio. No diagnostica, envía ayuda, garantiza precios ni elige un proveedor.",
-  "Open Tuveloz AI": "Abrir Tuveloz AI",
   "After launch, customers will be able to request approved services, compare eligible providers and quotes, and choose what works best. Service requests are not yet available.": "Después del lanzamiento, los clientes podrán solicitar servicios aprobados, comparar proveedores elegibles y cotizaciones, y elegir la mejor opción. Las solicitudes de servicio aún no están disponibles.",
-  "Check customer launch status": "Consultar el estado del lanzamiento para clientes",
   "Mobile mechanics, service-truck operators, and shop-based providers can apply now, select specific services for review, and upload the required evidence. Job access begins only after the provider and each selected service pass every required review.": "Los mecánicos móviles, los operadores de vehículos de servicio y los proveedores con taller pueden solicitar ahora, seleccionar servicios específicos para revisión y cargar los documentos requeridos. El acceso a trabajos comienza solo después de que el proveedor y cada servicio seleccionado aprueben todas las revisiones requeridas.",
   "These services are planned and are not yet available. Each one must complete Tuveloz's launch review before it can open to customers.": "Estos servicios están planificados y aún no están disponibles. Cada uno debe completar la revisión de lanzamiento de Tuveloz antes de ofrecerse a los clientes.",
   "Planned service · View launch status": "Servicio planificado · Ver el estado del lanzamiento",
   "Planned quote workflow": "Proceso de cotización planificado",
   "Cosmetic-repair quotes are not yet available.": "Las cotizaciones de reparación estética aún no están disponibles.",
   "This service will remain unavailable until its requirements, provider evidence, and launch approvals are complete.": "Este servicio permanecerá no disponible hasta que se completen sus requisitos, los documentos del proveedor y las aprobaciones de lanzamiento.",
-  "View launch status": "Ver el estado del lanzamiento",
   "Join the provider network": "Unirse a la red de proveedores",
   "Provider applications are open. Customer service requests are not yet available.": "Las solicitudes de proveedores están abiertas. Las solicitudes de servicio para clientes aún no están disponibles.",
   "Provider onboarding is open in Montgomery County, Maryland.": "La incorporación de proveedores está abierta en el Condado de Montgomery, Maryland.",
@@ -93,7 +95,6 @@ const spanishText: Record<string, string> = {
   "Confirming your payment…": "Confirmando su pago…",
   "We are still waiting for confirmation. This usually takes only a moment.": "Aún esperamos la confirmación. Normalmente tarda solo un momento.",
   "Build your provider profile": "Cree su perfil de proveedor",
-  "View customer launch status": "Ver el estado del lanzamiento para clientes",
   "Customer launch preview": "Vista previa del lanzamiento para clientes",
   "Customer service requests are not yet available.": "Las solicitudes de servicio para clientes aún no están disponibles.",
   "The planned request form is shown below for review.": "El formulario de solicitud planificado se muestra abajo para su revisión.",
@@ -749,6 +750,294 @@ const spanishText: Record<string, string> = {
   "Customer total": "Total del cliente",
   "A 5% customer service fee is shown before you confirm": "Se muestra una tarifa de servicio del 5% antes de confirmar",
   "Accepted service fees": "Tarifas de servicio aceptadas",
+  // A/B variants only render for one bucket, so both wordings need Spanish.
+  "Your wrench. Your rules.": "Su herramienta. Sus reglas.",
+  "Your customers. Your prices. Your call.": "Sus clientes. Sus precios. Su decisión.",
+  // --- Public marketing surface: homepage, both landers, how-it-works, the
+  // assistant, FAQ, and safety. Added when Spanish was switched back on for
+  // these paths. The legal pages stay English and say so on the page. ---
+  "Almost open · Montgomery County, MD": "Casi abrimos · Condado de Montgomery, MD",
+  "Details": "Detalles",
+  "Local pros near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.": "Profesionales locales cerca de usted se están registrando ahora mismo. En cuanto abramos, podrá decir qué necesita su carro y recibir precios.",
+  "Making an account today is free, and it doesn't book anything or charge you.": "Crear una cuenta hoy es gratis, y no reserva nada ni le cobra.",
+  "Save my spot — free": "Aparte mi lugar — gratis",
+  "Save my spot": "Aparte mi lugar",
+  "Save my spot →": "Aparte mi lugar →",
+  "Save your spot": "Aparte su lugar",
+  "About": "Acerca de",
+  "About Tuveloz": "Acerca de Tuveloz",
+  "Payments": "Pagos",
+  "Job controls": "Control de trabajos",
+  "Terms": "Términos",
+  "Customer agreement": "Acuerdo del cliente",
+  "Provider agreement": "Acuerdo del proveedor",
+  "Marketplace conduct": "Conducta del mercado",
+  "Provider pathways": "Rutas para proveedores",
+  "Privacy": "Privacidad",
+  "Early supporters": "Primeros seguidores",
+  "© 2026 Tuveloz. All rights reserved.": "© 2026 Tuveloz. Todos los derechos reservados.",
+  "Signing up local pros and customers in Montgomery County, Maryland.": "Registrando profesionales locales y clientes en el Condado de Montgomery, Maryland.",
+  "Tuveloz customer launch update": "Novedades del lanzamiento de Tuveloz para clientes",
+  "What Tuveloz promises today": "Lo que Tuveloz promete hoy",
+  "What Tuveloz promises customers": "Lo que Tuveloz promete a los clientes",
+  "Application steps": "Pasos de la solicitud",
+  "Expansion demand groups": "Grupos de demanda para expansión",
+  "Tuveloz on Instagram": "Tuveloz en Instagram",
+  "Tuveloz on TikTok": "Tuveloz en TikTok",
+  "Tuveloz on Facebook": "Tuveloz en Facebook",
+  "Tuveloz on X": "Tuveloz en X",
+  "Opening in Montgomery County, MD": "Abriendo en el Condado de Montgomery, MD",
+  "Any car issue.": "Cualquier problema del carro.",
+  "Real quotes from local pros. You choose.": "Precios reales de profesionales locales. Usted elige.",
+  "Tell us what's going on with your car. Local pros send you their price, you see them next to each other, and you pick the one you like. No calling around, no pressure.": "Cuéntenos qué pasa con su carro. Los profesionales locales le mandan su precio, usted los ve uno al lado del otro y escoge el que le guste. Sin llamar a nadie, sin presión.",
+  "Free to ask, free to compare": "Gratis preguntar, gratis comparar",
+  "Real local pros, not a call center": "Profesionales locales de verdad, no un centro de llamadas",
+  "Pick one, or none. Totally up to you": "Escoja uno, o ninguno. Usted decide",
+  "I do car work — apply free": "Yo trabajo en carros — aplique gratis",
+  "Mechanics near you are signing up now. You'll be able to post your first job the day we open.": "Los mecánicos cerca de usted se están registrando. Podrá publicar su primer trabajo el día que abramos.",
+  "Preview": "Vista previa",
+  "Planned pick": "Selección prevista",
+  "YOU CHOOSE": "USTED ELIGE",
+  "Ramirez Mobile Auto · concept preview": "Ramirez Mobile Auto · vista conceptual",
+  "Silver Spring Auto Care · concept preview": "Silver Spring Auto Care · vista conceptual",
+  "Concept preview — not a live job. Customer requests and quotes open after launch.": "Vista conceptual: no es un trabajo real. Las solicitudes y cotizaciones de clientes abren después del lanzamiento.",
+  "A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch.": "Un adelanto, no un trabajo real: así se verá comparar precios. Las solicitudes y cotizaciones abren en el lanzamiento.",
+  "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch.": "Vista conceptual: esto es lo que ve un cliente cuando llega su cotización. Las solicitudes y cotizaciones abren en el lanzamiento.",
+  "Preview of the planned Tuveloz quote comparison": "Vista previa de la comparación de cotizaciones prevista en Tuveloz",
+  "Free": "Gratis",
+  "to ask and to compare prices": "preguntar y comparar precios",
+  "No pressure": "Sin presión",
+  "— say yes only if you want to": "— diga que sí solo si usted quiere",
+  "Local": "Profesionales",
+  "pros, prices side by side": "locales, precios lado a lado",
+  "Sign up now": "Regístrese ya",
+  "· post your first job when we open": "· publique su primer trabajo cuando abramos",
+  "5% fee": "Tarifa del 5%",
+  "shown on its own line before you confirm": "mostrada en su propia línea antes de confirmar",
+  "Maryland, more areas next": "Maryland, y más áreas después",
+  "Keep 100%": "Quédese con el 100%",
+  "of the price you quote": "del precio que usted cotiza",
+  "to apply — no subscription, no lead fees": "para aplicar — sin suscripción, sin cuotas por contacto",
+  "You set": "Usted fija",
+  "your prices, hours, and area": "sus precios, horarios y área",
+  "Founding spots": "Lugares fundadores",
+  "open in Montgomery County, MD": "abiertos en el Condado de Montgomery, MD",
+  "The honest version": "La versión honesta",
+  "You'll always know who you're dealing with.": "Siempre sabrá con quién está tratando.",
+  "No middleman you can't see, no price that changes later. Here's what we do, in plain words.": "Sin intermediarios ocultos, sin precios que cambian después. Esto es lo que hacemos, en palabras sencillas.",
+  "We introduce you — we don't fix cars": "Los presentamos: nosotros no reparamos carros",
+  "Tuveloz brings you and a local pro together, and payment runs safely through us. The actual work is between you and the person you picked.": "Tuveloz los conecta a usted y a un profesional local, y el pago pasa de forma segura por nosotros. El trabajo en sí es entre usted y la persona que escogió.",
+  "Real local businesses": "Negocios locales de verdad",
+  "Everyone here runs their own shop or truck. They're not our employees, so they set their own prices, hours, and the way they work.": "Cada quien maneja su propio taller o camión. No son nuestros empleados, así que ellos fijan sus precios, sus horarios y su forma de trabajar.",
+  "We check what the law says to check": "Revisamos lo que la ley dice que hay que revisar",
+  "If a job needs a license or registration by law, we ask for it and confirm it before anyone can offer that job here. Nothing extra, just what's actually required.": "Si un trabajo necesita licencia o registro por ley, lo pedimos y lo confirmamos antes de que alguien pueda ofrecerlo aquí. Nada de más, solo lo que de verdad se exige.",
+  "Your car. Your call.": "Su carro. Su decisión.",
+  "Say what your car needs once. Local pros come back with real prices you can line up side by side, and you pick whoever feels right. No pressure, no runaround. Sign up now and you're first in line the day we open.": "Diga una sola vez qué necesita su carro. Los profesionales locales responden con precios reales que usted puede poner lado a lado, y escoge al que le dé confianza. Sin presión, sin vueltas. Regístrese ya y será de los primeros el día que abramos.",
+  "One question, several real prices": "Una pregunta, varios precios reales",
+  "See who you're hiring before they touch your car": "Vea a quién contrata antes de que toquen su carro",
+  "The last word is always yours": "La última palabra siempre es suya",
+  "Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots now. Pick the jobs you want, send us anything the law asks for, and your workspace is set up before the first customer shows up.": "Mecánicos, detallistas, instaladores de polarizado, camiones de servicio y talleres están apartando lugares fundadores. Escoja los trabajos que quiere, mándenos lo que pida la ley y su espacio queda listo antes de que llegue el primer cliente.",
+  "Your hours, your prices": "Sus horarios, sus precios",
+  "Quotes, records, and invoices in one place": "Cotizaciones, registros y facturas en un solo lugar",
+  "Keep your own customers — you're not tied to us": "Conserve sus propios clientes: no está atado a nosotros",
+  "Apply free": "Aplique gratis",
+  "Apply free →": "Aplique gratis →",
+  "Services we open with": "Servicios con los que abrimos",
+  "The everyday stuff, handled where you park.": "Lo de todos los días, resuelto donde usted estaciona.",
+  "These are the jobs we're starting with in Montgomery County. We turn them on one at a time as we're ready, and we'll email you the moment yours is live.": "Estos son los trabajos con los que empezamos en el Condado de Montgomery. Los vamos activando uno por uno conforme estemos listos, y le escribiremos en cuanto el suyo esté disponible.",
+  "Battery & jump start": "Batería y paso de corriente",
+  "Back on the road when your battery quits.": "De vuelta al camino cuando la batería lo deja tirado.",
+  "Wipers & bulbs": "Limpiaparabrisas y focos",
+  "New wiper blades and burnt-out bulbs, swapped fast.": "Plumillas nuevas y focos quemados, cambiados rápido.",
+  "Top off fluids": "Rellenar líquidos",
+  "A quick top-up to keep your car running right.": "Un relleno rápido para que su carro siga andando bien.",
+  "Car cleaning": "Limpieza del carro",
+  "An outside wash, inside cleaning, or both.": "Lavado por fuera, limpieza por dentro, o las dos cosas.",
+  "Find out what's wrong": "Averigüe qué tiene",
+  "A local mechanic comes to your car and figures out what's going on.": "Un mecánico local llega hasta su carro y averigua qué está pasando.",
+  "Coming next": "Lo que viene",
+  "Send a photo of that dent, get prices back.": "Mande una foto de ese golpe y reciba precios.",
+  "Dents, scuffs, and paint aren't ready yet — we want the right pros and the paperwork sorted first. The jobs people ask for most are the ones we add next, so tell us if this is yours.": "Golpes, raspones y pintura todavía no están listos: primero queremos a los profesionales correctos y el papeleo en orden. Los trabajos que más nos piden son los que agregamos después, así que díganos si este es el suyo.",
+  "Tell us what to build next": "Díganos qué construir después",
+  "Post it once. Compare real quotes. Choose what works.": "Publíquelo una vez. Compare precios reales. Escoja lo que le sirva.",
+  "That's really all there is to it. You can't post a job just yet, but sign up now and you're first in line when we open.": "Eso es todo. Todavía no puede publicar un trabajo, pero regístrese ya y será de los primeros cuando abramos.",
+  "Tell us what's going on": "Cuéntenos qué pasa",
+  "Your car, what it's doing, and when you'd like it looked at. A sentence or two is plenty — you don't need to know what's wrong.": "Su carro, qué está haciendo y cuándo quisiera que lo revisen. Con una o dos frases basta: no necesita saber qué tiene.",
+  "Prices come to you": "Los precios llegan a usted",
+  "Local pros who are cleared for that exact job send you their own price. No calling around.": "Los profesionales locales autorizados para ese trabajo exacto le mandan su propio precio. Sin andar llamando.",
+  "Pick who you like": "Escoja a quien quiera",
+  "Line the prices up, pick the one that feels right — or pick nobody. Either way, it costs you nothing.": "Ponga los precios lado a lado y escoja el que le convenza, o no escoja a nadie. De cualquier forma, no le cuesta nada.",
+  "Ask once. Compare real prices. Pick who you like.": "Pregunte una vez. Compare precios reales. Escoja a quien quiera.",
+  "Local pros across Montgomery County are signing up now, and you'll be able to post a job the day we open. Here's how the whole thing goes, from your first message to the last.": "Profesionales locales de todo el Condado de Montgomery se están registrando, y usted podrá publicar un trabajo el día que abramos. Así funciona todo, desde su primer mensaje hasta el último.",
+  "1. Tell us what your car needs": "1. Cuéntenos qué necesita su carro",
+  "Pick the job, tell us about your car, when you'd like it done, and how you want to handle the part. A sentence or two is plenty — you don't need to know what's wrong. This step opens to customers at launch.": "Escoja el trabajo, cuéntenos de su carro, cuándo quisiera hacerlo y cómo quiere manejar la pieza. Con una o dos frases basta: no necesita saber qué tiene. Este paso se abre a los clientes en el lanzamiento.",
+  "2. We only show it to the right pros": "2. Solo se lo mostramos a los profesionales correctos",
+  "Not everyone sees your job. We pass it only to pros who work in your area, are cleared for that exact work, and have already handed us whatever the law asks for. That means fewer, better replies instead of a pile of phone calls. It does not mean we can promise safety, quality, or results — nobody honestly can.": "No cualquiera ve su trabajo. Solo se lo pasamos a profesionales que trabajan en su área, están autorizados para ese trabajo exacto y ya nos entregaron lo que pide la ley. Eso significa menos respuestas y mejores, en vez de un montón de llamadas. No significa que podamos prometer seguridad, calidad ni resultados: nadie honestamente puede.",
+  "3. Everyone here works for themselves, not for us": "3. Aquí cada quien trabaja por su cuenta, no para nosotros",
+  "Everyone on Tuveloz runs their own business. TUVELOZ does not employ, train, sponsor, assign, or supervise providers or provider personnel. If a pro brings a helper, that person works for the pro's business, which handles their hiring, payroll, training, and supervision.": "Todos en Tuveloz manejan su propio negocio. TUVELOZ no emplea, capacita, patrocina, asigna ni supervisa a proveedores ni a su personal. Si un profesional lleva a un ayudante, esa persona trabaja para el negocio del profesional, que se encarga de su contratación, su pago, su capacitación y su supervisión.",
+  "4. Their prices come back to you": "4. Sus precios le llegan a usted",
+  "Each pro decides whether to answer and sets their own price — we never set it for them. You read the prices next to each other, and see who's behind each one, before anybody touches your car. This step opens to customers at launch.": "Cada profesional decide si responde y fija su propio precio; nosotros nunca se lo ponemos. Usted lee los precios uno al lado del otro y ve quién está detrás de cada uno, antes de que alguien toque su carro. Este paso se abre a los clientes en el lanzamiento.",
+  "5. You pick — and picking nobody is fine": "5. Usted escoge, y no escoger a nadie también está bien",
+  "Say yes to the one you like and you'll see exactly which business and which person is coming. Or say no to all of them; that costs you nothing. We re-check that a pro is still cleared at every step after that, right through payment. This step opens to customers at launch.": "Diga que sí al que le guste y verá exactamente qué negocio y qué persona va a llegar. O dígales que no a todos; eso no le cuesta nada. Después de eso volvemos a revisar que el profesional siga autorizado en cada paso, hasta el pago. Este paso se abre a los clientes en el lanzamiento.",
+  "Ready when you are.": "Cuando usted quiera.",
+  "Where your jobs come from": "De dónde vienen sus trabajos",
+  "A customer posts once. You quote. They choose you.": "El cliente publica una vez. Usted cotiza. Lo escogen a usted.",
+  "That's the whole thing. Jobs start flowing when we open, so get your profile ready now and you can quote from day one.": "Eso es todo. Los trabajos empiezan a llegar cuando abramos, así que deje su perfil listo ahora y podrá cotizar desde el primer día.",
+  "See it in more detail →": "Véalo con más detalle →",
+  "See how it works": "Vea cómo funciona",
+  "See how it works →": "Vea cómo funciona →",
+  "Reviews linked to a completed Tuveloz job": "Reseñas ligadas a un trabajo completado en Tuveloz",
+  "Every review here comes from a finished job.": "Cada reseña aquí viene de un trabajo terminado.",
+  "A completed-job link confirms the job really happened here. It does not independently verify every word someone wrote, judge how good the repair was, or promise the next job goes the same way.": "El vínculo con un trabajo completado confirma que el trabajo de verdad pasó aquí. No verifica de forma independiente cada palabra que alguien escribió, no juzga qué tan buena fue la reparación ni promete que el siguiente trabajo salga igual.",
+  "Only from people who were there": "Solo de quienes estuvieron ahí",
+  "You can only leave a review if you actually had the work done here. No strangers, no bought-and-paid-for five stars.": "Solo puede dejar una reseña si de verdad le hicieron el trabajo aquí. Sin desconocidos, sin cinco estrellas compradas.",
+  "Nobody can pay to look better": "Nadie puede pagar para verse mejor",
+  "A pro can't buy a higher rating or a spot at the top of your list. That isn't for sale here.": "Un profesional no puede comprar una mejor calificación ni un lugar arriba en su lista. Eso aquí no se vende.",
+  "It belongs to the pro": "Le pertenece al profesional",
+  "Do good work and it follows you, job after job. That reputation is theirs to keep.": "Haga buen trabajo y eso lo acompaña, trabajo tras trabajo. Esa reputación es suya y se la queda.",
+  "Accounts are open": "Las cuentas están abiertas",
+  "Set up now. Be first in line when we launch.": "Prepárese ahora. Sea de los primeros cuando lancemos.",
+  "Set it up now and it's ready when you need it — nobody wants to fill out forms while their car is sitting dead in a parking lot. And when you do post, only pros cleared for that exact job can see it, so you hear from the right person instead of twenty phone calls.": "Prepárelo ahora y estará listo cuando lo necesite: nadie quiere llenar formularios con el carro muerto en un estacionamiento. Y cuando publique, solo los profesionales autorizados para ese trabajo exacto pueden verlo, así que le responde la persona correcta en vez de veinte llamadas.",
+  "We want to change how the car-service industry works: give customers clearer choices and help independent providers grow.": "Queremos cambiar cómo funciona la industria del servicio automotriz: darles a los clientes opciones más claras y ayudar a crecer a los proveedores independientes.",
+  "Ready to go the second we open": "Listo para usarse en cuanto abramos",
+  "Only pros cleared for that exact job see it": "Solo lo ven los profesionales autorizados para ese trabajo exacto",
+  "Saying yes to a price is always your call": "Decir que sí a un precio siempre es su decisión",
+  "Signing up books nothing and costs nothing": "Registrarse no reserva nada ni cuesta nada",
+  "Two minutes now. First in line at launch.": "Dos minutos ahora. De los primeros en el lanzamiento.",
+  "Save your car and contact details once, then walk straight into posting the day we open. No job, provider contact, booking, or payment is created now.": "Guarde una vez los datos de su carro y su contacto, y el día que abramos publique directo. Ahora no se crea ningún trabajo, contacto con proveedor, reserva ni pago.",
+  "Accounts are open today, for customers and pros both. Posting jobs and paying through us starts when we open.": "Las cuentas están abiertas hoy, tanto para clientes como para profesionales. Publicar trabajos y pagar por medio de nosotros empieza cuando abramos.",
+  "Why local pros join Tuveloz": "Por qué los profesionales locales se unen a Tuveloz",
+  "You’ve got the skills. Let’s build the business around them.": "Usted tiene el oficio. Construyamos el negocio alrededor de eso.",
+  "You shouldn't have to hand your customers — or your paycheck — to anyone. On Tuveloz you stay independent, set your own price, and let us handle the busywork. Show up, do great work, get paid. Simple as that.": "Usted no debería tener que entregarle sus clientes —ni su pago— a nadie. En Tuveloz sigue siendo independiente, fija su propio precio y nos deja el papeleo. Llegue, haga buen trabajo, cobre. Así de simple.",
+  "You're the boss": "Usted manda",
+  "Tuveloz doesn't employ, train, or assign you. Set your own price, schedule, and how you do the work — every job, every time.": "Tuveloz no lo emplea, no lo capacita ni le asigna trabajo. Usted fija su precio, su horario y su forma de trabajar, en cada trabajo, siempre.",
+  "Keep what you earn": "Quédese con lo que gana",
+  "Keep 100% of your quoted price. No subscription, no lead fees, no commission carved out of your labor.": "Quédese con el 100% del precio que cotiza. Sin suscripción, sin cuotas por contacto, sin comisión sacada de su mano de obra.",
+  "No exclusivity, no cage": "Sin exclusividad, sin jaula",
+  "Keep your own customers and work other platforms too. Tuveloz is one more way to fill your day — not a lock-in.": "Conserve sus propios clientes y trabaje también en otras plataformas. Tuveloz es una forma más de llenar su día, no un amarre.",
+  "Grow on real work": "Crezca con trabajo real",
+  "Reviews are tied to completed jobs, not gameable star clicks. Your track record is yours to build and keep.": "Las reseñas están ligadas a trabajos completados, no a estrellas fáciles de manipular. Su historial es suyo, usted lo construye y se lo queda.",
+  "Founding providers · Montgomery County": "Proveedores fundadores · Condado de Montgomery",
+  "Be first. Own your corner of the county.": "Sea el primero. Adueñese de su zona del condado.",
+  "The first pros into Montgomery County get first pick of jobs and a real voice in how Tuveloz works. Free to apply, no subscription, no exclusivity — there's no better time to bet on yourself.": "Los primeros profesionales en el Condado de Montgomery escogen trabajos antes que nadie y tienen voz real en cómo funciona Tuveloz. Aplicar es gratis, sin suscripción, sin exclusividad: no hay mejor momento para apostar por usted mismo.",
+  "Claim my spot": "Aparto mi lugar",
+  "Now onboarding · Montgomery County": "Incorporando ahora · Condado de Montgomery",
+  "Do great work. Get paid.": "Haga buen trabajo. Cobre.",
+  "We bring the customers.": "Nosotros traemos los clientes.",
+  "You bring the skills — Tuveloz brings the customers and knocks out the paperwork. Free to join, keep 100% of your quoted price, no exclusivity, no lead fees.": "Usted pone el oficio; Tuveloz trae los clientes y se encarga del papeleo. Unirse es gratis, se queda con el 100% de lo que cotiza, sin exclusividad y sin cuotas por contacto.",
+  "Free to apply, about 10 minutes": "Aplicar es gratis, unos 10 minutos",
+  "You set your prices and your hours": "Usted fija sus precios y sus horarios",
+  "Quotes, invoices, and records in one place": "Cotizaciones, facturas y registros en un solo lugar",
+  "The county is wide open. Take your spot.": "El condado está abierto de par en par. Tome su lugar.",
+  "Why Tuveloz is different": "Por qué Tuveloz es diferente",
+  "Built as a marketplace — so we can do what shop software can't.": "Hecho como un mercado, para poder hacer lo que un software de taller no puede.",
+  "Most tools are built for one front desk. Tuveloz is built around independent providers and their customers, which lets us design for trust, language, and mobile work from the ground up.": "La mayoría de las herramientas están hechas para un solo mostrador. Tuveloz está hecho alrededor de los proveedores independientes y sus clientes, lo que nos deja diseñar desde cero pensando en la confianza, el idioma y el trabajo móvil.",
+  "Bilingual to the fine print": "Bilingüe hasta la letra chica",
+  "Your quote, authorization, and invoice are built to read in English and Spanish — so you and your customer agree to the same words, not a rough translation.": "Su cotización, su autorización y su factura están hechas para leerse en inglés y en español, para que usted y su cliente acuerden las mismas palabras y no una traducción improvisada.",
+  "Paid through the platform": "Pago por medio de la plataforma",
+  "At launch, accepted jobs are paid through Tuveloz and released on your completion evidence. Finish the work and the payout is set up to follow — no chasing checks.": "En el lanzamiento, los trabajos aceptados se pagan por medio de Tuveloz y se liberan con su evidencia de trabajo terminado. Termine el trabajo y el pago está previsto para seguirle, sin andar persiguiendo cheques.",
+  "Labor-only, done right": "Solo mano de obra, bien hecho",
+  "Customers bring the part. Tuveloz is designed to line up the exact part before your appointment, so a wrong part doesn't waste your trip.": "El cliente pone la pieza. Tuveloz está diseñado para dejar lista la pieza exacta antes de su cita, para que una pieza equivocada no le eche a perder el viaje.",
+  "Made for mobile, not just the front desk": "Hecho para lo móvil, no solo para el mostrador",
+  "Appointments, records, and photo evidence work from any phone at the customer's location — built for mobile pros and service trucks, not only walk-in shops.": "Las citas, los registros y las fotos de evidencia funcionan desde cualquier teléfono en donde esté el cliente: hecho para profesionales móviles y camiones de servicio, no solo para talleres con mostrador.",
+  "That's how we're building it for you. Jobs and payments switch on as each one is ready — no surprises, and we'll keep you in the loop the whole way.": "Así lo estamos construyendo para usted. Los trabajos y los pagos se activan conforme cada uno esté listo, sin sorpresas, y lo mantendremos al tanto todo el camino.",
+  "Mechanics, detailers & service trucks": "Mecánicos, detallistas y camiones de servicio",
+  "Share your feedback": "Comparta su opinión",
+  "Required questions are marked below. Email is optional.": "Las preguntas obligatorias están marcadas abajo. El correo es opcional.",
+  "Email for follow-up": "Correo para dar seguimiento",
+  "Don't include payment details, identification numbers, or sensitive documents.": "No incluya datos de pago, números de identificación ni documentos sensibles.",
+  "Be first in line when Tuveloz opens.": "Sea de los primeros cuando Tuveloz abra.",
+  "Free for everyone. You'll be able to post a job and pay through us as soon as we open.": "Gratis para todos. Podrá publicar un trabajo y pagar por medio de nosotros en cuanto abramos.",
+  "Your car. Your quotes. Your call.": "Su carro. Sus precios. Su decisión.",
+  "Free to join. Posting a job and paying through us starts the day we open.": "Unirse es gratis. Publicar un trabajo y pagar por medio de nosotros empieza el día que abramos.",
+  "Car trouble.": "Problemas con el carro.",
+  "Real prices. Zero guesswork.": "Precios reales. Cero adivinanzas.",
+  "Tell us what's going on with your car. Local pros send you their price, you line them up next to each other, and you pick. No calling five shops, no surprise number when you go to pay.": "Cuéntenos qué pasa con su carro. Los profesionales locales le mandan su precio, usted los pone uno al lado del otro y escoge. Sin llamar a cinco talleres, sin números sorpresa a la hora de pagar.",
+  "Say yes only if the price feels right": "Diga que sí solo si el precio le parece justo",
+  "Local pros are joining now. You'll be able to post a job the day we open, and early sign-ups go first.": "Los profesionales locales se están uniendo. Podrá publicar un trabajo el día que abramos, y quienes se registren antes van primero.",
+  "Why customers use Tuveloz": "Por qué los clientes usan Tuveloz",
+  "Stop guessing what a repair should cost.": "Deje de adivinar cuánto debería costar una reparación.",
+  "The worst part of car trouble usually isn't the repair — it's not knowing if the price is fair. We put that answer in front of you before you agree to anything.": "Lo peor de un problema con el carro casi nunca es la reparación: es no saber si el precio es justo. Nosotros le ponemos esa respuesta enfrente antes de que acepte nada.",
+  "Real prices, side by side": "Precios reales, lado a lado",
+  "No more “bring it in and we'll take a look.” You get actual numbers from actual local pros, and you read them all before you agree to anything.": "Se acabó el “tráigalo y le echamos un ojo”. Recibe números reales de profesionales locales reales, y los lee todos antes de aceptar nada.",
+  "Only the right people see it": "Solo lo ve la gente correcta",
+  "Your job goes to pros near you who are cleared for that exact work — not to a giant call list. Way less phone tag.": "Su trabajo llega a profesionales cerca de usted que están autorizados para ese trabajo exacto, no a una lista enorme de llamadas. Mucho menos ir y venir por teléfono.",
+  "They come to your car": "Ellos llegan hasta su carro",
+  "Plenty of them are mobile, so they work where your car already is — your driveway, the office lot, wherever it broke down.": "Muchos son móviles, así que trabajan donde ya está su carro: su cochera, el estacionamiento del trabajo, o donde se haya quedado.",
+  "Three steps. That's the whole thing.": "Tres pasos. Eso es todo.",
+  "You can't post a job just yet. Set up your account now and step one takes about a minute the day we open.": "Todavía no puede publicar un trabajo. Cree su cuenta ahora y el primer paso le tomará como un minuto el día que abramos.",
+  "Straight answers": "Respuestas claras",
+  "There's no catch here.": "Aquí no hay trampa.",
+  "Before you sign up for anything, here's exactly what we do and what we don't — in plain words.": "Antes de que se registre en nada, esto es exactamente lo que hacemos y lo que no, en palabras sencillas.",
+  "You're never stuck": "Nunca queda amarrado",
+  "Asking is free, comparing is free, and you can walk away from every single price you get. It costs you nothing to say no thanks.": "Preguntar es gratis, comparar es gratis, y puede rechazar todos y cada uno de los precios que reciba. No le cuesta nada decir “no, gracias”.",
+  "Everyone here runs their own shop or truck — they don't work for us. They set their own prices and hours, and you'll see exactly who you picked.": "Cada quien maneja su propio taller o camión; no trabajan para nosotros. Ellos fijan sus precios y sus horarios, y usted verá exactamente a quién escogió.",
+  "Your address stays yours": "Su dirección sigue siendo suya",
+  "Pros see only enough to give you a price. Your exact address and phone number go to the one person you choose, and nobody else.": "Los profesionales ven solo lo necesario para darle un precio. Su dirección exacta y su teléfono van únicamente a la persona que usted escoja, y a nadie más.",
+  "Our fee is right on the screen": "Nuestra tarifa está a la vista",
+  "We add 5% to the total, listed as its own line before you confirm. It's never quietly folded into the pro's price.": "Agregamos 5% al total, en su propia línea antes de que confirme. Nunca va escondida dentro del precio del profesional.",
+  "Be first in line when we open.": "Sea de los primeros cuando abramos.",
+  "Making an account takes about two minutes and saves your car and contact details, so the day we open you can just post instead of filling out forms. Nothing on this page submits a request, contacts a provider, books service, or processes a payment.": "Crear una cuenta toma unos dos minutos y guarda los datos de su carro y su contacto, para que el día que abramos solo publique en vez de llenar formularios. Nada en esta página envía una solicitud, contacta a un proveedor, reserva un servicio ni procesa un pago.",
+  "Just want an email when we open?": "¿Solo quiere un correo cuando abramos?",
+  "Leave your address and we'll write you once, the day we open in Montgomery County. No account needed.": "Déjenos su correo y le escribiremos una sola vez, el día que abramos en el Condado de Montgomery. No necesita cuenta.",
+  "Email me occasional Tuveloz updates about the Montgomery County launch. I can unsubscribe at any time using the link in any email.": "Envíenme novedades ocasionales de Tuveloz sobre el lanzamiento en el Condado de Montgomery. Puedo darme de baja en cualquier momento con el enlace de cualquier correo.",
+  "Get launch updates": "Recibir novedades del lanzamiento",
+  "Questions people actually ask": "Preguntas que la gente sí hace",
+  "Straight answers, no fine print.": "Respuestas claras, sin letra chica.",
+  "Don't see yours? There's more in the": "¿No ve la suya? Hay más en las",
+  "full FAQ": "preguntas frecuentes completas",
+  ", or just email us at": ", o simplemente escríbanos a",
+  "— a real person answers.": "— contesta una persona de verdad.",
+  "What does this cost me?": "¿Cuánto me cuesta esto?",
+  "Asking and comparing is free. You only pay for work you say yes to: the pro's price for the labor, plus our 5% fee listed separately. You see both before you confirm anything.": "Preguntar y comparar es gratis. Solo paga el trabajo que usted acepte: el precio del profesional por la mano de obra, más nuestra tarifa del 5% en una línea aparte. Ve las dos cosas antes de confirmar nada.",
+  "Do I have to say yes to any of them?": "¿Tengo que aceptar alguno?",
+  "Nope. Read them all, ask questions, and turn every one of them down if nothing feels right. It costs you nothing to walk away.": "No. Léalos todos, haga preguntas y rechácelos todos si ninguno le convence. No le cuesta nada retirarse.",
+  "Who actually does the work?": "¿Quién hace el trabajo en realidad?",
+  "A local pro you picked yourself. We introduce the two of you and keep the paperwork straight — the work itself is between you and them.": "Un profesional local que usted mismo escogió. Nosotros los presentamos y mantenemos el papeleo en orden; el trabajo en sí es entre usted y esa persona.",
+  "What about parts?": "¿Y las piezas?",
+  "Prices here cover the labor, so you buy the part yourself. We'll help you pin down the exact part before the appointment, so nobody wastes a trip on the wrong one.": "Los precios aquí cubren la mano de obra, así que usted compra la pieza. Le ayudamos a definir la pieza exacta antes de la cita, para que nadie pierda el viaje por una pieza equivocada.",
+  "When can I post a job?": "¿Cuándo puedo publicar un trabajo?",
+  "Very soon. Local pros across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.": "Muy pronto. Profesionales locales de todo el Condado de Montgomery, Maryland se están registrando ahora mismo, y publicar trabajos se abre en cuanto terminemos de dejar todo listo. Cree su cuenta hoy y será de los primeros: registrarse no envía una solicitud, no contacta a un proveedor, no reserva un servicio ni le cobra.",
+  "My car needs something that's not on the list. Now what?": "Mi carro necesita algo que no está en la lista. ¿Ahora qué?",
+  "Tell us anyway! The jobs people ask about most are the ones we add next, and the areas people ask about decide where we go after Montgomery County.": "¡Díganos de todas formas! Los trabajos que más nos preguntan son los que agregamos después, y las áreas que más nos piden deciden a dónde vamos después del Condado de Montgomery.",
+  "Tuveloz AI gives general guidance only. It is not a diagnosis, an inspection, or a price quote, and it does not choose a provider. Answers about how Tuveloz works come from our published policies — the linked page is always the real thing, and for anything it can't answer, email": "Tuveloz AI da solo orientación general. No es un diagnóstico, ni una inspección, ni una cotización, y no elige un proveedor. Las respuestas sobre cómo funciona Tuveloz vienen de nuestras políticas publicadas: la página enlazada siempre es lo real, y para lo que no pueda responder, escriba a",
+  ". Posting jobs and payments are not open yet.": ". Publicar trabajos y los pagos todavía no están abiertos.",
+  "Who is asking": "Quién pregunta",
+  "Tuveloz AI assistant": "Asistente Tuveloz AI",
+  "What does Tuveloz charge me?": "¿Cuánto me cobra Tuveloz?",
+  "Who buys the parts?": "¿Quién compra las piezas?",
+  "Do I have to accept a quote?": "¿Tengo que aceptar una cotización?",
+  "Who can see my address and phone number?": "¿Quién puede ver mi dirección y mi teléfono?",
+  "Frequently asked questions": "Preguntas frecuentes",
+  "The important answers, without the clutter.": "Las respuestas importantes, sin relleno.",
+  "These are the basics customers and provider applicants should understand while TUVELOZ remains in provider-onboarding mode.": "Esto es lo básico que clientes y solicitantes de proveedor deben entender mientras TUVELOZ sigue en modo de incorporación de proveedores.",
+  "Is Tuveloz the vehicle-service provider?": "¿Tuveloz es quien presta el servicio al vehículo?",
+  "TUVELOZ is designed as a marketplace. The selected provider business—not TUVELOZ—will offer and perform the vehicle service. This description does not waive any responsibility TUVELOZ has under applicable law.": "TUVELOZ está diseñado como un mercado. El negocio proveedor seleccionado —no TUVELOZ— ofrecerá y realizará el servicio al vehículo. Esta descripción no exime ninguna responsabilidad que TUVELOZ tenga bajo la ley aplicable.",
+  "Does TUVELOZ employ or train providers?": "¿TUVELOZ emplea o capacita a los proveedores?",
+  "No. TUVELOZ does not employ, train, sponsor, assign, or supervise providers, mechanics, trainees, or provider-business employees. A separate provider business must handle its own hiring, payroll, training, supervision, insurance, and job assignment. Applicant-only accounts receive no training or jobs.": "No. TUVELOZ no emplea, capacita, patrocina, asigna ni supervisa a proveedores, mecánicos, aprendices ni empleados de negocios proveedores. Cada negocio proveedor debe encargarse de su propia contratación, nómina, capacitación, supervisión, seguro y asignación de trabajos. Las cuentas que solo son de solicitante no reciben capacitación ni trabajos.",
+  "Will submitting a request cost money?": "¿Enviar una solicitud cuesta dinero?",
+  "Customer service requests and payments are not yet available. Before launch, Tuveloz must approve the final fee and tax treatment and show every charge and refund term before payment.": "Las solicitudes de servicio y los pagos de clientes todavía no están disponibles. Antes del lanzamiento, Tuveloz debe aprobar la tarifa final y el tratamiento fiscal, y mostrar cada cargo y cada condición de reembolso antes del pago.",
+  "Who sets the provider price?": "¿Quién fija el precio del proveedor?",
+  "In the planned workflow, each provider business sets or approves its quote and chooses whether to pursue a request. Real quoting is currently disabled.": "En el flujo previsto, cada negocio proveedor fija o aprueba su cotización y decide si quiere atender una solicitud. Las cotizaciones reales están desactivadas por ahora.",
+  "Are all providers licensed?": "¿Todos los proveedores tienen licencia?",
+  "Do not assume an umbrella license or 'fully verified' status. TUVELOZ will show the exact evidence checked for a specific service, person, location, and date. Insurance, registration, competency, supervision, or other evidence may apply even where there is no universal mechanic license.": "No suponga que existe una licencia general ni un estado de “totalmente verificado”. TUVELOZ mostrará la evidencia exacta que se revisó para un servicio, una persona, un lugar y una fecha específicos. Pueden aplicar seguro, registro, competencia, supervisión u otra evidencia incluso donde no existe una licencia universal de mecánico.",
+  "Where is Tuveloz launching?": "¿Dónde va a lanzar Tuveloz?",
+  "Provider onboarding is focused on Montgomery County, Maryland. Customer service requests and payments are not yet available in any area. Customers and providers can request future launch areas on the About page.": "La incorporación de proveedores está enfocada en el Condado de Montgomery, Maryland. Las solicitudes de servicio y los pagos de clientes todavía no están disponibles en ninguna área. Clientes y proveedores pueden pedir futuras áreas de lanzamiento en la página Acerca de.",
+  "How do I access my tools?": "¿Cómo entro a mis herramientas?",
+  "Sign in and choose the correct workspace. Provider applicants use the onboarding checklist to submit private evidence; matched real jobs remain unavailable during launch review.": "Inicie sesión y escoja el espacio correcto. Los solicitantes de proveedor usan la lista de incorporación para enviar evidencia privada; los trabajos reales asignados siguen sin estar disponibles durante la revisión de lanzamiento.",
+  "Service-specific checks before any future job begins.": "Revisiones específicas por servicio antes de que empiece cualquier trabajo futuro.",
+  "Provider onboarding is open, but customer service requests and jobs are not yet available. Tuveloz is implementing service-specific evidence checks, limited information sharing, clear quotes, and role-specific access.": "La incorporación de proveedores está abierta, pero las solicitudes de servicio y los trabajos de clientes todavía no están disponibles. Tuveloz está implementando revisiones de evidencia por servicio, información compartida de forma limitada, cotizaciones claras y acceso según el rol.",
+  "Every job requires its own checks": "Cada trabajo requiere sus propias revisiones",
+  "Tuveloz reviews the requested service, assigned worker, location, date, evidence, current agreements, and any supervision requirement. Each label identifies the evidence checked; it does not guarantee safety, quality, or results.": "Tuveloz revisa el servicio solicitado, la persona asignada, el lugar, la fecha, la evidencia, los acuerdos vigentes y cualquier requisito de supervisión. Cada etiqueta identifica la evidencia revisada; no garantiza seguridad, calidad ni resultados.",
+  "Service-specific review": "Revisión específica por servicio",
+  "Person- and location-specific checks": "Revisiones específicas por persona y por lugar",
+  "Expired evidence prevents job access": "La evidencia vencida impide el acceso a trabajos",
+  "Customer privacy": "Privacidad del cliente",
+  "Providers receive only the information needed to decide whether to quote. Private contact and service-address details are limited to the selected provider.": "Los proveedores reciben solo la información necesaria para decidir si cotizan. Los datos privados de contacto y la dirección del servicio se limitan al proveedor seleccionado.",
+  "Transparent quotes": "Cotizaciones transparentes",
+  "After launch approval, customers must see the provider subtotal, parts and labor, any separate TUVELOZ fee, taxes or other charges, refund terms, and total before confirming.": "Tras la aprobación de lanzamiento, los clientes deben ver el subtotal del proveedor, piezas y mano de obra, cualquier tarifa aparte de TUVELOZ, impuestos u otros cargos, las condiciones de reembolso y el total antes de confirmar.",
+  "Independent choice": "Elección independiente",
+  "Customers choose their provider. Providers choose their jobs, prices, schedule, tools, and methods, subject to applicable law and the agreed job scope. TUVELOZ does not employ, train, assign, or supervise providers or provider personnel.": "Los clientes escogen a su proveedor. Los proveedores escogen sus trabajos, precios, horarios, herramientas y métodos, sujeto a la ley aplicable y al alcance acordado del trabajo. TUVELOZ no emplea, capacita, asigna ni supervisa a proveedores ni a su personal.",
 };
 
 const spanishPlaceholders: Record<string, string> = {
@@ -839,15 +1128,36 @@ function translateInterface(root: ParentNode, language: SiteLanguage) {
   });
 }
 
-// The Spanish translation dictionary below is incomplete - it predates
-// several recent English-only rewrites (homepage, Terms of Use, Provider
-// Agreement) that were deliberately left untranslated pending real Spanish
-// copy. Until that copy exists, the site stays English-only: this always
-// returns "en" regardless of any stored preference, and SiteLanguageButton
-// renders nothing, so nobody - new visitor or returning tester - can land
-// in a half-translated experience on a legal page or elsewhere.
+/**
+ * Spanish is on for the pages a visitor decides on, and deliberately off for
+ * the legal pages.
+ *
+ * It was switched off entirely because a half-translated legal page is worse
+ * than an English one. That reasoning still holds — so rather than translate
+ * agreements without review, the switch is per-path: every string on the paths
+ * below is in the dictionary (tests/spanish-coverage.test.mjs fails if one is
+ * not), and everywhere else stays English and says so on the page.
+ */
+export const SPANISH_READY_PATHS = [
+  "/",
+  "/post-job",
+  "/join",
+  "/about",
+  "/how-it-works",
+  "/ai",
+  "/faq",
+  "/safety",
+];
+
+export function pathHasSpanish(pathname: string) {
+  return SPANISH_READY_PATHS.includes(pathname);
+}
+
 function getLanguageSnapshot(): SiteLanguage {
-  return "en";
+  if (typeof window === "undefined") return "en";
+  // A page without reviewed Spanish stays English no matter what is stored.
+  if (!pathHasSpanish(window.location.pathname)) return "en";
+  return window.localStorage.getItem(LANGUAGE_KEY) === "es" ? "es" : "en";
 }
 
 function subscribeLanguage(listener: () => void) {
@@ -910,8 +1220,34 @@ export function useSiteLanguage() {
   return useContext(SiteLanguageContext);
 }
 
-// Hidden until real Spanish copy exists for the pages rewritten this
-// session - see the note on getLanguageSnapshot above.
+/**
+ * Only offered where the whole page has reviewed Spanish. Showing it on a legal
+ * page would promise a translation that does not exist.
+ */
 export function SiteLanguageButton() {
-  return null;
+  const { language, setLanguage } = useSiteLanguage();
+  const [available, setAvailable] = useState(false);
+  const nextLanguage = language === "en" ? "es" : "en";
+
+  useEffect(() => {
+    // After paint, matching how the rest of the site defers client-only state,
+    // so the server and client first render agree.
+    const ready = pathHasSpanish(window.location.pathname);
+    queueMicrotask(() => setAvailable(ready));
+  }, []);
+
+  if (!available) return null;
+
+  return (
+    <button
+      aria-label={language === "en" ? "Cambiar toda la página a español" : "Change the whole page to English"}
+      className="site-language-button"
+      data-language-control
+      onClick={() => setLanguage(nextLanguage)}
+      type="button"
+    >
+      <span aria-hidden="true">🌐</span>
+      <strong>{language === "en" ? "Español" : "English"}</strong>
+    </button>
+  );
 }

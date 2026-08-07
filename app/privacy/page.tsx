@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy Policy"
       summary="What Tuveloz collects, why it is needed, who receives it, and the choices available to you."
-      updated="August 1, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>1. Scope and sources</h2>
@@ -24,6 +24,7 @@ export default function PrivacyPage() {
         <h2>2. Information we collect</h2>
         <ul>
           <li>Identifiers and account data, including name, email, role, password hash, session and sign-in records, language, and support messages.</li>
+          <li>A phone number, only if you add one for text-message sign-in: the number, its verification status, and records of the one-time codes sent to it (the code itself is stored only as a hash). Texts are used solely for the sign-in and verification codes you request, as the <a href="/sms-terms">SMS Terms</a> describe — never for marketing.</li>
           <li>Customer job data, including vehicle details or a VIN you choose to provide, requested services, general area, exact service address when needed, photos, condition records, quote selections, messages, status, and reviews.</li>
           <li>Provider data, including business name and location, performing-person name, service areas, service options, experience, insurance responses, legally applicable credential records, identity-verification status and references, verification decisions, profile content, and Stripe connected-account identifiers.</li>
           <li>Transaction data, including displayed amounts, payment status, receipt email, refunds, disputes, transfer status, and Stripe transaction identifiers.</li>

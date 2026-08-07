@@ -31,7 +31,7 @@ export const CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION = [
   `terms:${TERMS_VERSION}`,
   `customer:${CUSTOMER_AGREEMENT_VERSION}`,
   `payments:${PAYMENT_POLICY_VERSION}`,
-  "provider-quote-selection:3",
+  "provider-quote-selection:4",
 ].join("|");
 
 export const CUSTOMER_REQUEST_ACCEPTANCE_TEXT =
@@ -82,6 +82,7 @@ export type CustomerQuoteSelectionScope = {
     partType: string;
     availability: string;
     message: string;
+    workmanshipWarranty: string;
     confirmedCredentialLabels: readonly string[];
     yearsExperience: string;
   };
@@ -357,6 +358,7 @@ export function customerQuoteSelectionScopeSnapshot(
       partType: scope.quote.partType,
       availability: scope.quote.availability,
       message: scope.quote.message,
+      workmanshipWarranty: scope.quote.workmanshipWarranty,
       confirmedCredentialLabels: [...scope.quote.confirmedCredentialLabels],
       yearsExperience: scope.quote.yearsExperience,
     },
@@ -412,6 +414,19 @@ function providerDisclosureLine(scope: CustomerQuoteSelectionScope) {
   return `${confirmedText} ${experienceText} Compare their price, reviews, and completed jobs to decide if they're the right fit.`;
 }
 
+/**
+ * Offering a workmanship warranty is each independent provider business's own
+ * choice — never a Tuveloz requirement. When none is offered, the customer's
+ * recorded acceptance says so explicitly, so choosing a no-warranty provider
+ * is always a documented, informed decision rather than a surprise.
+ */
+function warrantyDisclosureLine(scope: CustomerQuoteSelectionScope) {
+  const warranty = scope.quote.workmanshipWarranty.trim();
+  return warranty
+    ? `This provider business offers a written workmanship warranty for this job: ${warranty}. That warranty is a promise from the provider business to me — TUVELOZ does not offer, back, or administer it.`
+    : "This provider business does not offer a workmanship warranty for this job. Offering one is each independent provider's own choice, not a Tuveloz requirement, and I acknowledge and agree to hire this provider without one.";
+}
+
 export function customerProviderSelectionAcceptanceText(
   scope: CustomerQuoteSelectionScope,
 ) {
@@ -424,6 +439,7 @@ export function customerProviderSelectionAcceptanceText(
     `I select ${scope.quote.providerName} and its disclosed performing person (${scope.quote.performingPersonDisplay}) for only the exact service code ${serviceLabel} and operation ${operationCodes}.`,
     `The authorized location is ${scope.request.jobFacts.location.address} (${scope.request.jobFacts.location.type}), with the stored property, vehicle-condition, excluded-operation, and safety attestations unchanged.`,
     providerDisclosureLine(scope),
+    warrantyDisclosureLine(scope),
     `I accept quote ${scope.quote.quoteId} for a displayed customer total of $${amount}, scheduled for ${scope.quote.scheduledFor}.`,
     "I confirm that the accepted provider amount is labor only. Any OEM or aftermarket preference concerns a part I purchase separately; no provider-supplied parts, parts reimbursement, parts tax, or other parts charge is included.",
     "I agree to the linked Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy.",

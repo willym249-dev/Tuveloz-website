@@ -298,6 +298,7 @@ function selectionScopeFor(
         partType: quote.partType,
         availability: quote.availability,
         message: quote.message,
+        workmanshipWarranty: quote.workmanshipWarranty,
         confirmedCredentialLabels,
         yearsExperience,
       },
@@ -802,6 +803,7 @@ export async function POST(request: Request) {
     quoteMessage: selection.scope.quote.message,
     availability: selection.scope.quote.availability,
     partType: selection.scope.quote.partType,
+    workmanshipWarranty: selection.scope.quote.workmanshipWarranty,
     jobFacts: selection.scope.request.jobFacts,
   });
   const basePriceBreakdown = JSON.stringify({

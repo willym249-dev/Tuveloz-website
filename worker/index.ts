@@ -48,6 +48,22 @@ const PRIVATE_PATH_PREFIXES = [
   "/api/",
 ];
 
+// ai.tuveloz.com points at this same Worker. Landing on its root drops you
+// straight into the assistant; every other path is served normally so the
+// links the assistant hands out (/payments, /faq, ...) keep working on the
+// host the visitor is already on.
+const AI_HOSTNAMES = new Set(["ai.tuveloz.com"]);
+
+function aiHostRedirect(requestUrl: URL) {
+  if (!AI_HOSTNAMES.has(requestUrl.hostname.toLowerCase())) return null;
+  if (requestUrl.pathname !== "/") return null;
+  const target = new URL(requestUrl);
+  target.pathname = "/ai";
+  // Deliberately temporary: a permanent redirect would be cached in browsers
+  // long after any decision to use this host differently.
+  return Response.redirect(target.toString(), 302);
+}
+
 function isStagingRequest(requestUrl: URL, env: Env) {
   const configuredEnvironment = env.APP_ENVIRONMENT?.trim().toLowerCase();
   const hostname = requestUrl.hostname.toLowerCase();
@@ -147,6 +163,9 @@ const worker = {
     if (staging && !(await isVerifiedOwnerRequest(request))) {
       return securedResponse(stagingAccessDenied(acceptsHtml), url, true);
     }
+
+    const aiRedirect = aiHostRedirect(url);
+    if (aiRedirect) return securedResponse(aiRedirect, url, staging);
 
     if (!staging && request.method === "GET" && acceptsHtml && env.DB) {
       ctx.waitUntil(
