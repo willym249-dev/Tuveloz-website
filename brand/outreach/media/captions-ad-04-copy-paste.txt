@@ -117,6 +117,78 @@ HASHTAGS (5, both languages):
 
 
 =====================================================================
+BILINGUAL — INSTAGRAM REELS / FACEBOOK (one post, English video)
+=====================================================================
+Instagram truncates at roughly 125 characters, so the first line does the work.
+It names the trade and the county before anyone taps "more".
+
+Same rule as the TikTok bilingual caption: no Spain flag emoji, plain EN / ES
+labels.
+
+Link in bio → tuveloz.com/join?src=recruit-04
+
+CAPTION:
+Mechanics, detailers and mobile techs in Montgomery County — this one's for you.
+
+EN / We're a new local marketplace for vehicle services, signing up independent
+providers before we open. Free to join. You set your own prices and keep 100%
+of what you quote — the customer pays the 5% fee, not you. No exclusivity, so
+keep every platform and client you already have. You pick the jobs.
+
+Straight up: customer requests aren't live yet. On purpose — a marketplace
+where you post a job and nobody answers is worse than no marketplace. Applying
+now means your review is done and you're first in line on day one.
+
+ES / Somos un nuevo mercado local de servicios vehiculares, e inscribimos
+proveedores independientes antes de abrir. Unirse es gratis. Tú pones tus
+precios y te quedas con el 100% de lo que cotizas — el cliente paga la tarifa
+del 5%, no tú. Sin exclusividad: conserva cada plataforma y cliente que ya
+tienes. Tú eliges los trabajos.
+
+Directo: las solicitudes de clientes todavía no están activas. Es a propósito —
+un mercado donde publicas un trabajo y nadie responde es peor que no tener
+mercado. Aplicar ahora deja tu revisión lista y te pone primero en la fila el
+día uno.
+
+Know someone who fixes cars for a living? Send them this.
+¿Conoces a alguien que arregla autos? Mándale esto.
+
+Apply in minutes / Solicita en minutos — link in bio
+
+HASHTAGS (5):
+#MobileMechanic #MecanicoMovil #MontgomeryCountyMD #SilverSpringMD #MechanicLife
+
+
+=====================================================================
+PICKING HASHTAGS — THE SIZE RULE
+=====================================================================
+The giant automotive tags are worthless to an account this size. #automotive
+carries ~107M posts; #cars and #carsofinstagram are the same story. A post from
+a small local account lands in that feed and is buried in seconds.
+
+Target NICHE and MID-SIZE tags: roughly 10K–500K posts. Hyperlocal tags reported
+up to 3x the engagement of broad ones for small businesses, and Instagram's own
+guidance of 3–5 highly relevant tags outperforms 10+ loose ones by around 25%.
+
+The shape that works here, 5 slots:
+  1-2  TRADE, niche      #MobileMechanic  #MecanicoMovil  #MechanicLife
+  2    GEO, specific     #MontgomeryCountyMD  #SilverSpringMD  #RockvilleMD
+                         #GaithersburgMD  #WheatonMD  #GermantownMD
+  1    COMMUNITY         #MechanicLife  #WrenchLife  #LatinosEnMaryland
+
+ROTATE THE TOWN each post. Match it to the location tag on that post, and work
+across the county rather than hammering one town.
+
+NEVER use: #cars #carsofinstagram #automotive #auto #carporn #supercars
+#smallbusiness — all too large to reach anyone local.
+
+Volume check: post counts move, and they cannot be read from outside the app.
+Before locking a set, type each tag into Instagram search and look at the count.
+Drop anything over ~1M or under ~1K — the first buries you, the second reaches
+nobody.
+
+
+=====================================================================
 SPANISH — INSTAGRAM REELS / FACEBOOK  (post as its own reel)
 =====================================================================
 Link in bio → tuveloz.com/join?src=recruit-04-es
