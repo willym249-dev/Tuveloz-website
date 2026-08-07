@@ -7,8 +7,11 @@ NO AI LABEL NEEDED. Neither cut contains AI-generated footage — the frames are
 rendered from brand files. (The older reels DO need the label; this one does
 not.)
 
-Post the two cuts as SEPARATE posts, not as one bilingual post. Same slot,
-consecutive days.
+Two ways to run this:
+  - EN and ES cuts as SEPARATE posts, same slot, consecutive days. Cleanest
+    keyword signal per post.
+  - ONE post using the English video with the bilingual caption below. Use this
+    when you want a single post to reach both audiences.
 
 
 =====================================================================
@@ -77,6 +80,43 @@ HASHTAGS (5):
 
 
 =====================================================================
+BILINGUAL — TIKTOK (one post, English video, both languages in the caption)
+=====================================================================
+Use this when you want ONE post to reach both audiences instead of running the
+EN and ES cuts separately. Trade-off: a single-language caption gives a cleaner
+keyword signal, but in MoCo a large share of the independent auto trade is
+Spanish-speaking and almost nobody markets to them in Spanish — reach beats
+signal purity here.
+
+Do NOT put a Spain flag emoji on the Spanish block. MoCo's Spanish-speaking
+community is largely Salvadoran, Guatemalan and Honduran; a Spain flag reads as
+someone who does not know the neighborhood. Plain "EN /" and "ES /" labels.
+
+CAPTION:
+Fix cars for a living in Montgomery County? Read whichever one you think in.
+
+EN / New local marketplace for vehicle services. Free to join, you set your own
+prices, and you keep 100% of what you quote — the customer pays the 5% fee, not
+you. No exclusivity, so keep every client you already have. You pick the jobs.
+Customer requests aren't live yet, on purpose: a marketplace where you post a
+job and nobody answers is worse than no marketplace. Signing up now puts you
+first in line on day one.
+
+ES / Nuevo mercado local de servicios vehiculares. Unirse es gratis, tú pones
+tus precios y te quedas con el 100% de lo que cotizas — el cliente paga la
+tarifa del 5%, no tú. Sin exclusividad: conserva cada cliente que ya tienes. Tú
+eliges los trabajos. Las solicitudes de clientes aún no están activas, y es a
+propósito: un mercado donde publicas un trabajo y nadie responde es peor que no
+tener mercado. Inscribirte ahora te pone primero en la fila el día uno.
+
+Send this to a mechanic you know. Mándaselo a un mecánico que conozcas.
+tuveloz.com/join
+
+HASHTAGS (5, both languages):
+#MobileMechanic #MecanicoMovil #MontgomeryCountyMD #CarTok #AutoRepair
+
+
+=====================================================================
 SPANISH — INSTAGRAM REELS / FACEBOOK  (post as its own reel)
 =====================================================================
 Link in bio → tuveloz.com/join?src=recruit-04-es
@@ -133,3 +173,41 @@ POSTING CHECKLIST
 Best slots (ET), from the v3 kit — move to your own analytics peaks after 2-3
 posts: Wed 9 AM IG/FB, Wed 7:30 PM TikTok (EN); Thu 9 AM TikTok, Thu 12 PM
 IG/FB (ES).
+
+
+=====================================================================
+TIKTOK AUDIO — WHAT YOU MAY ACTUALLY USE
+=====================================================================
+These videos are ads: brand mark, value props, a CTA. That makes the audio a
+COMMERCIAL use.
+
+TikTok's general music library (chart hits, viral FYP sounds) is licensed for
+personal, non-commercial use only. Using it on a promotional post risks the
+audio being muted or stripped, the post being pulled on a rights claim, and
+strikes accruing on the account. It also permanently blocks paid promotion —
+boosting requires cleared audio.
+
+The account-type tell: if the picker shows major-label tracks, you are on a
+Personal/Creator account. A Business account shows ONLY the Commercial Music
+Library, so it cannot pick wrong.
+
+Three safe options:
+  1. Commercial Music Library (1M+ tracks, cleared for business use). Verify
+     with the FILTER control in the sound picker — searching the words "cml
+     library" is only a text search and proves nothing.
+  2. Silent. Genuinely fine; every word is on screen and it is a 9.5s read.
+  3. Your own recorded audio. Fair game on any account type, and a founder
+     talking over it beats a pop song for a recruitment ad.
+
+CML picks that fit these cuts:
+  - "Little Things" — Adrián Berenguer. Gentle, builds, very widely used so it
+    reads native. First choice.
+  - "Little Sparrow" — Paul Alan Morris. Warmer, acoustic. Use when you want it
+    to feel like a person rather than a company.
+  Avoid luxury/corporate beds and lifestyle-vlog beds — wrong register for
+  recruiting mechanics.
+
+Trim so the track starts on a build, not mid-phrase; aim the lift at the third
+card and let it carry into the CTA. Full volume is fine — no voiceover to
+compete with. Do not expect the sound to move reach: on a 9.5s post,
+watch-through and sends do the work.
