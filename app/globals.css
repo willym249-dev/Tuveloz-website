@@ -11790,3 +11790,87 @@ body {
 .business-details-disclosure > summary {
   color: #172b3c;
 }
+
+/* The onboarding page's "Start here" card. Every other card on that page is
+   reference material or a status readout; this one answers "what do I do next",
+   so it leads and is the only card carrying a primary button. */
+.provider-next-step {
+  border-color: rgba(255, 106, 0, 0.55);
+  min-height: 0;
+}
+
+.provider-next-step > p {
+  margin: 0 0 18px;
+}
+
+.provider-next-step .button.primary {
+  align-self: flex-start;
+}
+
+.provider-next-checklist {
+  display: grid;
+  gap: 2px;
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+}
+
+.provider-next-checklist li {
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 20px 1fr auto;
+  padding: 11px 2px;
+}
+
+.provider-next-checklist li > span {
+  color: #9fb0c0;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.provider-next-checklist li.done > span {
+  color: #86e0a6;
+}
+
+.provider-next-checklist li > a {
+  color: #f7f3ef;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.provider-next-checklist li > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.provider-next-checklist li > small {
+  color: #9fb0c0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.provider-next-checklist li.done > small {
+  color: #86e0a6;
+}
+
+.provider-progress-bar {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  height: 6px;
+  margin-top: 18px;
+  overflow: hidden;
+}
+
+.provider-progress-bar > span {
+  background: #ff8a2a;
+  border-radius: 999px;
+  display: block;
+  height: 100%;
+  min-width: 0;
+}

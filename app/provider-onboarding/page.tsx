@@ -11,6 +11,7 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
+import { onboardingProgress } from "../../lib/provider-onboarding-progress";
 import { BrandMark } from "../components/tuveloz-icons";
 
 type EvidenceSubmission = {
@@ -550,8 +551,50 @@ export default function ProviderOnboardingPage() {
         {error && <p className="form-error" role="alert">{error}</p>}
         {notice && <p className="portal-success" role="status">{notice}</p>}
         {!data && !error && <p className="admin-note">Loading your onboarding checklist…</p>}
-        {data && (
+        {data && (() => {
+          const progress = onboardingProgress(data);
+          const percent = progress.documents.total > 0
+            ? Math.round((progress.documents.accepted / progress.documents.total) * 100)
+            : 0;
+          return (
           <div className="account-grid">
+            {/* First card on the page on purpose. Everything below it is
+                reference material or a status readout; this is the only one
+                that answers "what do I do next". */}
+            <section className="account-card provider-next-step" id="start-here">
+              <div className="account-card-heading">
+                <div>
+                  <span className="account-role">Start here</span>
+                  <h2>{progress.next.title}</h2>
+                </div>
+              </div>
+              <p>{progress.next.detail}</p>
+              {progress.next.href && (
+                <a className="button primary" href={progress.next.href}>{progress.next.cta}</a>
+              )}
+              <ul className="provider-next-checklist">
+                {progress.checklist.map((item) => (
+                  <li className={item.done ? "done" : ""} key={item.label}>
+                    <span aria-hidden="true">{item.done ? "✓" : "○"}</span>
+                    <a href={item.href}>{item.label}</a>
+                    <small>{item.done ? "Done" : "Not yet"}</small>
+                  </li>
+                ))}
+              </ul>
+              {progress.documents.total > 0 && (
+                <div
+                  aria-label={`${progress.documents.accepted} of ${progress.documents.total} documents accepted`}
+                  aria-valuemax={progress.documents.total}
+                  aria-valuemin={0}
+                  aria-valuenow={progress.documents.accepted}
+                  className="provider-progress-bar"
+                  role="progressbar"
+                >
+                  <span style={{ width: `${percent}%` }} />
+                </div>
+              )}
+            </section>
+
             <section className="account-card">
               <div className="account-card-heading">
                 <div><span className="account-role">Policy v{data.policy.version}</span><h2>Launch protection is active</h2></div>
@@ -827,7 +870,7 @@ export default function ProviderOnboardingPage() {
               </p>
             </section>
 
-            <section className="account-card provider-service-status-card">
+            <section className="account-card provider-service-status-card" id="selected-services">
               <div className="account-card-heading">
                 <div><span className="account-role">Exact service checklist</span><h2>Selected services</h2></div>
                 <span className="account-count">{data.services.length}</span>
@@ -948,7 +991,7 @@ export default function ProviderOnboardingPage() {
               </div>
             </section>
 
-            <section className="account-card">
+            <section className="account-card" id="policy-acknowledgments">
               <div className="account-card-heading">
                 <div><span className="account-role">Application-review record</span><h2>Policy acknowledgments</h2></div>
                 <span className="account-count">
@@ -1002,7 +1045,8 @@ export default function ProviderOnboardingPage() {
               )}
             </section>
           </div>
-        )}
+          );
+        })()}
       </section>
     </main>
   );
