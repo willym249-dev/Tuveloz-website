@@ -782,9 +782,23 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   const accountSource = await readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8");
   const adminSource = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
 
-  assert.ok(publicSource.includes('view === "about" ? ('));
-  assert.ok(publicSource.includes('view === "request" ? ('));
+  // Each view still renders its own focused page rather than one shared page.
   assert.ok(publicSource.includes('view === "provider" ? ('));
+  assert.ok(publicSource.includes('view === "home" && ('));
+  assert.ok(publicSource.includes('view !== "provider" && ('));
+
+  // Exactly one <h1> per view: the hero. Section headings must not be promoted
+  // to <h1> for the view they belong to, or /about and /join end up with two.
+  const headingOnes = [...publicSource.matchAll(/<h1[ >]/g)];
+  assert.strictEqual(headingOnes.length, 3, "only the three hero variants may be <h1>");
+  const heroStart = publicSource.indexOf('<section className="hero"');
+  const heroEnd = publicSource.indexOf('<div className="hero-actions">');
+  for (const match of headingOnes) {
+    assert.ok(
+      match.index > heroStart && match.index < heroEnd,
+      `<h1> at index ${match.index} is outside the hero`,
+    );
+  }
   assert.ok(!customerSource.includes("<summary>More tools</summary>"));
   assert.ok(!customerSource.includes('<a href="#my-requests">'));
   assert.ok(customerSource.includes('["quotes", "Quotes received"]'));

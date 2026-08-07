@@ -903,15 +903,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
           <span className="kicker">Built for both sides</span>
-          {view === "about" ? (
-            <h1 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h1>
-          ) : (
-            <h2 id="audience-heading">
-              One marketplace. Clear benefits for customers and providers.
-            </h2>
-          )}
+          <h2 id="audience-heading">
+            One marketplace. Clear benefits for customers and providers.
+          </h2>
           <p>
             Tuveloz keeps customers in control of their vehicle-service
             decisions and independent providers in control of their business.
@@ -1112,19 +1106,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">
             {CUSTOMER_JOB_POSTING_PAUSED ? "Accounts are open" : "For customers"}
           </span>
-          {view === "request" ? (
-            <h1>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h1>
-          ) : (
-            <h2>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Set up now. Be first in line when we launch."
-                : "Post it once. Compare real quotes. No pressure."}
-            </h2>
-          )}
+          <h2>
+            {CUSTOMER_JOB_POSTING_PAUSED
+              ? "Set up now. Be first in line when we launch."
+              : "Post it once. Compare real quotes. No pressure."}
+          </h2>
           {CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
               <p>
@@ -1627,11 +1613,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
             <span className="kicker light">For providers</span>
-            {view === "provider" ? (
-              <h1>Your business. Your price. Your schedule.</h1>
-            ) : (
-              <h2>Your business. Your price. Your schedule.</h2>
-            )}
+            <h2>Your business. Your price. Your schedule.</h2>
             <p>
               This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
               you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
