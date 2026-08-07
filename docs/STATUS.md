@@ -93,6 +93,35 @@ consent across every entry point.
   rather than request-for-quote. Keep it provider-set; Tuveloz requiring
   hours is the classification drift to avoid.
 
+**Provider review — what is automated and what is not**
+
+The evidence queue now has three layers, in order:
+
+1. `lib/evidence-review-assistant.ts` — deterministic pre-screen on stored
+   metadata. Sorts pending documents and auto-sends *only* a correction
+   request for an expired or undated one. Bulk action: `prescreen-dispatch`.
+2. `lib/business-name-match.ts` — flags when the profile name, the document
+   name, and the verified legal name disagree. Advisory; changes nothing.
+3. `read-evidence-document` — sends the file to a model provider to transcribe
+   what is printed on it. Reads only; fills in nothing.
+
+**The external authenticity check is still entirely manual and always will
+be.** A forged certificate reads exactly like a real one, so nothing in a
+document can establish that the document is genuine — only the issuing
+authority, insurer, or approved vendor can. That is what the six authenticity
+fields on the acceptance form record, and no automated path can supply them.
+
+Two things to know about the document reader:
+
+- It is off unless `OPENAI_API_KEY`, `GEMINI_API_KEY`, or `ANTHROPIC_API_KEY`
+  is set as a Worker secret. Without one it returns 503 and the queue works as
+  before.
+- The authority links in `lib/evidence-acceptance-guide.ts` were taken from
+  URLs already in this repo. **None could be verified** — egress to `.gov` is
+  blocked from the build environment. Open each once before relying on it, and
+  replace any that are stale or that point at a program page where a real
+  lookup portal exists.
+
 **Not code, higher leverage**
 
 - **Google Business Profile — submitted, awaiting decision.** Video

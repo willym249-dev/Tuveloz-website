@@ -77,6 +77,21 @@ type EvidencePrescreen = {
   } | null;
 };
 
+type DocumentRead = {
+  fields: {
+    businessName: string;
+    personName: string;
+    documentNumber: string;
+    issuer: string;
+    issuedOn: string;
+    expiresOn: string;
+  };
+  unreadable: string[];
+  nameCheck: { comparison: string; needsReview: boolean; note: string } | null;
+  model: string;
+  readAt: string;
+};
+
 type ServiceEvaluation = {
   code: string;
   label: string;
@@ -291,6 +306,41 @@ function EvidenceReviewForm({
       : suggestedStatus ?? (fileIsClean ? "accepted" : "needs_correction"),
   );
   const [checkError, setCheckError] = useState<string[]>([]);
+  const [read, setRead] = useState<DocumentRead | null>(null);
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState("");
+
+  // Reads what is printed on the document so the owner is comparing rather
+  // than transcribing. It deliberately fills nothing in below: every field in
+  // the acceptance form records the *external* check against the issuing
+  // authority, and a value copied off the submitted document is not that.
+  async function readDocument() {
+    setReading(true);
+    setReadError("");
+    try {
+      const response = await fetch("/api/admin/provider-compliance", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "read-evidence-document",
+          providerId: applicationId,
+          evidenceId: evidence.id,
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        read?: DocumentRead;
+      };
+      if (!response.ok || !result.read) {
+        throw new Error(result.error || "The document could not be read.");
+      }
+      setRead(result.read);
+    } catch (reason) {
+      setReadError(reason instanceof Error ? reason.message : "The document could not be read.");
+    } finally {
+      setReading(false);
+    }
+  }
   const availableReasons = status === "accepted"
     ? REVIEW_REASONS.slice(0, 1)
     : REVIEW_REASONS.slice(1);
@@ -455,6 +505,43 @@ function EvidenceReviewForm({
             sends nothing outside TUVELOZ. Nothing is accepted for you: accepting still requires
             your external authenticity check below.
           </small>
+        </div>
+      )}
+      {evidence.hasPrivateFile && fileIsClean && (
+        <div className="credential-card">
+          <strong>Read the document</strong>
+          <small className="admin-note">
+            Sends this file to a model provider to transcribe what is printed on it — name,
+            number, issuer, dates — so you can compare it to the application without typing it
+            out. It fills nothing in below: every field in the acceptance form records your
+            external check with the issuing authority, and a value copied off the submitted
+            document is not that. Disclosed in section 5 of the Privacy Policy.
+          </small>
+          <button className="button secondary" disabled={reading} onClick={readDocument} type="button">
+            {reading ? "Reading…" : read ? "Read again" : "Read this document"}
+          </button>
+          {readError && <small className="form-error" role="alert">{readError}</small>}
+          {read && (
+            <>
+              <small>Business name printed: {read.fields.businessName || "— not found —"}</small>
+              <small>Person named: {read.fields.personName || "— not found —"}</small>
+              <small>Document number: {read.fields.documentNumber || "— not found —"}</small>
+              <small>Issuer: {read.fields.issuer || "— not found —"}</small>
+              <small>Issued: {read.fields.issuedOn || "— not found —"}</small>
+              <small>Expires: {read.fields.expiresOn || "— not found —"}</small>
+              {read.nameCheck && (
+                <small className="admin-note"><strong>Name check:</strong> {read.nameCheck.note}</small>
+              )}
+              {read.unreadable.map((note) => (
+                <small key={note} className="admin-note">Could not read: {note}</small>
+              ))}
+              <small className="admin-note">
+                Read by {read.model || "an unnamed model"}. This is a reading of the document, not
+                a verification of it — a forged document reads exactly like a real one. Confirm
+                every value with the issuing authority before accepting.
+              </small>
+            </>
+          )}
         </div>
       )}
       <form className="credential-card" onSubmit={submit}>
