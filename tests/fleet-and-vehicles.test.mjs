@@ -345,3 +345,40 @@ test("the promotions box on the request form now reaches the launch sequence", a
   // Nothing is stored without both the wording and its version.
   assert.match(enrollment, /!input\.consentText\.trim\(\) \|\| !input\.consentVersion\.trim\(\)/);
 });
+
+test("the arbitration clause keeps every element that makes it hold up", async () => {
+  const terms = await read("app/terms/page.tsx");
+
+  // Conspicuous notice before the agreement, not buried at section 13.
+  assert.match(terms, /policy-callout[\s\S]*Please read section 13 before you agree/);
+  assert.match(terms, /policy-callout[\s\S]*30 days to opt out/);
+
+  // Mutual, not one-sided.
+  assert.match(terms, /binds Tuveloz exactly\s*\n?\s*as much as it binds you/);
+
+  // A real opt-out: 30 days, a stated method, free, and no retaliation.
+  assert.match(terms, /Arbitration opt-out/);
+  assert.match(terms, /within\{" "\}\s*\n?\s*<strong>30 days<\/strong>/);
+  assert.match(terms, /costs nothing/);
+  assert.match(terms, /won&apos;t treat you differently for it/);
+
+  // Carve-outs that keep it from being unconscionable or unlawful.
+  assert.match(terms, /small-claims court/);
+  assert.match(terms, /Ending Forced Arbitration of Sexual Assault and Sexual\s*\n?\s*Harassment Act/);
+  assert.match(terms, /<strong>you choose<\/strong>/);
+
+  // Cost allocation — the consumer never pays more than court would cost.
+  assert.match(terms, /Tuveloz pays the AAA/);
+  assert.match(terms, /exceed what\s*\n?\s*it would have cost you to file the same claim in court/);
+  assert.match(terms, /never\s*\n?\s*required to pay Tuveloz&apos;s legal fees/);
+
+  // Hearing in the user's county, not the company's.
+  assert.match(terms, /county where you live/);
+
+  // Class waiver with a blowup clause, so it never becomes class arbitration.
+  assert.match(terms, /class-action waiver above is found unenforceable[\s\S]*goes to court instead/);
+  assert.match(terms, /never\s*\n?\s*arbitrated as a class/);
+
+  // Survives account closure.
+  assert.match(terms, /survives after\s*\n?\s*your account closes/);
+});

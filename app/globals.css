@@ -11293,3 +11293,11 @@ footer > p,
     max-width: 100%;
   }
 }
+
+.policy-callout {
+  background: rgba(180, 112, 60, 0.09);
+  border: 1px solid #6b4a33;
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
