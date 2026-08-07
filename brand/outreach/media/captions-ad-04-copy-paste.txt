@@ -1,0 +1,135 @@
+TUVELOZ AD 04 — COPY-PASTE KIT (provider recruitment, EN + ES)
+==============================================================
+Files:  brand/ads/tuveloz-providers-recruit.mp4   (English, 9.5s, 1080x1920)
+        brand/ads/tuveloz-proveedores-es.mp4      (Spanish, 9.5s, 1080x1920)
+
+NO AI LABEL NEEDED. Neither cut contains AI-generated footage — the frames are
+rendered from brand files. (The older reels DO need the label; this one does
+not.)
+
+Post the two cuts as SEPARATE posts, not as one bilingual post. Same slot,
+consecutive days.
+
+
+=====================================================================
+READ THIS FIRST — THE HASHTAG RULE CHANGED
+=====================================================================
+Instagram now caps hashtags at 5 per post/Reel (rolled out late 2025 into
+2026), and Adam Mosseri has said plainly that hashtags are not a way to get
+more reach. Instagram removed hashtag following entirely in Dec 2024.
+
+So the 30-tag block in captions-v3-copy-paste.txt is out of date. Do not paste
+it. Tags now CATEGORIZE the post; they do not boost it.
+
+What actually drives reach on both platforms:
+  - Watch time / completion. A fully-watched 9s clip beats a skipped 30s one.
+  - SENDS. Weighted 3-5x likes for reaching new people. Write for "send this
+    to your cousin who fixes cars."
+  - A keyword-rich first line. The caption's words are searchable; spend the
+    effort there, not on tags.
+  - The location tag. Tag a SPECIFIC town — Silver Spring, Wheaton, Rockville,
+    Gaithersburg, Germantown — never "Maryland".
+
+5 tags, both platforms. Specific and local beats big and broad: a #MoCo view is
+worth a hundred from outside the county.
+
+
+=====================================================================
+ENGLISH — INSTAGRAM REELS / FACEBOOK
+=====================================================================
+Link in bio → tuveloz.com/join?src=recruit-04
+
+CAPTION:
+Mobile mechanics, detailers, jump-start guys in Montgomery County — this one's
+for you.
+
+We're a new local marketplace for vehicle services, and we're signing up
+independent providers before we open.
+
+Free to join. You set your own prices and keep 100% of what you quote — the
+customer pays the site's 5% fee, not you. No exclusivity, so keep every
+platform and client you already have. You pick the jobs.
+
+Straight up: customer requests aren't live yet. That's on purpose — a
+marketplace where you post a job and nobody answers is worse than no
+marketplace. Applying now means your review is done and you're first in line on
+day one.
+
+Know someone who fixes cars for a living? Send them this.
+
+Apply in minutes, English o español → link in bio
+
+HASHTAGS (5, in the caption — not the first comment):
+#MobileMechanic #MontgomeryCountyMD #AutoRepair #SilverSpringMD #MechanicLife
+
+
+=====================================================================
+ENGLISH — TIKTOK
+=====================================================================
+CAPTION:
+Fix cars in Montgomery County? New local marketplace — free to join, you set
+your prices, you keep 100% of what you quote. Customer jobs aren't live yet;
+signing up now puts you first in line. Send this to a mechanic you know.
+tuveloz.com/join
+
+HASHTAGS (5):
+#MobileMechanic #MontgomeryCountyMD #CarTok #MechanicsOfTikTok #AutoRepair
+
+
+=====================================================================
+SPANISH — INSTAGRAM REELS / FACEBOOK  (post as its own reel)
+=====================================================================
+Link in bio → tuveloz.com/join?src=recruit-04-es
+
+CAPTION:
+Mecánicos móviles, detalladores y técnicos en el Condado de Montgomery — esto
+es para ustedes.
+
+Somos un nuevo mercado local de servicios vehiculares, e inscribimos
+proveedores independientes antes de abrir.
+
+Unirse es gratis. Tú pones tus precios y te quedas con el 100% de lo que
+cotizas — el cliente paga la tarifa del 5% del sitio, no tú. Sin exclusividad:
+conserva cada plataforma y cliente que ya tienes. Tú eliges los trabajos.
+
+Directo: las solicitudes de clientes todavía no están activas. Es a propósito
+— un mercado donde publicas un trabajo y nadie responde es peor que no tener
+mercado. Aplicar ahora deja tu revisión lista y te pone primero en la fila el
+día uno.
+
+¿Conoces a alguien que arregla autos? Mándale esto.
+
+Solicita en minutos, English o español → enlace en bio
+
+HASHTAGS (5):
+#MecanicoMovil #MontgomeryCountyMD #MecanicoADomicilio #LatinosEnMaryland #TallerMovil
+
+
+=====================================================================
+SPANISH — TIKTOK
+=====================================================================
+CAPTION:
+¿Arreglas autos en el Condado de Montgomery? Nuevo mercado local — unirse es
+gratis, tú pones tus precios y te quedas con el 100% de lo que cotizas. Las
+solicitudes de clientes aún no están activas; inscribirte ahora te pone primero
+en la fila. Mándaselo a un mecánico que conozcas. tuveloz.com/join
+
+HASHTAGS (5):
+#MecanicoMovil #MontgomeryCountyMD #LatinosEnMaryland #CarTok #MecanicoADomicilio
+
+
+=====================================================================
+POSTING CHECKLIST
+=====================================================================
+[ ] Upload the MP4 natively to each app. NEVER export from TikTok and reupload
+    to Reels — the watermark tanks reach.
+[ ] Do NOT add text overlays; the copy is already in the frames.
+[ ] Location tag: one specific MoCo town per post. Rotate towns across posts.
+[ ] Link in bio carries ?src=recruit-04 (EN) / ?src=recruit-04-es (ES) so
+    /admin/analytics-funnel can attribute applications.
+[ ] AI label OFF — no AI footage in these two cuts.
+[ ] Reply to every comment in the first hour. Replies are engagement.
+
+Best slots (ET), from the v3 kit — move to your own analytics peaks after 2-3
+posts: Wed 9 AM IG/FB, Wed 7:30 PM TikTok (EN); Thu 9 AM TikTok, Thu 12 PM
+IG/FB (ES).

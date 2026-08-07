@@ -4,8 +4,13 @@
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-08-07
 
-**File:** `tuveloz-providers-recruit.mp4` — 9.5s, 1080×1920, H.264 High,
-yuv420p, AAC, faststart. Posts to Instagram Reels and TikTok as-is.
+**Files:** `tuveloz-providers-recruit.mp4` (English) and
+`tuveloz-proveedores-es.mp4` (Spanish) — 9.5s each, 1080×1920, H.264 High,
+yuv420p, AAC, faststart. Post to Instagram Reels and TikTok as-is, as two
+separate posts rather than one bilingual post.
+
+Captions, the 5-hashtag sets, and the posting checklist are in
+`../outreach/media/captions-ad-04-copy-paste.txt`.
 
 Built entirely from code — Chromium renders the four frames from
 `ad-04-assets/build-frames.html`, ffmpeg adds a slow push and crossfades.
@@ -46,8 +51,11 @@ the customer, so it is not a cut of the provider's price.
 
 ## Posting
 
-- Captions, hashtag blocks, and best posting slots are already written in
-  `../outreach/media/captions-v3-copy-paste.txt` — they apply unchanged.
+- Captions and hashtags: `../outreach/media/captions-ad-04-copy-paste.txt`.
+  **Do not reuse the 30-tag block from `captions-v3-copy-paste.txt`** —
+  Instagram now caps hashtags at 5 per post (rolled out late 2025 into 2026)
+  and has said outright that hashtags do not drive reach; it removed hashtag
+  following in Dec 2024. Five specific, local tags per platform.
 - **Do not** add TikTok's own text overlays on top; the frames already carry the
   copy. Upload natively to each platform, never export from one and re-upload to
   the other — a watermark tanks Reels reach.
@@ -91,11 +99,15 @@ Note: the ffmpeg bundled with Playwright is a stripped build (VP8/WebM only, no
 H.264, no `zoompan` or `xfade`). Use a full build — `npm i ffmpeg-static` gets
 one without a system install.
 
+Both language sets live in `build-frames.html`; append `&lang=es` to the query
+string to render the Spanish frames.
+
 ## Still worth doing
 
-A Spanish cut is a copy edit away and the playbook calls Spanish-language
-outreach the most underpriced channel available — translate the four frames and
-re-run the commands above, tagging it `?src=recruit-04-es`.
+The AI hero frame generated for ad 03 would make a far better background than
+the gradient. It could not be pulled into the repo from a session because the
+network policy denies `artlist.io` hosts — download it manually into
+`ad-04-assets/` and these frames can be re-rendered over it.
 
 When a real provider volunteers, a spotlight of them beats this outright. See
 `../outreach/provider-spotlight-kit.md`.

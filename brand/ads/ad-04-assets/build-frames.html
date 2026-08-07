@@ -115,8 +115,43 @@
       <div class="spacer"></div>
       <div class="cta">tuveloz.com/join</div>` + LOCKUP
   };
-  const key = new URLSearchParams(location.search).get('f') || 'f1';
-  document.getElementById('inner').innerHTML = FRAMES[key];
+
+  const FRAMES_ES = {
+    f1: `<div class="spacer"></div>
+      <div class="eyebrow">Condado de Montgomery, MD</div>
+      <div class="rule"></div>
+      <div class="headline">Ya haces<br>el trabajo.<br><span class="accent">Ahora que te encuentren.</span></div>
+      <div class="sub">Un nuevo mercado local de servicios vehiculares — hecho para proveedores independientes.</div>
+      <div class="spacer"></div>` + LOCKUP,
+    f2: `
+      <div class="eyebrow">Lo que obtienes</div>
+      <div class="rule"></div>
+      <ul class="points">
+        <li>Unirse es gratis<span>Sin cuota de listado. Sin suscripción. Sin cuotas para proveedores.</span></li>
+        <li>Tú pones tus precios<span>Quédate con el 100% de lo que cotizas.</span></li>
+        <li>Sin exclusividad<span>Conserva cada plataforma y cliente que ya tienes.</span></li>
+        <li>Tú eliges los trabajos<span>Sin horario. Sin tasa mínima de aceptación.</span></li>
+      </ul>
+      <div class="spacer"></div>` + LOCKUP,
+    f3: `
+      <div class="eyebrow">Directo</div>
+      <div class="rule"></div>
+      <div class="headline small">Todavía no estamos<br>abiertos a clientes.<br><span class="accent">A propósito.</span></div>
+      <div class="sub">Un mercado donde publicas un trabajo y nadie responde es peor que no tener mercado. Por eso primero inscribimos proveedores.</div>
+      <div class="spacer"></div>
+      <div class="note">Aplicar ahora deja tu revisión lista y te pone primero en la fila el día uno.</div>` + LOCKUP,
+    f4: `<div class="spacer"></div>
+      <div class="eyebrow">¿Arreglas autos?</div>
+      <div class="rule"></div>
+      <div class="headline">Tu llave.<br><span class="accent">Tus reglas.</span></div>
+      <div class="sub">Solicita en minutos — English o español.</div>
+      <div class="spacer"></div>
+      <div class="cta">tuveloz.com/join</div>` + LOCKUP
+  };
+  const params = new URLSearchParams(location.search);
+  const key = params.get('f') || 'f1';
+  const set = params.get('lang') === 'es' ? FRAMES_ES : FRAMES;
+  document.getElementById('inner').innerHTML = set[key];
 </script>
 </body>
 </html>
