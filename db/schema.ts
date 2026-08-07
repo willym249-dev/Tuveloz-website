@@ -1903,3 +1903,103 @@ export const jobEvidenceItems = sqliteTable(
     ),
   ],
 );
+
+/**
+ * Work history a provider enters and signs. Named "work history" rather than
+ * resume on purpose: a resume is what a person sends a prospective employer,
+ * and TUVELOZ does not employ providers. The wording is load-bearing for that
+ * position, not a style preference.
+ *
+ * One row per place worked. `serviceCategory` ties the entry to the kind of
+ * work it backs, because the competency bar is per service — a decade of
+ * roadside work says nothing about air-conditioning service.
+ */
+export const providerWorkHistoryEntries = sqliteTable(
+  "provider_work_history_entries",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    employerName: text("employer_name").notNull(),
+    selfEmployed: text("self_employed").notNull().default("no"),
+    city: text("city").notNull().default(""),
+    startMonth: text("start_month").notNull(),
+    endMonth: text("end_month").notNull().default(""),
+    stillWorkingHere: text("still_working_here").notNull().default("no"),
+    workPerformed: text("work_performed").notNull().default(""),
+    serviceCategory: text("service_category").notNull().default(""),
+    referenceName: text("reference_name").notNull().default(""),
+    referencePhone: text("reference_phone").notNull().default(""),
+    referenceContactConsent: text("reference_contact_consent").notNull().default("no"),
+    auditStatus: text("audit_status").notNull().default("not_selected"),
+    auditNotes: text("audit_notes").notNull().default(""),
+    auditedAt: text("audited_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("provider_work_history_provider_idx").on(table.providerId, table.createdAt),
+    index("provider_work_history_person_idx").on(table.personId),
+    index("provider_work_history_audit_idx").on(table.auditStatus),
+    check(
+      "provider_work_history_self_employed_check",
+      sql`${table.selfEmployed} in ('yes', 'no')`,
+    ),
+    check(
+      "provider_work_history_still_working_check",
+      sql`${table.stillWorkingHere} in ('yes', 'no')`,
+    ),
+    check(
+      "provider_work_history_reference_consent_check",
+      sql`${table.referenceContactConsent} in ('yes', 'no')`,
+    ),
+    check(
+      "provider_work_history_audit_status_check",
+      sql`${table.auditStatus} in ('not_selected', 'selected', 'confirmed', 'contradicted', 'unreachable')`,
+    ),
+    // An open-ended entry has no end month; a closed one must have both.
+    check(
+      "provider_work_history_end_month_check",
+      sql`(${table.stillWorkingHere} = 'yes' and ${table.endMonth} = '') or (${table.stillWorkingHere} = 'no' and ${table.endMonth} <> '')`,
+    ),
+  ],
+);
+
+/**
+ * A provider's claim on one competency route for one service. Points are never
+ * stored here — they come from lib/provider-competency-points.ts at read time,
+ * so a weight change never has to be backfilled across old rows.
+ *
+ * Verifiable routes count only once `verificationStatus` is 'verified'. The
+ * signed work-history route is the single exception and is set verified when
+ * the attestation is signed.
+ */
+export const providerCompetencyClaims = sqliteTable(
+  "provider_competency_claims",
+  {
+    id: text("id").primaryKey(),
+    providerId: text("provider_id").notNull(),
+    personId: text("person_id").notNull().default(""),
+    serviceCode: text("service_code").notNull(),
+    routeCode: text("route_code").notNull(),
+    providerNote: text("provider_note").notNull().default(""),
+    evidenceSubmissionId: text("evidence_submission_id").notNull().default(""),
+    verificationStatus: text("verification_status").notNull().default("pending"),
+    verifiedByEmail: text("verified_by_email").notNull().default(""),
+    verifiedAt: text("verified_at").notNull().default(""),
+    reviewNotes: text("review_notes").notNull().default(""),
+    pointsVersion: text("points_version").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("provider_competency_claims_unique")
+      .on(table.providerId, table.personId, table.serviceCode, table.routeCode),
+    index("provider_competency_claims_provider_idx").on(table.providerId),
+    index("provider_competency_claims_status_idx").on(table.verificationStatus),
+    check(
+      "provider_competency_claims_status_check",
+      sql`${table.verificationStatus} in ('pending', 'verified', 'rejected')`,
+    ),
+  ],
+);

@@ -84,7 +84,10 @@ function genericCompleteResponse() {
 
 function invalidChallengeResponse() {
   return Response.json(
-    { error: "That verification code is invalid, expired, already used, or does not match this application." },
+    {
+        error: "That verification code is invalid, expired, already used, or does not match this application.",
+        errorEs: "Ese código de verificación no es válido, venció, ya se usó, o no corresponde a esta solicitud.",
+      },
     { status: 401, headers: NO_STORE_HEADERS },
   );
 }
@@ -92,7 +95,10 @@ function invalidChallengeResponse() {
 export async function POST(request: Request) {
   if (!isStrictSameOriginWriteRequest(request)) {
     return Response.json(
-      { error: "This verified application must be submitted from TUVELOZ." },
+      {
+        error: "This verified application must be submitted from TUVELOZ.",
+        errorEs: "Esta solicitud verificada debe enviarse desde TUVELOZ.",
+      },
       { status: 403, headers: NO_STORE_HEADERS },
     );
   }
@@ -461,26 +467,32 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) {
       return Response.json(
-        { error: "The provider application is too large." },
+        {
+          error: "The provider application is too large.",
+          errorEs: "La solicitud del proveedor es demasiado grande.",
+        },
         { status: 413, headers: NO_STORE_HEADERS },
       );
     }
     if (error instanceof InvalidJsonBodyError) {
       return Response.json(
-        { error: error.message },
+        { error: error.message, errorEs: error.message },
         { status: 400, headers: NO_STORE_HEADERS },
       );
     }
     if (error instanceof ProviderApplicationValidationError) {
       return Response.json(
-        { error: error.message },
+        { error: error.message, errorEs: error.messageEs || error.message },
         { status: error.status, headers: NO_STORE_HEADERS },
       );
     }
 
     console.error("Unable to save verified provider application", error);
     return Response.json(
-      { error: "We could not verify and save the application. Request a new code and try again." },
+      {
+        error: "We could not verify and save the application. Request a new code and try again.",
+        errorEs: "No pudimos verificar y guardar la solicitud. Pida un código nuevo e intente otra vez.",
+      },
       { status: 500, headers: NO_STORE_HEADERS },
     );
   }

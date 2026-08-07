@@ -441,6 +441,12 @@ export function ProviderSignupForm() {
     ? "Por favor intente de nuevo."
     : retryMessage;
 
+  // Provider API routes answer with both languages. Fall back to the English
+  // whenever a route has no Spanish for that particular failure.
+  function serverMessage(result: { error?: string; errorEs?: string }) {
+    return (providerFormIsSpanish ? result.errorEs : result.error) || result.error || "";
+  }
+
   function resetChallenge() {
     setApplicationChallengeId("");
     setApplicationVerificationCode("");
@@ -573,8 +579,8 @@ export function ProviderSignupForm() {
             verificationCode: applicationVerificationCode,
           }),
         });
-        const result = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(result.error || retryMessage);
+        const result = (await response.json()) as { error?: string; errorEs?: string };
+        if (!response.ok) throw new Error(serverMessage(result) || retryMessage);
         form.reset();
         clearSignupDraft();
         setDraftFields({});
@@ -613,8 +619,12 @@ export function ProviderSignupForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = (await response.json()) as { error?: string; challengeId?: string };
-      if (!response.ok) throw new Error(result.error || retryMessage);
+      const result = (await response.json()) as {
+        error?: string;
+        errorEs?: string;
+        challengeId?: string;
+      };
+      if (!response.ok) throw new Error(serverMessage(result) || retryMessage);
       if (!result.challengeId) {
         throw new Error(providerFormIsSpanish
           ? "No se pudo preparar un código de verificación. Por favor intente de nuevo."
@@ -644,9 +654,13 @@ export function ProviderSignupForm() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(pendingApplicationPayload),
       });
-      const result = (await response.json()) as { error?: string; challengeId?: string };
+      const result = (await response.json()) as {
+        error?: string;
+        errorEs?: string;
+        challengeId?: string;
+      };
       if (!response.ok || !result.challengeId) {
-        throw new Error(result.error || (providerFormIsSpanish
+        throw new Error(serverMessage(result) || (providerFormIsSpanish
           ? "No se pudo solicitar un código nuevo."
           : "A new code could not be requested."));
       }

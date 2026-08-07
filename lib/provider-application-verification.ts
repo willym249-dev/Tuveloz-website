@@ -73,9 +73,19 @@ const LEVEL_PRIORITY: readonly ProviderLevel[] = [
   "specialty_provider",
 ];
 
+/**
+ * Carries its own Spanish alongside the English rather than leaving the client
+ * to map message text back to a cause. The applicant reads whichever matches
+ * the language they filled the form in; logs and tests keep the English.
+ */
 export class ProviderApplicationValidationError extends Error {
-  constructor(message: string, readonly status = 400) {
+  readonly messageEs: string;
+  readonly status: number;
+
+  constructor(message: string, options: { es?: string; status?: number } = {}) {
     super(message);
+    this.messageEs = options.es ?? "";
+    this.status = options.status ?? 400;
   }
 }
 
@@ -226,40 +236,54 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   ) {
     throw new ProviderApplicationValidationError(
       "Complete the applicant, pathway, performing-person identity, and signer fields.",
+      { es: "Complete los campos del solicitante, la ruta, la identidad de la persona que realiza el trabajo y el firmante." },
     );
   }
   if (!isEmail(email)) {
-    throw new ProviderApplicationValidationError("Enter a valid applicant email address.");
+    throw new ProviderApplicationValidationError(
+      "Enter a valid applicant email address.",
+      { es: "Escriba un correo electrónico válido del solicitante." },
+    );
   }
   if (phone && !/^\+?[\d\s().-]{7,}$/.test(phone)) {
     throw new ProviderApplicationValidationError(
       "Enter a valid phone number, or leave the phone field blank.",
+      { es: "Escriba un número de teléfono válido, o deje el campo en blanco." },
     );
   }
   if (!rawServiceCodes.length || rawServiceCodes.length !== serviceCodes.length) {
     throw new ProviderApplicationValidationError(
       "Choose only exact services listed in the current review matrix.",
+      { es: "Elija solamente los servicios exactos que aparecen en la lista de revisión actual." },
     );
   }
   if (serviceCodes.includes("general_auto_repair")) {
     throw new ProviderApplicationValidationError(
       "General auto repair is too broad. Choose exact service codes.",
+      { es: "“Reparación general” es demasiado amplio. Elija los servicios exactos." },
     );
   }
 
   const areas = [...new Set(parseProviderAreas(serviceArea))].sort();
   if (areas.length === 0 || areas.some((area) => !ALLOWED_AREAS.has(area))) {
-    throw new ProviderApplicationValidationError("Choose at least one listed service area.");
+    throw new ProviderApplicationValidationError(
+      "Choose at least one listed service area.",
+      { es: "Elija al menos un área de servicio de la lista." },
+    );
   }
   if (!providerAreasHaveReviewedCompliance(areas)) {
     throw new ProviderApplicationValidationError(
       "This service area is not open for provider review yet.",
-      409,
+      {
+        es: "Esta área de servicio todavía no está abierta para revisión de proveedores.",
+        status: 409,
+      },
     );
   }
   if (!businessMunicipality) {
     throw new ProviderApplicationValidationError(
       "Enter the municipality where the provider is based.",
+      { es: "Escriba la ciudad o el municipio donde se ubica el proveedor." },
     );
   }
   if (
@@ -270,11 +294,13 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   ) {
     throw new ProviderApplicationValidationError(
       "Choose only the listed service-location options.",
+      { es: "Elija solamente las opciones de ubicación de servicio que aparecen en la lista." },
     );
   }
   if (workLocations.includes(PROVIDER_WORK_LOCATION_OPTIONS[1]) && !businessServiceAddress) {
     throw new ProviderApplicationValidationError(
       "Enter the business service address when customers may come to the business.",
+      { es: "Escriba la dirección del negocio cuando los clientes puedan ir al negocio." },
     );
   }
   if (
@@ -283,6 +309,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   ) {
     throw new ProviderApplicationValidationError(
       "The independent owner-operator pathway requires the provider business details.",
+      { es: "La ruta de dueño-operador independiente requiere los datos del negocio proveedor." },
     );
   }
   if (
@@ -297,6 +324,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   ) {
     throw new ProviderApplicationValidationError(
       "Enter the sponsoring or employer provider business and its authorized contact.",
+      { es: "Escriba el negocio proveedor patrocinador o empleador y su contacto autorizado." },
     );
   }
   if (
@@ -308,6 +336,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   ) {
     throw new ProviderApplicationValidationError(
       "Complete every required legal acknowledgment. Privacy remains a separate acknowledgment.",
+      { es: "Complete cada confirmación legal requerida. La de privacidad es una confirmación aparte." },
     );
   }
 
@@ -320,6 +349,11 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
       `These services are not offered on the selected pathway: ${
         unsupported.join(", ")
       }. Remove them, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.`,
+      {
+        es: `Estos servicios no se ofrecen en la ruta seleccionada: ${
+          unsupported.join(", ")
+        }. Quítelos, o use una cuenta de solo solicitante mientras se prepara por su cuenta. TUVELOZ no ofrece capacitación.`,
+      },
     );
   }
   const providerLevel = summaryLevelForApplication(
@@ -329,6 +363,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
   if (!providerLevel) {
     throw new ProviderApplicationValidationError(
       "Select at least one exact service that is lawful on the chosen pathway, or use an applicant-only account while you prepare independently. TUVELOZ does not provide training.",
+      { es: "Elija al menos un servicio exacto que sea lícito en la ruta seleccionada, o use una cuenta de solo solicitante mientras se prepara por su cuenta. TUVELOZ no ofrece capacitación." },
     );
   }
 
