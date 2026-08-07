@@ -3,6 +3,7 @@ import {
   PAYMENT_POLICY_VERSION,
   PRIVACY_VERSION,
   TERMS_VERSION,
+  VEHICLE_SERVICE_RISK_VERSION,
 } from "./policies";
 import { policyDocumentRelease } from "./policy-release-manifest";
 
@@ -38,6 +39,14 @@ export const CUSTOMER_ACCEPTANCE_DOCUMENTS = [
     href: "/customer-agreement",
     purposes: CUSTOMER_ACCEPTANCE_PURPOSES,
     ...policyDocumentRelease("customer_agreement"),
+  },
+  {
+    key: "vehicle_service_risk",
+    version: VEHICLE_SERVICE_RISK_VERSION,
+    title: "Service Risk, Damage Claims, and Disputes",
+    href: "/vehicle-service-risk",
+    purposes: CUSTOMER_ACCEPTANCE_PURPOSES,
+    ...policyDocumentRelease("vehicle_service_risk"),
   },
   {
     key: "privacy",

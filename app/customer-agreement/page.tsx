@@ -27,7 +27,13 @@ export default function CustomerAgreementPage() {
         <p>
           This Customer Agreement supplements the <a href="/terms">Terms of Use</a>.
           It applies when you post, review, accept, schedule, or pay for a
-          vehicle-service request as a customer.
+          vehicle-service request as a customer. The{" "}
+          <a href="/vehicle-service-risk">
+            Service Risk, Damage Claims, and Disputes
+          </a>{" "}
+          page covers who is responsible if something goes wrong with your
+          vehicle, what insurance providers must carry, and how to report
+          damage.
         </p>
       </section>
 
@@ -122,7 +128,9 @@ export default function CustomerAgreementPage() {
         <p>
           Raise a workmanship, parts, warranty, delay, or property concern with
           the provider business promptly and preserve relevant messages, approvals,
-          receipts, and photos. Tuveloz may help organize records or review an
+          receipts, and photos. The{" "}
+          <a href="/vehicle-service-risk">damage-claim steps</a> explain what to
+          do and by when. Tuveloz may help organize records or review an
           unreleased payment if live transactions are later enabled, but the
           provider business remains responsible for the vehicle service and any
           warranty it expressly offers. Tuveloz remains responsible for its own

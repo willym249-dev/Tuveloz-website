@@ -239,10 +239,24 @@ export default function TermsPage() {
           out first. That doesn&apos;t extend any legal filing deadline you have.
         </p>
         <p>
-          Tuveloz hasn&apos;t adopted a formal governing-law, forum-selection, or
-          arbitration clause for production yet, and this draft doesn&apos;t
-          require arbitration or waive your right to a class action.
-          Independent legal review is recommended before any of that changes.
+          Maryland law governs these Terms and any dispute arising from your use
+          of Tuveloz, without regard to conflict-of-law rules. Claims must be
+          brought in the state or federal courts serving Montgomery County,
+          Maryland, and both sides consent to those courts. This doesn&apos;t
+          override any right you have under Maryland law to bring an eligible
+          claim in a small-claims court where you live.
+        </p>
+        <p>
+          Tuveloz hasn&apos;t adopted an arbitration clause or a class-action
+          waiver, and these Terms don&apos;t require arbitration or waive your right
+          to a class action. If that ever changes, we&apos;ll publish it as a new
+          version with advance notice.
+        </p>
+        <p>
+          The <a href="/vehicle-service-risk">
+            Service Risk, Damage Claims, and Disputes
+          </a> page covers responsibility for work done on your vehicle,
+          provider insurance, and how to report damage.
         </p>
       </section>
 

@@ -4,13 +4,14 @@ import {
   PRIVACY_VERSION,
   PROVISIONAL_PROVIDER_POLICY_VERSION,
   PROVIDER_AGREEMENT_VERSION,
+  PROVIDER_SAFETY_POLICY_VERSION,
   TERMS_VERSION,
 } from "./policies";
 import { POLICY_VERSION } from "./provider-policy";
 import { policyDocumentRelease } from "./policy-release-manifest";
 
 export const PROVIDER_TERMS_ACCEPTANCE_TEXT =
-  "I am at least 18 years old and authorized to act for the applicant or provider business. I agree to the Terms of Use, Provider Agreement, Payment, Cancellation and Refund Policy, Marketplace Conduct and Review Policy, and Provisional Provider and Trainee Policy shown for this application. I certify that the application information is complete and current, and I understand that no service or customer-job access is granted until each required approval is recorded.";
+  "I am at least 18 years old and authorized to act for the applicant or provider business. I agree to the Terms of Use, Provider Agreement, Payment, Cancellation and Refund Policy, Marketplace Conduct and Review Policy, Provisional Provider and Trainee Policy, and Provider Safety and Safe-Work Policy shown for this application. I agree to follow the stop-work safety rules on every job and to hold and keep current every license, registration, and insurance the law requires for my exact service and location. I certify that the application information is complete and current, and I understand that no service or customer-job access is granted until each required approval is recorded.";
 
 export const PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT =
   "I separately acknowledge that I reviewed the Privacy Policy and understand how TUVELOZ handles provider-application, identity, credential, insurance, personnel, and service-eligibility information.";
@@ -75,6 +76,15 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
     control: "terms-bundle",
     presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
     ...policyDocumentRelease("provisional_provider_policy"),
+  },
+  {
+    key: "provider_safety_policy",
+    version: PROVIDER_SAFETY_POLICY_VERSION,
+    title: "Provider Safety and Safe-Work Policy",
+    href: "/provider-safety-policy",
+    control: "terms-bundle",
+    presentedText: PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    ...policyDocumentRelease("provider_safety_policy"),
   },
   {
     key: "privacy",

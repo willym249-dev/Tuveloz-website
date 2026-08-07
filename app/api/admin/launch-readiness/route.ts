@@ -83,6 +83,8 @@ const POLICY_RELEASE_PRESENTATION: Record<PolicyReleaseKey, {
   payment_policy: { title: "Payment, cancellation, and refund policy", href: "/payments" },
   marketplace_conduct: { title: "Marketplace conduct and review policy", href: "/marketplace-conduct" },
   provisional_provider_policy: { title: "Provisional provider policy", href: "/provisional-provider-policy" },
+  vehicle_service_risk: { title: "Service risk, damage claims, and disputes", href: "/vehicle-service-risk" },
+  provider_safety_policy: { title: "Provider safety and safe-work policy", href: "/provider-safety-policy" },
 };
 
 function launchStateReason(state: string) {

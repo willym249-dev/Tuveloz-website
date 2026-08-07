@@ -100,7 +100,9 @@ export function PublicInfoPage({
           <Link href="/faq">FAQ</Link>
           <Link href="/account">Sign in</Link>
           <Link href="/terms">Terms</Link>
+          <Link href="/vehicle-service-risk">Damage claims</Link>
           <Link href="/provider-agreement">Provider agreement</Link>
+          <Link href="/provider-safety-policy">Provider safety</Link>
           <Link href="/marketplace-conduct">Marketplace conduct</Link>
           <Link href="/provisional-provider-policy">Provider pathways</Link>
           <Link href="/payments">Payments</Link>

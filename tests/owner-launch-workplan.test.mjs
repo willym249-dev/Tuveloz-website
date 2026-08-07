@@ -51,6 +51,8 @@ test("every shared policy release becomes an explicit runtime and owner blocker 
     "payment_policy",
     "marketplace_conduct",
     "provisional_provider_policy",
+    "vehicle_service_risk",
+    "provider_safety_policy",
   ];
 
   assert.deepEqual(Object.keys(manifest).sort(), expectedKeys.sort());

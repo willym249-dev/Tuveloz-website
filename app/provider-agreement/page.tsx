@@ -24,6 +24,9 @@ export default function ProviderAgreementPage() {
           the <a href="/marketplace-conduct">Marketplace Conduct Policy</a>, the{" "}
           <a href="/provisional-provider-policy">
             Provisional Provider and Trainee Policy
+          </a>, the{" "}
+          <a href="/provider-safety-policy">
+            Provider Safety and Safe-Work Policy
           </a>, the <a href="/privacy">Privacy Policy</a>, and the{" "}
           <a href="/payments">Payment, Cancellation, and Refund Policy</a>.
         </p>
@@ -165,6 +168,24 @@ export default function ProviderAgreementPage() {
           date — a certificate alone doesn&apos;t prove coverage. Report a lapse,
           or an incident like an injury, property damage, or a safety issue,
           right away.
+        </p>
+        <p>
+          Tell us within five days if a required credential or policy is
+          cancelled, non-renewed, or materially reduced. If one lapses, access
+          to the work that depends on it is suspended until it&apos;s current.
+          Whether you carry anything beyond what the law requires is your call
+          as an independent business — Tuveloz doesn&apos;t provide, procure, or pay
+          for your coverage, and isn&apos;t your insurer.
+        </p>
+        <p>
+          You also have to follow the{" "}
+          <a href="/provider-safety-policy">
+            Provider Safety and Safe-Work Policy
+          </a>{" "}
+          on every job, including confirming the stop-work items before you
+          start. Those are conduct rules about protecting people and property —
+          they don&apos;t direct your repair method and they don&apos;t make Tuveloz your
+          employer or supervisor.
         </p>
       </section>
 

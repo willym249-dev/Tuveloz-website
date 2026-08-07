@@ -1,26 +1,26 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:12:24.189Z",
-    "releaseId": "terms-2026-08-04-r2",
-    "reviewBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
-    "canonicalBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
+    "effectiveAt": "2026-08-07T00:00:00.000Z",
+    "releaseId": "terms-2026-08-07",
+    "reviewBodyHash": "910e4e231c72c907c4a5e19fe20a54c977172038707b8dcc5ac163334bf3f27e",
+    "canonicalBodyHash": "910e4e231c72c907c4a5e19fe20a54c977172038707b8dcc5ac163334bf3f27e",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:21:00.675Z",
-    "releaseId": "customer-agreement-2026-08-04",
-    "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
-    "canonicalBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
+    "effectiveAt": "2026-08-07T00:00:00.000Z",
+    "releaseId": "customer-agreement-2026-08-07",
+    "reviewBodyHash": "8c13f9545911bda50c07ec20082325a9057a9489706357cbcc3526803314ffa1",
+    "canonicalBodyHash": "8c13f9545911bda50c07ec20082325a9057a9489706357cbcc3526803314ffa1",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:16:46.736Z",
-    "releaseId": "provider-agreement-2026-08-04",
-    "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
-    "canonicalBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
+    "effectiveAt": "2026-08-07T00:00:00.000Z",
+    "releaseId": "provider-agreement-2026-08-07",
+    "reviewBodyHash": "608f786738885e34d733edcd42d32ab5e055811ddd8128d82ffc3f25dd716c67",
+    "canonicalBodyHash": "608f786738885e34d733edcd42d32ab5e055811ddd8128d82ffc3f25dd716c67",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {
@@ -54,5 +54,21 @@
     "reviewBodyHash": "8484d87588301c99d394b39a02d04d907ad9f71fff88c402dc501a9a05fa98f0",
     "canonicalBodyHash": "8484d87588301c99d394b39a02d04d907ad9f71fff88c402dc501a9a05fa98f0",
     "sourceFile": "app/provisional-provider-policy/page.tsx"
+  },
+  "vehicle_service_risk": {
+    "releaseStatus": "active",
+    "effectiveAt": "2026-08-07T00:00:00.000Z",
+    "releaseId": "vehicle-service-risk-2026-08-07",
+    "reviewBodyHash": "1a85333ce5348c30a1f0ca71590f03c85093d72210ab8e65dd96e519f1bf7cf9",
+    "canonicalBodyHash": "1a85333ce5348c30a1f0ca71590f03c85093d72210ab8e65dd96e519f1bf7cf9",
+    "sourceFile": "app/vehicle-service-risk/page.tsx"
+  },
+  "provider_safety_policy": {
+    "releaseStatus": "active",
+    "effectiveAt": "2026-08-07T00:00:00.000Z",
+    "releaseId": "provider-safety-policy-2026-08-07",
+    "reviewBodyHash": "f3a7c58a0f07aab6dd02020908b99eea7ce791e2a7cc7c97e2879f98d3220675",
+    "canonicalBodyHash": "f3a7c58a0f07aab6dd02020908b99eea7ce791e2a7cc7c97e2879f98d3220675",
+    "sourceFile": "app/provider-safety-policy/page.tsx"
   }
 }
