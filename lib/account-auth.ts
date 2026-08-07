@@ -500,6 +500,33 @@ async function sendLoginCodeEmail(
   }
 }
 
+/**
+ * The one account whose sign-in code is fixed instead of emailed.
+ *
+ * Apple's App Review cannot receive email, so an app whose only way in is an
+ * emailed one-time code is unreviewable and gets rejected under Guideline 2.1.
+ * This lets a single, named account use a code the reviewer already has.
+ *
+ * Fail-closed: both APP_REVIEW_EMAIL and APP_REVIEW_CODE must be set, and the
+ * code must be exactly six digits, or this returns null and nothing changes.
+ * Configure it with `wrangler secret put`, point it at a dedicated account, and
+ * unset it once review is done.
+ *
+ * Deliberately narrow. It only makes the code for this one address
+ * *predictable* — it does not skip verification. `verifyAccountCode` is
+ * untouched: the code is still hashed and compared in constant time, still
+ * expires in ten minutes, still allows five attempts, is still single-use, and
+ * the account must still be eligible for the requested role. It grants nothing
+ * a normal sign-in would not, and cannot reach owner access, which lives behind
+ * Cloudflare Access rather than this path.
+ */
+function appReviewFixedCode(email: string): string | null {
+  const reviewEmail = normalizeAccountEmail(runtimeEnv().APP_REVIEW_EMAIL);
+  const reviewCode = (runtimeEnv().APP_REVIEW_CODE ?? "").trim();
+  if (!reviewEmail || !/^\d{6}$/.test(reviewCode)) return null;
+  return email === reviewEmail ? reviewCode : null;
+}
+
 export async function requestAccountCode(email: string, role: AccountRole) {
   const roles = await eligibleAccountRoles(email);
   if (!roles.includes(role)) {
@@ -514,6 +541,30 @@ export async function requestAccountCode(email: string, role: AccountRole) {
   const cutoff = Date.now() - LOGIN_RATE_WINDOW_MS;
   if (recent.filter((item) => parseStoredDate(item.createdAt) >= cutoff).length >= LOGIN_RATE_LIMIT) {
     return { accepted: false, delivered: false, rateLimited: true };
+  }
+
+  // Deliberately below the rate limit rather than above it: the review account
+  // gets the same three-per-fifteen-minutes ceiling as everyone else, so a
+  // guessed address cannot be used to insert challenge rows without bound. A
+  // reviewer types a code they were given and does not need more than three
+  // requests in a quarter of an hour.
+  const fixedCode = appReviewFixedCode(email);
+  if (fixedCode) {
+    const id = crypto.randomUUID();
+    await getDb().insert(loginCodes).values({
+      id,
+      email,
+      role,
+      codeHash: await hmacHex(`${id}:${email}:${role}:${fixedCode}`),
+      expiresAt: new Date(Date.now() + LOGIN_CODE_LIFETIME_MS).toISOString(),
+      attempts: 0,
+      usedAt: "",
+      createdAt: new Date().toISOString(),
+    });
+    console.warn(
+      `App Review sign-in code issued for the configured review account (${role}).`,
+    );
+    return { accepted: true, delivered: false, appReview: true };
   }
 
   const id = crypto.randomUUID();
