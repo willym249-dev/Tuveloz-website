@@ -260,49 +260,27 @@ export default function TermsPage() {
       <section>
         <h2>13. Resolving disputes with Tuveloz</h2>
         <p>
-          Before starting arbitration or any other claim against Tuveloz,
-          email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with
-          what happened and what you&apos;re asking for, and give us 60 days to
-          try to work it out with you informally. That doesn&apos;t extend any
+          Before filing a claim against Tuveloz, email{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> with what
+          happened and what you&apos;re asking for, and give us 60 days to try
+          to work it out with you informally. That doesn&apos;t extend any
           legal filing deadline you have.
         </p>
         <p>
-          If we can&apos;t resolve it informally, you and Tuveloz agree to
-          resolve any dispute between you and Tuveloz through binding
-          individual arbitration instead of a court trial. The arbitration
-          is administered by the American Arbitration Association under its
-          Consumer Arbitration Rules, is governed by the Federal Arbitration
-          Act, and can award you the same individual relief a court could.
-          Either side may instead bring an individual claim in small-claims
-          court if it qualifies there.
-        </p>
-        <p>
-          You and Tuveloz each waive the right to a jury trial and to
-          participate in a class, collective, consolidated, or
-          representative action against the other. If that class-action
-          waiver turns out to be unenforceable for a particular claim, that
-          claim goes to court instead of arbitration. This section covers
+          These Terms don&apos;t require arbitration. If we can&apos;t resolve a
+          dispute informally, you and Tuveloz can each take it to court —
+          including small-claims court when the claim qualifies there — and
+          nothing here waives your right to a jury trial or your right to
+          raise a concern with a government agency. This section covers
           disputes with Tuveloz only — a dispute between a customer and a
           provider belongs to their own service agreement.
         </p>
         <p>
-          You can opt out of this arbitration agreement by emailing{" "}
-          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a> within 30
-          days of first accepting these Terms, with your name, your account
-          email, and a statement that you&apos;re opting out of arbitration.
-          Opting out doesn&apos;t change any other part of these Terms. Nothing
-          in this section stops either side from asking a court for
-          emergency relief to protect the platform or its users, and nothing
-          here waives a right the law says can&apos;t be waived — including your
-          right to raise a concern with a government agency.
-        </p>
-        <p>
           These Terms are governed by Maryland law, excluding its
-          conflict-of-law rules, except that the Federal Arbitration Act
-          governs this arbitration agreement. Any claim that belongs in
-          court must be brought in the state or federal courts covering
-          Montgomery County, Maryland, and both sides consent to those
-          courts.
+          conflict-of-law rules. Any claim between you and Tuveloz must be
+          brought in the state or federal courts covering Montgomery County,
+          Maryland, and both sides consent to those courts. Nothing in this
+          section waives a right the law says can&apos;t be waived.
         </p>
       </section>
 
