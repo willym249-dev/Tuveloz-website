@@ -11,7 +11,7 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
   assert.equal(matrix.status, "draft_pending_mandatory_compliance_insurance_tax");
   assert.equal(matrix.default_policy, "deny");
   assert.equal(matrix.jurisdiction, "US-MD-MontgomeryCounty");
-  assert.equal(services.length, 25);
+  assert.equal(services.length, 24);
   assert.equal(matrix.services.general_auto_repair.launch_state, "prohibited_broad_category");
   assert.equal(matrix.services.general_auto_repair.customer_visible, false);
   assert.equal(
@@ -158,7 +158,8 @@ test("every operational stage uses the central eligibility model and no real pro
   assert.ok(engine.includes("customer_assignment_acceptance_required"));
   assert.ok(engine.includes("supervision_checkpoint_missing"));
   assert.ok(engine.includes("sponsoring_provider_not_eligible_for_exact_service"));
-  assert.ok(engine.includes("provider_of_record_assignment_not_implemented"));
+  assert.ok(engine.includes("provider_of_record_model_not_approved"));
+  assert.match(engine, /employeeTraineeProviderOfRecordApproval\(\s*options\.through\.getTime\(\)/);
   assert.ok(engine.includes("owner_operator_registration_binding_missing"));
   assert.ok(policy.includes("RELATIONSHIP_EVIDENCE_REQUIREMENTS"));
   assert.match(policy, /independent_startup: Object\.freeze\(\[\s*"no_employee_attestation"/);

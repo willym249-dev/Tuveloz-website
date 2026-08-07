@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { expansionInterests } from "../../../db/schema";
-
-const EXPANSION_AREAS = new Set([
-  "Maryland",
-  "Washington, DC",
-]);
+import {
+  EXPANSION_ALREADY_SERVED_MESSAGE,
+  isCurrentLaunchArea,
+  isExpansionState,
+} from "../../../lib/expansion-areas";
 
 const PROVIDER_TYPES = new Set([
   "Mobile mechanic or service truck",
@@ -51,17 +51,18 @@ export async function POST(request: Request) {
     ) {
       return Response.json({ error: "Choose the type of provider you are." }, { status: 400 });
     }
-    if (!locality || !EXPANSION_AREAS.has(state)) {
+    if (!locality || !isExpansionState(state)) {
       return Response.json({
-        error: "Enter your county or city and choose Maryland or Washington, DC.",
+        error: "Enter your county or city and choose your state.",
       }, { status: 400 });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return Response.json({ error: "Enter a valid email address." }, { status: 400 });
     }
-    if (state === "Maryland" && locality.toLowerCase().includes("montgomery")) {
+    // The one area already open routes to the real application instead.
+    if (isCurrentLaunchArea(state, locality)) {
       return Response.json({
-        error: "Tuveloz already serves Montgomery County. Use the customer or provider form to get started.",
+        error: EXPANSION_ALREADY_SERVED_MESSAGE,
       }, { status: 400 });
     }
 

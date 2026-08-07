@@ -32,6 +32,12 @@ test("migration journal preserves upstream order before renumbered provider and 
     "0051_sms_phone_sign_in",
     "0052_founding_provider_cohort",
     "0053_launch_update_subscribers",
+    "0054_fleet_accounts_and_saved_vehicles",
+    "0055_referral_attribution",
+    "0056_fleet_phone_contact_consent",
+    "0057_phone_contact_consents",
+    "0058_customer_request_contact_phone",
+    "0059_arbitration_opt_outs",
   ];
   const tail = journal.entries.slice(31);
 

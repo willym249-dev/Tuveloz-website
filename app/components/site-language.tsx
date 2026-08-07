@@ -424,7 +424,6 @@ const spanishText: Record<string, string> = {
   "Battery replacement": "Reemplazo de batería",
   "Tire installation": "Instalación de llantas",
   "Minor repairs and maintenance": "Reparaciones menores y mantenimiento",
-  "Towing or roadside service": "Remolque o asistencia en carretera",
   "Other job or service": "Otro trabajo o servicio",
   "Tell us what should be added": "Díganos qué se debería agregar",
   "Which tools would make a provider's work easier?": "¿Qué herramientas facilitarían el trabajo de un proveedor?",

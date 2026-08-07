@@ -103,7 +103,6 @@ live-payment switches are excluded):
 |---|---|---|
 | `customer_workflow_and_terms_requirements` | owner + official source | mgaleg …gcl §13-301 |
 | `maryland_repair_duty_allocation` | owner + official source | mgaleg …gcl §14-1008 |
-| `platform_and_service_insurance_bound` | **insurance broker/carrier** | — |
 | `stripe_connect_business_model` | **payment processor** | — |
 | `cpa_tax_mor_and_transaction_map` | **CPA / tax adviser** | — |
 | `checkout_fee_receipt_copy` | official source + **CPA** | mgaleg …gcl §14-1003 |
@@ -112,8 +111,15 @@ live-payment switches are excluded):
 | `provider_expiration_reminder_delivery` | owner + **security reviewer** | — |
 | `screening_or_no_screening_position` | official source + **screening reviewer** | ftc.gov background-checks |
 
-`employee_and_trainee_provider_of_record` is **not required** for an
-independent-owner-only launch — leave it or mark not-applicable.
+Two gates are recorded but **not required**, so neither blocks the stage:
+
+- `employee_and_trainee_provider_of_record` — not needed for an
+  independent-owner-only launch. Leave it or mark not-applicable.
+- `platform_and_service_insurance_bound` — owner decision, August 2026. No
+  Maryland statute requires platform coverage, so bound insurance is tracked
+  rather than gated. The exposure it covers is a customer naming both the
+  provider and Tuveloz over work done at their location. Set `required: true`
+  in `lib/launch-readiness.ts` to make it blocking again.
 
 Two internal checks must also read green (no manual entry — they follow from
 code/config): `active_policy_catalog` (needs ≥1 enabled customer-visible service

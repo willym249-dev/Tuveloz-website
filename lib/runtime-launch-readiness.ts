@@ -10,7 +10,9 @@ import {
 } from "../db/schema";
 import {
   LAUNCH_GATE_CATALOG,
+  launchAuthorityApprovals,
   launchDecisionState,
+  launchGateByKey,
   stageIsApproved,
   type LaunchReviewStage,
   type StoredLaunchGateDecision,
@@ -537,6 +539,51 @@ function runtimeLiveInternalChecks(activeServiceCount: number): RuntimeInternalC
         && stripeLiveModeEnabled(),
     },
   ];
+}
+
+export const EMPLOYEE_TRAINEE_PROVIDER_OF_RECORD_GATE_KEY =
+  "employee_and_trainee_provider_of_record";
+
+export type EmployeeTraineeProviderOfRecordApproval = {
+  approved: boolean;
+  state: string;
+  decisionId: string;
+  validThrough: string;
+};
+
+/**
+ * Whether the optional employee-and-trainee provider-of-record gate currently
+ * holds a complete approval — official legal source, insurer, and CPA — valid
+ * through the supplied time. Read fresh from D1 with no process cache, and
+ * fail-closed: a missing, blocked, expired, not-applicable, or malformed
+ * decision keeps employee and trainee work blocked.
+ */
+export async function employeeTraineeProviderOfRecordApproval(
+  through = Date.now(),
+): Promise<EmployeeTraineeProviderOfRecordApproval> {
+  const gate = launchGateByKey(EMPLOYEE_TRAINEE_PROVIDER_OF_RECORD_GATE_KEY);
+  if (!gate) {
+    return { approved: false, state: "missing", decisionId: "", validThrough: "" };
+  }
+  const [decision] = await getDb().select().from(launchGateDecisions)
+    .where(eq(launchGateDecisions.gateKey, gate.key))
+    .orderBy(
+      desc(launchGateDecisions.gateVersion),
+      desc(launchGateDecisions.createdAt),
+    )
+    .limit(1);
+  const state = launchDecisionState(gate, decision, through);
+  const validThrough = decision
+    ? earliestValidThrough(
+      launchAuthorityApprovals(gate, decision).map((item) => item.validThrough),
+    )
+    : "";
+  return {
+    approved: state === "approved",
+    state,
+    decisionId: decision?.id ?? "",
+    validThrough,
+  };
 }
 
 /**

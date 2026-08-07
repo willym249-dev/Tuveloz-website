@@ -9,6 +9,7 @@ import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
 import { StripeConnectPanel } from "../components/stripe-connect-panel";
 import { BrandMark, TuvelozIcon } from "../components/tuveloz-icons";
+import { ReferralPanel } from "../components/referral-panel";
 import {
   parseCustomerServiceLocations,
   parseJobServices,
@@ -131,7 +132,8 @@ type ProviderView =
   | "messages"
   | "reviews"
   | "profile"
-  | "performance";
+  | "performance"
+  | "share";
 
 const nextStatus: Record<string, { value: string; label: string }> = {
   "quote accepted": { value: "on my way", label: "I'm on my way" },
@@ -658,8 +660,18 @@ export default function ProviderJobsPage() {
           <button aria-pressed={activeView === "reviews"} className={activeView === "reviews" ? "is-active" : ""} onClick={() => setActiveView("reviews")} type="button">Reviews</button>
           <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
           <button aria-pressed={activeView === "performance"} className={activeView === "performance" ? "is-active" : ""} onClick={() => setActiveView("performance")} type="button">Performance tools</button>
+          <button aria-pressed={activeView === "share"} className={activeView === "share" ? "is-active" : ""} onClick={() => setActiveView("share")} type="button">Share Tuveloz</button>
           <Link href="/ai?for=provider">Ask Tuveloz AI</Link>
         </nav>
+      )}
+      {workspaceReady && activeView === "share" && (
+        <section className="portal-section" id="provider-share">
+          <div className="portal-section-heading">
+            <div><span className="kicker">Share Tuveloz</span><h2>Invite another independent provider</h2></div>
+            <p>Your link records who told someone about Tuveloz. It carries no payment, and it never changes job routing, search ranking, or how any application is reviewed.</p>
+          </div>
+          <ReferralPanel role="provider" />
+        </section>
       )}
       {workspaceReady && activeView === "schedule" && (
         <section className="portal-section provider-schedule-section" id="provider-schedule">

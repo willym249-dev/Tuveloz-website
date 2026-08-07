@@ -369,10 +369,11 @@ export async function decideAutomaticJobRouting(
       || eligibility.policyVersion !== POLICY_VERSION
       || eligibility.rulesEngineVersion !== ELIGIBILITY_RULES_VERSION
       || !validThroughSchedule(eligibility.validThrough, scheduledTime)
-      // Employee and sponsored-trainee applications are people, not the
-      // provider of record. Keep them out of automatic routing until jobs are
-      // accepted/assigned under the sponsoring provider business and the
-      // performing person is bound at booking.
+      // Employee and sponsored-trainee eligibility rows are people, not the
+      // provider of record, so they never route directly — even when the
+      // provider-of-record gate is approved. The sponsoring business routes on
+      // its own independent eligibility row, and the performing person is
+      // bound at booking through stage eligibility.
       || eligibility.relationshipPath !== "independent_startup"
     ) continue;
     providersByService.get(eligibility.serviceCode)?.add(eligibility.providerId);

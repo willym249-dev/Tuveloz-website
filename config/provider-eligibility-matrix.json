@@ -87,7 +87,6 @@
         "motor_vehicle_ac_service",
         "body_paint_refinishing",
         "window_tint_installation",
-        "towing_or_storage",
         "vehicle_lockout",
         "official_vehicle_inspection",
         "fuel_delivery",
@@ -610,22 +609,6 @@
       "job_control_profile": "specialty_customer_vehicle",
       "allowed_scope": ["window_tint_installation_under_approved_compliance_controls"],
       "policy_notes": "Medical-exception and official repair-order certification workflows remain disabled pending written approval."
-    },
-    "towing_or_storage": {
-      "launch_state": "disabled_pending_mandatory_requirements_insurer",
-      "customer_visible": false,
-      "allowed_pathways": ["independent_startup", "provider_business_employee"],
-      "allowed_provider_levels": ["specialty_provider"],
-      "jurisdictions": ["US-MD-MontgomeryCounty"],
-      "requirements": [
-        "ocp_towing_registration",
-        "tow_vehicle_registration",
-        "business_auto_coverage",
-        "towing_custody_coverage"
-      ],
-      "location_rule": "approved_towing_and_storage_workflow_only",
-      "job_control_profile": "specialty_customer_vehicle",
-      "allowed_scope": ["approved_towing_and_storage_service"]
     },
     "vehicle_lockout": {
       "launch_state": "disabled_pending_mandatory_requirements_insurer",

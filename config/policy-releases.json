@@ -1,58 +1,58 @@
 {
-  "terms": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:12:24.189Z",
-    "releaseId": "terms-2026-08-04-r2",
-    "reviewBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
-    "canonicalBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
-    "sourceFile": "app/terms/page.tsx"
-  },
-  "customer_agreement": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:21:00.675Z",
-    "releaseId": "customer-agreement-2026-08-04",
-    "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
-    "canonicalBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
-    "sourceFile": "app/customer-agreement/page.tsx"
-  },
-  "provider_agreement": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:16:46.736Z",
-    "releaseId": "provider-agreement-2026-08-04",
-    "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
-    "canonicalBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
-    "sourceFile": "app/provider-agreement/page.tsx"
-  },
-  "privacy": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T06:00:46.511Z",
-    "releaseId": "privacy-2026-08-04",
-    "reviewBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
-    "canonicalBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
-    "sourceFile": "app/privacy/page.tsx"
-  },
-  "payment_policy": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:22:43.156Z",
-    "releaseId": "payment-policy-2026-08-04",
-    "reviewBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
-    "canonicalBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
-    "sourceFile": "app/payments/page.tsx"
-  },
-  "marketplace_conduct": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:52:38.993Z",
-    "releaseId": "marketplace-conduct-2026-08-04",
-    "reviewBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
-    "canonicalBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
-    "sourceFile": "app/marketplace-conduct/page.tsx"
-  },
-  "provisional_provider_policy": {
-    "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:38:44.656Z",
-    "releaseId": "provisional-provider-policy-2026-08-04",
-    "reviewBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
-    "canonicalBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
-    "sourceFile": "app/provisional-provider-policy/page.tsx"
-  }
+ "terms": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-07T00:00:00.000Z",
+  "releaseId": "terms-2026-08-07-r4",
+  "reviewBodyHash": "5917989910af817d9295194b23b33f7d2453d3255df8bf69abb632462bfb7e70",
+  "canonicalBodyHash": "5917989910af817d9295194b23b33f7d2453d3255df8bf69abb632462bfb7e70",
+  "sourceFile": "app/terms/page.tsx"
+ },
+ "customer_agreement": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-04T05:21:00.675Z",
+  "releaseId": "customer-agreement-2026-08-04",
+  "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
+  "canonicalBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
+  "sourceFile": "app/customer-agreement/page.tsx"
+ },
+ "provider_agreement": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-04T05:16:46.736Z",
+  "releaseId": "provider-agreement-2026-08-04",
+  "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
+  "canonicalBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
+  "sourceFile": "app/provider-agreement/page.tsx"
+ },
+ "privacy": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-07T00:00:00.000Z",
+  "releaseId": "privacy-2026-08-07",
+  "reviewBodyHash": "af113be201e955efed7e12d882fba3e2752dc2cae410cbe6c6bba486400c58c7",
+  "canonicalBodyHash": "af113be201e955efed7e12d882fba3e2752dc2cae410cbe6c6bba486400c58c7",
+  "sourceFile": "app/privacy/page.tsx"
+ },
+ "payment_policy": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-04T05:22:43.156Z",
+  "releaseId": "payment-policy-2026-08-04",
+  "reviewBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
+  "canonicalBodyHash": "d2b5aa8ab306a0b38b967d075305ca2c792c51c643e8188b78d73b55d9958d3d",
+  "sourceFile": "app/payments/page.tsx"
+ },
+ "marketplace_conduct": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-04T05:52:38.993Z",
+  "releaseId": "marketplace-conduct-2026-08-04",
+  "reviewBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
+  "canonicalBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
+  "sourceFile": "app/marketplace-conduct/page.tsx"
+ },
+ "provisional_provider_policy": {
+  "releaseStatus": "active",
+  "effectiveAt": "2026-08-04T05:38:44.656Z",
+  "releaseId": "provisional-provider-policy-2026-08-04",
+  "reviewBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
+  "canonicalBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
+  "sourceFile": "app/provisional-provider-policy/page.tsx"
+ }
 }

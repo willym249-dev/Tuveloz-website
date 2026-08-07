@@ -146,7 +146,7 @@ test("every configured service has a mandatory official-source baseline", async 
   ));
   const serviceCodes = Object.keys(matrix.services);
 
-  assert.equal(serviceCodes.length, 25);
+  assert.equal(serviceCodes.length, 24);
   for (const serviceCode of serviceCodes) {
     const references = requiredOfficialLegalSourceReferences(
       serviceCode,

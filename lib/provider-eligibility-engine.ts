@@ -30,7 +30,10 @@ import {
   annualComplianceReviewWindowIsValid,
   hasCompleteMandatoryLegalComplianceEvidence,
 } from "./legal-compliance-evidence";
-import { runtimeRealMarketplaceReleaseDecision } from "./runtime-launch-readiness";
+import {
+  employeeTraineeProviderOfRecordApproval,
+  runtimeRealMarketplaceReleaseDecision,
+} from "./runtime-launch-readiness";
 import { PLATFORM_SERVICE_ACTIVATION_RULES_VERSION } from "./platform-service-activation";
 import {
   MARKETPLACE_CONDUCT_VERSION,
@@ -67,7 +70,7 @@ import {
 } from "./provider-policy";
 import { parseProviderServices } from "./service-matching";
 
-export const ELIGIBILITY_RULES_VERSION = "0.14.1";
+export const ELIGIBILITY_RULES_VERSION = "0.15.0";
 export const PLATFORM_ACTIVATION_PROVIDER_ID = "__tuveloz_platform__";
 
 export const JOB_FACTS_SOURCES = [
@@ -368,12 +371,23 @@ async function evaluateOneService(options: {
     reasons.push({ code: "owner_operator_registration_binding_missing", detail: "The independent owner-operator must be the registered provider business for this pathway." });
   }
 
+  let providerOfRecordGateValidThrough = "";
   if (pathway === "sponsored_trainee_employee" || pathway === "provider_business_employee") {
-    reasons.push({
-      code: "provider_of_record_assignment_not_implemented",
-      detail: "Employee and trainee work remains blocked until jobs are accepted and assigned under the sponsoring provider business as provider of record.",
-      serviceCode: options.serviceCode,
-    });
+    // The provider-of-record model opens only while its launch gate holds a
+    // complete approval from the outside authorities (official legal source,
+    // insurer, CPA) through the scheduled work time. No gate, no employee or
+    // trainee work — every person-level check below still applies on top.
+    const providerOfRecordGate = await employeeTraineeProviderOfRecordApproval(
+      options.through.getTime(),
+    );
+    providerOfRecordGateValidThrough = providerOfRecordGate.validThrough;
+    if (!providerOfRecordGate.approved) {
+      reasons.push({
+        code: "provider_of_record_model_not_approved",
+        detail: "Employee and trainee work stays blocked until the employee-and-trainee provider-of-record gate holds current official legal, insurer, and tax approval through the scheduled work time.",
+        serviceCode: options.serviceCode,
+      });
+    }
     const sponsorProviderId = profile?.sponsoringProviderId ?? "";
     if (
       !sponsorProviderId
@@ -692,6 +706,7 @@ async function evaluateOneService(options: {
     agreementVersions,
     validThrough: latestNonemptyDate([
       ...evidenceExpirations,
+      providerOfRecordGateValidThrough,
       activation?.validThrough ?? "",
       activationLegalValidThrough,
       activationInsurerValidThrough,

@@ -116,7 +116,7 @@ test("the derived summary level is the highest level actually held", () => {
   );
   assert.equal(summaryFor(["battery_replacement"]), "standard_provider");
   assert.equal(
-    summaryFor(["motor_vehicle_ac_service", "towing_or_storage"]),
+    summaryFor(["motor_vehicle_ac_service", "vehicle_lockout"]),
     "specialty_provider",
   );
   assert.notEqual(summaryFor(["battery_replacement", "motor_vehicle_ac_service"]), "standard_provider");

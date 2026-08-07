@@ -1,6 +1,11 @@
 ﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import {
+  PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN,
+  SMS_MARKETING_CONSENT_TEXT_EN,
+} from "../lib/phone-consent-text";
+import { EXPANSION_STATES } from "../lib/expansion-areas";
 import Link from "next/link";
 import {
   CURRENT_LAUNCH_AREA,
@@ -144,7 +149,6 @@ const feedbackJobOptions = [
   "Battery replacement",
   "Tire installation",
   "Minor repairs and maintenance",
-  "Towing or roadside service",
 ];
 
 const feedbackProviderOptions = [
@@ -236,6 +240,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [repeatBooking, setRepeatBooking] = useState<RepeatBooking | null>(null);
   const [repeatBookingError, setRepeatBookingError] = useState("");
   const [useSameVehicle, setUseSameVehicle] = useState(true);
+  // Drives whether the promotional-text opt-in is shown at all: no number
+  // entered means there is nothing to consent about.
+  const [contactPhoneEntered, setContactPhoneEntered] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [headerAccountState, setHeaderAccountState] = useState<
     "checking" | "signed-out" | "customer" | "provider"
@@ -1260,6 +1267,27 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   placeholder="you@example.com"
                 />
               </label>
+              <label>
+                Phone <small>(optional)</small>
+                <input
+                  autoComplete="tel"
+                  inputMode="tel"
+                  maxLength={40}
+                  name="contact-phone"
+                  onChange={(event) => setContactPhoneEntered(
+                    event.target.value.trim().length > 0,
+                  )}
+                  placeholder="(301) 555-0100"
+                  type="tel"
+                />
+                <small>{PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN}</small>
+              </label>
+              {contactPhoneEntered && (
+                <label className="request-sms-consent">
+                  <input name="sms-marketing-consent" type="checkbox" value="yes" />
+                  <span>{SMS_MARKETING_CONSENT_TEXT_EN}</span>
+                </label>
+              )}
               {repeatBooking && (
                 <fieldset className="area-fieldset repeat-vehicle-fieldset">
                   <legend>Which vehicle is this for?</legend>
@@ -1711,10 +1739,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">Future expansion</span>
           <h2>Bring Tuveloz to your area.</h2>
           <p>
-            Tuveloz provider onboarding currently focuses on Montgomery County,
-            Maryland. Customers and providers elsewhere in Maryland or Washington,
-            DC can request their area. We&apos;ll use combined demand to choose where
-            to launch next.
+            Tuveloz is in Montgomery County, Maryland today — that&apos;s the whole
+            map right now, and we&apos;d rather say so plainly than let you guess.
+            If you&apos;re somewhere else, tell us where. There&apos;s no work outside
+            Montgomery County yet and this isn&apos;t an application, but every area
+            someone names helps decide where we go, and you&apos;ll hear from us
+            directly if that turns out to be yours.
           </p>
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
@@ -1727,16 +1757,21 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           {expansionSent ? (
             <div className="success-message expansion-success" role="status">
               <span>✓</span>
-              <h3>Your area request is counted.</h3>
-              <p>We&apos;ll compare customer and provider demand as Tuveloz plans its next launch area.</p>
+              <h3>Thank you — we know where you are now.</h3>
+              <p>
+                We&apos;re only in Montgomery County, Maryland today, so we can&apos;t send
+                you work yet and this isn&apos;t an application. We&apos;d rather tell you
+                that straight than leave you waiting on us. If Tuveloz opens where
+                you are, you&apos;ll hear it from us directly.
+              </p>
               <button type="button" onClick={() => setExpansionSent(false)}>
                 Request another area
               </button>
             </div>
           ) : (
             <>
-              <h3>Request your area</h3>
-              <p>Four quick answers help us measure real local demand.</p>
+              <h3>Tell us where you are</h3>
+              <p>Four quick answers, and we&apos;ll know your area is worth a look.</p>
               <fieldset className="expansion-audience-fieldset">
                 <legend>I am a…</legend>
                 <div className="expansion-role-options">
@@ -1776,8 +1811,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   State or district
                   <select required name="expansion-state" defaultValue="">
                     <option value="" disabled>Select one</option>
-                    <option>Maryland</option>
-                    <option>Washington, DC</option>
+                    {EXPANSION_STATES.map((stateName) => (
+                      <option key={stateName}>{stateName}</option>
+                    ))}
                   </select>
                 </label>
                 <label>

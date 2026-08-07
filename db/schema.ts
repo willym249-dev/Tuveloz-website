@@ -21,6 +21,10 @@ export const customerRequests = sqliteTable(
     municipality: text("municipality").notNull().default(""),
     isTestJob: text("is_test_job").notNull().default("no"),
     vehicle: text("vehicle").notNull(),
+    // Optional. Given so Tuveloz and the chosen provider can reach the
+    // customer about this job; promotional texts need the separate opt-in
+    // recorded in phone_contact_consents.
+    contactPhone: text("contact_phone").notNull().default(""),
     service: text("service").notNull(),
     serviceCodes: text("service_codes").notNull().default("[]"),
     partsSource: text("parts_source").notNull().default("Not sure whether parts are needed — discuss with provider"),
@@ -694,6 +698,175 @@ export const savedProviders = sqliteTable(
       .on(table.customerEmail, table.providerId),
     index("saved_providers_customer_email_idx").on(table.customerEmail),
     index("saved_providers_created_at_idx").on(table.createdAt),
+  ],
+);
+
+/**
+ * Vehicles a customer account has saved so a repeat or multi-vehicle customer
+ * does not retype them. A fleet customer is simply an account with several of
+ * these; the rows carry no pricing, routing, or eligibility meaning.
+ */
+export const customerVehicles = sqliteTable(
+  "customer_vehicles",
+  {
+    id: text("id").primaryKey(),
+    customerEmail: text("customer_email").notNull(),
+    label: text("label").notNull().default(""),
+    year: text("year").notNull().default(""),
+    make: text("make").notNull(),
+    model: text("model").notNull(),
+    trim: text("trim").notNull().default(""),
+    color: text("color").notNull().default(""),
+    plate: text("plate").notNull().default(""),
+    vin: text("vin").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    archived: text("archived").notNull().default("no"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("customer_vehicles_email_idx").on(table.customerEmail, table.archived),
+    index("customer_vehicles_created_at_idx").on(table.createdAt),
+  ],
+);
+
+/**
+ * Businesses that want multi-vehicle service when the marketplace opens.
+ * Recording interest is not an account, a contract, or a promise of service.
+ */
+export const fleetInquiries = sqliteTable(
+  "fleet_inquiries",
+  {
+    id: text("id").primaryKey(),
+    companyName: text("company_name").notNull(),
+    contactName: text("contact_name").notNull(),
+    email: text("email").notNull(),
+    // Given for contact about this request. Promotional texts additionally
+    // require the recorded opt-in below — see lib/phone-contact-consent.ts.
+    contactPhone: text("contact_phone").notNull().default(""),
+    smsMarketingConsentText: text("sms_marketing_consent_text").notNull().default(""),
+    smsMarketingConsentVersion: text("sms_marketing_consent_version").notNull().default(""),
+    smsMarketingConsentedAt: text("sms_marketing_consented_at").notNull().default(""),
+    smsMarketingRevokedAt: text("sms_marketing_revoked_at").notNull().default(""),
+    fleetSize: text("fleet_size").notNull(),
+    vehicleTypes: text("vehicle_types").notNull().default(""),
+    municipality: text("municipality").notNull().default(""),
+    servicesNeeded: text("services_needed").notNull().default(""),
+    notes: text("notes").notNull().default(""),
+    status: text("status").notNull().default("new"),
+    requestKey: text("request_key").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("fleet_inquiries_request_key_unique").on(table.requestKey),
+    index("fleet_inquiries_status_idx").on(table.status, table.createdAt),
+    index("fleet_inquiries_created_at_idx").on(table.createdAt),
+  ],
+);
+
+/**
+ * One share code per account. A referral is attribution only — it carries no
+ * payment, no ranking weight, and no routing preference.
+ */
+export const referralCodes = sqliteTable(
+  "referral_codes",
+  {
+    code: text("code").primaryKey(),
+    ownerRole: text("owner_role").notNull(),
+    ownerEmail: text("owner_email").notNull(),
+    status: text("status").notNull().default("active"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("referral_codes_owner_unique").on(table.ownerRole, table.ownerEmail),
+    index("referral_codes_status_idx").on(table.status),
+  ],
+);
+
+/**
+ * A signup credited to a share code. The referred person's email is stored
+ * only as a one-way key for deduplication — the joined record itself is the
+ * link the owner reviews, so a referrer never gains access to who signed up.
+ */
+export const referralSignups = sqliteTable(
+  "referral_signups",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull(),
+    referrerRole: text("referrer_role").notNull(),
+    referrerEmail: text("referrer_email").notNull(),
+    referredRole: text("referred_role").notNull(),
+    referredEntityId: text("referred_entity_id").notNull().default(""),
+    referredKey: text("referred_key").notNull(),
+    status: text("status").notNull().default("recorded"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("referral_signups_referred_unique").on(table.referredRole, table.referredKey),
+    index("referral_signups_code_idx").on(table.code, table.createdAt),
+    index("referral_signups_referrer_idx").on(table.referrerRole, table.referrerEmail),
+  ],
+);
+
+/**
+ * The one place that answers "may Tuveloz send this person a promotional
+ * text?" for every entry point. Transactional contact about someone's own
+ * request never consults this table — see lib/phone-contact-consent.ts.
+ */
+export const phoneContactConsents = sqliteTable(
+  "phone_contact_consents",
+  {
+    id: text("id").primaryKey(),
+    role: text("role").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    source: text("source").notNull().default(""),
+    smsMarketingConsentText: text("sms_marketing_consent_text").notNull().default(""),
+    smsMarketingConsentVersion: text("sms_marketing_consent_version").notNull().default(""),
+    smsMarketingConsentedAt: text("sms_marketing_consented_at").notNull().default(""),
+    smsMarketingRevokedAt: text("sms_marketing_revoked_at").notNull().default(""),
+    revokeToken: text("revoke_token").notNull(),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("phone_contact_consents_role_email_unique").on(table.role, table.email),
+    uniqueIndex("phone_contact_consents_revoke_token_unique").on(table.revokeToken),
+    index("phone_contact_consents_marketing_idx")
+      .on(table.smsMarketingRevokedAt, table.smsMarketingConsentedAt),
+  ],
+);
+
+/**
+ * Section 13 of the Terms promises anyone 30 days to decline arbitration, at
+ * no cost and with a written confirmation. This table is how that promise is
+ * kept: it is the record that decides, years later, whether a given person is
+ * bound by the arbitration agreement.
+ *
+ * Rows are never edited or deleted. The unique key is (email, terms version)
+ * because opting out of one version of the Terms is not an opt-out of a later
+ * one — a new version restarts the 30 days and gets its own row.
+ */
+export const arbitrationOptOuts = sqliteTable(
+  "arbitration_opt_outs",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    /** Self-reported, display only: "customer", "provider", or "". */
+    role: text("role").notNull().default(""),
+    /** Which version of the Terms this opt-out is against. */
+    termsVersion: text("terms_version").notNull(),
+    /** "form" or "email" — the Terms accept both. */
+    method: text("method").notNull(),
+    recordedAt: text("recorded_at").notNull(),
+    confirmationSentAt: text("confirmation_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("arbitration_opt_outs_email_terms_version_unique")
+      .on(table.email, table.termsVersion),
   ],
 );
 

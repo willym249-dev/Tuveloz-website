@@ -68,6 +68,11 @@ import {
   SERVICE_POLICY_CATALOG,
 } from "../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import {
+  normalizeContactPhone,
+  recordPhoneContactConsent,
+} from "../../../lib/phone-contact-consent";
+import { enrollLaunchUpdateSubscriber } from "../../../lib/launch-update-enrollment";
 
 const GUEST_CONSENT_VERSION = "guest-request-2026-07-30";
 const GUEST_PROFILE_CONSENT_TEXT =
@@ -174,6 +179,8 @@ export async function POST(request: Request) {
         customerPrivacyHash: formData.get("customer-privacy-hash"),
         rememberEmailConsent: formData.get("remember-email-consent"),
         marketingConsent: formData.get("marketing-consent"),
+        contactPhone: formData.get("contact-phone"),
+        smsMarketingConsent: formData.get("sms-marketing-consent") === "yes",
       };
       issuePhoto = formData.get("issue-photo");
     } else {
@@ -186,6 +193,10 @@ export async function POST(request: Request) {
     const submittedLaunchArea = clean(body.launchArea, 80);
     const municipality = clean(body.municipality, 100);
     const vehicle = clean(body.vehicle, 320) || "Not provided";
+    // Optional, and transactional by default: the chosen provider needs a way
+    // to reach the customer about this job. Promotional texts require the
+    // separate opt-in recorded centrally after the request is stored.
+    const contactPhone = normalizeContactPhone(body.contactPhone);
     const submittedServiceCodes = Array.isArray(body.serviceCodes)
       ? body.serviceCodes
       : [body.serviceCode];
@@ -569,6 +580,7 @@ export async function POST(request: Request) {
         launchArea: CURRENT_LAUNCH_AREA,
         municipality,
         vehicle,
+        contactPhone,
         service: serviceLabel,
         serviceCodes: JSON.stringify(automaticDecision ? automaticDecision.serviceCodes : []),
         jurisdiction: automaticDecision ? automaticDecision.jurisdiction : jurisdiction,
@@ -652,6 +664,29 @@ export async function POST(request: Request) {
       await Promise.allSettled(cleanup);
       throw error;
     }
+
+    // The promotions box on this form now enrols the customer in the
+    // launch-update sequence, carrying the wording they saw here rather than
+    // the subscribe form's. Transactional email about this job is unaffected.
+    if (marketingConsent) {
+      await enrollLaunchUpdateSubscriber({
+        email,
+        source: "customer-request",
+        consentText: MARKETING_CONSENT_TEXT,
+        consentVersion: GUEST_CONSENT_VERSION,
+      });
+    }
+
+    // Promotional-text permission only, recorded after the request and its
+    // agreement records are safely stored. Reaching this customer about this
+    // job never depends on it, and a failure here must not fail the request.
+    await recordPhoneContactConsent({
+      role: "customer",
+      email,
+      phone: contactPhone,
+      smsMarketingConsent: body.smsMarketingConsent,
+      source: "customer-request",
+    });
 
     let matchingProviderCount = 0;
     if (automaticDecision) {

@@ -5,7 +5,6 @@ import {
   customerRequests,
   jobReviews,
   providerApplications,
-  providerCredentialVerifications,
   providerGalleryItems,
   providerProfiles,
   providerQuotes,
@@ -16,20 +15,14 @@ import {
   parseProviderWorkLocations,
 } from "../../../lib/service-matching";
 import { getAccountSession, providerAccountFor } from "../../../lib/account-auth";
-import { parseProviderSelfAssessment } from "../../../lib/provider-compliance";
 import { isFoundingMember } from "../../../lib/founding-cohort";
-import {
-  providerCredentialRecordIsCurrent,
-  providerCredentialRequirementsAreSatisfied,
-  requiredProviderCredentialRequirements,
-} from "../../../lib/provider-credentials";
 import {
   marketplacePausedMessage,
 } from "../../../lib/launch-status";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import { currentPlatformActiveServiceCodes } from "../../../lib/platform-service-activation";
 import { POLICY_JURISDICTION } from "../../../lib/provider-policy";
-import { providerProfileHasCurrentContentApproval } from "../../../lib/provider-profile-claims";
+import { evaluateProviderPublicAccess } from "../../../lib/public-provider-page";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -82,52 +75,15 @@ export async function GET(request: Request) {
   if (!result) {
     return Response.json({ error: "Provider page not found." }, { status: 404 });
   }
-  const credentialRequirements = requiredProviderCredentialRequirements(
-    result.provider.approvedServices,
-    result.provider.serviceArea,
-    parseProviderSelfAssessment(result.provider.providerSelfAssessment),
-  );
-  const credentialRecords = credentialRequirements.length > 0
-    ? await db.select().from(providerCredentialVerifications)
-      .where(eq(providerCredentialVerifications.providerId, result.provider.id))
-    : [];
-  const credentialRequirementsSatisfied = providerCredentialRequirementsAreSatisfied(
-    credentialRequirements,
-    credentialRecords,
-  );
-  const currentCredentials = credentialRequirements.flatMap((requirement) => {
-    const record = credentialRecords.find((candidate) => (
-      candidate.requirementKey === requirement.key
-      && providerCredentialRecordIsCurrent(candidate)
-    ));
-    return record ? [{
-      requirementKey: requirement.key,
-      label: requirement.publicLabel,
-      jurisdiction: requirement.jurisdiction,
-      issuingAuthority: requirement.issuingAuthority,
-      legalBasisUrl: requirement.legalBasisUrl,
-      officialLookupUrl: requirement.officialLookupUrl,
-      checkedAt: record.checkedAt,
-      expiresAt: record.expiresAt,
-    }] : [];
-  });
-  const currentProvider = await providerAccountFor(result.provider.email);
+  const {
+    publicAccess,
+    currentPublicServices,
+    credentialRequirementsSatisfied,
+    credentialRequirementCount,
+    currentCredentials,
+  } = await evaluateProviderPublicAccess(result.profile, result.provider);
   const activePlatformServiceCodes = await currentPlatformActiveServiceCodes(
     POLICY_JURISDICTION,
-  );
-  const currentPublicServices = parseProviderServices(result.provider.approvedServices)
-    .filter((serviceCode) => activePlatformServiceCodes.has(serviceCode));
-  const currentProfileContentApproved = result.profile.publicStatus === "published"
-    && await providerProfileHasCurrentContentApproval(result.profile);
-  const publicAccess = (
-    result.profile.publicStatus === "published"
-    && currentProfileContentApproved
-    && result.provider.status === "approved"
-    && result.provider.verificationStatus === "verified"
-    && result.provider.isTestProvider === "no"
-    && currentProvider?.id === result.provider.id
-    && currentPublicServices.length > 0
-    && credentialRequirementsSatisfied
   );
   const session = await getAccountSession(request);
   const previewProvider = session?.role === "provider"
@@ -246,7 +202,7 @@ export async function GET(request: Request) {
     reviewSummary: { average, count: reviews.length },
     credentialReview: {
       requirementsSatisfied: credentialRequirementsSatisfied,
-      noGovernmentCredentialTriggered: credentialRequirements.length === 0,
+      noGovernmentCredentialTriggered: credentialRequirementCount === 0,
       credentials: currentCredentials,
     },
     confidence: {

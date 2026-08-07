@@ -15,6 +15,7 @@ import {
   callGemini,
   callOpenAI,
   type CouncilProvider,
+  type ProviderCallAttachment,
   type ProviderCallResult,
 } from "./providers.ts";
 
@@ -44,6 +45,14 @@ export type CouncilTask = {
   system?: string;
   mode?: CouncilMode;
   maxTokens?: number;
+  /**
+   * Documents for the model to read alongside the question.
+   *
+   * These are part of the cache identity (see cacheKeyFor). Two different
+   * documents asked the same question must never share an answer — that would
+   * report one provider's certificate as another's.
+   */
+  attachments?: readonly ProviderCallAttachment[];
 };
 
 export type CouncilAnswer = ProviderCallResult & { tier: CouncilTier };
@@ -89,8 +98,16 @@ async function sha256Hex(value: string) {
 export async function cacheKeyFor(task: CouncilTask, models: CouncilModels) {
   const mode = task.mode ?? "quick";
   const maxTokens = task.maxTokens ?? DEFAULT_MAX_TOKENS;
+  // Attachment bytes are hashed into the key. Leaving them out would let two
+  // different documents asked the same question collide and return each
+  // other's answer.
+  const attachmentKey = task.attachments?.length
+    ? await sha256Hex(task.attachments
+      .map((attachment) => `${attachment.mediaType}:${attachment.data}`)
+      .join("|"))
+    : "";
   return sha256Hex(
-    `${mode}::${maxTokens}::${JSON.stringify(models)}::${task.system ?? ""}::${task.question}`,
+    `${mode}::${maxTokens}::${JSON.stringify(models)}::${task.system ?? ""}::${attachmentKey}::${task.question}`,
   );
 }
 
@@ -133,6 +150,7 @@ async function callTier(
     system: task.system,
     prompt: task.question,
     maxTokens: task.maxTokens ?? DEFAULT_MAX_TOKENS,
+    attachments: task.attachments,
   });
   return { ...result, tier };
 }

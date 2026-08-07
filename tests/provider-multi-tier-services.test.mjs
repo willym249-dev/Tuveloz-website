@@ -47,41 +47,41 @@ test("a provider level is resolved from the exact service, not from the provider
     "specialty_provider",
   );
   assert.equal(
-    providerLevelForService("towing_or_storage", INDEPENDENT),
+    providerLevelForService("vehicle_lockout", INDEPENDENT),
     "specialty_provider",
   );
 });
 
-test("battery, A/C, and towing can be held together by one independent provider", () => {
+test("battery, A/C, and lockout can be held together by one independent provider", () => {
   const levels = providerLevelsForServices(
-    ["battery_replacement", "motor_vehicle_ac_service", "towing_or_storage"],
+    ["battery_replacement", "motor_vehicle_ac_service", "vehicle_lockout"],
     INDEPENDENT,
   );
   // The mixed selection is lawful and reports both levels it spans.
   assert.deepEqual([...levels].sort(), ["specialty_provider", "standard_provider"]);
 });
 
-test("A/C and towing stay independent: each needs its own credentials", () => {
+test("A/C and lockout stay independent: each needs its own credentials", () => {
   // Both are specialty work, but neither service's evidence authorizes the
-  // other. Holding an EPA Section 609 certificate must never enable towing,
-  // and towing custody coverage must never enable refrigerant work.
+  // other. Holding an EPA Section 609 certificate must never enable lockout
+  // work, and a locksmith license must never enable refrigerant work.
   const ac = PROVIDER_POLICY_MATRIX.services.motor_vehicle_ac_service.requirements;
-  const towing = PROVIDER_POLICY_MATRIX.services.towing_or_storage.requirements;
+  const lockout = PROVIDER_POLICY_MATRIX.services.vehicle_lockout.requirements;
 
   assert.ok(ac.includes("epa_section_609_certificate"));
-  assert.ok(towing.includes("ocp_towing_registration"));
-  assert.ok(towing.includes("towing_custody_coverage"));
+  assert.ok(lockout.includes("md_locksmith_business_license"));
+  assert.ok(lockout.includes("md_locksmith_technician_registration"));
 
-  assert.ok(!towing.includes("epa_section_609_certificate"));
-  assert.ok(!ac.includes("ocp_towing_registration"));
-  assert.ok(!ac.includes("towing_custody_coverage"));
+  assert.ok(!lockout.includes("epa_section_609_certificate"));
+  assert.ok(!ac.includes("md_locksmith_business_license"));
+  assert.ok(!ac.includes("md_locksmith_technician_registration"));
 
   // Sharing a level never means sharing credentials.
   assert.equal(
     providerLevelForService("motor_vehicle_ac_service", INDEPENDENT),
-    providerLevelForService("towing_or_storage", INDEPENDENT),
+    providerLevelForService("vehicle_lockout", INDEPENDENT),
   );
-  assert.notDeepEqual([...ac].sort(), [...towing].sort());
+  assert.notDeepEqual([...ac].sort(), [...lockout].sort());
 });
 
 test("prohibited and off-pathway services still resolve to no level", () => {
@@ -194,4 +194,29 @@ test("the single-level collapse helper is gone from signup", async () => {
   // The provisioning draft no longer carries a hand-picked level either.
   assert.doesNotMatch(adminPage, /providerLevel: draft\.providerLevel/);
   assert.doesNotMatch(adminPage, /providerLevel: "provisional_independent"/);
+});
+
+test("towing is not an offered service anywhere a provider or customer can pick it", async () => {
+  // Owner decision, August 2026: towing is off the catalog for now. The
+  // requirement definitions it used (ocp_towing_registration,
+  // tow_vehicle_registration, towing_custody_coverage, the
+  // approved_towing_and_storage_workflow_only location rule) are left dormant
+  // so restoring the service is a small change — but nothing may offer it,
+  // list it, or let a provider apply for it while it is out.
+  assert.equal(PROVIDER_POLICY_MATRIX.services.towing_or_storage, undefined);
+  for (const [level, definition] of Object.entries(PROVIDER_POLICY_MATRIX.provider_levels)) {
+    assert.ok(
+      !definition.allowed_service_codes.includes("towing_or_storage"),
+      `${level} still offers towing`,
+    );
+  }
+
+  const policy = await source("lib/provider-policy.ts");
+  assert.doesNotMatch(policy, /towing_or_storage/);
+
+  // No signup option, and no public list that implies someone can request it.
+  const signupForm = await source("app/components/provider-signup-form.tsx");
+  assert.doesNotMatch(signupForm, /towing_or_storage/);
+  const homepage = await source("app/page.tsx");
+  assert.doesNotMatch(homepage, /"Towing or roadside service"/);
 });

@@ -111,6 +111,7 @@ async function customerExport(email: string) {
     quotes,
     appointments,
     savedProviders,
+    savedVehicles,
     reviews,
     authorizations,
     payments,
@@ -138,6 +139,7 @@ async function customerExport(email: string) {
               launch_area AS launchArea,
               municipality,
               vehicle,
+              contact_phone AS contactPhone,
               service,
               parts_source AS partsSource,
               parts_preference AS partsPreference,
@@ -206,6 +208,16 @@ async function customerExport(email: string) {
          LEFT JOIN provider_profiles profile ON profile.provider_id = provider.id
         WHERE lower(saved.customer_email) = lower(?)
         ORDER BY datetime(saved.created_at) DESC`,
+      [email],
+    ),
+    rows(
+      `SELECT id, label, year, make, model, trim, color, plate, vin, notes,
+              archived,
+              created_at AS createdAt,
+              updated_at AS updatedAt
+         FROM customer_vehicles
+        WHERE lower(customer_email) = lower(?)
+        ORDER BY datetime(created_at) DESC`,
       [email],
     ),
     rows(
@@ -299,6 +311,7 @@ async function customerExport(email: string) {
     quotesReceived: quotes,
     appointments,
     savedProviders,
+    savedVehicles,
     reviewsSubmitted: reviews,
     jobAuthorizations: authorizations,
     paymentSummaries: payments,

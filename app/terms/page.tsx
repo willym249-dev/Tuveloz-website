@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PolicyPage } from "../components/policy-page";
 
 export default function TermsPage() {
@@ -6,7 +7,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 3, 2026"
+      updated="August 7, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -24,6 +25,16 @@ export default function TermsPage() {
           advice or proof of compliance. Tuveloz&apos;s owner may choose to proceed
           without private counsel for now, but that choice doesn&apos;t reduce any
           duty the law places on Tuveloz.
+        </p>
+        <p className="policy-callout">
+          <strong>Please read section 13 before you agree.</strong> It requires
+          most disputes with Tuveloz to go to individual arbitration instead of
+          court, and gives up your right to a jury trial and to join a class
+          action. <strong>You have 30 days to opt out</strong> and keep those
+          rights. Opting out costs you nothing and changes nothing else about
+          your account — the form is at{" "}
+          <Link href="/arbitration-opt-out">tuveloz.com/arbitration-opt-out</Link>,
+          and section 13 explains the rest.
         </p>
       </section>
 
@@ -239,10 +250,124 @@ export default function TermsPage() {
           out first. That doesn&apos;t extend any legal filing deadline you have.
         </p>
         <p>
-          Tuveloz hasn&apos;t adopted a formal governing-law, forum-selection, or
-          arbitration clause for production yet, and this draft doesn&apos;t
-          require arbitration or waive your right to a class action.
-          Independent legal review is recommended before any of that changes.
+          These Terms are governed by the laws of the State of Maryland, without
+          regard to its conflict-of-laws rules. Any claim that isn&apos;t resolved
+          between us belongs in the state or federal courts located in
+          Montgomery County, Maryland, and we each agree those courts have
+          jurisdiction. If your claim qualifies for small-claims court, you can
+          bring it there instead.
+        </p>
+        <h3>Binding individual arbitration</h3>
+        <p>
+          If talking it out doesn&apos;t work, you and Tuveloz agree to resolve the
+          dispute by <strong>binding individual arbitration</strong> rather than
+          in court, and each of us gives up the right to a jury trial. This
+          applies to any dispute between you and Tuveloz arising out of or
+          relating to these Terms or your use of Tuveloz, including disputes
+          about whether this section itself applies. It binds Tuveloz exactly
+          as much as it binds you.
+        </p>
+        <p>
+          Arbitration is run by the American Arbitration Association under its
+          Consumer Arbitration Rules, by a single arbitrator, and the
+          arbitrator&apos;s decision can be entered as a judgment in any court with
+          jurisdiction. Unless you and Tuveloz agree otherwise, any in-person
+          hearing happens in the county where you live — not where Tuveloz is.
+          You can also choose to have it decided on written submissions or by
+          phone or video.
+        </p>
+
+        <h3>What arbitration does not cover</h3>
+        <p>Either of us can still go to court for:</p>
+        <ul>
+          <li>
+            <strong>Small claims.</strong> Any claim that qualifies can be
+            brought in small-claims court instead, and you don&apos;t need our
+            agreement to do that.
+          </li>
+          <li>
+            <strong>Sexual assault or sexual harassment.</strong> Under the
+            federal Ending Forced Arbitration of Sexual Assault and Sexual
+            Harassment Act, if your dispute relates to sexual assault or sexual
+            harassment, <strong>you choose</strong> whether it goes to
+            arbitration or to court, and no class waiver applies to it. That
+            choice is entirely yours.
+          </li>
+          <li>
+            <strong>Emergency orders</strong> to stop misuse of accounts,
+            security systems, or intellectual property, while the rest of the
+            dispute goes to arbitration.
+          </li>
+        </ul>
+
+        <h3>How to opt out — 30 days, no cost</h3>
+        <p>
+          You can decline arbitration entirely, within <strong>30 days</strong>{" "}
+          of first accepting these Terms. Either of these works, and they count
+          the same:
+        </p>
+        <ul>
+          <li>
+            Use the form at{" "}
+            <Link href="/arbitration-opt-out">tuveloz.com/arbitration-opt-out</Link>{" "}
+            — one field, and it&apos;s recorded immediately.
+          </li>
+          <li>
+            Or email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>{" "}
+            with the subject <strong>&quot;Arbitration opt-out&quot;</strong> and
+            the email address or phone number on your account.
+          </li>
+        </ul>
+        <p>
+          That&apos;s all it takes. It costs nothing, we&apos;ll confirm in
+          writing, and it has no effect on your account, your pricing, or how
+          your jobs are handled — we won&apos;t treat you differently for it. If
+          you opt out, disputes go to the Montgomery County courts described
+          above.
+        </p>
+        <p>
+          An opt-out applies to the version of these Terms you accepted. If we
+          publish a new version, you get a fresh 30 days to decline arbitration
+          under that one.
+        </p>
+
+        <h3>No class actions</h3>
+        <p>
+          Claims are brought individually. Neither you nor Tuveloz may bring a
+          class, collective, consolidated, or representative action, and the
+          arbitrator may only award relief to the individual party asking for
+          it. If you opt out of arbitration, this paragraph doesn&apos;t apply to
+          you either.
+        </p>
+        <p>
+          If many similar claims are filed against Tuveloz at around the same
+          time by the same or coordinated counsel, we and the claimants may
+          agree with AAA to hear a small number of representative cases first
+          and apply what the arbitrators decide to the rest, so that nobody
+          waits years in a queue. Any claimant who prefers to have their own
+          case heard separately can say so and keep that right.
+        </p>
+
+        <h3>Costs</h3>
+        <p>
+          <strong>Tuveloz pays the AAA filing, administrative, and arbitrator
+          fees</strong> on any claim you bring that exceed what it would have
+          cost you to file the same claim in court. This applies whether you are
+          an individual or a provider business — we are not drawing a line
+          between &quot;consumers&quot; and &quot;businesses&quot; here, because a
+          one-person provider business facing our filing costs is in exactly the
+          position this paragraph exists to prevent. You are never required to
+          pay Tuveloz&apos;s legal fees as a condition of arbitrating, and nothing
+          here limits what the law lets you recover.
+        </p>
+
+        <h3>If part of this doesn&apos;t hold up</h3>
+        <p>
+          If the class-action waiver above is found unenforceable for a
+          particular claim, that claim goes to court instead — it is never
+          arbitrated as a class. If any other part of this section is found
+          unenforceable, the rest still applies. This section survives after
+          your account closes.
         </p>
       </section>
 

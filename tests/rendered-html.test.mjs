@@ -1064,11 +1064,24 @@ test("customer account features are authenticated and backed by real records", a
   assert.ok(migrationSource.includes('CREATE TABLE `saved_providers`'));
   assert.ok(migrationSource.includes('CREATE TABLE `job_messages`'));
 
-  for (const source of [customerToolsSource, customerToolsComponent, schemaSource, migrationSource]) {
+  // The customer workspace itself still collects no phone number.
+  for (const source of [customerToolsSource, customerToolsComponent, migrationSource]) {
     assert.ok(!/\bphone\b/i.test(source));
     assert.ok(!source.includes("emailNotifications"));
     assert.ok(!source.includes("email_notifications"));
   }
+  assert.ok(!schemaSource.includes("emailNotifications"));
+  assert.ok(!schemaSource.includes("email_notifications"));
+
+  // db/schema.ts is no longer blanket phone-free: fleet_inquiries takes a
+  // business contact number. The rule it carries is now stricter and specific
+  // — any table storing a contact phone must store a marketing-consent basis
+  // beside it, so a number can never be promoted to a marketing list by
+  // existing. See tests/fleet-and-vehicles.test.mjs for the pairing check.
+  assert.equal(
+    schemaSource.includes('text("contact_phone")'),
+    schemaSource.includes('text("sms_marketing_consent_version")'),
+  );
 });
 
 
@@ -1189,6 +1202,7 @@ test("public claims scope credential records while real provider auth requires e
     adminActionSource,
     adminPageSource,
     publicApiSource,
+    publicAccessSource,
     publicPageSource,
     accountAuthSource,
   ] = await Promise.all([
@@ -1198,7 +1212,8 @@ test("public claims scope credential records while real provider auth requires e
     readFile(new URL("../app/api/admin/providers/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/api/public-provider/route.ts", import.meta.url), "utf8"),
-    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/public-provider-page.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/provider-storefront-client.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/account-auth.ts", import.meta.url), "utf8"),
   ]);
 
@@ -1232,10 +1247,13 @@ test("public claims scope credential records while real provider auth requires e
   assert.ok(adminPageSource.includes("Official lookup"));
   assert.ok(!adminPageSource.includes("Tuveloz verified badge"));
 
-  assert.ok(publicApiSource.includes("providerCredentialRecordIsCurrent"));
+  assert.ok(publicAccessSource.includes("providerCredentialRecordIsCurrent"));
+  assert.ok(publicAccessSource.includes("credentialRequirementsSatisfied"));
+  assert.ok(publicApiSource.includes("evaluateProviderPublicAccess"));
   assert.ok(publicApiSource.includes("credentialRequirementsSatisfied"));
   assert.ok(publicApiSource.includes("noGovernmentCredentialTriggered"));
   assert.ok(!publicApiSource.includes("credentialIdentifier: record.credentialIdentifier"));
+  assert.ok(!publicAccessSource.includes("credentialIdentifier: record.credentialIdentifier"));
   assert.ok(publicPageSource.includes("Confirmed for this service"));
   assert.ok(publicPageSource.includes("No credential record displayed for this scope"));
   assert.ok(publicPageSource.includes("not a blanket licensed-provider claim"));
@@ -1258,7 +1276,7 @@ test("public claims scope credential records while real provider auth requires e
 test("public review and payout copy does not overstate platform verification", async () => {
   const [homeSource, publicPageSource, paymentCardSource] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/providers/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/providers/[slug]/provider-storefront-client.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/quote-payment-card.tsx", import.meta.url), "utf8"),
   ]);
 

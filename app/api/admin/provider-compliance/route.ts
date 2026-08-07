@@ -7,6 +7,7 @@ import {
   providerEvidenceSubmissions,
   providerPathwayProfiles,
   providerPersonnel,
+  providerProfiles,
   providerServiceEligibility,
   serviceActivationDecisions,
 } from "../../../../db/schema";
@@ -27,6 +28,15 @@ import {
   notifyProviderEvidenceScanBlocked,
 } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
+import { askCouncil, councilConfigured } from "../../../../lib/ai-council-runtime";
+import {
+  documentIsReadable,
+  documentNameCheck,
+  documentReadPrompt,
+  DOCUMENT_READER_SYSTEM_PROMPT,
+  parseDocumentRead,
+  toBase64,
+} from "../../../../lib/evidence-document-reader";
 import {
   prescreenEvidence,
   type EvidencePrescreen,
@@ -72,7 +82,11 @@ import {
   type ServiceCode,
 } from "../../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../../lib/request-security";
-import { runtimeProviderActivationPrerequisitesDecision } from "../../../../lib/runtime-launch-readiness";
+import {
+  employeeTraineeProviderOfRecordApproval,
+  runtimeProviderActivationPrerequisitesDecision,
+  type EmployeeTraineeProviderOfRecordApproval,
+} from "../../../../lib/runtime-launch-readiness";
 import { expireOpenCheckoutSessionsForLaunchShutdown } from "../../../../lib/stripe-payments";
 import {
   parseProviderServices,
@@ -378,6 +392,7 @@ function prescreenForEvidence(
   scan: ScanRow | undefined,
   provider: ProviderRow,
   profile: ProfileRow | undefined,
+  profileBusinessName = "",
 ): EvidencePrescreen {
   const definition = row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
     ? PROVIDER_POLICY_MATRIX.evidence_types[row.requirementKey as EvidenceRequirementCode]
@@ -390,6 +405,8 @@ function prescreenForEvidence(
     isExpired: Boolean(row.expiresAt) && !currentThrough(row.expiresAt),
     hasPrivateFile: Boolean(row.storageKey),
     scanStatus: row.storageKey ? scan?.status ?? "missing" : "not_required",
+    profileBusinessName,
+    verifiedLegalBusinessName: boundLegalBusinessIdentityReview(row)?.legalBusinessName ?? "",
   });
 }
 
@@ -486,6 +503,7 @@ function evaluateService(input: {
   activation: ActivationRow | undefined;
   sponsorProvider?: typeof providerApplications.$inferSelect;
   sponsorEligibility?: EligibilityRow;
+  providerOfRecordGate?: EmployeeTraineeProviderOfRecordApproval;
 }) {
   const {
     provider,
@@ -498,6 +516,7 @@ function evaluateService(input: {
     activation,
     sponsorProvider,
     sponsorEligibility,
+    providerOfRecordGate,
   } = input;
   const reasons: string[] = [];
   const pathway = profile && isProviderPathway(profile.relationshipPath)
@@ -557,7 +576,11 @@ function evaluateService(input: {
     if (profile?.providerPersonId !== person?.personId) reasons.push("owner_operator_person_mismatch");
   }
   if (pathway === "sponsored_trainee_employee" || pathway === "provider_business_employee") {
-    reasons.push("provider_of_record_assignment_not_implemented");
+    // Open only while the employee-and-trainee provider-of-record launch gate
+    // holds a current approval from its outside authorities. Fail-closed.
+    if (!providerOfRecordGate?.approved) {
+      reasons.push("provider_of_record_model_not_approved");
+    }
     const expectedRelationship = pathway === "sponsored_trainee_employee" ? "trainee" : "employee";
     if (person?.relationshipType !== expectedRelationship) reasons.push("employee_relationship_missing");
     if (!profile?.sponsoringProviderId || profile.registrationHolderId !== profile.sponsoringProviderId) {
@@ -617,6 +640,9 @@ function evaluateService(input: {
     .filter((row): row is EvidenceRow => Boolean(row));
   const validThrough = earliestDate([
     activation?.validThrough ?? "",
+    (pathway === "sponsored_trainee_employee" || pathway === "provider_business_employee")
+      ? providerOfRecordGate?.validThrough ?? ""
+      : "",
     ...acceptedEvidence.map((row) => row.expiresAt),
     ...acceptedEvidence.map((row) => row.authenticityValidThrough),
     person?.identityVerificationValidThrough ?? "",
@@ -687,6 +713,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
   const agreements = await currentAgreements(acceptanceRows);
   const scans = latestScanMap(scanRows);
   const activations = latestActivations(activationRows);
+  const providerOfRecordGate = await employeeTraineeProviderOfRecordApproval();
   const serviceCodes = parseProviderServices(provider.service)
     .filter(isServiceCode)
     .filter((serviceCode) => serviceCode !== "general_auto_repair");
@@ -704,6 +731,7 @@ async function recalculateProvider(providerId: string, actorId: string) {
       row.serviceCode === serviceCode
       && row.jurisdiction === POLICY_JURISDICTION
     )),
+    providerOfRecordGate,
   }));
   const now = new Date().toISOString();
   for (const evaluation of evaluations) {
@@ -871,6 +899,7 @@ async function complianceResponse() {
     acceptanceRows,
     activationRows,
     eligibilityRows,
+    publicProfileRows,
   ] = await Promise.all([
     db.select().from(providerApplications).orderBy(desc(providerApplications.createdAt)).limit(250),
     db.select().from(providerPathwayProfiles).orderBy(desc(providerPathwayProfiles.pathwayVersion)),
@@ -883,11 +912,21 @@ async function complianceResponse() {
       eq(serviceActivationDecisions.stage, CONFIGURATION_STAGE),
     )).orderBy(desc(serviceActivationDecisions.decisionVersion)),
     db.select().from(providerServiceEligibility),
+    // Public trading name per provider, so review can flag a profile that
+    // advertises a name the registration was not issued to.
+    db.select({
+      providerId: providerProfiles.providerId,
+      businessName: providerProfiles.businessName,
+    }).from(providerProfiles),
   ]);
+  const businessNameByProvider = new Map(
+    publicProfileRows.map((row) => [row.providerId, row.businessName]),
+  );
   const profiles = latestProfiles(profileRows);
   const personnel = latestPersonnel(personnelRows);
   const scans = latestScanMap(scanRows);
   const activations = latestActivations(activationRows);
+  const providerOfRecordGate = await employeeTraineeProviderOfRecordApproval();
   const applications = await Promise.all(providers.map(async (provider) => {
     const profile = profiles.get(provider.id);
     const providerPeople = personnel.filter((person) => person.providerId === provider.id);
@@ -918,6 +957,7 @@ async function complianceResponse() {
             && item.jurisdiction === POLICY_JURISDICTION
           ))
         : undefined,
+      providerOfRecordGate,
     }));
     return {
       id: provider.id,
@@ -973,7 +1013,13 @@ async function complianceResponse() {
       allAgreementsCurrent: agreements.every((agreement) => agreement.current),
       evidence: evidence.map((item) => ({
         ...safeEvidence(item, scans.get(item.id)),
-        prescreen: prescreenForEvidence(item, scans.get(item.id), provider, profile),
+        prescreen: prescreenForEvidence(
+          item,
+          scans.get(item.id),
+          provider,
+          profile,
+          businessNameByProvider.get(provider.id) ?? "",
+        ),
       })),
       services,
       eligibleServices: services
@@ -1282,6 +1328,126 @@ export async function POST(request: Request) {
         flaggedForReview,
         readyForAuthenticity,
       });
+    }
+
+    if (action === "read-evidence-document") {
+      // Transcribes what is printed on a submitted document so the owner
+      // confirms a filled-in form instead of typing one. It records a reading,
+      // never a decision: nothing here writes a review status, and accepting
+      // still requires the owner's external authenticity check below.
+      const evidenceId = clean(body.evidenceId, 120);
+      if (!evidenceId) {
+        return Response.json({ error: "Choose an evidence item to read." }, { status: 400 });
+      }
+      if (!councilConfigured()) {
+        return Response.json(
+          { error: "Automatic document reading is not configured on this deployment." },
+          { status: 503 },
+        );
+      }
+      const [evidence] = await db.select().from(providerEvidenceSubmissions)
+        .where(eq(providerEvidenceSubmissions.id, evidenceId)).limit(1);
+      if (!evidence || (providerId && evidence.providerId !== providerId)) {
+        return Response.json({ error: "Evidence submission not found." }, { status: 404 });
+      }
+      if (!evidence.storageKey) {
+        return Response.json(
+          { error: "This submission is a structured attestation with no document to read." },
+          { status: 400 },
+        );
+      }
+
+      // A file whose malware scan is not clean is never opened, and that rule
+      // does not get an exception because a machine is the one reading it.
+      const [scan] = await db.select().from(evidenceFileScans)
+        .where(eq(evidenceFileScans.evidenceSubmissionId, evidence.id))
+        .orderBy(desc(evidenceFileScans.requestedAt))
+        .limit(1);
+      if (scan?.status !== "clean") {
+        return Response.json(
+          { error: "This file cannot be opened until its malware scan reports clean." },
+          { status: 409 },
+        );
+      }
+
+      const object = await getProviderEvidence(evidence.storageKey);
+      if (!object) {
+        return Response.json({ error: "The stored document could not be opened." }, { status: 404 });
+      }
+      const bytes = await new Response(object.body).arrayBuffer();
+      const mediaType = object.httpMetadata?.contentType ?? "";
+      const readable = documentIsReadable({ mediaType, byteLength: bytes.byteLength });
+      if (!readable.ok) {
+        return Response.json({ error: readable.reason }, { status: 400 });
+      }
+
+      const [provider] = await db.select().from(providerApplications)
+        .where(eq(providerApplications.id, evidence.providerId)).limit(1);
+      const [publicProfile] = await db.select({ businessName: providerProfiles.businessName })
+        .from(providerProfiles)
+        .where(eq(providerProfiles.providerId, evidence.providerId))
+        .limit(1);
+      const applicationBusinessName = publicProfile?.businessName ?? provider?.name ?? "";
+      const definition = evidence.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
+        ? PROVIDER_POLICY_MATRIX.evidence_types[evidence.requirementKey as EvidenceRequirementCode]
+        : undefined;
+
+      let raw: string;
+      let model = "";
+      try {
+        const result = await askCouncil({
+          question: documentReadPrompt({
+            requirementLabel: definition?.label ?? evidence.requirementKey,
+            applicationBusinessName,
+          }),
+          system: DOCUMENT_READER_SYSTEM_PROMPT,
+          mode: "quick",
+          maxTokens: 700,
+          attachments: [{ mediaType, data: toBase64(bytes) }],
+        });
+        raw = result.answer;
+        model = result.consulted[0]?.model ?? "";
+      } catch (error) {
+        console.error("Unable to read an evidence document", error);
+        return Response.json(
+          { error: "The document could not be read automatically. Read it yourself and fill the form in." },
+          { status: 502 },
+        );
+      }
+
+      const { fields, unreadable } = parseDocumentRead(raw);
+      // Recorded because a private document left Tuveloz. The transcription
+      // itself is deliberately not stored: it is a draft for the form below,
+      // and keeping it would create a second, unreviewed copy of the
+      // document's contents with none of the original's protections.
+      await recordProviderAuditEvent({
+        providerId: evidence.providerId,
+        eventType: "evidence_document_read",
+        entityType: "provider_evidence_submission",
+        entityId: evidence.id,
+        actorType: "owner",
+        actorId,
+        outcome: "read_only_no_decision",
+        reasonCodes: ["automated_transcription"],
+        metadata: {
+          requirementKey: evidence.requirementKey,
+          model,
+          unreadableCount: unreadable.length,
+        },
+      });
+
+      return Response.json({
+        ok: true,
+        read: {
+          fields,
+          unreadable,
+          nameCheck: documentNameCheck(fields.businessName, applicationBusinessName),
+          model,
+          readAt: new Date().toISOString(),
+        },
+        note: "This is a reading of the document, not a verification of it. Confirm every value "
+          + "against the issuing authority before accepting.",
+      }, { headers: { "cache-control": "no-store" } });
     }
 
     if (action === "initialize-provider-pathway") {

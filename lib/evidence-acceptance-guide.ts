@@ -21,6 +21,18 @@ export type AcceptanceGuide = {
   authorityLabel: string;
   recommendedMethod: AcceptanceMethod;
   steps: readonly string[];
+  /**
+   * The issuing authority's own page, so the owner does not have to go find it
+   * every time. It is a shortcut, not a result.
+   *
+   * It is deliberately NOT used to pre-fill the acceptance form's source URL:
+   * that field records where a specific document was actually confirmed, and
+   * filling it with a program landing page would put a false record in a
+   * compliance file. Only requirements with a URL already carried elsewhere in
+   * this repo have one here — an unverified link in this position is worse
+   * than no link.
+   */
+  authorityUrl?: string;
 };
 
 const INSURER_METHOD: AcceptanceMethod = "insurer_or_broker_confirmation";
@@ -33,6 +45,7 @@ const VENDOR_METHOD: AcceptanceMethod = "approved_verification_vendor";
 const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   ocp_vehicle_service_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
+    authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
     recommendedMethod: OFFICIAL_METHOD,
     steps: [
       "Look up the certificate on the county's official government (.gov) system.",
@@ -41,6 +54,7 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   md_locksmith_business_license: {
     authorityLabel: "Maryland locksmith licensing authority",
+    authorityUrl: "https://www.labor.maryland.gov/license/locksmiths/lockadvisory.shtml",
     recommendedMethod: OFFICIAL_METHOD,
     steps: [
       "Verify the license on the state's official government (.gov) lookup.",
@@ -49,6 +63,7 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   md_locksmith_technician_registration: {
     authorityLabel: "Maryland locksmith licensing authority",
+    authorityUrl: "https://www.labor.maryland.gov/license/locksmiths/lockadvisory.shtml",
     recommendedMethod: OFFICIAL_METHOD,
     steps: [
       "Verify the technician/employee registration on the official government (.gov) lookup.",
@@ -57,16 +72,19 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   mva_inspection_station_license: {
     authorityLabel: "Maryland State Police / MVA inspection program",
+    authorityUrl: "https://mdsp.maryland.gov/safety-prevention/vehicle-safety-inspections/inspection-stations-and-mechanics",
     recommendedMethod: OFFICIAL_METHOD,
     steps: ["Verify the station license on the official government (.gov) source and confirm it is active."],
   },
   mva_inspection_mechanic_license: {
     authorityLabel: "Maryland State Police / MVA inspection program",
+    authorityUrl: "https://mdsp.maryland.gov/safety-prevention/vehicle-safety-inspections/inspection-stations-and-mechanics",
     recommendedMethod: OFFICIAL_METHOD,
     steps: ["Verify the inspection mechanic license on the official government (.gov) source for this exact person."],
   },
   ocp_towing_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
+    authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
     recommendedMethod: OFFICIAL_METHOD,
     steps: ["Verify the towing registration on the county's official government (.gov) system."],
   },
@@ -105,6 +123,7 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   epa_section_609_certificate: {
     authorityLabel: "The EPA-approved Section 609 certifying program",
+    authorityUrl: "https://www.epa.gov/mvac/regulatory-requirements-mvac-system-servicing",
     recommendedMethod: ISSUER_METHOD,
     steps: ["Confirm the certificate directly with the approved certifying program for this exact person."],
   },
