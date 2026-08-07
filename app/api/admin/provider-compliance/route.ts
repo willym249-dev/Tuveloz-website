@@ -7,6 +7,7 @@ import {
   providerEvidenceSubmissions,
   providerPathwayProfiles,
   providerPersonnel,
+  providerProfiles,
   providerServiceEligibility,
   serviceActivationDecisions,
 } from "../../../../db/schema";
@@ -382,6 +383,7 @@ function prescreenForEvidence(
   scan: ScanRow | undefined,
   provider: ProviderRow,
   profile: ProfileRow | undefined,
+  profileBusinessName = "",
 ): EvidencePrescreen {
   const definition = row.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
     ? PROVIDER_POLICY_MATRIX.evidence_types[row.requirementKey as EvidenceRequirementCode]
@@ -394,6 +396,8 @@ function prescreenForEvidence(
     isExpired: Boolean(row.expiresAt) && !currentThrough(row.expiresAt),
     hasPrivateFile: Boolean(row.storageKey),
     scanStatus: row.storageKey ? scan?.status ?? "missing" : "not_required",
+    profileBusinessName,
+    verifiedLegalBusinessName: boundLegalBusinessIdentityReview(row)?.legalBusinessName ?? "",
   });
 }
 
@@ -886,6 +890,7 @@ async function complianceResponse() {
     acceptanceRows,
     activationRows,
     eligibilityRows,
+    publicProfileRows,
   ] = await Promise.all([
     db.select().from(providerApplications).orderBy(desc(providerApplications.createdAt)).limit(250),
     db.select().from(providerPathwayProfiles).orderBy(desc(providerPathwayProfiles.pathwayVersion)),
@@ -898,7 +903,16 @@ async function complianceResponse() {
       eq(serviceActivationDecisions.stage, CONFIGURATION_STAGE),
     )).orderBy(desc(serviceActivationDecisions.decisionVersion)),
     db.select().from(providerServiceEligibility),
+    // Public trading name per provider, so review can flag a profile that
+    // advertises a name the registration was not issued to.
+    db.select({
+      providerId: providerProfiles.providerId,
+      businessName: providerProfiles.businessName,
+    }).from(providerProfiles),
   ]);
+  const businessNameByProvider = new Map(
+    publicProfileRows.map((row) => [row.providerId, row.businessName]),
+  );
   const profiles = latestProfiles(profileRows);
   const personnel = latestPersonnel(personnelRows);
   const scans = latestScanMap(scanRows);
@@ -990,7 +1004,13 @@ async function complianceResponse() {
       allAgreementsCurrent: agreements.every((agreement) => agreement.current),
       evidence: evidence.map((item) => ({
         ...safeEvidence(item, scans.get(item.id)),
-        prescreen: prescreenForEvidence(item, scans.get(item.id), provider, profile),
+        prescreen: prescreenForEvidence(
+          item,
+          scans.get(item.id),
+          provider,
+          profile,
+          businessNameByProvider.get(provider.id) ?? "",
+        ),
       })),
       services,
       eligibleServices: services
