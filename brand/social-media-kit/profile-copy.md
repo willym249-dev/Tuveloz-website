@@ -23,6 +23,74 @@ Shared facts used everywhere:
 
 ---
 
+## Provider-first bios — USE THESE NOW
+
+The bios further down lead with the customer outcome. That is right for launch
+and wrong for today: while customer job posting is paused, the person checking
+this profile is a mechanic who just got a DM or saw a recruitment reel, and a
+customer pitch tells them they are in the wrong place. Swap back to the
+customer-first versions the week customer requests open.
+
+Pick ONE account per platform and run it bilingually. A second Spanish account
+splits the effort and neither one builds.
+
+### Instagram (150 chars)
+
+English (120):
+```
+Mechanics & detailers: run your own business. Set your prices, keep what you quote. Montgomery County, MD · Join free ⬇️
+```
+
+Spanish (133):
+```
+Mecánicos y detalladores: tu negocio, tus precios. Quédate con el 100% de lo que cotizas. Condado de Montgomery, MD · Únete gratis ⬇️
+```
+
+Bilingual, if you run one account (125):
+```
+Mechanics: your prices, your jobs · Mecánicos: tus precios, tus trabajos. Montgomery County, MD · Join free / Únete gratis ⬇️
+```
+
+Website field: `https://tuveloz.com/join?src=bio-ig`
+
+### TikTok (80 chars)
+
+English (72):
+```
+Mechanics: your prices, your jobs. MoCo, MD. Join free: tuveloz.com/join
+```
+
+Spanish (72):
+```
+Mecánicos: tus precios, tus trabajos. MoCo, MD. Gratis: tuveloz.com/join
+```
+
+Bilingual (76):
+```
+Tu negocio, tus precios · Your prices, your jobs. MoCo MD · tuveloz.com/join
+```
+
+The URL is inline because TikTok only gives a website field to business accounts
+or accounts past 1k followers. Once it unlocks, move the link to that field with
+`?src=bio-tt` and spend the freed characters on the pitch.
+
+### Hashtags that go with these
+
+The audience is providers, so the tags go where mechanics talk to each other,
+not where customers search. Full reasoning and the size rule are in
+`../outreach/media/captions-ad-04-copy-paste.txt`.
+
+- Instagram: `#MobileMechanic #MecanicoMovil #MechanicLife #MechanicsOfInstagram #MontgomeryCountyMD`
+- TikTok: `#MobileMechanic #MecanicoMovil #MechanicLife #MechanicsOfTikTok #MontgomeryCountyMD`
+- Spanish-only posts: `#MecanicoMovil #TallerMovil #MecanicoADomicilio #LatinosEnMaryland #MontgomeryCountyMD`
+
+Never `#AutoRepair`, `#CarTok`, `#CarsOfInstagram` or `#automotive` — those reach
+customers and car enthusiasts, and neither can post a job yet.
+
+---
+
+## Customer-first bios — for launch week, not now
+
 ## Instagram — @tuveloz (bio limit 150 chars)
 
 ```
