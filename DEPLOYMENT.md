@@ -352,6 +352,24 @@ To deploy without claiming the hostname, delete the `ai.tuveloz.com` entry from
 `routes` in `wrangler.jsonc`. Nothing else depends on it: `/ai` keeps working on
 the main domain, and the redirect in `worker/index.ts` simply never fires.
 
+### Checking Spanish coverage
+
+```bash
+npm run dev            # in one shell
+npm run i18n:check     # in another
+```
+
+Walks every page in `SPANISH_READY_PATHS` the way the runtime translator does
+and fails if any visible string on a Spanish-ready page has no dictionary entry.
+Run it after changing public copy: adding an English sentence to a translated
+page is exactly how the site ended up English-only the first time. Either add
+the Spanish or drop the page from the ready list — the point is that a page
+either offers Spanish completely or does not offer it at all.
+
+Legal pages are deliberately excluded. They stay English and do not show the
+language toggle, because a half-translated agreement is worse than an English
+one.
+
 ### Checking the assistant after a deploy
 
 ```bash

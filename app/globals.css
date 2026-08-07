@@ -11419,3 +11419,33 @@ footer > p,
   border-color: transparent;
   color: #ffffff;
 }
+
+/* Spanish labels run longer than English ("Aparte mi lugar" vs "Save my spot"),
+   which wrapped the header's primary button onto two lines and pushed the nav
+   flush against the language toggle. Keep the buttons on one line and give the
+   nav room to compress instead. */
+.header-sign-in,
+.header-cta,
+.site-language-button {
+  white-space: nowrap;
+}
+
+.site-header .nav {
+  min-width: 0;
+}
+
+.public-site .nav,
+.public-info-shell .nav {
+  gap: clamp(10px, 1.3vw, 22px);
+}
+
+.header-actions {
+  padding-left: clamp(8px, 1.2vw, 20px);
+}
+
+@media (min-width: 781px) and (max-width: 1240px) {
+  /* At these widths the longer labels are what runs out of room, not the layout. */
+  .site-header .nav a {
+    font-size: 13.5px;
+  }
+}
