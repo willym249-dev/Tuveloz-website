@@ -30,6 +30,28 @@ Set `required: true` in `lib/launch-readiness.ts` to make it blocking again.
 Those are appointments and phone calls, not commits. Nothing else in this file
 produces revenue until they are done.
 
+**Towing is off the catalog** (owner decision, August 2026, "for now"). The
+`towing_or_storage` service was removed from
+`config/provider-eligibility-matrix.json`, from `SERVICE_CODES` in
+`lib/provider-policy.ts`, from the provider signup options, and from the
+homepage feedback list. A guard test in
+`tests/provider-multi-tier-services.test.mjs` keeps it out.
+
+Its supporting definitions were left dormant on purpose, so restoring it is a
+small change rather than a rebuild: the `ocp_towing_registration`,
+`tow_vehicle_registration`, and `towing_custody_coverage` evidence types in the
+matrix, their entries in `lib/evidence-acceptance-guide.ts` and
+`lib/provider-legal-identity.ts`, and the
+`approved_towing_and_storage_workflow_only` location rule with its
+`towing_or_storage_site` and `towing_storage_workflow_confirmed` facts in
+`lib/job-scope-facts.ts`. To bring towing back, re-add the service entry, the
+service code, the signup label, and delete the guard test.
+
+Two towing mentions stay because they are still true: the Terms say Tuveloz is
+not a towing-dispatch service, and the Montgomery County registration URL is
+named "Motor Vehicle Repair/Maintenance/Towing" — that is the general repair
+registration, not a towing-specific one.
+
 The runtime check lives at `active_policy_catalog` in
 `lib/runtime-launch-readiness.ts` — it requires the status string to equal
 `"active"` **and** at least one service to be `enabled` and `customer_visible`.

@@ -36,7 +36,7 @@ import { SocialLinks } from "./components/social-links";
 
 // Homepage launches with only the easy-entry, no-license services — the
 // simplest onboarding path. Specialized/proof-required services (tire
-// repair, A/C service, towing, etc.) are added as separate categories once
+// repair, A/C service, window tint, etc.) are added as separate categories once
 // the marketplace is ready to expand, not shown here yet. Each group's
 // serviceCodes must be real entries from lib/provider-policy.ts's catalog,
 // checked below, so this list can't silently drift from what actually exists.
@@ -209,7 +209,6 @@ const feedbackJobOptions = [
   "Battery replacement",
   "Tire installation",
   "Minor repairs and maintenance",
-  "Towing or roadside service",
 ];
 
 const feedbackProviderOptions = [

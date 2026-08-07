@@ -39,7 +39,6 @@ export const SERVICE_CODES = [
   "motor_vehicle_ac_service",
   "body_paint_refinishing",
   "window_tint_installation",
-  "towing_or_storage",
   "vehicle_lockout",
   "official_vehicle_inspection",
   "fuel_delivery",
@@ -377,10 +376,6 @@ const SERVICE_METADATA = {
   window_tint_installation: {
     label: "Window-tint installation",
     description: "Installs window tint only under approved legal-compliance and meter controls.",
-  },
-  towing_or_storage: {
-    label: "Towing or storage",
-    description: "Provides approved towing or storage with the required registrations and custody coverage.",
   },
   vehicle_lockout: {
     label: "Vehicle lockout",

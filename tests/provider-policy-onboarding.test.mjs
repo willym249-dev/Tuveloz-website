@@ -11,7 +11,7 @@ test("provider policy v0.11 is exact-code and default deny", async () => {
   assert.equal(matrix.status, "draft_pending_mandatory_compliance_insurance_tax");
   assert.equal(matrix.default_policy, "deny");
   assert.equal(matrix.jurisdiction, "US-MD-MontgomeryCounty");
-  assert.equal(services.length, 25);
+  assert.equal(services.length, 24);
   assert.equal(matrix.services.general_auto_repair.launch_state, "prohibited_broad_category");
   assert.equal(matrix.services.general_auto_repair.customer_visible, false);
   assert.equal(

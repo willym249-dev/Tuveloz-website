@@ -87,10 +87,6 @@ const SERVICE_SPECIFIC_OFFICIAL_SOURCES: Record<string, readonly string[]> = {
     ...REPAIR_BASELINE_SOURCES,
     "https://mgaleg.maryland.gov/mgawebsite/laws/StatuteText?article=gtr&section=22-406",
   ],
-  towing_or_storage: [
-    ...REPAIR_BASELINE_SOURCES,
-    "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtr&section=13-920",
-  ],
   vehicle_lockout: [
     ...REPAIR_BASELINE_SOURCES,
     "https://www.labor.maryland.gov/license/locksmiths/lockadvisory.shtml",

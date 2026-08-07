@@ -135,8 +135,8 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
     id: "specialty",
     label: "Special jobs",
     labelEs: "Trabajos especiales",
-    description: "Jobs that need extra licenses or permits — like towing, window tint, or A/C.",
-    descriptionEs: "Trabajos que necesitan licencias o permisos adicionales — como remolque, polarizado o aire acondicionado.",
+    description: "Jobs that need extra licenses or permits — like window tint, A/C, or state inspection.",
+    descriptionEs: "Trabajos que necesitan licencias o permisos adicionales — como polarizado, aire acondicionado o inspección estatal.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("specialty_provider")
     )),
@@ -216,7 +216,6 @@ const PROVIDER_SERVICE_PLAIN_LABELS: Partial<
     en: "Put tint on the windows",
     es: "Poner polarizado en las ventanas",
   },
-  towing_or_storage: { en: "Tow or store a car", es: "Remolcar o guardar un carro" },
   vehicle_lockout: {
     en: "Unlock a car (keys locked inside)",
     es: "Abrir un carro con las llaves adentro",
