@@ -31,6 +31,8 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-08-09 | Publish Ad 01 before the Epidemic Sound licence window closes, or reactivate the Pro plan. The track in `brand/ads/ad-01-assets/music.mp3` was downloaded 2026-08-04 under a subscription that was cancelled the next day; Epidemic's licence generally covers content published while the plan is active, so an ad launched after this date may be running on an unlicensed track | hello@tuveloz.com | open |
+| 2026-08-14 | Start Google Business Profile verification. `audience-growth-playbook.md` ranks it the highest-intent channel and the longest pole — postcard or video verification takes days to weeks — and the link is still a commented-out placeholder in `app/components/social-links.tsx` | hello@tuveloz.com | open |
 | — | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | open |
 | — | Reconcile PR #97 and PR #98 — whichever merges second drops its own `CLAUDE.md` and index instead of adding a parallel one | hello@tuveloz.com | open |
 | — | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |

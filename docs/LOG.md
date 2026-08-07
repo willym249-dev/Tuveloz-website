@@ -13,6 +13,43 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Reviewed running ads today; two dated deadlines were untracked
+
+**The question.** Whether to run ads today, and what to run against what is
+trending or popular.
+
+**What the review found.** Every customer-side marketplace action — `request`,
+`discovery`, `quote`, `booking`, `checkout`, through `payout` — is blocked by
+`CUSTOMER_JOB_POSTING_PAUSED` in `lib/launch-status.ts`. Paid traffic aimed at
+customer demand therefore has no conversion to buy: `/post-job` returns the
+pause message. Provider recruitment is the only campaign with a live funnel
+behind it (`/join`, `/founding-providers`, `/provider-onboarding`), and it has
+a real offer attached — the founding cohort is 20 with a permanent membership-fee
+waiver, and 10 spotlight slots.
+
+**No internal popularity data exists.** No job has ever been posted, so the
+marketplace cannot say which services are popular. Any "popular services" claim
+in an ad today would be invented, and `brand/ads/HANDOFF.md` already restricts
+pre-launch messaging to launch services (battery/jump start, detailing, wipers,
+fluids, diagnostics) — which rules out the obvious August seasonal hook, since
+AC, tires, and towing are all off the list.
+
+**Two deadlines were real and untracked, and are now rows in `OPEN-ITEMS.md`.**
+The Epidemic Sound track in `brand/ads/ad-01-assets/music.mp3` was downloaded
+2026-08-04 on a Pro plan cancelled the following day; the plan ends 2026-08-09,
+and the licence generally covers content published while it is active. Ad 01 is
+rendered in both formats and is the thing that has to go out before that date,
+or the plan gets reactivated. Separately, Google Business Profile verification
+has still not been started, and the playbook ranks it the highest-intent channel
+and the longest pole.
+
+**Not done.** No ad was launched and no spend was authorised — that is the
+owner's call, and `audience-growth-playbook.md` §2 gates any spend on a
+pre-flight checklist (bios, covers, pinned post, nine posts per platform) that
+has not been confirmed as complete.
+
+---
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,
