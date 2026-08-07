@@ -373,7 +373,12 @@ Surfaced in `SALES_PITCH.md` §14; not fixed by this campaign.
 - [ ] Pull MoCo vehicle registrations from Maryland Open Data (`db8v-9ewn`) —
       blocked by the network proxy in-session, needs a manual pull. Then
       rewrite M2 around the local figure.
-- [ ] Render M1–M5 as 1080×1920 and 1080×1080 cards, EN + ES (10 creatives).
+- [x] **Rendered.** `build-morning-cards.py` writes all 28 creatives (M1–M5,
+      M7, M8 × EN/ES × 9:16 and 1:1) into `morning-cards/`. Zero credits, no
+      stock footage, no music — nothing here depends on the Epidemic licence.
+      Copy lives in §5 of this file; change it there first, then in the script.
+- [ ] M6 is customer-facing and deliberately not rendered with the provider
+      set — build it only when the customer audience is being posted to.
 - [ ] Re-verify every figure in §1 before any drop after **2026-11-07**. Stat
       cards age badly, and a stale number in front of this audience costs more
       credibility than it buys attention.
