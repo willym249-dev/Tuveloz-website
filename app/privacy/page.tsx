@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy Policy"
       summary="What Tuveloz collects, why it is needed, who receives it, and the choices available to you."
-      updated="August 1, 2026"
+      updated="August 7, 2026"
     >
       <section>
         <h2>1. Scope and sources</h2>
@@ -95,6 +95,8 @@ export default function PrivacyPage() {
           <li>Stripe processes checkout, connected accounts, transfers, refunds, disputes, payment risk, and hosted provider identity document-and-selfie verification.</li>
           <li>Cloudflare provides hosting, security, database, and private image-storage services.</li>
           <li>Cloudmersive receives a quarantined provider-evidence file solely to scan it for malware and unsafe file content before Tuveloz permits review or download.</li>
+          <li>OpenAI, Google, and Anthropic provide the models behind Tuveloz AI, the optional assistant that helps you put words to what your vehicle is doing. What you type into it — and nothing else — is sent to one of them to produce a reply. Tuveloz AI is optional; if you never open it, nothing goes to them from you. Do not enter payment details, passwords, or government-ID numbers there, and the assistant is instructed not to ask for them.</li>
+          <li>The same model providers may receive a provider&apos;s submitted compliance document to read the details printed on it — business name, license or policy number, issuer, and dates — so those can be checked against the application. This applies to provider evidence only, never to a customer&apos;s information. It is a reading step: it never decides whether a document is accepted, and it never replaces the external check Tuveloz performs with the issuing authority, insurer, or approved vendor.</li>
           <li>Resend provides transactional email delivery.</li>
           <li>Professional advisers may receive information when reasonably necessary for accounting, insurance, security, or legal work and subject to appropriate duties.</li>
           <li>Information may be disclosed to comply with law, valid legal process, payment-network rules, or a good-faith need to protect users, rights, property, or platform security.</li>
@@ -108,7 +110,11 @@ export default function PrivacyPage() {
           Tuveloz does not sell personal information. We do not currently use
           personal information for cross-site targeted advertising or solely
           automated decisions that produce legal or similarly significant
-          effects. Public provider pages omit private email and exact address
+          effects. Where automated tools help review a provider application,
+          they sort, read, and flag — a person makes every decision that
+          approves, rejects, or limits a provider, and the only step a tool
+          completes on its own is asking a provider to re-upload a document
+          that is expired or undated, which the provider can simply redo. Public provider pages omit private email and exact address
           information, and public reviews use a first name and last initial.
         </p>
       </section>
