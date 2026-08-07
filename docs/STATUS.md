@@ -64,9 +64,6 @@ consent across every entry point.
 
 **Small code, real value**
 
-- The `marketing_consent` opt-in on the customer request form has no send path.
-  Consent is captured and never used. The launch-update nurture sequence in
-  `lib/launch-updates.ts` already exists next to it.
 - Nothing sends texts. `phone_contact_consents` is the permission layer only.
   Sending needs a provider (Twilio or similar) plus STOP-keyword handling
   wired to `revokeMarketingSmsConsent`.

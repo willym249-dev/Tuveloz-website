@@ -72,6 +72,7 @@ import {
   normalizeContactPhone,
   recordPhoneContactConsent,
 } from "../../../lib/phone-contact-consent";
+import { enrollLaunchUpdateSubscriber } from "../../../lib/launch-update-enrollment";
 
 const GUEST_CONSENT_VERSION = "guest-request-2026-07-30";
 const GUEST_PROFILE_CONSENT_TEXT =
@@ -662,6 +663,18 @@ export async function POST(request: Request) {
       if (issueImageKey) cleanup.push(deleteJobImage(issueImageKey));
       await Promise.allSettled(cleanup);
       throw error;
+    }
+
+    // The promotions box on this form now enrols the customer in the
+    // launch-update sequence, carrying the wording they saw here rather than
+    // the subscribe form's. Transactional email about this job is unaffected.
+    if (marketingConsent) {
+      await enrollLaunchUpdateSubscriber({
+        email,
+        source: "customer-request",
+        consentText: MARKETING_CONSENT_TEXT,
+        consentVersion: GUEST_CONSENT_VERSION,
+      });
     }
 
     // Promotional-text permission only, recorded after the request and its
