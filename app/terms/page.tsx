@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 3, 2026"
+      updated="August 7, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -239,10 +239,19 @@ export default function TermsPage() {
           out first. That doesn&apos;t extend any legal filing deadline you have.
         </p>
         <p>
-          Tuveloz hasn&apos;t adopted a formal governing-law, forum-selection, or
-          arbitration clause for production yet, and this draft doesn&apos;t
-          require arbitration or waive your right to a class action.
-          Independent legal review is recommended before any of that changes.
+          These Terms are governed by the laws of the State of Maryland, without
+          regard to its conflict-of-laws rules. Any claim that isn&apos;t resolved
+          between us belongs in the state or federal courts located in
+          Montgomery County, Maryland, and we each agree those courts have
+          jurisdiction. If your claim qualifies for small-claims court, you can
+          bring it there instead.
+        </p>
+        <p>
+          <strong>Tuveloz does not require arbitration.</strong> You keep your
+          right to go to court, and to take part in a class action. Many
+          marketplaces take both of those away — we haven&apos;t, and if that ever
+          changes we&apos;ll tell you before it applies to you and give you a real
+          chance to decline.
         </p>
       </section>
 
