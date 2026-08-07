@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 6, 2026"
+      updated="August 7, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -234,7 +234,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>12. Liability</h2>
+        <h2>12. Liability and indemnification</h2>
         <p>
           Tuveloz&apos;s role is limited to running the marketplace. To the
           fullest extent Maryland law allows, Tuveloz&apos;s liability for any
@@ -242,6 +242,18 @@ export default function TermsPage() {
           is about. This cap doesn&apos;t remove a right, duty, or remedy the law
           doesn&apos;t let us waive — and it isn&apos;t a claim that Tuveloz has zero
           liability.
+        </p>
+        <p>
+          The other side of that: if a third party brings a claim against
+          Tuveloz because of something you did — content you posted without
+          the right to share it, a job you weren&apos;t authorized to request,
+          credentials or a warranty position you misstated, a law you broke,
+          or a service your business performed — you agree to defend Tuveloz
+          against that claim and cover the reasonable legal fees, costs, and
+          damages that result. This doesn&apos;t apply to the portion of a claim
+          caused by Tuveloz&apos;s own conduct, Tuveloz will tell you promptly
+          about any claim it expects you to cover, and nothing here waives a
+          right the law doesn&apos;t allow to be waived.
         </p>
       </section>
 
