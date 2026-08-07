@@ -31,6 +31,8 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-08-07 | **Production deploys are failing.** Every deploy since 5 August has died attaching the `tuveloz.com` custom domain (`workers/scripts/tuveloz/domains/records`). Check the Cloudflare API token still carries Workers custom-domain permission and that the zone is still on the account. Until this is fixed, merging to `main` does not ship. See `LOG.md` | hello@tuveloz.com | open |
+| 2026-08-07 | Confirm whether the live site is serving current code: open `https://tuveloz.com/api/health` and compare `release.commit` to the newest commit on `main` | hello@tuveloz.com | open |
 | — | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | open |
 | — | Reconcile PR #97 and PR #98 — whichever merges second drops its own `CLAUDE.md` and index instead of adding a parallel one | hello@tuveloz.com | open |
 | — | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |

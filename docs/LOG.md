@@ -13,6 +13,45 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Production deploys have been failing since 5 August
+
+**What happened.** Merging PR #98 triggered a production deploy, which failed.
+Checking the history showed it is not an isolated failure: the last successful
+production deploy was PR #94 on 5 August. Every deploy since — #99, #101, #102,
+#103, and #98 — has failed. Five merges have not reached production.
+
+**The cause is the same every time, and it is not the code.** Lint, the test
+suite, the production build, and the remote D1 migration all pass. The run dies
+at `wrangler deploy`, on the step that attaches the custom domain:
+
+```
+✘ [ERROR] Some triggers failed to deploy for tuveloz:
+    - A request to the Cloudflare API
+      (/accounts/***/workers/scripts/tuveloz/domains/records) failed.
+```
+
+That endpoint is the Workers custom-domain attachment for `tuveloz.com`. The
+usual explanations are a Cloudflare API token that no longer carries the
+permission to attach a Workers custom domain, the zone having moved or been
+removed from the account, or the hostname already being bound to something else.
+It is an account and credentials problem, not a repository problem, so it cannot
+be fixed from here.
+
+**What is not yet known.** Whether the live site is serving old code or is
+affected at all. The error says *triggers* failed, which leaves open whether the
+Worker script itself uploaded before the domain binding failed. The workflow's
+own health verification never ran, so nothing confirmed the release either way.
+`tuveloz.com` resolves to a Cloudflare address, and the sandbox this was
+diagnosed from is blocked from reaching that host, so it could not be checked
+directly. **Check `https://tuveloz.com/api/health` from an ordinary browser and
+compare `release.commit` against the newest commit on `main`** — that answers it
+in one step.
+
+**Now open.** Recorded in `OPEN-ITEMS.md` dated today so the Monday check keeps
+raising it until it is resolved. Until it is, merging to `main` does not ship.
+
+---
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,
