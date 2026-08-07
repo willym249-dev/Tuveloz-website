@@ -4415,8 +4415,10 @@ label > small {
   padding: clamp(28px, 4vw, 48px);
 }
 
+/* The banner gradient is orange, so --lime lands at 1.5:1 against it and the
+   label is effectively invisible. The heading's near-black reads at 5.7:1. */
 .founding-banner .kicker.light {
-  color: var(--lime);
+  color: #050505;
   margin-bottom: 12px;
 }
 
@@ -4436,6 +4438,32 @@ label > small {
 
 .founding-banner .button.lime {
   white-space: nowrap;
+}
+
+/* Inline rather than inline-flex: at narrow widths the label wraps to two
+   lines, and a flex gap would strand the arrow at the far edge of the banner
+   instead of keeping it beside the last word. */
+.founding-terms-link {
+  color: #050505;
+  display: inline;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.founding-terms-link span {
+  margin-left: 7px;
+}
+
+.founding-banner p + .founding-terms-link {
+  display: inline-block;
+  margin-top: 18px;
+}
+
+.founding-terms-link:hover,
+.founding-terms-link:focus-visible {
+  text-decoration: underline;
 }
 
 @media (max-width: 900px) {

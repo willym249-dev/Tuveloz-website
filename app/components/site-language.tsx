@@ -923,6 +923,7 @@ const spanishText: Record<string, string> = {
   "Be first. Own your corner of the county.": "Sea el primero. Adueñese de su zona del condado.",
   "The first pros into Montgomery County get first pick of jobs and a real voice in how Tuveloz works. Free to apply, no subscription, no exclusivity — there's no better time to bet on yourself.": "Los primeros profesionales en el Condado de Montgomery escogen trabajos antes que nadie y tienen voz real en cómo funciona Tuveloz. Aplicar es gratis, sin suscripción, sin exclusividad: no hay mejor momento para apostar por usted mismo.",
   "Claim my spot": "Aparto mi lugar",
+  "What founding providers get, in writing": "Lo que reciben los proveedores fundadores, por escrito",
   "Now onboarding · Montgomery County": "Incorporando ahora · Condado de Montgomery",
   "Do great work. Get paid.": "Haga buen trabajo. Cobre.",
   "We bring the customers.": "Nosotros traemos los clientes.",

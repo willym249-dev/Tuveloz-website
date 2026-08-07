@@ -1600,6 +1600,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               a real voice in how Tuveloz works. Free to apply, no subscription, no
               exclusivity — there&apos;s no better time to bet on yourself.
             </p>
+            <Link className="founding-terms-link" href="/founding-providers">
+              What founding providers get, in writing <span aria-hidden="true">→</span>
+            </Link>
           </div>
           {view !== "provider" && (
             <Link className="button lime" href="/join">
