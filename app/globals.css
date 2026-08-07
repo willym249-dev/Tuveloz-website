@@ -10,6 +10,16 @@
   --muted: #607083;
   --line: #dfe6eb;
   --white: #ffffff;
+
+  /* Two muted greys, because no single one can pass WCAG AA on both surfaces
+     this site puts small text on. Clearing 4.5:1 against white caps relative
+     luminance at 0.183, while clearing it against the near-black page floors it
+     at 0.202 — the ranges do not overlap, so the surface has to pick the token.
+     Use -on-light inside white cards and -on-dark on the page itself. */
+  --muted-on-light: #5c6f7d; /* >=4.67:1 on every light card surface in use:
+                                #ffffff, #f7f9fb, #f5f8fb, #f2f4f6, #edf3f8 */
+  --muted-on-dark: #748695;  /* 5.02:1 on #111111, 5.42:1 on #050505 */
+  --muted-on-dark-warm: #8b817a; /* 4.96:1 on #111111 — for the warm-grey copy */
 }
 
 * {
@@ -3659,7 +3669,7 @@ footer > p {
   background: #f2f4f6;
   border: 1px solid #dbe3e9;
   border-radius: 999px;
-  color: #687b8a;
+  color: var(--muted-on-light);
   cursor: default;
   display: inline-flex;
   flex: 1 1 auto;
@@ -3798,7 +3808,7 @@ footer > p {
 
 .service-search p {
   align-items: center;
-  color: #687b8a;
+  color: var(--muted-on-dark);
   display: flex;
   flex-wrap: wrap;
   font-size: 11px;
@@ -3810,7 +3820,7 @@ footer > p {
 .service-search p button {
   background: none;
   border: 0;
-  color: #526b7d;
+  color: var(--muted-on-dark);
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
@@ -3872,7 +3882,7 @@ footer > p {
 }
 
 .signup-review-summary > p {
-  color: #687b8a;
+  color: var(--muted-on-light);
   font-size: 11px;
   font-weight: 700;
   margin: 8px 0 0;
@@ -3884,7 +3894,14 @@ footer > p {
   margin-top: 16px;
 }
 
+/* The summary text is ink (#172b3c), but only the open state had a light
+   background — closed, it sat straight on the near-black form at 1.3:1, so the
+   control you have to find in order to open it was the least readable thing on
+   the step. The light surface now applies in both states, matching how the
+   service-group cards behave. */
 .business-details-disclosure > summary {
+  background: #f5f8fb;
+  border-radius: 10px;
   cursor: pointer;
   list-style: none;
   min-height: 44px;
@@ -3901,14 +3918,13 @@ footer > p {
 }
 
 .business-details-disclosure > summary small {
-  color: #687b8a;
+  color: var(--muted-on-light);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
 }
 
 .business-details-disclosure[open] > summary {
-  background: #f5f8fb;
   border-bottom: 1px solid #dbe3e9;
   border-radius: 10px 10px 0 0;
 }
@@ -4213,7 +4229,7 @@ label > small {
 }
 
 .service-group > summary small {
-  color: #687b8a;
+  color: var(--muted-on-light);
   font-size: 10px;
   font-weight: 500;
   line-height: 1.4;
@@ -4350,7 +4366,7 @@ label > small {
 }
 
 .customer-service-note {
-  color: #687b8a;
+  color: var(--muted-on-dark);
   display: block;
   font-size: 10px;
   line-height: 1.55;
@@ -4368,7 +4384,8 @@ label > small {
 }
 
 .provider-mode-preview > span {
-  color: #526b7d;
+  /* Sits directly on the near-black form, not inside a card. */
+  color: var(--muted-on-dark);
   font-size: 11px;
   font-weight: 700;
 }
@@ -8075,7 +8092,7 @@ footer > p,
 }
 
 .expansion-form > small {
-  color: #786d65;
+  color: var(--muted-on-dark-warm);
   font-size: 10px;
   line-height: 1.5;
 }
@@ -11761,4 +11778,15 @@ body {
     -webkit-user-select: none;
     user-select: none;
   }
+}
+
+/* The dark theme paints every <label> orange (#ff9a55). That is correct on the
+   near-black form, but the service picker puts its labels inside white cards,
+   where the same orange lands at 1.98:1 — and those labels are the service
+   names, the primary content of the whole step. Light cards get ink instead.
+   Scoped to the cards so the orange stays everywhere it is legible. */
+.service-group label,
+.service-option label,
+.business-details-disclosure > summary {
+  color: #172b3c;
 }
