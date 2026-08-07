@@ -127,7 +127,18 @@ test("every installed icon points at the versioned master artwork", async () => 
   );
   assert.equal(versions.size, 1, `icon cache versions disagree: ${[...versions]}`);
 
+  // Maskable variants are the same artwork on a full-bleed field for Android's
+  // launcher mask, generated alongside the rest, so they share the cache
+  // version with everything else.
   for (const icon of JSON.parse(manifest).icons) {
-    assert.match(icon.src, /^\/icon-\d+\.png\?v=\d+$/);
+    assert.match(icon.src, /^\/icon-(?:maskable-)?\d+\.png\?v=\d+$/);
   }
+  const manifestVersions = new Set(
+    JSON.parse(manifest).icons.map((icon) => icon.src.split("?v=")[1]),
+  );
+  assert.equal(
+    manifestVersions.size,
+    1,
+    `manifest icon cache versions disagree: ${[...manifestVersions]}`,
+  );
 });

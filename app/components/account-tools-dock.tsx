@@ -59,7 +59,7 @@ export function AccountToolsDock() {
   };
 
   return (
-    <details style={dockStyle}>
+    <details data-owner-dock style={dockStyle}>
       <summary style={{ cursor: "pointer", fontWeight: 800 }}>
         Owner Tools
       </summary>

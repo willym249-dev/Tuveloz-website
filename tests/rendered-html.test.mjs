@@ -495,13 +495,18 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(contents.includes("Any charge, transfer, or connected-account configuration remains in testing"));
   assert.ok(contents.includes("technical labels or movement of funds do not by themselves determine who is merchant of record"));
   assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
-  assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
+  // Written as a plain <link> rather than metadata.manifest, which resolves
+  // against metadataBase and hard-codes the production origin — a cross-origin
+  // manifest is not installable, so staging and previews lost the install
+  // prompt. See tests/installable-app-shell.test.mjs.
+  assert.ok(layoutSource.includes('<link rel="manifest" href="/manifest.webmanifest" />'));
   assert.ok(sitemapSource.includes('path: "/payments"'));
   assert.ok(!sitemapSource.includes('path: "/admin"'));
   assert.ok(!sitemapSource.includes('path: "/customer"'));
   assert.ok(!sitemapSource.includes('path: "/provider-jobs"'));
   assert.equal(manifest.name, "Tuveloz");
-  assert.equal(manifest.start_url, "/");
+  // The launch source is tagged for attribution; the destination is still root.
+  assert.equal(new URL(manifest.start_url, "https://tuveloz.com").pathname, "/");
   assert.equal(manifest.display, "standalone");
   assert.ok(contents.includes("does not sell personal information"));
   assert.ok(contents.includes("customer and provider form their own service agreement"));

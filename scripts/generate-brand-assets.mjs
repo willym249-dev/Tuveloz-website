@@ -7,7 +7,8 @@
  *
  * Outputs to public/: brand-badge.png (the header/footer mark), favicon.ico
  * (16/32/48), favicon.svg, tuveloz-favicon-v2.svg, apple-touch-icon.png (180),
- * icon-192.png, icon-512.png, og-image.png (1200x630).
+ * icon-192.png, icon-512.png, icon-maskable-192.png, icon-maskable-512.png,
+ * og-image.png (1200x630).
  *
  * Run from the repo root:  node scripts/generate-brand-assets.mjs
  * Then bump the ?v= query strings in app/layout.tsx and
@@ -58,6 +59,33 @@ console.log("wrote brand-badge.png");
 // --- PNG icons ---
 for (const [size, out] of [[180, "apple-touch-icon.png"], [192, "icon-192.png"], [512, "icon-512.png"]]) {
   await sharp(badgePng).resize(size, size).png().toFile(join(pub, out));
+  console.log("wrote", out);
+}
+
+// --- Maskable app icons ---
+// Android applies its own shape mask (circle, squircle, rounded square) and
+// crops whatever falls outside it. The regular icons above are transparent
+// outside the keyline, so a launcher shrinks them inside a white circle rather
+// than filling the shape. These are the same badge on a full-bleed navy field,
+// scaled into the maskable safe zone: the centred circle of diameter 0.8 x the
+// canvas.
+//
+// The badge is square, so it is its *corners* that decide the fit, not its
+// width — a square of side s has half-diagonal s/sqrt(2), so the largest square
+// that fits inside the 0.8 circle has side 0.8/sqrt(2) = 0.5657 of the canvas.
+// Sizing to 0.8 instead would put the keyline's corners ~289px from centre on a
+// 512 canvas, outside the 205px safe radius, and a circular launcher mask
+// (Pixel's default) would slice them off.
+const MASKABLE_BACKGROUND = { r: 0x07, g: 0x18, b: 0x2d };
+const MASKABLE_SAFE_SCALE = 0.8 / Math.SQRT2;
+const badgeTrimmed = await sharp(badgePng).trim().png().toBuffer();
+for (const [size, out] of [[192, "icon-maskable-192.png"], [512, "icon-maskable-512.png"]]) {
+  const inner = Math.round(size * MASKABLE_SAFE_SCALE);
+  const glyph = await sharp(badgeTrimmed).resize(inner, inner, { fit: "contain",
+    background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+  await sharp({ create: { width: size, height: size, channels: 3, background: MASKABLE_BACKGROUND } })
+    .composite([{ input: glyph, left: Math.round((size - inner) / 2), top: Math.round((size - inner) / 2) }])
+    .png().toFile(join(pub, out));
   console.log("wrote", out);
 }
 

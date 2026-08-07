@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <title>Offline | Tuveloz</title>
+    <link rel="icon" href="/tuveloz-favicon-v2.svg?v=5" type="image/svg+xml" />
+    <style>
+      /* Standalone by necessity: this page is what renders when the network is
+         gone, so it cannot pull in the site stylesheet. */
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        align-items: center;
+        background: #050505;
+        color: #f0e9e4;
+        display: flex;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        justify-content: center;
+        line-height: 1.6;
+        min-height: 100svh;
+        padding: calc(24px + env(safe-area-inset-top, 0px))
+                 calc(24px + env(safe-area-inset-right, 0px))
+                 calc(24px + env(safe-area-inset-bottom, 0px))
+                 calc(24px + env(safe-area-inset-left, 0px));
+        text-align: center;
+      }
+      main { max-width: 26rem; }
+      img { height: 68px; width: 68px; }
+      h1 {
+        font-size: 24px;
+        letter-spacing: -0.02em;
+        margin: 20px 0 10px;
+      }
+      p { color: #b6aaa1; font-size: 15px; margin: 0 0 8px; }
+      .hint { color: #7d736c; font-size: 13px; margin-top: 18px; }
+      button {
+        background: #ff6a00;
+        border: 0;
+        border-radius: 999px;
+        color: #050505;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 800;
+        margin-top: 22px;
+        min-height: 48px;
+        padding: 13px 26px;
+      }
+      button:hover { background: #ff8a2a; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icon-192.png?v=5" alt="" />
+      <h1>You're offline</h1>
+      <p>Tuveloz needs a connection to show live jobs, quotes, and account details, so there's nothing safe to show you from memory.</p>
+      <p>Your place in any form you were filling out is saved on this device — it'll still be there when you reconnect.</p>
+      <button type="button" onclick="location.reload()">Try again</button>
+      <p class="hint">This page will reload itself as soon as you're back online.</p>
+    </main>
+    <script>
+      addEventListener("online", () => location.reload());
+    </script>
+  </body>
+</html>
