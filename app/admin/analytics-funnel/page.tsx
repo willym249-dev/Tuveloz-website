@@ -21,6 +21,16 @@ type ExperimentRow = {
   conversion: number;
 };
 
+type CampaignRow = {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
 type WindowPayload = {
   provider: FunnelStage[];
   customer: FunnelStage[];
@@ -30,8 +40,54 @@ type WindowPayload = {
     providerFirstQuoteSent: number;
   };
   experiments: Record<string, ExperimentRow[]>;
+  campaigns: CampaignRow[];
   rawCounts: Array<{ event: string; count: number }>;
 };
+
+function CampaignAttribution({ rows }: { rows: CampaignRow[] }) {
+  return (
+    <section style={{ marginTop: "1.75rem" }}>
+      <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Provider campaign results</h2>
+      <p className="hint" style={{ margin: "0 0 0.75rem", fontSize: "0.82rem" }}>
+        Signup starts and completed applications from tagged campaign links.
+        Untagged visits are excluded from this table.
+      </p>
+      {rows.length === 0 ? (
+        <p className="hint" style={{ margin: 0 }}>No tagged provider visits in this window yet.</p>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ borderCollapse: "collapse", width: "100%", minWidth: 650 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0" }}>Source</th>
+                <th style={{ textAlign: "left", padding: "0.3rem 0.6rem" }}>Creative</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem" }}>Started</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem" }}>Submitted</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0" }}>Conversion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={`${row.source}:${row.medium}:${row.campaign}:${row.content}`}>
+                  <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
+                    <strong>{row.source}</strong>
+                    {row.medium && <small style={{ display: "block", opacity: 0.7 }}>{row.medium}</small>}
+                  </td>
+                  <td style={{ padding: "0.3rem 0.6rem", fontFamily: "monospace", fontSize: "0.82rem" }}>
+                    {row.content || row.campaign}
+                  </td>
+                  <td style={{ padding: "0.3rem 0.6rem", textAlign: "right" }}>{row.started}</td>
+                  <td style={{ padding: "0.3rem 0.6rem", textAlign: "right" }}>{row.submitted}</td>
+                  <td style={{ padding: "0.3rem 0", textAlign: "right" }}>{row.conversion}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // Keep these titles/labels in sync with the copy rendered for each variant in
 // app/page.tsx. Order here is the display order on this page.
@@ -428,6 +484,8 @@ export default function AnalyticsFunnelPage() {
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />
+
+          <CampaignAttribution rows={active.campaigns} />
 
           <Experiments windows={active.experiments} />
 
