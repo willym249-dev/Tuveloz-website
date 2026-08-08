@@ -9,6 +9,7 @@ import {
   cleanProviderSelfAssessment,
   providerAreasHaveReviewedCompliance,
 } from "./provider-compliance";
+import { cleanOptionalCertificates } from "./optional-certificates";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAgreementEvidenceText,
@@ -336,6 +337,7 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     performingPersonLastName,
     experience,
     providerSelfAssessment: cleanProviderSelfAssessment(body.providerSelfAssessment),
+    optionalCertificates: cleanOptionalCertificates(body.optionalCertificates),
     acknowledgements: {
       rulesReviewed: true as const,
       adultAcknowledged: true as const,
