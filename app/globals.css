@@ -11023,3 +11023,34 @@ footer > p,
   font-size: 12px;
   margin-top: 4px;
 }
+
+/* ---- Short-viewport hero: keep the primary call to action above the fold ----
+   Laptops around 768px tall leave roughly 660px of viewport once browser chrome
+   is subtracted. The full-height hero (740px min-height, vertically centred
+   copy) pushed the buttons past that. Taller screens keep the original layout
+   untouched. */
+@media (min-width: 1000px) and (max-height: 860px) {
+  .hero {
+    min-height: 0;
+    padding-bottom: 48px;
+    padding-top: 40px;
+  }
+
+  .hero-copy {
+    align-self: start;
+  }
+
+  .hero h1 {
+    font-size: clamp(44px, 4.6vw, 68px);
+    margin: 18px 0 16px;
+  }
+
+  .hero-copy > p {
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    margin-top: 22px;
+  }
+}

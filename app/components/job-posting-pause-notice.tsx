@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
   CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
+  CUSTOMER_JOB_POSTING_PAUSED_SUMMARY,
 } from "../../lib/launch-status";
 
 export function JobPostingPauseNotice() {
@@ -19,70 +20,93 @@ export function JobPostingPauseNotice() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 1rem;
-          padding: 0.85rem clamp(1rem, 4vw, 3rem);
+          gap: 0.9rem;
+          padding: 0.45rem clamp(1rem, 4vw, 3rem);
           border-bottom: 1px solid rgba(255, 106, 0, 0.5);
           background: #07182d;
           color: white;
         }
 
         .tuveloz-launch-pause-copy {
-          display: grid;
-          gap: 0.2rem;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.2rem 0.6rem;
+          min-width: 0;
           max-width: 70rem;
         }
 
         .tuveloz-launch-pause-heading {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          gap: 0.75rem;
+          gap: 0.6rem;
         }
 
         .tuveloz-launch-pause-heading strong {
           color: #ff6a00;
-          font-size: 0.78rem;
+          font-size: 0.72rem;
           letter-spacing: 0.09em;
           text-transform: uppercase;
+          white-space: nowrap;
         }
 
         .tuveloz-launch-pause-toggle {
-          display: none;
+          display: inline-flex;
           align-items: center;
           gap: 0.3rem;
-          min-height: 2.25rem;
-          padding: 0.3rem 0.6rem;
+          min-height: 1.9rem;
+          padding: 0.15rem 0.55rem;
           border: 1px solid rgba(255, 255, 255, 0.24);
-          border-radius: 0.7rem;
+          border-radius: 0.6rem;
           background: transparent;
           color: white;
-          font-size: 0.78rem;
+          font-size: 0.74rem;
           font-weight: 750;
+          white-space: nowrap;
           cursor: pointer;
         }
 
-        .tuveloz-launch-pause-copy span {
-          font-size: 0.95rem;
-          line-height: 1.45;
+        .tuveloz-launch-pause-summary,
+        .tuveloz-launch-pause-details span {
+          font-size: 0.88rem;
+          line-height: 1.4;
+        }
+
+        .tuveloz-launch-pause-details {
+          display: grid;
+          gap: 0.25rem;
+          flex-basis: 100%;
+          padding-bottom: 0.2rem;
+        }
+
+        /* Collapsed is the default at every width: one line, so the hero call
+           to action stays above the fold on a short laptop screen. */
+        .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-details {
+          display: none;
+        }
+
+        .tuveloz-launch-pause.expanded .tuveloz-launch-pause-summary {
+          display: none;
         }
 
         .tuveloz-launch-pause-actions {
           display: flex;
           flex: 0 0 auto;
           flex-wrap: wrap;
-          gap: 0.55rem;
+          gap: 0.45rem;
         }
 
         .tuveloz-launch-pause-actions a {
           display: inline-flex;
           align-items: center;
-          min-height: 2.5rem;
-          padding: 0.55rem 0.8rem;
+          min-height: 2rem;
+          padding: 0.25rem 0.7rem;
           border: 1px solid rgba(255, 255, 255, 0.24);
-          border-radius: 0.7rem;
+          border-radius: 0.6rem;
           color: white;
-          font-size: 0.85rem;
+          font-size: 0.8rem;
           font-weight: 750;
+          white-space: nowrap;
           text-decoration: none;
         }
 
@@ -92,20 +116,23 @@ export function JobPostingPauseNotice() {
           color: #07182d;
         }
 
+        @media (max-width: 900px) {
+          .tuveloz-launch-pause-summary {
+            display: none;
+          }
+        }
+
         @media (max-width: 760px) {
           .tuveloz-launch-pause {
             align-items: stretch;
             flex-direction: column;
-            gap: 0.75rem;
-            padding-top: 0.6rem;
-            padding-bottom: 0.6rem;
+            gap: 0.55rem;
           }
 
-          .tuveloz-launch-pause-toggle {
-            display: inline-flex;
+          .tuveloz-launch-pause-heading {
+            justify-content: space-between;
           }
 
-          .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-copy span,
           .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-actions {
             display: none;
           }
@@ -124,6 +151,9 @@ export function JobPostingPauseNotice() {
         <div className="tuveloz-launch-pause-copy">
           <div className="tuveloz-launch-pause-heading">
             <strong>Customer launch update</strong>
+            <span className="tuveloz-launch-pause-summary">
+              {CUSTOMER_JOB_POSTING_PAUSED_SUMMARY}
+            </span>
             <button
               aria-controls="tuveloz-launch-pause-details"
               aria-expanded={expanded}
@@ -134,8 +164,10 @@ export function JobPostingPauseNotice() {
               {expanded ? "Hide details" : "Details"} <span aria-hidden>{expanded ? "▴" : "▾"}</span>
             </button>
           </div>
-          <span id="tuveloz-launch-pause-details">{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
-          <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
+          <div className="tuveloz-launch-pause-details" id="tuveloz-launch-pause-details">
+            <span>{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
+            <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
+          </div>
         </div>
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
           <Link href="/account?role=customer&mode=create">Create customer account</Link>

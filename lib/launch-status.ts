@@ -1,5 +1,13 @@
 export const CUSTOMER_JOB_POSTING_PAUSED = true;
 
+/**
+ * One-line version for the site-wide banner's collapsed state. The full
+ * message and detail below stay one click away and must never be removed —
+ * this only changes how much of the first screen the disclosure occupies.
+ */
+export const CUSTOMER_JOB_POSTING_PAUSED_SUMMARY =
+  "Customer requests aren't open yet. We're signing up local providers first.";
+
 export const CUSTOMER_JOB_POSTING_PAUSED_MESSAGE =
   "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.";
 
