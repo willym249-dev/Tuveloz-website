@@ -722,24 +722,25 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <>
               <div className="eyebrow">
                 <span className="pulse" />
-                Opening in Montgomery County, MD
+                Customer launch is in preparation · Montgomery County, MD
               </div>
               <h1>
-                Any car issue.
+                Car trouble shouldn&apos;t leave you guessing.
                 <br />
                 <span className="hero-value-line">
-                  Real quotes from local pros. You choose.
+                  Join now. Compare local quotes when we open.
                 </span>
               </h1>
               <p>
-                Tell us what&apos;s going on with your car. Local pros send you
-                their price, you see them next to each other, and you pick the one you
-                like. No calling around, no pressure.
+                Tuveloz is building a local marketplace where you can post a car need
+                once, compare providers and prices side by side, and choose. Customer
+                accounts are open now; requests turn on once the right provider coverage
+                is in place.
               </p>
               <ul className="hero-highlights">
-                <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
-                <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
-                <li><span aria-hidden="true">✓</span> Pick one, or none. Totally up to you</li>
+                <li><span aria-hidden="true">✓</span> Free to create your account</li>
+                <li><span aria-hidden="true">✓</span> Independent local businesses, no call center</li>
+                <li><span aria-hidden="true">✓</span> When we open, you decide who to hire — or no one</li>
               </ul>
             </>
           ) : (
@@ -765,7 +766,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
                 <Link className="button primary" href="/post-job">
-                  Save my spot — free <span>→</span>
+                  Create your free account <span>→</span>
                 </Link>
                 <Link className="button secondary" href="/join">
                   I do car work — apply free <span>→</span>
@@ -790,7 +791,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <div className="hero-launch-note">
             <strong>
               {CUSTOMER_JOB_POSTING_PAUSED
-                ? "Mechanics near you are signing up now. You'll be able to post your first job the day we open."
+                ? "We're onboarding providers for the services customers will need. Customer requests open once the marketplace is ready."
                 : "Now serving Montgomery County, Maryland. More areas coming soon."}
             </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
@@ -839,10 +840,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </>
         ) : (
           <>
-            <span><b>Free</b> to ask and to compare prices</span>
-            <span><b>No pressure</b> — say yes only if you want to</span>
-            <span><b>Local</b> pros, prices side by side</span>
-            <span><b>Sign up now</b> · post your first job when we open</span>
+            <span><b>Free</b> to create your account</span>
+            <span><b>Independent</b> local businesses, no call center</span>
+            <span><b>Your choice</b> when customer requests open</span>
+            <span><b>No launch date yet</b> · we open when coverage is ready</span>
           </>
         )}
       </section>
@@ -855,6 +856,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             No middleman you can&apos;t see, no price that changes later. Here&apos;s
             what we do, in plain words.
           </p>
+          {view === "home" && (
+            <p className="trust-origin">
+              <strong>Why Tuveloz exists.</strong> Car owners deserve a clear choice,
+              and independent pros deserve a fair shot to grow. A certificate can
+              matter, and where a service legally requires a license, registration, or
+              coverage, we check it. But paperwork alone does not decide who earns a
+              customer&apos;s trust — the customer does.
+            </p>
+          )}
         </div>
         <div className="trust-grid">
           <article className="trust-card">
@@ -880,6 +890,25 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               what&apos;s actually required.
             </p>
           </article>
+          {view === "provider" ? (
+            <article className="trust-card">
+              <span className="trust-card-label">Your price stays your price</span>
+              <p>
+                You set the quote. Tuveloz does not take a cut from it, set your
+                prices, or require exclusivity.
+              </p>
+            </article>
+          ) : (
+            <article className="trust-card">
+              <span className="trust-card-label">Planned customer fee, shown clearly</span>
+              <p>
+                Example at the planned 5% rate: a $200 labor quote would show a $10
+                Tuveloz customer service fee, for a $210 total. Final launch pricing
+                and tax treatment remain under review; you&apos;ll see the full total
+                before accepting.
+              </p>
+            </article>
+          )}
         </div>
       </section>
 
@@ -957,6 +986,29 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </article>
         </div>
       </section>
+
+      {view === "home" && CUSTOMER_JOB_POSTING_PAUSED && (
+        <section className="launch-help-section" aria-labelledby="launch-help-heading">
+          <div>
+            <span className="kicker">Need help today?</span>
+            <h2 id="launch-help-heading">Don&apos;t wait on a marketplace that isn&apos;t open.</h2>
+          </div>
+          <div>
+            <p>
+              Tuveloz isn&apos;t dispatching service requests yet. If your car trouble is
+              urgent or the vehicle may be unsafe to drive, contact a local shop or
+              mobile mechanic directly, or call a licensed towing service.
+            </p>
+            <p>
+              If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
+              before continuing your trip.
+            </p>
+            <Link className="text-link" href="/account?role=customer&mode=create">
+              Join the list for launch updates →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {view !== "provider" && (
       <section className="section services" id="services">
@@ -1036,6 +1088,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </section>
 
+      {view !== "home" && (
       <section className="section reviews-section" id="reviews">
         <div className="reviews-heading">
           <div>
@@ -1105,8 +1158,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </div>
         )}
       </section>
+      )}
 
-      {view !== "provider" && (
+      {view !== "provider" && view !== "home" && (
       <section className="section request-section" id="request">
         <div className="request-copy">
           <span className="kicker">
@@ -1578,6 +1632,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
+      {view !== "home" && (
       <section className="section provider-pitch" id="why-join">
         <div className="section-heading">
           <div>
@@ -1622,7 +1677,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </div>
       </section>
+      )}
 
+      {view !== "home" && (
       <section className="section providers" id="providers">
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
@@ -1675,7 +1732,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </div>
         </div>
       </section>
+      )}
 
+      {view !== "home" && (
       <section className="section difference-section" id="what-makes-us-different">
         <div className="section-heading">
           <div>
@@ -1705,7 +1764,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           whole way.
         </p>
       </section>
+      )}
 
+      {view !== "home" && (
       <section className="section expansion-section" id="expansion">
         <div className="expansion-copy">
           <span className="kicker">Future expansion</span>
@@ -1810,7 +1871,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </form>
       </section>
+      )}
 
+      {view !== "home" && (
       <section className="section feedback-section" id="feedback">
         <div className="feedback-copy">
           <span className="kicker">Your feedback matters</span>
@@ -1924,6 +1987,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </form>
       </section>
+      )}
 
       <section className="final-cta">
         <span className="kicker light">Montgomery County, Maryland</span>

@@ -329,9 +329,9 @@ test("homepage uses clear launch language and keeps its service icons visible", 
   assert.ok(homeSource.includes('aria-label="What Tuveloz promises today"'));
   // The strip leads with what a visitor gets, and still says plainly that
   // requests are not live yet rather than implying they are.
-  assert.ok(homeSource.includes("<b>Free</b> to ask and to compare prices"));
-  assert.ok(homeSource.includes("<b>No pressure</b>"));
-  assert.ok(homeSource.includes("post your first job when we open"));
+  assert.ok(homeSource.includes("<b>Free</b> to create your account"));
+  assert.ok(homeSource.includes("<b>Independent</b> local businesses, no call center"));
+  assert.ok(homeSource.includes("we open when coverage is ready"));
   assert.ok(homeSource.includes("<b>Keep 100%</b> of the price you quote"));
   assert.ok(!styles.includes(".public-view-home > .services,"));
   assert.match(
