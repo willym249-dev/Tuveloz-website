@@ -11,6 +11,19 @@
       "*/15 * * * *"
     ]
   },
+  "routes": [
+    {
+      "pattern": "tuveloz.com",
+      "custom_domain": true
+    },
+    {
+      // Serves the same Worker. The root of this host redirects to /ai in
+      // worker/index.ts, so ai.tuveloz.com is a front door for the assistant
+      // while every in-app link stays a normal same-origin path.
+      "pattern": "ai.tuveloz.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",
