@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-06
+- **Last reviewed:** 2026-08-08
 
 The things that must not be forgotten. An expired insurance certificate, a
 lapsed registration, or a legal review gone stale can block provider activation
@@ -31,6 +31,8 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-08-11 | Unblock production deploys: create the `ai.tuveloz.com` custom domain in Cloudflare, or drop that route from `wrangler.jsonc`. Every deploy since 2026-08-05 has failed on it and 30 commits are undeployed | hello@tuveloz.com | open |
+| 2026-08-11 | Check `https://tuveloz.com/api/health` and record which commit `release.commit` reports, so it is known whether the PR #99 site rewrite is actually serving or production is still on `46a6a019` | hello@tuveloz.com | open |
 | — | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | open |
 | — | Reconcile PR #97 and PR #98 — whichever merges second drops its own `CLAUDE.md` and index instead of adding a parallel one | hello@tuveloz.com | open |
 | — | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |

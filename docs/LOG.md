@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-06
+- **Last reviewed:** 2026-08-08
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,57 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+---
+
+## 2026-08-08 — Production deploys have been failing since 2026-08-05
+
+**What happened.** A request to reconcile the live site's copy against this
+repository turned up something else: the last five deploys to `main` all failed,
+and nothing has reached production since `46a6a019` on 2026-08-05 21:59 UTC.
+Thirty commits are sitting undeployed, including the whole public-site rewrite
+from PR #99, the Terms and Privacy changes from PR #101 and #103, and the
+customer completion confirmation from PR #102.
+
+**Why they fail.** Every run gets through lint, tests, and the production
+database migration, then fails on the `Deploy to Cloudflare` step with the same
+error:
+
+```
+Some triggers failed to deploy for tuveloz:
+  - A request to the Cloudflare API
+    (/accounts/***/workers/scripts/tuveloz/domains/records) failed.
+```
+
+The cause is the second custom domain. Commit `066a7cf` ("Point ai.tuveloz.com
+at the app") added `ai.tuveloz.com` to `routes` in `wrangler.jsonc` with
+`custom_domain: true`. That commit rode into `main` with the PR #99 merge
+(`e43cd57`), and `e43cd57` is exactly the first failing run. Wrangler cannot
+register the hostname, so the trigger step exits non-zero and takes the run with
+it. The failure is in Cloudflare configuration, not in the application code —
+which is why the tests kept passing while production went stale.
+
+**What is actually live is unverified.** The worker bundle uploads before
+triggers are configured, and the upload succeeded in every failing run, so the
+new code may well be serving on `tuveloz.com` with only `ai.tuveloz.com`
+unbound. But the `Verify exact live release and database readiness` step is
+gated on the deploy step succeeding, so it was skipped all five times and
+nobody confirmed either way. `https://tuveloz.com/api/health` returns
+`release.commit` and settles it in one request. It could not be checked from
+this session — the sandbox's egress proxy blocks `tuveloz.com`.
+
+**No copy drift to reconcile.** The original worry — that the live site carried
+wording the repository had lost — does not apply. Production is deployed only by
+this workflow from `main`, so live copy is always some commit of this
+repository, never a separate edit. The gap is one-directional and is a
+deployment gap, not a content gap: `main` is ahead, production is behind.
+
+**Not fixed here.** The two ways out are to create the `ai.tuveloz.com` custom
+domain in the Cloudflare dashboard, or to drop the route from `wrangler.jsonc`
+and re-add it once the hostname exists. The first needs Cloudflare access this
+session does not have; the second reverses a deliberate product decision from
+`066a7cf`. Left for the owner to choose, and tracked in
+[`OPEN-ITEMS.md`](OPEN-ITEMS.md).
 
 ---
 
