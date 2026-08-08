@@ -693,6 +693,26 @@ export const jobInspectionItems = sqliteTable(
   ],
 );
 
+// A confirmed appointment time the accepted provider sets on a job. The customer
+// sees it on their request; a cron sweep emails a reminder before it arrives.
+export const jobAppointments = sqliteTable(
+  "job_appointments",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    providerEmail: text("provider_email").notNull(),
+    appointmentAt: text("appointment_at").notNull().default(""),
+    note: text("note").notNull().default(""),
+    reminderSentAt: text("reminder_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_appointments_request_id_unique").on(table.requestId),
+    index("job_appointments_reminder_idx").on(table.reminderSentAt),
+  ],
+);
+
 export const customerProfiles = sqliteTable(
   "customer_profiles",
   {
