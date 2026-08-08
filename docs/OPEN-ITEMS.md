@@ -37,6 +37,8 @@ When you close something significant, write a matching entry in
 | — | Take stock of which business documents already exist — insurance, LLC formation, EIN, Maryland registrations, licenses — and file a record card for each in `records/` | hello@tuveloz.com | open |
 | — | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
 | — | Confirm the current state of the 18 launch gates in the owner dashboard; the decisions live in the database, not in this repository | hello@tuveloz.com | open |
+| 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
+| — | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 
