@@ -95,6 +95,10 @@ async function responseData(
               marketing_email AS marketingEmail,
               product_update_email AS productUpdateEmail,
               optional_reminder_email AS optionalReminderEmail,
+              launch_notification_email AS launchNotificationEmail,
+              launch_notification_consent_at AS launchNotificationConsentAt,
+              launch_notification_consent_version AS launchNotificationConsentVersion,
+              launch_notification_consent_source AS launchNotificationConsentSource,
               updated_at AS updatedAt
          FROM account_communication_preferences
         WHERE lower(email) = lower(?) AND role = ?
@@ -127,6 +131,12 @@ async function responseData(
       optionalReminderEmail: preferences?.optionalReminderEmail !== "no",
       essentialTransactionalEmail: true,
       securityEmail: true,
+      // Surfaced with its provenance so the account holder can see not just
+      // that they consented, but when, to what version, and from where.
+      launchNotificationEmail: preferences?.launchNotificationEmail === "yes",
+      launchNotificationConsentAt: preferences?.launchNotificationConsentAt ?? "",
+      launchNotificationConsentVersion: preferences?.launchNotificationConsentVersion ?? "",
+      launchNotificationConsentSource: preferences?.launchNotificationConsentSource ?? "",
       updatedAt: preferences?.updatedAt ?? "",
     },
     requests: requestsResult.results ?? [],
@@ -187,17 +197,50 @@ export async function POST(request: Request) {
     await ensurePreferences(account.email, account.role);
 
     if (action === "save-preferences") {
+      // Revoking launch notifications clears the consent provenance too — a
+      // stored "when and against what version" only means something while the
+      // consent it describes is live. Re-consenting here is recorded with this
+      // surface as its source, so it is never mistaken for the original
+      // signup opt-in.
+      // Customer scope only, mirroring the check on the account-create path.
+      // Preferences are keyed (email, role), so a provider-scope row is a
+      // separate record that was never offered this consent — without this
+      // gate, saving from the provider scope would mint one that creation
+      // refuses to grant. Forcing "no" rather than skipping the column also
+      // clears any provider-scope row that already picked one up.
+      const launchNotification = account.role === "customer"
+        ? yesNo(body.launchNotificationEmail)
+        : "no";
       await env.DB.prepare(
         `UPDATE account_communication_preferences
             SET marketing_email = ?,
                 product_update_email = ?,
                 optional_reminder_email = ?,
+                launch_notification_email = ?,
+                launch_notification_consent_at =
+                  CASE WHEN ? = 'yes'
+                       THEN CASE WHEN launch_notification_email = 'yes'
+                                 THEN launch_notification_consent_at
+                                 ELSE CURRENT_TIMESTAMP END
+                       ELSE '' END,
+                launch_notification_consent_version =
+                  CASE WHEN ? = 'yes' THEN launch_notification_consent_version ELSE '' END,
+                launch_notification_consent_source =
+                  CASE WHEN ? = 'yes'
+                       THEN CASE WHEN launch_notification_email = 'yes'
+                                 THEN launch_notification_consent_source
+                                 ELSE 'privacy_center' END
+                       ELSE '' END,
                 updated_at = CURRENT_TIMESTAMP
           WHERE lower(email) = lower(?) AND role = ?`,
       ).bind(
         yesNo(body.marketingEmail),
         yesNo(body.productUpdateEmail),
         yesNo(body.optionalReminderEmail),
+        launchNotification,
+        launchNotification,
+        launchNotification,
+        launchNotification,
         account.email,
         account.role,
       ).run();

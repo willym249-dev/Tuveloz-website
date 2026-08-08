@@ -1777,6 +1777,15 @@ export const accountCommunicationPreferences = sqliteTable(
     marketingEmail: text("marketing_email").notNull().default("no"),
     productUpdateEmail: text("product_update_email").notNull().default("no"),
     optionalReminderEmail: text("optional_reminder_email").notNull().default("yes"),
+    // Scoped to "customer requests are open, plus essential launch updates".
+    // Separate from marketingEmail on purpose — this consent does not extend
+    // to a broader marketing list, and revoking either must not touch the
+    // other. The provenance columns record when, against which policy bundle
+    // version, and from which surface the consent was given.
+    launchNotificationEmail: text("launch_notification_email").notNull().default("no"),
+    launchNotificationConsentAt: text("launch_notification_consent_at").notNull().default(""),
+    launchNotificationConsentVersion: text("launch_notification_consent_version").notNull().default(""),
+    launchNotificationConsentSource: text("launch_notification_consent_source").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },

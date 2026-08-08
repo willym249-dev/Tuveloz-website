@@ -36,6 +36,10 @@ type PrivacyCenterData = {
     optionalReminderEmail: boolean;
     essentialTransactionalEmail: true;
     securityEmail: true;
+    launchNotificationEmail: boolean;
+    launchNotificationConsentAt: string;
+    launchNotificationConsentVersion: string;
+    launchNotificationConsentSource: string;
     updatedAt: string;
   };
   requests: PrivacyRequest[];
@@ -70,6 +74,8 @@ export default function PrivacyCenterPage() {
   const [marketingEmail, setMarketingEmail] = useState(false);
   const [productUpdateEmail, setProductUpdateEmail] = useState(false);
   const [optionalReminderEmail, setOptionalReminderEmail] = useState(true);
+  const [launchNotificationEmail, setLaunchNotificationEmail] = useState(false);
+  const [launchConsent, setLaunchConsent] = useState({ at: "", version: "", source: "" });
 
   async function load(scope?: AccountRole) {
     const query = scope ? `?scope=${scope}` : "";
@@ -84,6 +90,12 @@ export default function PrivacyCenterPage() {
     setMarketingEmail(result.preferences.marketingEmail);
     setProductUpdateEmail(result.preferences.productUpdateEmail);
     setOptionalReminderEmail(result.preferences.optionalReminderEmail);
+    setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
+    setLaunchConsent({
+      at: result.preferences.launchNotificationConsentAt,
+      version: result.preferences.launchNotificationConsentVersion,
+      source: result.preferences.launchNotificationConsentSource,
+    });
   }
 
   async function selectPrivacyScope(scope: AccountRole) {
@@ -124,6 +136,7 @@ export default function PrivacyCenterPage() {
           marketingEmail,
           productUpdateEmail,
           optionalReminderEmail,
+          launchNotificationEmail,
         }),
       });
       const result = await response.json() as PrivacyCenterData & { error?: string };
@@ -161,6 +174,12 @@ export default function PrivacyCenterPage() {
       setMarketingEmail(result.preferences.marketingEmail);
       setProductUpdateEmail(result.preferences.productUpdateEmail);
       setOptionalReminderEmail(result.preferences.optionalReminderEmail);
+    setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
+    setLaunchConsent({
+      at: result.preferences.launchNotificationConsentAt,
+      version: result.preferences.launchNotificationConsentVersion,
+      source: result.preferences.launchNotificationConsentSource,
+    });
       form.reset();
       setRequestType("access");
       setNotice(
@@ -309,6 +328,40 @@ export default function PrivacyCenterPage() {
                   />
                   Optional reminders that are not required to complete an active job
                 </label>
+                {/*
+                  Customer scope only. Preferences are keyed (email, role), so
+                  the provider scope is a separate row that was never offered
+                  this consent — rendering the toggle there would not surface a
+                  customer's consent, it would offer a way to create one the
+                  account-create path deliberately refuses to grant. Someone
+                  holding both roles manages this under their customer scope.
+
+                  The provenance line is the point of the rest: seeing that you
+                  consented is weaker than seeing when, to what, and from where.
+                */}
+                {data.role === "customer" && (
+                <label>
+                  <input
+                    checked={launchNotificationEmail}
+                    onChange={(event) => setLaunchNotificationEmail(event.target.checked)}
+                    type="checkbox"
+                  />
+                  Email me when Tuveloz opens customer requests, plus essential launch updates
+                </label>
+                )}
+                {data.role === "customer" && launchNotificationEmail && launchConsent.at && (
+                  <p className="hint">
+                    Agreed {readableDate(launchConsent.at)}
+                    {launchConsent.version ? ` · policy version ${launchConsent.version}` : ""}
+                    {launchConsent.source === "account_create"
+                      ? " · from account creation"
+                      : launchConsent.source === "privacy_center"
+                        ? " · from this page"
+                        : ""}
+                    . This does not include general marketing email, which is a
+                    separate choice above.
+                  </p>
+                )}
                 <div className="customer-security-note">
                   <strong>Essential messages stay on</strong>
                   <p>

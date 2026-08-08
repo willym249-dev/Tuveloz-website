@@ -8405,6 +8405,100 @@ footer > p,
   margin-top: -4px;
 }
 
+/*
+  Pre-launch value proposition, customer create mode only. Sits between the
+  mode tabs and the form so it reads as the reason to fill the form in.
+*/
+.account-value-prop {
+  background: rgba(255, 106, 0, 0.06);
+  border: 1px solid rgba(255, 106, 0, 0.28);
+  border-radius: 12px;
+  display: grid;
+  gap: 9px;
+  margin-bottom: 4px;
+  padding: 13px 15px;
+}
+
+.account-value-prop > p {
+  color: #f2f6f9;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.account-value-prop > ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.account-value-prop > ul > li {
+  color: #b6c6d3;
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding-left: 14px;
+  position: relative;
+}
+
+.account-value-prop > ul > li::before {
+  color: #ff8a2a;
+  content: "•";
+  left: 2px;
+  position: absolute;
+}
+
+/*
+  Live password checklist. Unmet rules stay readable rather than being greyed
+  toward invisibility — an unmet rule is the one the applicant still has to
+  act on, so it must not be the hardest to read.
+*/
+.password-rules {
+  display: grid;
+  gap: 5px;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.password-rules li {
+  align-items: center;
+  color: #9badbb;
+  display: grid;
+  font-size: 11px;
+  gap: 7px;
+  grid-template-columns: 13px 1fr;
+  line-height: 1.45;
+}
+
+.password-rules li > span:first-child {
+  color: #6f8496;
+  font-size: 11px;
+  text-align: center;
+}
+
+.password-rules li.met {
+  color: #d7e3ec;
+}
+
+.password-rules li.met > span:first-child {
+  color: #57d08a;
+}
+
+/* Screen-reader-only text: conveys met/unmet, which the glyph alone does not. */
+.visually-hidden {
+  border: 0;
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .account-remember-email {
   align-items: center;
   display: flex !important;

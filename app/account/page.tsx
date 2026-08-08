@@ -12,6 +12,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
+import { track } from "../../lib/analytics";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -20,6 +21,46 @@ type AuthMode = "signin" | "create" | "reset" | "code";
 type PasswordPurpose = "create" | "reset";
 
 const PASSWORD_MIN_LENGTH = 10;
+const PASSWORD_MAX_LENGTH = 128;
+
+/**
+ * The password policy, in one place. The live checklist and the submit-time
+ * error both read from this, so they cannot drift into disagreeing about
+ * whether a password is acceptable. Rule order is the order errors surface in,
+ * which is the order they were reported in before the checklist existed.
+ *
+ * Labels are plain English on purpose: /account carries no
+ * data-manual-language marker, so the site dictionary translates them.
+ */
+function passwordRules(value: string) {
+  const length = Array.from(value).length;
+  return [
+    {
+      key: "min",
+      label: `At least ${PASSWORD_MIN_LENGTH} characters`,
+      error: `Use at least ${PASSWORD_MIN_LENGTH} characters.`,
+      met: length >= PASSWORD_MIN_LENGTH,
+    },
+    {
+      key: "max",
+      label: `${PASSWORD_MAX_LENGTH} characters or fewer`,
+      error: `Use no more than ${PASSWORD_MAX_LENGTH} characters.`,
+      met: length > 0 && length <= PASSWORD_MAX_LENGTH,
+    },
+    {
+      key: "uppercase",
+      label: "One uppercase letter",
+      error: "Add at least one uppercase letter.",
+      met: /\p{Lu}/u.test(value),
+    },
+    {
+      key: "special",
+      label: "One special character",
+      error: "Add at least one special character.",
+      met: /[^\p{L}\p{N}\s]/u.test(value),
+    },
+  ];
+}
 const REMEMBERED_EMAIL_KEY = "tuveloz.remembered-email";
 
 function destinationAfterSignIn(destination: string) {
@@ -34,6 +75,10 @@ export default function AccountPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
+  // Optional and unchecked by default. Never bundled with the Terms checkbox —
+  // a required acceptance and an optional marketing-adjacent consent cannot
+  // share one control, or neither is freely given.
+  const [launchNotification, setLaunchNotification] = useState(false);
   const [code, setCode] = useState("");
   const [codeRequested, setCodeRequested] = useState(false);
   const [passwordChallengeRequested, setPasswordChallengeRequested] = useState(false);
@@ -73,6 +118,24 @@ export default function AccountPage() {
     if (requestedRole === "provider" || requestedRole === "customer") {
       Promise.resolve().then(() => setRole(requestedRole));
     }
+    // `mode` was previously read by nobody, so every "Create customer account"
+    // link — both of the ones on /post-job — dropped its visitor on the
+    // sign-in form instead. Reset and code are honored too so a support link
+    // can point straight at either.
+    const requestedMode = searchParams.get("mode");
+    if (requestedMode === "create" || requestedMode === "reset" || requestedMode === "code") {
+      Promise.resolve().then(() => {
+        setMode(requestedMode);
+        // chooseMode() is what normally reports funnel entry, and arriving by
+        // URL bypasses it.
+        if (requestedMode === "create") {
+          track("account_create_started", {
+            role: requestedRole === "provider" ? "provider" : "customer",
+            entry: "url",
+          });
+        }
+      });
+    }
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
       if (!response.ok) return;
       const result = (await response.json()) as { role?: Role; destination?: string };
@@ -99,14 +162,21 @@ export default function AccountPage() {
     setPassword("");
     setConfirmPassword("");
     setAcceptedPolicies(false);
+    setLaunchNotification(false);
     clearFlowMessages();
   }
 
   function chooseMode(nextMode: AuthMode) {
+    // Account creation was previously unmeasured end to end — the provider
+    // funnel had step events and the customer side had none at all.
+    if (nextMode === "create" && mode !== "create") {
+      track("account_create_started", { role, entry: "tab" });
+    }
     setMode(nextMode);
     setPassword("");
     setConfirmPassword("");
     setAcceptedPolicies(false);
+    setLaunchNotification(false);
     clearFlowMessages();
   }
 
@@ -126,18 +196,8 @@ export default function AccountPage() {
   }
 
   function passwordError() {
-    if (Array.from(password).length < PASSWORD_MIN_LENGTH) {
-      return `Use at least ${PASSWORD_MIN_LENGTH} characters.`;
-    }
-    if (Array.from(password).length > 128) {
-      return "Use no more than 128 characters.";
-    }
-    if (!/\p{Lu}/u.test(password)) {
-      return "Add at least one uppercase letter.";
-    }
-    if (!/[^\p{L}\p{N}\s]/u.test(password)) {
-      return "Add at least one special character.";
-    }
+    const failed = passwordRules(password).find((rule) => !rule.met);
+    if (failed) return failed.error;
     if (password !== confirmPassword) {
       return "The passwords do not match.";
     }
@@ -236,6 +296,7 @@ export default function AccountPage() {
         return;
       }
       rememberCurrentEmail();
+      if (purpose === "create") track("account_create_code_sent", { role });
       setCodeRequested(true);
       setMessage(
         result.message || "Check your email for a verification code.",
@@ -263,6 +324,9 @@ export default function AccountPage() {
           purpose,
           role,
           termsAccepted: acceptedPolicies,
+          // Only meaningful on customer create; the server ignores it
+          // otherwise rather than trusting the client to have scoped it.
+          launchNotificationConsent: launchNotification,
         }),
       });
       const result = (await response.json()) as {
@@ -273,6 +337,7 @@ export default function AccountPage() {
         setError(result.error || "Unable to verify this code.");
         return;
       }
+      if (purpose === "create") track("account_created", { role });
       if (passkeySupported) {
         setCodeRequested(false);
         setCode("");
@@ -568,6 +633,29 @@ export default function AccountPage() {
             </button>
           </div>
 
+          {/*
+            Customer create mode previously said job tools were closed and then
+            asked for a password, with no reason to continue. This states what
+            an account is worth today versus at launch. Both lines name the
+            pre-launch gate rather than implying anyone can book now — keep it
+            that way: CUSTOMER_JOB_POSTING_PAUSED is still true.
+
+            Customers only. A provider applicant creating credentials is on a
+            different path and this would misdescribe it.
+          */}
+          {mode === "create" && role === "customer" && (
+            <div className="account-value-prop">
+              <p>
+                Create your account now so you are ready to ask for prices when
+                customer requests open.
+              </p>
+              <ul>
+                <li>Today: save your account and sign in securely.</li>
+                <li>At launch: post one request, compare local quotes, and choose.</li>
+              </ul>
+            </div>
+          )}
+
           {mode === "signin" && !passwordChallengeRequested && (
             <form className="account-login-form" onSubmit={signInWithPassword}>
               {passkeySupported && (
@@ -723,10 +811,35 @@ export default function AccountPage() {
                   value={confirmPassword}
                 />
               </label>
-              <small className="account-password-guidance">
-                Use at least 10 characters, including one uppercase letter and one
-                special character. Spaces are allowed.
-              </small>
+              {/*
+                The rules were previously one static sentence, and passwordError()
+                surfaced only the first unmet one, on submit — so a password could
+                be rejected several times in a row for a different reason each
+                time. The list shows all of them, live.
+              */}
+              <ul className="password-rules" aria-label="Password requirements">
+                {passwordRules(password).map((rule) => (
+                  <li className={rule.met ? "met" : ""} key={rule.key}>
+                    <span aria-hidden="true">{rule.met ? "✓" : "○"}</span>
+                    <span>{rule.label}</span>
+                    <span className="visually-hidden">
+                      {rule.met ? "Requirement met" : "Not met yet"}
+                    </span>
+                  </li>
+                ))}
+                {confirmPassword.length > 0 && (
+                  <li className={password === confirmPassword ? "met" : ""} key="match">
+                    <span aria-hidden="true">
+                      {password === confirmPassword ? "✓" : "○"}
+                    </span>
+                    <span>Both passwords match</span>
+                    <span className="visually-hidden">
+                      {password === confirmPassword ? "Requirement met" : "Not met yet"}
+                    </span>
+                  </li>
+                )}
+              </ul>
+              <small className="account-password-guidance">Spaces are allowed.</small>
               {mode === "create" && (
                 <label className="policy-consent">
                   <input
@@ -762,6 +875,33 @@ export default function AccountPage() {
                     >
                       Privacy Policy
                     </Link>.
+                  </span>
+                </label>
+              )}
+              {/*
+                Optional, unchecked, and a separate control from the Terms
+                acceptance above — bundling a required acceptance with an
+                optional one makes neither freely given. Customer create only:
+                the wording promises customer requests opening, which does not
+                describe a provider applicant's path.
+
+                Scope is deliberately narrow. This is not permission for a
+                general marketing list; that stays the separate marketingEmail
+                preference, and neither implies the other.
+              */}
+              {mode === "create" && role === "customer" && (
+                <label className="policy-consent optional-consent">
+                  <input
+                    checked={launchNotification}
+                    disabled={checking || busy}
+                    name="launch-notification-consent"
+                    onChange={(event) => setLaunchNotification(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>
+                    Email me when Tuveloz opens customer requests, plus
+                    essential launch updates. Optional, and you can turn it off
+                    any time in the Privacy Center.
                   </span>
                 </label>
               )}
