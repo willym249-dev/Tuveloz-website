@@ -11864,3 +11864,50 @@ footer > p,
   line-height: 1.5;
   margin: 6px 0;
 }
+
+/* ---- Message image attachments ---- */
+.job-message-image {
+  border-radius: 10px;
+  display: block;
+  margin-top: 8px;
+  max-height: 320px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.job-message-image-note {
+  color: var(--muted);
+  display: inline-block;
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.job-message-image-note.blocked {
+  color: #c2410c;
+  font-style: normal;
+}
+
+.job-message-attach {
+  display: block;
+  margin-top: 4px;
+}
+
+.job-message-attach span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.job-message-attach input[type="file"] {
+  font-size: 13px;
+  max-width: 100%;
+}
+
+.job-message-attach small {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}

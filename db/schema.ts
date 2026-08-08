@@ -751,12 +751,22 @@ export const jobMessages = sqliteTable(
     senderRole: text("sender_role").notNull(),
     recipientEmail: text("recipient_email").notNull(),
     body: text("body").notNull(),
+    // Optional image attachment. imageKey is the R2 object; scanStatus is
+    // '' for text-only messages, else 'pending' | 'clean' | 'blocked'. An image
+    // is NEVER served or shown unless scanStatus is 'clean' (fail-closed).
+    imageKey: text("image_key").notNull().default(""),
+    imageType: text("image_type").notNull().default(""),
+    scanStatus: text("scan_status").notNull().default(""),
+    scanAttemptedAt: text("scan_attempted_at").notNull().default(""),
+    scanAttemptCount: integer("scan_attempt_count").notNull().default(0),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("job_messages_request_created_idx").on(table.requestId, table.createdAt),
     index("job_messages_recipient_email_idx").on(table.recipientEmail),
     index("job_messages_sender_email_idx").on(table.senderEmail),
+    index("job_messages_scan_status_idx").on(table.scanStatus),
+    index("job_messages_scan_attempted_idx").on(table.scanStatus, table.scanAttemptedAt),
   ],
 );
 
