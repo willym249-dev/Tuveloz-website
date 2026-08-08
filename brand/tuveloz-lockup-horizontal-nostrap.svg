@@ -1,0 +1,26 @@
+<!--
+  Strapline-free lockup. Identical mark and wordmark to
+  tuveloz-lockup-horizontal.svg, with the baked "Customer choice. Provider
+  freedom." line removed.
+
+  Use this wherever the sign-off is already set as its own line - the video end
+  cards do, and the strapline rendered the tagline twice on one card. Everywhere
+  else (email, social kit) keeps the full lockup.
+
+  Wordmark baseline drops 295 -> 323 so it centres on the badge once the
+  strapline is no longer holding the stack down.
+-->
+<svg width="1560" height="500" viewBox="0 0 1560 500" xmlns="http://www.w3.org/2000/svg">
+  <svg x="40" y="60" width="380" height="380" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tuveloz badge: rounded square, brand navy, orange keyline -->
+  <rect x="31" y="31" width="450" height="450" rx="102" fill="#07182D" stroke="#FF6A00" stroke-width="30"/>
+  <!-- Funnel -->
+  <path d="M146 150 L366 150 L300 254 L300 342 L212 342 L212 254 Z"
+        fill="#FF6A00" stroke="#FF6A00" stroke-width="26" stroke-linejoin="round"/>
+  <!-- Drop -->
+  <path d="M256 380 C241 401 227 417 227 431 A29 29 0 0 0 285 431 C285 417 271 401 256 380 Z"
+        fill="#FF6A00"/>
+</svg>
+
+  <text x="470" y="323" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="200" fill="#FF6A00">Tuveloz</text>
+</svg>
