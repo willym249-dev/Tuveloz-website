@@ -105,6 +105,16 @@ type ExperimentRow = {
   conversion: number;
 };
 
+type CampaignRow = {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
 // Experiments whose conversion is start → submitted on the provider funnel.
 // Add a name here (and render copy variants in the app) to measure it.
 const EXPERIMENTS = ["provider_hero", "provider_pitch", "founding_cta"] as const;
@@ -163,7 +173,52 @@ async function experimentsSince(sinceValue: string | null): Promise<Record<strin
   return result;
 }
 
-function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
+function readCampaign(props: string | null) {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as Record<string, unknown>;
+    const value = (key: string) => typeof parsed[key] === "string" ? parsed[key] : "";
+    return {
+      source: value("utm_source"),
+      medium: value("utm_medium"),
+      campaign: value("utm_campaign"),
+      content: value("utm_content"),
+    };
+  } catch {
+    return { source: "", medium: "", campaign: "", content: "" };
+  }
+}
+
+async function campaignsSince(sinceValue: string | null): Promise<CampaignRow[]> {
+  const eventFilter = inArray(analyticsEvents.event, [
+    "provider_signup_started",
+    "provider_signup_completed",
+  ]);
+  const rows = await getDb()
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const tally = new Map<string, Omit<CampaignRow, "conversion">>();
+  for (const row of rows) {
+    const campaign = readCampaign(row.props);
+    if (!campaign.source || !campaign.campaign) continue;
+    const key = JSON.stringify(campaign);
+    const bucket = tally.get(key) ?? { ...campaign, started: 0, submitted: 0 };
+    if (row.event === "provider_signup_started") bucket.started += 1;
+    else bucket.submitted += 1;
+    tally.set(key, bucket);
+  }
+
+  return [...tally.values()]
+    .map((row) => ({ ...row, conversion: pct(row.submitted, row.started) }))
+    .sort((a, b) => b.submitted - a.submitted || b.started - a.started);
+}
+
+function windowPayload(
+  counts: Map<string, number>,
+  experiments: Record<string, ExperimentRow[]>,
+  campaigns: CampaignRow[],
+) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -174,6 +229,7 @@ function windowPayload(counts: Map<string, number>, experiments: Record<string, 
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
     experiments,
+    campaigns,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
   };
 }
@@ -298,7 +354,7 @@ export async function GET(request: Request) {
     const since30 = threshold(30, now);
     const since7 = threshold(7, now);
     const [
-      allTime, last30, last7, expAll, exp30, exp7,
+      allTime, last30, last7, expAll, exp30, exp7, campaignAll, campaign30, campaign7,
       assistantAll, assistant7, launchList,
     ] = await Promise.all([
       countsSince(null),
@@ -307,6 +363,9 @@ export async function GET(request: Request) {
       experimentsSince(null),
       experimentsSince(since30),
       experimentsSince(since7),
+      campaignsSince(null),
+      campaignsSince(since30),
+      campaignsSince(since7),
       assistantSummary(null),
       assistantSummary(since7),
       launchListSummary(since7),
@@ -316,9 +375,9 @@ export async function GET(request: Request) {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime, expAll),
-          last30: windowPayload(last30, exp30),
-          last7: windowPayload(last7, exp7),
+          allTime: windowPayload(allTime, expAll, campaignAll),
+          last30: windowPayload(last30, exp30, campaign30),
+          last7: windowPayload(last7, exp7, campaign7),
         },
         assistant: { allTime: assistantAll, last7: assistant7 },
         launchList,
