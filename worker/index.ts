@@ -154,6 +154,15 @@ const worker = {
 
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    // Keep one public origin. Cloudflare's custom-domain Worker can receive
+    // direct HTTP requests, so enforce HTTPS here instead of relying on a
+    // dashboard setting that could be changed independently of the site.
+    if (url.protocol === "http:" && url.hostname.toLowerCase() === "tuveloz.com") {
+      url.protocol = "https:";
+      return Response.redirect(url.toString(), 308);
+    }
+
     const acceptsHtml = request.headers.get("accept")?.includes("text/html") === true;
     const staging = isStagingRequest(url, env);
 

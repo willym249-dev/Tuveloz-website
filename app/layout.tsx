@@ -9,6 +9,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tuveloz.com"),
+  alternates: {
+    canonical: "/",
+  },
   manifest: "/manifest.webmanifest",
   title: {
     default: "Tuveloz | Customer Choice. Provider Freedom.",
