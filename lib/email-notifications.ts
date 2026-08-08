@@ -42,6 +42,39 @@ function siteUrl() {
   return (runtimeEnv().SITE_URL ?? "https://tuveloz.com").replace(/\/+$/, "");
 }
 
+/**
+ * One-click unsubscribe headers for bulk mail.
+ *
+ * Gmail and Yahoo have required these of bulk senders since February 2024. An
+ * unsubscribe link in the body is not a substitute: without the headers the
+ * only way a recipient can stop the mail from their inbox is "Report spam", and
+ * that is the signal that decides where the *next* send lands. The launch list
+ * is the only bulk mail here; sign-in codes and job alerts are transactional
+ * and must not carry these.
+ *
+ * /api/launch-updates/unsubscribe already answers POST, which is what
+ * List-Unsubscribe-Post=One-Click makes mail providers send.
+ */
+async function bulkUnsubscribeHeaders(
+  eventKey: string,
+  recipientEmail: string,
+): Promise<Record<string, string>> {
+  if (!eventKey.startsWith("launch-updates:")) return {};
+  const [subscriber] = await getDb().select({
+    unsubscribeToken: launchUpdateSubscribers.unsubscribeToken,
+  }).from(launchUpdateSubscribers)
+    .where(eq(launchUpdateSubscribers.email, recipientEmail))
+    .limit(1);
+  if (!subscriber?.unsubscribeToken) return {};
+  const url = `${siteUrl()}/api/launch-updates/unsubscribe?token=${
+    encodeURIComponent(subscriber.unsubscribeToken)
+  }`;
+  return {
+    "List-Unsubscribe": `<${url}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
+
 function errorSummary(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   return message.replace(/[\r\n]+/g, " ").slice(0, 500);
@@ -137,6 +170,10 @@ async function deliverEvent(eventKey: string) {
         to: [notification.recipientEmail],
         subject: notification.subject,
         text: notification.textBody,
+        headers: await bulkUnsubscribeHeaders(
+          notification.eventKey,
+          notification.recipientEmail,
+        ),
       }),
     });
     if (!response.ok) {
@@ -195,13 +232,27 @@ async function queueNotification(notification: QueuedNotification) {
       console.error("Unable to queue Tuveloz email notification: recipient is missing.");
       return;
     }
+    // A blank subject or body is the single loudest spam signal a sender can
+    // emit, and one that lands teaches the recipient's provider to distrust the
+    // whole domain — including the sign-in codes people actually need. Every
+    // caller passes a literal today, so reaching this is a bug; dropping the
+    // send is the safe failure.
+    const subject = notification.subject.trim();
+    const textBody = notification.textBody.trim();
+    if (!subject || !textBody) {
+      console.error(
+        `Refusing to queue Tuveloz email notification "${notification.eventKey}": `
+        + `${!subject ? "subject" : "body"} is empty.`,
+      );
+      return;
+    }
     const now = new Date().toISOString();
     await getDb().insert(emailNotificationOutbox).values({
       id: crypto.randomUUID(),
       eventKey: notification.eventKey,
       recipientEmail,
-      subject: notification.subject,
-      textBody: notification.textBody,
+      subject,
+      textBody,
       status: "pending",
       attempts: 0,
       lastError: "",
