@@ -4,6 +4,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
+import { JobAppointmentPanel } from "../components/job-appointment-panel";
 import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { JobMessages } from "../components/job-messages";
 import { ProviderBusinessPage } from "../components/provider-business-page";
@@ -958,6 +959,10 @@ export default function ProviderJobsPage() {
                       {!job.timerStartedAt && !job.jobFacts && (
                         <p className="portal-error">Structured accepted job facts are missing. Work start is blocked.</p>
                       )}
+                    </details>
+                    <details className="job-tools job-appointment-details">
+                      <summary>Appointment time</summary>
+                      <JobAppointmentPanel requestId={job.id} />
                     </details>
                     <details className="job-tools job-inspection-details">
                       <summary>Inspection checklist</summary>

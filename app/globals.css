@@ -11794,3 +11794,73 @@ footer > p,
     grid-column: 1 / -1;
   }
 }
+
+/* ---- Job appointment scheduling ---- */
+.job-appointment-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.job-appointment {
+  margin-top: 12px;
+}
+
+.job-appointment-loading,
+.job-appointment-empty {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.job-appointment-field {
+  color: var(--muted);
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.job-appointment-field input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: block;
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: normal;
+  margin-top: 6px;
+  padding: 9px 11px;
+  text-transform: none;
+  width: 100%;
+}
+
+.job-appointment-actions {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  margin: 4px 0 10px;
+}
+
+.job-appointment-error { color: #c2410c; font-size: 13px; margin: 0 0 10px; }
+.job-appointment-notice { color: #15803d; font-size: 13px; margin: 0 0 10px; }
+
+.job-appointment-hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.job-appointment-when {
+  color: var(--ink);
+  display: block;
+  font-size: 18px;
+}
+
+.job-appointment-readonly .job-appointment-note {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0;
+}
