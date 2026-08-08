@@ -1,0 +1,52 @@
+# Continuous integration for the Tuveloz app.
+#
+# NOTE: this workflow is INERT while the project lives in `mobile/`. GitHub
+# Actions only reads workflows from `.github/workflows` at the repository root,
+# so nothing here runs until the project is extracted into `tuveloz-app`, at
+# which point it activates automatically with no changes.
+#
+# It runs exactly what `npm run verify` runs locally, so a green local run and
+# a green CI run mean the same thing.
+
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint and format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` rather than `npm install`: it installs exactly the lockfile
+      # and fails if package.json and the lockfile disagree.
+      - name: Install dependencies
+        run: npm ci
+
+      # Expo Router writes its typed-route definitions into `.expo/types` when
+      # the dev server runs, which has not happened on a fresh checkout. The
+      # `href` types are therefore looser here than they are locally — this
+      # step still catches every other type error. Tightening it would mean
+      # booting the bundler in CI, which is not worth the minutes.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check

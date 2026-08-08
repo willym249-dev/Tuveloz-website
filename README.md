@@ -10,6 +10,15 @@ This repository is an independent source-code copy prepared for GitHub and
 Cloudflare Workers. It contains no live database, uploaded customer files,
 deployment credentials, API keys, or production environment values.
 
+## Related project: the Tuveloz mobile app
+
+The Tuveloz React Native app is a separate codebase in [`mobile/`](mobile/). It
+shares no code with the website — only the brand palette — and has its own
+dependencies, tooling and documentation. Start with
+[`mobile/README.md`](mobile/README.md) and
+[`mobile/PROJECT_STATUS.md`](mobile/PROJECT_STATUS.md). Nothing in the website
+build reads from that directory.
+
 ## Included
 
 - Public Tuveloz website and service-request flow
