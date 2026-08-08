@@ -13,6 +13,53 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — The documentation landed, and the deadline check was inert
+
+**What happened.** Merged PR #98 into `main` after refreshing it — its CI had
+been *cancelled* rather than passed and the branch was several merges behind, so
+it was updated from `main` first and merged on green. `CLAUDE.md`, the filing
+guide, this log, the records register, and the deadline automation are now
+reachable from a fresh clone. Opened PR #104 for `brand/SALES_PITCH.md`, which
+had been finished and sitting on a branch with **no pull request at all**.
+
+**The thing worth knowing.** Every row in `OPEN-ITEMS.md` had `—` in the `Due`
+column, and the checker skips undated rows by design. So the automation that
+just landed would have run on Monday, found nothing, and reported all clear —
+coverage that looks real and isn't. Dates are now on eleven rows and the checker
+was run against the real file to confirm it reports them.
+
+**Decisions made.**
+
+- **External deadlines are now marked as such** and separated from self-set
+  targets in the file's preamble. Missing a target costs a re-plan; missing an
+  external one costs money or blocks a launch gate, and the table gave no way to
+  tell them apart.
+- **The dates on the operational rows are self-set targets, proposed rather than
+  agreed**, chosen so the check has something to bite on. Move them
+  deliberately; they were not owner-committed.
+- **Renewal dates were not invented.** The real legal-review and insurance dates
+  live in documents nobody has read yet, so rather than guessing, the act of
+  *establishing* each date is what got dated. Guessing a renewal date is worse
+  than an empty one — it reads as tracked while the gate fails silently.
+
+**The urgent one.** The Epidemic Sound licence window closes **2026-08-09** — it
+was the single hardest deadline in the project and appeared nowhere in the
+tracker. Ad 01 must be published before then or the subscription reactivated.
+
+**Also recorded.** The homepage founding banner promises "first pick of jobs,"
+which `founding-provider-program.md` refuses in writing and
+`lib/founding-cohort.ts` bars in code. It is now a dated row, because it has to
+land before any paid provider traffic points at it. Surfaced by
+`brand/SALES_PITCH.md` §14 while checking new ad copy against it — that same
+check caught two wrong claims in a draft morning-ads campaign, which is the
+clearest argument for getting #104 onto `main`.
+
+**Now open.** #104 awaits review. #97 and #100 still each carry a parallel
+`CLAUDE.md` that should now fold into the one on `main` rather than land beside
+it.
+
+---
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,
