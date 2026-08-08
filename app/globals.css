@@ -539,10 +539,22 @@ a {
   margin: 14px 0 0;
 }
 
+.trust-origin {
+  color: #b6aaa1;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 18px 0 0;
+  max-width: 760px;
+}
+
+.trust-origin strong {
+  color: #f7f3ef;
+}
+
 .trust-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 40px;
 }
 
@@ -581,9 +593,56 @@ a {
   margin: 12px 0 0;
 }
 
+.launch-help-section {
+  align-items: start;
+  background:
+    radial-gradient(circle at 4% 0, rgba(255, 106, 0, 0.14), transparent 33%),
+    #111111;
+  border-bottom: 1px solid rgba(255, 106, 0, 0.24);
+  display: grid;
+  gap: 48px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  padding: 68px clamp(24px, 7vw, 108px);
+}
+
+.launch-help-section h2 {
+  color: #f7f3ef;
+  font-size: clamp(30px, 3.5vw, 46px);
+  letter-spacing: -0.05em;
+  line-height: 1.06;
+  margin: 12px 0 0;
+}
+
+.launch-help-section p {
+  color: #c6bbb3;
+  font-size: 16px;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.launch-help-section p + p {
+  margin-top: 14px;
+}
+
+.launch-help-section .text-link {
+  margin-top: 22px;
+}
+
+@media (max-width: 1080px) {
+  .trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 780px) {
   .trust-grid {
     grid-template-columns: 1fr;
+  }
+
+  .launch-help-section {
+    gap: 26px;
+    grid-template-columns: 1fr;
+    padding-block: 52px;
   }
 }
 
