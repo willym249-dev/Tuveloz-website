@@ -243,6 +243,31 @@ function providerServicePlainLabel(
   return serviceDisplayLabel(fallbackLabel);
 }
 
+/**
+ * Keep the first decision lightweight, but never make a provider hunt for the
+ * fact that a selected job will need a registration or more proof later.
+ * This is an onboarding cue only; the exact document list remains the source
+ * of truth on the following requirements step.
+ */
+function providerServiceRequirementCue(code: ServiceCode, isSpanish: boolean) {
+  const documents = getRequiredDocumentsForSelection([code], PROVIDER_PATHWAY);
+  const hasServiceSpecificProof = documents.length > 1;
+  const isSpecialty = providerLevelsForServices([code], PROVIDER_PATHWAY)
+    .includes("specialty_provider");
+
+  if (isSpecialty) {
+    return isSpanish
+      ? "Registro del condado + credencial especial"
+      : "County registration + specialty credential";
+  }
+  if (hasServiceSpecificProof) {
+    return isSpanish
+      ? "Registro del condado + prueba del servicio"
+      : "County registration + service proof";
+  }
+  return isSpanish ? "Revisión de registro del condado" : "County registration review";
+}
+
 type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
@@ -734,8 +759,28 @@ export function ProviderSignupForm() {
 
       {step === 1 && (
         <div data-signup-step="1">
-          <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
-          <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
+          <h3>{providerFormIsSpanish ? "Revise lo que necesita para unirse" : "Check what you need to join"}</h3>
+          <p>{providerFormIsSpanish ? "Primero elija los trabajos exactos que desea ofrecer." : "Start with the exact jobs you want to offer."}</p>
+          <div
+            className="signup-next-steps"
+            aria-label={providerFormIsSpanish ? "Como funciona esta solicitud" : "How this application works"}
+          >
+            <span><b>1</b>{providerFormIsSpanish ? "Elija trabajos" : "Pick jobs"}</span>
+            <span><b>2</b>{providerFormIsSpanish ? "Vea requisitos" : "See requirements"}</span>
+            <span><b>3</b>{providerFormIsSpanish ? "Envie lo basico" : "Send the basics"}</span>
+          </div>
+          <div className="legal-requirement-note signup-start-note" role="status">
+            <strong>
+              {providerFormIsSpanish
+                ? "Puede empezar aunque todavia no tenga su registro. Los trabajos reales quedan desactivados hasta que se verifique cada requisito."
+                : "You can start even if you are not registered yet. Live jobs stay off until every requirement is verified."}
+            </strong>
+            <small>
+              {providerFormIsSpanish
+                ? "Para reparacion o mantenimiento movil en el Condado de Montgomery, se necesita el registro OCP del Condado. Los trabajos especiales tambien tienen sus propias credenciales."
+                : "For mobile repair or maintenance in Montgomery County, the County OCP registration is required. Specialty work also has its own credentials."}
+            </small>
+          </div>
           <div className="legal-requirement-note" role="status">
             <strong>
               {providerFormIsSpanish
@@ -841,6 +886,9 @@ export function ProviderSignupForm() {
                                     providerFormIsSpanish,
                                   )}
                                 </strong>
+                                <small className="service-requirement-cue">
+                                  {providerServiceRequirementCue(service.code, providerFormIsSpanish)}
+                                </small>
                               </span>
                             </label>
                             <details className="service-scope">
@@ -896,11 +944,11 @@ export function ProviderSignupForm() {
         <div data-signup-step="2">
           {requiredDocumentsBySelection.length > 0 && (
             <>
-              <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
+              <h3>{providerFormIsSpanish ? "Esto es lo que revisaremos" : "Here's what we'll review"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
-                  : "We only ask for the one document each law actually requires — nothing extra."}
+                  ? "Estos son los requisitos de los trabajos que eligio. Revise la lista ahora y complete lo que falte despues de verificar su correo."
+                  : "These are the requirements for the work you picked. Review the list now, then complete anything missing after email verification."}
               </p>
               {requiredDocumentsBySelection.map((entry) => (
                 <div key={entry.code} className="legal-requirement-note">
@@ -915,10 +963,15 @@ export function ProviderSignupForm() {
                   ))}
                 </div>
               ))}
+              <p className="requirement-summary requirement-submission-note">
+                {providerFormIsSpanish
+                  ? "Puede enviar la solicitud aunque aun no tenga todos los documentos. Los subira despues de verificar su correo; los trabajos siguen desactivados hasta que se aprueben."
+                  : "You can submit even if you do not have every document yet. Upload them after email verification; jobs stay off until they are approved."}
+              </p>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Subirá estos documentos después de verificar su correo e iniciar sesión."
-                  : "You'll upload these after you verify your email and sign in."}
+                  ? "Esta misma lista se guarda en su espacio de proveedor despues de verificar su correo."
+                  : "This same list stays in your provider workspace after you verify your email."}
               </p>
             </>
           )}

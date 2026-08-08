@@ -681,7 +681,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </Link>
           {view === "provider" ? (
             <a className="header-cta" href="#provider-apply">
-              Apply free
+              Check requirements
             </a>
           ) : (
             <Link className="header-cta" href="/post-job">
@@ -756,7 +756,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             {view === "provider" ? (
               <>
                 <a className="button primary" href="#provider-apply">
-                  Apply free <span>→</span>
+                  Check requirements <span>→</span>
                 </a>
                 <Link className="text-link hero-text-link" href="/how-it-works">
                   See how it works →
