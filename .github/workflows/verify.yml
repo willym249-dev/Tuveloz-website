@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Chromium for Spanish coverage
+        run: npx playwright install --with-deps chromium
+
       - name: Lint
         run: npm run lint
 
@@ -45,3 +48,19 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify rendered Spanish coverage
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: |
+          npm run dev -- --host 127.0.0.1 > /tmp/tuveloz-dev.log 2>&1 &
+          DEV_SERVER_PID=$!
+          trap 'kill $DEV_SERVER_PID; cat /tmp/tuveloz-dev.log' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS "$BASE_URL/" > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS "$BASE_URL/" > /dev/null
+          npm run i18n:check
