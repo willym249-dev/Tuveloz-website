@@ -407,6 +407,13 @@
       "when": 1786320200000,
       "tag": "0057_job_appointments",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "6",
+      "when": 1786320300000,
+      "tag": "0058_message_image_attachments",
+      "breakpoints": true
     }
   ]
 }
