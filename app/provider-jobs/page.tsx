@@ -3,6 +3,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { primeAccountHeaderState } from "../components/account-header-state";
 import { ConfirmAction } from "../components/confirm-action";
 import { JobMessages } from "../components/job-messages";
 import { ProviderBusinessPage } from "../components/provider-business-page";
@@ -222,6 +223,9 @@ export default function ProviderJobsPage() {
           window.location.replace("/customer");
           return;
         }
+        // Public pages linked from here share this answer instead of
+        // rediscovering the session and briefly showing signed-out wording.
+        primeAccountHeaderState("provider", "/provider-jobs");
         setSignedIn(true);
         setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
 
@@ -514,6 +518,9 @@ export default function ProviderJobsPage() {
       if (!response.ok) {
         throw new Error(result.error || "Unable to sign out. Your session is still active.");
       }
+      // The cached answer outlives the page, so it has to be retired with the
+      // session or public pages would keep claiming this person is signed in.
+      primeAccountHeaderState("signed-out");
       window.location.replace("/account?role=provider");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to sign out. Your session is still active.");

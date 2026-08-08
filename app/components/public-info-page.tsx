@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
+import { SaveMySpotButton } from "./save-my-spot-button";
 
 export type PublicInfoSection = {
   title: string;
@@ -47,7 +48,7 @@ export function PublicInfoPage({
       <section className="public-info-actions">
         <h2>Ready when you are.</h2>
         <div>
-          <Link className="button primary" href="/post-job">Save my spot — free <span>→</span></Link>
+          <SaveMySpotButton href="/post-job" />
           <Link className="button secondary" href="/join">I do car work — apply free</Link>
         </div>
       </section>

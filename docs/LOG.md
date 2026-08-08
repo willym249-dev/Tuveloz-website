@@ -13,6 +13,51 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-07 — Public pages no longer look like a sign-out to a signed-in visitor
+
+**What happened.** A signed-in customer who clicked "Customer launch status" in
+their workspace landed on `/post-job` and saw "Sign in", "Save my spot — free"
+in the header, and a second "Save my spot — free" in the launch banner, with no
+link back to their account. It read as being signed out.
+
+**No session was ever destroyed.** Verified in a browser against a real seeded
+session: the cookie survives, `/api/account` keeps returning 200, and the
+workspace is still there on the way back. Cookies are cleared only by
+`/api/auth/logout`. The whole thing was wording. Before chasing an auth bug
+here, check whether the page simply never asks who is looking at it.
+
+**Reproduce it the same way.** Put `AUTH_CODE_SECRET` in `.dev.vars`, run
+`npm run db:migrate:local` and `npm run dev`, insert an `account_credentials`
+row plus an `auth_sessions` row whose `token_hash` is
+`HMAC-SHA256("session:" + token)` under that secret, then drive the site with
+that token as the `tuveloz_session` cookie. Reading the source was what produced
+the wrong answer twice; the browser produced the right one in minutes.
+
+**What changed.** Four public surfaces asked nothing about the session and have
+been made to ask, all sharing one lookup in
+`app/components/account-header-state.ts`: `PublicSiteHeader`, the site-wide
+`JobPostingPauseNotice` banner (which was inviting people to create an account
+on the signed-in dashboard itself), every "Save my spot — free" call to action
+via the new `SaveMySpotButton`, and a `SignedInReturnNote` at the top of the
+launch status page giving an explicit route back. Signed-out visitors and
+crawlers see exactly what they saw before.
+
+**Two things worth knowing about the shared lookup.** It is a
+`useSyncExternalStore` store with one in-flight request, because the naive
+version fired five `/api/account` requests per page — one per component. And it
+caches in `sessionStorage`, primed by the customer and provider workspaces and
+retired on sign-out, which is what removes the visible flash of signed-out
+wording when arriving from a workspace. A cold load in a fresh tab still shows
+the signed-out header for the length of one request; that is the correct default
+for the visitor who is actually signed out.
+
+**A second, real sign-out is fixed as a side effect.** Sessions carry a
+30-minute idle timeout refreshed only when a route calls `getAccountSession`.
+Public pages called nothing, so reading them for half an hour genuinely expired
+the session. The header lookup now touches it on every public page load.
+
+---
+
 ## 2026-08-06 — Captured what the five open pull requests settle
 
 **What happened.** Recorded the state of every open pull request in one place,
