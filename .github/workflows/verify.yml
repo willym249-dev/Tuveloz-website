@@ -51,9 +51,9 @@ jobs:
 
       - name: Verify rendered Spanish coverage
         env:
-          BASE_URL: http://127.0.0.1:3000
+          BASE_URL: http://localhost:3000
         run: |
-          npm run dev -- --host 127.0.0.1 > /tmp/tuveloz-dev.log 2>&1 &
+          npm run dev > /tmp/tuveloz-dev.log 2>&1 &
           DEV_SERVER_PID=$!
           trap 'kill $DEV_SERVER_PID; cat /tmp/tuveloz-dev.log' EXIT
           for attempt in {1..30}; do
