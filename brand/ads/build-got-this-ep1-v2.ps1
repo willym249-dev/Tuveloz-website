@@ -79,7 +79,10 @@ $A_HIT   = 4.45   # logo hit, 0.25s after the card appears
 # clearly reads as natural outdoor air rather than noise.
 $AMBIENT_GAIN = $AmbientGain
 
-$HOOK = 'THIS ONE? EASY.'
+# Two lines on purpose. This is nearly twice the length of the line it replaced,
+# and on one line at a readable size it runs the full width of a 1080 frame with
+# no margin. Stacked, it stays large enough to read on a phone at arm's length.
+$HOOK = "THE GROUP CHAT'S`n`"CAR GUY.`""
 
 # End card. Fee copy is fixed: providers keep 100%. The customer-side 5% is a
 # platform fact, not ad copy, and this cut is aimed at providers only.
@@ -187,9 +190,12 @@ function Build($w, $h, $fmt) {
 
     # Hook burns in over the setup only. It is gone by the hard cut - the joke
     # has to land on the picture, not on a caption explaining it.
-    $hookSize = [int]($w*0.058)
-    $hookY    = [int]($h*0.085)
-    $hookVf   = "drawtext=fontfile='$font':textfile='$(New-TextArg 'hook' $HOOK)':expansion=none:fontcolor=white:fontsize=${hookSize}:box=1:boxcolor=0x07182D@0.72:boxborderw=$([int]($w*0.022)):x=(w-text_w)/2:y=$hookY"
+    # Stacking the hook buys back type size: the longest line is now ~16
+    # characters instead of ~27, so it can run larger than the single-line
+    # version did and still clear the frame edges.
+    $hookSize = [int]($w*0.072)
+    $hookY    = [int]($h*0.075)
+    $hookVf   = "drawtext=fontfile='$font':textfile='$(New-TextArg 'hook' $HOOK)':expansion=none:fontcolor=white:fontsize=${hookSize}:line_spacing=$([int]($hookSize*0.22)):text_align=C:box=1:boxcolor=0x07182D@0.72:boxborderw=$([int]($w*0.022)):x=(w-text_w)/2:y=$hookY"
 
     $p0 = Join-Path $work "$tag-0setup.mp4"
     Render-Segment (Find-Clip 'setup') 'SETUP' $w $h $T_SETUP $p0 $hookVf
