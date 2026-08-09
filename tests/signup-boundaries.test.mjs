@@ -75,6 +75,19 @@ test("dictionary keys never target the manually translated provider signup subtr
   assert.deepEqual(manualOnlyKeys, []);
 });
 
+test("provider clickwrap remains English even if it moves outside the provider panel", () => {
+  assert.match(
+    siteLanguage,
+    /\[data-no-interface-translation\], \[data-manual-language\]/,
+    "the page translator must recognize the local legal-copy barrier",
+  );
+  assert.match(
+    providerSignup,
+    /<div data-no-interface-translation>[\s\S]*?employment-work-authorization-acknowledged[\s\S]*?PROVIDER_TERMS_ACCEPTANCE_TEXT[\s\S]*?PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT[\s\S]*?<\/div>/,
+    "every English legal acknowledgment needs its own translation barrier",
+  );
+});
+
 test("every launch-notification consent write is customer-create-only", () => {
   assert.match(
     passwordComplete,
