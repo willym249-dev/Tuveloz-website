@@ -4005,6 +4005,13 @@ label > small {
   margin-top: 18px;
 }
 
+.provider-service-picker-intro {
+  color: #9db0c2;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
 .service-groups {
   display: grid;
   gap: 10px;
@@ -4072,6 +4079,83 @@ label > small {
 
 .service-group[open] > summary b {
   background: #dce9f4;
+}
+
+/* Provider onboarding is a first decision, not an admin catalogue. Keep the
+   category cards aligned to the dark launch-page surface and show job counts
+   instead of repeating a generic "View" CTA. */
+.provider-service-groups .service-group {
+  background: #0e1722;
+  border-color: #314252;
+  box-shadow: none;
+}
+
+.provider-service-groups .service-group > summary {
+  min-height: 78px;
+}
+
+.provider-service-groups .service-group > summary strong {
+  color: #f7fafc;
+  font-size: 14px;
+}
+
+.provider-service-groups .service-group > summary small {
+  color: #aec0cf;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+.provider-service-groups .service-group > summary b {
+  background: #172838;
+  color: #d8e5ee;
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: .03em;
+  min-width: 52px;
+  text-align: center;
+}
+
+.provider-service-groups .service-group > summary::after {
+  color: #ff6a00;
+  content: "+";
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1;
+  margin-left: 9px;
+}
+
+.provider-service-groups .service-group[open] > summary {
+  background: #132333;
+  border-bottom-color: #314252;
+}
+
+.provider-service-groups .service-group[open] > summary::after {
+  content: "-";
+}
+
+.provider-service-groups .service-group[open] > summary b {
+  background: #264154;
+  color: #fff;
+}
+
+.provider-service-groups .service-group > .service-options {
+  background: #0a1119;
+}
+
+.provider-service-groups .service-option,
+.provider-service-groups .service-option > label {
+  background: #101b27;
+  border-color: #2d4050;
+}
+
+.provider-service-groups .service-option > label strong {
+  color: #f4f7f9;
+}
+
+.provider-service-groups .service-scope > summary,
+.provider-service-groups .service-scope small {
+  color: #afc1cf;
 }
 
 .service-group > .service-options {
