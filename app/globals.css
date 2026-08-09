@@ -4793,6 +4793,186 @@ label > small {
   padding: 12px;
 }
 
+.optional-cert-section {
+  background: #0f2436;
+  border: 1px solid #355064;
+  border-radius: 12px;
+  margin: 8px 0 4px;
+  padding: 14px;
+}
+
+.optional-cert-optin {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.optional-cert-optin-copy strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.optional-cert-optin-copy small {
+  color: #aebdca;
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+.brand-switch {
+  align-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+}
+
+.brand-switch-track {
+  background: #33475a;
+  border-radius: 999px;
+  display: block;
+  height: 28px;
+  position: relative;
+  transition: background 0.15s ease;
+  width: 52px;
+}
+
+.brand-switch-thumb {
+  background: #f7fafc;
+  border-radius: 50%;
+  height: 22px;
+  left: 3px;
+  position: absolute;
+  top: 3px;
+  transition: transform 0.15s ease;
+  width: 22px;
+}
+
+.brand-switch.on .brand-switch-track {
+  background: #ff6a00;
+}
+
+.brand-switch.on .brand-switch-thumb {
+  transform: translateX(24px);
+}
+
+.brand-switch-state {
+  color: #aebdca;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.brand-switch.on .brand-switch-state {
+  color: #ff9142;
+}
+
+.brand-switch:focus-visible .brand-switch-track {
+  box-shadow: 0 0 0 2px #ff6a00;
+  outline: none;
+}
+
+.optional-cert-editor {
+  border-top: 1px solid #274155;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.optional-cert-row {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr 0.8fr auto;
+}
+
+.optional-cert-row label {
+  font-size: 12px;
+}
+
+.optional-cert-remove {
+  background: none;
+  border: 1px solid #5a6b7b;
+  border-radius: 8px;
+  color: #cdd8e2;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 9px 12px;
+}
+
+.optional-cert-remove:hover {
+  border-color: #ff6a00;
+  color: #ff9142;
+}
+
+.optional-cert-add {
+  align-self: start;
+  background: none;
+  border: 1px dashed #5a6b7b;
+  border-radius: 8px;
+  color: #ff9142;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 12px;
+}
+
+.optional-cert-add:hover {
+  border-color: #ff6a00;
+}
+
+@media (max-width: 640px) {
+  .optional-cert-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.requirement-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.requirement-checklist li {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+
+.requirement-check {
+  color: #9af2ba;
+  flex: 0 0 auto;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.requirement-text {
+  color: #eaf1f7;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.legal-requirement-note .requirement-official-name {
+  color: #8fa1b1;
+  display: block;
+  font-size: 10px;
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
 .legal-check-status {
   border-radius: 8px;
   font-size: 10px;
@@ -7955,6 +8135,59 @@ footer > p,
   margin-bottom: 2px;
 }
 
+/*
+  Seam between the "about you" and "about your business" halves of step 3.
+  Sized to read as a section break without competing with the step's own h3.
+*/
+.signup-subheading {
+  border-top: 1px solid #2f2119;
+  color: #8d7b6e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 22px 0 2px;
+  padding-top: 18px;
+  text-transform: uppercase;
+}
+
+/*
+  Step 3 read-back of the email collected on step 1. Shows the applicant what
+  the code will be sent to, and sends them back to correct it, without
+  duplicating the field.
+*/
+.provider-email-readback {
+  align-items: center;
+  background: #080808;
+  border: 1px solid #493123;
+  border-radius: 12px;
+  column-gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  padding: 13px 14px;
+  row-gap: 4px;
+}
+
+.provider-email-readback > span {
+  color: #8d7b6e;
+  font-size: 10px;
+  font-weight: 800;
+  grid-column: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.provider-email-readback > strong {
+  color: #f7f3ef;
+  font-size: 14px;
+  grid-column: 1;
+  overflow-wrap: anywhere;
+}
+
+.provider-email-readback > button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
 .expansion-section {
   align-items: start;
   background:
@@ -8648,6 +8881,100 @@ footer > p,
   font-size: 10px;
   line-height: 1.55;
   margin-top: -4px;
+}
+
+/*
+  Pre-launch value proposition, customer create mode only. Sits between the
+  mode tabs and the form so it reads as the reason to fill the form in.
+*/
+.account-value-prop {
+  background: rgba(255, 106, 0, 0.06);
+  border: 1px solid rgba(255, 106, 0, 0.28);
+  border-radius: 12px;
+  display: grid;
+  gap: 9px;
+  margin-bottom: 4px;
+  padding: 13px 15px;
+}
+
+.account-value-prop > p {
+  color: #f2f6f9;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.account-value-prop > ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.account-value-prop > ul > li {
+  color: #b6c6d3;
+  font-size: 11.5px;
+  line-height: 1.45;
+  padding-left: 14px;
+  position: relative;
+}
+
+.account-value-prop > ul > li::before {
+  color: #ff8a2a;
+  content: "•";
+  left: 2px;
+  position: absolute;
+}
+
+/*
+  Live password checklist. Unmet rules stay readable rather than being greyed
+  toward invisibility — an unmet rule is the one the applicant still has to
+  act on, so it must not be the hardest to read.
+*/
+.password-rules {
+  display: grid;
+  gap: 5px;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.password-rules li {
+  align-items: center;
+  color: #9badbb;
+  display: grid;
+  font-size: 11px;
+  gap: 7px;
+  grid-template-columns: 13px 1fr;
+  line-height: 1.45;
+}
+
+.password-rules li > span:first-child {
+  color: #6f8496;
+  font-size: 11px;
+  text-align: center;
+}
+
+.password-rules li.met {
+  color: #d7e3ec;
+}
+
+.password-rules li.met > span:first-child {
+  color: #57d08a;
+}
+
+/* Screen-reader-only text: conveys met/unmet, which the glyph alone does not. */
+.visually-hidden {
+  border: 0;
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 .account-remember-email {

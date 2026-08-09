@@ -780,7 +780,6 @@ const spanishText: Record<string, string> = {
   "Tuveloz customer launch update": "Novedades del lanzamiento de Tuveloz para clientes",
   "What Tuveloz promises today": "Lo que Tuveloz promete hoy",
   "What Tuveloz promises customers": "Lo que Tuveloz promete a los clientes",
-  "Application steps": "Pasos de la solicitud",
   "Expansion demand groups": "Grupos de demanda para expansión",
   "Tuveloz on Instagram": "Tuveloz en Instagram",
   "Tuveloz on TikTok": "Tuveloz en TikTok",
@@ -1073,6 +1072,85 @@ const spanishText: Record<string, string> = {
   "Your price stays your price": "Su precio se mantiene intacto",
   "You set the quote. Tuveloz does not take a cut from it, set your prices, or require exclusivity.": "Usted fija la cotización. Tuveloz no descuenta nada de ella, no fija sus precios ni exige exclusividad.",
   "Asking and comparing will be free. If you accept a job after launch, the current plan is the pro's labor price plus a separate 5% Tuveloz customer service fee. Final launch pricing and tax treatment are still under review, and you'll see the full total before confirming anything.": "Preguntar y comparar será gratis. Si acepta un trabajo después del lanzamiento, el plan actual es el precio de mano de obra del profesional más una tarifa de servicio al cliente de Tuveloz separada del 5%. El precio final de lanzamiento y el tratamiento fiscal todavía están en revisión, y verá el total completo antes de confirmar nada.",
+  "Choose a workspace": "Elija un espacio",
+  "Account options": "Opciones de cuenta",
+  "Provider applicant / provider": "Solicitante o proveedor",
+  "Sign in faster next time.": "Inicie sesión más rápido la próxima vez.",
+  "Set up a passkey to use Face ID, Touch ID, a fingerprint, or your device lock.": "Configure una llave de acceso para usar Face ID, Touch ID, una huella digital o el bloqueo de su dispositivo.",
+  "Set up a passkey": "Configurar una llave de acceso",
+  "Setting up…": "Configurando…",
+  "Not now": "Ahora no",
+  "Tuveloz stores a public key—not your face or fingerprint. Your device or password manager may securely sync the passkey.": "Tuveloz guarda una clave pública, no su cara ni su huella digital. Su dispositivo o administrador de contraseñas puede sincronizar la llave de acceso de forma segura.",
+  "Use a passkey": "Usar una llave de acceso",
+  "Use Face ID, Touch ID, a fingerprint, or your device lock.": "Use Face ID, Touch ID, una huella digital o el bloqueo de su dispositivo.",
+  "or": "o",
+  "Remember my email on this device": "Recordar mi correo en este dispositivo",
+  "Tuveloz never saves your password in this browser.": "Tuveloz nunca guarda su contraseña en este navegador.",
+  "Checking…": "Comprobando…",
+  "Signing in…": "Iniciando sesión…",
+  "Verifying…": "Verificando…",
+  "Password requirements": "Requisitos de la contraseña",
+  "Requirement met": "Requisito cumplido",
+  "Not met yet": "Aún no se cumple",
+  "Both passwords match": "Las contraseñas coinciden",
+  "I am 18 or older and agree to the": "Tengo 18 años o más y acepto los",
+  "Customer Agreement": "el Acuerdo del cliente",
+  ", and acknowledge the": ", y reconozco la",
+  "Terms (opens in a new tab)": "Términos (se abre en una pestaña nueva)",
+  "Provider Agreement (opens in a new tab)": "Acuerdo del proveedor (se abre en una pestaña nueva)",
+  "Customer Agreement (opens in a new tab)": "Acuerdo del cliente (se abre en una pestaña nueva)",
+  "Privacy Policy (opens in a new tab)": "Política de privacidad (se abre en una pestaña nueva)",
+  "Email me when Tuveloz opens customer requests, plus essential launch updates. Optional, and you can turn it off any time in the Privacy Center.": "Envíeme un correo cuando Tuveloz abra las solicitudes de clientes y con actualizaciones esenciales del lanzamiento. Es opcional y puede desactivarlo en cualquier momento en el Centro de privacidad.",
+  "Email me when Tuveloz opens customer requests, plus essential launch updates": "Envíeme un correo cuando Tuveloz abra las solicitudes de clientes y con actualizaciones esenciales del lanzamiento",
+  "Agreed": "Aceptado",
+  "· from account creation": "· desde la creación de la cuenta",
+  "· from this page": "· desde esta página",
+  ". This does not include general marketing email, which is a separate choice above.": ". Esto no incluye correos de marketing general, que son una opción separada arriba.",
+  "Use at least 10 characters.": "Use al menos 10 caracteres.",
+  "Use no more than 128 characters.": "Use no más de 128 caracteres.",
+  "Add at least one uppercase letter.": "Agregue al menos una letra mayúscula.",
+  "Add at least one special character.": "Agregue al menos un carácter especial.",
+  "The passwords do not match.": "Las contraseñas no coinciden.",
+  "At least 10 characters": "Al menos 10 caracteres",
+  "One uppercase letter": "Una letra mayúscula",
+  "One special character": "Un carácter especial",
+  "128 characters or fewer": "128 caracteres o menos",
+  "Spaces are allowed.": "Se permiten espacios.",
+  "Enter the code sent to your email to finish signing in.": "Escriba el código enviado a su correo para terminar de iniciar sesión.",
+  "Check your email for a verification code.": "Revise su correo para ver el código de verificación.",
+  "Check your email for a sign-in code.": "Revise su correo para ver el código de inicio de sesión.",
+  "Unable to sign in.": "No se pudo iniciar sesión.",
+  "Sign-in is temporarily unavailable. Please try again.": "El inicio de sesión no está disponible temporalmente. Inténtelo de nuevo.",
+  "Unable to verify this code.": "No se pudo verificar este código.",
+  "Unable to send a verification code.": "No se pudo enviar un código de verificación.",
+  "Verification email is temporarily unavailable. Please try again.": "El correo de verificación no está disponible temporalmente. Inténtelo de nuevo.",
+  "Account setup is temporarily unavailable. Please try again.": "La configuración de la cuenta no está disponible temporalmente. Inténtelo de nuevo.",
+  "Unable to send a sign-in code.": "No se pudo enviar un código de inicio de sesión.",
+  "Sign-in email is temporarily unavailable. Please try again.": "El correo de inicio de sesión no está disponible temporalmente. Inténtelo de nuevo.",
+  "Passkey sign-in is unavailable.": "El inicio de sesión con llave de acceso no está disponible.",
+  "That passkey could not sign you in.": "Esa llave de acceso no pudo iniciar su sesión.",
+  "Passkey sign-in was canceled or is unavailable on this device.": "El inicio de sesión con llave de acceso se canceló o no está disponible en este dispositivo.",
+  "Passkey setup is unavailable.": "La configuración de la llave de acceso no está disponible.",
+  "This passkey could not be verified.": "No se pudo verificar esta llave de acceso.",
+  "Passkey setup was canceled or is unavailable on this device.": "La configuración de la llave de acceso se canceló o no está disponible en este dispositivo.",
+  "Create your account now so you are ready to ask for prices when customer requests open.": "Cree su cuenta ahora para estar listo para pedir precios cuando se abran las solicitudes de clientes.",
+  "Today: save your account and sign in securely.": "Hoy: guarde su cuenta e inicie sesión de forma segura.",
+  "At launch: post one request, compare local quotes, and choose.": "En el lanzamiento: publique una solicitud, compare cotizaciones locales y elija.",
+  "Provider: apply or sign in": "Proveedor: solicite o inicie sesión",
+  "Save my email so Tuveloz can follow up about my unfinished provider application.": "Guarde mi correo para que Tuveloz pueda dar seguimiento a mi solicitud de proveedor sin terminar.",
+
+  // Provider signup: text that currently bypasses the form's Spanish branches.
+  "A mobile repair or maintenance business must hold the County OCP registration.": "Un negocio móvil de reparación o mantenimiento debe contar con el registro OCP del Condado.",
+  "An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service.": "Un propietario-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por su corredor para cada servicio específico.",
+  "Official sources:": "Fuentes oficiales:",
+  "County Code Chapter 31A": "Capítulo 31A del Código del Condado",
+  "I am at least 18 years old and authorized to act for the applicant or provider business. I agree to the Terms of Use, Provider Agreement, Payment, Cancellation and Refund Policy, Marketplace Conduct and Review Policy, and Provisional Provider and Trainee Policy shown for this application. I certify that the application information is complete and current, and I understand that no service or customer-job access is granted until each required approval is recorded.": "Tengo al menos 18 años y autorización para actuar en nombre del solicitante o negocio proveedor. Acepto los Términos de uso, el Acuerdo del proveedor, la Política de pagos, cancelación y reembolsos, la Política de conducta y reseñas del mercado y la Política provisional para proveedores y aprendices mostradas para esta solicitud. Certifico que la información de la solicitud está completa y vigente, y entiendo que no se concede acceso a servicios ni a trabajos de clientes hasta que se registre cada aprobación requerida.",
+  "I separately acknowledge that I reviewed the Privacy Policy and understand how TUVELOZ handles provider-application, identity, credential, insurance, personnel, and service-eligibility information.": "También reconozco que revisé la Política de privacidad y entiendo cómo TUVELOZ maneja la información de la solicitud de proveedor, identidad, credenciales, seguros, personal y elegibilidad de servicios.",
+  "Review the": "Consulte",
+  ", and": ", y",
+  "Provider Agreement": "el Acuerdo del proveedor",
+  "Payment Policy": "Política de pagos",
+  "Privacy Policy": "Política de privacidad",
 };
 
 const spanishPlaceholders: Record<string, string> = {
@@ -1102,6 +1180,16 @@ function translatedPattern(value: string) {
   if (match) return `${match[1]} ${match[2] === "service" ? "servicio actualmente publicado" : "servicios actualmente publicados"}`;
   match = value.match(/^(\d+) currently listed vehicle services$/);
   if (match) return `${match[1]} servicios para vehículos actualmente publicados`;
+  match = value.match(/^At least (\d+) characters$/);
+  if (match) return `Al menos ${match[1]} caracteres`;
+  match = value.match(/^(\d+) characters or fewer$/);
+  if (match) return `${match[1]} caracteres o menos`;
+  match = value.match(/^Use at least (\d+) characters\.$/);
+  if (match) return `Use al menos ${match[1]} caracteres.`;
+  match = value.match(/^Use no more than (\d+) characters\.$/);
+  if (match) return `Use no más de ${match[1]} caracteres.`;
+  match = value.match(/^· policy version (.+)$/);
+  if (match) return `· versión de la política ${match[1]}`;
   return value;
 }
 
