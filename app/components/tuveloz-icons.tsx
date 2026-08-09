@@ -34,7 +34,7 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
           It also sits above the fold, where next/image's lazy loading is the
           wrong default. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand-badge.png?v=1" alt="" />
+      <img src="/brand-badge.png?v=6" alt="" />
     </span>
   );
 }
