@@ -114,8 +114,23 @@ design — the customer-side cut is blocked by the pre-launch gate and becomes a
 launch-phase re-edit of the same clips (new punchline VO, new end card,
 `-Launch` flag).
 
-The `.mp4` files are currently untracked. Decide whether large video belongs in
-git before committing them.
+The `.mp4` files stay out of git — decided 2026-08-08. All 57 rendered cuts and
+source clips (~50MB) live in the **private** R2 bucket `tuveloz-brand-video`
+under the `ads/` prefix, mirroring their repo paths (`brand/ads/x.mp4` →
+`ads/x.mp4`). `.gitignore` enforces the exclusion.
+
+The bucket has **no public custom domain** and is not served to the internet:
+these are unreleased campaign assets, including placeholder slates for
+episodes 2-4. Fetch one with:
+
+```
+node node_modules/wrangler/bin/wrangler.js r2 object get \
+  tuveloz-brand-video/ads/<path>.mp4 --file <local> --remote
+```
+
+The `.mp4` paths in this file and in `docs/marketing/HIGGSFIELD_RUNBOOK.md` are
+**local build paths** for `build-got-this.ps1`, not URLs. Do not rewrite them to
+R2 addresses — the build script reads from disk.
 
 ---
 
