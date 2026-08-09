@@ -45,3 +45,11 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Boots a real dev server against the local D1 built above and drives the
+      # whole signup flow, including the email gate. Delivery is redirected to a
+      # loopback catcher, so no real address is ever contacted and no Resend
+      # credential is needed — the runner has neither.
+      - name: End-to-end provider signup
+        run: npm run test:e2e
+        timeout-minutes: 10

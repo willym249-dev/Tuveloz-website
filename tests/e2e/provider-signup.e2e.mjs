@@ -143,19 +143,33 @@ async function main() {
   // realpath, not tmpdir() directly: on Windows tmpdir() can come back in 8.3
   // short form (TORTAP~1), and Vite's watcher resolves the long form. libuv
   // asserts on the mismatch and kills the dev server before it serves anything.
-  const workdir = join(realpathSync.native(tmpdir()), "tuveloz-e2e-worktree");
-  const alreadyPrepared = existsSync(join(workdir, "node_modules", "vinext"));
+  // On CI the checkout is disposable and nobody else is working in it, so the
+  // worktree — and a second npm ci — buys nothing. Guarded twice: only when CI
+  // says so *and* there is no .dev.vars to overwrite, which is exactly the
+  // shape of a fresh runner and never the shape of a developer's machine.
+  const checkoutIsDisposable = process.env.CI === "true"
+    && !existsSync(join(repoRoot, ".dev.vars"));
 
-  // Never run a checkout in repoRoot: that is the developer's working branch.
-  const head = sh("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).trim();
+  const workdir = checkoutIsDisposable
+    ? repoRoot
+    : join(realpathSync.native(tmpdir()), "tuveloz-e2e-worktree");
+  const alreadyPrepared = checkoutIsDisposable
+    || existsSync(join(workdir, "node_modules", "vinext"));
 
-  if (existsSync(join(workdir, ".git"))) {
-    log(`reusing prepared worktree at ${head.slice(0, 7)}`);
-    sh("git", ["-C", workdir, "checkout", "--detach", "--force", head], { cwd: repoRoot });
+  if (checkoutIsDisposable) {
+    log("CI runner: using the checkout directly");
   } else {
-    rmSync(workdir, { recursive: true, force: true });
-    log(`creating worktree at ${workdir}`);
-    sh("git", ["worktree", "add", "--detach", workdir, "HEAD"], { cwd: repoRoot });
+    // Never run a checkout in repoRoot: that is the developer's working branch.
+    const head = sh("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).trim();
+
+    if (existsSync(join(workdir, ".git"))) {
+      log(`reusing prepared worktree at ${head.slice(0, 7)}`);
+      sh("git", ["-C", workdir, "checkout", "--detach", "--force", head], { cwd: repoRoot });
+    } else {
+      rmSync(workdir, { recursive: true, force: true });
+      log(`creating worktree at ${workdir}`);
+      sh("git", ["worktree", "add", "--detach", workdir, "HEAD"], { cwd: repoRoot });
+    }
   }
 
   if (!alreadyPrepared) {

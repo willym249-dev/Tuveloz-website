@@ -17,7 +17,10 @@
     "db:migrate:local": "wrangler d1 migrations apply tuveloz-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote",
     "mail:catch": "node scripts/dev-mail-catcher.mjs",
-    "test:e2e": "node tests/e2e/provider-signup.e2e.mjs"
+    "test:e2e": "node tests/e2e/provider-signup.e2e.mjs",
+    "video:manifest": "node scripts/r2-video-manifest.mjs write",
+    "video:verify": "node scripts/r2-video-manifest.mjs verify",
+    "video:restore-test": "node scripts/r2-video-manifest.mjs restore"
   },
   "dependencies": {
     "@simplewebauthn/browser": "13.3.0",
