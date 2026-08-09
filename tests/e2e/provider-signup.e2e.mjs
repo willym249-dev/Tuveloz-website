@@ -12,13 +12,13 @@
 
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync, openSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
-const MAIL_PORT = 3210;
 const APP_PORT = 3011; // deliberately not 3000-3003: those belong to other sessions
 const wrangler = join(repoRoot, "node_modules", "wrangler", "bin", "wrangler.js");
 
@@ -26,9 +26,11 @@ const log = (msg) => console.log(`[e2e] ${msg}`);
 const sh = (cmd, args, opts = {}) =>
   execFileSync(cmd, args, { encoding: "utf8", stdio: "pipe", ...opts });
 
-const waitFor = async (label, probe, timeoutMs = 180_000) => {
+const waitFor = async (label, probe, timeoutMs = 180_000, failure = () => null) => {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    const fatal = failure();
+    if (fatal) throw fatal;
     try {
       if (await probe()) return;
     } catch { /* not ready yet */ }
@@ -36,6 +38,19 @@ const waitFor = async (label, probe, timeoutMs = 180_000) => {
   }
   throw new Error(`timed out waiting for ${label}`);
 };
+
+const availableLoopbackPort = () => new Promise((resolve, reject) => {
+  const server = createServer();
+  server.once("error", reject);
+  server.listen(0, "127.0.0.1", () => {
+    const address = server.address();
+    if (!address || typeof address === "string") {
+      server.close(() => reject(new Error("could not allocate a loopback port")));
+      return;
+    }
+    server.close((error) => (error ? reject(error) : resolve(address.port)));
+  });
+});
 
 const cleanups = [];
 const cleanUp = () => {
@@ -116,6 +131,7 @@ const d1 = (workdir, sql) => {
 };
 
 async function main() {
+  const mailPort = await availableLoopbackPort();
   // 1. Throwaway worktree at HEAD -------------------------------------------
   // The path is stable, not a mkdtemp, and the worktree is kept between runs.
   //
@@ -153,7 +169,7 @@ async function main() {
   const targetVars = join(workdir, ".dev.vars");
   // The fixture uses only dummy values; it never copies the checkout's .dev.vars.
   writeFileSync(targetVars, [
-    `RESEND_BASE_URL=http://127.0.0.1:${MAIL_PORT}`,
+    `RESEND_BASE_URL=http://127.0.0.1:${mailPort}`,
     // Any non-empty pair satisfies the configured check; nothing reaches Resend.
     "RESEND_API_KEY=e2e-local-not-a-real-key",
     "RESEND_FROM_EMAIL=Tuveloz E2E <e2e@localhost>",
@@ -168,9 +184,21 @@ async function main() {
   });
 
   // 4. Mail catcher ------------------------------------------------------------
-  const catcher = spawn("node", [join(repoRoot, "scripts", "dev-mail-catcher.mjs"), "--port", String(MAIL_PORT)], { stdio: "ignore" });
+  let catcherFailure = null;
+  const catcher = spawn("node", [join(repoRoot, "scripts", "dev-mail-catcher.mjs"), "--port", String(mailPort)], { stdio: "ignore" });
+  catcher.on("error", (error) => { catcherFailure = error; });
+  catcher.on("exit", (code, signal) => {
+    if (code !== 0 && signal !== "SIGTERM") {
+      catcherFailure = new Error(`mail catcher exited code=${code} signal=${signal}`);
+    }
+  });
   cleanups.push(() => catcher.kill());
-  await waitFor("mail catcher", async () => (await fetch(`http://127.0.0.1:${MAIL_PORT}/messages`)).ok);
+  await waitFor(
+    "mail catcher",
+    async () => (await fetch(`http://127.0.0.1:${mailPort}/messages`)).ok,
+    180_000,
+    () => catcherFailure,
+  );
   log("mail catcher up");
 
   // 5. Dev server --------------------------------------------------------------
@@ -246,7 +274,7 @@ async function main() {
   log("challenge issued");
 
   // 7. Read the code out of the catcher, not an inbox --------------------------
-  const caught = await (await fetch(`http://127.0.0.1:${MAIL_PORT}/messages/latest`)).json();
+  const caught = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
   assert.equal(caught.to[0], applicantEmail, "code went to the wrong recipient");
   assert.match(caught.code, /^\d{6}$/, `no 6-digit code in: ${caught.text}`);
   log(`code captured: ${caught.code}`);
