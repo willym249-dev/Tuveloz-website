@@ -133,6 +133,12 @@ export function JobPostingPauseNotice() {
             justify-content: space-between;
           }
 
+          /* The label is long enough to overflow a 320px phone if it cannot
+             break. Wrapping is preferable to a horizontal scrollbar. */
+          .tuveloz-launch-pause-heading strong {
+            white-space: normal;
+          }
+
           .tuveloz-launch-pause:not(.expanded) .tuveloz-launch-pause-actions {
             display: none;
           }
@@ -150,7 +156,7 @@ export function JobPostingPauseNotice() {
       >
         <div className="tuveloz-launch-pause-copy">
           <div className="tuveloz-launch-pause-heading">
-            <strong>Customer launch update</strong>
+            <strong>Almost open · Montgomery County, MD</strong>
             <span className="tuveloz-launch-pause-summary">
               {CUSTOMER_JOB_POSTING_PAUSED_SUMMARY}
             </span>
@@ -169,9 +175,12 @@ export function JobPostingPauseNotice() {
             <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
           </div>
         </div>
+        {/* One action only. The hero below still recruits providers, so this
+            strip speaks to the customer who cannot book yet: creating an
+            account carries the launch-notification opt-in, which is what
+            "saving a spot" actually means here. */}
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
-          <Link href="/account?role=customer&mode=create">Create customer account</Link>
-          <Link href="/join">Join as a provider</Link>
+          <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
         </nav>
       </aside>
     </>

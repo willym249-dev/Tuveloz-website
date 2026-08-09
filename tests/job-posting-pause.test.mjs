@@ -66,6 +66,10 @@ test("the pause notice is visible sitewide and the homepage uses an explicit lau
   assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
   assert.doesNotMatch(pauseNotice, /display: none !important/);
-  assert.match(pauseNotice, /Create customer account/);
-  assert.match(pauseNotice, /Join as a provider/);
+  // The strip offers exactly one action, and it must be a route that is
+  // genuinely open. Provider recruitment moved to the hero and the nav, so
+  // this asserts the customer path only — not that both appear here.
+  assert.match(pauseNotice, /Save my spot/);
+  assert.match(pauseNotice, /account\?role=customer&mode=create/);
+  assert.doesNotMatch(pauseNotice, /post-job|request a quote/i);
 });
