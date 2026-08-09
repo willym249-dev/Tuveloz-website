@@ -812,7 +812,7 @@ export async function completePasswordVerification(
   // Written only on an affirmative opt-in — an unchecked box records nothing
   // rather than an explicit "no", so it never overwrites a preference the
   // person already set in the Privacy Center.
-  if (launchNotificationConsent) {
+  if (launchNotificationConsent && purpose === "create" && role === "customer") {
     await getDb().insert(accountCommunicationPreferences).values({
       email,
       role,
