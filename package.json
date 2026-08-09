@@ -15,7 +15,9 @@
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply tuveloz-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote",
+    "mail:catch": "node scripts/dev-mail-catcher.mjs",
+    "test:e2e": "node tests/e2e/provider-signup.e2e.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "13.3.0",
