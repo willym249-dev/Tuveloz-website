@@ -134,6 +134,33 @@ R2 addresses — the build script reads from disk.
 
 ---
 
+## 4c. Note for whoever owns the account-analytics events
+
+Two **additive** changes were made to your surface in `1794370`, to instrument
+the launch banner. Nothing existing was renamed or removed.
+
+- `lib/analytics.ts` — two event names (`launch_banner_impression`,
+  `launch_banner_cta_clicked`), plus `rememberAttribution()` and a merge inside
+  `track()`. The merge is `{ ...storedAttribution(), ...props }`: **an explicit
+  prop at a call site always wins**, so your `role` and `entry` props are never
+  overwritten. Events fired after a banner click now also carry
+  `surface: "launch_banner"`.
+- `app/api/analytics/route.ts` — the same two names added to `KNOWN_EVENTS`.
+  That allowlist is not optional: an event missing from it is rejected with a
+  400 and never reaches D1.
+
+Attribution is sessionStorage under `tuveloz-attribution-v1`. It holds no
+identifier, dies with the tab, and cannot follow anyone between visits.
+
+### The banner is frozen until 2026-08-22
+
+A two-week baseline is being collected on the current wording. **Do not change
+the launch banner's copy or layout before then**, and do not change the
+`variant: "baseline"` string — the two periods stop being comparable if either
+moves. Instrumentation fixes are fine; wording is not.
+
+---
+
 ## 5. Video / marketing production constraints
 
 Read `docs/marketing/HIGGSFIELD_RUNBOOK.md` (verbatim prompts + runbook) and
