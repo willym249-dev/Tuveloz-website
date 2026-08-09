@@ -20,12 +20,21 @@ import {
   PROVIDER_LEVEL_LABELS,
   providerLevelsForServices,
   SERVICES,
+  type EvidenceRequirementCode,
+  type ProviderLevel,
   type ServiceCode,
 } from "../../lib/provider-policy";
 import {
   getRequiredDocumentsForSelection,
   needsProofStep,
+  type RequiredDocument,
 } from "../../lib/service-tiers";
+import {
+  MAX_OPTIONAL_CERTIFICATES,
+  OPTIONAL_CERTIFICATE_CATEGORIES,
+  type DeclaredOptionalCertificate,
+  type OptionalCertificateCategory,
+} from "../../lib/optional-certificates";
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
@@ -243,6 +252,117 @@ function providerServicePlainLabel(
   return serviceDisplayLabel(fallbackLabel);
 }
 
+/**
+ * Everyday, plain-language names for the required documents. The policy matrix
+ * keeps each document's exact legal name of record (which we still show, small,
+ * so applicants recognize the real paperwork); this map only makes the first
+ * line readable. Every document here is legally required for the selected job
+ * and pathway — nothing is added or removed, only reworded. A document without
+ * a plain entry falls back to its official label.
+ */
+const PROVIDER_EVIDENCE_PLAIN_LABELS: Partial<
+  Record<EvidenceRequirementCode, { en: string; es: string }>
+> = {
+  provisional_service_competency: {
+    en: "A short note showing you've done this kind of job before",
+    es: "Una nota breve que muestre que ya ha hecho este tipo de trabajo",
+  },
+  ocp_vehicle_service_registration: {
+    en: "Your Montgomery County repair business certificate",
+    es: "Su certificado de negocio de reparación del Condado de Montgomery",
+  },
+  no_employee_attestation: {
+    en: "A short form saying it's just you — no employees",
+    es: "Un formulario corto que dice que trabaja solo — sin empleados",
+  },
+  general_liability_coi: {
+    en: "Proof of general liability insurance",
+    es: "Comprobante de seguro de responsabilidad general",
+  },
+  business_auto_coverage: {
+    en: "Proof of business-use auto insurance",
+    es: "Comprobante de seguro de auto de uso comercial",
+  },
+  workers_comp_coverage: {
+    en: "Proof of workers' compensation insurance",
+    es: "Comprobante de seguro de compensación de trabajadores",
+  },
+  md_locksmith_business_license: {
+    en: "Your Maryland locksmith business license",
+    es: "Su licencia de negocio de cerrajería de Maryland",
+  },
+  mva_inspection_station_license: {
+    en: "Your Maryland inspection station license",
+    es: "Su licencia de estación de inspección de Maryland",
+  },
+  mva_inspection_mechanic_license: {
+    en: "Your Maryland inspection mechanic license",
+    es: "Su licencia de mecánico de inspección de Maryland",
+  },
+  epa_section_609_certificate: {
+    en: "Your EPA Section 609 A/C certificate",
+    es: "Su certificado EPA Sección 609 para aire acondicionado",
+  },
+  ocp_towing_registration: {
+    en: "Your Montgomery County towing registration",
+    es: "Su registro de remolque del Condado de Montgomery",
+  },
+};
+
+function providerDocumentPlainLabel(
+  code: EvidenceRequirementCode,
+  isSpanish: boolean,
+) {
+  const plain = PROVIDER_EVIDENCE_PLAIN_LABELS[code];
+  return plain ? (isSpanish ? plain.es : plain.en) : null;
+}
+
+function joinServiceNames(services: readonly string[], isSpanish: boolean) {
+  if (services.length <= 1) return services.join("");
+  const conjunction = isSpanish ? "y" : "and";
+  const head = services.slice(0, -1).join(", ");
+  return `${head} ${conjunction} ${services[services.length - 1]}`;
+}
+
+/**
+ * Collapse the selected services into one block per identical document set, so
+ * an applicant who picks ten jobs that all need the same three documents sees
+ * that checklist once instead of ten times. Services with different required
+ * documents keep their own block.
+ */
+function groupRequiredDocuments(
+  entries: readonly { code: ServiceCode; label: string; documents: readonly RequiredDocument[] }[],
+  isSpanish: boolean,
+): Array<{ services: string[]; documents: readonly RequiredDocument[] }> {
+  const groups: Array<{ services: string[]; documents: readonly RequiredDocument[] }> = [];
+  const indexBySignature = new Map<string, number>();
+  for (const entry of entries) {
+    const signature = entry.documents.map((doc) => doc.code).slice().sort().join("|");
+    const serviceName = providerServicePlainLabel(entry.code, entry.label, isSpanish);
+    const existingIndex = indexBySignature.get(signature);
+    if (existingIndex === undefined) {
+      indexBySignature.set(signature, groups.length);
+      groups.push({ services: [serviceName], documents: entry.documents });
+    } else {
+      groups[existingIndex].services.push(serviceName);
+    }
+  }
+  return groups;
+}
+
+function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
+  const selectedPolicies = selectedServices.map((code) => (
+    PROVIDER_REVIEW_SERVICES.find((service) => service.code === code)
+  ));
+  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("specialty_provider"))) {
+    return "specialty_provider";
+  }
+  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("standard_provider"))) {
+    return "standard_provider";
+  }
+  return "provisional_independent";
+}
+
 type SignupStep = 1 | 2 | 3;
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
@@ -321,6 +441,8 @@ export function ProviderSignupForm() {
   const [applicationVerificationCode, setApplicationVerificationCode] = useState("");
   const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [showOptionalCertificates, setShowOptionalCertificates] = useState(false);
+  const [optionalCertificates, setOptionalCertificates] = useState<DeclaredOptionalCertificate[]>([]);
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
@@ -430,6 +552,10 @@ export function ProviderSignupForm() {
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
+  const requiredDocumentGroups = groupRequiredDocuments(
+    requiredDocumentsBySelection,
+    providerFormIsSpanish,
+  );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
 
   function resetChallenge() {
@@ -438,6 +564,43 @@ export function ProviderSignupForm() {
     setPendingApplicationPayload(null);
     setConfirmingSubmit(false);
   }
+
+  function toggleOptionalCertificates() {
+    const next = !showOptionalCertificates;
+    setShowOptionalCertificates(next);
+    if (next && optionalCertificates.length === 0) {
+      setOptionalCertificates([
+        { category: "ase", title: "", credentialIdentifier: "", issuingAuthority: "" },
+      ]);
+    }
+  }
+
+  function addOptionalCertificate() {
+    setOptionalCertificates((current) => (
+      current.length >= MAX_OPTIONAL_CERTIFICATES
+        ? current
+        : [...current, { category: "ase", title: "", credentialIdentifier: "", issuingAuthority: "" }]
+    ));
+  }
+
+  function updateOptionalCertificate(
+    index: number,
+    patch: Partial<DeclaredOptionalCertificate>,
+  ) {
+    setOptionalCertificates((current) => (
+      current.map((certificate, position) => (
+        position === index ? { ...certificate, ...patch } : certificate
+      ))
+    ));
+  }
+
+  function removeOptionalCertificate(index: number) {
+    setOptionalCertificates((current) => current.filter((_, position) => position !== index));
+  }
+
+  const declaredOptionalCertificates = showOptionalCertificates
+    ? optionalCertificates.filter((certificate) => certificate.title.trim())
+    : [];
 
   function goToStep1() {
     resetChallenge();
@@ -543,6 +706,7 @@ export function ProviderSignupForm() {
       termsBundleAccepted,
       privacyAcknowledged,
       providerSelfAssessment: providerAssessment,
+      optionalCertificates: declaredOptionalCertificates,
     };
 
     if (applicationChallengeId) {
@@ -894,31 +1058,54 @@ export function ProviderSignupForm() {
 
       {step === 2 && showStep2 && (
         <div data-signup-step="2">
-          {requiredDocumentsBySelection.length > 0 && (
+          {requiredDocumentGroups.length > 0 && (
             <>
-              <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
+              <h3>{providerFormIsSpanish ? "Lo que subirá" : "What you'll upload"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
-                  : "We only ask for the one document each law actually requires — nothing extra."}
+                  ? "No necesita nada de esto ahora mismo. Son los únicos documentos que la ley exige para los trabajos que eligió — nada de más."
+                  : "You don't need any of this right now. These are the only documents the law requires for the jobs you picked — nothing extra."}
               </p>
-              {requiredDocumentsBySelection.map((entry) => (
-                <div key={entry.code} className="legal-requirement-note">
-                  <strong>
-                    {providerServicePlainLabel(entry.code, entry.label, providerFormIsSpanish)}
-                  </strong>
-                  {entry.documents.map((doc) => (
-                    <small key={doc.code}>
-                      {doc.label}
-                      {doc.requiresExpiration === true ? " (must include an expiration date)" : ""}
-                    </small>
-                  ))}
+              {requiredDocumentGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className="legal-requirement-note">
+                  {requiredDocumentGroups.length > 1 && (
+                    <strong>
+                      {providerFormIsSpanish ? "Para " : "For "}
+                      {joinServiceNames(group.services, providerFormIsSpanish)}
+                    </strong>
+                  )}
+                  <ul className="requirement-checklist">
+                    {group.documents.map((doc) => {
+                      const plain = providerDocumentPlainLabel(doc.code, providerFormIsSpanish);
+                      return (
+                        <li key={doc.code}>
+                          <span className="requirement-check" aria-hidden="true">✓</span>
+                          <span className="requirement-text">
+                            <span>
+                              {plain ?? doc.label}
+                              {doc.requiresExpiration === true
+                                ? (providerFormIsSpanish
+                                    ? " — con su fecha de vencimiento"
+                                    : " — showing its expiry date")
+                                : ""}
+                            </span>
+                            {plain && (
+                              <small className="requirement-official-name">
+                                {providerFormIsSpanish ? "Nombre oficial: " : "Official name: "}
+                                {doc.label}
+                              </small>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               ))}
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Subirá estos documentos después de verificar su correo e iniciar sesión."
-                  : "You'll upload these after you verify your email and sign in."}
+                  ? "Subirá estos documentos después de verificar su correo e iniciar sesión. Le mostraremos cómo, paso a paso."
+                  : "You'll upload these after you verify your email and sign in. We'll walk you through it, step by step."}
               </p>
             </>
           )}
@@ -1403,6 +1590,106 @@ export function ProviderSignupForm() {
                 : "Outside the county? Request your area"}
             </Link>
           </div>
+          <section className="optional-cert-section">
+            <div className="optional-cert-optin">
+              <div className="optional-cert-optin-copy">
+                <strong>
+                  {providerFormIsSpanish
+                    ? "¿Tiene certificados (como ASE) que quiera mostrar a los clientes?"
+                    : "Have any certificates (like ASE) you'd like to show customers?"}
+                </strong>
+                <small>
+                  {providerFormIsSpanish
+                    ? "No es obligatorio. Puede agregarlos y Tuveloz los verifica antes de que un cliente los vea."
+                    : "Not required — but you can add them, and we'll verify each one before any customer sees it."}
+                </small>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showOptionalCertificates}
+                className={`brand-switch${showOptionalCertificates ? " on" : ""}`}
+                onClick={toggleOptionalCertificates}
+              >
+                <span className="brand-switch-track">
+                  <span className="brand-switch-thumb" />
+                </span>
+                <span className="brand-switch-state">
+                  {showOptionalCertificates
+                    ? (providerFormIsSpanish ? "Sí" : "On")
+                    : (providerFormIsSpanish ? "No" : "Off")}
+                </span>
+              </button>
+            </div>
+            {showOptionalCertificates && (
+              <div className="optional-cert-editor">
+                {optionalCertificates.map((certificate, index) => (
+                  <div className="optional-cert-row" key={index}>
+                    <label>
+                      {providerFormIsSpanish ? "Tipo de certificado" : "Certificate type"}
+                      <select
+                        value={certificate.category}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          category: event.target.value as OptionalCertificateCategory,
+                        })}
+                      >
+                        {OPTIONAL_CERTIFICATE_CATEGORIES.map((option) => (
+                          <option key={option.key} value={option.key}>
+                            {providerFormIsSpanish ? option.es : option.en}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {providerFormIsSpanish ? "Nombre del certificado" : "Certificate name"}
+                      <input
+                        maxLength={120}
+                        value={certificate.title}
+                        placeholder={providerFormIsSpanish
+                          ? "Ej.: ASE A6 sistema eléctrico"
+                          : "e.g. ASE A6 Electrical Systems"}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          title: event.target.value,
+                        })}
+                      />
+                    </label>
+                    <label>
+                      {providerFormIsSpanish ? "Número (opcional)" : "Certificate number (optional)"}
+                      <input
+                        maxLength={80}
+                        value={certificate.credentialIdentifier}
+                        placeholder={providerFormIsSpanish ? "Si lo tiene" : "If you have one"}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          credentialIdentifier: event.target.value,
+                        })}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="optional-cert-remove"
+                      onClick={() => removeOptionalCertificate(index)}
+                    >
+                      {providerFormIsSpanish ? "Quitar" : "Remove"}
+                    </button>
+                  </div>
+                ))}
+                {optionalCertificates.length < MAX_OPTIONAL_CERTIFICATES && (
+                  <button
+                    type="button"
+                    className="optional-cert-add"
+                    onClick={addOptionalCertificate}
+                  >
+                    + {providerFormIsSpanish ? "Agregar otro certificado" : "Add another certificate"}
+                  </button>
+                )}
+                <small className="hint">
+                  {providerFormIsSpanish
+                    ? "Tuveloz revisa cada certificado y le escribe si necesita algo más. Nada se muestra a los clientes hasta que quede verificado."
+                    : "Tuveloz checks each certificate and emails you if we need anything else. Nothing shows to customers until it's verified."}
+                </small>
+              </div>
+            )}
+          </section>
           <fieldset className="area-fieldset">
             <legend>
               {providerFormIsSpanish
@@ -1470,8 +1757,9 @@ export function ProviderSignupForm() {
               Review the <a href="/terms">Terms</a>,{" "}
               <a href="/provider-agreement">Provider Agreement</a>,{" "}
               <a href="/payments">Payment Policy</a>,{" "}
-              <a href="/marketplace-conduct">Conduct Policy</a>, and{" "}
-              <a href="/provisional-provider-policy">Provider Pathway Policy</a>.
+              <a href="/marketplace-conduct">Conduct Policy</a>,{" "}
+              <a href="/provisional-provider-policy">Provider Pathway Policy</a>, and{" "}
+              <a href="/provider-safety-policy">Safety and Safe-Work Policy</a>.
             </span>
           </label>
           <label className="policy-consent">

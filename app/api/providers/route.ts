@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { and, desc, eq, gt, ne, sql } from "drizzle-orm";
 import { getDb } from "../../../db";
 import {
@@ -450,6 +451,32 @@ export async function POST(request: Request) {
         }
       }
       return genericCompleteResponse();
+    }
+
+    // Optional, provider-declared certificates (e.g. ASE) go into the existing
+    // provider_submitted_credentials pipeline as pending + not-public. The owner
+    // verifies them in marketplace tools; nothing is shown to a customer until
+    // then. Best-effort and outside the legal-record transaction: a failure here
+    // never fails the application, and these records never gate any service.
+    for (const certificate of application.optionalCertificates) {
+      try {
+        await env.DB.prepare(
+          `INSERT INTO provider_submitted_credentials
+             (id, provider_id, category, credential_name, issuing_authority,
+              credential_identifier, jurisdiction, expires_at,
+              status, review_note, public_display, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, '', '', 'pending', '', 'no', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+        ).bind(
+          crypto.randomUUID(),
+          providerId,
+          certificate.category,
+          certificate.title,
+          certificate.issuingAuthority,
+          certificate.credentialIdentifier,
+        ).run();
+      } catch (certificateError) {
+        console.error("Unable to store an optional provider certificate", certificateError);
+      }
     }
 
     // Delivery is best-effort and remains outside the legal-record transaction.
