@@ -786,6 +786,11 @@ export function ProviderSignupForm() {
           </div>
           <fieldset className="area-fieldset service-fieldset">
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
+            <p className="provider-service-picker-intro">
+              {providerFormIsSpanish
+                ? "Elija los tipos de trabajo que realmente hace. Abra una categorÃ­a para seleccionar trabajos especÃ­ficos."
+                : "Choose the kinds of work you actually do. Open a category to pick the exact jobs."}
+            </p>
             <div className="service-groups provider-service-groups">
               {PROVIDER_REVIEW_SERVICE_GROUPS.map((group) => {
                 const groupServices = group.services.filter((service) => (
@@ -811,7 +816,9 @@ export function ProviderSignupForm() {
                           ? providerFormIsSpanish
                             ? `${selectedCount} elegidos`
                             : `${selectedCount} selected`
-                          : providerFormIsSpanish ? "Ver" : "View"}
+                          : providerFormIsSpanish
+                            ? `${groupServices.length} trabajos`
+                            : `${groupServices.length} jobs`}
                       </b>
                     </summary>
                     <div className="service-options">
