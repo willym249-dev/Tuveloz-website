@@ -142,6 +142,15 @@ export default function PrivacyCenterPage() {
       const result = await response.json() as PrivacyCenterData & { error?: string };
       if (!response.ok) throw new Error(result.error || "Unable to save communication choices.");
       setData(result);
+      setMarketingEmail(result.preferences.marketingEmail);
+      setProductUpdateEmail(result.preferences.productUpdateEmail);
+      setOptionalReminderEmail(result.preferences.optionalReminderEmail);
+      setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
+      setLaunchConsent({
+        at: result.preferences.launchNotificationConsentAt,
+        version: result.preferences.launchNotificationConsentVersion,
+        source: result.preferences.launchNotificationConsentSource,
+      });
       setNotice("Communication choices saved.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save communication choices.");

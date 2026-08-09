@@ -13,6 +13,7 @@ import {
   privacyAccountAccessFor,
   type PrivacyScope,
 } from "../../../lib/privacy-account-access";
+import { CUSTOMER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
 
 type AccountRole = "customer" | "provider";
 type PrivacyRequestType =
@@ -224,7 +225,11 @@ export async function POST(request: Request) {
                                  ELSE CURRENT_TIMESTAMP END
                        ELSE '' END,
                 launch_notification_consent_version =
-                  CASE WHEN ? = 'yes' THEN launch_notification_consent_version ELSE '' END,
+                  CASE WHEN ? = 'yes'
+                       THEN CASE WHEN launch_notification_email = 'yes'
+                                 THEN launch_notification_consent_version
+                                 ELSE ? END
+                       ELSE '' END,
                 launch_notification_consent_source =
                   CASE WHEN ? = 'yes'
                        THEN CASE WHEN launch_notification_email = 'yes'
@@ -240,6 +245,7 @@ export async function POST(request: Request) {
         launchNotification,
         launchNotification,
         launchNotification,
+        CUSTOMER_POLICY_BUNDLE_VERSION,
         launchNotification,
         account.email,
         account.role,
