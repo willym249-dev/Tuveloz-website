@@ -24,8 +24,16 @@ const APP_PORT = 3011; // deliberately not 3000-3003: those belong to other sess
 const wrangler = join(repoRoot, "node_modules", "wrangler", "bin", "wrangler.js");
 
 const log = (msg) => console.log(`[e2e] ${msg}`);
+// maxBuffer is raised well past Node's 1 MB default: `d1 migrations apply`
+// prints a table row per migration, and the suite crossed that ceiling at
+// sixty migrations with an ENOBUFS that looks nothing like the real cause.
 const sh = (cmd, args, opts = {}) =>
-  execFileSync(cmd, args, { encoding: "utf8", stdio: "pipe", ...opts });
+  execFileSync(cmd, args, {
+    encoding: "utf8",
+    stdio: "pipe",
+    maxBuffer: 64 * 1024 * 1024,
+    ...opts,
+  });
 
 const waitFor = async (label, probe, timeoutMs = 180_000, failure = () => null) => {
   const deadline = Date.now() + timeoutMs;
@@ -104,6 +112,16 @@ const buildPayload = (policy) => ({
   termsBundleAccepted: true,
   privacyAcknowledged: true,
   providerSelfAssessment: {},
+  // The point of the exercise: an optional certificate must survive the round
+  // trip and land as an unverified, non-public row.
+  optionalCertificates: [
+    {
+      category: "icar",
+      title: "I-CAR Structural Technician",
+      credentialIdentifier: "E2E-0001",
+      issuingAuthority: "I-CAR",
+    },
+  ],
 });
 
 // The write routes demand a strict same-origin request, so these headers have
@@ -328,17 +346,16 @@ async function main() {
   const apps = d1(workdir, `SELECT id, email, status FROM provider_applications WHERE email='${applicantEmail}';`);
   assert.equal(apps.length, 1, "expected exactly one application row");
 
-  // TODO: assert the optional-certificate round trip here — that a declared
-  // certificate is stored with its category, `status = 'pending'`, and
-  // `public_display = 'no'`. Deliberately absent: that feature and its
-  // `provider_submitted_credentials.category` column do not exist on `main`
-  // yet. These assertions belong in the certificates feature PR, added at the
-  // same time as the migration, so the test and its subject land together.
+  const creds = d1(workdir, `SELECT category, status, public_display FROM provider_submitted_credentials WHERE provider_id='${apps[0].id}';`);
+  assert.equal(creds.length, 1, "expected the declared certificate to be stored");
+  assert.equal(creds[0].category, "icar", "certificate category did not round-trip");
+  assert.equal(creds[0].status, "pending", "a declared certificate must start unverified");
+  assert.equal(creds[0].public_display, "no", "a declared certificate must not be customer-visible");
 
   const challengesLeft = d1(workdir, `SELECT COUNT(*) AS n FROM provider_application_challenges WHERE used_at='';`);
   assert.equal(Number(challengesLeft[0].n), 0, "the challenge should be consumed");
 
-  log("PASS — application creation and challenge consumption verified");
+  log("PASS — application, certificate, and challenge consumption all verified");
 }
 
 main().then(() => { cleanUp(); process.exit(0); })
