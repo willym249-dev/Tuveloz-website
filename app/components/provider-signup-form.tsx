@@ -788,7 +788,7 @@ export function ProviderSignupForm() {
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
             <p className="provider-service-picker-intro">
               {providerFormIsSpanish
-                ? "Elija los tipos de trabajo que realmente hace. Abra una categorÃ­a para seleccionar trabajos especÃ­ficos."
+                ? "Elija los tipos de trabajo que realmente hace. Abra una categoría para seleccionar trabajos específicos."
                 : "Choose the kinds of work you actually do. Open a category to pick the exact jobs."}
             </p>
             <div className="service-groups provider-service-groups">
