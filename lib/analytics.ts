@@ -15,6 +15,12 @@ export type AnalyticsEvent =
   | "provider_step2_abandoned"
   | "provider_signup_completed"
   | "provider_first_quote_sent"
+  // Account creation is role-neutral: both customers and provider applicants
+  // create sign-in credentials here. The role travels in props rather than in
+  // the event name, so a count of one event can never silently mix the two.
+  | "account_create_started"
+  | "account_create_code_sent"
+  | "account_created"
   | "customer_request_started"
   | "customer_request_posted"
   | "quote_received"
