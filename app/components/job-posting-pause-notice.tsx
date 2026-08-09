@@ -175,12 +175,12 @@ export function JobPostingPauseNotice() {
             <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
           </div>
         </div>
-        {/* One action only. The hero below still recruits providers, so this
-            strip speaks to the customer who cannot book yet: creating an
-            account carries the launch-notification opt-in, which is what
-            "saving a spot" actually means here. */}
+        {/* Customer account creation remains the primary action while requests
+            are paused. The strip is sitewide, though, so it also keeps a
+            provider route available on pages without the recruitment hero. */}
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
           <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+          <Link href="/join">Join as a provider</Link>
         </nav>
       </aside>
     </>
