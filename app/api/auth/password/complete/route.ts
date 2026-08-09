@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     purpose?: unknown;
     role?: unknown;
     termsAccepted?: unknown;
+    launchNotificationConsent?: unknown;
   };
   const email = normalizeAccountEmail(body.email);
   const code = typeof body.code === "string" ? body.code.trim() : "";
@@ -50,6 +51,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Re-derive the scope here instead of trusting the client's flag: this
+    // consent only exists for a customer creating an account. A provider
+    // create, or any reset, records nothing.
+    const launchNotificationConsent = body.purpose === "create"
+      && body.role === "customer"
+      && policyAccepted(body.launchNotificationConsent);
     const result = await completePasswordVerification(
       email,
       body.role,
@@ -57,6 +64,7 @@ export async function POST(request: Request) {
       code,
       password,
       acceptedTerms,
+      launchNotificationConsent,
     );
     if (!result.ok) {
       return Response.json(

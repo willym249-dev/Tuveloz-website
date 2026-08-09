@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
+  accountCommunicationPreferences,
   accountCredentials,
   authSessions,
   customerRequests,
@@ -717,6 +718,7 @@ export async function completePasswordVerification(
   code: string,
   password: string,
   acceptedTerms: boolean,
+  launchNotificationConsent = false,
 ) {
   if (
     passwordValidationError(password)
@@ -805,6 +807,32 @@ export async function completePasswordVerification(
       updatedAt: now,
     },
   });
+  // Launch-notification consent, with the provenance needed to defend it: when
+  // it was given, against which policy bundle version, and from which surface.
+  // Written only on an affirmative opt-in — an unchecked box records nothing
+  // rather than an explicit "no", so it never overwrites a preference the
+  // person already set in the Privacy Center.
+  if (launchNotificationConsent) {
+    await getDb().insert(accountCommunicationPreferences).values({
+      email,
+      role,
+      launchNotificationEmail: "yes",
+      launchNotificationConsentAt: now,
+      launchNotificationConsentVersion: policyVersion,
+      launchNotificationConsentSource: "account_create",
+      createdAt: now,
+      updatedAt: now,
+    }).onConflictDoUpdate({
+      target: [accountCommunicationPreferences.email, accountCommunicationPreferences.role],
+      set: {
+        launchNotificationEmail: "yes",
+        launchNotificationConsentAt: now,
+        launchNotificationConsentVersion: policyVersion,
+        launchNotificationConsentSource: "account_create",
+        updatedAt: now,
+      },
+    });
+  }
   await getDb().update(passwordVerificationCodes)
     .set({ usedAt: now })
     .where(eq(passwordVerificationCodes.id, challenge.id));
