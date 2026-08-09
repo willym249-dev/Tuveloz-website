@@ -13,6 +13,27 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-09 — Filed the Zeo remote access plan
+
+**What happened.** ChatGPT drafted a plan for reaching Zeo — the owner's local
+assistant on the home PC, which is not part of this codebase — from a phone or
+work computer. Filed as `docs/operations/zeo-remote-access-plan.md` with its
+provenance in the header. Nothing is built; Tailscale is not installed yet.
+
+**Decisions recorded, not made here.** Private network over public exposure:
+Tailscale plus Tailscale Serve, with Funnel and router port-forwarding rejected
+because both publish the service publicly. Access needs both the private-device
+identity and Zeo's owner password. Remote Zeo may chat, learn, manage tasks, and
+draft; applying code changes, deletions, publishing, and other destructive
+actions stay approval-gated or local-only, and the audit log survives the change.
+
+**Now open.** Session timeout, what "inspect Tuveloz" is allowed to read, whether
+the audit log is reachable remotely, and a practiced revocation path for a lost
+phone. The home PC has to stay awake for any of this to work. No deadline
+attached, so nothing was added to `OPEN-ITEMS.md`.
+
+---
+
 ## 2026-08-08 — Homepage made launch-honest and shorter
 
 **What happened.** Reworked the customer-facing hero on the homepage and customer lander so it no longer implies that live customer quotes are available today. Both now say that accounts are open while requests wait for adequate provider coverage. Added a clear “Need help today?” route to local shops, mobile mechanics, or licensed towing while dispatch is unavailable. Added a planned-fee example that labels final launch pricing and tax treatment as under review.

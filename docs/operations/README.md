@@ -3,8 +3,13 @@
 Runbooks, standing procedures, environment guides, and incident write-ups — the
 things you need when something has to be done correctly under pressure.
 
-Nothing filed here yet. The existing operational documents stayed at the top of
-`docs/` so that links and tests referencing them keep working:
+Filed here:
+
+- [`zeo-remote-access-plan.md`](zeo-remote-access-plan.md) — the proposed private
+  remote path to Zeo, the owner's local assistant, and what stays approval-gated
+
+The existing operational documents stayed at the top of `docs/` so that links and
+tests referencing them keep working:
 
 - [`../PROVIDER_ACTIVATION_RUNBOOK.md`](../PROVIDER_ACTIVATION_RUNBOOK.md) —
   moving providers from applications-open to active

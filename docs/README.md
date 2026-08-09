@@ -22,6 +22,7 @@ self-contained page.
 | --- | --- |
 | [`PROVIDER_ACTIVATION_RUNBOOK.md`](PROVIDER_ACTIVATION_RUNBOOK.md) | How do we move from "applications open" to providers actually working jobs? The exact sequence and what blocks it. |
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
+| [`operations/zeo-remote-access-plan.md`](operations/zeo-remote-access-plan.md) | How would the owner reach Zeo from a phone or work computer without exposing it publicly, and what stays approval-gated? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical
