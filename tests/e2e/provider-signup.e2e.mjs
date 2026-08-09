@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -140,9 +141,29 @@ async function main() {
   const checkoutIsDisposable = process.env.CI === "true"
     && !existsSync(join(repoRoot, ".dev.vars"));
 
+  // Namespaced by repository and branch, not a single shared path.
+  //
+  // A fixed directory made reruns fast but let two branches share one local D1.
+  // Migration lineages that diverged — different files under the same 0055,
+  // 0056 numbers — then applied on top of each other, and the second branch
+  // failed with a duplicate column from the first branch's schema. Namespacing
+  // keeps the speed (node_modules is still reused per branch) without letting
+  // one lineage's database masquerade as another's.
+  const repoKey = createHash("sha256")
+    .update(realpathSync.native(repoRoot))
+    .digest("hex")
+    .slice(0, 8);
+  const branchRef = (() => {
+    const named = sh("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: repoRoot }).trim();
+    // Detached HEAD reports "HEAD"; fall back to the commit so it is still stable.
+    const ref = named === "HEAD"
+      ? sh("git", ["rev-parse", "--short", "HEAD"], { cwd: repoRoot }).trim()
+      : named;
+    return ref.replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 40);
+  })();
   const workdir = checkoutIsDisposable
     ? repoRoot
-    : join(realpathSync.native(tmpdir()), "tuveloz-e2e-worktree");
+    : join(realpathSync.native(tmpdir()), `tuveloz-e2e-${repoKey}-${branchRef}`);
   const alreadyPrepared = checkoutIsDisposable
     || existsSync(join(workdir, "node_modules", "vinext"));
 
@@ -182,6 +203,12 @@ async function main() {
   ].join("\n"));
 
   // 3. Schema -----------------------------------------------------------------
+  // Same reset CI performs before migrating: migrations are additive and
+  // assume an empty database, so replaying them over a previous run's schema
+  // fails on already-present columns. Only .wrangler/state goes — node_modules
+  // survives, which is what makes a rerun fast.
+  rmSync(join(workdir, ".wrangler", "state"), { recursive: true, force: true });
+
   log("applying migrations to the worktree's local D1");
   sh("node", [wrangler, "d1", "migrations", "apply", "tuveloz-db", "--local"], {
     cwd: workdir, input: "y\n", stdio: ["pipe", "pipe", "pipe"],
