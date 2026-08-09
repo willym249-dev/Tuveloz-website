@@ -65,9 +65,13 @@ test("manual staging deployment uses isolated Cloudflare resources", async () =>
   assert.match(workflow, /STAGING_D1_DATABASE_ID/);
   assert.match(workflow, /STAGING_R2_BUCKET_NAME/);
   assert.match(workflow, /d1 migrations apply tuveloz-staging-db/);
-  assert.match(workflow, /wrangler deploy --config \.wrangler-staging\.generated\.json/);
+  assert.match(workflow, /test "\$CI" = "true"/);
+  assert.match(workflow, /generate-staging-wrangler\.mjs wrangler\.jsonc/);
+  assert.match(workflow, /wrangler d1 migrations apply tuveloz-staging-db --remote --config wrangler\.jsonc/);
+  assert.match(workflow, /run: npm run deploy/);
+  assert.match(workflow, /rm -f wrangler\.jsonc/);
   assert.doesNotMatch(workflow, /npm run db:migrate:remote/);
-  assert.doesNotMatch(workflow, /npm run deploy/);
+  assert.doesNotMatch(workflow, /wrangler deploy --config/);
 
   assert.match(generator, /name: "tuveloz-staging"/);
   assert.match(generator, /pattern: "staging\.tuveloz\.com"/);
