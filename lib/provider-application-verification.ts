@@ -42,6 +42,7 @@ import {
   serializeProviderServices,
 } from "./service-matching";
 import { PROVIDER_POLICY_BUNDLE_VERSION } from "./policies";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 export const PROVIDER_APPLICATION_MAX_JSON_BYTES = 48 * 1024;
 export const PROVIDER_APPLICATION_CHALLENGE_LIFETIME_MS = 10 * 60 * 1000;
@@ -472,7 +473,7 @@ async function sendProviderApplicationCode(email: string, code: string) {
   if (!apiKey || !from) {
     throw new Error("Provider application email verification is not configured.");
   }
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,

@@ -35,6 +35,7 @@ import {
   PROVIDER_POLICY_BUNDLE_VERSION,
 } from "./policies";
 import { ELIGIBILITY_RULES_VERSION } from "./provider-eligibility-engine";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -462,7 +463,7 @@ async function sendLoginCodeEmail(
   }
 
   const roleLabel = role === "provider" ? "provider" : "customer";
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
@@ -594,7 +595,7 @@ async function sendPasswordVerificationEmail(
     : purpose === "reset"
       ? "reset your password"
       : "finish signing in";
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
