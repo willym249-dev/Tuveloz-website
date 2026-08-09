@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const source = async (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
@@ -13,14 +13,29 @@ const [siteLanguage, homepage, providerSignup, accountAuth, passwordComplete, pr
   source("app/api/privacy-center/route.ts"),
 ]);
 
+const otherAppFiles = (await readdir(new URL("../app/", import.meta.url), { recursive: true }))
+  .map((path) => path.replaceAll("\\", "/"))
+  .filter((path) => /\.(?:ts|tsx)$/.test(path))
+  .filter((path) => path !== "components/provider-signup-form.tsx")
+  .filter((path) => path !== "components/site-language.tsx");
+const otherAppSources = await Promise.all(otherAppFiles.map((path) => source(`app/${path}`)));
+
 function quotedDictionaryKeys(text) {
   return [...text.matchAll(/^\s*"((?:[^"\\]|\\.)*)"\s*:/gm)]
     .map((match) => JSON.parse(`"${match[1]}"`));
 }
 
-function quotedLiterals(text) {
-  return [...text.matchAll(/(["'`])((?:\\.|(?!\1)[\s\S])*)\1/g)]
-    .map((match) => match[2].replace(/\\(["'`\\])/g, "$1"));
+function interfaceLiterals(text) {
+  const quoted = [...text.matchAll(/"((?:\\.|[^"\\])*)"/g)]
+    .map((match) => match[1].replace(/\\(["\\])/g, "$1"));
+  const jsxText = [...text.matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g)]
+    .map((match) => match[1]
+      .replace(/&apos;/g, "'")
+      .replace(/&quot;/g, "\"")
+      .replace(/\s+/g, " ")
+      .trim())
+    .filter(Boolean);
+  return new Set([...quoted, ...jsxText]);
 }
 
 test("dictionary keys never target the manually translated provider signup subtree", () => {
@@ -28,9 +43,22 @@ test("dictionary keys never target the manually translated provider signup subtr
     homepage,
     /<div className="provider-panel" data-manual-language>[\s\S]*?<ProviderSignupForm/,
   );
-  const keys = new Set(quotedDictionaryKeys(siteLanguage));
-  const overlap = [...new Set(quotedLiterals(providerSignup).filter((literal) => keys.has(literal)))];
-  assert.deepEqual(overlap, []);
+  const dictionaryKeys = new Set(quotedDictionaryKeys(siteLanguage));
+  const providerLiterals = interfaceLiterals(providerSignup);
+  const nonManualLiterals = new Set(
+    otherAppSources.flatMap((text) => [...interfaceLiterals(text)]),
+  );
+  const manualOnlyKeys = [...dictionaryKeys]
+    .filter((key) => providerLiterals.has(key) && !nonManualLiterals.has(key));
+
+  // This is a known historical failure. Keeping it explicit proves the
+  // extractor sees the provider verification copy instead of passing after a
+  // JSX apostrophe desynchronizes a generic quote matcher.
+  const sentinel = "Verify email and continue";
+  assert.ok(providerLiterals.has(sentinel));
+  assert.ok(!nonManualLiterals.has(sentinel));
+  assert.ok(!dictionaryKeys.has(sentinel));
+  assert.deepEqual(manualOnlyKeys, []);
 });
 
 test("every launch-notification consent write is customer-create-only", () => {
