@@ -848,6 +848,7 @@ const spanishText: Record<string, string> = {
   "Back on the road when your battery quits.": "De vuelta al camino cuando la batería lo deja tirado.",
   "Wipers & bulbs": "Limpiaparabrisas y focos",
   "New wiper blades and burnt-out bulbs, swapped fast.": "Plumillas nuevas y focos quemados, cambiados rápido.",
+  "Top off fluids": "Rellenar líquidos",
   "A quick top-up to keep your car running right.": "Un relleno rápido para que su carro siga andando bien.",
   "Car cleaning": "Limpieza del carro",
   "An outside wash, inside cleaning, or both.": "Lavado por fuera, limpieza por dentro, o las dos cosas.",

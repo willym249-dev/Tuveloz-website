@@ -13,12 +13,26 @@ const [siteLanguage, homepage, providerSignup, accountAuth, passwordComplete, pr
   source("app/api/privacy-center/route.ts"),
 ]);
 
-const otherAppFiles = (await readdir(new URL("../app/", import.meta.url), { recursive: true }))
-  .map((path) => path.replaceAll("\\", "/"))
-  .filter((path) => /\.(?:ts|tsx)$/.test(path))
-  .filter((path) => path !== "components/provider-signup-form.tsx")
-  .filter((path) => path !== "components/site-language.tsx");
-const otherAppSources = await Promise.all(otherAppFiles.map((path) => source(`app/${path}`)));
+// Scans lib/ as well as app/. Copy reaches the page from both — service and
+// marketing catalogs live in lib/ — and scanning only app/ made any string
+// shared with lib/ look provider-exclusive. "Top off fluids" was deleted as
+// unreachable on exactly that mistake, and main's rendered-coverage check
+// caught it on three public pages.
+async function sourcesUnder(dir, skip = []) {
+  const files = (await readdir(new URL(`../${dir}/`, import.meta.url), { recursive: true }))
+    .map((path) => path.replaceAll("\\", "/"))
+    .filter((path) => /\.(?:ts|tsx)$/.test(path))
+    .filter((path) => !skip.includes(path));
+  return Promise.all(files.map((path) => source(`${dir}/${path}`)));
+}
+
+const otherAppSources = [
+  ...(await sourcesUnder("app", [
+    "components/provider-signup-form.tsx",
+    "components/site-language.tsx",
+  ])),
+  ...(await sourcesUnder("lib")),
+];
 
 function quotedDictionaryKeys(text) {
   return [...text.matchAll(/^\s*"((?:[^"\\]|\\.)*)"\s*:/gm)]
