@@ -470,7 +470,7 @@ async function sendProviderApplicationCode(email: string, code: string) {
   if (!apiKey || !from) {
     throw new Error("Provider application email verification is not configured.");
   }
-  const response = await fetch(resendEmailsUrl(runtimeEnv.RESEND_BASE_URL), {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,

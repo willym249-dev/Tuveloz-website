@@ -90,7 +90,7 @@ async function sendProviderJobAlert(
 
   const results = await Promise.all(matches.map(async (provider) => {
     const workspaceUrl = `${siteUrl()}/account?role=provider`;
-    const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
+    const response = await fetch(resendEmailsUrl(runtimeEnv.RESEND_BASE_URL), {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
@@ -196,7 +196,7 @@ export async function sendAcceptedQuoteAlert(
   }
 
   const workspaceUrl = `${siteUrl()}/account?role=provider`;
-  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
+  const response = await fetch(resendEmailsUrl(runtimeEnv.RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
