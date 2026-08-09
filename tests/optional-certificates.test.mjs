@@ -68,7 +68,7 @@ test("signup optional certificates reuse the existing submitted-credentials pipe
 
 test("the category column is added by an additive migration and shown to the owner", async () => {
   const [migration, journal, ownerRoute, ownerPage] = await Promise.all([
-    read("drizzle/0055_optional_certificate_category.sql"),
+    read("drizzle/0059_optional_certificate_category.sql"),
     read("drizzle/meta/_journal.json"),
     read("app/api/admin/marketplace-tools/route.ts"),
     read("app/admin/marketplace-tools/page.tsx"),
@@ -77,7 +77,7 @@ test("the category column is added by an additive migration and shown to the own
   // Additive only: one ADD COLUMN with a safe default, no rebuild or drop.
   assert.match(migration, /ALTER TABLE `provider_submitted_credentials` ADD `category` text DEFAULT '' NOT NULL;/);
   assert.doesNotMatch(migration, /DROP|DELETE|CREATE TABLE/i);
-  assert.match(journal, /"0055_optional_certificate_category"/);
+  assert.match(journal, /"0059_optional_certificate_category"/);
 
   // The owner review queue reads and renders the category.
   assert.match(ownerRoute, /credential\.category,/);

@@ -21,7 +21,6 @@ import {
   providerLevelsForServices,
   SERVICES,
   type EvidenceRequirementCode,
-  type ProviderLevel,
   type ServiceCode,
 } from "../../lib/provider-policy";
 import {
@@ -350,20 +349,19 @@ function groupRequiredDocuments(
   return groups;
 }
 
-function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
-  const selectedPolicies = selectedServices.map((code) => (
-    PROVIDER_REVIEW_SERVICES.find((service) => service.code === code)
-  ));
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("specialty_provider"))) {
-    return "specialty_provider";
-  }
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("standard_provider"))) {
-    return "standard_provider";
-  }
-  return "provisional_independent";
-}
+/**
+ * Step 2 only exists when the chosen services actually carry requirements, so
+ * a step's internal id is not the number the applicant sees. Display position
+ * is derived from the visible steps instead of hand-patched at each call site.
+ */
+type SignupStep = 1 | 2 | 3 | 4;
 
-type SignupStep = 1 | 2 | 3;
+const SIGNUP_STEP_LABELS: Record<SignupStep, { en: string; es: string }> = {
+  1: { en: "Your services", es: "Sus servicios" },
+  2: { en: "Requirements", es: "Requisitos" },
+  3: { en: "Your business", es: "Su negocio" },
+  4: { en: "Sign and submit", es: "Firmar y enviar" },
+};
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
@@ -478,7 +476,13 @@ export function ProviderSignupForm() {
         }
         setDraftFields(fields);
       }
-      if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
+      // Only steps that actually render may be restored. Step 4 is declared in
+      // SignupStep but has no block yet, so restoring it — from a stale draft
+      // or a hand-edited localStorage value — would show an empty form with no
+      // way forward. Widen this only when a step 4 exists to land on.
+      if (draft.step === 1 || draft.step === 2 || draft.step === 3) {
+        setStep(draft.step);
+      }
       setDraftRestored(true);
     });
     return () => {
@@ -557,6 +561,12 @@ export function ProviderSignupForm() {
     providerFormIsSpanish,
   );
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
+  // Step 4 ("Sign and submit") is defined but not yet reachable: splitting it
+  // off unmounts step 3, which would drop every required field there from
+  // FormData and skip its native validation. Each one needs a hidden carrier
+  // and an explicit check first, the same way provider-email does.
+  const visibleSteps: SignupStep[] = showStep2 ? [1, 2, 3] : [1, 3];
+  const stepPosition = Math.max(visibleSteps.indexOf(step), 0) + 1;
 
   function resetChallenge() {
     setApplicationChallengeId("");
@@ -614,6 +624,17 @@ export function ProviderSignupForm() {
         providerFormIsSpanish
           ? "Elija al menos un servicio."
           : "Pick at least one service.",
+      );
+      return;
+    }
+    // Step 1 renders its own Continue as type="button", so native `required`
+    // validation never runs here — check the email explicitly.
+    const stepOneEmail = (draftFields["provider-email"] ?? "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stepOneEmail)) {
+      setStepError(
+        providerFormIsSpanish
+          ? "Escriba un correo electrónico válido."
+          : "Enter a valid email address.",
       );
       return;
     }
@@ -711,7 +732,9 @@ export function ProviderSignupForm() {
 
     if (applicationChallengeId) {
       if (!pendingApplicationPayload || !/^\d{6}$/.test(applicationVerificationCode)) {
-        setApplicationError("Enter the 6-digit code sent to the application email.");
+        setApplicationError(providerFormIsSpanish
+          ? "Escriba el código de 6 dígitos enviado al correo de la solicitud."
+          : "Enter the 6-digit code sent to the application email.");
         return;
       }
       setApplicationBusy(true);
@@ -868,22 +891,18 @@ export function ProviderSignupForm() {
       onSubmit={handleFinalSubmit}
     >
       <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
-          1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
-        </span>
-        {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
+        {visibleSteps.map((id, index) => (
+          <span className={step === id ? "on" : ""} key={id}>
+            {index + 1}. {providerFormIsSpanish
+              ? SIGNUP_STEP_LABELS[id].es
+              : SIGNUP_STEP_LABELS[id].en}
           </span>
-        )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
-        </span>
+        ))}
       </div>
       <p className="hint step-progress" aria-live="polite">
         {providerFormIsSpanish
-          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
-          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+          ? `Paso ${stepPosition} de ${visibleSteps.length}`
+          : `Step ${stepPosition} of ${visibleSteps.length}`}
       </p>
 
       {draftRestored && !applicationChallengeId && (
@@ -918,24 +937,30 @@ export function ProviderSignupForm() {
                   : "Why, and what Montgomery County requires"}
               </summary>
               <small>
-                Applications and service selections are accepted for review only. Activation requires
-                documented compliance with applicable law, insurer approval, and every required government,
-                agency, environmental, tax, payment, privacy, security, and service-specific control.
+                {providerFormIsSpanish
+                  ? "Las solicitudes y selecciones de servicios se aceptan solo para revisión. La activación requiere cumplimiento documentado de la ley aplicable, aprobación de la aseguradora y todos los controles gubernamentales, de agencias, ambientales, fiscales, de pagos, privacidad, seguridad y específicos del servicio que correspondan."
+                  : "Applications and service selections are accepted for review only. Activation requires documented compliance with applicable law, insurer approval, and every required government, agency, environmental, tax, payment, privacy, security, and service-specific control."}
               </small>
               <small>
-                <strong>Montgomery County has no unregistered simple-repair lane.</strong>{" "}
-                A mobile repair or maintenance business must hold the County OCP registration.
-                An independent owner-operator needs a real business, current OCP registration, and
-                broker-confirmed coverage for each exact service.
+                <strong>
+                  {providerFormIsSpanish
+                    ? "El Condado de Montgomery no tiene una vía de reparaciones simples sin registro."
+                    : "Montgomery County has no unregistered simple-repair lane."}
+                </strong>{" "}
+                {providerFormIsSpanish
+                  ? "Un negocio móvil de reparación o mantenimiento debe contar con el registro OCP del Condado. Un propietario-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por su corredor para cada servicio específico."
+                  : "A mobile repair or maintenance business must hold the County OCP registration. An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service."}
               </small>
               <small>
-                Official sources: {" "}
+                {providerFormIsSpanish ? "Fuentes oficiales: " : "Official sources: "}{" "}
                 <a
                   href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Montgomery County OCP registration guidance
+                  {providerFormIsSpanish
+                    ? "Guía de registro OCP del Condado de Montgomery"
+                    : "Montgomery County OCP registration guidance"}
                 </a>
                 {" · "}
                 <a
@@ -943,7 +968,9 @@ export function ProviderSignupForm() {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  County Code Chapter 31A
+                  {providerFormIsSpanish
+                    ? "Capítulo 31A del Código del Condado"
+                    : "County Code Chapter 31A"}
                 </a>
               </small>
             </details>
@@ -1050,6 +1077,23 @@ export function ProviderSignupForm() {
               ))}
             </div>
           )}
+          <label>
+            {providerFormIsSpanish ? "Correo electrónico" : "Email"}
+            <input
+              autoComplete="email"
+              defaultValue={draftFields["provider-email"] ?? ""}
+              inputMode="email"
+              required
+              name="provider-email"
+              type="email"
+              placeholder="hello@yourbusiness.com"
+            />
+            <small>
+              {providerFormIsSpanish
+                ? "Solo lo usamos para verificar su solicitud y enviarle actualizaciones. Sus respuestas se guardan en este dispositivo, así que puede continuar donde quedó."
+                : "We only use this to verify your application and send you updates. Your answers are saved on this device, so you can pick up where you left off."}
+            </small>
+          </label>
           <button type="button" className="button lime form-button" onClick={goToStep2}>
             {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
           </button>
@@ -1321,7 +1365,9 @@ export function ProviderSignupForm() {
 
       {step === 3 && (
         <div data-signup-step="3">
-          <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
+          <h3>
+            {providerFormIsSpanish ? "Usted y su negocio" : "You and your business"}
+          </h3>
           <p>
             {providerFormIsSpanish
               ? "Unos datos sobre usted y su negocio. La configuración de pago viene después de la aprobación."
@@ -1391,23 +1437,26 @@ export function ProviderSignupForm() {
                 : "Must match the ID used in the separate Stripe Identity check."}
             </small>
           </label>
-          <label>
-            {providerFormIsSpanish ? "Correo electrónico" : "Email"}
-            <input
-              autoComplete="email"
-              defaultValue={draftFields["provider-email"] ?? ""}
-              inputMode="email"
-              required
-              name="provider-email"
-              type="email"
-              placeholder="hello@yourbusiness.com"
-            />
-            <small>
-              {providerFormIsSpanish
-                ? "Solo lo usamos para verificar su solicitud y enviarle actualizaciones."
-                : "We only use this to verify your application and send you updates."}
-            </small>
-          </label>
+          {/*
+            Email is collected on step 1 so an applicant who abandons partway
+            still has their progress saved under an address they can return to.
+            Steps render conditionally, so `new FormData(form)` at submit only
+            sees the current step — this hidden field carries the step-1 value
+            into the payload. The read-back row below keeps it visible and
+            correctable without leaving step 3.
+          */}
+          <input
+            name="provider-email"
+            type="hidden"
+            value={draftFields["provider-email"] ?? ""}
+          />
+          <div className="provider-email-readback">
+            <span>{providerFormIsSpanish ? "Correo electrónico" : "Email"}</span>
+            <strong>{draftFields["provider-email"] ?? ""}</strong>
+            <button type="button" className="account-text-button" onClick={goToStep1}>
+              {providerFormIsSpanish ? "Cambiar" : "Change"}
+            </button>
+          </div>
           <label>
             {providerFormIsSpanish ? "Teléfono (opcional)" : "Phone (optional)"}
             <input
@@ -1424,6 +1473,15 @@ export function ProviderSignupForm() {
                 : "Only if you'd rather we reach you by phone. Email is all that's required."}
             </small>
           </label>
+          {/*
+            Everything above is about the person; everything below is about the
+            business. Marking the seam is what makes this step read as two
+            short sections instead of one long one — no fields move, so nothing
+            can drop out of FormData.
+          */}
+          <h4 className="signup-subheading">
+            {providerFormIsSpanish ? "Su negocio" : "Your business"}
+          </h4>
           <label>
             {soloBusiness
               ? (providerFormIsSpanish ? "Nombre del negocio (opcional)" : "Business name (optional)")
@@ -1735,6 +1793,14 @@ export function ProviderSignupForm() {
                   : "I confirm that I am at least 18 years old and authorized to submit this application."}
               </span>
             </label>
+            {/*
+              Stays English until its Spanish legal copy is reviewed. Unlike
+              the two acceptances below, this one is not hash-recorded, so
+              translating it would not corrupt any evidence record — that is
+              exactly why it looks safe to translate, and it is not. It is
+              still a legal acknowledgment, and what it means in Spanish is a
+              reviewed-copy decision rather than a string swap.
+            */}
             <label className="policy-consent">
               <input
                 required
@@ -1749,7 +1815,23 @@ export function ProviderSignupForm() {
                 remains responsible for their own business and work authorization obligations.
               </span>
             </label>
-          </fieldset>
+          {/*
+            DO NOT translate the two acceptance texts below, and do not add
+            them to the spanishText dictionary (the form sits under
+            data-manual-language, so dictionary entries never reach it anyway).
+
+            On submit, app/api/providers/route.ts records
+            providerAgreementEvidenceText() for every acceptance document, and
+            that evidence embeds `presentedText` — these exact English
+            constants — alongside a canonical body hash and release id.
+            Rendering Spanish here while recording the English would make the
+            immutable record assert the applicant saw text they never saw.
+
+            Translating them needs a reviewed Spanish policy release and a
+            presentedText that follows the displayed language, not a string
+            swap. Spanish drafts already exist in site-language.tsx if that
+            work gets picked up.
+          */}
           <label className="policy-consent">
             <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
             <span>
@@ -1769,6 +1851,7 @@ export function ProviderSignupForm() {
               Review the <a href="/privacy">Privacy Policy</a>.
             </span>
           </label>
+          </fieldset>
           {applicationChallengeId ? (
             <section
               className="legal-requirement-note"
@@ -1791,7 +1874,9 @@ export function ProviderSignupForm() {
                   : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
-                6-digit verification code
+                {providerFormIsSpanish
+                  ? "Código de verificación de 6 dígitos"
+                  : "6-digit verification code"}
                 <input
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -1811,16 +1896,22 @@ export function ProviderSignupForm() {
                 disabled={applicationBusy || applicationVerificationCode.length !== 6}
                 type="submit"
               >
-                {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                {applicationBusy
+                  ? (providerFormIsSpanish ? "Verificando..." : "Verifying...")
+                  : (providerFormIsSpanish
+                    ? "Verificar correo y continuar"
+                    : "Verify email and continue")}
               </button>
               {/* One button to press. The two ways out stay available as plain
                   links so they cannot be mistaken for the thing to do next. */}
               <div className="form-alt-actions">
                 <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
-                  Send the code again
+                  {providerFormIsSpanish ? "Enviar el código de nuevo" : "Send the code again"}
                 </button>
                 <button disabled={applicationBusy} onClick={resetChallenge} type="button">
-                  Go back and edit
+                  {/* TODO(es): "Regresar y editar" is a literal rendering of main's
+                      newer label; confirm against reviewed Spanish copy. */}
+                  {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
                 </button>
               </div>
             </section>
