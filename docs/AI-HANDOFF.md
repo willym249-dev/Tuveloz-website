@@ -61,6 +61,11 @@ The platform charge is a **5% customer service fee**, defined once in
 top of the provider's quote and paid by the customer; provider quotes are
 labor-only. Both amounts appear as separate line items at checkout.
 
+Providers keep **100% of what they quote**. Never express the customer fee as a
+deduction from provider earnings, and never reuse the legacy 10% customer-fee
+copy from an old branch, screenshot, search result, or conversation. The build
+enforces this copy contract in `tests/customer-fee-consistency.test.mjs`.
+
 There are two settlement strategies in `app/api/stripe/checkout/route.ts`:
 
 - **Destination charge** — used for storefront product purchases. Stripe moves

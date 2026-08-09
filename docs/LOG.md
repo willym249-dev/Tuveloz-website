@@ -13,6 +13,26 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-09 — Locked the 5% customer-fee copy against regression
+
+**What happened.** Audited the current production release and the source on
+`main` after stale indexed pages exposed older 10% fee language. Cache-bypassed
+production responses for the homepage, payment policy, provider agreement,
+terms, customer agreement, provider signup, and post-job page contained no 10%
+customer-fee claims. Production was serving the same commit as `main`.
+
+**Decisions made.** The invariant is explicit for every assistant and every
+copy surface: customers pay a 5% service fee, providers keep 100% of what they
+quote, legacy 10% language is a defect, and the customer fee must never be
+expressed as a deduction from provider earnings. A focused test now fails the
+build if either forbidden claim returns in application, brand, AI-policy, or
+assistant-handoff copy.
+
+**Now open.** Search-engine and crawler snapshots may continue showing an old
+version until they recrawl; production itself is current.
+
+---
+
 ## 2026-08-08 — Homepage made launch-honest and shorter
 
 **What happened.** Reworked the customer-facing hero on the homepage and customer lander so it no longer implies that live customer quotes are available today. Both now say that accounts are open while requests wait for adequate provider coverage. Added a clear “Need help today?” route to local shops, mobile mechanics, or licensed towing while dispatch is unavailable. Added a planned-fee example that labels final launch pricing and tax treatment as under review.

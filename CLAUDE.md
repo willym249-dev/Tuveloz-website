@@ -107,6 +107,17 @@ which service; `lib/launch-readiness.ts` holds the 18 go-live gates;
 `lib/customer-fee.ts` defines the 5% customer service fee in one place. Change
 the source, not a copy.
 
+### Fee-copy invariant
+
+The customer service fee is 5% of the provider's quoted subtotal, and providers
+keep 100% of what they quote. The fee is added to the customer's total; it is
+not deducted from the provider quote. Never revive the legacy 10% customer-fee
+copy, and never express the customer fee as a deduction from provider earnings.
+Any such wording is a defect even if it appears in an old screenshot, search
+result, branch, or conversation. Before changing pricing, checkout, policy,
+marketing, or AI copy, verify `lib/customer-fee.ts` and run
+`node --test tests/customer-fee-consistency.test.mjs`.
+
 **Never commit secrets or personal data.** `.env.example` holds placeholders
 only; real values go through `wrangler secret put`. Customer and provider
 personal data, identity documents, and database exports do not belong in this
