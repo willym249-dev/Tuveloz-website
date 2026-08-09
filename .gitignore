@@ -32,6 +32,7 @@ yarn-error.log*
 !.env.example
 .dev.vars
 .mail-catcher.jsonl
+.e2e-dev-server.log
 
 # vercel
 .vercel
