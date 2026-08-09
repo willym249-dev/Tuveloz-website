@@ -1,15 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { rememberAttribution, track } from "../../lib/analytics";
 import {
   CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
   CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
   CUSTOMER_JOB_POSTING_PAUSED_SUMMARY,
 } from "../../lib/launch-status";
 
+// Recorded on every banner event so a later copy test has something to compare
+// against. Change this string only when the wording itself changes, or the two
+// periods become indistinguishable in the data.
+const BANNER_SURFACE = { surface: "launch_banner", variant: "baseline" } as const;
+
+// Module scope, deliberately not a ref. This component mounts more than once per
+// page load — StrictMode double-invokes effects, and the layout can remount —
+// and a ref only dedupes within a single instance. Measured: a ref produced two
+// impressions for one page view, which would have halved the reported
+// click-through rate. A module flag lives as long as the JS context, so it
+// resets on a real navigation and never on a remount.
+let impressionSent = false;
+
 export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
+
+  // Once per page load, not per render, so clicks over impressions is a real
+  // click-through rate.
+  useEffect(() => {
+    if (impressionSent) return;
+    impressionSent = true;
+    track("launch_banner_impression", BANNER_SURFACE);
+  }, []);
 
   return (
     <>
@@ -179,8 +201,27 @@ export function JobPostingPauseNotice() {
             are paused. The strip is sitewide, though, so it also keeps a
             provider route available on pages without the recruitment hero. */}
         <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
-          <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
-          <Link href="/join">Join as a provider</Link>
+          <Link
+            href="/account?role=customer&mode=create&source=launch_banner"
+            onClick={() => {
+              // Remember first, then count. If the navigation wins the race, the
+              // attribution is already stored and account_created still lands
+              // against the banner.
+              rememberAttribution(BANNER_SURFACE);
+              track("launch_banner_cta_clicked", { ...BANNER_SURFACE, cta: "save_my_spot_free" });
+            }}
+          >
+            Save my spot — free
+          </Link>
+          <Link
+            href="/join"
+            onClick={() => {
+              rememberAttribution(BANNER_SURFACE);
+              track("launch_banner_cta_clicked", { ...BANNER_SURFACE, cta: "join_as_a_provider" });
+            }}
+          >
+            Join as a provider
+          </Link>
         </nav>
       </aside>
     </>

@@ -16,6 +16,8 @@ const KNOWN_EVENTS = new Set([
   "quote_received",
   "quote_accepted",
   "job_completed",
+  "launch_banner_impression",
+  "launch_banner_cta_clicked",
 ]);
 
 export async function POST(request: Request) {
