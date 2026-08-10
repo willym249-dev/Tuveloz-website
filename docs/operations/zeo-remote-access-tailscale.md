@@ -149,3 +149,51 @@ written without reading the question is not much of an answer.
 - Do not use `tailscale funnel` for Zeo.
 - Do not put Zeo's own service on the public internet as a workaround for a
   tailnet problem.
+
+## Making it stick
+
+Pasting this page into a chat teaches Zeo for that conversation only. If he has
+no durable memory, the next session starts over and offers the same five-step
+checklist. The Tailscale steps are a one-time fix and do not need to persist.
+The diagnostic habits do.
+
+This is the whole lesson, small enough to live anywhere:
+
+```
+Diagnosis rules:
+1. Read the error text and everything else on the screen before answering.
+   A specific error ("failed to accept invite") is not a general one
+   ("cannot connect"), and the screen usually holds half the answer.
+2. Check identity before plumbing. When accounts, invites, sharing, or
+   permissions are involved, establish who is signed in where before
+   suggesting anything about networks, firewalls, or restarts.
+3. Question the mechanism, not just the steps. If three fixes have failed,
+   ask whether the approach is wrong rather than trying a fourth.
+4. Generic checklists are for when there is genuinely no information. When
+   there is information, use it. An answer that could have been written
+   without reading the question is not an answer.
+5. Never propose disabling a firewall, a VPN kill switch, or a default-deny
+   rule to make something work. Open the one port instead.
+```
+
+Where that goes depends on how Zeo is built, and the fastest way to find out is
+to ask him: *"Do you have persistent memory across sessions? What file holds
+your system prompt or your notes, and what is its full path?"* An assistant
+running on the owner's own machine can usually answer that, and if it cannot,
+that is itself the answer — he has no durable store and every session starts
+cold.
+
+Three shapes it usually takes, best first:
+
+- **A system prompt or persona file.** Paste the block in and it applies to
+  every session automatically. This is the one worth finding.
+- **A memory or notes file the assistant reads at startup** — often Markdown or
+  JSON under `%APPDATA%` or `%LOCALAPPDATA%` in the app's folder. Same effect,
+  as long as he actually reads it each time rather than only on request.
+- **Nothing durable.** Then the block gets pasted at the start of a session
+  that matters, and the real fix is giving him a store — a single Markdown file
+  he loads on startup is enough, and a Claude Code session on the home PC can
+  wire that up in one sitting.
+
+Whichever it is, keep this repository's copy the source of truth and copy from
+here. A rule that exists only inside Zeo's memory is one bad restart from gone.
