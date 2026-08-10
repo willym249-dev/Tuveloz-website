@@ -68,11 +68,24 @@ deployment for a pull request — every deploy step in `deploy-cloudflare.yml` i
 gated on `github.event_name != 'pull_request'` — and staging cannot send at all:
 `scripts/generate-staging-wrangler.mjs` sets `RESEND_FROM_EMAIL` to an empty
 string and the staging Worker holds no `RESEND_API_KEY`, which `STAGING.md`
-documents as intentional. So the fixes above are verified by build, lint, and
-391 tests, but nobody has yet watched a real code arrive in a real inbox, and
-the `Authentication-Results` header that would prove `dmarc=pass` has not been
-captured. Enabling staging mail needs a separate Resend key and a `STAGING.md`
-update; whether to do that at all is an open item.
+documents as intentional.
+
+Verification was done locally instead, and is now committed as
+`tests/e2e/account-signup.e2e.mjs` (`npm run test:e2e:account`). It runs in a
+throwaway worktree against a real dev server, a real local D1, and a real
+browser, with delivery pointed at `scripts/dev-mail-catcher.mjs` on loopback —
+no production credential, no staging email, nothing leaving the machine. It
+proves the property that matters: an eligible and an ineligible address are
+indistinguishable across all four requests — same statuses, same response text
+— while the catcher shows the two paths really did different work underneath,
+three codes sent versus none. Reversing the throttle ordering makes it fail, so
+it is a real guard.
+
+What is still unproven is anything about **delivery**: nobody has watched a
+code arrive in a real inbox, and the `Authentication-Results` header that would
+turn the DNS analysis above into evidence has not been captured. Enabling
+staging mail needs a separate Resend key and a `STAGING.md` update; whether to
+do that at all is an open item.
 
 **Now open.** Two friction points were left alone deliberately, as security
 posture that is the owner's call rather than an assistant's:
