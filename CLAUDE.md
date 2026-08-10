@@ -173,7 +173,22 @@ npm test        # full production build, then 62 test files
 ```
 
 `npm test` builds before it tests, so it is slower than it looks but catches
-build breakage. Deployment happens through GitHub Actions on push to `main`;
+build breakage.
+
+To see what the business still needs rather than what the code does:
+
+```bash
+npm run readiness
+```
+
+It reads and never writes. One report covering the three marketplace locks, the
+18 launch gates in `lib/launch-readiness.ts` against the decisions actually
+recorded in production D1, `.env.example` against the deployed Worker's vars and
+secrets, and the deadline table in `docs/OPEN-ITEMS.md`. Add `--offline` to skip
+the two Cloudflare reads, `--json` for machine-readable output, or `--strict` to
+exit non-zero when something required is outstanding. Gates are answered by the
+owner in `/admin/launch-readiness`; this command cannot record a decision and
+nothing it reports is a reason to flip a lock. Deployment happens through GitHub Actions on push to `main`;
 running `npm run deploy` by hand skips the release stamping and health
 verification and is documented as emergency-only in `DEPLOYMENT.md`.
 
