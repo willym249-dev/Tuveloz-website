@@ -176,24 +176,54 @@ Diagnosis rules:
    rule to make something work. Open the one port instead.
 ```
 
-Where that goes depends on how Zeo is built, and the fastest way to find out is
-to ask him: *"Do you have persistent memory across sessions? What file holds
-your system prompt or your notes, and what is its full path?"* An assistant
-running on the owner's own machine can usually answer that, and if it cannot,
-that is itself the answer — he has no durable store and every session starts
-cold.
+### Asked directly, Zeo says he has no memory file
 
-Three shapes it usually takes, best first:
+His answer, 2026-08-10: *"I don't have a specific memory file. I operate
+entirely within the constraints of Wilfredo's computer and my interactions are
+based on the information available to me during our session."*
 
-- **A system prompt or persona file.** Paste the block in and it applies to
-  every session automatically. This is the one worth finding.
-- **A memory or notes file the assistant reads at startup** — often Markdown or
-  JSON under `%APPDATA%` or `%LOCALAPPDATA%` in the app's folder. Same effect,
-  as long as he actually reads it each time rather than only on request.
-- **Nothing durable.** Then the block gets pasted at the start of a session
-  that matters, and the real fix is giving him a store — a single Markdown file
-  he loads on startup is enough, and a Claude Code session on the home PC can
-  wire that up in one sitting.
+Take that as evidence about the conversation, not about the machine. A model
+cannot see the program that runs it. It does not know what its launcher reads
+at startup, what is on disk beside it, or what text was prepended to the
+conversation before the first message appeared — that text simply arrives as
+context, indistinguishable from something it always knew. Asking an assistant
+where its configuration lives is asking a question it has no instrument to
+answer, and a confident "I have none" from that position means only that none
+is visible from where it is standing.
 
-Whichever it is, keep this repository's copy the source of truth and copy from
-here. A rule that exists only inside Zeo's memory is one bad restart from gone.
+What is on disk is not in doubt. The Zeo window renders **"Private local
+companion"** and **"OWNER SESSION · LOCAL BRAIN"**. Those strings were written
+by someone into a file, and the persona that produces his tone almost certainly
+sits near them. Find that file and the diagnosis block has a permanent home.
+
+From PowerShell on the home PC:
+
+```powershell
+Get-ChildItem -Path $env:APPDATA, $env:LOCALAPPDATA,
+    "$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents" `
+    -Recurse -Include *.json,*.md,*.txt,*.py,*.js,*.ts,*.yaml,*.yml `
+    -ErrorAction SilentlyContinue |
+  Select-String -Pattern 'Private local companion|LOCAL BRAIN|OWNER SESSION' |
+  Select-Object -ExpandProperty Path -Unique
+```
+
+That takes a few minutes across a full profile and prints every file carrying
+Zeo's own interface text. Whatever comes back — a config JSON, a prompt
+Markdown file, a string in source — is where he is defined. If the whole thing
+returns nothing, widen it to the drive Zeo is installed on, or simply look in
+the folder the application launches from.
+
+Once the file is found, three shapes it usually takes:
+
+- **A system prompt or persona string.** Append the block to it. It then
+  applies to every session with nothing to remember.
+- **A memory or notes file read at startup.** Same effect, provided the
+  launcher loads it every time rather than only when asked.
+- **Genuinely nothing durable** — the persona is typed fresh or hardcoded past
+  reach. Then the block gets pasted at the top of any session that matters, and
+  the real fix is giving him a store: one Markdown file, loaded at startup. A
+  Claude Code session run on the home PC can read the launcher and wire that up
+  in a sitting, which is the durable version of this whole exercise.
+
+Keep this repository's copy the source of truth and copy from here. A rule that
+exists only inside Zeo's configuration is one reinstall from gone.
