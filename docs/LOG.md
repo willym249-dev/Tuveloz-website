@@ -13,6 +13,59 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-10 — Closed three silent dead ends in account creation
+
+**What happened.** Audited both signup paths end to end after asking whether
+customers and providers can actually get accounts without trouble. Nothing was
+broken, but three failures were silent — the visitor was told a code was on its
+way and no email was ever sent, with no error to act on.
+
+1. A provider picking the Provider tab and "Create account" without having
+   applied. `eligibleAccountRoles()` only returns `provider` once an
+   application row exists, so the server correctly refused and the generic
+   response read as success. The provider create tab now says applications come
+   first and links to `/join`.
+2. The emailed-code throttle (3 per 15 minutes) was never surfaced. Both
+   request routes returned the generic success text even when throttled, so
+   anyone whose first code went to spam burned all three retries blind. Both
+   routes now answer 429 with a real message.
+3. No code entry step mentioned spam folders, the 10-minute expiry, or the send
+   limit. All three now do.
+
+**Decisions made.** Surfacing the 429 is only safe because the throttle now
+runs *before* the eligibility lookup. The previous row-counting throttle could
+only count rows it had written, so a 429 would itself have confirmed that an
+address was real — an enumeration oracle, and the exact thing the generic "if
+that email is eligible" wording exists to prevent. Throttling is now consumed
+first, keyed by a hash of email+role+purpose, via the existing
+`consumeFixedWindow` helper in `lib/public-write-rate-limit.ts` (no migration
+needed). `issuePasswordChallenge` no longer throttles internally: its two
+callers have to consume the window at different points — before the eligibility
+lookup for a self-service request, after the password check for a sign-in — and
+one shared throttle fired at the wrong moment for one of them.
+
+Refusals stay generic. Naming which emails have applications would enumerate
+providers; the fix is to state the rule up front, not to explain the refusal.
+
+`tests/account-code-delivery.test.mjs` guards all of it, including the
+throttle-before-eligibility ordering. That ordering assertion was
+mutation-tested: reversing the two blocks fails it.
+
+**Now open.** Two friction points were left alone deliberately, as security
+posture that is the owner's call rather than an assistant's:
+
+- Password sign-in always requires an emailed code — mandatory 2FA on every
+  sign-in, not optional. Passkey enrollment right after first sign-in is what
+  softens this for repeat users.
+- Sessions expire after 30 minutes idle and 12 hours absolute, so a provider
+  working jobs will be signed out during the day.
+
+Also unaddressed and structural: every entry path depends on Resend delivering
+within 10 minutes, and phone/SMS is off (`PHONE_SMS_LIVE_MODE_ENABLED`). A
+Resend incident or a domain-reputation dip locks everyone out with no fallback.
+
+---
+
 ## 2026-08-09 — Locked the 5% customer-fee copy against regression
 
 **What happened.** Audited the current production release and the source on

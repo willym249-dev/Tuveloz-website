@@ -21,6 +21,7 @@ import {
   requiredProviderCredentialRequirements,
 } from "./provider-credentials";
 import { sendAccountSecurityAlert } from "./email-notifications";
+import { consumeFixedWindow, rateLimitKeyHash } from "./public-write-rate-limit";
 import {
   isPathwayLevelCompatible,
   isProviderLevel,
@@ -502,20 +503,39 @@ async function sendLoginCodeEmail(
   }
 }
 
+/**
+ * Fixed-window throttle for emailed authentication codes, keyed by a hash of
+ * the address rather than the address itself. Every caller must consume this
+ * before any lookup that could distinguish a real account from an unknown one.
+ */
+async function withinCodeRequestWindow(
+  action: string,
+  email: string,
+  role: AccountRole,
+  purpose: PasswordChallengePurpose | "" = "",
+) {
+  return consumeFixedWindow(
+    action,
+    await rateLimitKeyHash(`${email}:${role}:${purpose}`),
+    LOGIN_RATE_LIMIT,
+    LOGIN_RATE_WINDOW_MS,
+  );
+}
+
 export async function requestAccountCode(email: string, role: AccountRole) {
+  // Throttled before the eligibility check, and recorded for every address
+  // rather than only the ones that resolve to an account. An eligibility-first
+  // throttle can only ever count rows it wrote, so a 429 would itself confirm
+  // that the address is real — the enumeration leak the generic response text
+  // exists to prevent. Counting first keeps the surfaced 429 identical for an
+  // eligible and an ineligible address.
+  if (!await withinCodeRequestWindow("account_code", email, role)) {
+    return { accepted: false, delivered: false, rateLimited: true };
+  }
+
   const roles = await eligibleAccountRoles(email);
   if (!roles.includes(role)) {
     return { accepted: true, delivered: false };
-  }
-
-  const recent = await getDb().select({ createdAt: loginCodes.createdAt })
-    .from(loginCodes)
-    .where(and(eq(loginCodes.email, email), eq(loginCodes.role, role)))
-    .orderBy(desc(loginCodes.createdAt))
-    .limit(LOGIN_RATE_LIMIT);
-  const cutoff = Date.now() - LOGIN_RATE_WINDOW_MS;
-  if (recent.filter((item) => parseStoredDate(item.createdAt) >= cutoff).length >= LOGIN_RATE_LIMIT) {
-    return { accepted: false, delivered: false, rateLimited: true };
   }
 
   const id = crypto.randomUUID();
@@ -638,25 +658,18 @@ async function sendPasswordVerificationEmail(
   }
 }
 
+/**
+ * Issues and sends a challenge. Throttling belongs to the caller, not here:
+ * each caller has to consume its window at a different point — before the
+ * eligibility lookup for a self-service request, after the password check for
+ * a sign-in — and a throttle inside this helper would fire at the wrong moment
+ * for one of them and double-count for the other.
+ */
 async function issuePasswordChallenge(
   email: string,
   role: AccountRole,
   purpose: PasswordChallengePurpose,
 ) {
-  const recent = await getDb().select({ createdAt: passwordVerificationCodes.createdAt })
-    .from(passwordVerificationCodes)
-    .where(and(
-      eq(passwordVerificationCodes.email, email),
-      eq(passwordVerificationCodes.role, role),
-      eq(passwordVerificationCodes.purpose, purpose),
-    ))
-    .orderBy(desc(passwordVerificationCodes.createdAt))
-    .limit(LOGIN_RATE_LIMIT);
-  const cutoff = Date.now() - LOGIN_RATE_WINDOW_MS;
-  if (recent.filter((item) => parseStoredDate(item.createdAt) >= cutoff).length >= LOGIN_RATE_LIMIT) {
-    return { accepted: false, delivered: false, rateLimited: true };
-  }
-
   const id = crypto.randomUUID();
   const code = randomDigits();
   const createdAt = new Date().toISOString();
@@ -690,6 +703,11 @@ export async function requestPasswordVerification(
   role: AccountRole,
   purpose: PasswordPurpose,
 ) {
+  // Before the eligibility lookup, for the reason given on requestAccountCode.
+  if (!await withinCodeRequestWindow("password_code", email, role, purpose)) {
+    return { accepted: false, delivered: false, rateLimited: true };
+  }
+
   const [roles, credentialRows] = await Promise.all([
     eligibleAccountRoles(email),
     getDb().select({ email: accountCredentials.email })
@@ -907,10 +925,12 @@ export async function signInWithPassword(
     }).where(eq(accountCredentials.email, email));
   }
 
-  const challenge = await issuePasswordChallenge(email, role, "signin");
-  if (!challenge.accepted) {
+  // Safe to throttle after the password check here: reaching this line already
+  // required the correct password, so the window cannot be probed anonymously.
+  if (!await withinCodeRequestWindow("password_code", email, role, "signin")) {
     return { ok: false as const, rateLimited: true as const };
   }
+  await issuePasswordChallenge(email, role, "signin");
   return { ok: true as const, challengeRequired: true as const };
 }
 

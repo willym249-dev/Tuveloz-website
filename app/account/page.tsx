@@ -63,6 +63,23 @@ function passwordRules(value: string) {
 }
 const REMEMBERED_EMAIL_KEY = "tuveloz.remembered-email";
 
+/**
+ * Shown under every 6-digit entry step. Codes are throttled to 3 per 15
+ * minutes, and a visitor who does not know that spends all three on a message
+ * sitting in a spam folder, then reads the resulting 429 as the site being
+ * broken. Naming the delivery window, the expiry, and the limit up front is
+ * what keeps the throttle from looking like a failure.
+ */
+function CodeDeliveryHint() {
+  return (
+    <small className="account-code-hint">
+      The code can take a minute to arrive and expires after 10 minutes. Check
+      your spam or junk folder before asking for another — only 3 codes can be
+      sent to an email every 15 minutes.
+    </small>
+  );
+}
+
 function destinationAfterSignIn(destination: string) {
   const privacyReturn = new URLSearchParams(window.location.search).get("privacy") === "1";
   return privacyReturn ? "/privacy-center" : destination;
@@ -724,6 +741,36 @@ export default function AccountPage() {
             </div>
           )}
 
+          {/*
+            A provider account is created from an application, not from this
+            form: eligibleAccountRoles() only returns "provider" once an
+            application row exists for the address. Without this panel the
+            server correctly refuses — and then the generic "if that email is
+            eligible" response reads as success, so an applicant who has not
+            applied yet waits on an email that is never sent. The refusal stays
+            generic on purpose (saying which emails have applications would
+            enumerate providers); saying the rule up front is what makes the
+            silence legible.
+          */}
+          {mode === "create" && role === "provider" && (
+            <div className="account-value-prop">
+              <p>
+                Providers apply first — your account is created from your
+                application, and applying is free.
+              </p>
+              <ul>
+                <li>
+                  Not applied yet?{" "}
+                  <Link href="/join">Apply to join as a provider</Link>, then
+                  come back here to set your password.
+                </li>
+                <li>
+                  Already applied? Use the same email address you applied with.
+                </li>
+              </ul>
+            </div>
+          )}
+
           {mode === "signin" && !passwordChallengeRequested && (
             <form className="account-login-form" onSubmit={signInWithPassword}>
               {passkeySupported && (
@@ -829,6 +876,7 @@ export default function AccountPage() {
                   value={code}
                 />
               </label>
+              <CodeDeliveryHint />
               <button className="button primary" disabled={busy || code.length !== 6} type="submit">
                 {busy ? "Verifying…" : "Finish signing in"}
               </button>
@@ -1013,6 +1061,7 @@ export default function AccountPage() {
                   value={code}
                 />
               </label>
+              <CodeDeliveryHint />
               <button className="button primary" disabled={busy || code.length !== 6} type="submit">
                 {busy
                   ? "Verifying…"
@@ -1081,6 +1130,7 @@ export default function AccountPage() {
                   value={code}
                 />
               </label>
+              <CodeDeliveryHint />
               <button className="button primary" disabled={busy || code.length !== 6} type="submit">
                 {busy ? "Signing in…" : "Sign in"}
               </button>
