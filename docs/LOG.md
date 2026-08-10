@@ -51,6 +51,29 @@ providers; the fix is to state the rule up front, not to explain the refusal.
 throttle-before-eligibility ordering. That ordering assertion was
 mutation-tested: reversing the two blocks fails it.
 
+**Email authentication, checked the same day.** SPF, DKIM, and DMARC were
+verified for `updates.tuveloz.com` by direct DNS query. DKIM aligns exactly and
+SPF aligns under relaxed via Resend's `send.updates.tuveloz.com` bounce domain,
+so alignment is correct. The gap is policy: `_dmarc.updates.tuveloz.com` does
+not exist, so discovery falls back to `_dmarc.tuveloz.com`, which is `p=none`
+with no `sp=` tag — monitoring only, no enforcement. Findings and the deliberate
+tightening sequence are in
+[`operations/email-authentication.md`](operations/email-authentication.md), with
+dated rows in [`OPEN-ITEMS.md`](OPEN-ITEMS.md). The decision recorded: stay at
+`p=none` until someone is actually reading `dmarc@tuveloz.com`, then move to
+`p=quarantine` deliberately, and rotate the 1024-bit DKIM key to 2048.
+
+**No end-to-end email test was possible before merge.** There is no preview
+deployment for a pull request — every deploy step in `deploy-cloudflare.yml` is
+gated on `github.event_name != 'pull_request'` — and staging cannot send at all:
+`scripts/generate-staging-wrangler.mjs` sets `RESEND_FROM_EMAIL` to an empty
+string and the staging Worker holds no `RESEND_API_KEY`, which `STAGING.md`
+documents as intentional. So the fixes above are verified by build, lint, and
+391 tests, but nobody has yet watched a real code arrive in a real inbox, and
+the `Authentication-Results` header that would prove `dmarc=pass` has not been
+captured. Enabling staging mail needs a separate Resend key and a `STAGING.md`
+update; whether to do that at all is an open item.
+
 **Now open.** Two friction points were left alone deliberately, as security
 posture that is the owner's call rather than an assistant's:
 

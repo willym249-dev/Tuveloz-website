@@ -37,6 +37,11 @@ When you close something significant, write a matching entry in
 | — | Take stock of which business documents already exist — insurance, LLC formation, EIN, Maryland registrations, licenses — and file a record card for each in `records/` | hello@tuveloz.com | open |
 | — | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
 | — | Confirm the current state of the 18 launch gates in the owner dashboard; the decisions live in the database, not in this repository | hello@tuveloz.com | open |
+| 2026-08-24 | Name a person to monitor `dmarc@tuveloz.com` and confirm the mailbox actually receives aggregate reports. Until someone reads it, the `rua` address is decorative and DMARC stays at `p=none` | hello@tuveloz.com | open |
+| 2026-09-14 | Rotate the DKIM key for `updates.tuveloz.com` to 2048-bit; Resend issued the current 1024-bit default | hello@tuveloz.com | open |
+| 2026-09-21 | Review a full month of DMARC aggregate reports and inventory every legitimate sender before any enforcement change | hello@tuveloz.com | open |
+| 2026-10-19 | Move DMARC to `p=quarantine` — only after the report review above confirms every legitimate sender aligns. Enforcing before that inventory sends real mail to spam | hello@tuveloz.com | open |
+| — | Decide whether staging should be able to send email at all. It cannot today by design, so no end-to-end email test is possible before merge. Enabling it needs a **separate** Resend key, never production's | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 
