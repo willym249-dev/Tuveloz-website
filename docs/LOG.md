@@ -13,6 +13,25 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-10 — Phone-to-Zeo remote access, and why the Tailscale invite failed
+
+**What happened.** The Tailscale "share a device" invite for `zeo-home` kept
+returning `Failed to accept invite`. Cause: the invite was sent from
+hello@tuveloz.com to hello@tuveloz.com. Device sharing crosses accounts; you
+cannot share a device with the account that already owns it. The phone does not
+need a share at all — signing it in to Tailscale with the same account puts it
+in the same tailnet and `zeo-home` appears on its own.
+
+**Written up** in
+[`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md):
+the working procedure, an ordered fault list (the usual real cause is a service
+bound to `127.0.0.1` rather than anything to do with Tailscale), and the rule
+that Zeo stays inside the tailnet — `tailscale serve`, never `tailscale funnel`.
+
+Nothing in the Tuveloz application depends on any of this.
+
+---
+
 ## 2026-08-10 — One command that reports what Tuveloz still needs
 
 **What happened.** Added `npm run readiness` (`scripts/check-readiness.mjs`),
