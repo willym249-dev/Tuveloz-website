@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Safety & Trust",
   description:
     "How Tuveloz verifies providers: law-based checks, service-specific evidence review, limited information sharing, and clear quotes.",
+  alternates: {
+    canonical: "/safety",
+  },
 };
 
 export default function SafetyPage() {

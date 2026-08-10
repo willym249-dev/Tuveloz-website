@@ -13,6 +13,44 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-10 — First AI-discoverability pass, and a canonical-tag defect
+
+**What happened.** Audited how findable Tuveloz is to answer engines and fixed
+the three cheapest gaps. Added `/llms.txt`, a plain-text site summary generated
+from `lib/customer-fee.ts` and `lib/launch-status.ts` rather than hand-written,
+so it cannot drift into describing a marketplace that is not open or a fee that
+is not current. Gave every page in the sitemap its own title, description, and
+canonical URL. Added `AutomotiveBusiness` structured data and server-rendered
+metadata to provider profile pages, and taught the sitemap to list them.
+
+**The defect worth knowing about.** `app/layout.tsx` set
+`alternates.canonical: "/"`, and Next inherits that. Every page on the site was
+therefore declaring the homepage as its canonical URL — telling crawlers that
+`/faq`, `/terms`, `/join` and the rest were all duplicates of `/`. That is a
+plausible contributor to the thin indexing behind the stale-snapshot problem in
+the entry below. The root layout keeps `/` for the homepage, which is a client
+component and cannot export its own metadata; every other indexable page now
+declares its own.
+
+**Decisions made.** The seven released policy pages are pinned to content
+hashes, so their metadata lives in a sibling `layout.tsx` and `page.tsx` is left
+byte-identical. Provider profiles are indexed only through
+`lib/public-provider-directory.ts`, which returns nothing unless
+`runtimeMarketplaceActionAllowed("discovery")` passes — so while the
+marketplace is in onboarding-only mode the sitemap is unchanged and profiles
+render `noindex`, and the listing turns itself on at launch. Reviews, ratings,
+and credential records are deliberately kept out of the structured data: the
+page presents them with dated limits and disclaimers that schema.org markup
+strips away.
+
+**Now open.** The conditions in `lib/public-provider-directory.ts` mirror
+`publicAccess` in `app/api/public-provider/route.ts` and must stay in step —
+the route remains the authoritative gate. Still undecided, carried over from
+2026-08-08: which first-wave local service pages to publish. Without them there
+is little for an answer engine to cite beyond the homepage.
+
+---
+
 ## 2026-08-09 — Locked the 5% customer-fee copy against regression
 
 **What happened.** Audited the current production release and the source on

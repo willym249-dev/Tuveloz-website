@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import { PolicyPage } from "../components/policy-page";
+
+export const metadata: Metadata = {
+  title: "Copyright & DMCA Policy",
+  description:
+    "How to report content on Tuveloz that infringes a copyright, what a valid notice must include, and what happens after a report is filed.",
+  alternates: {
+    canonical: "/copyright",
+  },
+};
 
 export default function CopyrightPage() {
   return (

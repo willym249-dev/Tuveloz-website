@@ -1,6 +1,13 @@
 import type { MetadataRoute } from "next";
+import { publicProviderDirectory } from "../lib/public-provider-directory";
 
 const BASE_URL = "https://tuveloz.com";
+
+/**
+ * Provider entries are read at request time. While discovery is paused the
+ * directory is empty and this is the same static list it has always been.
+ */
+export const dynamic = "force-dynamic";
 
 type PublicPage = {
   path: string;
@@ -30,10 +37,27 @@ const PUBLIC_PAGES: PublicPage[] = [
   { path: "/job-operations", changeFrequency: "monthly", priority: 0.5 },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return PUBLIC_PAGES.map(({ path, changeFrequency, priority }) => ({
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const staticPages = PUBLIC_PAGES.map(({ path, changeFrequency, priority }) => ({
     url: `${BASE_URL}${path}`,
     changeFrequency,
     priority,
   }));
+
+  let providerPages: MetadataRoute.Sitemap = [];
+  try {
+    const directory = await publicProviderDirectory();
+    providerPages = directory.map((entry) => ({
+      url: `${BASE_URL}/providers/${encodeURIComponent(entry.slug)}`,
+      lastModified: entry.updatedAt ? new Date(entry.updatedAt) : undefined,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+  } catch (error) {
+    // A sitemap that omits provider pages is still valid; one that fails to
+    // render at all costs the static pages their indexing too.
+    console.error("Unable to list provider profiles for the sitemap", error);
+  }
+
+  return [...staticPages, ...providerPages];
 }
