@@ -13,6 +13,42 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-10 — One command that reports what Tuveloz still needs
+
+**What happened.** Added `npm run readiness` (`scripts/check-readiness.mjs`),
+which collects into a single report the four things that previously had to be
+checked in four places: the three marketplace locks read from source, the 18
+launch gates read from the catalogue in `lib/launch-readiness.ts` against the
+decisions recorded in production D1, `.env.example` compared against the
+deployed Worker's vars and secrets, and the deadline table, by running the
+existing `scripts/check-deadlines.mjs`. Flags: `--offline` skips the two
+Cloudflare reads, `--json` emits the same data as JSON, `--strict` exits 1 when
+something required is outstanding.
+
+**What the first run found.** Production has **zero** launch-gate decisions
+recorded, so all 18 gates are pending — including the ones only an outside
+authority can answer (insurance carrier, CPA, payment processor). Three
+required configuration values are unset: `LAUNCH_UPDATES_POSTAL_ADDRESS` and
+`IDENTITY_VERIFICATION_PROVIDERS` are declared empty in `wrangler.jsonc`, and
+`STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` has neither a var nor a secret.
+Nothing is overdue in `OPEN-ITEMS.md`, but every row there is undated, so that
+is not reassurance.
+
+**Decisions made.** The report reads and never writes. Gates are answered by
+the owner in `/admin/launch-readiness` and nowhere else; the script cannot
+record a decision, and the marketplace locks are printed as context with a note
+that nothing in the report is a reason to change one. Keys that are only needed
+once a related subsystem is switched on — the two evidence-scanner secrets,
+while `EVIDENCE_SCAN_PROVIDER` is `unconfigured` — are reported as not yet
+needed rather than counted as gaps, so a deliberately fail-closed subsystem
+does not read as broken.
+
+**Now open.** The gate decisions and the postal address are owner and
+third-party work, not code. Adding real dates to `OPEN-ITEMS.md` would make the
+deadline section of this report meaningful rather than always clean.
+
+---
+
 ## 2026-08-09 — Locked the 5% customer-fee copy against regression
 
 **What happened.** Audited the current production release and the source on
