@@ -2,7 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const source = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+// Line endings are normalised because the assertions below slice the source on
+// "\n}\n". A Windows checkout hands back CRLF, that terminator is never found,
+// indexOf returns -1, and the "function body" silently becomes the whole rest
+// of the file — so a body assertion is then testing unrelated code. It only
+// misbehaves off CI, which is the worst place for a test to disagree with
+// itself.
+const source = async (path) =>
+  (await readFile(new URL(`../${path}`, import.meta.url), "utf8"))
+    .replace(/\r\n/g, "\n");
 
 test("a row that uses its last delivery attempt raises an owner incident", async () => {
   const lib = await source("lib/email-notifications.ts");
