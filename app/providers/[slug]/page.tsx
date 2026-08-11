@@ -11,6 +11,7 @@ import {
 } from "../../components/tuveloz-icons";
 import { SiteLanguageButton } from "../../components/site-language";
 import { providerModeForWorkLocations } from "../../../lib/service-matching";
+import { providerProfileJsonLd } from "../../../lib/provider-structured-data";
 
 type StorefrontData = {
   profile: {
@@ -132,8 +133,33 @@ export default function ProviderStorefrontPage() {
   const { profile, services, areas, workLocations, businessMunicipality, gallery, reviews } = data;
   const average = data.reviewSummary.average;
 
+  // Structured data describes only what is on the page. A private draft preview
+  // and a test provider are not public records, so neither gets marked up at
+  // all; `publicAddress` is deliberately not supplied because no provider
+  // address is rendered here, which is what keeps mobile providers out of
+  // LocalBusiness. See lib/provider-structured-data.ts.
+  const structuredData = data.privatePreview || data.testProvider
+    ? null
+    : providerProfileJsonLd({
+      slug,
+      businessName: profile.businessName,
+      headline: profile.headline,
+      about: profile.about,
+      workLocations,
+      businessMunicipality,
+      areas,
+      services,
+      reviewSummary: data.reviewSummary,
+    });
+
   return (
     <main className="storefront-shell">
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      )}
       <header className="storefront-header">
         <Link className="brand" href="/"><BrandMark />Tuveloz</Link>
         <SiteLanguageButton />

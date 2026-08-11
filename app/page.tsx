@@ -2028,6 +2028,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <Link href="/post-job">For customers</Link>
           <Link href="/join">For providers</Link>
           <Link href="/how-it-works">How it works</Link>
+          <Link href="/providers">Providers</Link>
           <Link href="/service-areas">Service areas</Link>
           <Link href="/services">Services</Link>
           <Link href="/safety">Safety &amp; trust</Link>
