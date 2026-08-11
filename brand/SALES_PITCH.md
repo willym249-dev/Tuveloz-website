@@ -199,9 +199,10 @@ with gig work.
 | **A real public presence** | Business page, work gallery, QR code, job-linked reviews |
 | **Direct payouts** | Stripe Connect, paid to your own account |
 
-**Never say "providers keep 95%."** Providers keep 100% of what they quote. The
-customer pays a separate 5% service fee to the site. This distinction is a
-standing rule in the outreach kit and it matters — it's the whole pitch.
+**Never describe the provider share as 95%.** Providers keep 100% of what they
+quote. The customer pays a separate 5% Customer Service Fee to the site. This
+distinction is a standing rule in the outreach kit and it matters — it's the
+whole pitch.
 
 **What the platform takes off their plate** — *"You fix the vehicle. We knock
 out the paperwork."*
@@ -319,13 +320,13 @@ growth playbook calls this *"likely the most underpriced channel available."*
 
 The fee is **additive, not deducted.** A $100 quote means the provider is owed
 $100 and the customer pays $105. That is why "keep 100% of what you quote" is
-literally true and why "providers keep 95%" is banned.
+literally true and why describing the provider share as 95% is banned.
 
 One constant, one place: `CUSTOMER_SERVICE_FEE_RATE_BPS = 500` in
-`lib/customer-fee.ts`. It is snapshotted onto each quote, so the number the
-customer agreed to is the number that flows through display, checkout, and
-payout review. Customers see the line as "Tuveloz service fee (5%)" next to
-"Provider labor" and "Total."
+`lib/customer-fee.ts`, with the name in `CUSTOMER_SERVICE_FEE_NAME`. It is
+snapshotted onto each quote, so the number the customer agreed to is the number
+that flows through display, checkout, and payout review. Customers see the line
+as "Customer Service Fee (5%)" next to "Provider labor" and "Total."
 
 > **The 5% is proposed, not final.** Every legal page says so: it "still needs
 > final sign-off from a tax adviser, the payment processor, and Tuveloz's
@@ -716,8 +717,8 @@ exact people the marketplace depends on.
 
 - That customers can book or pay today, or that jobs are waiting for a provider.
 - Any promise of income, job volume, or earnings.
-- "Providers keep 95%." They keep **100%** of what they quote; the customer pays
-  the 5% fee on top.
+- Any wording that puts the provider share at 95%. They keep **100%** of what
+  they quote; the customer pays the 5% fee on top.
 - That the 5% is final. It is *proposed*, pending tax-adviser, payment-processor,
   and insurance sign-off.
 - **"Escrow," "trust account," or "deposit"** for held funds, unless that
@@ -773,7 +774,7 @@ product problems, and both are worth resolving before this pitch is used widely.
 A third, non-copy item worth a developer's attention: the database default for
 `customer_fee_rate_bps` is **1000 (10%)** while the code constant is **500 (5%)**.
 Live writes always pass 500, so it's latent rather than active — but a row
-inserted without an explicit value would carry a 10% fee.
+inserted without an explicit value would carry a rate of 1000 bps instead.
 
 ---
 
