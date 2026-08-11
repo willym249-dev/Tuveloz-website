@@ -19,6 +19,17 @@ entries to catch up. Write one before you finish.
 when written. Neither is now: the ad half landed in #132/#134, and the last
 thing the tag held that `main` did not landed in #143. The tag pointed at
 `858b2d1` (annotated object `76f3a25`) and is gone from local and `origin`.
+Both archive refs from `ads/got-this-series` are now gone; nothing points at
+those commits, so git will collect them.
+
+**Where everything ended up**, so nobody has to reconstruct this:
+
+| From the tag | Landed as |
+| --- | --- |
+| the 21 ad-pipeline and document files | #132 and #134 |
+| the `lib/launch-status.ts` doc block | #137 (and #138, an empty duplicate) |
+| the e2e customer-signup and provider-sign-in coverage | #140 |
+| the Reel 2 retirement note | #143 |
 
 **How it was audited, since "delete an archive" deserves showing the work.**
 Three questions, in order:
@@ -55,6 +66,11 @@ looked promising were the *older fee copy*, and one was the retired logo
 pipeline. On a tag from a superseded lineage, "content `main` does not have" is
 usually content `main` deliberately moved past. Read every candidate; do not
 salvage on a line count.
+
+**One idea died with it, deliberately.** The tag's owner-side new-account alert,
+keyed `security:owner-new-account:`, does not exist on `main` and was not ported
+— adding it is a product change, not test coverage. If that notification is ever
+wanted, it has to be rebuilt from scratch; there is no longer a copy to read.
 
 ---
 
@@ -127,6 +143,9 @@ holds the only copy of everything not listed above. Treat it as a reference to
 read, not a branch to land: anything wanted out of it should be ported by hand
 onto `main`'s current version and then actually run, the same way #140 was.
 
+*Superseded 2026-08-11: the tag was deleted once the salvage finished. The
+port-by-hand advice still applies to any old ref; the tag itself is gone.*
+
 ---
 
 ## 2026-08-11 — The archived ad work is on main, and one archive tag is gone
@@ -168,9 +187,12 @@ structural reason worth remembering: `archive/got-this-series-wip` points at
 `858b2d1`, whose parent *is* `0808b9b`, so the old branch tip stays reachable
 through the surviving tag. Files unique to that tag versus main are now zero.
 
-**`archive/got-this-series-wip` must stay.** It is the only thing holding 18
-files of working-tree state that were never committed to any branch. Recover
-with `git switch -c ads-restore archive/got-this-series-wip`.
+**`archive/got-this-series-wip` was kept for this reason at the time.** It held 18
+files of working-tree state that were never committed to any branch.
+
+*Superseded 2026-08-11: the salvage finished and the tag was deleted. See the
+entry at the top of this log. There is no recovery command any more, and the
+audit found nothing left in it that `main` did not already have.*
 
 **Fee copy was checked before landing**, since these are marketing documents.
 Every mention states the rule correctly or forbids "keep 95%"; no legacy 10%
