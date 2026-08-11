@@ -148,13 +148,28 @@ Professional Dashboard → Total followers → most active times) and move the
 slots to the audience's actual peaks; account-specific data beats every
 benchmark study.
 
-## Reel 2 — trend-based comedy skit ("dead battery documentary stare")
+## Reel 2 — RETIRED 2026-08-07 (folded into the "I've Got This" series)
 
-Rides three currently-trending formats (Aug 2026): absurdist low-production
-single-take skits outperforming polished content, the "Netflix Documentary"
-deadpan-stare bit, and TikTok's evergreen dead-battery/check-engine meme
-genre. 8s AI clip: guy sips coffee, turns the key, gets click-click-click,
-slow deadpan turn to camera, forehead on horn.
+**Do not produce this as a standalone reel.** It duplicated the joke and the CTA of
+Episode 1 of the character series in
+[docs/marketing/TUVELOZ MARKETING IDEAS.md](../../docs/marketing/TUVELOZ%20MARKETING%20IDEAS.md)
+— shipping both would split one gag across two posts and waste the first.
+
+What carried over: the **documentary stare and the forehead on the horn**, which is the part
+that actually worked. It is now **clip D of Episode 1**, bolted onto the end of the
+jumper-cable gag, where it serves as the button and the audio cut into the end card. The
+dead-battery cold open was dropped — a provider-facing series needs a *mistake the mechanic
+spots*, and a battery that simply dies has none.
+
+The meme-genre hashtags below still apply to Episode 1.
+
+The original spec is kept here for reference only:
+
+> Rides three currently-trending formats (Aug 2026): absurdist low-production
+> single-take skits outperforming polished content, the "Netflix Documentary"
+> deadpan-stare bit, and TikTok's evergreen dead-battery/check-engine meme
+> genre. 8s AI clip: guy sips coffee, turns the key, gets click-click-click,
+> slow deadpan turn to camera, forehead on horn.
 
 On-screen text (native overlays):
 - 0.0–3.0s (hook): "POV: you're already late and the car says ⚡nope⚡"
@@ -171,10 +186,12 @@ ready day one. Link in bio → tuveloz.com/join
 Hashtags: use the same full-reach sets above, and add meme-genre tags on
 this one: #CarMemes #DeadBattery #CheckEngineLight #POV #CarTok
 
-Slotting: post the comedy reel FIRST (it's the reach play — broad meme
-audience), then the mechanic-recruitment reel next day (the conversion
-play). Suggested: comedy Wed 9 AM IG/FB + Wed 7:30 PM TikTok; recruitment
-Thu slots as scheduled above.
+Slotting (still the right logic, now applied to the series): post the comedy
+reach-play FIRST — that is **Episode 1** of "I've Got This" — then the
+direct mechanic-recruitment reel next day as the conversion play. Suggested:
+Episode 1 Wed 9 AM IG/FB + Wed 7:30 PM TikTok; recruitment reel Thu slots as
+scheduled above. Subsequent episodes take the following weeks' Wed slots so
+the character builds recognition instead of burning all four at once.
 
 ## Measurement (check 48h after each post)
 
