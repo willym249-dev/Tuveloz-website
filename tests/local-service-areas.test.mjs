@@ -207,11 +207,13 @@ test("the notification form records which service and area was asked about", asy
 });
 
 test("the public site links to the hubs so they are crawlable", async () => {
-  const [home, infoPage] = await Promise.all([
+  // The footer moved into the shared public chrome, so that is where the hub
+  // links live for every public page rather than in the info-page shell alone.
+  const [home, chrome] = await Promise.all([
     source("app/page.tsx"),
-    source("app/components/public-info-page.tsx"),
+    source("app/components/public-chrome.tsx"),
   ]);
-  for (const file of [home, infoPage]) {
+  for (const file of [home, chrome]) {
     assert.match(file, /href="\/service-areas"/);
     assert.match(file, /href="\/services"/);
   }

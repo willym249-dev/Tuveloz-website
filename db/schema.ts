@@ -99,6 +99,7 @@ export const providerQuotes = sqliteTable(
     availability: text("availability").notNull(),
     scheduledFor: text("scheduled_for").notNull().default(""),
     message: text("message").notNull(),
+    workmanshipWarranty: text("workmanship_warranty").notNull().default(""),
     scopeVersion: integer("scope_version").notNull().default(0),
     authorizationDecisionId: text("authorization_decision_id").notNull().default(""),
     status: text("status").notNull().default("submitted"),
@@ -657,6 +658,8 @@ export const jobReviews = sqliteTable(
     service: text("service").notNull(),
     rating: integer("rating").notNull(),
     comment: text("comment").notNull(),
+    providerReply: text("provider_reply").notNull().default(""),
+    providerReplyAt: text("provider_reply_at").notNull().default(""),
     status: text("status").notNull().default("published"),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
@@ -665,6 +668,48 @@ export const jobReviews = sqliteTable(
     index("job_reviews_provider_email_idx").on(table.providerEmail),
     index("job_reviews_created_at_idx").on(table.createdAt),
     index("job_reviews_status_idx").on(table.status),
+  ],
+);
+
+// A service-aware inspection checklist the accepted provider fills in on a job.
+// Items are seeded from the job's service codes but fully editable; the customer
+// sees them read-only on their request. status is 'pending' | 'good' | 'attention'.
+export const jobInspectionItems = sqliteTable(
+  "job_inspection_items",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    providerEmail: text("provider_email").notNull(),
+    label: text("label").notNull(),
+    status: text("status").notNull().default("pending"),
+    note: text("note").notNull().default(""),
+    position: integer("position").notNull().default(0),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("job_inspection_items_request_id_idx").on(table.requestId),
+    index("job_inspection_items_provider_email_idx").on(table.providerEmail),
+  ],
+);
+
+// A confirmed appointment time the accepted provider sets on a job. The customer
+// sees it on their request; a cron sweep emails a reminder before it arrives.
+export const jobAppointments = sqliteTable(
+  "job_appointments",
+  {
+    id: text("id").primaryKey(),
+    requestId: text("request_id").notNull(),
+    providerEmail: text("provider_email").notNull(),
+    appointmentAt: text("appointment_at").notNull().default(""),
+    note: text("note").notNull().default(""),
+    reminderSentAt: text("reminder_sent_at").notNull().default(""),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    uniqueIndex("job_appointments_request_id_unique").on(table.requestId),
+    index("job_appointments_reminder_idx").on(table.reminderSentAt),
   ],
 );
 
@@ -706,12 +751,22 @@ export const jobMessages = sqliteTable(
     senderRole: text("sender_role").notNull(),
     recipientEmail: text("recipient_email").notNull(),
     body: text("body").notNull(),
+    // Optional image attachment. imageKey is the R2 object; scanStatus is
+    // '' for text-only messages, else 'pending' | 'clean' | 'blocked'. An image
+    // is NEVER served or shown unless scanStatus is 'clean' (fail-closed).
+    imageKey: text("image_key").notNull().default(""),
+    imageType: text("image_type").notNull().default(""),
+    scanStatus: text("scan_status").notNull().default(""),
+    scanAttemptedAt: text("scan_attempted_at").notNull().default(""),
+    scanAttemptCount: integer("scan_attempt_count").notNull().default(0),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => [
     index("job_messages_request_created_idx").on(table.requestId, table.createdAt),
     index("job_messages_recipient_email_idx").on(table.recipientEmail),
     index("job_messages_sender_email_idx").on(table.senderEmail),
+    index("job_messages_scan_status_idx").on(table.scanStatus),
+    index("job_messages_scan_attempted_idx").on(table.scanStatus, table.scanAttemptedAt),
   ],
 );
 
@@ -1803,6 +1858,15 @@ export const accountCommunicationPreferences = sqliteTable(
     marketingEmail: text("marketing_email").notNull().default("no"),
     productUpdateEmail: text("product_update_email").notNull().default("no"),
     optionalReminderEmail: text("optional_reminder_email").notNull().default("yes"),
+    // Scoped to "customer requests are open, plus essential launch updates".
+    // Separate from marketingEmail on purpose — this consent does not extend
+    // to a broader marketing list, and revoking either must not touch the
+    // other. The provenance columns record when, against which policy bundle
+    // version, and from which surface the consent was given.
+    launchNotificationEmail: text("launch_notification_email").notNull().default("no"),
+    launchNotificationConsentAt: text("launch_notification_consent_at").notNull().default(""),
+    launchNotificationConsentVersion: text("launch_notification_consent_version").notNull().default(""),
+    launchNotificationConsentSource: text("launch_notification_consent_source").notNull().default(""),
     createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
     updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   },

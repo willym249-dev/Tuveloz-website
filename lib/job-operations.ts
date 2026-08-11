@@ -64,6 +64,7 @@ export type JobStageDecision = {
 export type PayoutReadinessInput = {
   jobCompleted: boolean;
   completionDecisionId: string;
+  customerCompletionConfirmed: boolean;
   finalInvoiceStatus: string;
   finalInvoiceTotalCents: number;
   authorizedTotalCents: number;
@@ -544,6 +545,9 @@ export function assessPayoutReadiness(
   }
   if (!input.completionDecisionId) {
     failures.push(["completion_eligibility_missing", "A current completion eligibility decision is missing."]);
+  }
+  if (!input.customerCompletionConfirmed) {
+    failures.push(["customer_completion_confirmation_missing", "The customer's recorded confirmation that the work was completed as described is required."]);
   }
   if (input.providerTimerRunning) {
     failures.push(["provider_timer_running", "The provider work timer is still running."]);

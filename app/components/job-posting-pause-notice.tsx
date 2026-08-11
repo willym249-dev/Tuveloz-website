@@ -2,13 +2,39 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  CUSTOMER_JOB_POSTING_PAUSED_DETAIL,
-  CUSTOMER_JOB_POSTING_PAUSED_MESSAGE,
-} from "../../lib/launch-status";
+import { usePathname } from "next/navigation";
+// The banner sits above every page, so it is the first voice a visitor hears.
+// It says the same two things the API-facing constants say — you cannot post a
+// job yet, and signing up books nothing and costs nothing — in the words a
+// person would actually use.
+const LAUNCH_BANNER_MESSAGE =
+  "Local pros near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.";
+
+const LAUNCH_BANNER_DETAIL =
+  "Making an account today is free, and it doesn't book anything or charge you.";
+
+// Pages where a banner button would duplicate what the page already offers:
+// the provider pages carry "Apply free" in a sticky header, and /account is
+// itself the sign-up form the banner would be linking to. Signed-out provider
+// routes redirect to /account, so it has to be on this list or a mechanic
+// lands on a page telling them to create a customer account.
+const PAGES_WITH_THEIR_OWN_CTA = [
+  "/join",
+  "/account",
+  // Owner tooling. A "save my spot" button on the private dashboard is noise.
+  "/admin",
+  "/provider-onboarding",
+  "/provider-jobs",
+  "/provider-services",
+  "/provider-service-area",
+];
 
 export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
+  const pathname = usePathname();
+  const pageHasItsOwnCta = PAGES_WITH_THEIR_OWN_CTA.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 
   return (
     <>
@@ -123,7 +149,7 @@ export function JobPostingPauseNotice() {
       >
         <div className="tuveloz-launch-pause-copy">
           <div className="tuveloz-launch-pause-heading">
-            <strong>Customer launch update</strong>
+            <strong>Almost open · Montgomery County, MD</strong>
             <button
               aria-controls="tuveloz-launch-pause-details"
               aria-expanded={expanded}
@@ -134,13 +160,14 @@ export function JobPostingPauseNotice() {
               {expanded ? "Hide details" : "Details"} <span aria-hidden>{expanded ? "▴" : "▾"}</span>
             </button>
           </div>
-          <span id="tuveloz-launch-pause-details">{CUSTOMER_JOB_POSTING_PAUSED_MESSAGE}</span>
-          <span>{CUSTOMER_JOB_POSTING_PAUSED_DETAIL}</span>
+          <span id="tuveloz-launch-pause-details">{LAUNCH_BANNER_MESSAGE}</span>
+          <span>{LAUNCH_BANNER_DETAIL}</span>
         </div>
-        <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
-          <Link href="/account?role=customer&mode=create">Create customer account</Link>
-          <Link href="/join">Join as a provider</Link>
-        </nav>
+        {!pageHasItsOwnCta && (
+          <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
+            <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+          </nav>
+        )}
       </aside>
     </>
   );

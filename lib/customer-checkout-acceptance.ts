@@ -23,6 +23,7 @@ export type CustomerCheckoutAcceptanceScope = {
   supervisorPersonId: string;
   serviceCodes: readonly string[];
   scheduledFor: string;
+  workmanshipWarranty: string;
   laborAmountCents: number;
   partsAmountCents: number;
   taxAmountCents: number;
@@ -57,6 +58,9 @@ export function customerCheckoutAcceptanceText(
     `Scheduled time: ${scope.scheduledFor}. Performing person ID: ${scope.performingPersonId}. Supervisor person ID: ${scope.supervisorPersonId || "none"}.`,
     `Itemized price: labor ${dollars(scope.laborAmountCents)}; parts ${dollars(scope.partsAmountCents)}; tax ${dollars(scope.taxAmountCents)}; other charges ${dollars(scope.otherAmountCents)}; complete provider amount ${dollars(scope.providerAmountCents)}; Customer Service Fee ${dollars(scope.customerFeeCents)}; customer total ${dollars(scope.customerTotalCents)}.`,
     `The selected provider business, ${scope.providerLegalName}, not TUVELOZ, performs only those exact listed vehicle services.`,
+    scope.workmanshipWarranty.trim()
+      ? `Workmanship warranty offered by the provider business: ${scope.workmanshipWarranty}. That warranty is between me and the provider business — TUVELOZ does not offer, back, or administer it.`
+      : "The provider business offers no workmanship warranty for this job. Offering one is each independent provider's own choice, not a Tuveloz requirement, and I acknowledged that when I selected this provider.",
     CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
     "I can save or download this exact acceptance record.",
   ].join(" ");

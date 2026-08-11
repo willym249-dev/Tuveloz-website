@@ -88,7 +88,7 @@ end card verified, no music).
 Ken Burns motion (+ aerial video if available) → "Set your own prices." /
 "Pick your own jobs." / "Keep 100% of your price. Join free." (fee is
 customer-side 5% per Section 7 sign-off — providers keep their full quote;
-NEVER say "keep 95%") → logo end card
+never express the customer fee as a provider deduction) → logo end card
 (brand/tuveloz-lockup-horizontal.svg + Tuveloz Logo.png), tuveloz.com/join,
 "Customer choice. Provider freedom." Citadel under it all, captions burned in.
 Export 1080x1920 (Reels/TikTok/Shorts) + 1080x1080 (feed).

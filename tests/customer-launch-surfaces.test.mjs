@@ -88,9 +88,9 @@ test("account and private-request surfaces describe launch mode without active-j
   assert.doesNotMatch(account, /href="\/#providers"/);
   assert.match(providerProfile, /className="button primary" href="\/post-job"/);
   assert.doesNotMatch(providerProfile, /href="\/#request"/);
-  assert.match(howItWorks, /After launch: request an available service/);
-  assert.match(howItWorks, /After launch: compare quotes/);
-  assert.match(howItWorks, /After launch: choose and track/);
+  // Every customer-facing step keeps its own "opens at launch" disclosure, so
+  // the friendlier headings can never read as a live service.
+  assert.equal((howItWorks.match(/opens to customers at launch/g) ?? []).length, 3);
 });
 
 test("public discovery and bilingual launch copy stay aligned with onboarding-only mode", async () => {
