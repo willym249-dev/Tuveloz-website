@@ -58,7 +58,7 @@ customer sees.
    Tuveloz charges providers nothing today, so this is a commitment about a
    future membership fee: if one is introduced, these 20 are never charged it.
    Scoped deliberately to the provider membership fee — it does not touch the
-   customer service fee, and the public page says so explicitly.
+   Customer Service Fee, and the public page says so explicitly.
 
    Be clear-eyed about what this costs. It is permanent, and in year five it
    means 20 free accounts sitting alongside paying ones, at whatever the

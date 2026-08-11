@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { localPagePaths } from "../lib/local-service-areas";
 
 const BASE_URL = "https://tuveloz.com";
 
@@ -30,8 +31,21 @@ const PUBLIC_PAGES: PublicPage[] = [
   { path: "/job-operations", changeFrequency: "monthly", priority: 0.5 },
 ];
 
+/**
+ * The local service-area pages come from lib/local-service-areas.ts rather
+ * than being listed by hand, so adding an area or a service cannot leave its
+ * page unlisted here. They sit below the core pages in priority: useful entry
+ * points from search, but not more important than the homepage or the two
+ * pages that actually convert.
+ */
+const LOCAL_PAGES: PublicPage[] = localPagePaths().map((path) => ({
+  path,
+  changeFrequency: "monthly",
+  priority: 0.6,
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return PUBLIC_PAGES.map(({ path, changeFrequency, priority }) => ({
+  return [...PUBLIC_PAGES, ...LOCAL_PAGES].map(({ path, changeFrequency, priority }) => ({
     url: `${BASE_URL}${path}`,
     changeFrequency,
     priority,

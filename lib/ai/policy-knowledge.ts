@@ -45,7 +45,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     question: "What does Tuveloz charge me?",
     keywords: ["fee", "cost", "charge", "commission", "5%", "price", "total", "surcharge"],
     answer:
-      "The pro sets their own price for the labor. On top of that, the current design adds a 5% Tuveloz service fee to your total, shown as its own line before you confirm — never folded into the pro's price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
+      "The pro sets their own price for the labor. On top of that, the current design adds a 5% Customer Service Fee to your total, shown as its own line before you confirm — never folded into the pro's price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
     anchor: "5% customer service fee",
   },

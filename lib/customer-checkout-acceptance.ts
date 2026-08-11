@@ -56,7 +56,7 @@ export function customerCheckoutAcceptanceText(
     `Provider legal identity: ${scope.providerLegalName}.`,
     `Exact service codes: ${scope.serviceCodes.join(", ")}.`,
     `Scheduled time: ${scope.scheduledFor}. Performing person ID: ${scope.performingPersonId}. Supervisor person ID: ${scope.supervisorPersonId || "none"}.`,
-    `Itemized price: labor ${dollars(scope.laborAmountCents)}; parts ${dollars(scope.partsAmountCents)}; tax ${dollars(scope.taxAmountCents)}; other charges ${dollars(scope.otherAmountCents)}; complete provider amount ${dollars(scope.providerAmountCents)}; TUVELOZ fee ${dollars(scope.customerFeeCents)}; customer total ${dollars(scope.customerTotalCents)}.`,
+    `Itemized price: labor ${dollars(scope.laborAmountCents)}; parts ${dollars(scope.partsAmountCents)}; tax ${dollars(scope.taxAmountCents)}; other charges ${dollars(scope.otherAmountCents)}; complete provider amount ${dollars(scope.providerAmountCents)}; Customer Service Fee ${dollars(scope.customerFeeCents)}; customer total ${dollars(scope.customerTotalCents)}.`,
     `The selected provider business, ${scope.providerLegalName}, not TUVELOZ, performs only those exact listed vehicle services.`,
     scope.workmanshipWarranty.trim()
       ? `Workmanship warranty offered by the provider business: ${scope.workmanshipWarranty}. That warranty is between me and the provider business — TUVELOZ does not offer, back, or administer it.`

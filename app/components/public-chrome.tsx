@@ -73,6 +73,10 @@ export function PublicSiteFooter() {
         <Link href="/post-job">For customers</Link>
         <Link href="/join">For providers</Link>
         <Link href="/how-it-works">How it works</Link>
+        {/* The local-search hubs are reached from here and from breadcrumbs, not
+            from the header: that nav is already at the width it can hold. */}
+        <Link href="/service-areas">Service areas</Link>
+        <Link href="/services">Services</Link>
         <Link href="/safety">Safety &amp; trust</Link>
         <Link href="/faq">FAQ</Link>
         <Link href="/account">Sign in</Link>

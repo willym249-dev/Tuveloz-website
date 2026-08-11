@@ -124,7 +124,11 @@ const providerReasons: Array<{
   {
     icon: "earnings",
     title: "Keep what you earn",
-    text: "Keep 100% of your quoted price. No subscription, no lead fees, no commission carved out of your labor.",
+    // States what is actually true of the payout rather than denying a cut:
+    // nothing is deducted, but the fee IS sized by the provider's price, and the
+    // Customer Agreement says so. See PROVIDER_PAYOUT_DISCLOSURE in
+    // lib/customer-fee.ts, and the guard in tests/customer-fee-consistency.test.mjs.
+    text: "Keep 100% of your quoted price — no subscription, no lead fees, and nothing deducted from your payout. The 5% Customer Service Fee is calculated on your price and charged to the customer on top of it.",
   },
   {
     icon: "open-jobs",
@@ -1694,7 +1698,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
             </p>
             <div className="provider-benefits">
-              <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
+              <div><span>01</span><strong>Keep 100% of your quoted price — the 5% Customer Service Fee is charged to the customer on top of it</strong></div>
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
@@ -2024,6 +2028,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <Link href="/post-job">For customers</Link>
           <Link href="/join">For providers</Link>
           <Link href="/how-it-works">How it works</Link>
+          <Link href="/service-areas">Service areas</Link>
+          <Link href="/services">Services</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
           <a href="/payments">Payment policy</a>
