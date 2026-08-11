@@ -31,6 +31,17 @@ and keeping them current is part of the work, not an extra:
 what recently changed and what was left unfinished, which is usually not
 obvious from the code.
 
+**Check for concurrent work before starting anything small.** The log records
+finished work; work in flight lives in open pull requests, and nothing else
+points you at it. Run `gh pr list` and skim the last few commits on `main`
+first. Sessions run in parallel and cannot see each other, so the small,
+obvious, self-contained job — a doc block, a log entry, a one-file salvage — is
+exactly the one two sessions pick independently. This is not hypothetical:
+on 2026-08-11 it happened three times in one afternoon, and one of those pull
+requests merged with an entirely empty diff because the other had landed the
+identical text first. If you find someone already on it, extend their branch or
+pick something else rather than opening a second pull request.
+
 **Write an entry before you finish** if something happened a future session
 would be wrong not to know — a decision, a launch step, a policy or vendor
 change, an incident, a change of direction. Skip it for routine edits; a log
