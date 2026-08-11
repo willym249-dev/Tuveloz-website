@@ -85,6 +85,45 @@ bound to `127.0.0.1` rather than anything to do with Tailscale), and the rule
 that Zeo stays inside the tailnet — `tailscale serve`, never `tailscale funnel`.
 
 Nothing in the Tuveloz application depends on any of this.
+---
+
+## 2026-08-10 — Zeo was answering without most of its own rules
+
+**Why this is here.** Zeo is the owner's local assistant and it reads Tuveloz
+under a read-only workspace. Its answers about this project were being produced
+without most of its behaviour policy, so anything it said today or earlier is
+worth re-checking rather than trusted. The work itself is in the Zeo repository
+(`C:\Users\Torta Pounder\Zeo`), sixteen commits, written up in
+`ZEO_LOCAL_MODEL_BEHAVIOUR.md` there.
+
+**What happened.** The local runner keeps roughly 2k tokens of context by
+default and discards the overflow without an error. Zeo's system prompt is
+about 4805 tokens, so a question carrying project excerpts arrived with most of
+the policy removed — measured directly: `prompt_eval_count` 2050 against a
+4805-token prompt. Not only formatting rules were lost but never invent facts,
+owner corrections outrank older memory, and the security boundaries. The symptom
+that exposed it was two different system prompts producing byte-identical
+replies. `num_ctx` is now always sent.
+
+**What else that uncovered.** The Tuveloz project-context path had its own
+standalone prompt and so never carried the general answering rules at all; it
+now does, and its reply cap moved from 850 to 1200 characters. A reply to a
+question with no project context attached ended "Checked read-only project
+context: None applicable." — a claim to have run a file check that never ran,
+copied from the shape of earlier replies. Model-authored versions of that
+footer are now stripped; only code may state which files were read.
+
+**Decisions made.** Answers that must follow a format are no longer requested
+as prose. The runner constrains generation to a JSON schema, the model fills in
+fields, and code writes the format — for choice lists and for code edits alike.
+The model's indentation is discarded outright rather than validated, because
+one measured edit was valid Python that quietly lifted a statement out of its
+loop, which a syntax check passes. No hardware was needed; the constraint was
+never the model's instruction-following.
+
+**Now open.** Nothing Tuveloz-side is blocked. Worth knowing when Zeo is used
+for project questions: it reads only the approved excerpt list, and its answer
+is only as current as those files.
 
 ---
 
