@@ -128,7 +128,7 @@ const providerReasons: Array<{
     // nothing is deducted, but the fee IS sized by the provider's price, and the
     // Customer Agreement says so. See PROVIDER_PAYOUT_DISCLOSURE in
     // lib/customer-fee.ts, and the guard in tests/customer-fee-consistency.test.mjs.
-    text: "Keep 100% of your quoted price — no subscription, no lead fees, and nothing deducted from your payout. Tuveloz's 5% service fee is calculated on your price and charged to the customer on top of it.",
+    text: "Keep 100% of your quoted price — no subscription, no lead fees, and nothing deducted from your payout. The 5% Customer Service Fee is calculated on your price and charged to the customer on top of it.",
   },
   {
     icon: "open-jobs",
