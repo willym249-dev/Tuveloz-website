@@ -13,6 +13,55 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — The archived ad work is on main, and one archive tag is gone
+
+**Why this happened.** Deleting `ads/got-this-series` left 21 files reachable
+only through a git tag. That is safe but not discoverable: nobody browsing the
+repository would find the ad build pipeline, and the whole set sat one lost tag
+away from gone. Both halves have now landed on main.
+
+**#132 — the build pipeline.** The three ffmpeg build scripts, the ep1-battery
+source audio, the shared lockups and tagline VO, `R2-MANIFEST.json`, and
+`scripts/r2-video-manifest.mjs` that regenerates it. Twelve files, about 324KB.
+These are the pipeline's *inputs*; the 57 rendered MP4s stay out of git under
+the ignore rules from #127, with the private `tuveloz-brand-video` bucket as
+the durable copy.
+
+**A regression that was caught in the restore.** Checking out `brand/ads` from
+the tag also overwrote `brand/ads/HANDOFF.md`, whose tagged version carries an
+older fee line reading `NEVER say "keep 95%"` — while main already had the
+fuller wording about never expressing the customer fee as a provider deduction.
+That file was reverted so main's version stands. Restoring a directory from an
+old ref silently reverts every file in it that has moved on since; check the
+modified list, not just the added one.
+
+**#134 — the documents and remaining assets.** The counterweight-clip shoot
+script and its how-to, the "I've Got This" creative spec, the Higgsfield
+runbook, the no-strap lockup, a favicon variant, and the three cross-assistant
+handoff documents from 2026-08-08. Restored verbatim rather than renamed:
+three of them break the lowercase-hyphenated convention and none carry a status
+header, but the runbook links to the ideas file by its URL-encoded name and
+both briefs point at `SESSION-HANDOFF.md`, so renaming breaks the set.
+Normalizing names and adding headers is still open, as its own pass.
+`docs/README.md` gained a row for `docs/marketing/` and a **Historical**
+heading for the three handoff documents, which are a record of how work was
+split that day and not current instruction.
+
+**`archive/got-this-series` is deleted.** Nothing was orphaned by that, for a
+structural reason worth remembering: `archive/got-this-series-wip` points at
+`858b2d1`, whose parent *is* `0808b9b`, so the old branch tip stays reachable
+through the surviving tag. Files unique to that tag versus main are now zero.
+
+**`archive/got-this-series-wip` must stay.** It is the only thing holding 18
+files of working-tree state that were never committed to any branch. Recover
+with `git switch -c ads-restore archive/got-this-series-wip`.
+
+**Fee copy was checked before landing**, since these are marketing documents.
+Every mention states the rule correctly or forbids "keep 95%"; no legacy 10%
+copy survived anywhere in the set.
+
+---
+
 ## 2026-08-10 — Zeo was answering without most of its own rules
 
 **Why this is here.** Zeo is the owner's local assistant and it reads Tuveloz
@@ -83,7 +132,11 @@ runbook and marketing docs, two brand SVGs. Nothing was lost; two tags hold it:
 | `archive/got-this-series` | `0808b9b` | the branch tip, all 21 unique files |
 | `archive/got-this-series-wip` | `858b2d1` | that tip plus 18 uncommitted working-tree files (+299/−101) committed at deletion |
 
-Recover with `git switch -c ads-restore archive/got-this-series`.
+**Superseded 2026-08-11 — do not use the table above as a recovery path.** All
+21 files are on main, and `archive/got-this-series` has been deleted. Only
+`archive/got-this-series-wip` still exists; it descends from `0808b9b`, so the
+old branch tip is still reachable through it. See the entry at the top of this
+log.
 
 **A trap that nearly cost the ad videos.** The deleted branch's `.gitignore`
 ignored `brand/ads/*.mp4` and `brand/ads/got-this-assets/**/*.mp4`; main never
