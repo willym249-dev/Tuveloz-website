@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "Tuveloz is a local vehicle-service marketplace for Montgomery County, MD — built around customer choice and independent provider freedom.",
+  alternates: {
+    canonical: "/about",
+  },
 };
 
 export default function AboutPage() {

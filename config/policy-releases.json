@@ -1,34 +1,34 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:12:24.189Z",
-    "releaseId": "terms-2026-08-04-r2",
-    "reviewBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
-    "canonicalBodyHash": "af0a43263ce51bb74fb1ea4c42ce77a6d65eb936539134e8a85d594d0365b742",
+    "effectiveAt": "2026-08-07T06:32:59.381Z",
+    "releaseId": "terms-2026-08-07-r2",
+    "reviewBodyHash": "5b1b57f234ae21ef8731884e53ca504be9f0626045f608f9ae1e9a2669aee6e6",
+    "canonicalBodyHash": "5b1b57f234ae21ef8731884e53ca504be9f0626045f608f9ae1e9a2669aee6e6",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:21:00.675Z",
-    "releaseId": "customer-agreement-2026-08-04",
-    "reviewBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
-    "canonicalBodyHash": "f68396a90818f75c1b6e32c6d24ec22f318caa7881a807c20a92eb1f4a849ea1",
+    "effectiveAt": "2026-08-06T04:17:11.605Z",
+    "releaseId": "customer-agreement-2026-08-06",
+    "reviewBodyHash": "76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2",
+    "canonicalBodyHash": "76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T05:16:46.736Z",
-    "releaseId": "provider-agreement-2026-08-04",
-    "reviewBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
-    "canonicalBodyHash": "6b091b6f9f7e2be084425ee6a98edce9519eefa85ede9f9f6d3a4b92912bf2e7",
+    "effectiveAt": "2026-08-06T04:17:11.605Z",
+    "releaseId": "provider-agreement-2026-08-06",
+    "reviewBodyHash": "210925bba9be151a251f7f08f66e188ae2e5262f08b0c39830cd9be7d902553f",
+    "canonicalBodyHash": "210925bba9be151a251f7f08f66e188ae2e5262f08b0c39830cd9be7d902553f",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-04T06:00:46.511Z",
-    "releaseId": "privacy-2026-08-04",
-    "reviewBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
-    "canonicalBodyHash": "c2fd806ae2ecd9b6e2a7f95ead7d7350ae0da6cace7eafe01d4136219cadccd1",
+    "effectiveAt": "2026-08-07T04:59:47.172Z",
+    "releaseId": "privacy-2026-08-07",
+    "reviewBodyHash": "17d10664958ca8666a8285e3b05c26a31209ad87fbf7a3b29011ab60b03ad6e7",
+    "canonicalBodyHash": "17d10664958ca8666a8285e3b05c26a31209ad87fbf7a3b29011ab60b03ad6e7",
     "sourceFile": "app/privacy/page.tsx"
   },
   "payment_policy": {

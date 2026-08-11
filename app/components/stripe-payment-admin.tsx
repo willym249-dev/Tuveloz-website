@@ -168,7 +168,7 @@ export function StripePaymentAdmin() {
               </p>
               <dl className="quote-breakdown compact">
                 <div><dt>Provider amount</dt><dd>{dollars(payment.providerAmountCents)}</dd></div>
-                <div><dt>Tuveloz fee</dt><dd>{dollars(payment.applicationFeeCents)}</dd></div>
+                <div><dt>Customer Service Fee</dt><dd>{dollars(payment.applicationFeeCents)}</dd></div>
                 <div className="total"><dt>Customer total</dt><dd>{dollars(payment.customerTotalCents)}</dd></div>
               </dl>
               {payment.customerEmail && (

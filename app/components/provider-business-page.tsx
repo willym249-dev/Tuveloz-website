@@ -39,6 +39,8 @@ type ProviderReview = {
   service: string;
   rating: number;
   comment: string;
+  providerReply?: string;
+  providerReplyAt?: string;
   createdAt: string;
 };
 
@@ -113,6 +115,8 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
     "" | "profile" | "upload-logo" | "upload-gallery"
   >("");
   const [pendingRemovalId, setPendingRemovalId] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyOpenId, setReplyOpenId] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [qrError, setQrError] = useState("");
   const activeQrSlug = data?.canPublish && data.profile.publicStatus === "published"
@@ -252,6 +256,29 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
     } finally {
       setBusy("");
       setPendingRemovalId("");
+    }
+  }
+
+  async function saveReviewReply(reviewId: string, reply: string) {
+    setBusy(`reply:${reviewId}`);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/provider-profile", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "reply-review", reviewId, reply: reply.trim() }),
+      });
+      const result = await response.json().catch(() => ({})) as ProfileResponse;
+      if (!response.ok) throw new Error(result.error || "Unable to save that reply.");
+      if (!result.profile) throw new Error("The reply returned incomplete profile data.");
+      applyResponse(result);
+      setReplyOpenId("");
+      setNotice(reply.trim() ? "Reply posted to your review." : "Reply removed.");
+    } catch (reason) {
+      setError(profileErrorMessage(reason, "Unable to save that reply."));
+    } finally {
+      setBusy("");
     }
   }
 
@@ -753,6 +780,70 @@ export function ProviderBusinessPage({ focus = "profile" }: { focus?: ProviderBu
               <article key={review.id}>
                 <div><span>{"★★★★★".slice(0, review.rating)}</span><strong>{review.rating}.0</strong></div>
                 <blockquote>{review.comment}</blockquote>
+                {review.providerReply && replyOpenId !== review.id ? (
+                  <div className="provider-review-reply">
+                    <span>Your response</span>
+                    <p>{review.providerReply}</p>
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => {
+                        setReplyDrafts((drafts) => ({ ...drafts, [review.id]: review.providerReply ?? "" }));
+                        setReplyOpenId(review.id);
+                      }}
+                    >
+                      Edit response
+                    </button>
+                  </div>
+                ) : replyOpenId === review.id ? (
+                  <div className="provider-review-reply-form">
+                    <label htmlFor={`reply-${review.id}`}>Your public response</label>
+                    <textarea
+                      id={`reply-${review.id}`}
+                      maxLength={600}
+                      rows={3}
+                      placeholder="Thank the customer or add helpful context. Keep it professional — this shows on your public page."
+                      value={replyDrafts[review.id] ?? review.providerReply ?? ""}
+                      onChange={(event) =>
+                        setReplyDrafts((drafts) => ({ ...drafts, [review.id]: event.target.value }))
+                      }
+                    />
+                    <div className="provider-review-reply-actions">
+                      <button
+                        type="button"
+                        className="button lime small"
+                        disabled={busy === `reply:${review.id}`}
+                        onClick={() => saveReviewReply(review.id, replyDrafts[review.id] ?? review.providerReply ?? "")}
+                      >
+                        {busy === `reply:${review.id}` ? "Saving…" : "Post response"}
+                      </button>
+                      <button type="button" className="link-button" onClick={() => setReplyOpenId("")}>
+                        Cancel
+                      </button>
+                      {review.providerReply ? (
+                        <button
+                          type="button"
+                          className="link-button danger"
+                          disabled={busy === `reply:${review.id}`}
+                          onClick={() => saveReviewReply(review.id, "")}
+                        >
+                          Remove response
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      setReplyDrafts((drafts) => ({ ...drafts, [review.id]: "" }));
+                      setReplyOpenId(review.id);
+                    }}
+                  >
+                    Reply to this review
+                  </button>
+                )}
                 <footer>
                   <strong>{review.customerDisplayName}</strong>
                   <span>{review.service}</span>

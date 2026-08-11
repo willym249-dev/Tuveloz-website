@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
+import { JobAppointmentPanel } from "../components/job-appointment-panel";
+import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { SiteLanguageButton } from "../components/site-language";
 import { QuotePaymentCard } from "../components/quote-payment-card";
 import {
@@ -29,6 +31,7 @@ type Quote = {
   partType: string;
   availability: string;
   message: string;
+  workmanshipWarranty: string;
   status: string;
   declineReason: string;
   ratingAverage: number;
@@ -83,6 +86,18 @@ type Review = {
   comment: string;
   createdAt?: string;
 };
+type CompletionConfirmation = {
+  available: boolean;
+  reason?: string;
+  confirmed?: boolean;
+  confirmedAt?: string;
+  agreementHash?: string;
+  presentedText?: string;
+  invoiceNumber?: string;
+  workSummary?: string;
+  workmanshipWarranty?: string;
+  invoiceTotalCents?: number;
+};
 
 export default function MyRequestPage() {
   const [job, setJob] = useState<Job | null>(null);
@@ -98,6 +113,10 @@ export default function MyRequestPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [confirmingReview, setConfirmingReview] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
+  const [completion, setCompletion] = useState<CompletionConfirmation | null>(null);
+  const [completionChecked, setCompletionChecked] = useState(false);
+  const [completionBusy, setCompletionBusy] = useState(false);
+  const [completionError, setCompletionError] = useState("");
   const acceptedQuote = quotes.find((quote) => quote.status === "accepted");
 
   useEffect(() => {
@@ -116,8 +135,53 @@ export default function MyRequestPage() {
       if (!response.ok) throw new Error(result.error);
       setAccessToken(result.accessToken || token);
       setJob(result.job); setQuotes(result.quotes); setReview(result.review);
+      const activeToken = result.accessToken || token;
+      if (result.job?.status === "completed" && activeToken) {
+        const completionResponse = await fetch(
+          `/api/customer-completion?token=${encodeURIComponent(activeToken)}`,
+        );
+        const completionResult = await completionResponse.json().catch(() => null);
+        if (completionResponse.ok && completionResult) {
+          setCompletion(completionResult as CompletionConfirmation);
+        }
+      }
     }).catch((reason) => setError(reason.message || "Unable to load request."));
   }, []);
+
+  async function submitCompletionConfirmation() {
+    if (!completion?.available || !completionChecked || !accessToken) return;
+    setCompletionBusy(true);
+    setCompletionError("");
+    try {
+      const response = await fetch("/api/customer-completion", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          token: accessToken,
+          confirmed: true,
+          agreementHash: completion.agreementHash,
+        }),
+      });
+      const result = await response.json().catch(() => ({})) as {
+        error?: string;
+        confirmedAt?: string;
+      };
+      if (!response.ok) throw new Error(result.error || "Unable to record your confirmation.");
+      setCompletion({
+        ...completion,
+        confirmed: true,
+        confirmedAt: result.confirmedAt || new Date().toISOString(),
+      });
+    } catch (reason) {
+      setCompletionError(
+        reason instanceof Error && reason.message
+          ? reason.message
+          : "Unable to record your confirmation.",
+      );
+    } finally {
+      setCompletionBusy(false);
+    }
+  }
 
   async function accept(quoteId: string) {
     const selectedQuote = quotes.find((quote) => quote.id === quoteId);
@@ -313,6 +377,18 @@ export default function MyRequestPage() {
           <p>Refresh this private page to see the provider’s latest update.</p>
         </section>
       )}
+      {job && job.status !== "approved" && accessToken && (
+        <section className="customer-inspection" aria-label="Appointment">
+          <span>Appointment</span>
+          <JobAppointmentPanel requestId={job.id} token={accessToken} />
+        </section>
+      )}
+      {job && job.status !== "approved" && accessToken && (
+        <section className="customer-inspection" aria-label="Job inspection">
+          <span>Job inspection</span>
+          <JobInspectionPanel requestId={job.id} token={accessToken} />
+        </section>
+      )}
       {job?.hasCompletionImage && (
         <section className="customer-photo-card completion-proof">
           <span>Provider completion photo</span>
@@ -343,7 +419,7 @@ export default function MyRequestPage() {
               <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
               <div><dt>Provider labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
-                <dt>Tuveloz service fee shown at acceptance</dt>
+                <dt>Customer Service Fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
               </div>
               <div className="total">
@@ -354,6 +430,14 @@ export default function MyRequestPage() {
             <div className="quote-summary">
               <span>What this quote includes</span>
               <p>{quote.message}</p>
+            </div>
+            <div className="quote-summary">
+              <span>Workmanship warranty</span>
+              <p>
+                {quote.workmanshipWarranty?.trim()
+                  ? quote.workmanshipWarranty
+                  : "This provider doesn't offer a workmanship warranty for this job. Offering one is each provider's own choice — if you select this quote, you'll confirm you're okay with that."}
+              </p>
             </div>
             <details className="quote-provider-details">
               <summary>View provider details</summary>
@@ -406,7 +490,7 @@ export default function MyRequestPage() {
                 <strong>Authorize this exact provider and quote?</strong>
                 <p>
                   {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
-                  including the 5% Tuveloz service fee
+                  including the 5% Customer Service Fee
                 </p>
                 {quote.selectionAcceptance ? (
                   <label className="policy-consent">
@@ -545,6 +629,72 @@ export default function MyRequestPage() {
             </Link>
           </section>
         )}
+      {job?.status === "completed" && completion && (
+        <section className="review-panel" aria-label="Completion confirmation">
+          {completion.confirmed ? (
+            <>
+              <span className="portal-service">Completion confirmed</span>
+              <p>
+                You confirmed the completed work described in invoice{" "}
+                {completion.invoiceNumber}. Your confirmation is recorded and
+                lets payment processing to the provider finish. It doesn&apos;t
+                waive any warranty right or any claim about a problem you
+                couldn&apos;t reasonably have discovered.
+              </p>
+            </>
+          ) : completion.available ? (
+            <>
+              <span className="portal-service">Confirm the completed work</span>
+              <h2>Was the work completed as described?</h2>
+              <p>
+                Your provider says the job is done. Review their work summary
+                below — your confirmation is what releases their payment.
+              </p>
+              <div className="quote-summary">
+                <span>Work summary (invoice {completion.invoiceNumber})</span>
+                <p>{completion.workSummary}</p>
+              </div>
+              <div className="quote-summary">
+                <span>Workmanship warranty</span>
+                <p>
+                  {completion.workmanshipWarranty?.trim()
+                    ? completion.workmanshipWarranty
+                    : "None offered — you acknowledged this when you selected the provider."}
+                </p>
+              </div>
+              <label className="policy-consent">
+                <input
+                  checked={completionChecked}
+                  disabled={completionBusy}
+                  onChange={(event) => setCompletionChecked(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>{completion.presentedText}</span>
+              </label>
+              {completionError && <p className="portal-error">{completionError}</p>}
+              <button
+                className="button primary"
+                disabled={!completionChecked || completionBusy}
+                onClick={submitCompletionConfirmation}
+                type="button"
+              >
+                {completionBusy ? "Recording…" : "Confirm the work is complete"}
+              </button>
+              <p>
+                Something wrong? Don&apos;t confirm — message your provider first,
+                or email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>{" "}
+                to raise a problem. Confirming doesn&apos;t waive warranty rights or
+                claims about problems you couldn&apos;t reasonably have discovered.
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="portal-service">Completion confirmation</span>
+              <p>{completion.reason || "The confirmation step isn't ready yet."}</p>
+            </>
+          )}
+        </section>
+      )}
       {job?.status === "completed" && (
         <section className="review-panel">
           {review ? (

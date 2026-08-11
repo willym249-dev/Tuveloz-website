@@ -20,13 +20,20 @@ import {
   PROVIDER_LEVEL_LABELS,
   providerLevelsForServices,
   SERVICES,
-  type ProviderLevel,
+  type EvidenceRequirementCode,
   type ServiceCode,
 } from "../../lib/provider-policy";
 import {
   getRequiredDocumentsForSelection,
   needsProofStep,
+  type RequiredDocument,
 } from "../../lib/service-tiers";
+import {
+  MAX_OPTIONAL_CERTIFICATES,
+  OPTIONAL_CERTIFICATE_CATEGORIES,
+  type DeclaredOptionalCertificate,
+  type OptionalCertificateCategory,
+} from "../../lib/optional-certificates";
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
@@ -244,20 +251,117 @@ function providerServicePlainLabel(
   return serviceDisplayLabel(fallbackLabel);
 }
 
-function deriveProviderLevel(selectedServices: readonly ServiceCode[]): ProviderLevel {
-  const selectedPolicies = selectedServices.map((code) => (
-    PROVIDER_REVIEW_SERVICES.find((service) => service.code === code)
-  ));
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("specialty_provider"))) {
-    return "specialty_provider";
-  }
-  if (selectedPolicies.some((service) => service?.allowedProviderLevels.includes("standard_provider"))) {
-    return "standard_provider";
-  }
-  return "provisional_independent";
+/**
+ * Everyday, plain-language names for the required documents. The policy matrix
+ * keeps each document's exact legal name of record (which we still show, small,
+ * so applicants recognize the real paperwork); this map only makes the first
+ * line readable. Every document here is legally required for the selected job
+ * and pathway — nothing is added or removed, only reworded. A document without
+ * a plain entry falls back to its official label.
+ */
+const PROVIDER_EVIDENCE_PLAIN_LABELS: Partial<
+  Record<EvidenceRequirementCode, { en: string; es: string }>
+> = {
+  provisional_service_competency: {
+    en: "A short note showing you've done this kind of job before",
+    es: "Una nota breve que muestre que ya ha hecho este tipo de trabajo",
+  },
+  ocp_vehicle_service_registration: {
+    en: "Your Montgomery County repair business certificate",
+    es: "Su certificado de negocio de reparación del Condado de Montgomery",
+  },
+  no_employee_attestation: {
+    en: "A short form saying it's just you — no employees",
+    es: "Un formulario corto que dice que trabaja solo — sin empleados",
+  },
+  general_liability_coi: {
+    en: "Proof of general liability insurance",
+    es: "Comprobante de seguro de responsabilidad general",
+  },
+  business_auto_coverage: {
+    en: "Proof of business-use auto insurance",
+    es: "Comprobante de seguro de auto de uso comercial",
+  },
+  workers_comp_coverage: {
+    en: "Proof of workers' compensation insurance",
+    es: "Comprobante de seguro de compensación de trabajadores",
+  },
+  md_locksmith_business_license: {
+    en: "Your Maryland locksmith business license",
+    es: "Su licencia de negocio de cerrajería de Maryland",
+  },
+  mva_inspection_station_license: {
+    en: "Your Maryland inspection station license",
+    es: "Su licencia de estación de inspección de Maryland",
+  },
+  mva_inspection_mechanic_license: {
+    en: "Your Maryland inspection mechanic license",
+    es: "Su licencia de mecánico de inspección de Maryland",
+  },
+  epa_section_609_certificate: {
+    en: "Your EPA Section 609 A/C certificate",
+    es: "Su certificado EPA Sección 609 para aire acondicionado",
+  },
+  ocp_towing_registration: {
+    en: "Your Montgomery County towing registration",
+    es: "Su registro de remolque del Condado de Montgomery",
+  },
+};
+
+function providerDocumentPlainLabel(
+  code: EvidenceRequirementCode,
+  isSpanish: boolean,
+) {
+  const plain = PROVIDER_EVIDENCE_PLAIN_LABELS[code];
+  return plain ? (isSpanish ? plain.es : plain.en) : null;
 }
 
-type SignupStep = 1 | 2 | 3;
+function joinServiceNames(services: readonly string[], isSpanish: boolean) {
+  if (services.length <= 1) return services.join("");
+  const conjunction = isSpanish ? "y" : "and";
+  const head = services.slice(0, -1).join(", ");
+  return `${head} ${conjunction} ${services[services.length - 1]}`;
+}
+
+/**
+ * Collapse the selected services into one block per identical document set, so
+ * an applicant who picks ten jobs that all need the same three documents sees
+ * that checklist once instead of ten times. Services with different required
+ * documents keep their own block.
+ */
+function groupRequiredDocuments(
+  entries: readonly { code: ServiceCode; label: string; documents: readonly RequiredDocument[] }[],
+  isSpanish: boolean,
+): Array<{ services: string[]; documents: readonly RequiredDocument[] }> {
+  const groups: Array<{ services: string[]; documents: readonly RequiredDocument[] }> = [];
+  const indexBySignature = new Map<string, number>();
+  for (const entry of entries) {
+    const signature = entry.documents.map((doc) => doc.code).slice().sort().join("|");
+    const serviceName = providerServicePlainLabel(entry.code, entry.label, isSpanish);
+    const existingIndex = indexBySignature.get(signature);
+    if (existingIndex === undefined) {
+      indexBySignature.set(signature, groups.length);
+      groups.push({ services: [serviceName], documents: entry.documents });
+    } else {
+      groups[existingIndex].services.push(serviceName);
+    }
+  }
+  return groups;
+}
+
+/**
+ * Step 2 only exists when the chosen services actually carry requirements, so
+ * a step's internal id is not the number the applicant sees. Display position
+ * is derived from the visible steps instead of hand-patched at each call site.
+ */
+type SignupStep = 1 | 2 | 3 | 4;
+
+const SIGNUP_STEP_LABELS: Record<SignupStep, { en: string; es: string }> = {
+  1: { en: "Your services", es: "Sus servicios" },
+  2: { en: "Requirements", es: "Requisitos" },
+  3: { en: "Your business", es: "Su negocio" },
+  4: { en: "Sign and submit", es: "Firmar y enviar" },
+};
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
 
@@ -335,6 +439,8 @@ export function ProviderSignupForm() {
   const [applicationVerificationCode, setApplicationVerificationCode] = useState("");
   const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [showOptionalCertificates, setShowOptionalCertificates] = useState(false);
+  const [optionalCertificates, setOptionalCertificates] = useState<DeclaredOptionalCertificate[]>([]);
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
@@ -370,7 +476,13 @@ export function ProviderSignupForm() {
         }
         setDraftFields(fields);
       }
-      if (draft.step === 1 || draft.step === 2 || draft.step === 3) setStep(draft.step);
+      // Only steps that actually render may be restored. Step 4 is declared in
+      // SignupStep but has no block yet, so restoring it — from a stale draft
+      // or a hand-edited localStorage value — would show an empty form with no
+      // way forward. Widen this only when a step 4 exists to land on.
+      if (draft.step === 1 || draft.step === 2 || draft.step === 3) {
+        setStep(draft.step);
+      }
       setDraftRestored(true);
     });
     return () => {
@@ -416,7 +528,6 @@ export function ProviderSignupForm() {
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
-  const providerLevel = deriveProviderLevel(selectedProviderServices);
   const hasSpecialtySelection = providerLevels.includes("specialty_provider");
   const providerAcceptsCustomersAtBusiness = selectedProviderWorkLocations.includes(
     PROVIDER_WORK_LOCATION_OPTIONS[1],
@@ -445,7 +556,24 @@ export function ProviderSignupForm() {
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
+  const requiredDocumentGroups = groupRequiredDocuments(
+    requiredDocumentsBySelection,
+    providerFormIsSpanish,
+  );
+  // Step 1 preview count. Two services can require the same document, and step 2
+  // renders it once per group, so the honest number is the distinct documents an
+  // applicant actually uploads — not the sum of the per-service lists. No time
+  // estimate goes with it: the flow has not been measured.
+  const requiredDocumentCount = new Set(
+    requiredDocumentsBySelection.flatMap((entry) => entry.documents.map((doc) => doc.code)),
+  ).size;
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
+  // Step 4 ("Sign and submit") is defined but not yet reachable: splitting it
+  // off unmounts step 3, which would drop every required field there from
+  // FormData and skip its native validation. Each one needs a hidden carrier
+  // and an explicit check first, the same way provider-email does.
+  const visibleSteps: SignupStep[] = showStep2 ? [1, 2, 3] : [1, 3];
+  const stepPosition = Math.max(visibleSteps.indexOf(step), 0) + 1;
 
   function resetChallenge() {
     setApplicationChallengeId("");
@@ -453,6 +581,43 @@ export function ProviderSignupForm() {
     setPendingApplicationPayload(null);
     setConfirmingSubmit(false);
   }
+
+  function toggleOptionalCertificates() {
+    const next = !showOptionalCertificates;
+    setShowOptionalCertificates(next);
+    if (next && optionalCertificates.length === 0) {
+      setOptionalCertificates([
+        { category: "ase", title: "", credentialIdentifier: "", issuingAuthority: "" },
+      ]);
+    }
+  }
+
+  function addOptionalCertificate() {
+    setOptionalCertificates((current) => (
+      current.length >= MAX_OPTIONAL_CERTIFICATES
+        ? current
+        : [...current, { category: "ase", title: "", credentialIdentifier: "", issuingAuthority: "" }]
+    ));
+  }
+
+  function updateOptionalCertificate(
+    index: number,
+    patch: Partial<DeclaredOptionalCertificate>,
+  ) {
+    setOptionalCertificates((current) => (
+      current.map((certificate, position) => (
+        position === index ? { ...certificate, ...patch } : certificate
+      ))
+    ));
+  }
+
+  function removeOptionalCertificate(index: number) {
+    setOptionalCertificates((current) => current.filter((_, position) => position !== index));
+  }
+
+  const declaredOptionalCertificates = showOptionalCertificates
+    ? optionalCertificates.filter((certificate) => certificate.title.trim())
+    : [];
 
   function goToStep1() {
     resetChallenge();
@@ -466,6 +631,17 @@ export function ProviderSignupForm() {
         providerFormIsSpanish
           ? "Elija al menos un servicio."
           : "Pick at least one service.",
+      );
+      return;
+    }
+    // Step 1 renders its own Continue as type="button", so native `required`
+    // validation never runs here — check the email explicitly.
+    const stepOneEmail = (draftFields["provider-email"] ?? "").trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stepOneEmail)) {
+      setStepError(
+        providerFormIsSpanish
+          ? "Escriba un correo electrónico válido."
+          : "Enter a valid email address.",
       );
       return;
     }
@@ -531,7 +707,6 @@ export function ProviderSignupForm() {
       serviceCodes: selectedProviderServices,
       applicationPathway: PROVIDER_PATHWAY,
       providerPathway: PROVIDER_PATHWAY,
-      providerLevel,
       learningAccountOnly: false,
       policyVersion: POLICY_VERSION,
       policyStatus: POLICY_STATUS,
@@ -559,11 +734,14 @@ export function ProviderSignupForm() {
       termsBundleAccepted,
       privacyAcknowledged,
       providerSelfAssessment: providerAssessment,
+      optionalCertificates: declaredOptionalCertificates,
     };
 
     if (applicationChallengeId) {
       if (!pendingApplicationPayload || !/^\d{6}$/.test(applicationVerificationCode)) {
-        setApplicationError("Enter the 6-digit code sent to the application email.");
+        setApplicationError(providerFormIsSpanish
+          ? "Escriba el código de 6 dígitos enviado al correo de la solicitud."
+          : "Enter the 6-digit code sent to the application email.");
         return;
       }
       setApplicationBusy(true);
@@ -720,22 +898,18 @@ export function ProviderSignupForm() {
       onSubmit={handleFinalSubmit}
     >
       <div className="step-indicator" aria-label="Application steps">
-        <span className={step === 1 ? "on" : ""}>
-          1. {providerFormIsSpanish ? "Sus servicios" : "Your services"}
-        </span>
-        {showStep2 && (
-          <span className={step === 2 ? "on" : ""}>
-            2. {providerFormIsSpanish ? "Requisitos" : "Requirements"}
+        {visibleSteps.map((id, index) => (
+          <span className={step === id ? "on" : ""} key={id}>
+            {index + 1}. {providerFormIsSpanish
+              ? SIGNUP_STEP_LABELS[id].es
+              : SIGNUP_STEP_LABELS[id].en}
           </span>
-        )}
-        <span className={step === 3 ? "on" : ""}>
-          {showStep2 ? "3" : "2"}. {providerFormIsSpanish ? "Su negocio" : "Your business"}
-        </span>
+        ))}
       </div>
       <p className="hint step-progress" aria-live="polite">
         {providerFormIsSpanish
-          ? `Paso ${step === 3 && !showStep2 ? 2 : step} de ${showStep2 ? 3 : 2}`
-          : `Step ${step === 3 && !showStep2 ? 2 : step} of ${showStep2 ? 3 : 2}`}
+          ? `Paso ${stepPosition} de ${visibleSteps.length}`
+          : `Step ${stepPosition} of ${visibleSteps.length}`}
       </p>
 
       {draftRestored && !applicationChallengeId && (
@@ -770,24 +944,30 @@ export function ProviderSignupForm() {
                   : "Why, and what Montgomery County requires"}
               </summary>
               <small>
-                Applications and service selections are accepted for review only. Activation requires
-                documented compliance with applicable law, insurer approval, and every required government,
-                agency, environmental, tax, payment, privacy, security, and service-specific control.
+                {providerFormIsSpanish
+                  ? "Las solicitudes y selecciones de servicios se aceptan solo para revisión. La activación requiere cumplimiento documentado de la ley aplicable, aprobación de la aseguradora y todos los controles gubernamentales, de agencias, ambientales, fiscales, de pagos, privacidad, seguridad y específicos del servicio que correspondan."
+                  : "Applications and service selections are accepted for review only. Activation requires documented compliance with applicable law, insurer approval, and every required government, agency, environmental, tax, payment, privacy, security, and service-specific control."}
               </small>
               <small>
-                <strong>Montgomery County has no unregistered simple-repair lane.</strong>{" "}
-                A mobile repair or maintenance business must hold the County OCP registration.
-                An independent owner-operator needs a real business, current OCP registration, and
-                broker-confirmed coverage for each exact service.
+                <strong>
+                  {providerFormIsSpanish
+                    ? "El Condado de Montgomery no tiene una vía de reparaciones simples sin registro."
+                    : "Montgomery County has no unregistered simple-repair lane."}
+                </strong>{" "}
+                {providerFormIsSpanish
+                  ? "Un negocio móvil de reparación o mantenimiento debe contar con el registro OCP del Condado. Un propietario-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por su corredor para cada servicio específico."
+                  : "A mobile repair or maintenance business must hold the County OCP registration. An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service."}
               </small>
               <small>
-                Official sources: {" "}
+                {providerFormIsSpanish ? "Fuentes oficiales: " : "Official sources: "}{" "}
                 <a
                   href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
                   rel="noreferrer"
                   target="_blank"
                 >
-                  Montgomery County OCP registration guidance
+                  {providerFormIsSpanish
+                    ? "Guía de registro OCP del Condado de Montgomery"
+                    : "Montgomery County OCP registration guidance"}
                 </a>
                 {" · "}
                 <a
@@ -795,13 +975,20 @@ export function ProviderSignupForm() {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  County Code Chapter 31A
+                  {providerFormIsSpanish
+                    ? "Capítulo 31A del Código del Condado"
+                    : "County Code Chapter 31A"}
                 </a>
               </small>
             </details>
           </div>
           <fieldset className="area-fieldset service-fieldset">
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
+            <p className="provider-service-picker-intro">
+              {providerFormIsSpanish
+                ? "Elija los tipos de trabajo que realmente hace. Abra una categoría para seleccionar trabajos específicos."
+                : "Choose the kinds of work you actually do. Open a category to pick the exact jobs."}
+            </p>
             <div className="service-groups provider-service-groups">
               {PROVIDER_REVIEW_SERVICE_GROUPS.map((group) => {
                 const groupServices = group.services.filter((service) => (
@@ -827,7 +1014,9 @@ export function ProviderSignupForm() {
                           ? providerFormIsSpanish
                             ? `${selectedCount} elegidos`
                             : `${selectedCount} selected`
-                          : providerFormIsSpanish ? "Ver" : "View"}
+                          : providerFormIsSpanish
+                            ? `${groupServices.length} trabajos`
+                            : `${groupServices.length} jobs`}
                       </b>
                     </summary>
                     <div className="service-options">
@@ -902,6 +1091,41 @@ export function ProviderSignupForm() {
               ))}
             </div>
           )}
+          {requiredDocumentCount > 0 && (
+            <div className="legal-requirement-note" role="status" aria-live="polite">
+              <strong>
+                {providerFormIsSpanish
+                  ? `Para los trabajos que eligió, necesitará ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "documento" : "documentos únicos"
+                    }.`
+                  : `For the jobs you picked, you'll need ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "document" : "unique documents"
+                    }.`}
+              </strong>
+              <small>
+                {providerFormIsSpanish
+                  ? "No los necesita ahora mismo. El siguiente paso le muestra exactamente cuáles son."
+                  : "You don't need them right now. The next step shows you exactly which ones."}
+              </small>
+            </div>
+          )}
+          <label>
+            {providerFormIsSpanish ? "Correo electrónico" : "Email"}
+            <input
+              autoComplete="email"
+              defaultValue={draftFields["provider-email"] ?? ""}
+              inputMode="email"
+              required
+              name="provider-email"
+              type="email"
+              placeholder="hello@yourbusiness.com"
+            />
+            <small>
+              {providerFormIsSpanish
+                ? "Solo lo usamos para verificar su solicitud y enviarle actualizaciones. Sus respuestas se guardan en este dispositivo, así que puede continuar donde quedó."
+                : "We only use this to verify your application and send you updates. Your answers are saved on this device, so you can pick up where you left off."}
+            </small>
+          </label>
           <button type="button" className="button lime form-button" onClick={goToStep2}>
             {providerFormIsSpanish ? "Continuar" : "Continue"} <span>→</span>
           </button>
@@ -910,31 +1134,54 @@ export function ProviderSignupForm() {
 
       {step === 2 && showStep2 && (
         <div data-signup-step="2">
-          {requiredDocumentsBySelection.length > 0 && (
+          {requiredDocumentGroups.length > 0 && (
             <>
-              <h3>{providerFormIsSpanish ? "Lo que se necesita" : "What's required"}</h3>
+              <h3>{providerFormIsSpanish ? "Lo que subirá" : "What you'll upload"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Solo pedimos el documento que cada ley realmente exige — nada de más."
-                  : "We only ask for the one document each law actually requires — nothing extra."}
+                  ? "No necesita nada de esto ahora mismo. Son los únicos documentos que la ley exige para los trabajos que eligió — nada de más."
+                  : "You don't need any of this right now. These are the only documents the law requires for the jobs you picked — nothing extra."}
               </p>
-              {requiredDocumentsBySelection.map((entry) => (
-                <div key={entry.code} className="legal-requirement-note">
-                  <strong>
-                    {providerServicePlainLabel(entry.code, entry.label, providerFormIsSpanish)}
-                  </strong>
-                  {entry.documents.map((doc) => (
-                    <small key={doc.code}>
-                      {doc.label}
-                      {doc.requiresExpiration === true ? " (must include an expiration date)" : ""}
-                    </small>
-                  ))}
+              {requiredDocumentGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className="legal-requirement-note">
+                  {requiredDocumentGroups.length > 1 && (
+                    <strong>
+                      {providerFormIsSpanish ? "Para " : "For "}
+                      {joinServiceNames(group.services, providerFormIsSpanish)}
+                    </strong>
+                  )}
+                  <ul className="requirement-checklist">
+                    {group.documents.map((doc) => {
+                      const plain = providerDocumentPlainLabel(doc.code, providerFormIsSpanish);
+                      return (
+                        <li key={doc.code}>
+                          <span className="requirement-check" aria-hidden="true">✓</span>
+                          <span className="requirement-text">
+                            <span>
+                              {plain ?? doc.label}
+                              {doc.requiresExpiration === true
+                                ? (providerFormIsSpanish
+                                    ? " — con su fecha de vencimiento"
+                                    : " — showing its expiry date")
+                                : ""}
+                            </span>
+                            {plain && (
+                              <small className="requirement-official-name">
+                                {providerFormIsSpanish ? "Nombre oficial: " : "Official name: "}
+                                {doc.label}
+                              </small>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               ))}
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Subirá estos documentos después de verificar su correo e iniciar sesión."
-                  : "You'll upload these after you verify your email and sign in."}
+                  ? "Subirá estos documentos después de verificar su correo e iniciar sesión. Le mostraremos cómo, paso a paso."
+                  : "You'll upload these after you verify your email and sign in. We'll walk you through it, step by step."}
               </p>
             </>
           )}
@@ -1150,7 +1397,9 @@ export function ProviderSignupForm() {
 
       {step === 3 && (
         <div data-signup-step="3">
-          <h3>{providerFormIsSpanish ? "Su negocio" : "Your business"}</h3>
+          <h3>
+            {providerFormIsSpanish ? "Usted y su negocio" : "You and your business"}
+          </h3>
           <p>
             {providerFormIsSpanish
               ? "Unos datos sobre usted y su negocio. La configuración de pago viene después de la aprobación."
@@ -1220,23 +1469,26 @@ export function ProviderSignupForm() {
                 : "Must match the ID used in the separate Stripe Identity check."}
             </small>
           </label>
-          <label>
-            {providerFormIsSpanish ? "Correo electrónico" : "Email"}
-            <input
-              autoComplete="email"
-              defaultValue={draftFields["provider-email"] ?? ""}
-              inputMode="email"
-              required
-              name="provider-email"
-              type="email"
-              placeholder="hello@yourbusiness.com"
-            />
-            <small>
-              {providerFormIsSpanish
-                ? "Solo lo usamos para verificar su solicitud y enviarle actualizaciones."
-                : "We only use this to verify your application and send you updates."}
-            </small>
-          </label>
+          {/*
+            Email is collected on step 1 so an applicant who abandons partway
+            still has their progress saved under an address they can return to.
+            Steps render conditionally, so `new FormData(form)` at submit only
+            sees the current step — this hidden field carries the step-1 value
+            into the payload. The read-back row below keeps it visible and
+            correctable without leaving step 3.
+          */}
+          <input
+            name="provider-email"
+            type="hidden"
+            value={draftFields["provider-email"] ?? ""}
+          />
+          <div className="provider-email-readback">
+            <span>{providerFormIsSpanish ? "Correo electrónico" : "Email"}</span>
+            <strong>{draftFields["provider-email"] ?? ""}</strong>
+            <button type="button" className="account-text-button" onClick={goToStep1}>
+              {providerFormIsSpanish ? "Cambiar" : "Change"}
+            </button>
+          </div>
           <label>
             {providerFormIsSpanish ? "Teléfono (opcional)" : "Phone (optional)"}
             <input
@@ -1253,6 +1505,15 @@ export function ProviderSignupForm() {
                 : "Only if you'd rather we reach you by phone. Email is all that's required."}
             </small>
           </label>
+          {/*
+            Everything above is about the person; everything below is about the
+            business. Marking the seam is what makes this step read as two
+            short sections instead of one long one — no fields move, so nothing
+            can drop out of FormData.
+          */}
+          <h4 className="signup-subheading">
+            {providerFormIsSpanish ? "Su negocio" : "Your business"}
+          </h4>
           <label>
             {soloBusiness
               ? (providerFormIsSpanish ? "Nombre del negocio (opcional)" : "Business name (optional)")
@@ -1419,6 +1680,106 @@ export function ProviderSignupForm() {
                 : "Outside the county? Request your area"}
             </Link>
           </div>
+          <section className="optional-cert-section">
+            <div className="optional-cert-optin">
+              <div className="optional-cert-optin-copy">
+                <strong>
+                  {providerFormIsSpanish
+                    ? "¿Tiene certificados (como ASE) que quiera mostrar a los clientes?"
+                    : "Have any certificates (like ASE) you'd like to show customers?"}
+                </strong>
+                <small>
+                  {providerFormIsSpanish
+                    ? "No es obligatorio. Puede agregarlos y Tuveloz los verifica antes de que un cliente los vea."
+                    : "Not required — but you can add them, and we'll verify each one before any customer sees it."}
+                </small>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showOptionalCertificates}
+                className={`brand-switch${showOptionalCertificates ? " on" : ""}`}
+                onClick={toggleOptionalCertificates}
+              >
+                <span className="brand-switch-track">
+                  <span className="brand-switch-thumb" />
+                </span>
+                <span className="brand-switch-state">
+                  {showOptionalCertificates
+                    ? (providerFormIsSpanish ? "Sí" : "On")
+                    : (providerFormIsSpanish ? "No" : "Off")}
+                </span>
+              </button>
+            </div>
+            {showOptionalCertificates && (
+              <div className="optional-cert-editor">
+                {optionalCertificates.map((certificate, index) => (
+                  <div className="optional-cert-row" key={index}>
+                    <label>
+                      {providerFormIsSpanish ? "Tipo de certificado" : "Certificate type"}
+                      <select
+                        value={certificate.category}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          category: event.target.value as OptionalCertificateCategory,
+                        })}
+                      >
+                        {OPTIONAL_CERTIFICATE_CATEGORIES.map((option) => (
+                          <option key={option.key} value={option.key}>
+                            {providerFormIsSpanish ? option.es : option.en}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      {providerFormIsSpanish ? "Nombre del certificado" : "Certificate name"}
+                      <input
+                        maxLength={120}
+                        value={certificate.title}
+                        placeholder={providerFormIsSpanish
+                          ? "Ej.: ASE A6 sistema eléctrico"
+                          : "e.g. ASE A6 Electrical Systems"}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          title: event.target.value,
+                        })}
+                      />
+                    </label>
+                    <label>
+                      {providerFormIsSpanish ? "Número (opcional)" : "Certificate number (optional)"}
+                      <input
+                        maxLength={80}
+                        value={certificate.credentialIdentifier}
+                        placeholder={providerFormIsSpanish ? "Si lo tiene" : "If you have one"}
+                        onChange={(event) => updateOptionalCertificate(index, {
+                          credentialIdentifier: event.target.value,
+                        })}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="optional-cert-remove"
+                      onClick={() => removeOptionalCertificate(index)}
+                    >
+                      {providerFormIsSpanish ? "Quitar" : "Remove"}
+                    </button>
+                  </div>
+                ))}
+                {optionalCertificates.length < MAX_OPTIONAL_CERTIFICATES && (
+                  <button
+                    type="button"
+                    className="optional-cert-add"
+                    onClick={addOptionalCertificate}
+                  >
+                    + {providerFormIsSpanish ? "Agregar otro certificado" : "Add another certificate"}
+                  </button>
+                )}
+                <small className="hint">
+                  {providerFormIsSpanish
+                    ? "Tuveloz revisa cada certificado y le escribe si necesita algo más. Nada se muestra a los clientes hasta que quede verificado."
+                    : "Tuveloz checks each certificate and emails you if we need anything else. Nothing shows to customers until it's verified."}
+                </small>
+              </div>
+            )}
+          </section>
           <fieldset className="area-fieldset">
             <legend>
               {providerFormIsSpanish
@@ -1464,7 +1825,16 @@ export function ProviderSignupForm() {
                   : "I confirm that I am at least 18 years old and authorized to submit this application."}
               </span>
             </label>
-            <label className="policy-consent">
+            {/*
+              Stays English until its Spanish legal copy is reviewed. Unlike
+              the two acceptances below, this one is not hash-recorded, so
+              translating it would not corrupt any evidence record — that is
+              exactly why it looks safe to translate, and it is not. It is
+              still a legal acknowledgment, and what it means in Spanish is a
+              reviewed-copy decision rather than a string swap.
+            */}
+            <div data-no-interface-translation>
+              <label className="policy-consent">
               <input
                 required
                 name="employment-work-authorization-acknowledged"
@@ -1477,26 +1847,46 @@ export function ProviderSignupForm() {
                 compensation, supervision, and personnel records. An independent owner-operator
                 remains responsible for their own business and work authorization obligations.
               </span>
-            </label>
+              </label>
+          {/*
+            DO NOT translate the two acceptance texts below, and do not add
+            them to the spanishText dictionary. The enclosing panel is marked
+            data-manual-language, and this local wrapper is a second barrier
+            in case a future refactor moves the legal text outside that panel.
+
+            On submit, app/api/providers/route.ts records
+            providerAgreementEvidenceText() for every acceptance document, and
+            that evidence embeds `presentedText` — these exact English
+            constants — alongside a canonical body hash and release id.
+            Rendering Spanish here while recording the English would make the
+            immutable record assert the applicant saw text they never saw.
+
+            Translating them needs a reviewed Spanish policy release and a
+            presentedText that follows the displayed language, not a string
+            swap. Spanish drafts already exist in site-language.tsx if that
+            work gets picked up.
+          */}
+              <label className="policy-consent">
+                <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
+                <span>
+                  {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
+                  Review the <a href="/terms">Terms</a>,{" "}
+                  <a href="/provider-agreement">Provider Agreement</a>,{" "}
+                  <a href="/payments">Payment Policy</a>,{" "}
+                  <a href="/marketplace-conduct">Conduct Policy</a>,{" "}
+                  <a href="/provisional-provider-policy">Provider Pathway Policy</a>, and{" "}
+                  <a href="/provider-safety-policy">Safety and Safe-Work Policy</a>.
+                </span>
+              </label>
+              <label className="policy-consent">
+                <input required name="privacy-acknowledged" type="checkbox" value="yes" />
+                <span>
+                  {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
+                  Review the <a href="/privacy">Privacy Policy</a>.
+                </span>
+              </label>
+            </div>
           </fieldset>
-          <label className="policy-consent">
-            <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
-              Review the <a href="/terms">Terms</a>,{" "}
-              <a href="/provider-agreement">Provider Agreement</a>,{" "}
-              <a href="/payments">Payment Policy</a>,{" "}
-              <a href="/marketplace-conduct">Conduct Policy</a>, and{" "}
-              <a href="/provisional-provider-policy">Provider Pathway Policy</a>.
-            </span>
-          </label>
-          <label className="policy-consent">
-            <input required name="privacy-acknowledged" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
-              Review the <a href="/privacy">Privacy Policy</a>.
-            </span>
-          </label>
           {applicationChallengeId ? (
             <section
               className="legal-requirement-note"
@@ -1519,7 +1909,9 @@ export function ProviderSignupForm() {
                   : "Your answers are saved on this device — if you switch to your email to grab the code, they'll still be here when you come back."}
               </small>
               <label>
-                6-digit verification code
+                {providerFormIsSpanish
+                  ? "Código de verificación de 6 dígitos"
+                  : "6-digit verification code"}
                 <input
                   autoComplete="one-time-code"
                   inputMode="numeric"
@@ -1539,24 +1931,24 @@ export function ProviderSignupForm() {
                 disabled={applicationBusy || applicationVerificationCode.length !== 6}
                 type="submit"
               >
-                {applicationBusy ? "Verifying..." : "Verify email and continue"}
+                {applicationBusy
+                  ? (providerFormIsSpanish ? "Verificando..." : "Verifying...")
+                  : (providerFormIsSpanish
+                    ? "Verificar correo y continuar"
+                    : "Verify email and continue")}
               </button>
-              <button
-                className="button secondary form-button"
-                disabled={applicationBusy}
-                onClick={resendProviderApplicationCode}
-                type="button"
-              >
-                Send the code again
-              </button>
-              <button
-                className="button secondary form-button"
-                disabled={applicationBusy}
-                onClick={resetChallenge}
-                type="button"
-              >
-                Edit application
-              </button>
+              {/* One button to press. The two ways out stay available as plain
+                  links so they cannot be mistaken for the thing to do next. */}
+              <div className="form-alt-actions">
+                <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
+                  {providerFormIsSpanish ? "Enviar el código de nuevo" : "Send the code again"}
+                </button>
+                <button disabled={applicationBusy} onClick={resetChallenge} type="button">
+                  {/* TODO(es): "Regresar y editar" is a literal rendering of main's
+                      newer label; confirm against reviewed Spanish copy. */}
+                  {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
+                </button>
+              </div>
             </section>
           ) : confirmingSubmit ? (
             <ConfirmAction

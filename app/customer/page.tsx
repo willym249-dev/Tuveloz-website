@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CustomerAccountTools } from "../components/customer-account-tools";
 import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
+import { LaunchUpdatesForm } from "../components/launch-updates-form";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 import { parseJobServices } from "../../lib/service-matching";
@@ -281,10 +282,14 @@ export default function CustomerPage() {
             <span className="account-kicker">Customer launch status</span>
             <strong>You&rsquo;re in! Job requests open soon.</strong>
             <p>
-              We&rsquo;ll email you the moment service requests go live. Your
-              account is ready now &mdash; creating it did not submit a request,
-              contact a provider, book service, or charge you.
+              Your account is ready now &mdash; creating it did not submit a
+              request, contact a provider, book service, or charge you.
             </p>
+            <p className="customer-launch-callout-optin">
+              Want an email the moment service requests open? Add your address
+              below. Creating an account does not sign you up on its own.
+            </p>
+            <LaunchUpdatesForm source="customer-dashboard" />
           </aside>
         )}
 
@@ -294,6 +299,7 @@ export default function CustomerPage() {
           <div className="account-grid account-customer-grid">
             <nav className="workspace-nav customer-workspace-nav" aria-label="Customer dashboard">
               <Link className="workspace-nav-primary" href="/post-job">Customer launch status</Link>
+              <Link className="workspace-nav-primary" href="/ai">Ask Tuveloz AI</Link>
               {([
                 ["requests", "My requests"],
                 ["quotes", "Quotes received"],
@@ -348,7 +354,7 @@ export default function CustomerPage() {
                             <small>
                               Provider subtotal: {formatMoney(payment.providerAmountCents, payment.currency)}
                               {" · "}
-                              Tuveloz fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
+                              Customer Service Fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
                             </small>
                             {payment.refundAmountCents > 0 && (
                               <small>

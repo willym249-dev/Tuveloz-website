@@ -528,7 +528,7 @@ export default function AdminPage() {
         <div>
           <span>Private owner dashboard</span>
           <Link href="/admin/launch-readiness">Integrated launch review</Link>
-          <Link href="/admin/analytics-funnel">Signup funnel</Link>
+          <Link href="/admin/analytics-funnel">Funnel, launch list &amp; AI</Link>
           <Link href="/admin/compliance-operations">Compliance operations</Link>
           <Link href="/admin/provider-compliance">Provider compliance queue</Link>
           <Link href="/">View site</Link>
@@ -547,7 +547,7 @@ export default function AdminPage() {
             <div className="admin-stats">
               <article><strong>{requests.length}</strong><span>Job requests</span></article>
               <article><strong>{quotes.length}</strong><span>Provider quotes</span></article>
-              <article><strong>${(acceptedFeeCents / 100).toFixed(2)}</strong><span>Accepted service fees</span></article>
+              <article><strong>${(acceptedFeeCents / 100).toFixed(2)}</strong><span>Accepted Customer Service Fees</span></article>
               <article><strong>{providers.length}</strong><span>Provider applications</span></article>
               <article><strong>{expansion.length}</strong><span>Expansion requests</span></article>
               <article><strong>{feedback.length}</strong><span>Feedback responses</span></article>

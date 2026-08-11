@@ -315,7 +315,7 @@ function paymentReceiptBody(payment: CustomerPayment, customerEmail: string) {
     <table>
       <tbody>
         <tr><td>Independent-provider subtotal</td><td class="amount">${escapeHtml(money(payment.providerAmountCents, payment.currency))}</td></tr>
-        <tr><td>Tuveloz customer service fee</td><td class="amount">${escapeHtml(money(payment.applicationFeeCents, payment.currency))}</td></tr>
+        <tr><td>Customer Service Fee</td><td class="amount">${escapeHtml(money(payment.applicationFeeCents, payment.currency))}</td></tr>
         <tr><td><strong>Total marketplace payment</strong></td><td class="amount"><strong>${escapeHtml(money(payment.customerTotalCents, payment.currency))}</strong></td></tr>
         ${payment.refundAmountCents > 0 ? `<tr><td>Refund recorded${payment.refundedAt ? ` · ${escapeHtml(readableDate(payment.refundedAt))}` : ""}</td><td class="amount">-${escapeHtml(money(payment.refundAmountCents, payment.currency))}</td></tr>` : ""}
       </tbody>

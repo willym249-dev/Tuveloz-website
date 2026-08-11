@@ -60,6 +60,8 @@ import {
   POLICY_STATUS,
   POLICY_VERSION,
   providerLevelForService,
+  PROVIDER_LEVEL_CODES,
+  providerLevelsForServices,
   PROVIDER_LEVELS,
   PROVIDER_PATHWAYS,
   PROVIDER_POLICY_MATRIX,
@@ -1285,26 +1287,37 @@ export async function POST(request: Request) {
     if (action === "initialize-provider-pathway") {
       if (!providerId) return Response.json({ error: "Choose a provider application." }, { status: 400 });
       const pathway = clean(body.pathway, 80);
-      const providerLevel = clean(body.providerLevel, 80);
       const serviceCodes = Array.isArray(body.serviceCodes)
         ? [...new Set(body.serviceCodes.map((value) => clean(value, 100)).filter(Boolean))]
         : [];
-      if (!isProviderPathway(pathway) || !isProviderLevel(providerLevel)) {
-        return Response.json({ error: "Choose a recognized provider pathway and level." }, { status: 400 });
-      }
-      if (!isPathwayLevelCompatible(pathway, providerLevel) || providerLevel === "learning_account") {
-        return Response.json({ error: "That provider level is not compatible with the selected working relationship." }, { status: 400 });
+      if (!isProviderPathway(pathway)) {
+        return Response.json({ error: "Choose a recognized provider pathway." }, { status: 400 });
       }
       if (!serviceCodes.length || serviceCodes.some((code) => !isServiceCode(code) || code === "general_auto_repair")) {
         return Response.json({ error: "Choose at least one exact v0.11 service; general auto repair is prohibited." }, { status: 400 });
       }
       const exactServices = serviceCodes as ServiceCode[];
-      if (exactServices.some((serviceCode) => (
-        !SERVICE_POLICY_CATALOG[serviceCode].allowedPathways.includes(pathway)
-        || !SERVICE_POLICY_CATALOG[serviceCode].allowedProviderLevels.includes(providerLevel)
-        || !PROVIDER_POLICY_MATRIX.provider_levels[providerLevel].allowed_service_codes.includes(serviceCode)
-      ))) {
-        return Response.json({ error: "Every selected service must match the chosen pathway and provider level." }, { status: 409 });
+      // Each exact service carries its own lawful level, so one provider may be
+      // provisioned for standard and specialty work together. Services that no
+      // level on this pathway may perform are reported by name.
+      const unsupportedServices = exactServices.filter((serviceCode) => (
+        !providerLevelForService(serviceCode, pathway)
+      ));
+      if (unsupportedServices.length) {
+        return Response.json({
+          error: `These services are not lawful on the selected working relationship: ${
+            unsupportedServices.join(", ")
+          }.`,
+        }, { status: 409 });
+      }
+      // The profile keeps the highest level held as a display summary; per
+      // service authorization always runs through the eligibility engine.
+      const heldLevels = providerLevelsForServices(exactServices, pathway);
+      const providerLevel = [...PROVIDER_LEVEL_CODES]
+        .reverse()
+        .find((level) => heldLevels.includes(level)) ?? "";
+      if (!isProviderLevel(providerLevel) || providerLevel === "learning_account") {
+        return Response.json({ error: "That provider level is not compatible with the selected working relationship." }, { status: 400 });
       }
       const [provider] = await db.select().from(providerApplications)
         .where(eq(providerApplications.id, providerId)).limit(1);

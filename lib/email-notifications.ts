@@ -11,6 +11,7 @@ import {
 } from "./email-event-policy";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "./launch-status";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -197,7 +198,7 @@ async function deliverEvent(eventKey: string) {
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

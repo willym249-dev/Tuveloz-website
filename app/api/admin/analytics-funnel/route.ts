@@ -1,7 +1,9 @@
 import { and, count, gte, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { analyticsEvents } from "../../../../db/schema";
+import { analyticsEvents, launchUpdateSubscribers } from "../../../../db/schema";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
+import { ASSISTANT_EVENT, type AssistantEventProps } from "../../../../lib/ai/assistant-telemetry";
+import { POLICY_ENTRIES } from "../../../../lib/ai/policy-knowledge";
 
 // Owner-only read of the first-party funnel events collected in the
 // analytics_events D1 table (see lib/analytics.ts). Nothing here is sent to a
@@ -103,6 +105,16 @@ type ExperimentRow = {
   conversion: number;
 };
 
+type CampaignRow = {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  started: number;
+  submitted: number;
+  conversion: number;
+};
+
 // Experiments whose conversion is start → submitted on the provider funnel.
 // Add a name here (and render copy variants in the app) to measure it.
 const EXPERIMENTS = ["provider_hero", "provider_pitch", "founding_cta"] as const;
@@ -161,7 +173,52 @@ async function experimentsSince(sinceValue: string | null): Promise<Record<strin
   return result;
 }
 
-function windowPayload(counts: Map<string, number>, experiments: Record<string, ExperimentRow[]>) {
+function readCampaign(props: string | null) {
+  try {
+    const parsed = JSON.parse(props ?? "{}") as Record<string, unknown>;
+    const value = (key: string) => typeof parsed[key] === "string" ? parsed[key] : "";
+    return {
+      source: value("utm_source"),
+      medium: value("utm_medium"),
+      campaign: value("utm_campaign"),
+      content: value("utm_content"),
+    };
+  } catch {
+    return { source: "", medium: "", campaign: "", content: "" };
+  }
+}
+
+async function campaignsSince(sinceValue: string | null): Promise<CampaignRow[]> {
+  const eventFilter = inArray(analyticsEvents.event, [
+    "provider_signup_started",
+    "provider_signup_completed",
+  ]);
+  const rows = await getDb()
+    .select({ event: analyticsEvents.event, props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(sinceValue ? and(gte(analyticsEvents.createdAt, sinceValue), eventFilter) : eventFilter);
+
+  const tally = new Map<string, Omit<CampaignRow, "conversion">>();
+  for (const row of rows) {
+    const campaign = readCampaign(row.props);
+    if (!campaign.source || !campaign.campaign) continue;
+    const key = JSON.stringify(campaign);
+    const bucket = tally.get(key) ?? { ...campaign, started: 0, submitted: 0 };
+    if (row.event === "provider_signup_started") bucket.started += 1;
+    else bucket.submitted += 1;
+    tally.set(key, bucket);
+  }
+
+  return [...tally.values()]
+    .map((row) => ({ ...row, conversion: pct(row.submitted, row.started) }))
+    .sort((a, b) => b.submitted - a.submitted || b.started - a.started);
+}
+
+function windowPayload(
+  counts: Map<string, number>,
+  experiments: Record<string, ExperimentRow[]>,
+  campaigns: CampaignRow[],
+) {
   return {
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
@@ -172,7 +229,108 @@ function windowPayload(counts: Map<string, number>, experiments: Record<string, 
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
     experiments,
+    campaigns,
     rawCounts: ALL_EVENTS.map((event) => ({ event, count: counts.get(event) ?? 0 })),
+  };
+}
+
+const TOPIC_LABELS = new Map(POLICY_ENTRIES.map((entry) => [entry.id, entry.question]));
+
+/**
+ * What the assistant has been asked and whether its money answers stayed
+ * hedged. Reads the shape-only rows written by lib/ai/assistant-telemetry.ts —
+ * there is no question or answer text in this table to read.
+ */
+async function assistantSummary(since: string | null) {
+  const where = since
+    ? and(eqEvent(), gte(analyticsEvents.createdAt, since))
+    : eqEvent();
+  const rows = await getDb()
+    .select({ props: analyticsEvents.props })
+    .from(analyticsEvents)
+    .where(where);
+
+  const topics = new Map<string, number>();
+  let answered = 0;
+  let grounded = 0;
+  let guardReplaced = 0;
+  const byAudience = { customer: 0, provider: 0 };
+
+  for (const row of rows) {
+    answered += 1;
+    let props: Partial<AssistantEventProps> = {};
+    try {
+      props = JSON.parse(row.props) as Partial<AssistantEventProps>;
+    } catch {
+      continue;
+    }
+    if (props.audience === "provider") byAudience.provider += 1;
+    else byAudience.customer += 1;
+    if (props.grounded) grounded += 1;
+    if (props.guard === "replaced") guardReplaced += 1;
+    for (const topic of props.topics ?? []) {
+      topics.set(topic, (topics.get(topic) ?? 0) + 1);
+    }
+  }
+
+  return {
+    answered,
+    grounded,
+    vehicleOnly: answered - grounded,
+    byAudience,
+    // A non-zero count means the model stated a provisional design as settled
+    // fact and the vetted wording was served instead. Worth a look at the
+    // prompt, not a customer-facing incident.
+    guardReplaced,
+    topTopics: [...topics.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([id, askCount]) => ({ id, label: TOPIC_LABELS.get(id) ?? id, count: askCount })),
+  };
+}
+
+function eqEvent() {
+  return inArray(analyticsEvents.event, [ASSISTANT_EVENT]);
+}
+
+/**
+ * The pre-launch email list. Nothing here shows an address: the owner needs the
+ * size and the shape of the list, and the addresses themselves live behind the
+ * privacy tooling.
+ */
+async function launchListSummary(since: string | null) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      source: launchUpdateSubscribers.source,
+      unsubscribedAt: launchUpdateSubscribers.unsubscribedAt,
+      consentedAt: launchUpdateSubscribers.consentedAt,
+    })
+    .from(launchUpdateSubscribers);
+
+  const bySource = new Map<string, number>();
+  let subscribed = 0;
+  let unsubscribed = 0;
+  let recent = 0;
+
+  for (const row of rows) {
+    if (row.unsubscribedAt) {
+      unsubscribed += 1;
+      continue;
+    }
+    subscribed += 1;
+    const source = row.source || "unknown";
+    bySource.set(source, (bySource.get(source) ?? 0) + 1);
+    if (since && row.consentedAt && row.consentedAt >= since) recent += 1;
+  }
+
+  return {
+    subscribed,
+    unsubscribed,
+    recent,
+    bySource: [...bySource.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([source, subscriberCount]) => ({ source, count: subscriberCount })),
   };
 }
 
@@ -195,23 +353,34 @@ export async function GET(request: Request) {
     const now = Date.now();
     const since30 = threshold(30, now);
     const since7 = threshold(7, now);
-    const [allTime, last30, last7, expAll, exp30, exp7] = await Promise.all([
+    const [
+      allTime, last30, last7, expAll, exp30, exp7, campaignAll, campaign30, campaign7,
+      assistantAll, assistant7, launchList,
+    ] = await Promise.all([
       countsSince(null),
       countsSince(since30),
       countsSince(since7),
       experimentsSince(null),
       experimentsSince(since30),
       experimentsSince(since7),
+      campaignsSince(null),
+      campaignsSince(since30),
+      campaignsSince(since7),
+      assistantSummary(null),
+      assistantSummary(since7),
+      launchListSummary(since7),
     ]);
     return Response.json(
       {
         generatedAt: new Date(now).toISOString(),
         note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
         windows: {
-          allTime: windowPayload(allTime, expAll),
-          last30: windowPayload(last30, exp30),
-          last7: windowPayload(last7, exp7),
+          allTime: windowPayload(allTime, expAll, campaignAll),
+          last30: windowPayload(last30, exp30, campaign30),
+          last7: windowPayload(last7, exp7, campaign7),
         },
+        assistant: { allTime: assistantAll, last7: assistant7 },
+        launchList,
       },
       { headers: { "cache-control": "no-store" } },
     );

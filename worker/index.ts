@@ -5,9 +5,11 @@ import { flushPendingEmailNotifications } from "../lib/email-notifications";
 import { processDueLaunchUpdates } from "../lib/launch-update-delivery";
 import { isVerifiedOwnerRequest } from "../lib/owner-auth";
 import { processDueProviderReminders } from "../lib/request-reminders";
+import { processDueAppointmentReminders } from "../lib/appointment-reminders";
 import { processDueComplianceReminders } from "../lib/compliance-reminder-delivery";
 import { cleanupProviderApplicationVerificationState } from "../lib/provider-application-verification";
 import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
+import { processPendingMessageImageScans } from "../lib/message-image-scanner";
 import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
 
 interface Env {
@@ -47,6 +49,22 @@ const PRIVATE_PATH_PREFIXES = [
   "/success",
   "/api/",
 ];
+
+// ai.tuveloz.com points at this same Worker. Landing on its root drops you
+// straight into the assistant; every other path is served normally so the
+// links the assistant hands out (/payments, /faq, ...) keep working on the
+// host the visitor is already on.
+const AI_HOSTNAMES = new Set(["ai.tuveloz.com"]);
+
+function aiHostRedirect(requestUrl: URL) {
+  if (!AI_HOSTNAMES.has(requestUrl.hostname.toLowerCase())) return null;
+  if (requestUrl.pathname !== "/") return null;
+  const target = new URL(requestUrl);
+  target.pathname = "/ai";
+  // Deliberately temporary: a permanent redirect would be cached in browsers
+  // long after any decision to use this host differently.
+  return Response.redirect(target.toString(), 302);
+}
 
 function isStagingRequest(requestUrl: URL, env: Env) {
   const configuredEnvironment = env.APP_ENVIRONMENT?.trim().toLowerCase();
@@ -120,6 +138,7 @@ const worker = {
     );
     ctx.waitUntil(Promise.allSettled([
       scheduledTask("compliance reminders", () => processDueComplianceReminders()),
+      scheduledTask("appointment reminders", () => processDueAppointmentReminders()),
       scheduledTask("provider application verification cleanup", () => (
         cleanupProviderApplicationVerificationState()
       )),
@@ -133,11 +152,21 @@ const worker = {
       scheduledTask("quarantined provider evidence scans", () => (
         processPendingCloudmersiveEvidenceScans()
       )),
+      scheduledTask("pending message image scans", () => processPendingMessageImageScans()),
     ]).then(() => undefined));
   },
 
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    // Keep one public origin. Cloudflare's custom-domain Worker can receive
+    // direct HTTP requests, so enforce HTTPS here instead of relying on a
+    // dashboard setting that could be changed independently of the site.
+    if (url.protocol === "http:" && url.hostname.toLowerCase() === "tuveloz.com") {
+      url.protocol = "https:";
+      return Response.redirect(url.toString(), 308);
+    }
+
     const acceptsHtml = request.headers.get("accept")?.includes("text/html") === true;
     const staging = isStagingRequest(url, env);
 
@@ -147,6 +176,9 @@ const worker = {
     if (staging && !(await isVerifiedOwnerRequest(request))) {
       return securedResponse(stagingAccessDenied(acceptsHtml), url, true);
     }
+
+    const aiRedirect = aiHostRedirect(url);
+    if (aiRedirect) return securedResponse(aiRedirect, url, staging);
 
     if (!staging && request.method === "GET" && acceptsHtml && env.DB) {
       ctx.waitUntil(

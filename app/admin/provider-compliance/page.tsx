@@ -223,7 +223,6 @@ type ComplianceResponse = {
 
 type InitializeDraft = {
   pathway: string;
-  providerLevel: string;
   serviceCodes: string[];
 };
 
@@ -613,9 +612,7 @@ export default function ProviderCompliancePage() {
       for (const application of result.applications) {
         if (!application.canInitializeV011 || next[application.id]) continue;
         const pathway = result.catalog.pathways[0]?.code ?? "independent_startup";
-        const providerLevel = result.catalog.pathways[0]?.allowedLevels.find((level) => level !== "learning_account")
-          ?? "provisional_independent";
-        next[application.id] = { pathway, providerLevel, serviceCodes: [] };
+        next[application.id] = { pathway, serviceCodes: [] };
       }
       return next;
     });
@@ -665,7 +662,6 @@ export default function ProviderCompliancePage() {
       ...current,
       [providerId]: update(current[providerId] ?? {
         pathway: "independent_startup",
-        providerLevel: "provisional_independent",
         serviceCodes: [],
       }),
     }));
@@ -678,7 +674,6 @@ export default function ProviderCompliancePage() {
       action: "initialize-provider-pathway",
       providerId: application.id,
       pathway: draft.pathway,
-      providerLevel: draft.providerLevel,
       serviceCodes: draft.serviceCodes,
     }, `initialize:${application.id}`);
   }
@@ -988,11 +983,17 @@ export default function ProviderCompliancePage() {
                   const draft = initializeDrafts[application.id];
                   const selectedPathway = data.catalog.pathways.find((item) => item.code === draft?.pathway);
                   const compatibleLevels = selectedPathway?.allowedLevels.filter((level) => level !== "learning_account") ?? [];
+                  // A level belongs to the exact service, so the owner may
+                  // provision standard and specialty work together. Services are
+                  // filtered by the working relationship only; each one shows the
+                  // level it requires and is approved on its own credentials.
                   const availableServices = data.catalog.services.filter((service) => (
-                    draft
-                    && service.allowedPathways.includes(draft.pathway)
-                    && service.allowedProviderLevels.includes(draft.providerLevel)
+                    draft && service.allowedPathways.includes(draft.pathway)
                   ));
+                  const selectedLevels = [...new Set(availableServices
+                    .filter((service) => draft?.serviceCodes.includes(service.code))
+                    .flatMap((service) => service.allowedProviderLevels
+                      .filter((level) => compatibleLevels.includes(level))))];
                   const eligibleSponsors = data.applications.filter((candidate) => (
                     candidate.id !== application.id
                     && candidate.applicationStatus === "approved"
@@ -1047,12 +1048,8 @@ export default function ProviderCompliancePage() {
                               <select
                                 value={draft.pathway}
                                 onChange={(event) => {
-                                  const pathway = event.target.value;
-                                  const allowed = data.catalog.pathways.find((item) => item.code === pathway)?.allowedLevels
-                                    .filter((level) => level !== "learning_account") ?? [];
                                   updateInitializeDraft(application.id, () => ({
-                                    pathway,
-                                    providerLevel: allowed[0] ?? "",
+                                    pathway: event.target.value,
                                     serviceCodes: [],
                                   }));
                                 }}
@@ -1062,40 +1059,49 @@ export default function ProviderCompliancePage() {
                                 ))}
                               </select>
                             </label>
-                            <label>
-                              Provider level
-                              <select
-                                value={draft.providerLevel}
-                                onChange={(event) => updateInitializeDraft(application.id, (current) => ({
-                                  ...current,
-                                  providerLevel: event.target.value,
-                                  serviceCodes: [],
-                                }))}
-                              >
-                                {compatibleLevels.map((level) => (
-                                  <option key={level} value={level}>
-                                    {data.catalog.levels.find((item) => item.code === level)?.label ?? prettify(level)}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                            <div className="service-approval-review">
+                              <strong>Provider level</strong>
+                              <small>
+                                {selectedLevels.length === 0
+                                  ? "Set by the exact services selected below."
+                                  : selectedLevels
+                                    .map((level) => data.catalog.levels
+                                      .find((item) => item.code === level)?.label ?? prettify(level))
+                                    .join(" + ")}
+                              </small>
+                            </div>
                             <div className="service-approval-review">
                               <strong>Exact service codes</strong>
-                              {availableServices.map((service) => (
-                                <label key={service.code}>
-                                  <input
-                                    checked={draft.serviceCodes.includes(service.code)}
-                                    onChange={(event) => updateInitializeDraft(application.id, (current) => ({
-                                      ...current,
-                                      serviceCodes: event.target.checked
-                                        ? [...new Set([...current.serviceCodes, service.code])]
-                                        : current.serviceCodes.filter((code) => code !== service.code),
-                                    }))}
-                                    type="checkbox"
-                                  />
-                                  <span><strong>{service.label}</strong><small>{service.code}</small></span>
-                                </label>
-                              ))}
+                              <small>
+                                Standard and specialty services may be provisioned
+                                together. Each service is approved on its own
+                                credentials — approving one never approves another.
+                              </small>
+                              {availableServices.map((service) => {
+                                const serviceLevel = service.allowedProviderLevels
+                                  .find((level) => compatibleLevels.includes(level));
+                                return (
+                                  <label key={service.code}>
+                                    <input
+                                      checked={draft.serviceCodes.includes(service.code)}
+                                      onChange={(event) => updateInitializeDraft(application.id, (current) => ({
+                                        ...current,
+                                        serviceCodes: event.target.checked
+                                          ? [...new Set([...current.serviceCodes, service.code])]
+                                          : current.serviceCodes.filter((code) => code !== service.code),
+                                      }))}
+                                      type="checkbox"
+                                    />
+                                    <span>
+                                      <strong>{service.label}</strong>
+                                      <small>
+                                        {service.code}
+                                        {serviceLevel ? ` · ${prettify(serviceLevel)}` : ""}
+                                      </small>
+                                    </span>
+                                  </label>
+                                );
+                              })}
                             </div>
                             <button
                               className="save-compliance"

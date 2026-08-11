@@ -4,6 +4,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
+import { JobAppointmentPanel } from "../components/job-appointment-panel";
+import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { JobMessages } from "../components/job-messages";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
@@ -113,6 +115,7 @@ type PendingQuote = {
   laborPrice: string;
   availability: string;
   message: string;
+  workmanshipWarranty: string;
   laborOnlyConfirmed: boolean;
 };
 type PendingStatus = {
@@ -282,6 +285,7 @@ export default function ProviderJobsPage() {
       laborPrice: String(values.laborPrice ?? ""),
       availability: String(values.availability ?? ""),
       message: String(values.message ?? ""),
+      workmanshipWarranty: String(values.workmanshipWarranty ?? "").trim(),
       laborOnlyConfirmed: values.laborOnlyConfirmed === "yes",
     });
   }
@@ -658,6 +662,7 @@ export default function ProviderJobsPage() {
           <button aria-pressed={activeView === "reviews"} className={activeView === "reviews" ? "is-active" : ""} onClick={() => setActiveView("reviews")} type="button">Reviews</button>
           <button aria-pressed={activeView === "profile"} className={activeView === "profile" ? "is-active" : ""} onClick={() => setActiveView("profile")} type="button">Business profile</button>
           <button aria-pressed={activeView === "performance"} className={activeView === "performance" ? "is-active" : ""} onClick={() => setActiveView("performance")} type="button">Performance tools</button>
+          <Link href="/ai?for=provider">Ask Tuveloz AI</Link>
         </nav>
       )}
       {workspaceReady && activeView === "schedule" && (
@@ -955,6 +960,14 @@ export default function ProviderJobsPage() {
                         <p className="portal-error">Structured accepted job facts are missing. Work start is blocked.</p>
                       )}
                     </details>
+                    <details className="job-tools job-appointment-details">
+                      <summary>Appointment time</summary>
+                      <JobAppointmentPanel requestId={job.id} />
+                    </details>
+                    <details className="job-tools job-inspection-details">
+                      <summary>Inspection checklist</summary>
+                      <JobInspectionPanel requestId={job.id} />
+                    </details>
                     <ol className="job-progress" aria-label="Job progress">
                       {["Quote accepted", "On my way", "Arrived", "Completed"].map((step) => (
                         <li
@@ -1054,7 +1067,7 @@ export default function ProviderJobsPage() {
                     <div><dt>Labor-only amount</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
                     <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
                     <div className="total"><dt>Your labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Customer total with Tuveloz fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer total including Customer Service Fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <p><strong>Availability:</strong> {quote.availability}</p>
                   <blockquote>{quote.message}</blockquote>
@@ -1240,6 +1253,15 @@ export default function ProviderJobsPage() {
                   </div>
                   <input disabled={pendingQuote?.requestId === job.id} required name="availability" placeholder="Availability, e.g. Saturday 10–2" />
                   <textarea disabled={pendingQuote?.requestId === job.id} required name="message" rows={3} placeholder="Explain the labor included, exclusions, timing, and any customer-supplied-part assumptions. Do not include a parts price." />
+                  <label>
+                    Workmanship warranty (optional — your business&apos;s own promise)
+                    <input
+                      disabled={pendingQuote?.requestId === job.id}
+                      name="workmanshipWarranty"
+                      maxLength={300}
+                      placeholder="e.g. 12 months / 12,000 miles on workmanship. Leave blank if you don't offer one."
+                    />
+                  </label>
                   <label className="policy-consent">
                     <input
                       disabled={pendingQuote?.requestId === job.id}
@@ -1261,7 +1283,10 @@ export default function ProviderJobsPage() {
                     <p>
                       Labor-only amount ${(Number(pendingQuote.laborPrice) || 0).toFixed(2)}.
                       Parts charged through Tuveloz: $0.00. Availability: “{pendingQuote.availability}.”
-                      Please confirm the labor scope and details are correct.
+                      {pendingQuote.workmanshipWarranty
+                        ? ` Workmanship warranty offered by your business: “${pendingQuote.workmanshipWarranty}.”`
+                        : " No workmanship warranty — the customer will see that stated on your quote and confirm it before hiring you."}
+                      {" "}Please confirm the labor scope and details are correct.
                     </p>
                     <div>
                       <button
