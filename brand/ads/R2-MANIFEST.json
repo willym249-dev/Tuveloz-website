@@ -1,0 +1,117 @@
+{
+  "bucket": "tuveloz-brand-video",
+  "note": "Private archive. Checksums of the local originals, for restore verification.",
+  "generatedFrom": "scripts/r2-video-manifest.mjs write",
+  "fileCount": 18,
+  "totalBytes": 58210464,
+  "entries": [
+    {
+      "key": "ads/ad-01-1x1.mp4",
+      "path": "brand/ads/ad-01-1x1.mp4",
+      "bytes": 2593730,
+      "sha256": "93d77f8a7dc4e1fb948c2b94226011306c7a20872d5b67977eaa9c7b1726edd5"
+    },
+    {
+      "key": "ads/ad-01-9x16.mp4",
+      "path": "brand/ads/ad-01-9x16.mp4",
+      "bytes": 3981345,
+      "sha256": "50923bf12e9dbccfed04c86730a64ea75ef290e717010b25bbd3b7cdf3489169"
+    },
+    {
+      "key": "ads/ad-01-assets/scene4.mp4",
+      "path": "brand/ads/ad-01-assets/scene4.mp4",
+      "bytes": 14049861,
+      "sha256": "81cd6ee3ba0fcc3abf7e31b5c7503a879adb63e25133d2104e803ce2ebb99afc"
+    },
+    {
+      "key": "ads/got-this-assets/ep1-battery/clipB.mp4",
+      "path": "brand/ads/got-this-assets/ep1-battery/clipB.mp4",
+      "bytes": 6508084,
+      "sha256": "096c6b5034b6066e4497a69cb0f90eade264b44bfe28228460a06c5ca01bca23"
+    },
+    {
+      "key": "ads/got-this-assets/ep1-battery/clipC.mp4",
+      "path": "brand/ads/got-this-assets/ep1-battery/clipC.mp4",
+      "bytes": 11512843,
+      "sha256": "acbb78491d1cfadf457ce12ed8a9d06068e652097c7220d05090e103d7d4b026"
+    },
+    {
+      "key": "ads/got-this-assets/shared/plate.mp4",
+      "path": "brand/ads/got-this-assets/shared/plate.mp4",
+      "bytes": 11309583,
+      "sha256": "7c951c5d28be53dfdca01177e0d1a2f55d2721540d810ebf4a577b7649c587b8"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-1x1.mp4",
+      "path": "brand/ads/got-this-ep1-battery-1x1.mp4",
+      "bytes": 2601303,
+      "sha256": "369179f12dc6a7fe85035509cb2d44b75715e365dbeb50c44876a274dff5a10a"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-9x16.mp4",
+      "path": "brand/ads/got-this-ep1-battery-9x16.mp4",
+      "bytes": 3944295,
+      "sha256": "6efd918f0772ca3af2ced8b298854126211dee54be6e70826d82926dad576f9a"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-v2-SLATE-1x1.mp4",
+      "path": "brand/ads/got-this-ep1-battery-v2-SLATE-1x1.mp4",
+      "bytes": 209837,
+      "sha256": "de3fd74f04f2e3ff3bd4f32e0e8b8183c12fd2c7755a19b4b0a2be2579037f8f"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-v2-SLATE-9x16.mp4",
+      "path": "brand/ads/got-this-ep1-battery-v2-SLATE-9x16.mp4",
+      "bytes": 219951,
+      "sha256": "971cd87836777901e54a53facadd949636a8f42dba4167808b06f34a158c685a"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-v2-SLATE-amb15-1x1.mp4",
+      "path": "brand/ads/got-this-ep1-battery-v2-SLATE-amb15-1x1.mp4",
+      "bytes": 204403,
+      "sha256": "928b5e26375f9ee533c8177fff23b057aa16932bec25fe9f3dd97d55cf86946b"
+    },
+    {
+      "key": "ads/got-this-ep1-battery-v2-SLATE-amb15-9x16.mp4",
+      "path": "brand/ads/got-this-ep1-battery-v2-SLATE-amb15-9x16.mp4",
+      "bytes": 214725,
+      "sha256": "3ac5bbac20fca781e67b5dde370eefdf8d215b8d396f359a198e8c6977a5b153"
+    },
+    {
+      "key": "ads/got-this-ep2-diagnostics-1x1.mp4",
+      "path": "brand/ads/got-this-ep2-diagnostics-1x1.mp4",
+      "bytes": 136042,
+      "sha256": "09713ffd880d5ea7c0ac0afd6d7ffe6e17d77fcb4b2c457947c0237255a3c29f"
+    },
+    {
+      "key": "ads/got-this-ep2-diagnostics-9x16.mp4",
+      "path": "brand/ads/got-this-ep2-diagnostics-9x16.mp4",
+      "bytes": 152355,
+      "sha256": "db661c01632cf969e77ed3cb407cdd3477334d4780a77dfe451ed43008a0f2b3"
+    },
+    {
+      "key": "ads/got-this-ep3-oil-1x1.mp4",
+      "path": "brand/ads/got-this-ep3-oil-1x1.mp4",
+      "bytes": 136038,
+      "sha256": "741afececa8cddb2fbd540d52d31db1e4c7ade33a33f1786b71925d2f975269f"
+    },
+    {
+      "key": "ads/got-this-ep3-oil-9x16.mp4",
+      "path": "brand/ads/got-this-ep3-oil-9x16.mp4",
+      "bytes": 152237,
+      "sha256": "073e646ffa4b85ab68be97e1a3f7c7b9fed55eafd61b6849af92e437cf2b4e31"
+    },
+    {
+      "key": "ads/got-this-ep4-carwash-1x1.mp4",
+      "path": "brand/ads/got-this-ep4-carwash-1x1.mp4",
+      "bytes": 134463,
+      "sha256": "48b9711c9d945c96f7b9a8c85931d65cb4dc13918a7054acb9a56ad6b1a06c6a"
+    },
+    {
+      "key": "ads/got-this-ep4-carwash-9x16.mp4",
+      "path": "brand/ads/got-this-ep4-carwash-9x16.mp4",
+      "bytes": 149369,
+      "sha256": "f384d0be4dc965bc8193f960dec6f68e7f0245080d2ab641bce12911467ab7f6"
+    }
+  ]
+}

@@ -560,6 +560,13 @@ export function ProviderSignupForm() {
     requiredDocumentsBySelection,
     providerFormIsSpanish,
   );
+  // Step 1 preview count. Two services can require the same document, and step 2
+  // renders it once per group, so the honest number is the distinct documents an
+  // applicant actually uploads — not the sum of the per-service lists. No time
+  // estimate goes with it: the flow has not been measured.
+  const requiredDocumentCount = new Set(
+    requiredDocumentsBySelection.flatMap((entry) => entry.documents.map((doc) => doc.code)),
+  ).size;
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
   // Step 4 ("Sign and submit") is defined but not yet reachable: splitting it
   // off unmounts step 3, which would drop every required field there from
@@ -1082,6 +1089,24 @@ export function ProviderSignupForm() {
                   {PROVIDER_LEVEL_LABELS[level]}
                 </strong>
               ))}
+            </div>
+          )}
+          {requiredDocumentCount > 0 && (
+            <div className="legal-requirement-note" role="status" aria-live="polite">
+              <strong>
+                {providerFormIsSpanish
+                  ? `Para los trabajos que eligió, necesitará ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "documento" : "documentos únicos"
+                    }.`
+                  : `For the jobs you picked, you'll need ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "document" : "unique documents"
+                    }.`}
+              </strong>
+              <small>
+                {providerFormIsSpanish
+                  ? "No los necesita ahora mismo. El siguiente paso le muestra exactamente cuáles son."
+                  : "You don't need them right now. The next step shows you exactly which ones."}
+              </small>
             </div>
           )}
           <label>
