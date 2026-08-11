@@ -38,12 +38,20 @@ replaced 14 assertions with 4.
 
 **What was salvaged.** Two pull requests, both additive:
 
-- **#138** — the `lib/launch-status.ts` doc block. Eight lines, no deletions,
+- **#137** — the `lib/launch-status.ts` doc block. Eight lines, no deletions,
   lock value untouched. It records that `CUSTOMER_JOB_POSTING_PAUSED` governs
   marketplace *transactions* only and must never be read as a gate on account
   creation or on a provider submitting an application. The
   `CUSTOMER_JOB_POSTING_PAUSED_SUMMARY` constant that sits beside it in the tag
   was deliberately left out — nothing on `main` renders it.
+
+  **#138 is the same block again and its diff is empty.** Two sessions salvaged
+  it from the tag in parallel, and because the added text was byte-identical git
+  treated it as agreement rather than a conflict, so #138 merged changing
+  nothing (`git diff 496a05b 1d9d02a` is blank). The file carries exactly one
+  copy. Cite #137 as where the block came from, and check `main` for concurrent
+  work before salvaging from this tag — it is small enough that two sessions
+  will pick the same piece.
 - **#140** — the e2e signup coverage, ported by hand onto `main`'s version of
   `tests/e2e/provider-signup.e2e.mjs` rather than copied. Adds customer account
   signup, provider sign-in, post-signup application state, and the queued
