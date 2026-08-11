@@ -258,6 +258,16 @@ never the model's instruction-following.
 for project questions: it reads only the approved excerpt list, and its answer
 is only as current as those files.
 
+**Update 2026-08-11.** Zeo's safety suite passes (295 tests), including coverage
+of the honesty and correction boundaries that the truncation bug was removing.
+The specific defect is confirmed fixed. Zeo is also backed up to a private
+GitHub repository and the `zeo-home` clone is fully synchronized with it, so the
+single-disk exposure implied above no longer applies. The caution above still
+stands on its own terms: verified safeguards are not verified answers, and Zeo's
+replies remain only as current as the excerpt list it reads. Reported by the
+owner from the `zeo-home` machine, which this session could not reach; the suite
+was not run from here.
+
 ---
 
 ## 2026-08-10 — Signup step 1 shows the document count, and the ads branch is archived and gone
