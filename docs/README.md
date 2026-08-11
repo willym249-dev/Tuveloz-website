@@ -22,6 +22,7 @@ self-contained page.
 | --- | --- |
 | [`PROVIDER_ACTIVATION_RUNBOOK.md`](PROVIDER_ACTIVATION_RUNBOOK.md) | How do we move from "applications open" to providers actually working jobs? The exact sequence and what blocks it. |
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
+| [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical
