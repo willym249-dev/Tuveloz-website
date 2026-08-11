@@ -128,6 +128,32 @@ Nothing in the Tuveloz application depends on any of this.
 
 ---
 
+## 2026-08-11 — Gave the open items real dates, so the weekly check can work
+
+**What happened.** Every row in `OPEN-ITEMS.md` was undated, which meant the
+Monday deadline workflow had nothing to report and the readiness command's
+deadline section always came back clean. Dated 14 of the 16 rows and corrected
+the ones that had gone stale against the actual pull-request state: PR #98
+merged on 2026-08-07 and is now marked done, PR #33 and PR #46 are both closed
+so their stranded work only exists on their branches, and the launch-gate row
+now says what `npm run readiness` found rather than asking someone to go look.
+The `tuveloz-app` repository creation was split out as its own `blocked` row,
+because the move of `mobile/` cannot start until it exists.
+
+**Decisions made.** The dates are self-set targets, and the file now says so —
+they are there to make the automated check function, not because an outside
+party imposed them. Two exceptions are called out: the recurring reviews are
+dated against launch gates that fail once a legal review is over a year old,
+and the insurance row carries a placeholder to be replaced with the carrier's
+real renewal date once a record card exists. The SMS sign-in row stays undated
+on purpose — it describes a deliberate lock, not a commitment to unlock it.
+
+**Now open.** Eight items now fall inside the 30-day window, so the Monday
+workflow will start opening a GitHub issue where it previously found nothing.
+That is the intended behaviour, not a regression.
+
+---
+
 ## 2026-08-10 — One command that reports what Tuveloz still needs
 
 **What happened.** Added `npm run readiness` (`scripts/check-readiness.mjs`),
