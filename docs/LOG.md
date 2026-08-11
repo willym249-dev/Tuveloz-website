@@ -13,6 +13,26 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — Check open pull requests before starting anything small (#147)
+
+**New rule in `CLAUDE.md`, next to the existing "read the log first".** The log
+records finished work. Work in flight lives in open pull requests, and nothing
+sent anyone there — so run `gh pr list` and skim recent `main` before starting.
+
+**Why it earned a rule.** Sessions run in parallel and cannot see each other,
+and the collisions are not random: the small, obvious, self-contained job is the
+one two sessions pick independently. The big messy ones never collide. Three
+times in one afternoon — #137/#138 (the same eight-line doc block, and **#138
+merged with an entirely empty diff** because git read the byte-identical
+addition as agreement rather than a conflict), #145/#146 (the same deletion
+entry, reconciled by hand), and the tag audit itself, run twice in parallel.
+
+All three were minutes to hours apart, so the check would have caught every one.
+If someone is already on it, extend their branch rather than opening a second
+pull request.
+
+---
+
 ## 2026-08-11 — `archive/got-this-series-wip` is audited empty and deleted
 
 **This supersedes the two "the tag must stay" notes below.** Both were correct
