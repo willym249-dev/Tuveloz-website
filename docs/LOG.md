@@ -431,6 +431,50 @@ version until they recrawl; production itself is current.
 
 ---
 
+## 2026-08-08 — Search Console "Page with redirect": the QR short links
+
+**What happened.** Search Console emailed a new indexing exclusion for
+tuveloz.com: *Page with redirect*. Traced it to the only two redirects the site
+serves. The whole app contains exactly two: `app/q/[slug]/route.ts` and
+`app/api/stripe/connect/refresh/route.ts`. The second is already behind the
+`/api/` disallow. The first was not.
+
+**Why it happened.** `/q/<slug>` is the QR short link printed on provider
+materials. It 302s to `/providers/<slug>?source=qr`, counting the scan on the
+way through. Nothing excluded it from crawling, so Googlebot followed the links
+and reported each one as a page that redirects.
+
+**The important part: this was never an error.** The redirect is doing exactly
+what it was built to do, and "Page with redirect" is an exclusion, not a
+failure — Google is saying it indexed the destination instead of the wrapper.
+Nothing was broken and nothing needed unbreaking. The fix is only to stop
+spending crawl budget on a wrapper whose destination is directly reachable.
+
+**What changed.** `app/robots.ts` disallows `/q/`. The storefront it points at
+stays fully crawlable; only the redirector is excluded.
+
+**What did not, in the end.** This work originally added its own
+`app/providers/[slug]/layout.tsx` to set the canonical, because the storefront
+page is a client component and cannot export metadata itself. By the time it
+landed on 2026-08-11, #150 had already created that file with a better version —
+same canonical, plus slug sanitisation and a fail-closed `noindex` while
+`MARKETPLACE_MODE` is not live. Main's version stands; only the robots rule came
+from here.
+
+**Also true, and left alone.** `ai.tuveloz.com/` 302s to `/ai` in
+`worker/index.ts`. If the Search Console property is a domain property rather
+than a URL-prefix one, that root will be reported the same way, and it is
+equally intentional. The comment there explains why it is deliberately
+temporary rather than permanent; do not "fix" it either.
+
+**Worth knowing for later.** The sitemap lists 19 static pages and no provider
+storefronts at all. That is defensible while onboarding is the only thing open,
+but once storefronts are public and worth finding, `app/sitemap.ts` is where
+they need to appear. Not done here — it is a launch decision, not a redirect
+fix.
+
+---
+
 ## 2026-08-08 — Homepage made launch-honest and shorter
 
 **What happened.** Reworked the customer-facing hero on the homepage and customer lander so it no longer implies that live customer quotes are available today. Both now say that accounts are open while requests wait for adequate provider coverage. Added a clear “Need help today?” route to local shops, mobile mechanics, or licensed towing while dispatch is unavailable. Added a planned-fee example that labels final launch pricing and tax treatment as under review.
