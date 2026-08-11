@@ -213,6 +213,34 @@ Markdown file, a string in source — is where he is defined. If the whole thing
 returns nothing, widen it to the drive Zeo is installed on, or simply look in
 the folder the application launches from.
 
+### What the search found
+
+Run from a Claude Code session on the home PC, 2026-08-10. Zeo lives in
+`%USERPROFILE%\Zeo`:
+
+| File | What it holds |
+| --- | --- |
+| `zeo_chat.py` | The desktop app, including the header strings that led here |
+| `zeo_local_brain.py` | **`DEFAULT_SYSTEM_PROMPT`** — the persona, and where a durable rule belongs |
+| `social_ai_controller.py` | Injects that prompt when generating replies |
+| `zeo_chat_history.jsonl` | Full local transcript; last 10 messages supplied as context per request, up to 500 reloadable in the UI |
+| `social_ai_behavior_memory.jsonl`, `social_ai_chat_memory.jsonl` | Persistent behaviour and chat memory stores |
+
+So he does have memory between sessions, and he was wrong to say otherwise —
+not dishonestly, but because none of the above is visible from inside a
+conversation. It is worth remembering the next time any assistant reports
+confidently on its own machinery.
+
+The transcript file is protected by an owner-only ACL, which stopped the
+session reading it. That is correct and should stay that way; nothing in this
+work needs its contents. Note also that none of these paths belong in this
+repository in full — the Windows profile name is personal data, so they are
+written here relative to `%USERPROFILE%`.
+
+The rule block goes in `DEFAULT_SYSTEM_PROMPT`, not in a memory file. Memory
+files accumulate what happened; the system prompt is what shapes how he
+answers, and it is applied to every session with nothing to recall.
+
 Once the file is found, three shapes it usually takes:
 
 - **A system prompt or persona string.** Append the block to it. It then
