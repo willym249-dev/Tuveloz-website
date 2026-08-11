@@ -8,8 +8,8 @@ and Montgomery County community groups.
 
 Shared facts (same as profile-copy.md — do not improvise beyond these):
 - Free to join. No listing fee, no subscription, no provider fees.
-- Providers keep 100% of their quoted price (customers pay a small 5% service
-  fee to the site — never say "providers keep 95%").
+- Providers keep 100% of their quoted price (customers pay a small 5% Customer
+  Service Fee to the site; never express that fee as a provider deduction).
 - No exclusivity — work other platforms too.
 - Pre-launch: applying gets you reviewed now; real customer jobs open only
   after launch review. Say this plainly in every message.

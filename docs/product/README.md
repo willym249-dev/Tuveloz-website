@@ -3,7 +3,9 @@
 Feature specifications, interface contracts, and records of design decisions —
 particularly the ones where the reasoning is not obvious from reading the code.
 
-Nothing filed here yet.
+- [`provider-signup-eligibility-first.md`](provider-signup-eligibility-first.md)
+  — why provider signup asks for service choices before answering "can I do
+  this at all", and the eligibility-first proposal from the closed #108.
 [`../EVIDENCE_SCANNER_CALLBACK.md`](../EVIDENCE_SCANNER_CALLBACK.md), the
 malware-scanner callback contract, stayed at the top of `docs/` so existing
 links keep working. New specifications go in this folder.

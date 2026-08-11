@@ -209,9 +209,9 @@ test("build gives mobile mechanics and service-truck operators clear prominence"
   assert.ok(contents.includes("mobile mechanic/service-truck interest"));
 });
 
-test("layout uses the brand badge favicon with a cache-busting reference", async () => {
+test("layout uses the definitive vector favicon at a fresh URL", async () => {
   const favicon = await readFile(
-    new URL("../public/tuveloz-favicon-v2.svg", import.meta.url),
+    new URL("../public/tuveloz-favicon-v3.svg", import.meta.url),
     "utf8",
   );
   const layout = await readFile(
@@ -219,10 +219,11 @@ test("layout uses the brand badge favicon with a cache-busting reference", async
     "utf8",
   );
 
-  assert.ok(layout.includes("/tuveloz-favicon-v2.svg?v="));
-  // The favicon embeds the exact social-kit badge art (navy fill, orange
-  // keyline) rather than a hand-drawn approximation of it.
-  assert.ok(favicon.includes("data:image/png;base64,"));
+  assert.ok(layout.includes("/tuveloz-favicon-v3.svg"));
+  // The favicon is the definitive icon-only vector, not a padded social
+  // profile export or an obsolete full-logo raster.
+  assert.ok(favicon.includes('viewBox="0 0 512 512"'));
+  assert.ok(favicon.includes("#FF6A00"));
 });
 
 test("provider approval requires applicable state and local proof without requesting unnecessary documents", async () => {
@@ -329,9 +330,9 @@ test("homepage uses clear launch language and keeps its service icons visible", 
   assert.ok(homeSource.includes('aria-label="What Tuveloz promises today"'));
   // The strip leads with what a visitor gets, and still says plainly that
   // requests are not live yet rather than implying they are.
-  assert.ok(homeSource.includes("<b>Free</b> to ask and to compare prices"));
-  assert.ok(homeSource.includes("<b>No pressure</b>"));
-  assert.ok(homeSource.includes("post your first job when we open"));
+  assert.ok(homeSource.includes("<b>Free</b> to create your account"));
+  assert.ok(homeSource.includes("<b>Independent</b> local businesses, no call center"));
+  assert.ok(homeSource.includes("we open when coverage is ready"));
   assert.ok(homeSource.includes("<b>Keep 100%</b> of the price you quote"));
   assert.ok(!styles.includes(".public-view-home > .services,"));
   assert.match(
@@ -607,10 +608,11 @@ test("build preserves the proposed 5 percent test configuration and fee snapshot
 
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 5% in test)"));
+  assert.ok(quotePaymentSource.includes("configured Customer Service Fee (currently 5% in test)"));
   assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 5%"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
-  assert.ok(contents.includes("Accepted service fees"));
+  // Renamed to the one canonical fee name — see tests/customer-fee-consistency.test.mjs.
+  assert.ok(contents.includes("Accepted Customer Service Fees"));
   assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 500"));
   assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
   assert.ok(migration.includes("customer_fee_rate_bps"));
@@ -815,7 +817,7 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(customerSource.includes("Customer account:"));
   assert.ok(customerSource.includes("account.payments.map"));
   assert.ok(customerSource.includes("Provider subtotal:"));
-  assert.ok(customerSource.includes("Tuveloz fee:"));
+  assert.ok(customerSource.includes("Customer Service Fee:"));
   assert.ok(customerSource.includes("Refund recorded:"));
   assert.ok(customerSource.includes("Dispute status:"));
   assert.ok(customerSource.includes('href="/payments"'));

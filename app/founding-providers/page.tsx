@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Founding Providers",
   description:
     `The first ${FOUNDING_COHORT_SIZE} providers accepted to Tuveloz in Montgomery County, MD are never charged a provider membership fee. What the founding cohort is, who counts, and what it does not mean.`,
+  alternates: {
+    canonical: "/founding-providers",
+  },
 };
 
 /**
@@ -36,7 +39,7 @@ export default function FoundingProvidersPage() {
           title: `No provider membership fee, permanently — first ${FOUNDING_COHORT_SIZE}`,
           text: "Tuveloz charges providers nothing today. If a provider membership fee is introduced in the future, founding providers are never charged it, for as long as their account remains in good standing. This is a permanent commitment, not an introductory rate or a trial period.",
           points: [
-            "This covers the provider membership fee only. It does not change the service fee that customers pay, which is charged to the customer and is unaffected by founding status.",
+            "This covers the provider membership fee only. It does not change the Customer Service Fee that customers pay, which is charged to the customer and is unaffected by founding status.",
             "It does not cover payment processing costs, which are set by the payment processor rather than by Tuveloz.",
             "Founding providers set their own prices and keep 100% of what they quote — the same as every other provider.",
           ],

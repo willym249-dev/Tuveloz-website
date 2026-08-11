@@ -54,6 +54,13 @@ next-env.d.ts
 brand/ads/**/_work/
 brand/ads/**/_unzip/
 
+# Rendered ad video and its source clips. These are build output of
+# brand/ads/build-got-this.ps1, not source, and ~50MB across 57 files.
+# Durable copy lives in the private R2 bucket `tuveloz-brand-video`
+# under the `ads/` prefix, mirroring the paths below.
+brand/ads/*.mp4
+brand/ads/got-this-assets/**/*.mp4
+
 # deadline checker output (regenerated on every run; see scripts/check-deadlines.mjs)
 /deadline-report.md
 

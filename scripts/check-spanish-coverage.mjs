@@ -34,7 +34,7 @@ const SKIP = new Set(["Tuveloz", "FAQ", "Tuveloz AI", "JOB #4471", "hello@tuvelo
 const PUNCTUATION_ONLY = /^[\d\s$€.,:%•·—–→✦✓✕✱★☆|]+$/;
 
 const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium",
+  executablePath: process.env.PLAYWRIGHT_CHROMIUM || undefined,
 });
 let untranslated = 0;
 
