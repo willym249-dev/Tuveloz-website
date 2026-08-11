@@ -788,6 +788,10 @@ export async function POST(request: Request) {
 
   const availability = clean(body.availability, 200);
   const message = clean(body.message, 800);
+  // Optional: an independent provider business may offer its own written
+  // workmanship warranty. Blank means none is offered, and the customer
+  // explicitly acknowledges that before accepting the quote.
+  const workmanshipWarranty = clean(body.workmanshipWarranty, 300);
   const laborOnlyConfirmed = (
     body.laborOnlyConfirmed === true
     || body.laborOnlyConfirmed === "yes"
@@ -946,6 +950,7 @@ export async function POST(request: Request) {
       availability,
       scheduledFor: job.scheduledFor,
       message,
+      workmanshipWarranty,
       scopeVersion,
       authorizationDecisionId: eligibility.decisionId,
     });

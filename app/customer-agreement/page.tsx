@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="August 4, 2026"
+      updated="August 6, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -99,6 +99,17 @@ export default function CustomerAgreementPage() {
           should identify the customer-supplied part and any applicable workmanship
           limitation in the service records. Implied or statutory warranty rights
           and duties remain governed by applicable law.
+        </p>
+        <p>
+          Each provider business decides for itself whether to offer a written
+          workmanship warranty — Tuveloz never requires one, because providers
+          are independent businesses, not Tuveloz employees or agents. Every
+          quote shows either the provider&apos;s own warranty terms or a plain
+          statement that none is offered, so you can compare and choose. If you
+          select a provider that offers no workmanship warranty, your recorded
+          acceptance includes your explicit acknowledgment of that choice. Any
+          warranty a provider does offer is that provider business&apos;s promise to
+          you — Tuveloz does not offer, back, or administer it.
         </p>
       </section>
 

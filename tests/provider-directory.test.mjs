@@ -155,15 +155,17 @@ test("profile markup is withheld from drafts and test providers", async () => {
 });
 
 test("the directory is linked and listed, and profile URLs are not listed", async () => {
-  const [home, infoPage, sitemap, robots] = await Promise.all([
+  // The footer moved into the shared public chrome, so that is the file that
+  // puts the link on every public page.
+  const [home, chrome, sitemap, robots] = await Promise.all([
     source("app/page.tsx"),
-    source("app/components/public-info-page.tsx"),
+    source("app/components/public-chrome.tsx"),
     source("app/sitemap.ts"),
     source("app/robots.ts"),
   ]);
 
   // Linked from every public footer — a sitemap entry is not internal linking.
-  for (const file of [home, infoPage]) {
+  for (const file of [home, chrome]) {
     assert.match(file, /href="\/providers"/);
   }
   assert.match(sitemap, /path: "\/providers"/);

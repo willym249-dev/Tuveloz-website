@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
+  accountCommunicationPreferences,
   accountCredentials,
   authSessions,
   customerRequests,
@@ -36,6 +37,7 @@ import {
   PROVIDER_POLICY_BUNDLE_VERSION,
 } from "./policies";
 import { ELIGIBILITY_RULES_VERSION } from "./provider-eligibility-engine";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -471,7 +473,7 @@ async function sendLoginCodeEmail(
   }
 
   const roleLabel = role === "provider" ? "provider" : "customer";
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
@@ -603,7 +605,7 @@ async function sendPasswordVerificationEmail(
     : purpose === "reset"
       ? "reset your password"
       : "finish signing in";
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,
@@ -716,6 +718,7 @@ export async function completePasswordVerification(
   code: string,
   password: string,
   acceptedTerms: boolean,
+  launchNotificationConsent = false,
 ) {
   if (
     passwordValidationError(password)
@@ -804,6 +807,32 @@ export async function completePasswordVerification(
       updatedAt: now,
     },
   });
+  // Launch-notification consent, with the provenance needed to defend it: when
+  // it was given, against which policy bundle version, and from which surface.
+  // Written only on an affirmative opt-in — an unchecked box records nothing
+  // rather than an explicit "no", so it never overwrites a preference the
+  // person already set in the Privacy Center.
+  if (launchNotificationConsent && purpose === "create" && role === "customer") {
+    await getDb().insert(accountCommunicationPreferences).values({
+      email,
+      role,
+      launchNotificationEmail: "yes",
+      launchNotificationConsentAt: now,
+      launchNotificationConsentVersion: policyVersion,
+      launchNotificationConsentSource: "account_create",
+      createdAt: now,
+      updatedAt: now,
+    }).onConflictDoUpdate({
+      target: [accountCommunicationPreferences.email, accountCommunicationPreferences.role],
+      set: {
+        launchNotificationEmail: "yes",
+        launchNotificationConsentAt: now,
+        launchNotificationConsentVersion: policyVersion,
+        launchNotificationConsentSource: "account_create",
+        updatedAt: now,
+      },
+    });
+  }
   await getDb().update(passwordVerificationCodes)
     .set({ usedAt: now })
     .where(eq(passwordVerificationCodes.id, challenge.id));

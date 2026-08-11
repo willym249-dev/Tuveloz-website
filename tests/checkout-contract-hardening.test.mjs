@@ -35,6 +35,8 @@ test("checkout agreement displays and hashes exact parties, work, schedule, and 
   assert.match(acceptance, /providerLegalIdentitySourceEvidenceId/);
   assert.match(acceptance, /serviceCodes: \[\.\.\.scope\.serviceCodes\]/);
   assert.match(acceptance, /checkout:3/);
+  assert.ok(acceptance.includes("Workmanship warranty offered by the provider business:"));
+  assert.ok(acceptance.includes("The provider business offers no workmanship warranty for this job."));
 
   for (const label of [
     "Provider legal identity",
