@@ -13,6 +13,62 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-10 — Signup step 1 shows the document count, and the ads branch is archived and gone
+
+**What shipped.** Step 1 of the provider application now names how many
+documents the selected services require, before the form asks for an email.
+Previously that only appeared on step 2. The count is **distinct documents**,
+not rendered checklist rows: two services can require the same document and
+step 2 draws it once per group, so summing the per-service lists overstates
+what actually gets uploaded. The copy reads "unique documents" so the smaller
+number does not look like a contradiction of those repeated rows. Live at
+`/join`, English and Spanish. Merged as #126, with #127 alongside it.
+
+**Deliberately not shipped: a time estimate.** An earlier draft paired the
+count with "about 10–15 minutes." That was dropped because the flow has never
+been measured. The same reasoning removed an unmeasured "set it up in minutes"
+line from provider toolkit copy on the old branch, though main had already
+deleted that copy independently. If the duration is ever measured, the step 1
+note is where it belongs.
+
+**`ads/got-this-series` is deleted.** It was 121 commits behind main and
+already superseded by #119, and a dry-run merge conflicted in ~28 files
+including `drizzle/meta/_journal.json`. Its code features had all reached main
+separately, but **21 files existed nowhere else** — the `brand/ads` build
+pipeline and ep1-battery audio, `scripts/r2-video-manifest.mjs`, the Higgsfield
+runbook and marketing docs, two brand SVGs. Nothing was lost; two tags hold it:
+
+| Tag | Commit | Holds |
+| --- | --- | --- |
+| `archive/got-this-series` | `0808b9b` | the branch tip, all 21 unique files |
+| `archive/got-this-series-wip` | `858b2d1` | that tip plus 18 uncommitted working-tree files (+299/−101) committed at deletion |
+
+Recover with `git switch -c ads-restore archive/got-this-series`.
+
+**A trap that nearly cost the ad videos.** The deleted branch's `.gitignore`
+ignored `brand/ads/*.mp4` and `brand/ads/got-this-assets/**/*.mp4`; main never
+had those rules. Switching a checkout to main therefore left all 57 rendered
+MP4s untracked and stageable, one `git add -A` away from committing ~50MB of
+build output into permanent history and reversing the move to private R2. #127
+ports the rules. The videos remain on disk and in the `tuveloz-brand-video`
+bucket, with checksums in `brand/ads/R2-MANIFEST.json`.
+
+**Two verification traps worth remembering.** `npm run i18n:check` reports on
+whatever dev server is listening, not your checkout — it was run against a
+server started from the branch's own worktree on a dedicated port, after
+confirming the lineage. And `git merge-base --is-ancestor` called both merged
+PR branches *unmerged*, because GitHub squash-merges: the branch tips never
+become ancestors of main. Deleting them safely meant diffing content against
+main instead, which is the check to use here.
+
+**Production.** Both merges deployed clean. `wrangler d1 migrations apply`
+reported "No migrations to apply!", so production D1 was untouched. Health
+reports application, database, and schema ready, and the launch locks are
+unchanged: `onboarding_only`, accounts and provider applications open,
+customer job requests and payments closed.
+
+---
+
 ## 2026-08-10 — Phone-to-Zeo remote access, and why the Tailscale invite failed
 
 **What happened.** The Tailscale "share a device" invite for `zeo-home` kept
