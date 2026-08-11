@@ -53,6 +53,18 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 | [`../brand/outreach/`](../brand/outreach/) | Provider recruitment kits, the founding provider program, the growth playbook, and the Montgomery County outreach worklist. |
 | [`../brand/ads/`](../brand/ads/) | Ad concepts, production briefs, and finished cuts. |
 | [`../brand/social-media-kit/`](../brand/social-media-kit/) | Profile and cover images for every platform, plus the brand colors and how to regenerate assets. |
+| [`marketing/`](marketing/) | What the "I've Got This" video series is and how each episode is produced, including the Higgsfield runbook. |
+
+## Historical
+
+Kept for the record, not as current instruction. Each says when it was written;
+where one disagrees with a file above, the file above wins.
+
+| Document | What it answers |
+| --- | --- |
+| [`SESSION-HANDOFF.md`](SESSION-HANDOFF.md) | What a second assistant was told about this repo on 2026-08-08, when work was split across parallel sessions. |
+| [`GPT-BRIEF-got-this-ads.md`](GPT-BRIEF-got-this-ads.md) | The scope handed to GPT for the ad series in that split. |
+| [`GPT-BRIEF-signup-improvements.md`](GPT-BRIEF-signup-improvements.md) | The scope handed to GPT for signup copy in that split. |
 
 ## Where the rules actually live
 
