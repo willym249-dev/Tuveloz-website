@@ -13,6 +13,35 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — `archive/got-this-series-wip` is deleted; the salvage is complete
+
+**The two entries below say to keep this tag. That is no longer the plan, and
+the tag no longer exists.** The owner's sequence was land what is worth landing,
+then delete — and landing is done, so the tag was deleted on 2026-08-11. Both
+archive refs from `ads/got-this-series` are now gone. Nothing points at those
+commits, so git will collect them; there is no recovery path and none is wanted.
+
+**What survived, and where.** Everything judged worth keeping is on `main`:
+
+| From the tag | Landed as |
+| --- | --- |
+| the 21 ad-pipeline and document files | #132 and #134 |
+| the `lib/launch-status.ts` doc block | #137 (and #138, an empty duplicate) |
+| the e2e customer-signup and provider-sign-in coverage | #140 |
+
+**What died with it, deliberately.** The rest of those 18 files: the tag's
+versions of `app/api/providers`, `app/api/requests`, `lib/account-auth.ts`,
+`lib/email-notifications.ts`, and the page and test files listed below. That
+code is exactly what the entry below shows would revert `main`'s fail-closed
+guards, so it was never going to be applied. One idea in it has no home now and
+would have to be rebuilt from scratch if wanted: the owner-side new-account
+alert keyed `security:owner-new-account:`, which does not exist on `main`.
+
+**The rest of this entry is kept as the reasoning behind that decision.** It
+describes a tag that is gone; read it for why, not for what to do next.
+
+---
+
 ## 2026-08-11 — `archive/got-this-series-wip` is not landable; two pieces salvaged
 
 **Why this is here.** The tag looks like unfinished work waiting to be landed.
@@ -82,6 +111,9 @@ holds the only copy of everything not listed above. Treat it as a reference to
 read, not a branch to land: anything wanted out of it should be ported by hand
 onto `main`'s current version and then actually run, the same way #140 was.
 
+*Superseded 2026-08-11: the tag was deleted once the salvage finished. The
+port-by-hand advice still applies to any old ref; the tag itself is gone.*
+
 ---
 
 ## 2026-08-11 — The archived ad work is on main, and one archive tag is gone
@@ -123,9 +155,9 @@ structural reason worth remembering: `archive/got-this-series-wip` points at
 `858b2d1`, whose parent *is* `0808b9b`, so the old branch tip stays reachable
 through the surviving tag. Files unique to that tag versus main are now zero.
 
-**`archive/got-this-series-wip` must stay.** It is the only thing holding 18
+**`archive/got-this-series-wip` was kept for this reason at the time.** It held 18
 files of working-tree state that were never committed to any branch. Recover
-with `git switch -c ads-restore archive/got-this-series-wip`.
+Superseded 2026-08-11: the salvage finished and the tag was deleted. See the entry at the top of this log; there is no recovery command any more.
 
 **Fee copy was checked before landing**, since these are marketing documents.
 Every mention states the rule correctly or forbids "keep 95%"; no legacy 10%
