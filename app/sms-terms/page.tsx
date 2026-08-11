@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import { PolicyPage } from "../components/policy-page";
+
+export const metadata: Metadata = {
+  title: "SMS Terms",
+  description:
+    "Plain-language terms for the text messages Tuveloz sends — one-time sign-in and verification codes only, with message frequency, rates, and how to stop them.",
+  alternates: {
+    canonical: "/sms-terms",
+  },
+};
 
 export default function SmsTermsPage() {
   return (
