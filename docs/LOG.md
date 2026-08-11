@@ -13,6 +13,51 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — `archive/got-this-series-wip` is audited empty and deleted
+
+**This supersedes the two "the tag must stay" notes below.** Both were correct
+when written. Neither is now: the ad half landed in #132/#134, and the last
+thing the tag held that `main` did not landed in #143. The tag pointed at
+`858b2d1` (annotated object `76f3a25`) and is gone from local and `origin`.
+
+**How it was audited, since "delete an archive" deserves showing the work.**
+Three questions, in order:
+
+1. *Files only in the tag?* `git diff --diff-filter=A origin/main <tag>` → **0**.
+   Every path in the tag exists on `main`. The "18 files never committed to any
+   branch" line below was already stale.
+2. *Files whose content differs?* **109.** For code and tests `main` is ahead by
+   the whole lineage — that is the subject of the entry below, and losing those
+   older versions is the point, not a cost.
+3. *Any file with lines in the tag that never reached `main`?* Seven had some.
+   Each was read rather than counted:
+
+| File | Verdict |
+| --- | --- |
+| `brand/outreach/reel-provider-recruitment.md` | **tag ahead — salvaged in #143** |
+| `scripts/generate-brand-assets.mjs` | `main` ahead: tag is the old PNG-master/`favicon-v2` generator, before the vector master |
+| `brand/social-media-kit/README.md` | `main` ahead: tag drops the served-assets table and the `brand-mark-consistency` test note |
+| `brand/outreach/moco-outreach-worklist.md` | `main` ahead: tag lacks Tier 1b and the `montgomery.craigslist.org`-is-Alabama warning |
+| `.env.example` | `main` ahead: same AI-key block plus the `/ai` page and its fail-closed behaviour |
+| `brand/outreach/provider-outreach-kit.md` | **tag is the old fee copy** — `never say "providers keep 95%"`. `main`'s fuller wording stands |
+| `brand/ads/HANDOFF.md` | same old fee line. Left dead deliberately |
+
+**#143 — the only thing that needed rescuing.** `main` still listed Reel 2
+("dead battery documentary stare") as a live spec to produce. It was retired on
+2026-08-07 and folded into Episode 1 of the "I've Got This" series, because it
+duplicated Episode 1's joke and CTA and shipping both would split one gag across
+two posts. What survived is the documentary stare and the forehead on the horn,
+now clip D of Episode 1. Anyone working from that file would have produced a
+retired reel.
+
+**The lesson worth keeping.** Two of the three "tag ahead?" candidates that
+looked promising were the *older fee copy*, and one was the retired logo
+pipeline. On a tag from a superseded lineage, "content `main` does not have" is
+usually content `main` deliberately moved past. Read every candidate; do not
+salvage on a line count.
+
+---
+
 ## 2026-08-11 — `archive/got-this-series-wip` is not landable; two pieces salvaged
 
 **Why this is here.** The tag looks like unfinished work waiting to be landed.
