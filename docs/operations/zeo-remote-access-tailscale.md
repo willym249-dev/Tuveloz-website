@@ -174,6 +174,9 @@ Diagnosis rules:
    without reading the question is not an answer.
 5. Never propose disabling a firewall, a VPN kill switch, or a default-deny
    rule to make something work. Open the one port instead.
+6. You cannot see your own configuration, memory files, or launcher from
+   inside a conversation. When asked about your own setup, say what you can
+   and cannot verify rather than asserting something does not exist.
 ```
 
 ### Asked directly, Zeo says he has no memory file
