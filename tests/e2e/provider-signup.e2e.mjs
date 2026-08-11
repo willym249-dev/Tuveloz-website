@@ -12,11 +12,19 @@
 
 import assert from "node:assert/strict";
 import { spawn, execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { createServer } from "node:net";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -72,9 +80,14 @@ process.on("SIGINT", () => { cleanUp(); process.exit(130); });
 
 // --- the application fixture, mirroring what provider-signup-form.tsx posts ---
 // Unique per run. The worktree's local D1 is reused between runs, and a repeat
-// email is treated as an already-claimed application: the route returns early
-// and the test would fail for the wrong reason.
+// email is treated as an already-claimed application: the route returns early,
+// before the certificate write, and the test would fail for the wrong reason.
 const applicantEmail = `e2e-provider+${Date.now()}@tuveloz.invalid`;
+const customerEmail = `e2e-customer+${Date.now()}@tuveloz.invalid`;
+// Meets lib/account-auth.ts: length, an uppercase letter, and a special
+// character. Local fixture only; it never leaves the throwaway worktree. Both
+// the customer and the provider account below are created with it.
+const fixturePassword = "E2e-Local-Fixture!7";
 
 const buildPayload = (policy) => ({
   name: "E2E Mobile Mechanic",
@@ -198,6 +211,24 @@ async function main() {
       rmSync(workdir, { recursive: true, force: true });
       log(`creating worktree at ${workdir}`);
       sh("git", ["worktree", "add", "--detach", workdir, "HEAD"], { cwd: repoRoot });
+    }
+
+    // The worktree is a commit, so by default this proves HEAD works, not what
+    // is about to be shipped. With E2E_OVERLAY_WORKING_TREE=1 the checkout's
+    // uncommitted edits to tracked files are copied over the worktree after the
+    // reset above, so a signup change can be exercised before it is committed.
+    // Untracked new files are not copied — `git diff` does not list them. The
+    // copy is one-way: nothing is ever written back into the checkout.
+    if (process.env.E2E_OVERLAY_WORKING_TREE === "1") {
+      const changed = sh("git", ["diff", "--name-only", "HEAD"], { cwd: repoRoot })
+        .split("\n").map((line) => line.trim()).filter(Boolean);
+      for (const relativePath of changed) {
+        const from = join(repoRoot, relativePath);
+        if (!existsSync(from)) continue;
+        mkdirSync(dirname(join(workdir, relativePath)), { recursive: true });
+        copyFileSync(from, join(workdir, relativePath));
+      }
+      log(`overlaid ${changed.length} uncommitted file(s) from the checkout`);
     }
   }
 
@@ -355,7 +386,136 @@ async function main() {
   const challengesLeft = d1(workdir, `SELECT COUNT(*) AS n FROM provider_application_challenges WHERE used_at='';`);
   assert.equal(Number(challengesLeft[0].n), 0, "the challenge should be consumed");
 
-  log("PASS — application, certificate, and challenge consumption all verified");
+  // Signing up proves email control and nothing else. Neither field may claim a
+  // review that never happened: "new" is an application awaiting owner review,
+  // and customer-facing surfaces key off verification_status === "verified"
+  // (lib/provider-alerts.ts, lib/provider-eligibility-engine.ts).
+  const enrolled = d1(workdir, `SELECT status, verification_status FROM provider_applications WHERE email='${applicantEmail}';`);
+  assert.equal(
+    enrolled[0].status,
+    "new",
+    "signup must not advance an application past owner review",
+  );
+  assert.notEqual(
+    enrolled[0].verification_status,
+    "verified",
+    "signup must not stamp a provider as verified",
+  );
+  assert.equal(
+    enrolled[0].verification_status,
+    "not reviewed",
+    "the schema default is what a fresh application should carry",
+  );
+  log("provider signup verified");
+
+  // 10. Customer account signup ------------------------------------------------
+  // The other half of "can people actually sign up". A customer never touches
+  // the provider application; they create a password account, which is open
+  // while the marketplace itself is closed.
+  const customerCodeRes = await fetch(`${origin}/api/auth/password/request`, {
+    method: "POST",
+    headers: sameOriginHeaders(origin),
+    body: JSON.stringify({ email: customerEmail, role: "customer", purpose: "create" }),
+  });
+  assert.ok(customerCodeRes.ok, `customer code request failed (${customerCodeRes.status})`);
+
+  const customerMail = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(customerMail.to[0], customerEmail, "customer code went to the wrong recipient");
+  assert.match(customerMail.code, /^\d{6}$/, `no 6-digit code in: ${customerMail.text}`);
+
+  const customerCreateRes = await fetch(`${origin}/api/auth/password/complete`, {
+    method: "POST",
+    headers: sameOriginHeaders(origin),
+    body: JSON.stringify({
+      email: customerEmail,
+      role: "customer",
+      purpose: "create",
+      code: customerMail.code,
+      password: fixturePassword,
+      termsAccepted: true,
+      launchNotificationConsent: true,
+    }),
+  });
+  const customerCreateBody = await customerCreateRes.json();
+  assert.ok(
+    customerCreateRes.ok,
+    `customer signup failed (${customerCreateRes.status}): ${JSON.stringify(customerCreateBody)}`,
+  );
+  assert.ok(
+    (customerCreateRes.headers.get("set-cookie") ?? "").length > 0,
+    "a completed customer signup should return a session cookie",
+  );
+
+  const accounts = d1(workdir, `SELECT COUNT(*) AS n FROM account_credentials WHERE lower(email)='${customerEmail}';`);
+  assert.equal(Number(accounts[0].n), 1, "expected exactly one customer credential row");
+  log("customer signup verified");
+
+  // 11. Both signups queue their notification ----------------------------------
+  // Filtered here rather than in SQL: the command reaches wrangler through a
+  // shell, and a LIKE pattern with % and colons does not survive the trip.
+  const queued = d1(workdir, `SELECT event_key FROM email_notification_outbox;`);
+  const alertKeys = queued.map((row) => row.event_key);
+  assert.ok(
+    alertKeys.some((key) => key.startsWith("marketplace:provider-onboarding:owner:application:")),
+    `no owner alert for the provider application, saw: ${JSON.stringify(alertKeys)}`,
+  );
+  assert.ok(
+    alertKeys.some((key) => key.startsWith("security:account_created:")),
+    `no account-created notice for the customer signup, saw: ${JSON.stringify(alertKeys)}`,
+  );
+
+  // 12. The applicant can actually get into their provider workspace ----------
+  // Applying is worthless if the applicant cannot then sign in. Provider role
+  // eligibility comes from the application, not from a completed review, so a
+  // brand-new applicant must be able to create a password account and land on
+  // onboarding — never on the "no active exact-service access" error.
+  const providerCodeRes = await fetch(`${origin}/api/auth/password/request`, {
+    method: "POST",
+    headers: sameOriginHeaders(origin),
+    body: JSON.stringify({ email: applicantEmail, role: "provider", purpose: "create" }),
+  });
+  assert.ok(providerCodeRes.ok, `provider code request failed (${providerCodeRes.status})`);
+
+  const providerMail = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(providerMail.to[0], applicantEmail, "provider code went to the wrong recipient");
+
+  const providerCreateRes = await fetch(`${origin}/api/auth/password/complete`, {
+    method: "POST",
+    headers: sameOriginHeaders(origin),
+    body: JSON.stringify({
+      email: applicantEmail,
+      role: "provider",
+      purpose: "create",
+      code: providerMail.code,
+      password: fixturePassword,
+      termsAccepted: true,
+    }),
+  });
+  const providerCreateBody = await providerCreateRes.json();
+  assert.ok(
+    providerCreateRes.ok,
+    `provider account creation failed (${providerCreateRes.status}): ${JSON.stringify(providerCreateBody)}`,
+  );
+
+  const sessionCookie = (providerCreateRes.headers.get("set-cookie") ?? "").split(";")[0];
+  assert.ok(sessionCookie, "provider signup returned no session cookie");
+  const accountRes = await fetch(`${origin}/api/account`, {
+    headers: { ...sameOriginHeaders(origin), cookie: sessionCookie },
+  });
+  const accountBody = await accountRes.json();
+  assert.ok(
+    accountRes.ok,
+    `provider account load failed (${accountRes.status}): ${JSON.stringify(accountBody)}`,
+  );
+  assert.equal(accountBody.role, "provider", "the signed-in applicant is not a provider");
+  assert.equal(
+    accountBody.destination,
+    "/provider-onboarding",
+    "a self-enrolled applicant belongs in onboarding, not in the job workspace",
+  );
+  log("provider sign-in verified");
+
+  log("PASS — provider application, provider sign-in, customer signup, and notifications all verified");
 }
 
 main().then(() => { cleanUp(); process.exit(0); })
