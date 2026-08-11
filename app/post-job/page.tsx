@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   title: "For Customers — Real Quotes From Local Pros",
   description:
     "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
+  alternates: {
+    canonical: "/post-job",
+  },
 };
 
 const valueProps = [

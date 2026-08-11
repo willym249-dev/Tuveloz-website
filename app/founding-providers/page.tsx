@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Founding Providers",
   description:
     `The first ${FOUNDING_COHORT_SIZE} providers accepted to Tuveloz in Montgomery County, MD are never charged a provider membership fee. What the founding cohort is, who counts, and what it does not mean.`,
+  alternates: {
+    canonical: "/founding-providers",
+  },
 };
 
 /**
