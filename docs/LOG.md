@@ -13,6 +13,69 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — `archive/got-this-series-wip` is not landable; two pieces salvaged
+
+**Why this is here.** The tag looks like unfinished work waiting to be landed.
+It is not. It is a snapshot of an older lineage, so applying it to `main`
+*removes* newer work rather than adding to it — and some of what it removes is
+launch guarding. Anyone who finds the tag and tries to cherry-pick or merge it
+will weaken the marketplace locks without meaning to. Read this before touching
+it. The entry directly below covers the same tag from the ad-asset side and
+concludes it must stay; both conclusions point the same way — **keep the tag,
+never merge it.**
+
+**What replaying it would delete.** Not a merge conflict to resolve — a silent
+revert. Among other things: `pausedCustomerRequestResponse()`, the entire
+fail-closed 503 handler for customer requests; the comment pinning that gate
+ahead of origin checks, body parsing, and every database read; the
+`status: "blocked"` eligibility reasons and the "Real job operations remain
+disabled" copy; and the customer-facing "jobs closed" text on the account and
+post-job pages. Applied file by file, the tag nets out as
+`email-notifications.ts` +35/−62 and `account-auth.ts` +15/−74. The two real
+conflicts, `post-job/page.tsx` and `job-posting-pause.test.mjs`, both resolve to
+`main`'s side: one would have deleted imports `main` still uses, the other
+replaced 14 assertions with 4.
+
+**What was salvaged.** Two pull requests, both additive:
+
+- **#138** — the `lib/launch-status.ts` doc block. Eight lines, no deletions,
+  lock value untouched. It records that `CUSTOMER_JOB_POSTING_PAUSED` governs
+  marketplace *transactions* only and must never be read as a gate on account
+  creation or on a provider submitting an application. The
+  `CUSTOMER_JOB_POSTING_PAUSED_SUMMARY` constant that sits beside it in the tag
+  was deliberately left out — nothing on `main` renders it.
+- **#140** — the e2e signup coverage, ported by hand onto `main`'s version of
+  `tests/e2e/provider-signup.e2e.mjs` rather than copied. Adds customer account
+  signup, provider sign-in, post-signup application state, and the queued
+  notifications. `main`'s newer work in that file is preserved: the `maxBuffer`
+  raise, the per-repo/per-branch worktree namespacing, and the `.wrangler/state`
+  reset before migrating.
+
+**The trap inside the port, worth knowing on its own.** Three of the tag's
+assertions did not hold against `main`, and running the suite is what exposed
+them — two of the three passed review by eye:
+
+| | tag | `main` |
+| --- | --- | --- |
+| `status` on a fresh application | `"approved"` | `"new"` |
+| `verification_status` | `"self-enrolled"` | `"not reviewed"` |
+| customer signup alert | `security:owner-new-account:customer:` | no such event exists |
+
+The first two are the tag's lineage advancing an application *further* on signup
+than `main` does. Asserting the tag's values would have pinned the looser
+posture into a test — a guard regression wearing the costume of new coverage.
+The assertions pin `main`'s stricter values instead. The third would have meant
+porting a new owner-notification feature out of the old lineage, which is a
+product change and not test coverage, so the assertion covers the
+`security:account_created:` notice `main` does queue.
+
+**Where that leaves the tag.** Intact and unmerged, which is correct. It still
+holds the only copy of everything not listed above. Treat it as a reference to
+read, not a branch to land: anything wanted out of it should be ported by hand
+onto `main`'s current version and then actually run, the same way #140 was.
+
+---
+
 ## 2026-08-11 — The archived ad work is on main, and one archive tag is gone
 
 **Why this happened.** Deleting `ads/got-this-series` left 21 files reachable
