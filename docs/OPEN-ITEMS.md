@@ -59,7 +59,7 @@ Merge order matters here and is not visible from the pull request list.
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
-| 2026-08-25 | `LAUNCH_UPDATES_POSTAL_ADDRESS` is empty, which keeps the launch-update email sequence inert. Marketing email cannot send without a physical postal address; a PO box or registered agent address is enough | hello@tuveloz.com | open |
+| 2026-08-25 | `LAUNCH_UPDATES_POSTAL_ADDRESS` is empty, which keeps the launch-update sequence inert. Needed before the first real send, not sooner: as of 2026-08-11 the only subscriber is an owner test signup, so nobody real is waiting. A PO box or registered agent address is enough, and setting it delivers that test signup's first email — a free end-to-end check of a send path that has never run | hello@tuveloz.com | open |
 | — | SMS sign-in is code-locked behind `PHONE_SMS_LIVE_MODE_ENABLED = false` in addition to its environment configuration. Undated on purpose: this describes a deliberate lock, not a commitment to unlock it | hello@tuveloz.com | open |
 
 ## Recurring reviews
