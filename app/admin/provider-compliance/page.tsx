@@ -70,6 +70,11 @@ type EvidencePrescreen = {
   reasons: string[];
   autoDispatch: { status: "needs_correction"; reasonCode: string; note: string } | null;
   readyForOwnerAuthenticityCheck: boolean;
+  nameCheck: {
+    comparison: "identical" | "equivalent" | "contained" | "different" | "incomparable";
+    needsReview: boolean;
+    note: string;
+  } | null;
 };
 
 type ServiceEvaluation = {
@@ -439,6 +444,11 @@ function EvidenceReviewForm({
         <div className={`credential-card prescreen-suggestion ${prescreen.readyForOwnerAuthenticityCheck ? "ready" : "attention"}`}>
           <strong>Automated pre-screen: {prescreen.headline}</strong>
           {prescreen.reasons.map((reason) => <small key={reason}>· {reason}</small>)}
+          {prescreen.nameCheck && (
+            <small className="admin-note">
+              <strong>Name check:</strong> {prescreen.nameCheck.note}
+            </small>
+          )}
           <small className="admin-note">
             This is a suggestion from an automatic check of the recorded facts only — dates, scan
             result, and whether it still matches this application. It reads no file contents and
@@ -484,6 +494,15 @@ function EvidenceReviewForm({
             <div className="credential-card acceptance-guide">
               <strong>How to verify this document</strong>
               <small>Verify with: {guide.authorityLabel}</small>
+              {guide.authorityUrl && (
+                <small>
+                  <a href={guide.authorityUrl} rel="noreferrer noopener" target="_blank">
+                    Open the authority&apos;s page ↗
+                  </a>{" "}
+                  — a shortcut to the issuer, not a result. Paste the URL of the page that
+                  actually shows this document below.
+                </small>
+              )}
               {guide.steps.map((step) => <small key={step}>· {step}</small>)}
               <small className="admin-note">
                 The recommended method below is pre-selected as a starting point. Enter what you
