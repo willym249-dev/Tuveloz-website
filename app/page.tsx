@@ -1610,11 +1610,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="founding-banner">
           <div>
             <span className="kicker light">Founding providers · Montgomery County</span>
-            <h3>Be first. Own your corner of the county.</h3>
+            <h3>Be one of the first 20.</h3>
             <p>
-              The first pros into Montgomery County get first pick of jobs and
-              a real voice in how Tuveloz works. Free to apply, no subscription, no
-              exclusivity — there&apos;s no better time to bet on yourself.
+              The first 20 pros accepted here are never charged a provider membership
+              fee, if one is ever introduced. The first 10 are also invited to a
+              spotlight post. Free to apply, no subscription, no exclusivity —
+              there&apos;s no better time to bet on yourself.
             </p>
           </div>
           {view !== "provider" && (

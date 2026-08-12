@@ -757,14 +757,15 @@ for every time.
 Flagged during the research for this document. Both are copy problems, not
 product problems, and both are worth resolving before this pitch is used widely.
 
-1. **The homepage founding banner promises job-routing preference.** It reads
-   *"The first mechanics into Montgomery County get first pick of jobs…"*, which
-   directly contradicts the founding program's explicit, written refusal of
-   routing and ranking preference — and contradicts the code, which bars founding
-   rank from influencing what a customer sees. This is the one claim on the site
-   that could not be delivered. **Recommend rewording to the perks that are real:
-   permanent membership-fee exemption, the spotlight, the badge, first access to
-   new service categories, and a direct line to the owner.**
+1. ~~**The homepage founding banner promises job-routing preference.**~~
+   **Fixed 2026-08-11.** The banner read *"The first mechanics into Montgomery
+   County get first pick of jobs…"*, which contradicted the founding program's
+   written refusal of routing and ranking preference and the code that bars
+   founding rank from influencing what a customer sees. Its heading, *"Own your
+   corner of the county"*, also implied the territory lock the program refuses.
+   Both now state the perks that are real — the permanent membership-fee
+   exemption for the first 20 and the spotlight for the first 10 — in English and
+   in the Spanish dictionary, which carried the same two claims.
 2. **The outreach kit is a revision behind the site.** It still says not to
    mention founding perks, but `/founding-providers` is now published — which was
    the whole precondition for saying it. The kit's own rule ("publish it, then
