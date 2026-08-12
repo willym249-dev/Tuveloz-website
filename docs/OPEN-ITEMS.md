@@ -44,8 +44,8 @@ When you close something significant, write a matching entry in
 | 2026-08-09 | **(external)** Epidemic Sound licence window closed without Ad 01 being published. The renders and the track are deleted from the repository (2026-08-11); the visuals in `brand/ads/ad-01-assets/` are unaffected. To ship Ad 01, re-score it against a current licence and re-run `build-ad-01.ps1`. Do not restore the old audio from git history or R2 | hello@tuveloz.com | done |
 | 2026-08-14 | Reword the homepage founding banner. It promised "first pick of jobs" and "own your corner of the county", which the founding program refuses in writing and `lib/founding-cohort.ts` bars in code. Fixed 2026-08-11 in English and Spanish | hello@tuveloz.com | done |
 | 2026-08-07 | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | done |
-| 2026-08-18 | Reconcile PR #97 against the merged #98 structure — #97 must edit the existing `CLAUDE.md` and document index rather than adding a parallel one | hello@tuveloz.com | open |
-| 2026-08-25 | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |
+| 2026-08-18 | Reconcile PR #97 against the merged #98 structure — #97 had to edit the existing `CLAUDE.md` and document index rather than add a parallel one. Done 2026-08-11 in #97: its parallel `CLAUDE.md`, `docs/INDEX.md`, and `docs/PITCH.md` were dropped and main's kept | hello@tuveloz.com | done |
+| 2026-08-25 | When PR #97 lands, add its competitive landscape and provider classification documents to `README.md`, and its jurisdiction-scoped compliance rules to `CLAUDE.md`. Done 2026-08-11 in #97. The pitch row is satisfied by `brand/SALES_PITCH.md` from #104, which landed first and supersedes #97's own pitch draft | hello@tuveloz.com | done |
 | 2026-09-08 | Take stock of which business documents already exist — insurance, LLC formation, EIN, Maryland registrations, licenses — and file a record card for each in `records/` | hello@tuveloz.com | open |
 | 2026-09-15 | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
 | 2026-08-25 | Answer the 18 launch gates in `/admin/launch-readiness`. `npm run readiness` confirms production currently holds **zero** recorded decisions, so every gate is pending | hello@tuveloz.com | open |
@@ -58,10 +58,10 @@ Merge order matters here and is not visible from the pull request list.
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
-| 2026-08-18 | Merge PR #95 **before** PR #96 — #96 is stacked on #95's branch, not on `main` | hello@tuveloz.com | open |
+| 2026-08-18 | Merge PR #95 **before** PR #96 — #96 is stacked on #95's branch, not on `main`. Done 2026-08-11: #95 landed as `27b551f`, then #96 as `a522de8`, in that order | hello@tuveloz.com | done |
 | 2026-09-01 | Create the `tuveloz-app` repository. The earlier attempt failed with `403 Resource not accessible by integration`, so it needs owner permissions rather than another attempt from a session | hello@tuveloz.com | blocked |
 | 2026-09-30 | **Never merge PR #93.** Once `tuveloz-app` exists, move `mobile/` there following `mobile/docs/EXTRACTION.md`, then close #93, delete its branch, and remove the temporary "Related project" pointer from the root `README.md` | hello@tuveloz.com | open |
-| 2026-09-01 | Re-release Terms of Use and the Payment, Cancellation and Refund Policy so they carry the renamed Customer Service Fee; both are SHA-pinned, so this is an owner-approved release, not an edit (tracked by a test in #95 that fails once they are re-released) | hello@tuveloz.com | open |
+| 2026-09-01 | Re-release Terms of Use and the Payment, Cancellation and Refund Policy so they carry the renamed Customer Service Fee. Done early, 2026-08-11 in #160: releases `terms-2026-08-11-r3` and `payment-policy-2026-08-11`, both hashes rebound to the deployed pages, and `PENDING_LEGAL_RELEASE` in the fee test is now empty | hello@tuveloz.com | done |
 | 2026-09-30 | Re-cut the features stranded on PR #33 and PR #46. Both pull requests are now closed, so the work only exists as whatever survives on their branches | hello@tuveloz.com | open |
 
 ## Blocked on something outside the code
