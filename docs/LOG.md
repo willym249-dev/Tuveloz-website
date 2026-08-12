@@ -16,9 +16,13 @@ entries to catch up. Write one before you finish.
 ## 2026-08-11 — Terms and the Payment Policy re-released; the open-PR queue cleared
 
 **The release, because this one is a legal act rather than an edit.** Both pages
-carried retired fee names — Terms said "platform fee" twice, once **inside the
-liability cap in section 15**, and the Payment Policy said "Tuveloz fee" twice,
-one a section heading. #95 had already established one canonical name in
+carried retired fee names, two occurrences each — one of Terms' sitting **inside
+the liability cap in section 15**, and one of the Payment Policy's being a
+section heading. The retired names themselves are not repeated here: they are the
+banned patterns in `tests/customer-fee-consistency.test.mjs`, which scans `docs/`,
+so writing one into this log re-introduces the thing the release removed. That is
+not hypothetical — the first draft of this entry named both and failed the guard.
+#95 had already established one canonical name in
 `lib/customer-fee.ts`, but these two pages are SHA-pinned, so renaming them meant
 following the `DEPLOYMENT.md` procedure: owner approval of the exact page,
 incremented versions, new release ids, and hashes recomputed as sha256 of the
