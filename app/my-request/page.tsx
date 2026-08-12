@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
+import { JobAppointmentPanel } from "../components/job-appointment-panel";
+import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { SiteLanguageButton } from "../components/site-language";
 import { QuotePaymentCard } from "../components/quote-payment-card";
 import {
@@ -375,6 +377,18 @@ export default function MyRequestPage() {
           <p>Refresh this private page to see the provider’s latest update.</p>
         </section>
       )}
+      {job && job.status !== "approved" && accessToken && (
+        <section className="customer-inspection" aria-label="Appointment">
+          <span>Appointment</span>
+          <JobAppointmentPanel requestId={job.id} token={accessToken} />
+        </section>
+      )}
+      {job && job.status !== "approved" && accessToken && (
+        <section className="customer-inspection" aria-label="Job inspection">
+          <span>Job inspection</span>
+          <JobInspectionPanel requestId={job.id} token={accessToken} />
+        </section>
+      )}
       {job?.hasCompletionImage && (
         <section className="customer-photo-card completion-proof">
           <span>Provider completion photo</span>
@@ -405,7 +419,7 @@ export default function MyRequestPage() {
               <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
               <div><dt>Provider labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
-                <dt>Tuveloz service fee shown at acceptance</dt>
+                <dt>Customer Service Fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
               </div>
               <div className="total">
@@ -476,7 +490,7 @@ export default function MyRequestPage() {
                 <strong>Authorize this exact provider and quote?</strong>
                 <p>
                   {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
-                  including the 5% Tuveloz service fee
+                  including the 5% Customer Service Fee
                 </p>
                 {quote.selectionAcceptance ? (
                   <label className="policy-consent">

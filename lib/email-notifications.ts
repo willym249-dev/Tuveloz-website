@@ -11,6 +11,7 @@ import {
 } from "./email-event-policy";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "./launch-status";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -27,8 +28,13 @@ type QueuedNotification = {
   textBody: string;
 };
 
-const MAX_DELIVERY_ATTEMPTS = 5;
+export const MAX_DELIVERY_ATTEMPTS = 5;
 const RETRY_BATCH_SIZE = 5;
+
+// A row that has used its last attempt is excluded from every future retry
+// batch, so nothing else in the system will ever look at it again. This prefix
+// marks the owner incident raised at that moment.
+export const DELIVERY_EXHAUSTED_EVENT_PREFIX = "owner:incident:email-delivery-exhausted:";
 
 function runtimeEnv() {
   return env as unknown as RuntimeEnv;
@@ -47,13 +53,79 @@ function errorSummary(error: unknown) {
   return message.replace(/[\r\n]+/g, " ").slice(0, 500);
 }
 
-async function markFailed(id: string, attempts: number, error: unknown) {
+async function markFailed(
+  id: string,
+  attempts: number,
+  error: unknown,
+  eventKey: string,
+) {
   await getDb().update(emailNotificationOutbox).set({
     status: "failed",
     attempts,
     lastError: errorSummary(error),
     updatedAt: new Date().toISOString(),
   }).where(eq(emailNotificationOutbox.id, id));
+
+  if (attempts >= MAX_DELIVERY_ATTEMPTS) {
+    await raiseDeliveryExhaustedIncident(eventKey, error);
+  }
+}
+
+/**
+ * Raised on the attempt that exhausts a row's retries — the last moment the
+ * owner can still be told, since the row is filtered out of every later retry
+ * batch. Protective mail (an account alert, a compliance notice) is exactly the
+ * category that cannot afford to go quietly undelivered.
+ *
+ * The incident is only inserted here, never delivered inline: this runs inside
+ * deliverEvent, and sending from within a send would re-enter delivery while
+ * the failing row is still being written. The fifteen-minute cron picks it up,
+ * and its own `owner:incident:` prefix keeps it protective, so a paused
+ * marketplace cannot suppress it.
+ */
+async function raiseDeliveryExhaustedIncident(eventKey: string, error: unknown) {
+  // Never raise an incident about an incident. Without this guard, an owner
+  // mailbox that is itself unreachable would queue a fresh alert every time the
+  // previous one exhausted, growing the outbox without ever reaching anyone.
+  if (eventKey.startsWith(DELIVERY_EXHAUSTED_EVENT_PREFIX)) return;
+  const ownerEmail = cleanEmail(runtimeEnv().OWNER_EMAIL);
+  if (!ownerEmail) return;
+
+  try {
+    const now = new Date().toISOString();
+    await getDb().insert(emailNotificationOutbox).values({
+      id: crypto.randomUUID(),
+      // Keyed by the failed event, so repeated failures of the same message
+      // collapse onto one incident rather than one per attempt.
+      eventKey: `${DELIVERY_EXHAUSTED_EVENT_PREFIX}${eventKey}`,
+      recipientEmail: ownerEmail,
+      subject: "Tuveloz email delivery gave up on a message",
+      textBody: [
+        "A queued Tuveloz email used all of its delivery attempts and will not be retried.",
+        "",
+        `Event: ${eventKey}`,
+        `Attempts: ${MAX_DELIVERY_ATTEMPTS}`,
+        `Last error: ${errorSummary(error)}`,
+        "",
+        "The recipient never received this message. Recipient details stay in the",
+        "protected owner dashboard rather than in this alert:",
+        `${siteUrl()}/admin`,
+      ].join("\n"),
+      status: "pending",
+      attempts: 0,
+      lastError: "",
+      createdAt: now,
+      updatedAt: now,
+      sentAt: "",
+    }).onConflictDoNothing({
+      target: emailNotificationOutbox.eventKey,
+    });
+  } catch (incidentError) {
+    console.error(
+      "Unable to record an exhausted Tuveloz email delivery",
+      incidentError,
+    );
+  }
 }
 
 /**
@@ -120,12 +192,13 @@ async function deliverEvent(eventKey: string) {
       notification.id,
       attempts,
       new Error("Resend email delivery is not configured."),
+      notification.eventKey,
     );
     return;
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch(resendEmailsUrl(runtimeEnv().RESEND_BASE_URL), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -152,7 +225,7 @@ async function deliverEvent(eventKey: string) {
       updatedAt: now,
     }).where(eq(emailNotificationOutbox.id, notification.id));
   } catch (error) {
-    await markFailed(notification.id, attempts, error);
+    await markFailed(notification.id, attempts, error, notification.eventKey);
   }
 }
 

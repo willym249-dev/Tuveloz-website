@@ -65,9 +65,30 @@ test("manual staging deployment uses isolated Cloudflare resources", async () =>
   assert.match(workflow, /STAGING_D1_DATABASE_ID/);
   assert.match(workflow, /STAGING_R2_BUCKET_NAME/);
   assert.match(workflow, /d1 migrations apply tuveloz-staging-db/);
-  assert.match(workflow, /wrangler deploy --config \.wrangler-staging\.generated\.json/);
+  assert.match(workflow, /test "\$CI" = "true"/);
+  assert.match(workflow, /generate-staging-wrangler\.mjs wrangler\.jsonc/);
+  assert.match(workflow, /wrangler d1 migrations apply tuveloz-staging-db --remote --config wrangler\.jsonc/);
+  assert.match(workflow, /run: npm run deploy/);
+  assert.match(workflow, /rm -f wrangler\.jsonc/);
   assert.doesNotMatch(workflow, /npm run db:migrate:remote/);
-  assert.doesNotMatch(workflow, /npm run deploy/);
+  assert.doesNotMatch(workflow, /wrangler deploy --config/);
+
+  // `vinext deploy` has no --config flag: it always builds and deploys the
+  // wrangler config at the project root. Staging therefore has to overwrite
+  // wrangler.jsonc, which makes step order the only thing standing between a
+  // staging run and the production Worker. Pin that order.
+  const generateStagingConfigAt = workflow.indexOf("generate-staging-wrangler.mjs wrangler.jsonc");
+  const migrateStagingAt = workflow.indexOf("d1 migrations apply tuveloz-staging-db");
+  const deployAt = workflow.indexOf("run: npm run deploy");
+  assert.ok(generateStagingConfigAt > -1 && migrateStagingAt > -1 && deployAt > -1);
+  assert.ok(
+    generateStagingConfigAt < migrateStagingAt,
+    "staging must replace wrangler.jsonc before it migrates a database",
+  );
+  assert.ok(
+    generateStagingConfigAt < deployAt,
+    "staging must replace wrangler.jsonc before it deploys a Worker",
+  );
 
   assert.match(generator, /name: "tuveloz-staging"/);
   assert.match(generator, /pattern: "staging\.tuveloz\.com"/);

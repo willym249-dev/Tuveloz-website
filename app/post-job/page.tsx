@@ -16,13 +16,15 @@ import { CustomerRequestForm } from "../components/customer-request-form";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
 import { PublicSiteFooter, PublicSiteHeader } from "../components/public-chrome";
 import { SaveMySpotButton } from "../components/save-my-spot-button";
-import { SignedInReturnNote } from "../components/signed-in-return-note";
 import { TuvelozIcon } from "../components/tuveloz-icons";
 
 export const metadata: Metadata = {
   title: "For Customers — Real Quotes From Local Pros",
   description:
     "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
+  alternates: {
+    canonical: "/post-job",
+  },
 };
 
 const valueProps = [
@@ -57,8 +59,8 @@ const trustPoints = [
     text: "Pros see only enough to give you a price. Your exact address and phone number go to the one person you choose, and nobody else.",
   },
   {
-    title: "Our fee is right on the screen",
-    text: "We add 5% to the total, listed as its own line before you confirm. It's never quietly folded into the pro's price.",
+    title: "Planned customer fee, shown clearly",
+    text: "Example at the planned 5% rate: a $200 labor quote would show a $10 Tuveloz customer service fee, for a $210 total. Final launch pricing and tax treatment remain under review; you'll see the full total before accepting.",
   },
 ];
 
@@ -66,7 +68,7 @@ const faqs = [
   {
     question: "What does this cost me?",
     answer:
-      "Asking and comparing is free. You only pay for work you say yes to: the pro's price for the labor, plus our 5% fee listed separately. You see both before you confirm anything.",
+      "Asking and comparing will be free. If you accept a job after launch, the current plan is the pro's labor price plus a separate 5% Tuveloz customer service fee. Final launch pricing and tax treatment are still under review, and you'll see the full total before confirming anything.",
   },
   {
     question: "Do I have to say yes to any of them?",
@@ -103,25 +105,24 @@ function CustomerLander() {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
-          <SignedInReturnNote />
           <div className="eyebrow">
             <span className="pulse" />
-            Almost open · Montgomery County, MD
+            Customer launch is in preparation · Montgomery County, MD
           </div>
           <h1>
-            Car trouble.
+            Car trouble shouldn&apos;t leave you guessing.
             <br />
-            <span className="hero-value-line">Real prices. Zero guesswork.</span>
+            <span className="hero-value-line">Join now. Compare local quotes when we open.</span>
           </h1>
           <p>
-            Tell us what&apos;s going on with your car. Local pros send you their
-            price, you line them up next to each other, and you pick. No calling five
-            shops, no surprise number when you go to pay.
+            Tuveloz is building a local marketplace where you can post a car need once,
+            compare providers and prices side by side, and choose. Customer accounts are
+            open now; requests turn on once the right provider coverage is in place.
           </p>
           <ul className="hero-highlights">
-            <li><span aria-hidden="true">✓</span> Free to ask, free to compare</li>
-            <li><span aria-hidden="true">✓</span> Real local pros, not a call center</li>
-            <li><span aria-hidden="true">✓</span> Say yes only if the price feels right</li>
+            <li><span aria-hidden="true">✓</span> Free to create your account</li>
+            <li><span aria-hidden="true">✓</span> Independent local businesses, no call center</li>
+            <li><span aria-hidden="true">✓</span> When we open, you decide who to hire — or no one</li>
           </ul>
           <div className="hero-actions">
             <SaveMySpotButton />
@@ -134,8 +135,8 @@ function CustomerLander() {
           </div>
           <div className="hero-launch-note">
             <strong>
-              Local pros are joining now. You&apos;ll be able to post a job the day we
-              open, and early sign-ups go first.
+              We&apos;re onboarding providers for the services customers will need.
+              Customer requests open once the marketplace is ready.
             </strong>
             <Link href="/about#expansion">Outside the county? Request your area →</Link>
           </div>
@@ -174,10 +175,10 @@ function CustomerLander() {
       </section>
 
       <section className="proof-strip" aria-label="What Tuveloz promises customers">
-        <span><b>Free</b> to ask and to compare prices</span>
-        <span><b>No pressure</b> — say yes only if you want to</span>
-        <span><b>5% fee</b> shown on its own line before you confirm</span>
-        <span><b>Montgomery County</b> Maryland, more areas next</span>
+        <span><b>Free</b> to create your account</span>
+        <span><b>Independent</b> local businesses, no call center</span>
+        <span><b>Your choice</b> when customer requests open</span>
+        <span><b>No launch date yet</b> — we open when coverage is ready</span>
       </section>
 
       <section className="section lander-value" aria-labelledby="lander-value-heading">
@@ -272,6 +273,27 @@ function CustomerLander() {
         </div>
       </section>
 
+      <section className="launch-help-section" aria-labelledby="launch-help-heading">
+        <div>
+          <span className="kicker">Need help today?</span>
+          <h2 id="launch-help-heading">Don&apos;t wait on a marketplace that isn&apos;t open.</h2>
+        </div>
+        <div>
+          <p>
+            Tuveloz isn&apos;t dispatching service requests yet. If your car trouble is
+            urgent or the vehicle may be unsafe to drive, contact a local shop or
+            mobile mechanic directly, or call a licensed towing service.
+          </p>
+          <p>
+            If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
+            before continuing your trip.
+          </p>
+          <Link className="text-link" href="/account?role=customer&mode=create">
+            Join the list for launch updates →
+          </Link>
+        </div>
+      </section>
+
       <section className="section early-access" id="early-access">
         <div className="early-access-copy">
           <span className="kicker">Save your spot</span>
@@ -288,7 +310,9 @@ function CustomerLander() {
             <li><span aria-hidden="true">✓</span> Saying yes to a price is always your call</li>
           </ul>
           <div className="hero-actions">
-            <SaveMySpotButton />
+            <Link className="button primary" href="/account?role=customer&mode=create">
+              Save my spot — free <span>→</span>
+            </Link>
             <Link className="button secondary" href="/join">
               I do car work — apply free
             </Link>
@@ -330,7 +354,9 @@ function CustomerLander() {
         <span className="kicker light">Montgomery County, Maryland</span>
         <h2>Your car. Your quotes. Your call.</h2>
         <div>
-          <SaveMySpotButton className="button lime" />
+          <Link className="button lime" href="/account?role=customer&mode=create">
+            Save my spot — free <span>→</span>
+          </Link>
           <Link className="button ghost" href="/how-it-works">See how it works</Link>
         </div>
         <p className="final-cta-note">

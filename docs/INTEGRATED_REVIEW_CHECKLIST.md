@@ -48,7 +48,7 @@ The safety position is intentionally conservative:
 - Incidents, claims, and stop-work controls.
 - Atomic change-order acceptance or decline.
 - Added work cannot begin without exact-service eligibility and customer authorization.
-- The latest authorized labor, parts, taxes/other charges, TUVELOZ fee, and total flow through customer display, checkout snapshot, and payout review.
+- The latest authorized labor, parts, taxes/other charges, Customer Service Fee, and total flow through customer display, checkout snapshot, and payout review.
 - An open test Checkout Session is expired before a price/scope change can commit; stale sessions and paid webhooks cannot bind to the new scope.
 - Delayed work is checked at the actual start time, not only the original schedule.
 - Invoices, warranty records, refund requests and decisions, disputes, reserves, holds, and payout review.

@@ -85,7 +85,7 @@ test("the marketing copy people decide on is translated", async () => {
   // the page is no longer fully translated and should not claim to be.
   for (const english of [
     "Any car issue.", // homepage hero
-    "Car trouble.", // customer lander hero
+    "Car trouble shouldn't leave you guessing.", // customer lander hero
     "Do great work. Get paid.", // provider lander hero
     "Ask once. Compare real prices. Pick who you like.", // how-it-works
     "Who is asking", // assistant

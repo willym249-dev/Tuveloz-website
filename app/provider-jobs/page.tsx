@@ -5,6 +5,8 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { primeAccountHeaderState } from "../components/account-header-state";
 import { ConfirmAction } from "../components/confirm-action";
+import { JobAppointmentPanel } from "../components/job-appointment-panel";
+import { JobInspectionPanel } from "../components/job-inspection-panel";
 import { JobMessages } from "../components/job-messages";
 import { ProviderBusinessPage } from "../components/provider-business-page";
 import { SiteLanguageButton } from "../components/site-language";
@@ -965,6 +967,14 @@ export default function ProviderJobsPage() {
                         <p className="portal-error">Structured accepted job facts are missing. Work start is blocked.</p>
                       )}
                     </details>
+                    <details className="job-tools job-appointment-details">
+                      <summary>Appointment time</summary>
+                      <JobAppointmentPanel requestId={job.id} />
+                    </details>
+                    <details className="job-tools job-inspection-details">
+                      <summary>Inspection checklist</summary>
+                      <JobInspectionPanel requestId={job.id} />
+                    </details>
                     <ol className="job-progress" aria-label="Job progress">
                       {["Quote accepted", "On my way", "Arrived", "Completed"].map((step) => (
                         <li
@@ -1064,7 +1074,7 @@ export default function ProviderJobsPage() {
                     <div><dt>Labor-only amount</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
                     <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
                     <div className="total"><dt>Your labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Customer total with Tuveloz fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer total including Customer Service Fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <p><strong>Availability:</strong> {quote.availability}</p>
                   <blockquote>{quote.message}</blockquote>

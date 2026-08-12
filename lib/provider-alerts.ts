@@ -13,6 +13,7 @@ import {
   marketplacePausedMessage,
 } from "./launch-status";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
+import { resendEmailsUrl } from "./resend-endpoint";
 
 type AlertResult = {
   configured: boolean;
@@ -89,7 +90,7 @@ async function sendProviderJobAlert(
 
   const results = await Promise.all(matches.map(async (provider) => {
     const workspaceUrl = `${siteUrl()}/account?role=provider`;
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch(resendEmailsUrl(runtimeEnv.RESEND_BASE_URL), {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
@@ -195,7 +196,7 @@ export async function sendAcceptedQuoteAlert(
   }
 
   const workspaceUrl = `${siteUrl()}/account?role=provider`;
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch(resendEmailsUrl(runtimeEnv.RESEND_BASE_URL), {
     method: "POST",
     headers: {
       authorization: `Bearer ${apiKey}`,

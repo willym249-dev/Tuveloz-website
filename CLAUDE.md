@@ -31,6 +31,17 @@ and keeping them current is part of the work, not an extra:
 what recently changed and what was left unfinished, which is usually not
 obvious from the code.
 
+**Check for concurrent work before starting anything small.** The log records
+finished work; work in flight lives in open pull requests, and nothing else
+points you at it. Run `gh pr list` and skim the last few commits on `main`
+first. Sessions run in parallel and cannot see each other, so the small,
+obvious, self-contained job — a doc block, a log entry, a one-file salvage — is
+exactly the one two sessions pick independently. This is not hypothetical:
+on 2026-08-11 it happened three times in one afternoon, and one of those pull
+requests merged with an entirely empty diff because the other had landed the
+identical text first. If you find someone already on it, extend their branch or
+pick something else rather than opening a second pull request.
+
 **Write an entry before you finish** if something happened a future session
 would be wrong not to know — a decision, a launch step, a policy or vendor
 change, an incident, a change of direction. Skip it for routine edits; a log
@@ -107,6 +118,17 @@ which service; `lib/launch-readiness.ts` holds the 18 go-live gates;
 `lib/customer-fee.ts` defines the 5% customer service fee in one place. Change
 the source, not a copy.
 
+### Fee-copy invariant
+
+The customer service fee is 5% of the provider's quoted subtotal, and providers
+keep 100% of what they quote. The fee is added to the customer's total; it is
+not deducted from the provider quote. Never revive the legacy 10% customer-fee
+copy, and never express the customer fee as a deduction from provider earnings.
+Any such wording is a defect even if it appears in an old screenshot, search
+result, branch, or conversation. Before changing pricing, checkout, policy,
+marketing, or AI copy, verify `lib/customer-fee.ts` and run
+`node --test tests/customer-fee-consistency.test.mjs`.
+
 **Never commit secrets or personal data.** `.env.example` holds placeholders
 only; real values go through `wrangler secret put`. Customer and provider
 personal data, identity documents, and database exports do not belong in this
@@ -162,7 +184,22 @@ npm test        # full production build, then 62 test files
 ```
 
 `npm test` builds before it tests, so it is slower than it looks but catches
-build breakage. Deployment happens through GitHub Actions on push to `main`;
+build breakage.
+
+To see what the business still needs rather than what the code does:
+
+```bash
+npm run readiness
+```
+
+It reads and never writes. One report covering the three marketplace locks, the
+18 launch gates in `lib/launch-readiness.ts` against the decisions actually
+recorded in production D1, `.env.example` against the deployed Worker's vars and
+secrets, and the deadline table in `docs/OPEN-ITEMS.md`. Add `--offline` to skip
+the two Cloudflare reads, `--json` for machine-readable output, or `--strict` to
+exit non-zero when something required is outstanding. Gates are answered by the
+owner in `/admin/launch-readiness`; this command cannot record a decision and
+nothing it reports is a reason to flip a lock. Deployment happens through GitHub Actions on push to `main`;
 running `npm run deploy` by hand skips the release stamping and health
 verification and is documented as emergency-only in `DEPLOYMENT.md`.
 

@@ -11,6 +11,7 @@ type CredentialReviewRow = {
   providerId: string;
   providerName: string;
   providerEmail: string;
+  category: string;
   credentialName: string;
   issuingAuthority: string;
   credentialIdentifier: string;
@@ -47,6 +48,7 @@ async function responseData() {
     env.DB.prepare(
       `SELECT credential.id, credential.provider_id AS providerId,
               provider.name AS providerName, provider.email AS providerEmail,
+              credential.category,
               credential.credential_name AS credentialName,
               credential.issuing_authority AS issuingAuthority,
               credential.credential_identifier AS credentialIdentifier,
