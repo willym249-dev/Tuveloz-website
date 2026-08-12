@@ -91,8 +91,15 @@ export route; the Privacy Policy is one of the seven pinned pages.
 **`security_and_data_incident_plan`** — *security, required*
 Assign the responsible person, escalation contacts, evidence-preservation steps,
 account containment, legal notices, and vendor notification.
-*Existing:* nothing filed. `docs/operations/` holds email authentication and Zeo
-remote access only. **This is a document to write, not code to find.**
+*Existing:* [`../operations/security-and-data-incident-plan.md`](../operations/security-and-data-incident-plan.md),
+drafted 2026-08-11. It carries the data inventory, the first-hour sequence, the
+preservation rules, and the vendor list. **Three items are marked [OWNER] and
+must be filled in before this gate can be answered:** the named incident lead and
+a deputy, escalation contacts with real phone numbers, and whether any vendor
+contract imposes a notification deadline. The gate's official source
+(Md. Code, Com. Law § 14-3504) is recorded in `lib/launch-readiness.ts`; whether
+it applies to a given incident is a legal determination the plan routes to
+counsel rather than answering.
 
 **`provider_expiration_reminder_delivery`** — *provider compliance, required*
 *Existing:* `lib/provider-compliance-notifications.ts` and

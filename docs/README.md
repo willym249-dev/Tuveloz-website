@@ -25,6 +25,7 @@ self-contained page.
 | [`operations/email-authentication.md`](operations/email-authentication.md) | What authenticates Tuveloz email, does SPF/DKIM/DMARC align for the sending domain, and in what order should DMARC be tightened? |
 | [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
 | [`operations/evidence-scanner-activation.md`](operations/evidence-scanner-activation.md) | How do I turn on the evidence malware scanner, and how do I confirm it actually works rather than just reporting success? |
+| [`operations/security-and-data-incident-plan.md`](operations/security-and-data-incident-plan.md) | What do I do in the first hour of a data exposure, account takeover, or vendor breach — and what must not be deleted while doing it? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical
