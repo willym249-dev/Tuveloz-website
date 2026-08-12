@@ -36,6 +36,8 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-08-09 | **(external)** Epidemic Sound license window has closed. Ad 01's track "On My Way (Instrumental Version)" was downloaded under a canceled Pro plan, so it is not licensed for publication as things stand. Do not publish Ad 01 until the subscription is reactivated or the track is replaced. See `brand/ads/HANDOFF.md` | hello@tuveloz.com | overdue |
+| 2026-08-14 | Reword the homepage founding banner. It promises "first pick of jobs", which the founding program refuses in writing and `lib/founding-cohort.ts` bars in code. Must land before any paid provider traffic points at it | hello@tuveloz.com | open |
 | 2026-08-07 | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | done |
 | 2026-08-18 | Reconcile PR #97 against the merged #98 structure — #97 must edit the existing `CLAUDE.md` and document index rather than adding a parallel one | hello@tuveloz.com | open |
 | 2026-08-25 | When PR #97 lands, add its pitch, competitive landscape, and provider classification documents to `README.md`, and add its jurisdiction-scoped compliance rules to `CLAUDE.md` | hello@tuveloz.com | open |
