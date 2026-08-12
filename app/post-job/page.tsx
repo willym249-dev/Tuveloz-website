@@ -16,6 +16,7 @@ import { CustomerRequestForm } from "../components/customer-request-form";
 import { LaunchUpdatesForm } from "../components/launch-updates-form";
 import { PublicSiteFooter, PublicSiteHeader } from "../components/public-chrome";
 import { SaveMySpotButton } from "../components/save-my-spot-button";
+import { SignedInReturnNote } from "../components/signed-in-return-note";
 import { TuvelozIcon } from "../components/tuveloz-icons";
 
 export const metadata: Metadata = {
@@ -105,6 +106,7 @@ function CustomerLander() {
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
+          <SignedInReturnNote />
           <div className="eyebrow">
             <span className="pulse" />
             Customer launch is in preparation · Montgomery County, MD
@@ -310,9 +312,7 @@ function CustomerLander() {
             <li><span aria-hidden="true">✓</span> Saying yes to a price is always your call</li>
           </ul>
           <div className="hero-actions">
-            <Link className="button primary" href="/account?role=customer&mode=create">
-              Save my spot — free <span>→</span>
-            </Link>
+            <SaveMySpotButton />
             <Link className="button secondary" href="/join">
               I do car work — apply free
             </Link>
@@ -354,9 +354,7 @@ function CustomerLander() {
         <span className="kicker light">Montgomery County, Maryland</span>
         <h2>Your car. Your quotes. Your call.</h2>
         <div>
-          <Link className="button lime" href="/account?role=customer&mode=create">
-            Save my spot — free <span>→</span>
-          </Link>
+          <SaveMySpotButton className="button lime" />
           <Link className="button ghost" href="/how-it-works">See how it works</Link>
         </div>
         <p className="final-cta-note">
