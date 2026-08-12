@@ -136,10 +136,23 @@ Tax, merchant-of-record, fees, and ledger treatment.
 and `CUSTOMER_SERVICE_FEE_NAME = "Customer Service Fee"` in
 `lib/customer-fee.ts`, snapshotted onto each quote. The fee is added on top of
 the provider's quote and never deducted from payout; providers keep 100% of what
-they quote. **Known discrepancy to raise:** the database default for
-`customer_fee_rate_bps` is 1000 while the code constant is 500. Live writes
-always pass 500, so it is latent, but a row inserted without an explicit value
-would carry the wrong rate.
+they quote.
+
+**The declared schema default was 1000 while the constant is 500** — fixed
+2026-08-11 in `db/schema.ts`, and both are now pinned together by a test that
+fails if they drift again. A second test pins the one path that writes a quote
+(`app/api/jobs/route.ts`) to setting the rate explicitly, which is why the drift
+never mispriced anything: the default was only reachable by code that forgot to
+pass a value.
+
+**The live column default in D1 is still 1000, deliberately.** SQLite cannot
+alter a column default in place, so changing it means rebuilding
+`provider_quotes` — a table touched by fourteen migrations and carrying the two
+real-only authorization triggers from `0041`. Rebuilding to change a fallback
+that application code never reaches trades a real risk of dropping a launch
+guard against a theoretical one. Worth raising at this gate so the CPA sees the
+actual state: every quote row is written with 500, and the stale default is
+unreachable rather than merely unused.
 
 **`checkout_fee_receipt_copy`** — *payments, required* — also needs a legal source
 *Existing:* the fee has one canonical name across every surface, enforced by

@@ -374,3 +374,44 @@ test("no file anywhere states the provider share as 95 percent", async () => {
       + offenders.join("\n"),
   );
 });
+
+/**
+ * The column default drifted to 1000 (10%) while the constant was 500 (5%),
+ * and nothing caught it because application code always passes the rate
+ * explicitly — so the default is only ever reached by something that forgot to.
+ * A silent doubling of the fee is exactly the failure a fallback should not
+ * introduce, so the declared default and the constant are pinned together.
+ */
+test("the quote fee-rate column default matches the canonical rate", async () => {
+  const schema = await source("db/schema.ts");
+  const declared = schema.match(
+    /customerFeeRateBps: integer\("customer_fee_rate_bps"\)[\s\S]{0,80}?\.default\((\d+)\)/,
+  );
+
+  assert.ok(declared, "could not find the customer_fee_rate_bps default in db/schema.ts");
+  assert.equal(
+    Number(declared[1]),
+    CUSTOMER_SERVICE_FEE_RATE_BPS,
+    "db/schema.ts default must equal CUSTOMER_SERVICE_FEE_RATE_BPS",
+  );
+});
+
+/**
+ * The reason the drift above was harmless in practice: the one path that writes
+ * a quote passes the rate. If a future path stops doing that, the default
+ * becomes load-bearing again and this fails rather than silently mispricing.
+ */
+test("the quote insert sets the fee rate explicitly rather than relying on the default", async () => {
+  const jobs = await source("app/api/jobs/route.ts");
+  const insert = jobs.slice(jobs.indexOf("insert(providerQuotes)"));
+
+  assert.ok(
+    insert.includes("insert(providerQuotes)"),
+    "app/api/jobs/route.ts no longer inserts provider quotes — re-point this guard",
+  );
+  assert.match(
+    insert.slice(0, 1500),
+    /customerFeeRateBps: customerPrice\.customerFeeRateBps/,
+    "the quote insert must set customerFeeRateBps from customerPriceFor()",
+  );
+});
