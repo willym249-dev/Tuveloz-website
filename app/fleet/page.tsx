@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   title: "Fleet and Business Vehicle Services in Montgomery County, MD",
   description:
     "Running vans, trucks, or a company car pool in Montgomery County, MD? Tuveloz is building multi-vehicle service with independent local providers. Tell us about your fleet.",
-  alternates: { canonical: `${BASE_URL}/fleet` },
+  // Relative, like every other page: Next resolves it against metadataBase, so
+  // one place defines the origin. An absolute literal here would silently
+  // disagree with metadataBase if the origin ever changes.
+  alternates: { canonical: "/fleet" },
   openGraph: {
     title: "Fleet and Business Vehicle Services | Tuveloz",
     description:
