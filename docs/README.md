@@ -24,6 +24,7 @@ self-contained page.
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
 | [`operations/email-authentication.md`](operations/email-authentication.md) | What authenticates Tuveloz email, does SPF/DKIM/DMARC align for the sending domain, and in what order should DMARC be tightened? |
 | [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
+| [`operations/evidence-scanner-activation.md`](operations/evidence-scanner-activation.md) | How do I turn on the evidence malware scanner, and how do I confirm it actually works rather than just reporting success? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical
