@@ -13,9 +13,15 @@
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
+    "ai:check": "node scripts/ai-selfcheck.mjs",
+    "i18n:check": "node scripts/check-spanish-coverage.mjs",
+    "readiness": "node --experimental-strip-types scripts/check-readiness.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply tuveloz-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply tuveloz-db --remote",
+    "mail:catch": "node scripts/dev-mail-catcher.mjs",
+    "test:e2e": "node tests/e2e/provider-signup.e2e.mjs",
+    "test:e2e:account": "node tests/e2e/account-signup.e2e.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "13.3.0",
@@ -40,6 +46,7 @@
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.12",
+    "playwright": "^1.62.1",
     "react-server-dom-webpack": "19.2.8",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",

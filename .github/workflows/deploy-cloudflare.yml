@@ -63,7 +63,24 @@ jobs:
 
       - name: Deploy to Cloudflare
         if: github.event_name != 'pull_request'
-        run: npm run deploy
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const configPath = "wrangler.jsonc";
+          const source = fs.readFileSync(configPath, "utf8");
+          const start = source.indexOf('  "routes": [');
+          const end = source.indexOf('  "assets": {', start);
+
+          if (start < 0 || end < 0) {
+            throw new Error("Unable to prepare the deployment-only Wrangler configuration.");
+          }
+
+          // The custom domains are already connected to this Worker. The
+          // deployment credential updates the Worker but intentionally cannot
+          // reconfigure domain records on every release.
+          fs.writeFileSync(configPath, `${source.slice(0, start)}${source.slice(end)}`);
+          NODE
+          npm run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

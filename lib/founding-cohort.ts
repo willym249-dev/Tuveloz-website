@@ -24,7 +24,7 @@
  * made as part of the pre-launch promotion.
  *
  * Scope is exactly the provider-side membership fee, if and when one is
- * introduced. It has nothing to do with the customer service fee, which is
+ * introduced. It has nothing to do with the Customer Service Fee, which is
  * paid by customers and is unaffected by founding standing.
  */
 export const FOUNDING_COHORT_SIZE = 20;

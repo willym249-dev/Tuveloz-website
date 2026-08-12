@@ -52,6 +52,9 @@ text-to-video; one-shot prompts, no retries.
 
 Full spec: [provider-recruitment-ad-01.md](provider-recruitment-ad-01.md).
 Ad 02 spec (customer launch, "The Rescue"): [breakdown-rescue-ad-02.md](breakdown-rescue-ad-02.md).
+Morning "Morning Number" stat-card campaign (provider recruitment, data-led,
+zero credits, no music dependency):
+[morning-ads-provider-recruitment.md](morning-ads-provider-recruitment.md).
 
 ### Assets status
 - ✅ All visuals downloaded and filed in `brand/ads/ad-01-assets/` as
@@ -88,7 +91,7 @@ end card verified, no music).
 Ken Burns motion (+ aerial video if available) → "Set your own prices." /
 "Pick your own jobs." / "Keep 100% of your price. Join free." (fee is
 customer-side 5% per Section 7 sign-off — providers keep their full quote;
-NEVER say "keep 95%") → logo end card
+never express the customer fee as a provider deduction) → logo end card
 (brand/tuveloz-lockup-horizontal.svg + Tuveloz Logo.png), tuveloz.com/join,
 "Customer choice. Provider freedom." Citadel under it all, captions burned in.
 Export 1080x1920 (Reels/TikTok/Shorts) + 1080x1080 (feed).

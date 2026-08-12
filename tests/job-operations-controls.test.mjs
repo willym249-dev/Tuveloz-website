@@ -193,6 +193,7 @@ test("completion never marks a payment ready and payout checks every operational
   for (const code of [
     "job_not_completed",
     "completion_eligibility_missing",
+    "customer_completion_confirmation_missing",
     "provider_timer_running",
     "final_invoice_missing",
     "invoice_total_not_authorized",

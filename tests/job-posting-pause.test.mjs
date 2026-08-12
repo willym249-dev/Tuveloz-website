@@ -26,6 +26,10 @@ const pauseNotice = await readFile(
   new URL("../app/components/job-posting-pause-notice.tsx", import.meta.url),
   "utf8",
 );
+const saveMySpotButton = await readFile(
+  new URL("../app/components/save-my-spot-button.tsx", import.meta.url),
+  "utf8",
+);
 
 test("customer signups stay open while new job requests and payments are paused", () => {
   assert.match(launchStatus, /CUSTOMER_JOB_POSTING_PAUSED = true/);
@@ -33,18 +37,26 @@ test("customer signups stay open while new job requests and payments are paused"
     launchStatus,
     /not accepting customer service requests or payments yet/,
   );
-  assert.match(postJobPage, /Customer service requests are not yet available/);
+  assert.match(postJobPage, /Customer requests and quotes open at launch/);
+  assert.match(
+    postJobPage,
+    /posting jobs opens once we've finished getting everything ready/,
+  );
   assert.match(postJobPage, /account\?role=customer&mode=create/);
   assert.match(postJobPage, /href="\/join"/);
-  assert.match(postJobPage, /Customer accounts are open\. Job requests are not\./);
+  assert.match(postJobPage, /Be first in line when we open\./);
   assert.match(postJobPage, /Nothing on this page submits a[\s\S]*request, contacts a provider, books service, or processes a payment/);
   assert.ok(
     postJobPage.indexOf("if (CUSTOMER_JOB_POSTING_PAUSED)")
       < postJobPage.indexOf("customerRequestAgreementHash()"),
   );
   assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
-  assert.match(homepage, /Prepare for launch without submitting a job/);
-  assert.match(homepage, /Create customer account/);
+  assert.match(homepage, /Two minutes now\. First in line at launch\./);
+  // The sign-up invitation now lives in SaveMySpotButton, which keeps this
+  // wording for a visitor without a session and offers a signed-in one their
+  // own workspace instead of telling them to create a second account.
+  assert.match(homepage, /<SaveMySpotButton/);
+  assert.match(saveMySpotButton, /Save my spot — free/);
   assert.match(homepage, /Apply as a provider/);
 });
 
@@ -66,6 +78,11 @@ test("the pause notice is visible sitewide and the homepage uses an explicit lau
   assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
   assert.doesNotMatch(pauseNotice, /display: none !important/);
-  assert.match(pauseNotice, /Create customer account/);
-  assert.match(pauseNotice, /Join as a provider/);
+  // The banner offers exactly one action, and stands down entirely on pages
+  // that already carry their own primary call to action in a sticky header —
+  // two buttons for the same job is what made the provider page confusing.
+  assert.match(pauseNotice, /Save my spot — free/);
+  assert.doesNotMatch(pauseNotice, /Join as a provider/);
+  assert.match(pauseNotice, /PAGES_WITH_THEIR_OWN_CTA/);
+  assert.match(pauseNotice, /!pageHasItsOwnCta && \(/);
 });

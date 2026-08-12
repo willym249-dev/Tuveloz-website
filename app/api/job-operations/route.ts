@@ -20,6 +20,10 @@ import {
   type AccountRole,
 } from "../../../lib/account-auth";
 import { customerPriceFor } from "../../../lib/customer-fee";
+import {
+  CUSTOMER_COMPLETION_AGREEMENT_KEY,
+  CUSTOMER_COMPLETION_AGREEMENT_VERSION,
+} from "../../../lib/customer-completion-confirmation";
 import { normalizeScheduledFor } from "../../../lib/customer-job-scope";
 import {
   appendJobLifecycleEvent,
@@ -1934,7 +1938,7 @@ export async function POST(request: Request) {
       db.select().from(paymentAdjustments).where(eq(paymentAdjustments.requestId, requestId)),
     ]);
     const authorizedTotalCents = await authorizedJobTotal(context);
-    const [actualStartCurrent, completionCurrent] = await Promise.all([
+    const [actualStartCurrent, completionCurrent, [completionConfirmation]] = await Promise.all([
       jobAuthorizationDecisionMatchesContext(
         context,
         jobRecord?.jobStartDecisionId || "",
@@ -1945,6 +1949,15 @@ export async function POST(request: Request) {
         jobRecord?.completionDecisionId || "",
         "completion",
       ),
+      db.select({ id: customerAgreementAcceptances.id })
+        .from(customerAgreementAcceptances)
+        .where(and(
+          eq(customerAgreementAcceptances.requestId, requestId),
+          eq(customerAgreementAcceptances.quoteId, context.quoteId),
+          eq(customerAgreementAcceptances.scopeVersion, context.scopeVersion),
+          eq(customerAgreementAcceptances.agreementKey, CUSTOMER_COMPLETION_AGREEMENT_KEY),
+          eq(customerAgreementAcceptances.agreementVersion, CUSTOMER_COMPLETION_AGREEMENT_VERSION),
+        )).limit(1),
     ]);
     const readiness = assessPayoutReadiness({
       jobCompleted: context.requestStatus === "completed"
@@ -1953,6 +1966,7 @@ export async function POST(request: Request) {
       completionDecisionId: completionCurrent
         ? jobRecord?.completionDecisionId || ""
         : "",
+      customerCompletionConfirmed: Boolean(completionConfirmation),
       finalInvoiceStatus: finalInvoice?.status || "",
       finalInvoiceTotalCents: finalInvoice?.totalAmountCents ?? -1,
       authorizedTotalCents,

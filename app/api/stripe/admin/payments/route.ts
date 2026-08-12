@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../../../../db";
 import {
   accountCredentials,
+  customerAgreementAcceptances,
   customerProfiles,
   customerRequests,
   jobCancellations,
@@ -37,6 +38,10 @@ import {
   jobAuthorizationDecisionMatchesContext,
 } from "../../../../../lib/job-operations";
 import { connectedAccountPayoutSafety } from "../../../../../lib/stripe-connected-account-snapshots";
+import {
+  CUSTOMER_COMPLETION_AGREEMENT_KEY,
+  CUSTOMER_COMPLETION_AGREEMENT_VERSION,
+} from "../../../../../lib/customer-completion-confirmation";
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -282,7 +287,7 @@ export async function POST(request: Request) {
     db.select().from(jobChangeOrders).where(eq(jobChangeOrders.requestId, payment.requestId)),
     db.select().from(paymentAdjustments).where(eq(paymentAdjustments.requestId, payment.requestId)),
   ]);
-  const [actualStartCurrent, completionCurrent] = await Promise.all([
+  const [actualStartCurrent, completionCurrent, [completionConfirmation]] = await Promise.all([
     jobAuthorizationDecisionMatchesContext(
       context,
       jobRecord?.jobStartDecisionId || "",
@@ -293,6 +298,15 @@ export async function POST(request: Request) {
       jobRecord?.completionDecisionId || "",
       "completion",
     ),
+    db.select({ id: customerAgreementAcceptances.id })
+      .from(customerAgreementAcceptances)
+      .where(and(
+        eq(customerAgreementAcceptances.requestId, payment.requestId),
+        eq(customerAgreementAcceptances.quoteId, context.quoteId),
+        eq(customerAgreementAcceptances.scopeVersion, context.scopeVersion),
+        eq(customerAgreementAcceptances.agreementKey, CUSTOMER_COMPLETION_AGREEMENT_KEY),
+        eq(customerAgreementAcceptances.agreementVersion, CUSTOMER_COMPLETION_AGREEMENT_VERSION),
+      )).limit(1),
   ]);
   const readiness = assessPayoutReadiness({
     jobCompleted: job.status === "completed"
@@ -301,6 +315,7 @@ export async function POST(request: Request) {
     completionDecisionId: completionCurrent
       ? jobRecord?.completionDecisionId || ""
       : "",
+    customerCompletionConfirmed: Boolean(completionConfirmation),
     finalInvoiceStatus: finalInvoice?.status || "",
     finalInvoiceTotalCents: finalInvoice?.totalAmountCents ?? -1,
     // The paid provider amount is the maximum releasable authorization. A

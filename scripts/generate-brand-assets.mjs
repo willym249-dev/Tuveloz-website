@@ -2,12 +2,12 @@
  * Regenerates every logo asset the website serves from the DEFINITIVE brand
  * masters, so the site can never drift from the brand kit:
  *
- *   badge master:  brand/social-media-kit/tuveloz-profile-master-1024.png
+ *   badge master:  brand/tuveloz-icon.svg
  *   lockup master: brand/social-media-kit/Tuveloz Logo.png
  *
- * Outputs to public/: favicon.ico (16/32/48), favicon.svg,
- * tuveloz-favicon-v2.svg, apple-touch-icon.png (180), icon-192.png,
- * icon-512.png, og-image.png (1200x630).
+ * Outputs to public/: brand-badge.png (the header/footer mark), favicon.ico
+ * (16/32/48), favicon.svg, tuveloz-favicon-v3.svg, apple-touch-icon.png (180),
+ * icon-192.png, icon-512.png, og-image.png (1200x630).
  *
  * Run from the repo root:  node scripts/generate-brand-assets.mjs
  * Then bump the ?v= query strings in app/layout.tsx and
@@ -15,38 +15,28 @@
  */
 import sharp from "sharp";
 import { writeFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pub = join(root, "public");
 const kit = join(root, "brand", "social-media-kit");
-const masterPath = join(kit, "tuveloz-profile-master-1024.png");
+const masterPath = join(root, "brand", "tuveloz-icon.svg");
 const lockupPath = join(kit, "Tuveloz Logo.png");
 
-// --- Floating badge: make everything outside the keyline transparent ---
-const { data, info } = await sharp(masterPath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-const { width: W, height: H } = info;
-const passable = (p) => {
-  const i = p * 4;
-  return data[i + 3] < 10 || (data[i] < 60 && data[i + 1] < 60 && data[i + 2] < 60);
-};
-const outside = new Uint8Array(W * H);
-const stack = [];
-for (let x = 0; x < W; x++) stack.push(x, (H - 1) * W + x);
-for (let y = 0; y < H; y++) stack.push(y * W, y * W + W - 1);
-while (stack.length) {
-  const p = stack.pop();
-  if (outside[p] || !passable(p)) continue;
-  outside[p] = 1;
-  const x = p % W, y = (p / W) | 0;
-  if (x > 0) stack.push(p - 1);
-  if (x < W - 1) stack.push(p + 1);
-  if (y > 0) stack.push(p - W);
-  if (y < H - 1) stack.push(p + W);
-}
-for (let p = 0; p < W * H; p++) if (outside[p]) data[p * 4 + 3] = 0;
-const badgePng = await sharp(data, { raw: { width: W, height: H, channels: 4 } }).png().toBuffer();
+// --- Definitive icon-only badge ---
+// The social-profile export deliberately has extra padding for circular crops.
+// It is not an appropriate favicon source: Google shrinks that padding and can
+// keep showing an obsolete full-logo mark. Use the native vector everywhere.
+const badgePng = await sharp(masterPath).png().toBuffer();
+
+// --- Header/footer mark: the badge trimmed edge-to-edge ---
+// This is the logo every page renders through <BrandMark>, so it has to come
+// out of the same master as the favicons. It is trimmed to the keyline because
+// the container gives it its own spacing, unlike the app icons below.
+await sharp(badgePng).trim().resize(256, 256).png().toFile(join(pub, "brand-badge.png"));
+console.log("wrote brand-badge.png");
 
 // --- PNG icons ---
 for (const [size, out] of [[180, "apple-touch-icon.png"], [192, "icon-192.png"], [512, "icon-512.png"]]) {
@@ -91,12 +81,11 @@ sizes.forEach((s, i) => {
 writeFileSync(join(pub, "favicon.ico"), Buffer.concat([dir, ...imgs]));
 console.log("wrote favicon.ico");
 
-// --- SVG favicons embed the exact badge art at 256px ---
-const png256 = await sharp(badgePng).resize(256, 256).png().toBuffer();
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><image width="256" height="256" href="data:image/png;base64,${png256.toString("base64")}"/></svg>\n`;
+// --- SVG favicons use the native definitive vector at a fresh URL ---
+const svg = await readFile(masterPath, "utf8");
 writeFileSync(join(pub, "favicon.svg"), svg);
-writeFileSync(join(pub, "tuveloz-favicon-v2.svg"), svg);
-console.log("wrote favicon.svg + tuveloz-favicon-v2.svg");
+writeFileSync(join(pub, "tuveloz-favicon-v3.svg"), svg);
+console.log("wrote favicon.svg + tuveloz-favicon-v3.svg");
 
 // --- og-image: lockup master centered on brand black, 1200x630 ---
 const lkMeta = await sharp(lockupPath).metadata();

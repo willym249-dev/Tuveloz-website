@@ -212,7 +212,7 @@ export const LAUNCH_GATE_CATALOG: readonly LaunchGateDefinition[] = [
     stage: "transaction_pilot",
     category: "payments",
     title: "Checkout, fee, tax, and receipt display verified",
-    plainLanguage: "The customer sees provider amount, parts and labor, TUVELOZ fee, taxes and other charges, total, scope, provider identity, and refund terms before accepting.",
+    plainLanguage: "The customer sees provider amount, parts and labor, Customer Service Fee, taxes and other charges, total, scope, provider identity, and refund terms before accepting.",
     authority: ["Official legal or licensing source", "CPA or tax adviser"],
     required: true,
     requiresValidThrough: true,

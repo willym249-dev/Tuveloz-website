@@ -2,8 +2,15 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+// Line endings are normalised because the fail-closed assertions below match
+// multi-line source fragments such as "POLICY_JURISDICTION,\n  );". A Windows
+// checkout hands back CRLF, those never match, and the test reports the
+// fail-closed guard as missing when the code is correct. It passes on CI, which
+// checks out LF, so the disagreement only ever shows up locally — on the one
+// assertion whose whole purpose is to prove a safety property is still there.
 async function source(path) {
-  return readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  const text = await readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  return text.replace(/\r\n/g, "\n");
 }
 
 const MATRIX = JSON.parse(await source("config/provider-eligibility-matrix.json"));

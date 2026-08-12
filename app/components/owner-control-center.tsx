@@ -422,7 +422,7 @@ export function OwnerControlCenter({
               <dl className="owner-settings-grid">
                 <div><dt>Production site</dt><dd>{platform.siteUrl}</dd></div>
                 <div><dt>Active service area</dt><dd>{platform.serviceArea}</dd></div>
-                <div><dt>Customer service fee</dt><dd>{platform.customerServiceFeePercent}%</dd></div>
+                <div><dt>Customer Service Fee</dt><dd>{platform.customerServiceFeePercent}%</dd></div>
                 <div><dt>Owner access protected</dt><dd>{yesNo(platform.ownerAccessProtected)}</dd></div>
                 <div><dt>Email delivery configured</dt><dd>{yesNo(platform.emailDeliveryConfigured)}</dd></div>
                 <div><dt>Email sender domain</dt><dd>{platform.emailSenderDomain || "Not configured"}</dd></div>
