@@ -96,7 +96,11 @@ export const providerQuotes = sqliteTable(
     laborOnlyPartsConfirmedAt: text("labor_only_parts_confirmed_at")
       .notNull()
       .default(""),
-    customerFeeRateBps: integer("customer_fee_rate_bps").notNull().default(1000),
+    // Matches CUSTOMER_SERVICE_FEE_RATE_BPS in lib/customer-fee.ts. Application
+    // code always passes the rate explicitly, so this default is a fallback that
+    // should never fire — but it read 1000 (10%) while the canonical rate is 500,
+    // so anything that did fall through carried double the fee.
+    customerFeeRateBps: integer("customer_fee_rate_bps").notNull().default(500),
     customerFeeCents: text("customer_fee_cents").notNull().default("0"),
     customerTotalCents: text("customer_total_cents").notNull().default("0"),
     partType: text("part_type").notNull().default("Customer supplied"),
