@@ -22,11 +22,13 @@ const source = (path) => readFile(new URL(path, root), "utf8");
  * Legal pages that still carry the retired fee name because renaming it in them
  * means cutting a new policy release, which DEPLOYMENT.md reserves for the
  * owner. Remove an entry here in the same change that re-releases the document.
+ *
+ * Empty since 2026-08-11: Terms of Use and the Payment, Cancellation and Refund
+ * Policy were re-released carrying the Customer Service Fee name, so no page is
+ * exempt any more. An entry added here is a page knowingly serving retired
+ * wording — say which release will fix it and when.
  */
-const PENDING_LEGAL_RELEASE = [
-  "app/terms/page.tsx",
-  "app/payments/page.tsx",
-];
+const PENDING_LEGAL_RELEASE = [];
 
 async function* walk(dir) {
   for (const entry of await readdir(new URL(dir, root), { withFileTypes: true })) {
