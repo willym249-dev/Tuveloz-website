@@ -13,7 +13,7 @@ Verified against the source on 2026-08-08. Nothing below is inherited.
 Break any of these and the work is unusable.
 
 - **Fee model:** providers keep **100%** of their quoted price; customers pay a
-  **5%** fee on top. Never write "providers keep 95%".
+  **5%** fee on top. Never state the provider share as anything but 100%.
 - **Pre-launch gate:** `CUSTOMER_JOB_POSTING_PAUSED = true` in
   `lib/launch-status.ts`. No customer can post a job. Copy may never imply
   otherwise. Customer *accounts* are open; customer *requests* are not.

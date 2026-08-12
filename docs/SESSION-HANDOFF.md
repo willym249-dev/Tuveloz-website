@@ -17,7 +17,7 @@ service in `provider-eligibility-matrix.json` is still `disabled_pending_*` with
 `customer_visible: false`. Nothing may imply customers can book today.
 
 **Fee model (never get this wrong):** providers keep **100%** of their quoted
-price; customers pay a **5%** fee on top. Never write "providers keep 95%".
+price; customers pay a **5%** fee on top. Never state the provider share as anything but 100%.
 
 **Sign-off tagline on every ad:** "Customer choice. Provider freedom." Do not
 invent a different one.

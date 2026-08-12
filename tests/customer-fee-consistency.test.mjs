@@ -315,3 +315,60 @@ test("the main fee explanations state the positive contract", async () => {
   assert.match(providerAgreement, /full quoted price[\s\S]{0,160}5% fee/i);
   assert.match(handoff, /Providers keep \*\*100% of what they quote\*\*/);
 });
+
+// The guard above only reaches app/ and brand/. The 95% framing kept turning up
+// outside both — in docs/, in a .ps1 build script — and every survivor was a
+// document quoting the phrase in order to ban it. Quoting it still puts it in
+// the repository, where the next writer, or a model reading for tone, can lift
+// it back out as though it were approved copy. So the string itself is not
+// allowed anywhere, including inside its own prohibition: say what the share is
+// (100%), never what it is not.
+const NINETY_FIVE_FRAMINGS = [
+  /\b(?:keep|keeps|kept|receive|receives|get|gets|retain|retains|earn|earns)\s+(?:only\s+)?(?:the\s+)?95\s*%/i,
+  /\bproviders?\s+(?:only\s+)?95\s*%/i,
+  /\b95\s*%\s+(?:of\s+)?(?:their|the|your)?\s*(?:quoted\s+)?(?:price|payout|earnings)/i,
+];
+const PURGE_SCAN_ROOTS = ["app", "brand", "config", "docs", "lib", "scripts"];
+const PURGE_EXTENSIONS = new Set([
+  ".json", ".md", ".mjs", ".ps1", ".ts", ".tsx", ".txt",
+]);
+
+async function purgeScanFiles(relativeDirectory) {
+  const entries = await readdir(join(projectRoot, relativeDirectory), {
+    withFileTypes: true,
+  });
+  const files = [];
+
+  for (const entry of entries) {
+    const relativePath = join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await purgeScanFiles(relativePath));
+    } else if (PURGE_EXTENSIONS.has(extname(entry.name).toLowerCase())) {
+      files.push(relativePath);
+    }
+  }
+
+  return files;
+}
+
+test("no file anywhere states the provider share as 95 percent", async () => {
+  const files = (
+    await Promise.all(PURGE_SCAN_ROOTS.map(purgeScanFiles))
+  ).flat();
+
+  const offenders = [];
+  for (const relativePath of files) {
+    const source = await readFile(join(projectRoot, relativePath), "utf8");
+    for (const framing of NINETY_FIVE_FRAMINGS) {
+      if (framing.test(source)) offenders.push(`${relativePath} :: ${framing}`);
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    "the 95% provider-share framing is banned outright — state the share as 100%, "
+      + "rather than quoting the forbidden phrasing in order to forbid it:\n"
+      + offenders.join("\n"),
+  );
+});

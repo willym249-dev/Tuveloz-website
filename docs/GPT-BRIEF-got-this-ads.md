@@ -13,7 +13,7 @@ Where the two disagree about the ad series, this file is newer and wins.
 Break any of these and the work is unusable.
 
 - **Fee model:** providers keep **100%** of their quoted price; customers pay a
-  **5%** fee on top. Never write "providers keep 95%".
+  **5%** fee on top. Never state the provider share as anything but 100%.
 - **Sign-off tagline, every ad:** "Customer choice. Provider freedom." Do not
   invent a different one.
 - **Pre-launch gate:** no customer can book today. Every service is
