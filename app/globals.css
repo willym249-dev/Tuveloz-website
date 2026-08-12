@@ -8102,6 +8102,30 @@ footer > p,
   font-weight: 800;
 }
 
+.signed-in-return-note {
+  align-items: flex-start;
+  background: rgba(126, 217, 87, 0.1);
+  border: 1px solid rgba(126, 217, 87, 0.32);
+  border-left: 4px solid #7ed957;
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  margin-bottom: 22px;
+  max-width: 530px;
+  padding: 13px 15px;
+}
+
+.signed-in-return-note strong {
+  color: #f7f3ef;
+  font-size: 13px;
+}
+
+.signed-in-return-note a {
+  color: #9ce87b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .fixed-launch-area {
   background: #080808;
   border: 1px solid #493123;
@@ -11531,6 +11555,119 @@ footer > p,
   }
 }
 
+/* Local service-area pages (/areas, /services). Built on the shared
+   public-info shell, so only the blocks unique to these pages live here. */
+
+.public-info-breadcrumbs {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.public-info-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+.public-info-breadcrumbs li {
+  align-items: center;
+  color: #9c928b;
+  display: flex;
+  gap: 8px;
+}
+
+.public-info-breadcrumbs li + li::before {
+  color: #5d5049;
+  content: "/";
+}
+
+.public-info-breadcrumbs a {
+  color: #c8beb7;
+  text-decoration: none;
+}
+
+.public-info-breadcrumbs a:hover,
+.public-info-breadcrumbs a:focus-visible {
+  color: #ff6a00;
+  text-decoration: underline;
+}
+
+.public-info-breadcrumbs [aria-current="page"] {
+  color: #f8f5f2;
+}
+
+.local-link-section {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 0 clamp(22px, 6vw, 78px) clamp(40px, 6vw, 64px);
+}
+
+.local-link-section h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.035em;
+  margin: 0 0 14px;
+}
+
+.local-link-note {
+  color: #bdb4ad;
+  line-height: 1.7;
+  margin: 0 0 20px;
+  max-width: 780px;
+}
+
+.local-link-note a {
+  color: #ff6a00;
+}
+
+.local-link-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.local-link-grid a {
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid #3b281d;
+  border-radius: 20px;
+  display: grid;
+  gap: 8px;
+  height: 100%;
+  padding: 22px 24px;
+  text-decoration: none;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.local-link-grid a:hover,
+.local-link-grid a:focus-visible {
+  border-color: #ff6a00;
+  transform: translateY(-2px);
+}
+
+.local-link-grid strong {
+  color: #f8f5f2;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.local-link-grid span {
+  color: #bdb4ad;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.local-area-links,
+.local-zip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 /* ---------------------------------------------------------------
    Marketing landers
    Appended last so these sit on top of the dark-theme overrides.
@@ -12093,6 +12230,129 @@ footer > p,
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.local-area-links a,
+.local-zip-list li {
+  border: 1px solid #3b281d;
+  border-radius: 999px;
+  color: #eee8e3;
+  display: inline-block;
+  font-size: 14.5px;
+  padding: 9px 18px;
+  text-decoration: none;
+}
+
+.local-area-links a:hover,
+.local-area-links a:focus-visible {
+  border-color: #ff6a00;
+  color: #ff6a00;
+}
+
+.local-zip-list li {
+  color: #bdb4ad;
+  font-variant-numeric: tabular-nums;
+}
+
+.local-launch-panel {
+  background: linear-gradient(135deg, #1b0d04, #090909 65%);
+  border-bottom: 1px solid #3b281d;
+  border-top: 1px solid #3b281d;
+  display: grid;
+  gap: clamp(28px, 5vw, 56px);
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  margin-bottom: clamp(40px, 6vw, 64px);
+  padding: clamp(44px, 7vw, 72px) clamp(22px, 6vw, 78px);
+}
+
+.local-launch-panel h2 {
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: -0.04em;
+  margin: 0 0 16px;
+}
+
+.local-launch-panel p {
+  color: #c8beb7;
+  line-height: 1.7;
+  margin: 0 0 14px;
+  max-width: 620px;
+}
+
+.local-launch-panel-secondary {
+  color: #9c928b;
+  font-size: 14.5px;
+}
+
+.local-launch-panel-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.local-launch-panel-form {
+  background: rgba(17, 17, 17, 0.92);
+  border: 1px solid #3b281d;
+  border-radius: 24px;
+  padding: clamp(24px, 4vw, 34px);
+}
+
+.local-launch-panel-form h3 {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+}
+
+.local-provider-panel {
+  margin: 0 auto clamp(48px, 7vw, 80px);
+  max-width: 1120px;
+  padding: 0 clamp(22px, 6vw, 78px);
+}
+
+.local-provider-panel h2 {
+  font-size: clamp(26px, 3.4vw, 38px);
+  letter-spacing: -0.04em;
+  margin: 0 0 16px;
+}
+
+.local-provider-panel p {
+  color: #bdb4ad;
+  line-height: 1.7;
+  margin: 0 0 14px;
+  max-width: 780px;
+}
+
+.local-provider-panel-note {
+  color: #9c928b;
+  font-size: 14.5px;
+}
+
+.local-provider-panel > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+@media (max-width: 700px) {
+  .local-launch-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.local-launch-panel-form-note {
+  color: #9c928b;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: -6px 0 16px;
+}
+
+.local-coverage-list {
+  color: #9c928b;
+  font-size: 14.5px;
+  line-height: 1.8;
+  margin: 20px 0 0;
+  max-width: 900px;
 }
 
 .job-inspection-item {

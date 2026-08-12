@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccountHeaderState } from "./account-header-state";
 // The banner sits above every page, so it is the first voice a visitor hears.
 // It says the same two things the API-facing constants say — you cannot post a
 // job yet, and signing up books nothing and costs nothing — in the words a
@@ -12,6 +13,12 @@ const LAUNCH_BANNER_MESSAGE =
 
 const LAUNCH_BANNER_DETAIL =
   "Making an account today is free, and it doesn't book anything or charge you.";
+
+// The same message for someone already signed in. Telling a customer who is
+// signed in to go make an account is what makes a public page read as a
+// sign-out, so the banner speaks to the session it can actually see.
+const SIGNED_IN_BANNER_DETAIL =
+  "You're signed in and your spot is saved. Nothing here books anything or charges you.";
 
 // Pages where a banner button would duplicate what the page already offers:
 // the provider pages carry "Apply free" in a sticky header, and /account is
@@ -32,6 +39,7 @@ const PAGES_WITH_THEIR_OWN_CTA = [
 export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
   const pathname = usePathname();
+  const { accountHref, signedIn, state } = useAccountHeaderState();
   const pageHasItsOwnCta = PAGES_WITH_THEIR_OWN_CTA.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
@@ -161,11 +169,17 @@ export function JobPostingPauseNotice() {
             </button>
           </div>
           <span id="tuveloz-launch-pause-details">{LAUNCH_BANNER_MESSAGE}</span>
-          <span>{LAUNCH_BANNER_DETAIL}</span>
+          <span>{signedIn ? SIGNED_IN_BANNER_DETAIL : LAUNCH_BANNER_DETAIL}</span>
         </div>
         {!pageHasItsOwnCta && (
           <nav aria-label="Available Tuveloz account options" className="tuveloz-launch-pause-actions">
-            <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+            {signedIn ? (
+              <Link href={accountHref}>
+                {state === "provider" ? "Go to your provider workspace" : "Go to your account"}
+              </Link>
+            ) : (
+              <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+            )}
           </nav>
         )}
       </aside>

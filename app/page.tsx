@@ -15,7 +15,9 @@ import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
+import { useAccountHeaderState } from "./components/account-header-state";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
+import { SaveMySpotButton } from "./components/save-my-spot-button";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
 import { SiteLanguageButton } from "./components/site-language";
@@ -124,7 +126,11 @@ const providerReasons: Array<{
   {
     icon: "earnings",
     title: "Keep what you earn",
-    text: "Keep 100% of your quoted price. No subscription, no lead fees, no commission carved out of your labor.",
+    // States what is actually true of the payout rather than denying a cut:
+    // nothing is deducted, but the fee IS sized by the provider's price, and the
+    // Customer Agreement says so. See PROVIDER_PAYOUT_DISCLOSURE in
+    // lib/customer-fee.ts, and the guard in tests/customer-fee-consistency.test.mjs.
+    text: "Keep 100% of your quoted price — no subscription, no lead fees, and nothing deducted from your payout. The 5% Customer Service Fee is calculated on your price and charged to the customer on top of it.",
   },
   {
     icon: "open-jobs",
@@ -237,50 +243,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [repeatBookingError, setRepeatBookingError] = useState("");
   const [useSameVehicle, setUseSameVehicle] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const [headerAccountState, setHeaderAccountState] = useState<
-    "checking" | "signed-out" | "customer" | "provider"
-  >("checking");
-  const [headerAccountDestination, setHeaderAccountDestination] = useState("");
+  const { accountHref, accountLabel } = useAccountHeaderState();
   // Control ("A") on first render so server and client match; the real assigned
   // A/B variants are set after mount in the experiment effect below.
   const [heroVariant, setHeroVariant] = useState("A");
   const [pitchVariant, setPitchVariant] = useState("A");
   const [foundingCtaVariant, setFoundingCtaVariant] = useState("A");
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/account", { cache: "no-store", signal: controller.signal })
-      .then(async (response) => {
-        if (response.status === 401) {
-          setHeaderAccountState("signed-out");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Account status unavailable.");
-        }
-
-        const result = (await response.json()) as {
-          role?: "customer" | "provider";
-          destination?: string;
-        };
-
-        if (result.role === "customer" || result.role === "provider") {
-          setHeaderAccountState(result.role);
-          setHeaderAccountDestination(result.destination ?? "");
-          return;
-        }
-
-        setHeaderAccountState("checking");
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setHeaderAccountState("checking");
-      });
-
-    return () => controller.abort();
-  }, []);
   const customerAllowsProviderTravel = selectedCustomerLocations.includes(
     CUSTOMER_SERVICE_LOCATION_OPTIONS[0],
   );
@@ -625,22 +594,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
     }
   }
 
-  const accountHref = headerAccountDestination || (
-    headerAccountState === "customer"
-      ? "/customer"
-      : headerAccountState === "provider"
-        ? "/provider-onboarding"
-        : "/account"
-  );
-  const accountLabel =
-    headerAccountState === "customer"
-      ? "Customer account"
-      : headerAccountState === "provider"
-        ? "Provider account"
-        : headerAccountState === "signed-out"
-          ? "Sign up or sign in"
-          : "Account";
-
   return (
     <main className={`public-site public-view-${view}`}>
       <header className="site-header">
@@ -765,9 +718,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
-                <Link className="button primary" href="/post-job">
-                  Create your free account <span>→</span>
-                </Link>
+                <SaveMySpotButton href="/post-job" />
                 <Link className="button secondary" href="/join">
                   I do car work — apply free <span>→</span>
                 </Link>
@@ -962,9 +913,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
               <li><span aria-hidden="true">✓</span> The last word is always yours</li>
             </ul>
-            <Link className="button primary" href="/post-job">
-              Save my spot — free <span>→</span>
-            </Link>
+            <SaveMySpotButton href="/post-job" />
           </article>
 
           <article className="audience-card audience-provider-card">
@@ -1224,9 +1173,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
             </div>
             <div className="hero-actions">
-              <Link className="button primary" href="/account?role=customer&mode=create">
-                Save my spot — free <span>→</span>
-              </Link>
+              <SaveMySpotButton />
               <Link className="button secondary" href="/join">
                 Apply as a provider
               </Link>
@@ -1694,7 +1641,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.
             </p>
             <div className="provider-benefits">
-              <div><span>01</span><strong>Keep 100% of your quoted price</strong></div>
+              <div><span>01</span><strong>Keep 100% of your quoted price — the 5% Customer Service Fee is charged to the customer on top of it</strong></div>
               <div><span>02</span><strong>Work other platforms too — no exclusivity</strong></div>
               <div><span>03</span><strong>Documents requested only when your exact services require them</strong></div>
             </div>
@@ -2002,7 +1949,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <>
             <h2>Be first in line when Tuveloz opens.</h2>
             <div>
-              <Link className="button lime" href="/post-job">Save my spot — free <span>→</span></Link>
+              <SaveMySpotButton className="button lime" href="/post-job" />
               <Link className="button ghost" href="/join">I do car work — apply free</Link>
             </div>
           </>
@@ -2024,6 +1971,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <Link href="/post-job">For customers</Link>
           <Link href="/join">For providers</Link>
           <Link href="/how-it-works">How it works</Link>
+          <Link href="/providers">Providers</Link>
+          <Link href="/service-areas">Service areas</Link>
+          <Link href="/services">Services</Link>
           <Link href="/safety">Safety &amp; trust</Link>
           <Link href="/faq">FAQ</Link>
           <a href="/payments">Payment policy</a>

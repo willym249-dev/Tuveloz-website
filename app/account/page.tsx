@@ -12,6 +12,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
+import { primeAccountHeaderState } from "../components/account-header-state";
 import { track } from "../../lib/analytics";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
@@ -157,9 +158,14 @@ export default function AccountPage() {
       });
     }
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
+      if (response.status === 401) {
+        primeAccountHeaderState("signed-out");
+        return;
+      }
       if (!response.ok) return;
       const result = (await response.json()) as { role?: Role; destination?: string };
       if (result.role) {
+        primeAccountHeaderState(result.role, result.destination ?? "");
         window.location.replace(destinationAfterSignIn(
           result.destination || (result.role === "customer" ? "/customer" : "/provider-onboarding"),
         ));

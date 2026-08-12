@@ -419,7 +419,7 @@ export default function MyRequestPage() {
               <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
               <div><dt>Provider labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
               <div>
-                <dt>Tuveloz service fee shown at acceptance</dt>
+                <dt>Customer Service Fee shown at acceptance</dt>
                 <dd>${(Number(quote.customerFeeCents) / 100).toFixed(2)}</dd>
               </div>
               <div className="total">
@@ -490,7 +490,7 @@ export default function MyRequestPage() {
                 <strong>Authorize this exact provider and quote?</strong>
                 <p>
                   {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
-                  including the 5% Tuveloz service fee
+                  including the 5% Customer Service Fee
                 </p>
                 {quote.selectionAcceptance ? (
                   <label className="policy-consent">

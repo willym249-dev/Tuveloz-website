@@ -23,6 +23,7 @@ self-contained page.
 | [`PROVIDER_ACTIVATION_RUNBOOK.md`](PROVIDER_ACTIVATION_RUNBOOK.md) | How do we move from "applications open" to providers actually working jobs? The exact sequence and what blocks it. |
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
 | [`operations/email-authentication.md`](operations/email-authentication.md) | What authenticates Tuveloz email, does SPF/DKIM/DMARC align for the sending domain, and in what order should DMARC be tightened? |
+| [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical
@@ -31,6 +32,7 @@ self-contained page.
 | --- | --- |
 | [`EVIDENCE_SCANNER_CALLBACK.md`](EVIDENCE_SCANNER_CALLBACK.md) | How does the malware scanner clear uploaded provider evidence, and what is the callback contract? |
 | [`product/`](product/) | Feature specifications and design decision records added from here on. |
+| [`product/provider-signup-eligibility-first.md`](product/provider-signup-eligibility-first.md) | Why does provider signup ask for service choices before telling an applicant whether they qualify, and what was proposed to fix it? |
 
 ## Legal and compliance
 
@@ -53,6 +55,18 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 | [`../brand/outreach/`](../brand/outreach/) | Provider recruitment kits, the founding provider program, the growth playbook, and the Montgomery County outreach worklist. |
 | [`../brand/ads/`](../brand/ads/) | Ad concepts, production briefs, and finished cuts. |
 | [`../brand/social-media-kit/`](../brand/social-media-kit/) | Profile and cover images for every platform, plus the brand colors and how to regenerate assets. |
+| [`marketing/`](marketing/) | What the "I've Got This" video series is and how each episode is produced, including the Higgsfield runbook. |
+
+## Historical
+
+Kept for the record, not as current instruction. Each says when it was written;
+where one disagrees with a file above, the file above wins.
+
+| Document | What it answers |
+| --- | --- |
+| [`SESSION-HANDOFF.md`](SESSION-HANDOFF.md) | What a second assistant was told about this repo on 2026-08-08, when work was split across parallel sessions. |
+| [`GPT-BRIEF-got-this-ads.md`](GPT-BRIEF-got-this-ads.md) | The scope handed to GPT for the ad series in that split. |
+| [`GPT-BRIEF-signup-improvements.md`](GPT-BRIEF-signup-improvements.md) | The scope handed to GPT for signup copy in that split. |
 
 ## Where the rules actually live
 

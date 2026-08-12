@@ -560,6 +560,13 @@ export function ProviderSignupForm() {
     requiredDocumentsBySelection,
     providerFormIsSpanish,
   );
+  // Step 1 preview count. Two services can require the same document, and step 2
+  // renders it once per group, so the honest number is the distinct documents an
+  // applicant actually uploads — not the sum of the per-service lists. No time
+  // estimate goes with it: the flow has not been measured.
+  const requiredDocumentCount = new Set(
+    requiredDocumentsBySelection.flatMap((entry) => entry.documents.map((doc) => doc.code)),
+  ).size;
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
   // Step 4 ("Sign and submit") is defined but not yet reachable: splitting it
   // off unmounts step 3, which would drop every required field there from
@@ -1082,6 +1089,24 @@ export function ProviderSignupForm() {
                   {PROVIDER_LEVEL_LABELS[level]}
                 </strong>
               ))}
+            </div>
+          )}
+          {requiredDocumentCount > 0 && (
+            <div className="legal-requirement-note" role="status" aria-live="polite">
+              <strong>
+                {providerFormIsSpanish
+                  ? `Para los trabajos que eligió, necesitará ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "documento" : "documentos únicos"
+                    }.`
+                  : `For the jobs you picked, you'll need ${requiredDocumentCount} ${
+                      requiredDocumentCount === 1 ? "document" : "unique documents"
+                    }.`}
+              </strong>
+              <small>
+                {providerFormIsSpanish
+                  ? "No los necesita ahora mismo. El siguiente paso le muestra exactamente cuáles son."
+                  : "You don't need them right now. The next step shows you exactly which ones."}
+              </small>
             </div>
           )}
           <label>
@@ -1808,7 +1833,8 @@ export function ProviderSignupForm() {
               still a legal acknowledgment, and what it means in Spanish is a
               reviewed-copy decision rather than a string swap.
             */}
-            <label className="policy-consent">
+            <div data-no-interface-translation>
+              <label className="policy-consent">
               <input
                 required
                 name="employment-work-authorization-acknowledged"
@@ -1821,11 +1847,12 @@ export function ProviderSignupForm() {
                 compensation, supervision, and personnel records. An independent owner-operator
                 remains responsible for their own business and work authorization obligations.
               </span>
-            </label>
+              </label>
           {/*
             DO NOT translate the two acceptance texts below, and do not add
-            them to the spanishText dictionary (the form sits under
-            data-manual-language, so dictionary entries never reach it anyway).
+            them to the spanishText dictionary. The enclosing panel is marked
+            data-manual-language, and this local wrapper is a second barrier
+            in case a future refactor moves the legal text outside that panel.
 
             On submit, app/api/providers/route.ts records
             providerAgreementEvidenceText() for every acceptance document, and
@@ -1839,25 +1866,26 @@ export function ProviderSignupForm() {
             swap. Spanish drafts already exist in site-language.tsx if that
             work gets picked up.
           */}
-          <label className="policy-consent">
-            <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
-              Review the <a href="/terms">Terms</a>,{" "}
-              <a href="/provider-agreement">Provider Agreement</a>,{" "}
-              <a href="/payments">Payment Policy</a>,{" "}
-              <a href="/marketplace-conduct">Conduct Policy</a>,{" "}
-              <a href="/provisional-provider-policy">Provider Pathway Policy</a>, and{" "}
-              <a href="/provider-safety-policy">Safety and Safe-Work Policy</a>.
-            </span>
-          </label>
-          <label className="policy-consent">
-            <input required name="privacy-acknowledged" type="checkbox" value="yes" />
-            <span>
-              {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
-              Review the <a href="/privacy">Privacy Policy</a>.
-            </span>
-          </label>
+              <label className="policy-consent">
+                <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
+                <span>
+                  {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
+                  Review the <a href="/terms">Terms</a>,{" "}
+                  <a href="/provider-agreement">Provider Agreement</a>,{" "}
+                  <a href="/payments">Payment Policy</a>,{" "}
+                  <a href="/marketplace-conduct">Conduct Policy</a>,{" "}
+                  <a href="/provisional-provider-policy">Provider Pathway Policy</a>, and{" "}
+                  <a href="/provider-safety-policy">Safety and Safe-Work Policy</a>.
+                </span>
+              </label>
+              <label className="policy-consent">
+                <input required name="privacy-acknowledged" type="checkbox" value="yes" />
+                <span>
+                  {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
+                  Review the <a href="/privacy">Privacy Policy</a>.
+                </span>
+              </label>
+            </div>
           </fieldset>
           {applicationChallengeId ? (
             <section

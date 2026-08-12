@@ -3,6 +3,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { primeAccountHeaderState } from "../components/account-header-state";
 import { ConfirmAction } from "../components/confirm-action";
 import { JobAppointmentPanel } from "../components/job-appointment-panel";
 import { JobInspectionPanel } from "../components/job-inspection-panel";
@@ -224,6 +225,9 @@ export default function ProviderJobsPage() {
           window.location.replace("/customer");
           return;
         }
+        // Public pages linked from here share this answer instead of
+        // rediscovering the session and briefly showing signed-out wording.
+        primeAccountHeaderState("provider", "/provider-jobs");
         setSignedIn(true);
         setCanSwitchWorkspace(account.availableRoles?.includes("customer") ?? false);
 
@@ -516,6 +520,9 @@ export default function ProviderJobsPage() {
       if (!response.ok) {
         throw new Error(result.error || "Unable to sign out. Your session is still active.");
       }
+      // The cached answer outlives the page, so it has to be retired with the
+      // session or public pages would keep claiming this person is signed in.
+      primeAccountHeaderState("signed-out");
       window.location.replace("/account?role=provider");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to sign out. Your session is still active.");
@@ -1067,7 +1074,7 @@ export default function ProviderJobsPage() {
                     <div><dt>Labor-only amount</dt><dd>${(Number(quote.laborPriceCents) / 100).toFixed(2)}</dd></div>
                     <div><dt>Parts charged through Tuveloz</dt><dd>$0.00</dd></div>
                     <div className="total"><dt>Your labor subtotal</dt><dd>${(Number(quote.priceCents) / 100).toFixed(2)}</dd></div>
-                    <div><dt>Customer total with Tuveloz fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
+                    <div><dt>Customer total including Customer Service Fee</dt><dd>${(Number(quote.customerTotalCents) / 100).toFixed(2)}</dd></div>
                   </dl>
                   <p><strong>Availability:</strong> {quote.availability}</p>
                   <blockquote>{quote.message}</blockquote>

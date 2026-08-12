@@ -247,6 +247,14 @@ test("build provides secure password sign-in with verified email setup and a cod
     new URL("../app/page.tsx", import.meta.url),
     "utf8",
   );
+  const accountHeaderStateSource = await readFile(
+    new URL("../app/components/account-header-state.ts", import.meta.url),
+    "utf8",
+  );
+  const publicChromeSource = await readFile(
+    new URL("../app/components/public-chrome.tsx", import.meta.url),
+    "utf8",
+  );
   const authSource = await readFile(
     new URL("../lib/account-auth.ts", import.meta.url),
     "utf8",
@@ -276,10 +284,15 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Email codes expire in 10 minutes"));
   assert.ok(contents.includes("Save this private link."));
   assert.ok(homeSource.includes("header-sign-in"));
-  assert.ok(homeSource.includes('fetch("/api/account"'));
-  assert.ok(homeSource.includes('"signed-out"'));
-  assert.ok(homeSource.includes('"Customer account"'));
-  assert.ok(homeSource.includes('"Provider account"'));
+  assert.ok(homeSource.includes("useAccountHeaderState()"));
+  assert.ok(accountHeaderStateSource.includes('fetch("/api/account"'));
+  assert.ok(accountHeaderStateSource.includes('"signed-out"'));
+  assert.ok(accountHeaderStateSource.includes('"Customer account"'));
+  assert.ok(accountHeaderStateSource.includes('"Provider account"'));
+  // Every public page header resolves the live session too, so a signed-in
+  // visitor is never shown signed-out wording on a public page.
+  assert.ok(publicChromeSource.includes("useAccountHeaderState()"));
+  assert.ok(publicChromeSource.includes("signedIn ? accountLabel"));
   assert.ok(homeSource.includes('href={accountHref}'));
   assert.ok(homeSource.includes("<Link href={accountHref}>{accountLabel}</Link>"));
   assert.ok(authSource.includes('"Path=/"'));
@@ -608,10 +621,11 @@ test("build preserves the proposed 5 percent test configuration and fee snapshot
 
   assert.ok(contents.includes("Provider quote subtotal"));
   assert.ok(contents.includes("Customer total"));
-  assert.ok(quotePaymentSource.includes("configured Tuveloz fee (currently 5% in test)"));
+  assert.ok(quotePaymentSource.includes("configured Customer Service Fee (currently 5% in test)"));
   assert.ok(paymentPolicySource.includes("configuration proposes a customer service fee equal to 5%"));
   assert.ok(paymentPolicySource.includes("remain subject to documented compliance with applicable law and final"));
-  assert.ok(contents.includes("Accepted service fees"));
+  // Renamed to the one canonical fee name — see tests/customer-fee-consistency.test.mjs.
+  assert.ok(contents.includes("Accepted Customer Service Fees"));
   assert.ok(feeSource.includes("CUSTOMER_SERVICE_FEE_RATE_BPS = 500"));
   assert.ok(feeSource.includes("Math.round((safeQuoteCents * safeRateBps) / 10_000)"));
   assert.ok(migration.includes("customer_fee_rate_bps"));
@@ -816,7 +830,7 @@ test("customer payment history is private and uses stored payment facts", async 
   assert.ok(customerSource.includes("Customer account:"));
   assert.ok(customerSource.includes("account.payments.map"));
   assert.ok(customerSource.includes("Provider subtotal:"));
-  assert.ok(customerSource.includes("Tuveloz fee:"));
+  assert.ok(customerSource.includes("Customer Service Fee:"));
   assert.ok(customerSource.includes("Refund recorded:"));
   assert.ok(customerSource.includes("Dispute status:"));
   assert.ok(customerSource.includes('href="/payments"'));
@@ -1365,4 +1379,64 @@ test("automatic provider alerts, security notifications, and idle session expiry
   assert.ok(notifications.includes("/admin"));
   assert.ok(schema.includes("email_notification_outbox"));
   assert.ok(migration.includes("email_notification_outbox_event_key_unique"));
+});
+
+test("a signed-in visitor is never shown sign-up wording on a public page", async () => {
+  const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  const [headerState, publicChrome, saveMySpot, returnNote, banner, landerPage, customerPage, providerPage, accountPage, spanish] =
+    await Promise.all([
+      read("app/components/account-header-state.ts"),
+      read("app/components/public-chrome.tsx"),
+      read("app/components/save-my-spot-button.tsx"),
+      read("app/components/signed-in-return-note.tsx"),
+      read("app/components/job-posting-pause-notice.tsx"),
+      read("app/post-job/page.tsx"),
+      read("app/customer/page.tsx"),
+      read("app/provider-jobs/page.tsx"),
+      read("app/account/page.tsx"),
+      read("app/components/site-language.tsx"),
+    ]);
+
+  // Every public surface that used to hardcode signed-out wording now asks who
+  // is looking. A signed-in customer opening the customer launch status page
+  // from their workspace was shown "Sign in" and "Save my spot — free", which
+  // reads as having been signed out.
+  for (const source of [publicChrome, saveMySpot, returnNote, banner]) {
+    assert.ok(source.includes("useAccountHeaderState()"));
+  }
+  assert.ok(publicChrome.includes("signedIn ? accountLabel"));
+  assert.ok(saveMySpot.includes('"Save my spot — free"'));
+  assert.ok(saveMySpot.includes('"Go to your account"'));
+  assert.ok(banner.includes("SIGNED_IN_BANNER_DETAIL"));
+
+  // The launch status page is the exact page reached from the workspace: no
+  // hardcoded account-creation call to action may remain on it.
+  assert.ok(!landerPage.includes("Save my spot — free"));
+  assert.ok(landerPage.includes("<SaveMySpotButton"));
+  assert.ok(landerPage.includes("<SignedInReturnNote />"));
+
+  // One shared lookup, so a page with a header, a banner, and three calls to
+  // action makes a single request instead of one per component.
+  assert.ok(headerState.includes("useSyncExternalStore"));
+  assert.ok(headerState.includes("if (inFlight) return inFlight"));
+
+  // The cached answer must be established on sign-in and retired on sign-out,
+  // or a public page would keep claiming a session that has ended.
+  assert.ok(customerPage.includes('primeAccountHeaderState("customer"'));
+  assert.ok(providerPage.includes('primeAccountHeaderState("provider"'));
+  assert.ok(accountPage.includes('primeAccountHeaderState("signed-out")'));
+  for (const source of [customerPage, providerPage]) {
+    const signOutBlock = source.slice(source.indexOf("async function signOut()"));
+    assert.ok(signOutBlock.includes('primeAccountHeaderState("signed-out")'));
+  }
+
+  // Spanish pages must not fall back to English for the signed-in wording.
+  for (const phrase of [
+    '"My workspace":',
+    '"Go to your account":',
+    '"Go to your provider workspace":',
+    '"Back to your account →":',
+  ]) {
+    assert.ok(spanish.includes(phrase), phrase);
+  }
 });

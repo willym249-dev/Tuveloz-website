@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "FAQ",
   description:
     "Answers to common questions about Tuveloz — how the marketplace works, fees, provider onboarding, and the customer launch in Montgomery County, MD.",
+  alternates: {
+    canonical: "/faq",
+  },
 };
 
 export default function FaqPage() {

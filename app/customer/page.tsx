@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { primeAccountHeaderState } from "../components/account-header-state";
 import { CustomerAccountTools } from "../components/customer-account-tools";
 import { CustomerPaymentMethods } from "../components/customer-payment-methods";
 import { JobMessages } from "../components/job-messages";
@@ -203,6 +204,9 @@ export default function CustomerPage() {
         window.location.replace("/provider-jobs");
         return;
       }
+      // Public pages linked from here share this answer, so the launch status
+      // page never shows a signed-in customer the signed-out wording.
+      primeAccountHeaderState("customer", "/customer");
       setAccount(result);
     }).catch((reason) => setError(reason.message || "Unable to load your customer workspace."));
   }, []);
@@ -210,6 +214,9 @@ export default function CustomerPage() {
   async function signOut() {
     setBusy(true);
     await fetch("/api/auth/logout", { method: "POST" });
+    // The cached answer outlives the page, so it has to be retired with the
+    // session or public pages would keep claiming this person is signed in.
+    primeAccountHeaderState("signed-out");
     window.location.replace("/account?role=customer");
   }
 
@@ -354,7 +361,7 @@ export default function CustomerPage() {
                             <small>
                               Provider subtotal: {formatMoney(payment.providerAmountCents, payment.currency)}
                               {" · "}
-                              Tuveloz fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
+                              Customer Service Fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
                             </small>
                             {payment.refundAmountCents > 0 && (
                               <small>

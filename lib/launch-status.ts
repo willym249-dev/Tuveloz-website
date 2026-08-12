@@ -1,3 +1,11 @@
+/**
+ * TUVELOZ is in provider-first onboarding. Customer and provider accounts and
+ * provider applications are open; customer service requests, quotes, bookings,
+ * payments, and job operations stay closed until launch.
+ *
+ * This switch governs marketplace transactions only. It must never be read as
+ * a gate on account creation or on a provider submitting an application.
+ */
 export const CUSTOMER_JOB_POSTING_PAUSED = true;
 
 export const CUSTOMER_JOB_POSTING_PAUSED_MESSAGE =
