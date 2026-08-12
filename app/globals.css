@@ -8908,6 +8908,19 @@ footer > p,
 }
 
 /*
+  Delivery expectations under a 6-digit entry field. Slightly larger than the
+  password guidance above: this one has to be read before the visitor decides
+  whether to request another code, not skimmed after the fact.
+*/
+.account-code-hint {
+  color: #9badbb;
+  display: block;
+  font-size: 11px;
+  line-height: 1.55;
+  margin-top: -2px;
+}
+
+/*
   Pre-launch value proposition, customer create mode only. Sits between the
   mode tabs and the form so it reads as the reason to fill the form in.
 */

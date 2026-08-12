@@ -36,6 +36,11 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-08-24 | Name a person to monitor `dmarc@tuveloz.com` and confirm the mailbox actually receives aggregate reports. Until someone reads it, the `rua` address is decorative and DMARC stays at `p=none` | hello@tuveloz.com | open |
+| 2026-09-14 | Rotate the DKIM key for `updates.tuveloz.com` to 2048-bit; Resend issued the current 1024-bit default | hello@tuveloz.com | open |
+| 2026-09-21 | Review a full month of DMARC aggregate reports and inventory every legitimate sender before any enforcement change | hello@tuveloz.com | open |
+| 2026-10-19 | Move DMARC to `p=quarantine` — only after the report review above confirms every legitimate sender aligns. Enforcing before that inventory sends real mail to spam | hello@tuveloz.com | open |
+| 2026-09-21 | Decide whether staging should be able to send email at all. It cannot today by design, so no end-to-end email test is possible before merge. Enabling it needs a **separate** Resend key, never production's. The date is a review checkpoint alongside the DMARC report review, not a commitment to enable it | hello@tuveloz.com | open |
 | 2026-08-09 | **(external)** Epidemic Sound license window has closed. Ad 01's track "On My Way (Instrumental Version)" was downloaded under a canceled Pro plan, so it is not licensed for publication as things stand. Do not publish Ad 01 until the subscription is reactivated or the track is replaced. See `brand/ads/HANDOFF.md` | hello@tuveloz.com | overdue |
 | 2026-08-14 | Reword the homepage founding banner. It promises "first pick of jobs", which the founding program refuses in writing and `lib/founding-cohort.ts` bars in code. Must land before any paid provider traffic points at it | hello@tuveloz.com | open |
 | 2026-08-07 | Merge the documentation branch (PR #98) into `main` so the structure is reachable from a fresh clone | hello@tuveloz.com | done |
