@@ -46,6 +46,22 @@ import { useSiteLanguage } from "./site-language";
 import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
+import { normalizeReferralCode } from "../../lib/referral-code";
+import {
+  PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
+  PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES,
+  SMS_MARKETING_CONSENT_TEXT_EN,
+  SMS_MARKETING_CONSENT_TEXT_ES,
+} from "../../lib/phone-consent-text";
+
+/**
+ * A share code arriving as ?ref= on the join link. Read at submit time rather
+ * than stored, so a malformed or absent value simply attributes nothing.
+ */
+function referralCode() {
+  if (typeof window === "undefined") return "";
+  return normalizeReferralCode(new URL(window.location.href).searchParams.get("ref"));
+}
 
 /**
  * New provider signups only ever create independent-contractor accounts.
@@ -754,6 +770,13 @@ export function ProviderSignupForm() {
             ...pendingApplicationPayload,
             challengeId: applicationChallengeId,
             verificationCode: applicationVerificationCode,
+            // Attribution only. Never part of the verified application payload
+            // or its hash — the server records it after the application is
+            // stored, and it changes nothing about review or eligibility.
+            referralCode: referralCode(),
+            // Promotional texts only. Reaching an applicant about their own
+            // application is transactional and never depends on this.
+            smsMarketingConsent: values["provider-sms-marketing-consent"] === "yes",
           }),
         });
         const result = (await response.json()) as { error?: string };
@@ -1504,6 +1527,19 @@ export function ProviderSignupForm() {
                 ? "Solo si prefiere que le contactemos por teléfono. El correo es lo único que se requiere."
                 : "Only if you'd rather we reach you by phone. Email is all that's required."}
             </small>
+            <small>
+              {providerFormIsSpanish
+                ? PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES
+                : PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN}
+            </small>
+          </label>
+          <label className="provider-sms-consent">
+            <input name="provider-sms-marketing-consent" type="checkbox" value="yes" />
+            <span>
+              {providerFormIsSpanish
+                ? SMS_MARKETING_CONSENT_TEXT_ES
+                : SMS_MARKETING_CONSENT_TEXT_EN}
+            </span>
           </label>
           {/*
             Everything above is about the person; everything below is about the

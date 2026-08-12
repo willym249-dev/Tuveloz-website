@@ -10457,6 +10457,280 @@ footer > p,
   justify-content: center;
 }
 
+
+
+
+.fleet-inquiry-panel {
+  grid-column: 1 / -1;
+}
+
+.fleet-inquiry-form {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 18px;
+}
+
+.fleet-inquiry-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  gap: 7px;
+}
+
+.fleet-inquiry-form label > span small {
+  color: #a79284;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.fleet-inquiry-form input,
+.fleet-inquiry-form select,
+.fleet-inquiry-form textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #3b281d;
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+  padding: 11px 13px;
+  width: 100%;
+}
+
+.fleet-inquiry-form input:focus-visible,
+.fleet-inquiry-form select:focus-visible,
+.fleet-inquiry-form textarea:focus-visible {
+  border-color: #b4703c;
+  outline: 2px solid rgba(180, 112, 60, 0.35);
+  outline-offset: 1px;
+}
+
+.fleet-inquiry-form textarea {
+  resize: vertical;
+}
+
+.fleet-inquiry-wide,
+.fleet-inquiry-note,
+.fleet-inquiry-form .form-error,
+.fleet-inquiry-form > button {
+  grid-column: 1 / -1;
+}
+
+.fleet-inquiry-note {
+  color: #a79284;
+  font-size: 14px;
+  margin: 0;
+}
+
+.fleet-field-note {
+  color: #a79284;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.request-sms-consent,
+.provider-sms-consent,
+.fleet-sms-consent {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  gap: 11px;
+  grid-column: 1 / -1;
+}
+
+.request-sms-consent input[type="checkbox"],
+.provider-sms-consent input[type="checkbox"],
+.fleet-sms-consent input[type="checkbox"] {
+  flex: 0 0 auto;
+  height: 19px;
+  margin-top: 2px;
+  width: 19px;
+}
+
+.request-sms-consent > span,
+.provider-sms-consent > span,
+.fleet-sms-consent > span {
+  color: #a79284;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fleet-form-done {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #3b281d;
+  border-radius: 14px;
+  margin-top: 18px;
+  padding: 20px 22px;
+}
+
+.fleet-form-done strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.fleet-form-done p {
+  color: #a79284;
+  margin: 0;
+}
+
+.customer-vehicle-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+}
+
+.customer-vehicle-list > li {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2f2118;
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+
+.customer-vehicle-list > li > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.customer-vehicle-list small {
+  color: #a79284;
+  font-size: 13px;
+}
+
+.customer-vehicle-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.customer-vehicle-actions button {
+  background: transparent;
+  border: 1px solid #3b281d;
+  border-radius: 999px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 14px;
+}
+
+.customer-vehicle-actions button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.customer-vehicle-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.customer-vehicle-form {
+  border-top: 1px solid #2f2118;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 8px;
+  padding-top: 20px;
+}
+
+.customer-vehicle-form h3,
+.customer-vehicle-wide,
+.customer-vehicle-form-actions,
+.customer-vehicle-form > small {
+  grid-column: 1 / -1;
+}
+
+.customer-vehicle-form h3 {
+  margin: 0;
+}
+
+.customer-vehicle-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 15px;
+  gap: 6px;
+}
+
+.customer-vehicle-form label > span small {
+  color: #a79284;
+  font-size: 13px;
+}
+
+.customer-vehicle-form input,
+.customer-vehicle-form textarea {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #3b281d;
+  border-radius: 10px;
+  color: inherit;
+  font: inherit;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.customer-vehicle-form textarea {
+  resize: vertical;
+}
+
+.customer-vehicle-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.referral-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #2f2118;
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+
+.referral-panel h3 {
+  margin: 6px 0 10px;
+}
+
+.referral-panel > p {
+  color: #a79284;
+  margin: 0 0 16px;
+}
+
+.referral-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.referral-link-row input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #3b281d;
+  border-radius: 10px;
+  color: inherit;
+  flex: 1 1 260px;
+  font: inherit;
+  font-size: 15px;
+  padding: 11px 13px;
+}
+
+.referral-count {
+  font-size: 15px;
+  margin: 16px 0 0;
+}
+
+.referral-count strong {
+  font-size: 22px;
+  margin-right: 6px;
+}
+
+.referral-disclaimer {
+  border-top: 1px solid #2f2118;
+  color: #a79284;
+  font-size: 14px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+}
+
 @media (min-width: 1051px) and (max-width: 1380px) {
   .public-site .site-header,
   .public-info-shell .site-header {
