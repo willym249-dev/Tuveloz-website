@@ -26,6 +26,7 @@ self-contained page.
 | [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
 | [`operations/evidence-scanner-activation.md`](operations/evidence-scanner-activation.md) | How do I turn on the evidence malware scanner, and how do I confirm it actually works rather than just reporting success? |
 | [`operations/security-and-data-incident-plan.md`](operations/security-and-data-incident-plan.md) | What do I do in the first hour of a data exposure, account takeover, or vendor breach — and what must not be deleted while doing it? |
+| [`operations/vehicle-incident-claims-and-stop-work-plan.md`](operations/vehicle-incident-claims-and-stop-work-plan.md) | What do I do when someone is hurt or a vehicle is damaged on a job — how does work stop, payment hold, and evidence get preserved without directing the repair? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical

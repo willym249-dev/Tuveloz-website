@@ -122,9 +122,15 @@ disabled, which is enforced rather than promised.
 
 **`vehicle_incident_claims_and_stop_work`** — *safety and claims, required*
 Also needs a legal source and the owner.
-*Existing:* safety gates and stop-work exist in the service policy layer.
-The incident plan itself is unwritten — same gap as
-`security_and_data_incident_plan`.
+*Existing:* [`../operations/vehicle-incident-claims-and-stop-work-plan.md`](../operations/vehicle-incident-claims-and-stop-work-plan.md),
+drafted 2026-08-11, plus the `job_incidents` table — which already records the
+stop time, injury and damage flags, evidence references, insurer notification,
+and holds payment by default (`holdPayments` defaults to `"yes"`). **[OWNER]
+items blocking the gate:** the carrier, broker, and out-of-hours claims number;
+the policy's notification deadline; which incidents must be tendered; and
+whether provider coverage tenders first. **The gate also requires the plan to be
+tested, not only written** — a rehearsal against test records, which is safe to
+run now.
 
 ### Payment processor
 
