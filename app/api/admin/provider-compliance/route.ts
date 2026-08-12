@@ -28,6 +28,15 @@ import {
   notifyProviderEvidenceScanBlocked,
 } from "../../../../lib/provider-compliance-notifications";
 import { getProviderEvidence } from "../../../../lib/provider-evidence";
+import { askCouncil, councilConfigured } from "../../../../lib/ai-council-runtime";
+import {
+  documentIsReadable,
+  documentNameCheck,
+  documentReadPrompt,
+  DOCUMENT_READER_SYSTEM_PROMPT,
+  parseDocumentRead,
+  toBase64,
+} from "../../../../lib/evidence-document-reader";
 import {
   prescreenEvidence,
   type EvidencePrescreen,
@@ -1302,6 +1311,126 @@ export async function POST(request: Request) {
         flaggedForReview,
         readyForAuthenticity,
       });
+    }
+
+    if (action === "read-evidence-document") {
+      // Transcribes what is printed on a submitted document so the owner
+      // confirms a filled-in form instead of typing one. It records a reading,
+      // never a decision: nothing here writes a review status, and accepting
+      // still requires the owner's external authenticity check below.
+      const evidenceId = clean(body.evidenceId, 120);
+      if (!evidenceId) {
+        return Response.json({ error: "Choose an evidence item to read." }, { status: 400 });
+      }
+      if (!councilConfigured()) {
+        return Response.json(
+          { error: "Automatic document reading is not configured on this deployment." },
+          { status: 503 },
+        );
+      }
+      const [evidence] = await db.select().from(providerEvidenceSubmissions)
+        .where(eq(providerEvidenceSubmissions.id, evidenceId)).limit(1);
+      if (!evidence || (providerId && evidence.providerId !== providerId)) {
+        return Response.json({ error: "Evidence submission not found." }, { status: 404 });
+      }
+      if (!evidence.storageKey) {
+        return Response.json(
+          { error: "This submission is a structured attestation with no document to read." },
+          { status: 400 },
+        );
+      }
+
+      // A file whose malware scan is not clean is never opened, and that rule
+      // does not get an exception because a machine is the one reading it.
+      const [scan] = await db.select().from(evidenceFileScans)
+        .where(eq(evidenceFileScans.evidenceSubmissionId, evidence.id))
+        .orderBy(desc(evidenceFileScans.requestedAt))
+        .limit(1);
+      if (scan?.status !== "clean") {
+        return Response.json(
+          { error: "This file cannot be opened until its malware scan reports clean." },
+          { status: 409 },
+        );
+      }
+
+      const object = await getProviderEvidence(evidence.storageKey);
+      if (!object) {
+        return Response.json({ error: "The stored document could not be opened." }, { status: 404 });
+      }
+      const bytes = await new Response(object.body).arrayBuffer();
+      const mediaType = object.httpMetadata?.contentType ?? "";
+      const readable = documentIsReadable({ mediaType, byteLength: bytes.byteLength });
+      if (!readable.ok) {
+        return Response.json({ error: readable.reason }, { status: 400 });
+      }
+
+      const [provider] = await db.select().from(providerApplications)
+        .where(eq(providerApplications.id, evidence.providerId)).limit(1);
+      const [publicProfile] = await db.select({ businessName: providerProfiles.businessName })
+        .from(providerProfiles)
+        .where(eq(providerProfiles.providerId, evidence.providerId))
+        .limit(1);
+      const applicationBusinessName = publicProfile?.businessName ?? provider?.name ?? "";
+      const definition = evidence.requirementKey in PROVIDER_POLICY_MATRIX.evidence_types
+        ? PROVIDER_POLICY_MATRIX.evidence_types[evidence.requirementKey as EvidenceRequirementCode]
+        : undefined;
+
+      let raw: string;
+      let model = "";
+      try {
+        const result = await askCouncil({
+          question: documentReadPrompt({
+            requirementLabel: definition?.label ?? evidence.requirementKey,
+            applicationBusinessName,
+          }),
+          system: DOCUMENT_READER_SYSTEM_PROMPT,
+          mode: "quick",
+          maxTokens: 700,
+          attachments: [{ mediaType, data: toBase64(bytes) }],
+        });
+        raw = result.answer;
+        model = result.consulted[0]?.model ?? "";
+      } catch (error) {
+        console.error("Unable to read an evidence document", error);
+        return Response.json(
+          { error: "The document could not be read automatically. Read it yourself and fill the form in." },
+          { status: 502 },
+        );
+      }
+
+      const { fields, unreadable } = parseDocumentRead(raw);
+      // Recorded because a private document left Tuveloz. The transcription
+      // itself is deliberately not stored: it is a draft for the form below,
+      // and keeping it would create a second, unreviewed copy of the
+      // document's contents with none of the original's protections.
+      await recordProviderAuditEvent({
+        providerId: evidence.providerId,
+        eventType: "evidence_document_read",
+        entityType: "provider_evidence_submission",
+        entityId: evidence.id,
+        actorType: "owner",
+        actorId,
+        outcome: "read_only_no_decision",
+        reasonCodes: ["automated_transcription"],
+        metadata: {
+          requirementKey: evidence.requirementKey,
+          model,
+          unreadableCount: unreadable.length,
+        },
+      });
+
+      return Response.json({
+        ok: true,
+        read: {
+          fields,
+          unreadable,
+          nameCheck: documentNameCheck(fields.businessName, applicationBusinessName),
+          model,
+          readAt: new Date().toISOString(),
+        },
+        note: "This is a reading of the document, not a verification of it. Confirm every value "
+          + "against the issuing authority before accepting.",
+      }, { headers: { "cache-control": "no-store" } });
     }
 
     if (action === "initialize-provider-pathway") {
