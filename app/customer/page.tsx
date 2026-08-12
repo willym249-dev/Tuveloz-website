@@ -354,7 +354,7 @@ export default function CustomerPage() {
                             <small>
                               Provider subtotal: {formatMoney(payment.providerAmountCents, payment.currency)}
                               {" · "}
-                              Tuveloz fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
+                              Customer Service Fee: {formatMoney(payment.applicationFeeCents, payment.currency)}
                             </small>
                             {payment.refundAmountCents > 0 && (
                               <small>

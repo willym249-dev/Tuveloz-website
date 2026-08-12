@@ -166,6 +166,7 @@ export async function GET(request: Request) {
       service: jobReviews.service,
       rating: jobReviews.rating,
       comment: jobReviews.comment,
+      providerReply: jobReviews.providerReply,
     }).from(jobReviews)
       .where(and(
         eq(jobReviews.providerEmail, result.provider.email),

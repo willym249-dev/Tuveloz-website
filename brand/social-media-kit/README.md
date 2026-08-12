@@ -46,7 +46,7 @@ cropped, or exported by hand.
 |---|---|
 | `brand-badge.png` | The logo in the header and footer of every page, via `<BrandMark>` |
 | `favicon.ico` | Browser tab (16/32/48) |
-| `favicon.svg`, `tuveloz-favicon-v2.svg` | Browser tab, vector |
+| `favicon.svg`, `tuveloz-favicon-v3.svg` | Browser tab and Google result, vector |
 | `apple-touch-icon.png` | iOS home screen |
 | `icon-192.png`, `icon-512.png` | Android / PWA install, listed in `manifest.webmanifest` |
 | `og-image.png` | Link previews when the site is shared |

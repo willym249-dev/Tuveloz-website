@@ -112,7 +112,7 @@ test("every installed icon points at the versioned master artwork", async () => 
 
   for (const asset of [
     "/favicon.ico",
-    "/tuveloz-favicon-v2.svg",
+    "/tuveloz-favicon-v3.svg",
     "/apple-touch-icon.png",
     "/og-image.png",
     "/icon-512.png",
@@ -122,7 +122,7 @@ test("every installed icon points at the versioned master artwork", async () => 
 
   // Cache-busting stays in lockstep so a logo change cannot ship half-applied.
   const versions = new Set(
-    [...layout.matchAll(/\/(?:favicon|tuveloz-favicon-v2|apple-touch-icon|og-image|icon-\d+)[^"?]*\?v=(\d+)/g)]
+    [...layout.matchAll(/\/(?:favicon|apple-touch-icon|og-image|icon-\d+)[^"?]*\?v=(\d+)/g)]
       .map((match) => match[1]),
   );
   assert.equal(versions.size, 1, `icon cache versions disagree: ${[...versions]}`);

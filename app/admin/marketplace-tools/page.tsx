@@ -3,11 +3,13 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../../components/tuveloz-icons";
+import { optionalCertificateCategoryLabel } from "../../../lib/optional-certificates";
 
 type Credential = {
   id: string;
   providerName: string;
   providerEmail: string;
+  category: string;
   credentialName: string;
   issuingAuthority: string;
   credentialIdentifier: string;
@@ -151,6 +153,9 @@ export default function AdminMarketplaceToolsPage() {
                         <strong>{credential.credentialName} · {credential.providerName}</strong>
                         <small>{credential.providerEmail}</small>
                         <small>
+                          {optionalCertificateCategoryLabel(credential.category)
+                            ? `${optionalCertificateCategoryLabel(credential.category)} · `
+                            : ""}
                           {credential.issuingAuthority || "No issuing authority entered"}
                           {credential.jurisdiction ? ` · ${credential.jurisdiction}` : ""}
                           {credential.expiresAt ? ` · expires ${credential.expiresAt}` : ""}

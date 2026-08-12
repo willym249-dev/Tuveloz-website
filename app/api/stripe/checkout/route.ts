@@ -627,8 +627,8 @@ export async function POST(request: Request) {
             currency,
             unit_amount: applicationFeeCents,
             product_data: {
-              name: "Tuveloz customer service fee",
-              description: "5% marketplace service fee",
+              name: "Customer Service Fee",
+              description: "5% Customer Service Fee, calculated on the provider's price",
             },
           },
           quantity: 1,
@@ -866,8 +866,8 @@ export async function POST(request: Request) {
             currency,
             unit_amount: applicationFeeCents,
             product_data: {
-              name: "Tuveloz customer service fee",
-              description: `${scopePrice.customerFeeRateBps / 100}% marketplace service fee`,
+              name: "Customer Service Fee",
+              description: `${scopePrice.customerFeeRateBps / 100}% Customer Service Fee, calculated on the provider's price`,
             },
           },
           quantity: 1,

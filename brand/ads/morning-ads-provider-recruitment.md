@@ -268,8 +268,9 @@ ones that bite hardest in ad copy specifically:
 
 - Never imply customers can book or pay today. Every provider unit carries the
   pre-launch line in the caption if not on the card.
-- **Never say "keep 95%."** Providers keep 100% of their quoted price; the 5%
-  service fee is customer-side.
+- **Never state the provider share as anything but 100%.** Providers keep 100%
+  of their quoted price; the 5% Customer Service Fee is customer-side and is
+  added on top, never deducted.
 - Never promise income, job volume, or a number of jobs. No unit here states or
   implies earnings — check any new one against this before it ships.
 - Never promise founding-provider perks beyond what `/founding-providers`

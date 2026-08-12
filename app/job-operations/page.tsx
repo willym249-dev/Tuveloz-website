@@ -1,6 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { PolicyPage } from "../components/policy-page";
 import { JobOperationsConsole } from "./job-operations-console";
+
+export const metadata: Metadata = {
+  title: "Change, Cancellation, Incident, Invoice, and Payment Review",
+  description:
+    "The job-operations workflow Tuveloz is building for review before any real customer job or payment is enabled — changes, cancellations, incidents, invoices, and Maryland repair records.",
+  alternates: {
+    canonical: "/job-operations",
+  },
+};
 
 export default function JobOperationsPage() {
   return (

@@ -12,6 +12,7 @@ import {
   stripePayments,
 } from "../../../../db/schema";
 import { CUSTOMER_SERVICE_FEE_PERCENT } from "../../../../lib/customer-fee";
+import { MAX_DELIVERY_ATTEMPTS as MAX_EMAIL_DELIVERY_ATTEMPTS } from "../../../../lib/email-notifications";
 import { isVerifiedOwnerRequest } from "../../../../lib/owner-auth";
 import {
   CUSTOMER_AGREEMENT_VERSION,
@@ -45,6 +46,7 @@ type CustomerNotificationRow = {
 type CustomerEmailRow = {
   recipientEmail: string;
   status: string;
+  attempts: number;
 };
 
 type CustomerRequestSummary = {
@@ -67,6 +69,10 @@ type EmailCountSummary = {
   sent: number;
   pending: number;
   failed: number;
+  // Failed rows that have used every delivery attempt. They are excluded from
+  // all future retry batches, so unlike `failed` this number never recovers on
+  // its own and the recipient never got the message.
+  exhausted: number;
 };
 
 function normalizedEmail(value: string) {
@@ -144,7 +150,7 @@ function emailSummaryFor(
   const key = normalizedEmail(email);
   const current = summaries.get(key);
   if (current) return current;
-  const created = { sent: 0, pending: 0, failed: 0 };
+  const created = { sent: 0, pending: 0, failed: 0, exhausted: 0 };
   summaries.set(key, created);
   return created;
 }
@@ -253,7 +259,7 @@ export async function GET(request: Request) {
           LIMIT 10000`,
       ).all<CustomerNotificationRow>(),
       env.DB.prepare(
-        `SELECT recipient_email AS recipientEmail, status
+        `SELECT recipient_email AS recipientEmail, status, attempts
            FROM email_notification_outbox
           LIMIT 10000`,
       ).all<CustomerEmailRow>(),
@@ -341,6 +347,11 @@ export async function GET(request: Request) {
         summary.sent += 1;
       } else if (emailRecord.status === "failed") {
         summary.failed += 1;
+        // Counted alongside `failed`, not instead of it: the row is still a
+        // failure, but it is one that will never be retried again.
+        if (emailRecord.attempts >= MAX_EMAIL_DELIVERY_ATTEMPTS) {
+          summary.exhausted += 1;
+        }
       } else {
         summary.pending += 1;
       }

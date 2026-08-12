@@ -13,50 +13,475 @@ entries to catch up. Write one before you finish.
 
 ---
 
-## 2026-08-07 — The documentation landed, and the deadline check was inert
+## 2026-08-11 — Check open pull requests before starting anything small (#147)
 
-**What happened.** Merged PR #98 into `main` after refreshing it — its CI had
-been *cancelled* rather than passed and the branch was several merges behind, so
-it was updated from `main` first and merged on green. `CLAUDE.md`, the filing
-guide, this log, the records register, and the deadline automation are now
-reachable from a fresh clone. Opened PR #104 for `brand/SALES_PITCH.md`, which
-had been finished and sitting on a branch with **no pull request at all**.
+**New rule in `CLAUDE.md`, next to the existing "read the log first".** The log
+records finished work. Work in flight lives in open pull requests, and nothing
+sent anyone there — so run `gh pr list` and skim recent `main` before starting.
 
-**The thing worth knowing.** Every row in `OPEN-ITEMS.md` had `—` in the `Due`
-column, and the checker skips undated rows by design. So the automation that
-just landed would have run on Monday, found nothing, and reported all clear —
-coverage that looks real and isn't. Dates are now on eleven rows and the checker
-was run against the real file to confirm it reports them.
+**Why it earned a rule.** Sessions run in parallel and cannot see each other,
+and the collisions are not random: the small, obvious, self-contained job is the
+one two sessions pick independently. The big messy ones never collide. Three
+times in one afternoon — #137/#138 (the same eight-line doc block, and **#138
+merged with an entirely empty diff** because git read the byte-identical
+addition as agreement rather than a conflict), #145/#146 (the same deletion
+entry, reconciled by hand), and the tag audit itself, run twice in parallel.
 
-**Decisions made.**
+All three were minutes to hours apart, so the check would have caught every one.
+If someone is already on it, extend their branch rather than opening a second
+pull request.
 
-- **External deadlines are now marked as such** and separated from self-set
-  targets in the file's preamble. Missing a target costs a re-plan; missing an
-  external one costs money or blocks a launch gate, and the table gave no way to
-  tell them apart.
-- **The dates on the operational rows are self-set targets, proposed rather than
-  agreed**, chosen so the check has something to bite on. Move them
-  deliberately; they were not owner-committed.
-- **Renewal dates were not invented.** The real legal-review and insurance dates
-  live in documents nobody has read yet, so rather than guessing, the act of
-  *establishing* each date is what got dated. Guessing a renewal date is worse
-  than an empty one — it reads as tracked while the gate fails silently.
+---
 
-**The urgent one.** The Epidemic Sound licence window closes **2026-08-09** — it
-was the single hardest deadline in the project and appeared nowhere in the
-tracker. Ad 01 must be published before then or the subscription reactivated.
+## 2026-08-11 — `archive/got-this-series-wip` is audited empty and deleted
 
-**Also recorded.** The homepage founding banner promises "first pick of jobs,"
-which `founding-provider-program.md` refuses in writing and
-`lib/founding-cohort.ts` bars in code. It is now a dated row, because it has to
-land before any paid provider traffic points at it. Surfaced by
-`brand/SALES_PITCH.md` §14 while checking new ad copy against it — that same
-check caught two wrong claims in a draft morning-ads campaign, which is the
-clearest argument for getting #104 onto `main`.
+**This supersedes the two "the tag must stay" notes below.** Both were correct
+when written. Neither is now: the ad half landed in #132/#134, and the last
+thing the tag held that `main` did not landed in #143. The tag pointed at
+`858b2d1` (annotated object `76f3a25`) and is gone from local and `origin`.
+Both archive refs from `ads/got-this-series` are now gone; nothing points at
+those commits, so git will collect them.
 
-**Now open.** #104 awaits review. #97 and #100 still each carry a parallel
-`CLAUDE.md` that should now fold into the one on `main` rather than land beside
-it.
+**Where everything ended up**, so nobody has to reconstruct this:
+
+| From the tag | Landed as |
+| --- | --- |
+| the 21 ad-pipeline and document files | #132 and #134 |
+| the `lib/launch-status.ts` doc block | #137 (and #138, an empty duplicate) |
+| the e2e customer-signup and provider-sign-in coverage | #140 |
+| the Reel 2 retirement note | #143 |
+
+**How it was audited, since "delete an archive" deserves showing the work.**
+Three questions, in order:
+
+1. *Files only in the tag?* `git diff --diff-filter=A origin/main <tag>` → **0**.
+   Every path in the tag exists on `main`. The "18 files never committed to any
+   branch" line below was already stale.
+2. *Files whose content differs?* **109.** For code and tests `main` is ahead by
+   the whole lineage — that is the subject of the entry below, and losing those
+   older versions is the point, not a cost.
+3. *Any file with lines in the tag that never reached `main`?* Seven had some.
+   Each was read rather than counted:
+
+| File | Verdict |
+| --- | --- |
+| `brand/outreach/reel-provider-recruitment.md` | **tag ahead — salvaged in #143** |
+| `scripts/generate-brand-assets.mjs` | `main` ahead: tag is the old PNG-master/`favicon-v2` generator, before the vector master |
+| `brand/social-media-kit/README.md` | `main` ahead: tag drops the served-assets table and the `brand-mark-consistency` test note |
+| `brand/outreach/moco-outreach-worklist.md` | `main` ahead: tag lacks Tier 1b and the `montgomery.craigslist.org`-is-Alabama warning |
+| `.env.example` | `main` ahead: same AI-key block plus the `/ai` page and its fail-closed behaviour |
+| `brand/outreach/provider-outreach-kit.md` | **tag is the old fee copy** — `never say "providers keep 95%"`. `main`'s fuller wording stands |
+| `brand/ads/HANDOFF.md` | same old fee line. Left dead deliberately |
+
+**#143 — the only thing that needed rescuing.** `main` still listed Reel 2
+("dead battery documentary stare") as a live spec to produce. It was retired on
+2026-08-07 and folded into Episode 1 of the "I've Got This" series, because it
+duplicated Episode 1's joke and CTA and shipping both would split one gag across
+two posts. What survived is the documentary stare and the forehead on the horn,
+now clip D of Episode 1. Anyone working from that file would have produced a
+retired reel.
+
+**The lesson worth keeping.** Two of the three "tag ahead?" candidates that
+looked promising were the *older fee copy*, and one was the retired logo
+pipeline. On a tag from a superseded lineage, "content `main` does not have" is
+usually content `main` deliberately moved past. Read every candidate; do not
+salvage on a line count.
+
+**One idea died with it, deliberately.** The tag's owner-side new-account alert,
+keyed `security:owner-new-account:`, does not exist on `main` and was not ported
+— adding it is a product change, not test coverage. If that notification is ever
+wanted, it has to be rebuilt from scratch; there is no longer a copy to read.
+
+---
+
+## 2026-08-11 — `archive/got-this-series-wip` is not landable; two pieces salvaged
+
+**Why this is here.** The tag looks like unfinished work waiting to be landed.
+It is not. It is a snapshot of an older lineage, so applying it to `main`
+*removes* newer work rather than adding to it — and some of what it removes is
+launch guarding. Anyone who finds the tag and tries to cherry-pick or merge it
+will weaken the marketplace locks without meaning to. Read this before touching
+it. The entry directly below covers the same tag from the ad-asset side and
+concludes it must stay; both conclusions point the same way — **keep the tag,
+never merge it.**
+
+**What replaying it would delete.** Not a merge conflict to resolve — a silent
+revert. Among other things: `pausedCustomerRequestResponse()`, the entire
+fail-closed 503 handler for customer requests; the comment pinning that gate
+ahead of origin checks, body parsing, and every database read; the
+`status: "blocked"` eligibility reasons and the "Real job operations remain
+disabled" copy; and the customer-facing "jobs closed" text on the account and
+post-job pages. Applied file by file, the tag nets out as
+`email-notifications.ts` +35/−62 and `account-auth.ts` +15/−74. The two real
+conflicts, `post-job/page.tsx` and `job-posting-pause.test.mjs`, both resolve to
+`main`'s side: one would have deleted imports `main` still uses, the other
+replaced 14 assertions with 4.
+
+**What was salvaged.** Two pull requests, both additive:
+
+- **#137** — the `lib/launch-status.ts` doc block. Eight lines, no deletions,
+  lock value untouched. It records that `CUSTOMER_JOB_POSTING_PAUSED` governs
+  marketplace *transactions* only and must never be read as a gate on account
+  creation or on a provider submitting an application. The
+  `CUSTOMER_JOB_POSTING_PAUSED_SUMMARY` constant that sits beside it in the tag
+  was deliberately left out — nothing on `main` renders it.
+
+  **#138 is the same block again and its diff is empty.** Two sessions salvaged
+  it from the tag in parallel, and because the added text was byte-identical git
+  treated it as agreement rather than a conflict, so #138 merged changing
+  nothing (`git diff 496a05b 1d9d02a` is blank). The file carries exactly one
+  copy. Cite #137 as where the block came from, and check `main` for concurrent
+  work before salvaging from this tag — it is small enough that two sessions
+  will pick the same piece.
+- **#140** — the e2e signup coverage, ported by hand onto `main`'s version of
+  `tests/e2e/provider-signup.e2e.mjs` rather than copied. Adds customer account
+  signup, provider sign-in, post-signup application state, and the queued
+  notifications. `main`'s newer work in that file is preserved: the `maxBuffer`
+  raise, the per-repo/per-branch worktree namespacing, and the `.wrangler/state`
+  reset before migrating.
+
+**The trap inside the port, worth knowing on its own.** Three of the tag's
+assertions did not hold against `main`, and running the suite is what exposed
+them — two of the three passed review by eye:
+
+| | tag | `main` |
+| --- | --- | --- |
+| `status` on a fresh application | `"approved"` | `"new"` |
+| `verification_status` | `"self-enrolled"` | `"not reviewed"` |
+| customer signup alert | `security:owner-new-account:customer:` | no such event exists |
+
+The first two are the tag's lineage advancing an application *further* on signup
+than `main` does. Asserting the tag's values would have pinned the looser
+posture into a test — a guard regression wearing the costume of new coverage.
+The assertions pin `main`'s stricter values instead. The third would have meant
+porting a new owner-notification feature out of the old lineage, which is a
+product change and not test coverage, so the assertion covers the
+`security:account_created:` notice `main` does queue.
+
+**Where that leaves the tag.** Intact and unmerged, which is correct. It still
+holds the only copy of everything not listed above. Treat it as a reference to
+read, not a branch to land: anything wanted out of it should be ported by hand
+onto `main`'s current version and then actually run, the same way #140 was.
+
+*Superseded 2026-08-11: the tag was deleted once the salvage finished. The
+port-by-hand advice still applies to any old ref; the tag itself is gone.*
+
+---
+
+## 2026-08-11 — The archived ad work is on main, and one archive tag is gone
+
+**Why this happened.** Deleting `ads/got-this-series` left 21 files reachable
+only through a git tag. That is safe but not discoverable: nobody browsing the
+repository would find the ad build pipeline, and the whole set sat one lost tag
+away from gone. Both halves have now landed on main.
+
+**#132 — the build pipeline.** The three ffmpeg build scripts, the ep1-battery
+source audio, the shared lockups and tagline VO, `R2-MANIFEST.json`, and
+`scripts/r2-video-manifest.mjs` that regenerates it. Twelve files, about 324KB.
+These are the pipeline's *inputs*; the 57 rendered MP4s stay out of git under
+the ignore rules from #127, with the private `tuveloz-brand-video` bucket as
+the durable copy.
+
+**A regression that was caught in the restore.** Checking out `brand/ads` from
+the tag also overwrote `brand/ads/HANDOFF.md`, whose tagged version carries an
+older fee line reading `NEVER say "keep 95%"` — while main already had the
+fuller wording about never expressing the customer fee as a provider deduction.
+That file was reverted so main's version stands. Restoring a directory from an
+old ref silently reverts every file in it that has moved on since; check the
+modified list, not just the added one.
+
+**#134 — the documents and remaining assets.** The counterweight-clip shoot
+script and its how-to, the "I've Got This" creative spec, the Higgsfield
+runbook, the no-strap lockup, a favicon variant, and the three cross-assistant
+handoff documents from 2026-08-08. Restored verbatim rather than renamed:
+three of them break the lowercase-hyphenated convention and none carry a status
+header, but the runbook links to the ideas file by its URL-encoded name and
+both briefs point at `SESSION-HANDOFF.md`, so renaming breaks the set.
+Normalizing names and adding headers is still open, as its own pass.
+`docs/README.md` gained a row for `docs/marketing/` and a **Historical**
+heading for the three handoff documents, which are a record of how work was
+split that day and not current instruction.
+
+**`archive/got-this-series` is deleted.** Nothing was orphaned by that, for a
+structural reason worth remembering: `archive/got-this-series-wip` points at
+`858b2d1`, whose parent *is* `0808b9b`, so the old branch tip stays reachable
+through the surviving tag. Files unique to that tag versus main are now zero.
+
+**`archive/got-this-series-wip` was kept for this reason at the time.** It held 18
+files of working-tree state that were never committed to any branch.
+
+*Superseded 2026-08-11: the salvage finished and the tag was deleted. See the
+entry at the top of this log. There is no recovery command any more, and the
+audit found nothing left in it that `main` did not already have.*
+
+**Fee copy was checked before landing**, since these are marketing documents.
+Every mention states the rule correctly or forbids "keep 95%"; no legacy 10%
+copy survived anywhere in the set.
+
+---
+
+## 2026-08-10 — Zeo was answering without most of its own rules
+
+**Why this is here.** Zeo is the owner's local assistant and it reads Tuveloz
+under a read-only workspace. Its answers about this project were being produced
+without most of its behaviour policy, so anything it said today or earlier is
+worth re-checking rather than trusted. The work itself is in the Zeo repository
+(`C:\Users\Torta Pounder\Zeo`), sixteen commits, written up in
+`ZEO_LOCAL_MODEL_BEHAVIOUR.md` there.
+
+**What happened.** The local runner keeps roughly 2k tokens of context by
+default and discards the overflow without an error. Zeo's system prompt is
+about 4805 tokens, so a question carrying project excerpts arrived with most of
+the policy removed — measured directly: `prompt_eval_count` 2050 against a
+4805-token prompt. Not only formatting rules were lost but never invent facts,
+owner corrections outrank older memory, and the security boundaries. The symptom
+that exposed it was two different system prompts producing byte-identical
+replies. `num_ctx` is now always sent.
+
+**What else that uncovered.** The Tuveloz project-context path had its own
+standalone prompt and so never carried the general answering rules at all; it
+now does, and its reply cap moved from 850 to 1200 characters. A reply to a
+question with no project context attached ended "Checked read-only project
+context: None applicable." — a claim to have run a file check that never ran,
+copied from the shape of earlier replies. Model-authored versions of that
+footer are now stripped; only code may state which files were read.
+
+**Decisions made.** Answers that must follow a format are no longer requested
+as prose. The runner constrains generation to a JSON schema, the model fills in
+fields, and code writes the format — for choice lists and for code edits alike.
+The model's indentation is discarded outright rather than validated, because
+one measured edit was valid Python that quietly lifted a statement out of its
+loop, which a syntax check passes. No hardware was needed; the constraint was
+never the model's instruction-following.
+
+**Now open.** Nothing Tuveloz-side is blocked. Worth knowing when Zeo is used
+for project questions: it reads only the approved excerpt list, and its answer
+is only as current as those files.
+
+**Update 2026-08-11.** Zeo's safety suite passes (295 tests), including coverage
+of the honesty and correction boundaries that the truncation bug was removing.
+The specific defect is confirmed fixed. Zeo is also backed up to a private
+GitHub repository and the `zeo-home` clone is fully synchronized with it, so the
+single-disk exposure implied above no longer applies. The caution above still
+stands on its own terms: verified safeguards are not verified answers, and Zeo's
+replies remain only as current as the excerpt list it reads. Reported by the
+owner from the `zeo-home` machine, which this session could not reach; the suite
+was not run from here.
+
+---
+
+## 2026-08-10 — Signup step 1 shows the document count, and the ads branch is archived and gone
+
+**What shipped.** Step 1 of the provider application now names how many
+documents the selected services require, before the form asks for an email.
+Previously that only appeared on step 2. The count is **distinct documents**,
+not rendered checklist rows: two services can require the same document and
+step 2 draws it once per group, so summing the per-service lists overstates
+what actually gets uploaded. The copy reads "unique documents" so the smaller
+number does not look like a contradiction of those repeated rows. Live at
+`/join`, English and Spanish. Merged as #126, with #127 alongside it.
+
+**Deliberately not shipped: a time estimate.** An earlier draft paired the
+count with "about 10–15 minutes." That was dropped because the flow has never
+been measured. The same reasoning removed an unmeasured "set it up in minutes"
+line from provider toolkit copy on the old branch, though main had already
+deleted that copy independently. If the duration is ever measured, the step 1
+note is where it belongs.
+
+**`ads/got-this-series` is deleted.** It was 121 commits behind main and
+already superseded by #119, and a dry-run merge conflicted in ~28 files
+including `drizzle/meta/_journal.json`. Its code features had all reached main
+separately, but **21 files existed nowhere else** — the `brand/ads` build
+pipeline and ep1-battery audio, `scripts/r2-video-manifest.mjs`, the Higgsfield
+runbook and marketing docs, two brand SVGs. Nothing was lost; two tags hold it:
+
+| Tag | Commit | Holds |
+| --- | --- | --- |
+| `archive/got-this-series` | `0808b9b` | the branch tip, all 21 unique files |
+| `archive/got-this-series-wip` | `858b2d1` | that tip plus 18 uncommitted working-tree files (+299/−101) committed at deletion |
+
+**Superseded 2026-08-11 — do not use the table above as a recovery path.** All
+21 files are on main, and `archive/got-this-series` has been deleted. Only
+`archive/got-this-series-wip` still exists; it descends from `0808b9b`, so the
+old branch tip is still reachable through it. See the entry at the top of this
+log.
+
+**A trap that nearly cost the ad videos.** The deleted branch's `.gitignore`
+ignored `brand/ads/*.mp4` and `brand/ads/got-this-assets/**/*.mp4`; main never
+had those rules. Switching a checkout to main therefore left all 57 rendered
+MP4s untracked and stageable, one `git add -A` away from committing ~50MB of
+build output into permanent history and reversing the move to private R2. #127
+ports the rules. The videos remain on disk and in the `tuveloz-brand-video`
+bucket, with checksums in `brand/ads/R2-MANIFEST.json`.
+
+**Two verification traps worth remembering.** `npm run i18n:check` reports on
+whatever dev server is listening, not your checkout — it was run against a
+server started from the branch's own worktree on a dedicated port, after
+confirming the lineage. And `git merge-base --is-ancestor` called both merged
+PR branches *unmerged*, because GitHub squash-merges: the branch tips never
+become ancestors of main. Deleting them safely meant diffing content against
+main instead, which is the check to use here.
+
+**Production.** Both merges deployed clean. `wrangler d1 migrations apply`
+reported "No migrations to apply!", so production D1 was untouched. Health
+reports application, database, and schema ready, and the launch locks are
+unchanged: `onboarding_only`, accounts and provider applications open,
+customer job requests and payments closed.
+
+---
+
+## 2026-08-10 — Phone-to-Zeo remote access, and why the Tailscale invite failed
+
+**What happened.** The Tailscale "share a device" invite for `zeo-home` kept
+returning `Failed to accept invite`. Cause: the invite was sent from
+hello@tuveloz.com to hello@tuveloz.com. Device sharing crosses accounts; you
+cannot share a device with the account that already owns it. The phone does not
+need a share at all — signing it in to Tailscale with the same account puts it
+in the same tailnet and `zeo-home` appears on its own.
+
+**Written up** in
+[`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md):
+the working procedure, an ordered fault list (the usual real cause is a service
+bound to `127.0.0.1` rather than anything to do with Tailscale), and the rule
+that Zeo stays inside the tailnet — `tailscale serve`, never `tailscale funnel`.
+
+Nothing in the Tuveloz application depends on any of this.
+
+---
+
+## 2026-08-11 — Gave the open items real dates, so the weekly check can work
+
+**What happened.** Every row in `OPEN-ITEMS.md` was undated, which meant the
+Monday deadline workflow had nothing to report and the readiness command's
+deadline section always came back clean. Dated 14 of the 16 rows and corrected
+the ones that had gone stale against the actual pull-request state: PR #98
+merged on 2026-08-07 and is now marked done, PR #33 and PR #46 are both closed
+so their stranded work only exists on their branches, and the launch-gate row
+now says what `npm run readiness` found rather than asking someone to go look.
+The `tuveloz-app` repository creation was split out as its own `blocked` row,
+because the move of `mobile/` cannot start until it exists.
+
+**Decisions made.** The dates are self-set targets, and the file now says so —
+they are there to make the automated check function, not because an outside
+party imposed them. Two exceptions are called out: the recurring reviews are
+dated against launch gates that fail once a legal review is over a year old,
+and the insurance row carries a placeholder to be replaced with the carrier's
+real renewal date once a record card exists. The SMS sign-in row stays undated
+on purpose — it describes a deliberate lock, not a commitment to unlock it.
+
+**Now open.** Eight items now fall inside the 30-day window, so the Monday
+workflow will start opening a GitHub issue where it previously found nothing.
+That is the intended behaviour, not a regression.
+
+---
+
+## 2026-08-10 — One command that reports what Tuveloz still needs
+
+**What happened.** Added `npm run readiness` (`scripts/check-readiness.mjs`),
+which collects into a single report the four things that previously had to be
+checked in four places: the three marketplace locks read from source, the 18
+launch gates read from the catalogue in `lib/launch-readiness.ts` against the
+decisions recorded in production D1, `.env.example` compared against the
+deployed Worker's vars and secrets, and the deadline table, by running the
+existing `scripts/check-deadlines.mjs`. Flags: `--offline` skips the two
+Cloudflare reads, `--json` emits the same data as JSON, `--strict` exits 1 when
+something required is outstanding.
+
+**What the first run found.** Production has **zero** launch-gate decisions
+recorded, so all 18 gates are pending — including the ones only an outside
+authority can answer (insurance carrier, CPA, payment processor). Three
+required configuration values are unset: `LAUNCH_UPDATES_POSTAL_ADDRESS` and
+`IDENTITY_VERIFICATION_PROVIDERS` are declared empty in `wrangler.jsonc`, and
+`STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` has neither a var nor a secret.
+Nothing is overdue in `OPEN-ITEMS.md`, but every row there is undated, so that
+is not reassurance.
+
+**Decisions made.** The report reads and never writes. Gates are answered by
+the owner in `/admin/launch-readiness` and nowhere else; the script cannot
+record a decision, and the marketplace locks are printed as context with a note
+that nothing in the report is a reason to change one. Keys that are only needed
+once a related subsystem is switched on — the two evidence-scanner secrets,
+while `EVIDENCE_SCAN_PROVIDER` is `unconfigured` — are reported as not yet
+needed rather than counted as gaps, so a deliberately fail-closed subsystem
+does not read as broken.
+
+**Now open.** The gate decisions and the postal address are owner and
+third-party work, not code. Adding real dates to `OPEN-ITEMS.md` would make the
+deadline section of this report meaningful rather than always clean.
+
+---
+
+## 2026-08-09 — Locked the 5% customer-fee copy against regression
+
+**What happened.** Audited the current production release and the source on
+`main` after stale indexed pages exposed older 10% fee language. Cache-bypassed
+production responses for the homepage, payment policy, provider agreement,
+terms, customer agreement, provider signup, and post-job page contained no 10%
+customer-fee claims. Production was serving the same commit as `main`.
+
+**Decisions made.** The invariant is explicit for every assistant and every
+copy surface: customers pay a 5% service fee, providers keep 100% of what they
+quote, legacy 10% language is a defect, and the customer fee must never be
+expressed as a deduction from provider earnings. A focused test now fails the
+build if either forbidden claim returns in application, brand, AI-policy, or
+assistant-handoff copy.
+
+**Now open.** Search-engine and crawler snapshots may continue showing an old
+version until they recrawl; production itself is current.
+
+---
+
+## 2026-08-08 — Search Console "Page with redirect": the QR short links
+
+**What happened.** Search Console emailed a new indexing exclusion for
+tuveloz.com: *Page with redirect*. Traced it to the only two redirects the site
+serves. The whole app contains exactly two: `app/q/[slug]/route.ts` and
+`app/api/stripe/connect/refresh/route.ts`. The second is already behind the
+`/api/` disallow. The first was not.
+
+**Why it happened.** `/q/<slug>` is the QR short link printed on provider
+materials. It 302s to `/providers/<slug>?source=qr`, counting the scan on the
+way through. Nothing excluded it from crawling, so Googlebot followed the links
+and reported each one as a page that redirects.
+
+**The important part: this was never an error.** The redirect is doing exactly
+what it was built to do, and "Page with redirect" is an exclusion, not a
+failure — Google is saying it indexed the destination instead of the wrapper.
+Nothing was broken and nothing needed unbreaking. The fix is only to stop
+spending crawl budget on a wrapper whose destination is directly reachable.
+
+**What changed.** `app/robots.ts` disallows `/q/`. The storefront it points at
+stays fully crawlable; only the redirector is excluded.
+
+**What did not, in the end.** This work originally added its own
+`app/providers/[slug]/layout.tsx` to set the canonical, because the storefront
+page is a client component and cannot export metadata itself. By the time it
+landed on 2026-08-11, #150 had already created that file with a better version —
+same canonical, plus slug sanitisation and a fail-closed `noindex` while
+`MARKETPLACE_MODE` is not live. Main's version stands; only the robots rule came
+from here.
+
+**Also true, and left alone.** `ai.tuveloz.com/` 302s to `/ai` in
+`worker/index.ts`. If the Search Console property is a domain property rather
+than a URL-prefix one, that root will be reported the same way, and it is
+equally intentional. The comment there explains why it is deliberately
+temporary rather than permanent; do not "fix" it either.
+
+**Worth knowing for later.** The sitemap lists 19 static pages and no provider
+storefronts at all. That is defensible while onboarding is the only thing open,
+but once storefronts are public and worth finding, `app/sitemap.ts` is where
+they need to appear. Not done here — it is a launch decision, not a redirect
+fix.
+
+---
+
+## 2026-08-08 — Homepage made launch-honest and shorter
+
+**What happened.** Reworked the customer-facing hero on the homepage and customer lander so it no longer implies that live customer quotes are available today. Both now say that accounts are open while requests wait for adequate provider coverage. Added a clear “Need help today?” route to local shops, mobile mechanics, or licensed towing while dispatch is unavailable. Added a planned-fee example that labels final launch pricing and tax treatment as under review.
+
+**Decisions made.** The homepage no longer uses provider counts, invented traction, or review substitutes as startup proof. It now focuses on customer choice, provider independence, documented service-specific requirements, and an honest launch state. The long provider-application, review, request, expansion, and feedback sections remain available on their dedicated pages or the About page instead of competing on the homepage.
+
+**Now open.** Decide which first-wave local SEO pages to publish while customer requests remain closed. Any service page must be informational and collect launch interest rather than imply a live booking or quote turnaround.
 
 ---
 
