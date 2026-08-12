@@ -55,7 +55,7 @@ launch-phase re-edit of the same footage: new punchline VO, new card, identical 
 Both are built into `brand/ads/build-got-this.ps1`. Default is provider; pass `-Launch` for
 the customer cut. Nothing else in the edit changes.
 
-⚠ Fee copy is fixed: **providers keep 100%, customers pay 5%.** Never write "keep 95%."
+⚠ Fee copy is fixed: **providers keep 100%, customers pay 5%.** Never state the provider share as anything less.
 
 **Episode order follows how many gates each service still has to clear.** Since everything
 is disabled, "which is legal" is the wrong sort — the useful sort is which unlocks first.

@@ -70,7 +70,7 @@ Three questions, in order:
 | `brand/social-media-kit/README.md` | `main` ahead: tag drops the served-assets table and the `brand-mark-consistency` test note |
 | `brand/outreach/moco-outreach-worklist.md` | `main` ahead: tag lacks Tier 1b and the `montgomery.craigslist.org`-is-Alabama warning |
 | `.env.example` | `main` ahead: same AI-key block plus the `/ai` page and its fail-closed behaviour |
-| `brand/outreach/provider-outreach-kit.md` | **tag is the old fee copy** — `never say "providers keep 95%"`. `main`'s fuller wording stands |
+| `brand/outreach/provider-outreach-kit.md` | **tag is the old fee copy** — it framed the provider share as 95%. `main`'s fuller wording stands |
 | `brand/ads/HANDOFF.md` | same old fee line. Left dead deliberately |
 
 **#143 — the only thing that needed rescuing.** `main` still listed Reel 2
@@ -184,7 +184,7 @@ the durable copy.
 
 **A regression that was caught in the restore.** Checking out `brand/ads` from
 the tag also overwrote `brand/ads/HANDOFF.md`, whose tagged version carries an
-older fee line reading `NEVER say "keep 95%"` — while main already had the
+older fee line that framed the provider share as 95% — while main already had the
 fuller wording about never expressing the customer fee as a provider deduction.
 That file was reverted so main's version stands. Restoring a directory from an
 old ref silently reverts every file in it that has moved on since; check the
@@ -215,7 +215,7 @@ entry at the top of this log. There is no recovery command any more, and the
 audit found nothing left in it that `main` did not already have.*
 
 **Fee copy was checked before landing**, since these are marketing documents.
-Every mention states the rule correctly or forbids "keep 95%"; no legacy 10%
+Every mention states the rule correctly or forbids the 95% framing; no legacy 10%
 copy survived anywhere in the set.
 
 ---

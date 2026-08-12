@@ -75,7 +75,7 @@ $CARD_TAIL = 0.55   # silence before the video ends
 
 # Default is the PROVIDER phase - the only messaging allowed pre-launch, and the
 # reason this series is runnable today (see docs/marketing/TUVELOZ MARKETING IDEAS.md).
-# Fee copy is fixed: providers keep 100%, customers pay 5%. NEVER "keep 95%".
+# Fee copy is fixed: providers keep 100%, customers pay 5%. The provider share is never stated as anything less.
 if ($Launch) { $phaseUrl = 'tuveloz.com';      $phaseLine = 'Post your job. Compare quotes. Get moving.' }
 else         { $phaseUrl = 'tuveloz.com/join'; $phaseLine = 'Keep 100% of your price. Join free.' }
 
