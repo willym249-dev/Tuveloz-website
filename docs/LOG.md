@@ -13,6 +13,53 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — Terms and the Payment Policy re-released; the open-PR queue cleared
+
+**The release, because this one is a legal act rather than an edit.** Both pages
+carried retired fee names — Terms said "platform fee" twice, once **inside the
+liability cap in section 15**, and the Payment Policy said "Tuveloz fee" twice,
+one a section heading. #95 had already established one canonical name in
+`lib/customer-fee.ts`, but these two pages are SHA-pinned, so renaming them meant
+following the `DEPLOYMENT.md` procedure: owner approval of the exact page,
+incremented versions, new release ids, and hashes recomputed as sha256 of the
+page source with CRLF normalised to LF.
+
+Released as `terms-2026-08-11-r3` and `payment-policy-2026-08-11` in #160.
+`TERMS_VERSION` went to `2026-08-11-r3` and `PAYMENT_POLICY_VERSION` to
+`2026-08-11`. Done now deliberately: bumping `TERMS_VERSION` changes
+`CUSTOMER_POLICY_BUNDLE_VERSION`, which is recorded on acceptance records, and
+with customer job posting paused there are no real acceptances to invalidate.
+Waiting would have made the same change expensive.
+
+**`PENDING_LEGAL_RELEASE` in the fee test is now empty.** That list existed only
+to let those two pages serve retired wording while a release was pending. An
+entry appearing there again means a page is knowingly serving retired wording —
+say which release fixes it and when.
+
+**Two capitalisations were reverted on purpose.** Two lines already read
+"customer service fee" in lowercase prose. Capitalising them broke the guard
+asserting the agreements and the Stripe receipt describe the same fee. Reverting
+kept the change minimal and left the guard alone; loosening its pattern to
+accommodate a cosmetic edit would have been the wrong trade in legal text.
+
+**The queue.** Eleven open pull requests down to one. #93 stays — it is the
+`[DO NOT MERGE]` preservation branch and goes away when `tuveloz-app` exists.
+#100 was closed unmerged: its headline change was an arbitration clause the owner
+shelved on 2026-08-07, and merging it would have silently reinstated a clause
+removed on purpose. Its salvageable work was extracted into four separate pull
+requests instead — #155, #156, #157, #158 — leaving behind the arbitration
+clause, a parallel `docs/STATUS.md`, and local-search work #95 had superseded.
+
+**The pattern across all of it, worth carrying.** Every stale branch hid at least
+one regression behind a small-looking conflict. Resolving with `--ours` or
+`--theirs` on a whole file is not conflict resolution — it discards one side's
+entire work, and it only looks safe when the visible hunk is short. Twice that
+reverted `main`'s corrected fee copy. The reliable method is to take `main`'s
+file and apply the branch's own diff on top with `git apply --3way`, resolving
+only the hunk that genuinely conflicts.
+
+---
+
 ## 2026-08-11 — The homepage founding banner promised two things we refuse
 
 **Why this mattered.** The banner told providers *"The first pros into Montgomery
