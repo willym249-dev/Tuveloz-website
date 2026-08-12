@@ -13,6 +13,10 @@
 // recommendation a human confirms. No private file content or personal data is
 // read or sent anywhere; this runs entirely on structured metadata.
 
+// Extension-qualified: this module is loaded directly by node --test, which
+// does not resolve extensionless relative imports.
+import { compareBusinessNames, type BusinessNameCheck } from "./business-name-match.ts";
+
 export type EvidencePrescreenRecommendation =
   | "not_awaiting_review"
   | "reject_mismatch"
@@ -31,6 +35,12 @@ export type EvidencePrescreen = {
   recommendation: EvidencePrescreenRecommendation;
   headline: string;
   reasons: readonly string[];
+  // Set when the names this provider is known by disagree. Advisory only: it
+  // never changes the recommendation, because a shortened trading name is
+  // common and legitimate, and only the owner can tell a typo from a different
+  // business. It exists so a name problem is visible at review time instead of
+  // surfacing later as an unexplained block.
+  nameCheck: BusinessNameCheck | null;
   // Populated only when the outcome is factual, safe, and reversible enough to
   // apply in bulk without a human confirming each one. Null for everything a
   // human must weigh — including every acceptance.
@@ -57,7 +67,23 @@ export type EvidencePrescreenFacts = {
   hasPrivateFile: boolean;
   // Latest malware-scan status for the attached file.
   scanStatus: string;
+  // The business name on the provider's profile, and the legal business name
+  // already verified from an official source, when both are known. Optional:
+  // most evidence types carry no business identity at all.
+  profileBusinessName?: string;
+  verifiedLegalBusinessName?: string;
 };
+
+function nameCheckFor(facts: EvidencePrescreenFacts): BusinessNameCheck | null {
+  const profile = facts.profileBusinessName?.trim() ?? "";
+  const verified = facts.verifiedLegalBusinessName?.trim() ?? "";
+  if (!profile || !verified) return null;
+  const check = compareBusinessNames(profile, verified, {
+    left: "The business name on the profile",
+    right: "the verified legal name",
+  });
+  return check.needsReview ? check : null;
+}
 
 // This note is stored verbatim as the provider-facing reason and is not
 // re-localized when displayed, so it is written bilingually (English + Spanish)
@@ -81,6 +107,7 @@ export function prescreenEvidence(
       reasons: [],
       autoDispatch: null,
       readyForOwnerAuthenticityCheck: false,
+      nameCheck: null,
     };
   }
 
@@ -98,6 +125,7 @@ export function prescreenEvidence(
       ],
       autoDispatch: null,
       readyForOwnerAuthenticityCheck: false,
+      nameCheck: nameCheckFor(facts),
     };
   }
 
@@ -119,6 +147,7 @@ export function prescreenEvidence(
         note: EXPIRED_NOTE,
       },
       readyForOwnerAuthenticityCheck: false,
+      nameCheck: nameCheckFor(facts),
     };
   }
 
@@ -140,6 +169,7 @@ export function prescreenEvidence(
       ],
       autoDispatch: null,
       readyForOwnerAuthenticityCheck: false,
+      nameCheck: nameCheckFor(facts),
     };
   }
 
@@ -157,5 +187,6 @@ export function prescreenEvidence(
     ],
     autoDispatch: null,
     readyForOwnerAuthenticityCheck: true,
+    nameCheck: nameCheckFor(facts),
   };
 }
