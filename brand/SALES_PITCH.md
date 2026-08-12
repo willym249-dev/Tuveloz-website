@@ -779,6 +779,33 @@ inserted without an explicit value would carry a rate of 1000 bps instead.
 
 ---
 
+## 14a. Where the pitch is actually rendered
+
+Change the pitch here, then update these. This list is the reason the pitch
+drifted in the first place: the words live in nine places and nothing pointed at
+all of them at once.
+
+| Surface | File |
+| --- | --- |
+| Homepage hero, service list, provider section | `app/page.tsx` |
+| Provider application | `app/components/provider-signup-form.tsx` |
+| Founding provider program page | `app/founding-providers/` |
+| Social and Google profile bios | `brand/social-media-kit/profile-copy.md` |
+| Provider outreach DMs, EN/ES | `brand/outreach/provider-outreach-kit.md` |
+| MoCo targeting worklist | `brand/outreach/moco-outreach-worklist.md` |
+| Founding cohort terms | `brand/outreach/founding-provider-program.md` |
+| Reel scripts and captions | `brand/outreach/reel-provider-recruitment.md` and `-v3.md` |
+| Ad scripts | `brand/ads/*.md` |
+
+Spanish is a tenth surface and the one most often missed: user-facing strings are
+translated through the dictionary in `app/components/site-language.tsx`, which
+keys on the exact English text. Changing an English string without changing its
+key there leaves the Spanish saying the old thing. That is not hypothetical — the
+founding banner's retired "first pick of jobs" claim survived in Spanish after the
+English was written, and had to be removed from both.
+
+---
+
 ## 15. Proof appendix
 
 ### Brand quick reference

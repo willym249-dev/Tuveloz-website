@@ -163,6 +163,23 @@ Anything touching pricing, routing, or the Provider Agreement should be checked
 against this list before it is built, and legal questions go to counsel rather
 than being settled in a document.
 
+### Compliance requirements follow the jurisdiction
+
+Requirements resolve from the place the work happens, not uniformly:
+
+- Each evidence type in `config/provider-eligibility-matrix.json` carries an
+  `imposed_by` jurisdiction, or none if Tuveloz imposes it everywhere as a safety
+  baseline (insurance, competency, supervision, rosters).
+- Jurisdictions form a containment chain: `US-MD-MontgomeryCounty` → `US-MD` →
+  `US`. A provider is asked for the documents of each government that reaches
+  them, plus the baseline. Never for another county's paperwork.
+- **Fails closed both ways.** A jurisdiction must be registered *and* carry
+  `local_requirements_reviewed: true` through its whole chain before a service
+  opens there. Opening a new place is a reviewed decision, never a config edit —
+  otherwise expansion silently drops local law instead of replacing it.
+- `tests/jurisdiction-scoped-requirements.test.mjs` pins the Montgomery County
+  effective requirement set. If it fails, something got relaxed where we launch.
+
 ### Legal and evidence machinery
 
 - `lib/maryland-repair-records.ts` implements Md. Comm. Law § 14-1001: the

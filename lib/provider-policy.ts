@@ -79,7 +79,32 @@ export interface EvidenceRequirementDefinition {
   label: string;
   requires_expiration: boolean | string;
   private: boolean;
+  /**
+   * The government that imposes this document, if any. Absent means Tuveloz
+   * imposes it everywhere as a platform safety baseline (insurance, competency,
+   * supervision, rosters). A jurisdiction-imposed document is only required
+   * where that government's law reaches: a Montgomery County certificate is not
+   * asked of a provider working outside Montgomery County.
+   */
+  imposed_by?: string;
   [key: string]: unknown;
+}
+
+/**
+ * A place whose law we have actually read. `parent` builds the containment
+ * chain (county -> state -> federal), and requirements are inherited down it.
+ *
+ * `local_requirements_reviewed` is the fail-closed half of this design. Scoping
+ * requirements to a jurisdiction means the Montgomery County documents stop
+ * applying elsewhere, so an unreviewed place must never be openable — otherwise
+ * expanding the service map would silently drop local law instead of replacing
+ * it. Set it true only once someone has established what that place requires.
+ */
+export interface JurisdictionRegistryEntry {
+  label: string;
+  parent: string | null;
+  local_requirements_reviewed: boolean;
+  review_note: string;
 }
 
 export interface ServicePolicyDefinition {
@@ -100,6 +125,7 @@ export interface ProviderPolicyMatrix {
   status: PolicyStatus;
   jurisdiction: PolicyJurisdiction;
   default_policy: DefaultPolicy;
+  jurisdiction_registry: Record<string, JurisdictionRegistryEntry>;
   provider_pathways: Record<ProviderPathway, ProviderPathwayDefinition>;
   provider_levels: Record<ProviderLevel, ProviderLevelDefinition>;
   pathway_level_compatibility: Record<
@@ -199,8 +225,59 @@ function assertProviderPolicyMatrix(
     );
   }
 
+  if (!isRecord(value.jurisdiction_registry)) {
+    throw new Error("Jurisdiction registry is missing.");
+  }
+  const jurisdictionKeys = Object.keys(value.jurisdiction_registry);
+  if (!jurisdictionKeys.includes(value.jurisdiction as string)) {
+    throw new Error("The policy jurisdiction is not present in the jurisdiction registry.");
+  }
+  for (const key of jurisdictionKeys) {
+    const entry = value.jurisdiction_registry[key];
+    if (!isRecord(entry)) throw new Error(`Jurisdiction ${key} is invalid.`);
+    if (typeof entry.label !== "string" || !entry.label) {
+      throw new Error(`Jurisdiction ${key} has no label.`);
+    }
+    if (typeof entry.local_requirements_reviewed !== "boolean") {
+      throw new Error(`Jurisdiction ${key} has an invalid local-requirements review flag.`);
+    }
+    if (typeof entry.review_note !== "string" || !entry.review_note) {
+      throw new Error(`Jurisdiction ${key} has no review note.`);
+    }
+    if (entry.parent !== null && typeof entry.parent !== "string") {
+      throw new Error(`Jurisdiction ${key} has an invalid parent.`);
+    }
+    if (typeof entry.parent === "string" && !jurisdictionKeys.includes(entry.parent)) {
+      throw new Error(`Jurisdiction ${key} names unknown parent ${entry.parent}.`);
+    }
+  }
+  // Walk every chain to a root so a cycle cannot make requirement resolution
+  // loop forever, and so every declared place terminates at a real root.
+  const parentOf = (key: string): string | null => {
+    const entry = value.jurisdiction_registry as Record<string, { parent: string | null }>;
+    return entry[key].parent;
+  };
+  for (const key of jurisdictionKeys) {
+    const seen = new Set<string>([key]);
+    let cursor = parentOf(key);
+    while (typeof cursor === "string") {
+      if (seen.has(cursor)) {
+        throw new Error(`Jurisdiction ${key} has a cyclical parent chain.`);
+      }
+      seen.add(cursor);
+      cursor = parentOf(cursor);
+    }
+  }
+
   if (!isRecord(value.evidence_types)) throw new Error("Evidence types are missing.");
   const evidenceCodeSet: ReadonlySet<string> = new Set(Object.keys(value.evidence_types));
+  for (const [code, definition] of Object.entries(value.evidence_types)) {
+    if (!isRecord(definition)) throw new Error(`Evidence type ${code} is invalid.`);
+    if (definition.imposed_by === undefined) continue;
+    if (typeof definition.imposed_by !== "string" || !jurisdictionKeys.includes(definition.imposed_by)) {
+      throw new Error(`Evidence type ${code} is imposed by an unknown jurisdiction.`);
+    }
+  }
 
   if (!isRecord(value.services)) throw new Error("Service policies are missing.");
   assertExactKeys(value.services, SERVICE_CODES, "Service policies");
@@ -217,6 +294,14 @@ function assertProviderPolicyMatrix(
     assertCodeArray(service.allowed_provider_levels, LEVEL_SET, `${code}.allowed_provider_levels`);
     if (!Array.isArray(service.jurisdictions) || service.jurisdictions.some((item) => typeof item !== "string")) {
       throw new Error(`Service ${code} has invalid jurisdictions.`);
+    }
+    // A service may only name a place whose law has been read. Without this,
+    // adding a jurisdiction to a service would drop the county and state
+    // documents that place's own law never replaced.
+    for (const jurisdiction of service.jurisdictions as readonly string[]) {
+      if (!jurisdictionKeys.includes(jurisdiction)) {
+        throw new Error(`Service ${code} names unregistered jurisdiction ${jurisdiction}.`);
+      }
     }
     if (service.requirements !== undefined) {
       assertCodeArray(service.requirements, evidenceCodeSet, `${code}.requirements`);
@@ -591,17 +676,83 @@ export const RELATIONSHIP_EVIDENCE_REQUIREMENTS: Readonly<
   ]),
 });
 
-export function getEvidenceRequirements(
+export const JURISDICTION_REGISTRY = PROVIDER_POLICY_MATRIX.jurisdiction_registry;
+
+/**
+ * The containment chain for a place, nearest first:
+ * `US-MD-MontgomeryCounty` -> `["US-MD-MontgomeryCounty", "US-MD", "US"]`.
+ * Returns an empty array for a place we have not registered, which callers
+ * must read as "deny", never as "no local law applies".
+ */
+export function jurisdictionChain(jurisdiction: string): readonly string[] {
+  if (!Object.hasOwn(JURISDICTION_REGISTRY, jurisdiction)) return [];
+  const chain: string[] = [];
+  let cursor: string | null = jurisdiction;
+  while (typeof cursor === "string") {
+    chain.push(cursor);
+    cursor = JURISDICTION_REGISTRY[cursor].parent;
+  }
+  return Object.freeze(chain);
+}
+
+/**
+ * True only when the place and every government above it have had their local
+ * requirements read. A half-reviewed chain is not openable.
+ */
+export function jurisdictionIsOpenForService(jurisdiction: string): boolean {
+  const chain = jurisdictionChain(jurisdiction);
+  if (chain.length === 0) return false;
+  return chain.every((code) => JURISDICTION_REGISTRY[code].local_requirements_reviewed);
+}
+
+/**
+ * Whether a document is required of a provider working in this place. Platform
+ * baseline documents (no `imposed_by`) are required everywhere; a
+ * government-imposed document is required only inside that government.
+ */
+export function evidenceAppliesInJurisdiction(
+  code: EvidenceRequirementCode,
+  jurisdiction: string,
+): boolean {
+  const imposedBy = PROVIDER_POLICY_MATRIX.evidence_types[code]?.imposed_by;
+  if (!imposedBy) return true;
+  return jurisdictionChain(jurisdiction).includes(imposedBy);
+}
+
+/**
+ * The documents a provider must hold to perform this service on this pathway in
+ * this place. An unregistered or unreviewed place yields an empty list, and the
+ * eligibility engine denies before it ever gets here.
+ */
+export function getEvidenceRequirementsInJurisdiction(
   serviceCode: ServiceCode,
   pathway: ProviderPathway,
+  jurisdiction: string,
 ): readonly EvidenceRequirementCode[] {
+  if (!jurisdictionIsOpenForService(jurisdiction)) return [];
   const serviceRequirements = SERVICE_POLICY_CATALOG[serviceCode]
     .evidenceRequirementsByPathway[pathway];
   if (!serviceRequirements) return [];
   return [...new Set([
     ...serviceRequirements,
     ...RELATIONSHIP_EVIDENCE_REQUIREMENTS[pathway],
-  ])];
+  ])].filter((code) => evidenceAppliesInJurisdiction(code, jurisdiction));
+}
+
+/**
+ * Requirements in the deployed policy jurisdiction. Kept so existing callers
+ * that have no job jurisdiction in hand behave exactly as before; anything that
+ * knows where the work happens should call the jurisdiction-aware form.
+ */
+export function getEvidenceRequirements(
+  serviceCode: ServiceCode,
+  pathway: ProviderPathway,
+): readonly EvidenceRequirementCode[] {
+  return getEvidenceRequirementsInJurisdiction(
+    serviceCode,
+    pathway,
+    POLICY_JURISDICTION,
+  );
 }
 
 export interface ServiceDefaultDenyStatus {

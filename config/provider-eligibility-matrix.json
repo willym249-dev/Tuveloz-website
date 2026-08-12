@@ -100,9 +100,30 @@
     "sponsored_trainee_employee": ["sponsored_trainee"],
     "provider_business_employee": ["standard_provider", "specialty_provider"]
   },
+  "jurisdiction_registry": {
+    "US": {
+      "label": "United States",
+      "parent": null,
+      "local_requirements_reviewed": true,
+      "review_note": "Federal requirements only. Reviewed for the launch service list."
+    },
+    "US-MD": {
+      "label": "Maryland",
+      "parent": "US",
+      "local_requirements_reviewed": true,
+      "review_note": "Maryland statewide licensing and environmental requirements reviewed for the launch service list."
+    },
+    "US-MD-MontgomeryCounty": {
+      "label": "Montgomery County, Maryland",
+      "parent": "US-MD",
+      "local_requirements_reviewed": true,
+      "review_note": "County Code Chapter 31A registration and Md. Comm. Law 14-1001 repair-record duties reviewed for the launch service list."
+    }
+  },
   "evidence_types": {
     "ocp_vehicle_service_registration": {
       "label": "Montgomery County Motor Vehicle Repair/Maintenance/Towing Certificate",
+      "imposed_by": "US-MD-MontgomeryCounty",
       "requires_expiration": true,
       "private": true
     },
@@ -138,31 +159,37 @@
     },
     "md_locksmith_business_license": {
       "label": "Maryland Locksmith Business License",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
     "md_locksmith_technician_registration": {
       "label": "Applicable Locksmith Technician/Employee Registration Evidence",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
     "mva_inspection_station_license": {
       "label": "Maryland Licensed Inspection Station Evidence",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
     "mva_inspection_mechanic_license": {
       "label": "Maryland Licensed Inspection Mechanic Evidence",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
     "epa_section_609_certificate": {
       "label": "EPA Section 609 Technician Certificate",
+      "imposed_by": "US",
       "requires_expiration": false,
       "private": true
     },
     "mde_vehicle_refinishing_permit": {
       "label": "Applicable Maryland Vehicle-Refinishing Air Permit/Coverage",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
@@ -178,18 +205,21 @@
     },
     "mde_scrap_tire_authorization": {
       "label": "Applicable MDE Scrap-Tire Authorization",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "conditional": "required_if_provider_transports_collects_stores_or_disposes_above_applicable_threshold",
       "private": true
     },
     "tire_fee_tax_accounts": {
       "label": "Applicable New-Tire Fee and Tax Account Evidence",
+      "imposed_by": "US-MD",
       "requires_expiration": "configurable",
       "conditional": "required_if_provider_is_responsible_for_first_maryland_sale",
       "private": true
     },
     "ocp_towing_registration": {
       "label": "Montgomery County Towing Registration",
+      "imposed_by": "US-MD-MontgomeryCounty",
       "requires_expiration": true,
       "private": true
     },
@@ -206,6 +236,7 @@
     },
     "motor_fuel_registration": {
       "label": "Applicable Maryland Motor-Fuel Registration",
+      "imposed_by": "US-MD",
       "requires_expiration": true,
       "private": true
     },
