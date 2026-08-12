@@ -3,6 +3,7 @@ import { getDb } from "../../../db";
 import {
   customerRequests,
   expansionInterests,
+  fleetInquiries,
   launchFeedback,
   providerApplications,
   providerCredentialVerifications,
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
   try {
     const db = getDb();
-    const [requests, providers, credentials, feedback, quotes, expansion] = await Promise.all([
+    const [requests, providers, credentials, feedback, quotes, expansion, fleet] = await Promise.all([
       db.select().from(customerRequests).orderBy(desc(customerRequests.createdAt)).limit(100),
       db.select().from(providerApplications).orderBy(desc(providerApplications.createdAt)).limit(100),
       db.select().from(providerCredentialVerifications).orderBy(desc(providerCredentialVerifications.updatedAt)).limit(500),
@@ -48,6 +49,9 @@ export async function GET(request: Request) {
       }).from(expansionInterests)
         .orderBy(desc(expansionInterests.createdAt))
         .limit(500),
+      db.select().from(fleetInquiries)
+        .orderBy(desc(fleetInquiries.createdAt))
+        .limit(500),
     ]);
     const safeRequests = requests.map(({ accessToken, ...requestItem }) => {
       void accessToken;
@@ -63,7 +67,7 @@ export async function GET(request: Request) {
       };
     });
     return Response.json(
-      { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion },
+      { requests: safeRequests, providers: safeProviders, feedback, quotes, expansion, fleet },
       { headers: ADMIN_NO_STORE_HEADERS },
     );
   } catch (error) {

@@ -1079,11 +1079,24 @@ test("customer account features are authenticated and backed by real records", a
   assert.ok(migrationSource.includes('CREATE TABLE `saved_providers`'));
   assert.ok(migrationSource.includes('CREATE TABLE `job_messages`'));
 
-  for (const source of [customerToolsSource, customerToolsComponent, schemaSource, migrationSource]) {
+  // The customer workspace itself still collects no phone number.
+  for (const source of [customerToolsSource, customerToolsComponent, migrationSource]) {
     assert.ok(!/\bphone\b/i.test(source));
     assert.ok(!source.includes("emailNotifications"));
     assert.ok(!source.includes("email_notifications"));
   }
+  assert.ok(!schemaSource.includes("emailNotifications"));
+  assert.ok(!schemaSource.includes("email_notifications"));
+
+  // db/schema.ts is no longer blanket phone-free: fleet_inquiries takes a
+  // business contact number. The rule it carries is now stricter and specific
+  // — any table storing a contact phone must store a marketing-consent basis
+  // beside it, so a number can never be promoted to a marketing list by
+  // existing. See tests/fleet-and-vehicles.test.mjs for the pairing check.
+  assert.equal(
+    schemaSource.includes('text("contact_phone")'),
+    schemaSource.includes('text("sms_marketing_consent_version")'),
+  );
 });
 
 

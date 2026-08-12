@@ -428,6 +428,41 @@
       "tag": "0060_launch_notification_consent",
       "when": 1785722500000,
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "6",
+      "when": 1786320400000,
+      "tag": "0061_fleet_accounts_and_saved_vehicles",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "6",
+      "when": 1786320500000,
+      "tag": "0062_referral_attribution",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "6",
+      "when": 1786320600000,
+      "tag": "0063_fleet_phone_contact_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "6",
+      "when": 1786320700000,
+      "tag": "0064_phone_contact_consents",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "6",
+      "when": 1786320800000,
+      "tag": "0065_customer_request_contact_phone",
+      "breakpoints": true
     }
   ]
 }

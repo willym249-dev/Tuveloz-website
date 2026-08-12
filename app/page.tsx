@@ -1,6 +1,10 @@
 ﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import {
+  PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN,
+  SMS_MARKETING_CONSENT_TEXT_EN,
+} from "../lib/phone-consent-text";
 import Link from "next/link";
 import {
   CURRENT_LAUNCH_AREA,
@@ -242,6 +246,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [repeatBooking, setRepeatBooking] = useState<RepeatBooking | null>(null);
   const [repeatBookingError, setRepeatBookingError] = useState("");
   const [useSameVehicle, setUseSameVehicle] = useState(true);
+  // Drives whether the promotional-text opt-in is shown at all: no number
+  // entered means there is nothing to consent about.
+  const [contactPhoneEntered, setContactPhoneEntered] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const { accountHref, accountLabel } = useAccountHeaderState();
   // Control ("A") on first render so server and client match; the real assigned
@@ -1261,6 +1268,27 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   placeholder="you@example.com"
                 />
               </label>
+              <label>
+                Phone <small>(optional)</small>
+                <input
+                  autoComplete="tel"
+                  inputMode="tel"
+                  maxLength={40}
+                  name="contact-phone"
+                  onChange={(event) => setContactPhoneEntered(
+                    event.target.value.trim().length > 0,
+                  )}
+                  placeholder="(301) 555-0100"
+                  type="tel"
+                />
+                <small>{PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN}</small>
+              </label>
+              {contactPhoneEntered && (
+                <label className="request-sms-consent">
+                  <input name="sms-marketing-consent" type="checkbox" value="yes" />
+                  <span>{SMS_MARKETING_CONSENT_TEXT_EN}</span>
+                </label>
+              )}
               {repeatBooking && (
                 <fieldset className="area-fieldset repeat-vehicle-fieldset">
                   <legend>Which vehicle is this for?</legend>
