@@ -82,7 +82,7 @@ export default function TermsPage() {
         </p>
         <p>
           Tuveloz isn&apos;t a party to that agreement just because it displays
-          information, supports messages, collects the platform fee, or helps
+          information, supports messages, collects the Customer Service Fee, or helps
           review a complaint. Nobody may make a promise or sign anything on
           Tuveloz&apos;s behalf.
         </p>
@@ -238,7 +238,7 @@ export default function TermsPage() {
         <p>
           Tuveloz&apos;s role is limited to running the marketplace. To the
           fullest extent Maryland law allows, Tuveloz&apos;s liability for any
-          claim is capped at the platform fee collected on the job the claim
+          claim is capped at the Customer Service Fee collected on the job the claim
           is about. This cap doesn&apos;t remove a right, duty, or remedy the law
           doesn&apos;t let us waive — and it isn&apos;t a claim that Tuveloz has zero
           liability.

@@ -30,7 +30,7 @@ export default function PaymentsPage() {
           configuration proposes a customer service fee equal to 5% of the
           provider&apos;s quoted subtotal. If that pricing and payment flow receive
           final approval, the customer must see the provider subtotal, separate
-          Tuveloz fee, and total conspicuously before choosing whether to proceed.
+          Customer Service Fee, and total conspicuously before choosing whether to proceed.
           Tuveloz must not add work to an accepted quote. Every provider amount
           processed through Tuveloz is labor only; provider-supplied parts, parts
           reimbursement, parts tax, and other parts charges are prohibited. A labor
@@ -40,7 +40,7 @@ export default function PaymentsPage() {
       </section>
 
       <section>
-        <h2>2. Provider pricing and proposed Tuveloz fee</h2>
+        <h2>2. Provider pricing and proposed Customer Service Fee</h2>
         <p>
           Provider businesses set their own labor-only quotes. Any required part
           is purchased separately by the customer and is not included in the
