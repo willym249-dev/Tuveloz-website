@@ -13,6 +13,47 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-11 — The homepage founding banner promised two things we refuse
+
+**Why this mattered.** The banner told providers *"The first pros into Montgomery
+County get first pick of jobs"* under the heading *"Be first. Own your corner of
+the county."* Both are perks the founding program refuses in writing, and the
+first is barred in code: `lib/founding-cohort.ts` says outright that nothing in
+that module may influence what a customer is shown or the order providers appear
+in. `founding-provider-program.md` refuses territory locks by name.
+
+So this was not a wording preference. It was the one claim on the site that could
+not have been delivered if a provider had asked us to honour it — and it sat on
+the page a paid provider campaign was about to point at.
+
+**What it says now.** Only perks that exist: the first 20 accepted are never
+charged a provider membership fee if one is ever introduced, and the first 10 are
+invited to a spotlight post. Both numbers match `FOUNDING_COHORT_SIZE` and
+`FOUNDING_SPOTLIGHT_LIMIT`, and the membership-fee wording matches the published
+`/founding-providers` page — which already said it correctly. The site contradicted
+its own published program page, not just its code.
+
+**The Spanish carried both claims too**, and would have been missed by reading the
+homepage alone: `site-language.tsx` had *"escogen trabajos antes que nadie"*
+(they choose jobs before anyone else) and *"Adueñese de su zona del condado"*
+(take ownership of your zone of the county). The dictionary keys on the English
+string, so both key and value had to change together. Anything that edits
+customer- or provider-facing copy has to check the dictionary in the same change,
+or the English gets fixed and the Spanish keeps making the promise.
+
+**Left the copy as one contiguous string on purpose.** Interpolating the cohort
+constants into the JSX would tie the numbers to the source of truth, but it splits
+the sentence into separate text nodes and the dictionary would no longer match —
+the translation would fail silently. Literal numbers, verified against the
+constants by hand, is the safer trade here.
+
+**Both brand documents already flagged this** — `SALES_PITCH.md` listed it as one
+of two live contradictions, and the morning-ads campaign doc told writers never to
+say it. The rule was written down and the site said it anyway. Written guidance
+does not remove copy that is already shipped; someone has to go and change it.
+
+---
+
 ## 2026-08-11 — Check open pull requests before starting anything small (#147)
 
 **New rule in `CLAUDE.md`, next to the existing "read the log first".** The log
