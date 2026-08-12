@@ -696,6 +696,15 @@ const spanishText: Record<string, string> = {
   "Customer account": "Cuenta de cliente",
   "Provider account": "Cuenta de proveedor",
   "Account": "Cuenta",
+  // Shown in place of the sign-up wording once a session is present, so a
+  // signed-in visitor on a public page is never told to create an account.
+  "My workspace": "Mi espacio",
+  "Go to your account": "Ir a su cuenta",
+  "Go to your provider workspace": "Ir a su espacio de proveedor",
+  "You’re signed in. This page is public information, not a sign-out.": "Su sesión sigue abierta. Esta página es información pública, no un cierre de sesión.",
+  "Back to your account →": "Volver a su cuenta →",
+  "Back to your provider workspace →": "Volver a su espacio de proveedor →",
+  "You're signed in and your spot is saved. Nothing here books anything or charges you.": "Su sesión está abierta y su lugar está apartado. Nada aquí reserva servicios ni le cobra.",
   "Tuveloz sign in": "Inicio de sesión de Tuveloz",
   "Welcome to Tuveloz.": "Bienvenido a Tuveloz.",
   "Access your customer requests, provider application, or approved-provider workspace.": "Acceda a sus solicitudes de cliente, su solicitud de proveedor o su espacio de proveedor aprobado.",

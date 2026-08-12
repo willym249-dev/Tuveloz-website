@@ -8102,6 +8102,30 @@ footer > p,
   font-weight: 800;
 }
 
+.signed-in-return-note {
+  align-items: flex-start;
+  background: rgba(126, 217, 87, 0.1);
+  border: 1px solid rgba(126, 217, 87, 0.32);
+  border-left: 4px solid #7ed957;
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  margin-bottom: 22px;
+  max-width: 530px;
+  padding: 13px 15px;
+}
+
+.signed-in-return-note strong {
+  color: #f7f3ef;
+  font-size: 13px;
+}
+
+.signed-in-return-note a {
+  color: #9ce87b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .fixed-launch-area {
   background: #080808;
   border: 1px solid #493123;

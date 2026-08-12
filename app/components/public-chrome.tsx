@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAccountHeaderState } from "./account-header-state";
 import { SiteLanguageButton } from "./site-language";
 import { SocialLinks } from "./social-links";
 import { BrandMark } from "./tuveloz-icons";
@@ -9,8 +10,10 @@ import { BrandMark } from "./tuveloz-icons";
 /**
  * One header and one footer for every public page outside the homepage, so the
  * navigation, the wording of each link, and the primary call to action stay
- * identical wherever a visitor lands. The homepage keeps its own header because
- * it swaps the sign-in link for a live account destination.
+ * identical wherever a visitor lands. Like the homepage header, it swaps the
+ * sign-in link and the sign-up call to action for the visitor's own workspace
+ * once a session is present — a signed-in customer opening a public page must
+ * not be shown the wording used for someone with no account.
  */
 export function PublicSiteHeader({
   cta = "customer",
@@ -20,6 +23,7 @@ export function PublicSiteHeader({
   navigationId?: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { accountHref, accountLabel, signedIn } = useAccountHeaderState();
 
   return (
     <header className="site-header">
@@ -48,8 +52,19 @@ export function PublicSiteHeader({
       </nav>
       <div className="header-actions">
         <SiteLanguageButton />
-        <Link className="header-sign-in" href="/account">Sign in</Link>
-        {cta === "provider" ? (
+        <Link
+          aria-label={accountLabel}
+          className="header-sign-in"
+          href={accountHref}
+          onClick={() => setMenuOpen(false)}
+        >
+          {signedIn ? accountLabel : "Sign in"}
+        </Link>
+        {signedIn ? (
+          <Link className="header-cta" href={accountHref} onClick={() => setMenuOpen(false)}>
+            My workspace
+          </Link>
+        ) : cta === "provider" ? (
           <Link className="header-cta" href="/join">Apply free</Link>
         ) : (
           <Link className="header-cta" href="/account?role=customer&mode=create">

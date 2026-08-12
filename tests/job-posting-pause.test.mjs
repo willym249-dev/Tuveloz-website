@@ -26,6 +26,10 @@ const pauseNotice = await readFile(
   new URL("../app/components/job-posting-pause-notice.tsx", import.meta.url),
   "utf8",
 );
+const saveMySpotButton = await readFile(
+  new URL("../app/components/save-my-spot-button.tsx", import.meta.url),
+  "utf8",
+);
 
 test("customer signups stay open while new job requests and payments are paused", () => {
   assert.match(launchStatus, /CUSTOMER_JOB_POSTING_PAUSED = true/);
@@ -48,7 +52,11 @@ test("customer signups stay open while new job requests and payments are paused"
   );
   assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
   assert.match(homepage, /Two minutes now\. First in line at launch\./);
-  assert.match(homepage, /Save my spot — free/);
+  // The sign-up invitation now lives in SaveMySpotButton, which keeps this
+  // wording for a visitor without a session and offers a signed-in one their
+  // own workspace instead of telling them to create a second account.
+  assert.match(homepage, /<SaveMySpotButton/);
+  assert.match(saveMySpotButton, /Save my spot — free/);
   assert.match(homepage, /Apply as a provider/);
 });
 
