@@ -44,6 +44,7 @@ const sh = (cmd, args, opts = {}) =>
     encoding: "utf8",
     stdio: "pipe",
     maxBuffer: 64 * 1024 * 1024,
+    timeout: 30_000,
     ...opts,
   });
 
