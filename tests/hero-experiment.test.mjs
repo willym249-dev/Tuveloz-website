@@ -23,7 +23,7 @@ test("hero and pitch each render both variants and tag the start event", async (
   assert.match(page, /activeVariants\(\)/);
   // Hero variants.
   assert.match(page, /Your wrench\. Your rules\./);
-  assert.match(page, /Do great work\. Get paid\./);
+  assert.match(page, /Be first in line for car jobs in Montgomery County\./);
   // Pitch variants.
   assert.match(page, /You’ve got the skills/);
   assert.match(page, /Your customers\. Your prices\. Your call\./);

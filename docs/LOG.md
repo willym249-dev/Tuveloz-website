@@ -13,6 +13,37 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-13 — Hero copy test refreshed from real funnel data; step events now variant-stamped
+
+Production funnel read (D1 `analytics_events`, all-time): 76 provider signup
+landings → 10 step-1 completions → 4 step-2 → 1 submitted. The cliff is
+landing → step 1, so the wording work went there. Two changes:
+
+**The measurement bug first.** `provider_step1_completed` and
+`provider_step2_completed` fired with empty props, so no A/B experiment could
+ever be read at the step that actually loses people — only the start and the
+single completion carried variants. Both events now stamp
+`variants: activeVariants()`. Every read of the experiments before 2026-08-13
+is unattributable at the step level; treat the tests as starting fresh from
+this date.
+
+**`provider_hero` B replaced.** The old B ("Do great work. Get paid.") was
+generic. Competitor survey (Thumbtack pro lander, TaskRabbit, YourMechanic,
+Wrench, Angi) shows the converging pattern for pro recruiting: name the
+visitor's place and the thing they want — Thumbtack literally renders "Get
+jobs in Germantown." for a Montgomery County visitor. New B, kept
+launch-honest (first in line, not jobs today): "Be first in line for car jobs
+in Montgomery County." A ("Your wrench. Your rules.") stays the control.
+Spanish dictionary, admin funnel labels, `tests/hero-experiment.test.mjs`, and
+`tests/spanish-coverage.test.mjs` updated together. Losing the old B's data
+cost nothing — see the measurement bug above.
+
+The paused-mode customer hero paragraph was also warmed (quotes "come right to
+your driveway"), with its dictionary entry replaced in the same commit. The
+customer side has too little traffic to test, so that one is a judgment edit,
+not an experiment. Owner reads results at `/admin/analytics-funnel`; the page
+itself says to wait for ~30 visitors per variant.
+
 ## 2026-08-11 — Terms and the Payment Policy re-released; the open-PR queue cleared
 
 **The release, because this one is a legal act rather than an edit.** Both pages

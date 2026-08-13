@@ -99,7 +99,12 @@ const EXPERIMENT_META: Array<{
   {
     name: "provider_hero",
     title: "Hero headline",
-    labels: { A: "“Your wrench. Your rules.”", B: "“Do great work. Get paid.”" },
+    // B replaced 2026-08-13 (was "Do great work. Get paid."): step events were
+    // not variant-stamped before that date, so no attributable reads were lost.
+    labels: {
+      A: "“Your wrench. Your rules.”",
+      B: "“Be first in line for car jobs in Montgomery County.”",
+    },
   },
   {
     name: "provider_pitch",

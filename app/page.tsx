@@ -661,7 +661,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 Now onboarding · Montgomery County
               </div>
               <h1>
-                {heroVariant === "B" ? "Do great work. Get paid." : "Your wrench. Your rules."}
+                {/* B follows the pattern the big pro marketplaces converge on:
+                    name the place and the thing the pro actually wants (jobs),
+                    stated honestly for a pre-launch marketplace — first in
+                    line, not jobs today. A stays the ownership-pride control. */}
+                {heroVariant === "B"
+                  ? "Be first in line for car jobs in Montgomery County."
+                  : "Your wrench. Your rules."}
                 <br />
                 <span className="hero-value-line">
                   We bring the customers.
@@ -692,10 +698,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </span>
               </h1>
               <p>
-                Tuveloz is building a local marketplace where you can post a car need
-                once, compare providers and prices side by side, and choose. Customer
-                accounts are open now; requests turn on once the right provider coverage
-                is in place.
+                Tuveloz is building a local marketplace where you post what your car
+                needs once, local independent providers send you real quotes — many
+                come right to your driveway — and you compare and choose. Customer
+                accounts are open now; requests turn on once the right provider
+                coverage is in place.
               </p>
               <ul className="hero-highlights">
                 <li><span aria-hidden="true">✓</span> Free to create your account</li>

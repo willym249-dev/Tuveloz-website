@@ -663,7 +663,7 @@ export function ProviderSignupForm() {
     }
     setStepError("");
     resetChallenge();
-    track("provider_step1_completed");
+    track("provider_step1_completed", { variants: activeVariants() });
     setStep(showStep2 ? 2 : 3);
   }
 
@@ -678,7 +678,7 @@ export function ProviderSignupForm() {
     }
     setStepError("");
     resetChallenge();
-    track("provider_step2_completed");
+    track("provider_step2_completed", { variants: activeVariants() });
     setStep(3);
   }
 

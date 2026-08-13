@@ -86,7 +86,7 @@ test("the marketing copy people decide on is translated", async () => {
   for (const english of [
     "Any car issue.", // homepage hero
     "Car trouble shouldn't leave you guessing.", // customer lander hero
-    "Do great work. Get paid.", // provider lander hero
+    "Be first in line for car jobs in Montgomery County.", // provider lander hero
     "Ask once. Compare real prices. Pick who you like.", // how-it-works
     "Who is asking", // assistant
     "Frequently asked questions", // faq
