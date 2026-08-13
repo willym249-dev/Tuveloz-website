@@ -14,6 +14,7 @@ import type {
 } from "@simplewebauthn/browser";
 import { primeAccountHeaderState } from "../components/account-header-state";
 import { track } from "../../lib/analytics";
+import { REMEMBERED_EMAIL_KEY } from "../../lib/remembered-email";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -62,7 +63,6 @@ function passwordRules(value: string) {
     },
   ];
 }
-const REMEMBERED_EMAIL_KEY = "tuveloz.remembered-email";
 
 /**
  * Shown under every 6-digit entry step. Codes are throttled to 3 per 15

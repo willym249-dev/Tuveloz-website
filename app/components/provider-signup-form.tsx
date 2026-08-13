@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   emptyProviderSelfAssessment,
@@ -47,6 +47,7 @@ import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
 import { normalizeReferralCode } from "../../lib/referral-code";
+import { rememberEmailForSignIn } from "../../lib/remembered-email";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES,
@@ -448,6 +449,7 @@ export function ProviderSignupForm() {
     emptyProviderSelfAssessment,
   );
   const [stepError, setStepError] = useState("");
+  const stepErrorRef = useRef<HTMLParagraphElement>(null);
   const [applicationSent, setApplicationSent] = useState(false);
   const [applicationBusy, setApplicationBusy] = useState(false);
   const [applicationError, setApplicationError] = useState("");
@@ -641,9 +643,19 @@ export function ProviderSignupForm() {
     setStep(1);
   }
 
+  // The step buttons sit at the bottom of a long step while the error renders
+  // at the top; on a phone the message lands off-screen and the tap looks like
+  // it did nothing. Bring the error to the reader every time it is raised.
+  function showStepError(message: string) {
+    setStepError(message);
+    requestAnimationFrame(() => {
+      stepErrorRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }
+
   function goToStep2() {
     if (selectedProviderServices.length === 0) {
-      setStepError(
+      showStepError(
         providerFormIsSpanish
           ? "Elija al menos un servicio."
           : "Pick at least one service.",
@@ -654,7 +666,7 @@ export function ProviderSignupForm() {
     // validation never runs here — check the email explicitly.
     const stepOneEmail = (draftFields["provider-email"] ?? "").trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(stepOneEmail)) {
-      setStepError(
+      showStepError(
         providerFormIsSpanish
           ? "Escriba un correo electrónico válido."
           : "Enter a valid email address.",
@@ -669,7 +681,7 @@ export function ProviderSignupForm() {
 
   function goToStep3() {
     if (hasVisibleLegalRequirements && !legalConfirmed) {
-      setStepError(
+      showStepError(
         providerFormIsSpanish
           ? "Confirme que entiende los requisitos legales mostrados."
           : "Confirm you understand the legal requirements shown above.",
@@ -781,6 +793,10 @@ export function ProviderSignupForm() {
         });
         const result = (await response.json()) as { error?: string };
         if (!response.ok) throw new Error(result.error || "Please try again.");
+        // The applicant proved control of this email seconds ago; prefill the
+        // /account sign-in so "Continue provider verification" doesn't ask
+        // them to retype it.
+        rememberEmailForSignIn(String(pendingApplicationPayload.email ?? ""));
         form.reset();
         clearSignupDraft();
         setDraftFields({});
@@ -943,7 +959,7 @@ export function ProviderSignupForm() {
         </p>
       )}
 
-      {stepError && <p className="form-error" role="alert">{stepError}</p>}
+      {stepError && <p className="form-error" ref={stepErrorRef} role="alert">{stepError}</p>}
 
       {step === 1 && (
         <div data-signup-step="1">

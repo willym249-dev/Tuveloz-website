@@ -44,6 +44,17 @@ customer side has too little traffic to test, so that one is a judgment edit,
 not an experiment. Owner reads results at `/admin/analytics-funnel`; the page
 itself says to wait for ~30 visitors per variant.
 
+**Same-day follow-up: two signup friction fixes.** A successful application now
+writes the verified email to the shared remembered-email key
+(`lib/remembered-email.ts`, extracted from `/account`), so the sign-in that the
+success screen points to arrives prefilled instead of asking the applicant to
+retype the address they just proved control of. And step errors ("pick at
+least one service", invalid email, legal confirmation) now scroll into view
+when raised — they rendered at the top of the form while the buttons sit at
+the bottom, so on a phone the tap looked like it did nothing. Verified by the
+full suite and `npm run test:e2e` (provider application, provider sign-in,
+customer signup all green against a real local server and D1).
+
 ## 2026-08-11 — Terms and the Payment Policy re-released; the open-PR queue cleared
 
 **The release, because this one is a legal act rather than an edit.** Both pages
