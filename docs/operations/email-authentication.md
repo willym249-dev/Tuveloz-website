@@ -33,6 +33,33 @@ Verified 2026-08-10 by direct DNS query:
 | `_dmarc.tuveloz.com` | `v=DMARC1; p=none; rua=mailto:dmarc@tuveloz.com;` | Present |
 | `tuveloz.com` TXT | `v=spf1 include:_spf.porkbun.com ~all` | Registrar forwarding |
 
+Re-verified 2026-08-16; every row above still reads exactly as recorded, and the
+Resend key is still 1024-bit. Two additions from that check:
+
+| Record | Value | State |
+| --- | --- | --- |
+| `tuveloz.com` MX | `smtp.google.com` | Google Workspace receives mail |
+| `google._domainkey.tuveloz.com` | — | NXDOMAIN, no Workspace DKIM |
+
+### The sender the reports are most likely to surface first
+
+The root domain receives at Google Workspace, and `hello@tuveloz.com` is the
+address used throughout this repository. Nothing here covers mail **sent** from
+that mailbox: the root SPF authorises the registrar's forwarders and not Google,
+and no Workspace DKIM selector is published. So any message sent from
+`hello@tuveloz.com` through Workspace fails SPF and has no DKIM signature to fall
+back on, and therefore fails DMARC alignment.
+
+This costs nothing today — `p=none` observes and never quarantines. It is
+precisely what the `rua` address exists to reveal, and it is the first thing to
+confirm or rule out in the sender inventory, because moving to `p=quarantine`
+with it unresolved sends the owner's own mail to spam.
+
+Confirming it needs one fact this repository cannot supply: whether business mail
+is actually sent from that mailbox, or only received there. If it is sent, the
+fix is a Workspace SPF include and a published DKIM selector, before enforcement
+rather than after.
+
 ## How alignment resolves
 
 **DKIM aligns.** The selector lives under `updates.tuveloz.com`, so the signing

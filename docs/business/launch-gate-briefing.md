@@ -46,8 +46,21 @@ review older than one year — see the recurring reviews in
 **`entity_authority_domain_and_code`** — *business, required*
 Confirm LLC records, ownership authority, domain control, code ownership,
 contractor assignments, and essential vendor contracts.
-*Existing evidence:* none in code — this is a records question, not a software
-one. It is the one gate that needs nobody else, and therefore the cheapest to
+*Existing evidence:* mostly a records question, but three of its six parts are
+verifiable from this repository and public DNS, and were checked on 2026-08-16.
+
+| Part | Evidence |
+| --- | --- |
+| Domain control | `tuveloz.com` nameservers are `ainsley.ns.cloudflare.com` and `kolton.ns.cloudflare.com`; SPF includes `_spf.porkbun.com` (registrar); MX is `smtp.google.com`; `updates.tuveloz.com` carries a Resend DKIM key |
+| Code ownership | 961 commits, five authors: `willym249-dev` (737), `Claude` (214 + 6), and CI identities (4). **No third-party human contributor has ever committed**, so there is no outside author to have assigned copyright from |
+| Essential vendors | The ones the product actually depends on, from config: Cloudflare (DNS, Workers, D1, R2), Porkbun (registrar), Google Workspace (mail), Resend (transactional mail), Stripe (payments). Cloudmersive and an identity provider are named in config but unconfigured |
+
+That leaves LLC records, ownership authority, and contractor assignments — all
+documents held outside this repository, each of which wants a card in
+[`../records/`](../records/). The contractor part should be quick: the commit
+history above is the evidence that there are no third-party assignments to chase.
+
+It remains the one gate that needs nobody else, and therefore the cheapest to
 close.
 
 ### Owner plus an official legal or licensing source
