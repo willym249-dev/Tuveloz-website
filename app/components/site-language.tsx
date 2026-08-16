@@ -14,7 +14,14 @@ export type SiteLanguage = "en" | "es";
 const LANGUAGE_KEY = "tuveloz-language";
 const LANGUAGE_EVENT = "tuveloz-language-change";
 
-const spanishText: Record<string, string> = {
+/**
+ * Exported so the same reviewed strings can be applied on the server, where a
+ * crawler is. Deliberately exported *in place* rather than moved to a module of
+ * its own: `scripts/check-spanish-coverage.mjs` reads this file and parses the
+ * entries below with a line-anchored regex, so relocating them would silently
+ * disarm the guard that fails the build on an untranslated string.
+ */
+export const spanishText: Record<string, string> = {
   "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.": "Tuveloz aún no acepta solicitudes de servicio ni pagos de clientes. Primero estamos incorporando y revisando negocios proveedores locales para que los clientes tengan buenas opciones cuando abra el mercado.",
   "Customer and provider accounts are available now. Creating an account does not submit a service request or charge you.": "Las cuentas de clientes y proveedores ya están disponibles. Crear una cuenta no envía una solicitud de servicio ni genera ningún cargo.",
   "Learn about Tuveloz": "Conozca Tuveloz",
@@ -1164,7 +1171,7 @@ const spanishText: Record<string, string> = {
   "Privacy Policy": "Política de privacidad",
 };
 
-const spanishPlaceholders: Record<string, string> = {
+export const spanishPlaceholders: Record<string, string> = {
   "Full name": "Nombre completo",
   "Example: Rockville or Silver Spring": "Ejemplo: Rockville o Silver Spring",
   "Example: Prince George's County": "Ejemplo: Condado de Prince George",
