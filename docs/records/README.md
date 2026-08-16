@@ -56,11 +56,22 @@ keep that reference.
 
 ## Register
 
-Nothing filed yet. Add rows here as record cards are created.
+Five cards opened 2026-08-16 against the `entity_authority_domain_and_code`
+launch gate. Two are evidenced from this repository and public DNS; three are
+blanks holding the shape of a document only the owner can supply. A blank card
+is still useful — it names what is missing and what is waiting on it.
 
 | Document | Type | Issuer | Expires | Card |
 | --- | --- | --- | --- | --- |
-| _(none yet)_ | | | | |
+| Domain registration — tuveloz.com | Registration | Porkbun | **unrecorded** | [card](domain-registration-tuveloz-com.md) |
+| Code ownership and contributors | Ownership | — | Does not expire | [card](code-ownership-and-contributors.md) |
+| Essential vendor accounts | Vendor | Several | Payment methods do | [card](essential-vendor-accounts.md) |
+| LLC formation — Maryland | Formation | Maryland SDAT | Annual report does | [card](llc-formation-maryland.md) |
+| EIN assignment | Tax registration | IRS | Does not expire | [card](ein-assignment.md) |
+
+Still unfiled and named in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md): general
+liability insurance, the operating agreement, any Montgomery County licence, and
+Stripe's approval of the marketplace model. Each blocks a gate of its own.
 
 ## Keeping it current
 
