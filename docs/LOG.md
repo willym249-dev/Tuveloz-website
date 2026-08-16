@@ -13,6 +13,37 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-16 — The failing DMARC sender is real, and the rua mailbox is not a black hole
+
+Two open questions about email authentication closed in the same sitting, both
+from evidence outside this repository.
+
+**The Workspace sender is live.** `2274534` (earlier the same day) worked out
+from DNS that mail sent as `hello@tuveloz.com` fails DMARC on both legs — the
+root SPF authorises the registrar's forwarders and not Google, and no Workspace
+DKIM selector is published — but recorded honestly that the repository could not
+say whether that mailbox actually *sends* or only receives. It sends. The sent
+folder holds ordinary correspondence to recipients outside the domain, the most
+recent on 2026-08-08, alongside a few self-addressed tests. So the broken sender
+is in current use, and the Workspace SPF include plus a published DKIM selector
+moved from "confirm or rule out" to a prerequisite for enforcement. It now has
+its own dated row (2026-10-05), ahead of the `p=quarantine` move on 2026-10-19,
+and that row was rewritten to depend on it. The recipient addresses are personal
+data and were deliberately not written down anywhere in this repository; that
+external recipients exist is the whole finding.
+
+**The `rua` address receives.** `dmarc@tuveloz.com` is a working mailbox with
+three Google aggregate reports in it, dated 2026-08-08 through 2026-08-12. That
+retires the receipt half of the 2026-08-24 item; naming a reader is still open,
+and pointedly so, because most of those reports are unread — the exact state
+`email-authentication.md` calls decorative. Worth knowing for the inventory:
+Google is so far the only submitter, so what the reports show is one receiver's
+view, and a sender that never mails Gmail addresses would not appear in it at
+all.
+
+Nothing in the DNS changed today. Both findings are evidence, and the fixes they
+imply are owner actions in the registrar and in Workspace, not code.
+
 ## 2026-08-13 — Hero copy test refreshed from real funnel data; step events now variant-stamped
 
 Production funnel read (D1 `analytics_events`, all-time): 76 provider signup

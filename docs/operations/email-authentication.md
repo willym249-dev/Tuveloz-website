@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-10
+- **Last reviewed:** 2026-08-16
 
 What authenticates Tuveloz email, how the sending domain is configured today,
 and the deliberate sequence for tightening DMARC. Every account on the platform
@@ -55,10 +55,34 @@ precisely what the `rua` address exists to reveal, and it is the first thing to
 confirm or rule out in the sender inventory, because moving to `p=quarantine`
 with it unresolved sends the owner's own mail to spam.
 
-Confirming it needs one fact this repository cannot supply: whether business mail
-is actually sent from that mailbox, or only received there. If it is sent, the
-fix is a Workspace SPF include and a published DKIM selector, before enforcement
-rather than after.
+**Confirmed 2026-08-16: it is sent.** The one fact this repository could not
+supply came from the mailbox itself. Its sent folder holds mail from
+`hello@tuveloz.com` addressed to recipients outside the domain — ordinary
+correspondence, sitting alongside a handful of self-addressed tests, with the
+most recent external message on 2026-08-08. The failing sender is therefore
+real and in current use, not hypothetical, and the fix is required *before*
+enforcement rather than after: a Workspace SPF include and a published Workspace
+DKIM selector.
+
+The recipient addresses are personal data and are deliberately not recorded here.
+That external recipients exist at all is the entire finding; who they are does
+not change it.
+
+### The rua mailbox does receive
+
+Also confirmed 2026-08-16: `dmarc@tuveloz.com` is a live mailbox and aggregate
+reports arrive in it. Three are on file, dated 2026-08-08, 2026-08-09, and
+2026-08-12, each from `noreply-dmarc-support@google.com` with the subject form
+`Report domain: tuveloz.com Submitter: google.com`. The `rua` address is not a
+black hole, which settles the second half of step 1 below.
+
+The receipts qualify themselves in two ways. Google is so far the only submitter,
+which is unremarkable at this volume but means the inventory reflects one
+receiver's view rather than the internet's — a sender that only ever mails
+non-Gmail recipients would not appear in it. And most of the reports on file are
+still unread, which is the *first* half of step 1, and the half still open. A
+mailbox that receives and is never read is decorative in exactly the way this
+page warns about.
 
 ## How alignment resolves
 
@@ -98,11 +122,15 @@ remembered — a registrar forwarder, a helpdesk, a marketing tool — and
 enforcement before that inventory is complete silently sends real mail to spam.
 
 1. Put a person on `dmarc@tuveloz.com` and confirm the mailbox actually receives.
-   An unread `rua` address makes the record decorative.
+   An unread `rua` address makes the record decorative. **Receipt is confirmed
+   (2026-08-16); naming the reader is not.**
 2. Stay at `p=none` for a full reporting month. Read the reports.
-3. Only then move to `p=quarantine`, deliberately, once every legitimate sender
+3. Fix the Workspace sender before enforcement — add a Google SPF include to the
+   root record and publish a Workspace DKIM selector. This step was contingent
+   until 2026-08-16 and is now known to be required.
+4. Only then move to `p=quarantine`, deliberately, once every legitimate sender
    is known to align.
-4. Rotate DKIM to a 2048-bit key. The current key is Resend's 1024-bit default —
+5. Rotate DKIM to a 2048-bit key. The current key is Resend's 1024-bit default —
    acceptable, but below current practice.
 
 Deadlines for each step are tracked in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md);
