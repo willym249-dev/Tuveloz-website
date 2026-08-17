@@ -21,7 +21,6 @@ const baseUrl = (process.argv[2] || process.env.BASE_URL || "http://localhost:30
 // without pulling a "use client" component into the Worker bundle. Both are
 // read here, because this check is the only thing standing between a
 // half-translated page and production.
-const source = readFileSync(new URL("../app/components/site-language.tsx", import.meta.url), "utf8");
 const dictionary = readFileSync(new URL("../lib/spanish-dictionary.ts", import.meta.url), "utf8");
 
 const routes = readFileSync(new URL("../lib/spanish-routes.ts", import.meta.url), "utf8");
