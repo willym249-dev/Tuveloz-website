@@ -13,6 +13,57 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-17 — Zeo's search has been dead for a year, and said so as if it were the question's fault
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+mistake is the same one as the entry below it, arriving from the other
+direction, and because a session that reads either should read both. The work is
+in the Zeo repository on `claude/zeo-search-issue-bbz6ev`.
+
+**What happened.** The owner asked Zeo whether any games were on. Zeo replied
+that it had searched the web and "the search returned nothing usable, so I have
+no answer for you." Asked to narrow it to the NBA, it answered from memory that
+no games were scheduled for "today, June 27, 2024".
+
+Both halves were broken, in different ways.
+
+The lookup's default backend reads Bing's `&format=rss` feed. Microsoft retired
+the Bing Search APIs on 2025-08-11; the URL still answers 200 and the channel
+comes back with no items in it, for every query. Zeo's code could not tell that
+apart from a question nobody has written about, so a search service that had
+stopped answering was reported, every time, as a run of unlucky questions. The
+sentence was honest and pointed in exactly the wrong direction: the only repair
+it suggests is asking again in different words, and no wording gets past a dead
+feed. Roughly a year of lookups.
+
+The date was a separate hole. No request Zeo sends the local model has ever
+carried one, so the only "today" the model has is wherever its training data
+stops — and every judgement that turns on recency was being made against that
+date, not just the one visible wrong answer.
+
+**The lesson worth keeping.** An honest failure message is not automatically a
+useful one. "Nothing came back" was true about the feed and false about the
+question, and because it named the wrong subject it sent the owner to the one
+place the fix could not be. When a component can fail for two reasons that look
+identical from outside, the check that tells them apart is the feature — Zeo now
+spends one control query on a failed search and, if that also comes back empty,
+names the search host and the setting to change instead of the question.
+
+This is the 2026-08-15 video mistake in reverse. That one verified the stage it
+had changed and never looked at what the owner receives. This one looked only at
+what the owner receives, saw a well-formed honest sentence, and never asked
+whether the machinery behind it was running at all. Both are answered the same
+way: assert on the artifact, and make the artifact say which failure it is.
+
+**Now open.** Nothing Tuveloz-side is blocked. Zeo's own searching stays broken
+until the owner switches `runtime.web_lookup.backend` — and, separately,
+`runtime.web_learning.backend` — off `rss` on the `zeo-home` machine; a session
+in this container cannot reach that config or test a replacement backend against
+the live web. Until then Zeo answers from memory alone, which is worth knowing
+before trusting anything it says about a fact that moves.
+
+---
+
 ## 2026-08-17 — Zeo's "same video every time" was the renderer, not the premise
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
