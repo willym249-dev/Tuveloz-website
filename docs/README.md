@@ -37,6 +37,7 @@ self-contained page.
 | [`product/`](product/) | Feature specifications and design decision records added from here on. |
 | [`product/provider-signup-eligibility-first.md`](product/provider-signup-eligibility-first.md) | Why does provider signup ask for service choices before telling an applicant whether they qualify, and what was proposed to fix it? |
 | [`product/spanish-is-invisible-to-search.md`](product/spanish-is-invisible-to-search.md) | Eight pages have reviewed Spanish — why has no search engine ever seen it, and what would a fix cost? |
+| [`product/spanish-titles-and-descriptions-draft.md`](product/spanish-titles-and-descriptions-draft.md) | What would the eight `/es` pages say in a Spanish search result, and what needs checking before those strings go live? |
 | [`PROVIDER_CLASSIFICATION_DESIGN.md`](PROVIDER_CLASSIFICATION_DESIGN.md) | Why are providers independent contractors, which product facts hold that classification, and what must never be built? |
 | [`COMPETITIVE_LANDSCAPE.md`](COMPETITIVE_LANDSCAPE.md) | Who else does this, where does Tuveloz exceed the category, and where is it still short of table stakes? |
 

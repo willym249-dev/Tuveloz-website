@@ -80,6 +80,32 @@ test("the document declares itself Spanish", () => {
   assert.match(PAGE, /setAttribute\("lang", "es"\)/);
 });
 
+test("the search result's own copy is translated too", () => {
+  // A meta description is the sentence a searcher reads before deciding whether
+  // to click, and it is an attribute — the text handler only sees text nodes.
+  // <title> needs no handler: its contents are a text node already covered.
+  for (const selector of [
+    'meta[name="description"]',
+    'meta[property="og:description"]',
+    'meta[property="og:title"]',
+  ]) {
+    assert.ok(PAGE.includes(selector), `missing ${selector}`);
+  }
+  assert.match(PAGE, /class TranslateAttribute[\s\S]*?translateText\(value\)/);
+});
+
+test("attribute copy uses the same dictionary and the same fallback", () => {
+  // Inert until reviewed strings exist: an untranslated description is emitted
+  // unchanged in English rather than guessed at. Adding a string turns it on,
+  // removing one turns it off, and neither is a code change.
+  assert.match(PAGE, /if \(translated !== value\) element\.setAttribute/);
+});
+
+test("the social card does not claim to be English", () => {
+  // og:locale is a fact about the document, not copy, so it is set outright.
+  assert.match(PAGE, /class TranslateLocale[\s\S]*?"es_US"/);
+});
+
 test("the English canonical is removed, not merely outnumbered", () => {
   // Next emits a canonical from page metadata and it survives into the twin,
   // because the twin is that page. Appending a second left two, the English one

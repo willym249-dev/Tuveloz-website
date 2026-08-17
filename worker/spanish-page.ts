@@ -51,6 +51,42 @@ class DropInheritedCanonical {
 }
 
 /**
+ * Translate the copy that lives in an attribute rather than in the page.
+ *
+ * A meta description is the sentence a searcher reads *before* deciding whether
+ * to click, so on a Spanish result it matters more than most of the page. It is
+ * an attribute, and the text handler only ever sees text nodes, so it needs its
+ * own pass. `<title>` does not: its contents are a text node and are already
+ * covered.
+ *
+ * Inert until the strings exist. Every value goes through the same exact-match
+ * dictionary as the body, so an untranslated description is emitted unchanged in
+ * English — the same honest fallback the rest of this makes. Adding a reviewed
+ * string turns it on; removing one turns it back off. No code change either way.
+ */
+/**
+ * og:locale is a fact about the document, not copy, so it is set rather than
+ * looked up. A card that says en_US while its text is Spanish is simply wrong,
+ * and no dictionary entry would fix it.
+ */
+class TranslateLocale {
+  element(element: Element) {
+    element.setAttribute("content", "es_US");
+  }
+}
+
+class TranslateAttribute {
+  constructor(private readonly attribute: string) {}
+
+  element(element: Element) {
+    const value = element.getAttribute(this.attribute);
+    if (!value) return;
+    const translated = translateText(value);
+    if (translated !== value) element.setAttribute(this.attribute, translated);
+  }
+}
+
+/**
  * Tell search engines the two URLs are the same page in two languages.
  *
  * Each side points at itself and at the other, which is what `hreflang`
@@ -137,6 +173,14 @@ export async function spanishPageResponse(
   return new HTMLRewriter()
     .on("html", new LanguageAttribute())
     .on('link[rel="canonical"]', new DropInheritedCanonical())
+    // The search result itself: description, and the card a shared link renders
+    // as. <title> needs no handler — its contents are a text node.
+    .on('meta[name="description"]', new TranslateAttribute("content"))
+    .on('meta[property="og:description"]', new TranslateAttribute("content"))
+    .on('meta[property="og:title"]', new TranslateAttribute("content"))
+    .on('meta[name="twitter:description"]', new TranslateAttribute("content"))
+    .on('meta[name="twitter:title"]', new TranslateAttribute("content"))
+    .on('meta[property="og:locale"]', new TranslateLocale())
     .on("head", new Alternates(englishPath, spanishPath))
     .on("script, style, noscript", {
       element(element: Element) {
