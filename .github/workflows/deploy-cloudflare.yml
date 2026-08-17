@@ -18,9 +18,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The gate. Verify Tuveloz runs the three checks this job does not -- the
+  # rendered Spanish coverage check, the end-to-end provider signup, and the
+  # migration rehearsal against a fresh database -- and the deploy below waits
+  # on its result. Until 2026-08-17 those checks existed only on the
+  # pull-request path, so a direct push to main could reach production without
+  # them, and one did: /post-job served an untranslated English paragraph on
+  # its Spanish page for a day.
+  #
+  # Skipped for pull requests, where Verify Tuveloz already runs on its own
+  # pull_request trigger and nothing is being released anyway.
+  verify:
+    name: Verify before release
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/verify.yml
+
   deploy:
     name: Test, migrate, and deploy
-    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    needs: [verify]
+    # !cancelled() is what lets this run at all when the gate above is skipped:
+    # a plain needs would skip the deploy with it. The result check is what
+    # makes it a gate -- a failed verification stops the release here.
+    if: >-
+      !cancelled()
+      && (needs.verify.result == 'success' || needs.verify.result == 'skipped')
+      && (github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production

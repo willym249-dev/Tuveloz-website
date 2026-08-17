@@ -7,22 +7,27 @@ name: Verify Tuveloz
 # against them, and /post-job served an untranslated English paragraph on its
 # Spanish page for a day. A branch that only edited docs/LOG.md is what finally
 # ran the check and found it.
+#
+# On main these checks are no longer a push trigger of their own. Deploy Tuveloz
+# calls this workflow as the job its deploy depends on, so a commit that fails
+# here is never released rather than being reported red shortly after it went
+# live. Keeping the push trigger as well would run the whole suite twice for
+# every merge.
 on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  # A superseded pull-request run is worth cancelling; a run on main is the only
-  # record that a given commit was verified, so it is allowed to finish.
-  group: tuveloz-verify-${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+  # A superseded pull-request run is worth cancelling. A run reached through
+  # workflow_call is a deploy's own gate -- cancelling it would strand the
+  # release waiting on a result that is never coming.
+  group: tuveloz-verify-${{ github.event_name == 'pull_request' && github.head_ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
