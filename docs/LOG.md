@@ -55,12 +55,41 @@ what the owner receives, saw a well-formed honest sentence, and never asked
 whether the machinery behind it was running at all. Both are answered the same
 way: assert on the artifact, and make the artifact say which failure it is.
 
-**Now open.** Nothing Tuveloz-side is blocked. Zeo's own searching stays broken
-until the owner switches `runtime.web_lookup.backend` — and, separately,
-`runtime.web_learning.backend` — off `rss` on the `zeo-home` machine; a session
-in this container cannot reach that config or test a replacement backend against
-the live web. Until then Zeo answers from memory alone, which is worth knowing
-before trusting anything it says about a fact that moves.
+**Update, same day: the config edit was removed rather than documented.** The
+paragraph that used to sit here said searching stayed broken until the owner
+hand-edited `runtime.web_lookup.backend` and `runtime.web_learning.backend` on
+`zeo-home`. That was true when it was written and it should not have been the
+answer. The dead host was a *default in the code*, so the place to fix it was
+the code, and writing up someone else's JSON edit was a way of not noticing
+that. `rss` now means an ordered list of feed URLs instead of one host: the
+first that returns results wins, and a machine whose config was never touched
+searches again after a pull and a restart. Merged as `804b95e`, with the
+`search status` command in `061b604` reporting which host is actually
+answering.
+
+Two things that came out of it are worth more than the fix:
+
+- **The first draft defeated the guard it was working around.** It merged the
+  new candidate hosts into the `search_hosts` allowlist, which made the
+  allowlist stop restricting anything. The existing test proving a
+  non-allowlisted host is refused went red, and it was right to. The fix was to
+  make the allowlist *filter* the candidate chain instead — the guard decides
+  what may be contacted, exactly as before. A test going red because you
+  loosened something is the test doing its job; the move is to redesign, never
+  to edit the test until it agrees.
+- **A fix for silent failure nearly shipped as slow failure.** Five candidates
+  at the full 15-second timeout is a 75-second search, and the health check
+  behind it makes it 150. That is worse than the silence, because the owner
+  feels it on every query. The chain now runs against a wall-clock budget of
+  twice the single-host timeout. Checking the cost of a change is part of the
+  change.
+
+**Now open.** Nothing Tuveloz-side is blocked, and nothing is owed on
+`zeo-home` beyond `git pull` and a restart. What is still unverified: no
+session in this container can reach a search host, so whether any of the
+candidates is actually alive has not been confirmed from here. The failure mode
+is bounded — if every one is dead, Zeo behaves exactly as it does now and says
+so — but "search works again" is a claim only the owner's machine can settle.
 
 ---
 
