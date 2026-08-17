@@ -1,7 +1,17 @@
 name: Verify Tuveloz
 
+# This ran only on pull_request until 2026-08-17, and the deploy workflow does
+# not run every check it does. Three commits pushed straight to main on
+# 2026-08-16 therefore reached production without the rendered Spanish check,
+# the end-to-end signup, or the fresh-database migration rehearsal ever running
+# against them, and /post-job served an untranslated English paragraph on its
+# Spanish page for a day. A branch that only edited docs/LOG.md is what finally
+# ran the check and found it.
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -10,8 +20,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: tuveloz-pr-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # A superseded pull-request run is worth cancelling; a run on main is the only
+  # record that a given commit was verified, so it is allowed to finish.
+  group: tuveloz-verify-${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
