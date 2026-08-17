@@ -1164,6 +1164,43 @@ export const spanishText: Record<string, string> = {
   "Provider Agreement": "el Acuerdo del proveedor",
   "Payment Policy": "Política de pagos",
   "Privacy Policy": "Política de privacidad",
+  // Page titles and meta descriptions for the eight Spanish-ready paths.
+  //
+  // These are the search result itself — the line a Spanish speaker reads before
+  // deciding whether to click — so they are translated faithfully rather than
+  // freely. Two carry content that must survive: the homepage states the launch
+  // stage, and the Tuveloz AI description carries an explicit disclaimer about
+  // what the assistant does not do. Shortening either would change a claim.
+  //
+  // Keys are the exact strings the pages emit, read from the live site on
+  // 2026-08-16. A key off by one character never matches and the entry is dead.
+  "Tuveloz | Customer Choice. Provider Freedom.":
+    "Tuveloz | Opciones para clientes. Libertad para proveedores.",
+  "Post what your vehicle needs and compare real quotes from local independent providers in Montgomery County, MD. Providers join free — customer launch coming soon.":
+    "Publique lo que su vehículo necesita y compare precios reales de proveedores independientes locales en Montgomery County, MD. Los proveedores se unen gratis — el lanzamiento para clientes es próximamente.",
+  "For Customers — Real Quotes From Local Pros | Tuveloz":
+    "Para clientes — Precios reales de profesionales locales | Tuveloz",
+  "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.":
+    "Díganos una sola vez qué necesita su carro y compare precios reales de profesionales locales en Montgomery County, MD. Preguntar es gratis, comparar es gratis, y siempre puede decir que no.",
+  "Join as a Provider — Free Signup | Tuveloz":
+    "Únase como proveedor — Registro gratis | Tuveloz",
+  "Apply free to offer vehicle services on Tuveloz in Montgomery County, MD. Keep 100% of your quoted price, set your own schedule, no exclusivity.":
+    "Solicite gratis para ofrecer servicios para vehículos en Tuveloz en Montgomery County, MD. Se queda con el 100% del precio que cotiza, fija su propio horario, sin exclusividad.",
+  "About | Tuveloz": "Acerca de | Tuveloz",
+  "Tuveloz is a local vehicle-service marketplace for Montgomery County, MD — built around customer choice and independent provider freedom.":
+    "Tuveloz es un mercado local de servicios para vehículos en Montgomery County, MD — construido en torno a las opciones del cliente y la libertad del proveedor independiente.",
+  "How It Works | Tuveloz": "Cómo funciona | Tuveloz",
+  "How Tuveloz works: tell us what your car needs once, compare real prices from local pros, and pick the one you like.":
+    "Cómo funciona Tuveloz: díganos una sola vez qué necesita su carro, compare precios reales de profesionales locales, y elija el que usted prefiera.",
+  "Tuveloz AI | Tuveloz": "Tuveloz AI | Tuveloz",
+  "Bilingual, safety-first guidance that helps you describe what your vehicle needs and prepare a future service request. Tuveloz AI does not diagnose, dispatch help, guarantee pricing, or choose a provider.":
+    "Orientación bilingüe, con la seguridad primero, que le ayuda a describir lo que su vehículo necesita y a preparar una futura solicitud de servicio. Tuveloz AI no diagnostica, no envía ayuda, no garantiza precios, y no elige proveedor.",
+  "FAQ | Tuveloz": "Preguntas frecuentes | Tuveloz",
+  "Answers to common questions about Tuveloz — how the marketplace works, fees, provider onboarding, and the customer launch in Montgomery County, MD.":
+    "Respuestas a preguntas comunes sobre Tuveloz — cómo funciona el mercado, las tarifas, el registro de proveedores, y el lanzamiento para clientes en Montgomery County, MD.",
+  "Safety & Trust | Tuveloz": "Seguridad y confianza | Tuveloz",
+  "How Tuveloz verifies providers: law-based checks, service-specific evidence review, limited information sharing, and clear quotes.":
+    "Cómo Tuveloz verifica a los proveedores: revisiones basadas en la ley, revisión de documentos según el servicio, intercambio limitado de información, y precios claros.",
 };
 
 export const spanishPlaceholders: Record<string, string> = {
