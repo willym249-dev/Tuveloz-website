@@ -11,6 +11,7 @@ import { cleanupProviderApplicationVerificationState } from "../lib/provider-app
 import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
 import { processPendingMessageImageScans } from "../lib/message-image-scanner";
 import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
+import { spanishPageResponse } from "./spanish-page";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -198,6 +199,17 @@ const worker = {
         },
       }, allowedWidths);
       return securedResponse(response, url, staging);
+    }
+
+    // The crawlable Spanish twin. Renders the English page and translates it on
+    // the way out, so /es/join is a Spanish document rather than an English one
+    // that becomes Spanish after a script runs. Only reviewed paths have a twin;
+    // anything else under /es is a 404 rather than an untranslated page wearing
+    // a Spanish URL.
+    if (request.method === "GET" && acceptsHtml) {
+      const spanish = await spanishPageResponse(url, request, (englishRequest) =>
+        handler.fetch(englishRequest, env, ctx));
+      if (spanish) return securedResponse(spanish, url, staging);
     }
 
     const response = await handler.fetch(request, env, ctx);

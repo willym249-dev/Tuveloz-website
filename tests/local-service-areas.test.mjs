@@ -147,7 +147,10 @@ test("the sitemap lists every published local page exactly once", async () => {
 
   const sitemap = await source("app/sitemap.ts");
   assert.match(sitemap, /localPagePaths\(\)/);
-  assert.match(sitemap, /\.\.\.PUBLIC_PAGES,\s*\.\.\.LOCAL_PAGES/);
+  // SPANISH_PAGES sits between them now: the crawlable /es twins, derived from
+  // SPANISH_READY_PATHS. What this line is really asserting is that the local
+  // pages are still spread in rather than listed by hand.
+  assert.match(sitemap, /\.\.\.PUBLIC_PAGES,\s*\.\.\.SPANISH_PAGES,\s*\.\.\.LOCAL_PAGES/);
 });
 
 test("local pages never imply customers can request or pay for work today", async () => {

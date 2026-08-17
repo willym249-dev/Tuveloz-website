@@ -24,10 +24,17 @@ const baseUrl = (process.argv[2] || process.env.BASE_URL || "http://localhost:30
 const source = readFileSync(new URL("../app/components/site-language.tsx", import.meta.url), "utf8");
 const dictionary = readFileSync(new URL("../lib/spanish-dictionary.ts", import.meta.url), "utf8");
 
-const readyPaths = [...source.slice(
-  source.indexOf("export const SPANISH_READY_PATHS"),
-  source.indexOf("export function pathHasSpanish"),
+const routes = readFileSync(new URL("../lib/spanish-routes.ts", import.meta.url), "utf8");
+
+const readyPaths = [...routes.slice(
+  routes.indexOf("export const SPANISH_READY_PATHS"),
+  routes.indexOf("export const SPANISH_PREFIX"),
 ).matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+
+if (readyPaths.length === 0) {
+  console.error("No Spanish-ready paths found in lib/spanish-routes.ts.");
+  process.exit(1);
+}
 
 const known = new Set(
   [...dictionary.matchAll(/^ {2}"((?:[^"\\]|\\.)*)":\s*"/gm)]

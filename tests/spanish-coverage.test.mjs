@@ -18,8 +18,14 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("Spanish is offered per path, not site-wide", async () => {
   const language = await read("app/components/site-language.tsx");
 
-  assert.match(language, /export const SPANISH_READY_PATHS/);
-  assert.match(language, /export function pathHasSpanish/);
+  // The list moved to lib/spanish-routes.ts, which the Worker also imports to
+  // serve the crawlable /es twins — one list, so a page cannot be Spanish in the
+  // browser and absent from search. The component re-exports it, so the switch
+  // below is unchanged.
+  assert.match(
+    language,
+    /export \{ SPANISH_READY_PATHS, pathHasSpanish \} from "\.\.\/\.\.\/lib\/spanish-routes"/,
+  );
 
   // The stored preference cannot override a page without reviewed Spanish.
   assert.match(
@@ -32,10 +38,10 @@ test("Spanish is offered per path, not site-wide", async () => {
 });
 
 test("no legal or account page is marked Spanish-ready", async () => {
-  const language = await read("app/components/site-language.tsx");
-  const list = language.slice(
-    language.indexOf("export const SPANISH_READY_PATHS"),
-    language.indexOf("export function pathHasSpanish"),
+  const routes = await read("lib/spanish-routes.ts");
+  const list = routes.slice(
+    routes.indexOf("export const SPANISH_READY_PATHS"),
+    routes.indexOf("export const SPANISH_PREFIX"),
   );
 
   for (const legalPath of [

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { localPagePaths } from "../lib/local-service-areas";
+import { spanishPagePaths } from "../lib/spanish-routes";
 
 const BASE_URL = "https://tuveloz.com";
 
@@ -49,8 +50,23 @@ const LOCAL_PAGES: PublicPage[] = localPagePaths().map((path) => ({
   priority: 0.6,
 }));
 
+/**
+ * The Spanish twins. They are listed because a URL a crawler is never told
+ * about is a URL it may never fetch, and these exist for exactly one audience:
+ * a Spanish speaker searching in Spanish. Priority sits just under the English
+ * originals — the same pages, a smaller share of the county's searches.
+ *
+ * Derived from `SPANISH_READY_PATHS` rather than typed out, so a page cannot
+ * gain reviewed Spanish and stay unlisted, or lose it and stay listed.
+ */
+const SPANISH_PAGES: PublicPage[] = spanishPagePaths().map((path) => ({
+  path,
+  changeFrequency: "monthly",
+  priority: 0.7,
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [...PUBLIC_PAGES, ...LOCAL_PAGES].map(({ path, changeFrequency, priority }) => ({
+  return [...PUBLIC_PAGES, ...SPANISH_PAGES, ...LOCAL_PAGES].map(({ path, changeFrequency, priority }) => ({
     url: `${BASE_URL}${path}`,
     changeFrequency,
     priority,

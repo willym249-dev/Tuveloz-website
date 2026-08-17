@@ -113,20 +113,11 @@ function translateInterface(root: ParentNode, language: SiteLanguage) {
  * below is in the dictionary (tests/spanish-coverage.test.mjs fails if one is
  * not), and everywhere else stays English and says so on the page.
  */
-export const SPANISH_READY_PATHS = [
-  "/",
-  "/post-job",
-  "/join",
-  "/about",
-  "/how-it-works",
-  "/ai",
-  "/faq",
-  "/safety",
-];
-
-export function pathHasSpanish(pathname: string) {
-  return SPANISH_READY_PATHS.includes(pathname);
-}
+// The list lives in lib/spanish-routes.ts, which the Worker also imports to
+// serve the crawlable /es twins. One list, so a page cannot be Spanish-ready in
+// the browser and absent from search, or the reverse.
+export { SPANISH_READY_PATHS, pathHasSpanish } from "../../lib/spanish-routes";
+import { pathHasSpanish } from "../../lib/spanish-routes";
 
 function getLanguageSnapshot(): SiteLanguage {
   if (typeof window === "undefined") return "en";
