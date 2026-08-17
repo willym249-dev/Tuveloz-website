@@ -1056,6 +1056,12 @@ export const spanishText: Record<string, string> = {
   "Car trouble shouldn't leave you guessing.": "Los problemas con su carro no deberían dejarlo adivinando.",
   "Join now. Compare local quotes when we open.": "Únase ahora. Compare cotizaciones locales cuando abramos.",
   "Tuveloz is building a local marketplace where you post what your car needs once, local independent providers send you real quotes — many come right to your driveway — and you compare and choose. Customer accounts are open now; requests turn on once the right provider coverage is in place.": "Tuveloz está creando un mercado local donde usted publica lo que su carro necesita una sola vez, proveedores locales independientes le envían cotizaciones reales — muchos van hasta su casa — y usted compara y elige. Las cuentas de clientes ya están abiertas; las solicitudes se activarán cuando exista la cobertura adecuada de proveedores.",
+  // The entry above is keyed to the wording /post-job carried before
+  // 74e4b94 (2026-08-11) shortened it. Both are kept: this dictionary is
+  // keyed by exact English, so an old key stops matching silently rather
+  // than failing, which is how the shortened paragraph reached a
+  // Spanish-ready page with no Spanish at all.
+  "Tuveloz is building a local marketplace where you can post a car need once, compare providers and prices side by side, and choose. Customer accounts are open now; requests turn on once the right provider coverage is in place.": "Tuveloz está creando un mercado local donde usted puede publicar lo que su carro necesita una sola vez, comparar proveedores y precios lado a lado, y elegir. Las cuentas de clientes ya están abiertas; las solicitudes se activarán cuando exista la cobertura adecuada de proveedores.",
   "Free to create your account": "Crear su cuenta es gratis",
   "to create your account": "para crear su cuenta",
   "Independent local businesses, no call center": "Negocios locales independientes, no un centro de llamadas",
