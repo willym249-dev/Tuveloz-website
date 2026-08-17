@@ -18,7 +18,7 @@ entries to catch up. Write one before you finish.
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
 mistake is the same one as the entry below it, arriving from the other
 direction, and because a session that reads either should read both. The work is
-in the Zeo repository on `claude/zeo-search-issue-bbz6ev`.
+in the Zeo repository, merged as `dbdbf82` (pull request #6).
 
 **What happened.** The owner asked Zeo whether any games were on. Zeo replied
 that it had searched the web and "the search returned nothing usable, so I have
