@@ -80,6 +80,21 @@ test("the document declares itself Spanish", () => {
   assert.match(PAGE, /setAttribute\("lang", "es"\)/);
 });
 
+test("the English canonical is removed, not merely outnumbered", () => {
+  // Next emits a canonical from page metadata and it survives into the twin,
+  // because the twin is that page. Appending a second left two, the English one
+  // won, and every Spanish URL declared itself a duplicate asking not to be
+  // indexed. Seen in production before this was fixed.
+  assert.match(PAGE, /link\[rel="canonical"\]/);
+  assert.match(PAGE, /class DropInheritedCanonical[\s\S]*?element\.remove\(\)/);
+  // Removal must be registered before the head append, or the appended one is
+  // removed along with the inherited one.
+  assert.ok(
+    PAGE.indexOf('.on(\'link[rel="canonical"]\'') < PAGE.indexOf('.on("head"'),
+    "the canonical must be dropped before the Spanish one is appended",
+  );
+});
+
 test("the Worker never reaches the client component", () => {
   // site-language.tsx is "use client" and imports React; pulling it into the
   // Worker bundle is the thing this whole split exists to avoid.

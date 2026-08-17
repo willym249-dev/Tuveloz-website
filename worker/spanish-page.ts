@@ -33,6 +33,24 @@ class LanguageAttribute {
 }
 
 /**
+ * Drop the canonical the English page already carries.
+ *
+ * Next emits `<link rel="canonical" href="https://tuveloz.com/…">` from page
+ * metadata, and it survives into the Spanish twin because the twin *is* that
+ * page. Appending a second canonical leaves two, and the English one wins:
+ * every Spanish URL then declares itself a duplicate of its English original
+ * and asks not to be indexed — the exact opposite of why these URLs exist.
+ * Verified in production on 2026-08-17, before this handler existed.
+ *
+ * So the inherited one is removed and the Spanish one appended in its place.
+ */
+class DropInheritedCanonical {
+  element(element: Element) {
+    element.remove();
+  }
+}
+
+/**
  * Tell search engines the two URLs are the same page in two languages.
  *
  * Each side points at itself and at the other, which is what `hreflang`
@@ -118,6 +136,7 @@ export async function spanishPageResponse(
 
   return new HTMLRewriter()
     .on("html", new LanguageAttribute())
+    .on('link[rel="canonical"]', new DropInheritedCanonical())
     .on("head", new Alternates(englishPath, spanishPath))
     .on("script, style, noscript", {
       element(element: Element) {
