@@ -16,7 +16,13 @@ import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const baseUrl = (process.argv[2] || process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+// Two files now. The paths stay beside the switch that reads them, and the
+// dictionaries moved to a plain module so server-side code can import them
+// without pulling a "use client" component into the Worker bundle. Both are
+// read here, because this check is the only thing standing between a
+// half-translated page and production.
 const source = readFileSync(new URL("../app/components/site-language.tsx", import.meta.url), "utf8");
+const dictionary = readFileSync(new URL("../lib/spanish-dictionary.ts", import.meta.url), "utf8");
 
 const readyPaths = [...source.slice(
   source.indexOf("export const SPANISH_READY_PATHS"),
@@ -24,9 +30,17 @@ const readyPaths = [...source.slice(
 ).matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
 const known = new Set(
-  [...source.matchAll(/^ {2}"((?:[^"\\]|\\.)*)":\s*"/gm)]
+  [...dictionary.matchAll(/^ {2}"((?:[^"\\]|\\.)*)":\s*"/gm)]
     .map((match) => match[1].replace(/\\"/g, '"').replace(/\\\\/g, "\\")),
 );
+
+// A silent zero here would pass every page rather than check it, which is
+// exactly how this guard stops working without anyone noticing.
+if (known.size === 0) {
+  console.error("No dictionary entries found in lib/spanish-dictionary.ts.");
+  console.error("If the dictionaries moved again, this script has to move with them.");
+  process.exit(1);
+}
 
 // Brand tokens and sample data that are the same in both languages.
 const SKIP = new Set(["Tuveloz", "FAQ", "Tuveloz AI", "JOB #4471", "hello@tuveloz.com",

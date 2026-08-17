@@ -18,23 +18,49 @@ const LANGUAGE = readFileSync(
   "utf8",
 );
 
+const DICTIONARY = readFileSync(new URL("../lib/spanish-dictionary.ts", import.meta.url), "utf8");
+const GUARD = readFileSync(
+  new URL("../scripts/check-spanish-coverage.mjs", import.meta.url),
+  "utf8",
+);
+
 test("the dictionary is shared with the browser, never copied", () => {
   // Two dictionaries drift, and a page half-translated by a stale copy is the
   // failure the per-path switch exists to prevent.
-  assert.match(SOURCE, /import \{ spanishText \} from "\.\.\/app\/components\/site-language"/);
+  assert.match(SOURCE, /import \{ spanishText \} from "\.\/spanish-dictionary"/);
   assert.ok(
     !/^\s*(const|export const)\s+\w*[Ss]panish\w*\s*(:|=)\s*\{/m.test(SOURCE),
     "spanish-html.ts must not define a dictionary of its own",
   );
 });
 
-test("the dictionary is exported in place, so the build guard still sees it", () => {
-  // scripts/check-spanish-coverage.mjs parses these entries out of the source
-  // with a line-anchored regex. Moving them to another module would disarm the
-  // check that fails the build on an untranslated string.
-  assert.match(LANGUAGE, /export const spanishText: Record<string, string> = \{/);
-  assert.match(LANGUAGE, /export const spanishPlaceholders: Record<string, string> = \{/);
-  assert.match(LANGUAGE, /^ {2}"/m, "entries must stay two-space indented for the guard's regex");
+test("the server half never reaches the client component", () => {
+  // site-language.tsx is "use client" and imports React. Reaching it from here
+  // would pull a client component into the Cloudflare Worker bundle as soon as
+  // a Worker route used any of this.
+  assert.ok(
+    !/site-language/.test(SOURCE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")),
+    "spanish-html.ts must not import site-language.tsx",
+  );
+  assert.ok(!/from "react"/.test(DICTIONARY), "the dictionary module must stay React-free");
+});
+
+test("the browser still reads the same strings", () => {
+  // Re-exported rather than duplicated, so every existing importer is unchanged.
+  assert.match(LANGUAGE, /export \{ spanishText, spanishPlaceholders \} from "\.\.\/\.\.\/lib\/spanish-dictionary"/);
+  assert.ok(
+    !/^export const spanish\w+: Record/m.test(LANGUAGE),
+    "the component must not define a dictionary of its own again",
+  );
+});
+
+test("the build guard reads the dictionary where it now lives", () => {
+  // The guard parses entries with a line-anchored regex and fails the build on
+  // an untranslated string. Moving the dictionary without moving the guard
+  // leaves it matching nothing, which passes every page rather than checking it.
+  assert.match(GUARD, /lib\/spanish-dictionary\.ts/);
+  assert.match(GUARD, /known\.size === 0/, "a zero-entry parse must fail loudly");
+  assert.match(DICTIONARY, /^ {2}"/m, "entries must stay two-space indented for that regex");
 });
 
 test("matching is exact, because looser matching would translate unreviewed text", () => {

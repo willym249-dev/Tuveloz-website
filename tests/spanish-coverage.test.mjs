@@ -58,10 +58,13 @@ test("no legal or account page is marked Spanish-ready", async () => {
 });
 
 test("the dictionary has no duplicate keys silently overriding each other", async () => {
-  const language = await read("app/components/site-language.tsx");
-  const body = language.slice(
-    language.indexOf("const spanishText"),
-    language.indexOf("const spanishPlaceholders"),
+  // The dictionaries moved to lib/spanish-dictionary.ts so server-side code can
+  // read them without pulling a "use client" component into the Worker bundle.
+  // This test reads them there; site-language.tsx re-exports them for callers.
+  const dictionary = await read("lib/spanish-dictionary.ts");
+  const body = dictionary.slice(
+    dictionary.indexOf("const spanishText"),
+    dictionary.indexOf("const spanishPlaceholders"),
   );
 
   const keys = [...body.matchAll(/^ {2}("(?:[^"\\]|\\.)*"):/gm)].map((match) => match[1]);
@@ -79,7 +82,7 @@ test("the dictionary has no duplicate keys silently overriding each other", asyn
 });
 
 test("the marketing copy people decide on is translated", async () => {
-  const language = await read("app/components/site-language.tsx");
+  const language = await read("lib/spanish-dictionary.ts");
 
   // Spot-check one load-bearing string per ready page. If a rewrite drops these,
   // the page is no longer fully translated and should not claim to be.

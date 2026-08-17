@@ -96,7 +96,10 @@ test("account and private-request surfaces describe launch mode without active-j
 test("public discovery and bilingual launch copy stay aligned with onboarding-only mode", async () => {
   const [sitemap, language] = await Promise.all([
     source("app/sitemap.ts"),
-    source("app/components/site-language.tsx"),
+    // The dictionaries moved to lib/spanish-dictionary.ts so server-side code
+    // can read them without pulling a "use client" component into the Worker
+    // bundle. site-language.tsx re-exports them for callers.
+    source("lib/spanish-dictionary.ts"),
   ]);
 
   assert.doesNotMatch(sitemap, /\/storefront/);

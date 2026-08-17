@@ -56,7 +56,9 @@ test("the assistant UI states it does not diagnose, quote, or choose a provider"
 });
 
 test("Spanish speakers get translated Tuveloz AI page copy", async () => {
-  const language = await source("app/components/site-language.tsx");
+  // The dictionaries moved to lib/spanish-dictionary.ts so server-side code can
+  // read them without pulling a "use client" component into the Worker bundle.
+  const language = await source("lib/spanish-dictionary.ts");
 
   for (const phrase of [
     "Ask Tuveloz AI",

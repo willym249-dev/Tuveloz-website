@@ -1407,7 +1407,10 @@ test("a signed-in visitor is never shown sign-up wording on a public page", asyn
       read("app/customer/page.tsx"),
       read("app/provider-jobs/page.tsx"),
       read("app/account/page.tsx"),
-      read("app/components/site-language.tsx"),
+      // The dictionaries moved to lib/spanish-dictionary.ts so server-side code
+      // can read them without pulling a "use client" component into the Worker
+      // bundle. site-language.tsx re-exports them for callers.
+      read("lib/spanish-dictionary.ts"),
     ]);
 
   // Every public surface that used to hardcode signed-out wording now asks who

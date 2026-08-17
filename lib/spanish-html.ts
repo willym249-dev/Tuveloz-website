@@ -20,22 +20,11 @@
  * consult it before calling any of this.
  */
 
-/**
- * Before wiring this into `worker/index.ts`, read this.
- *
- * `site-language.tsx` is a `"use client"` module: it imports React, hooks, and
- * `useSyncExternalStore`. Importing it from the Worker entry point therefore
- * pulls a client component into the Cloudflare Worker bundle. Nothing does that
- * today — this file is imported only by its test — so the risk is latent rather
- * than live, and the build stays green either way.
- *
- * The fix when the time comes is to move `spanishText` into a plain module that
- * both sides import, which the coverage guard blocks today: it parses the
- * entries out of `site-language.tsx` with a line-anchored regex, so the guard
- * has to learn the new location in the same change. Do both together, or the
- * build stops failing on untranslated strings and nobody notices.
- */
-import { spanishText } from "../app/components/site-language";
+// From the plain module, never from `site-language.tsx`. That file is
+// `"use client"` and imports React, so reaching it from here would pull a client
+// component into the Cloudflare Worker bundle the moment a Worker route uses
+// any of this. A test asserts this import stays pointed here.
+import { spanishText } from "./spanish-dictionary";
 
 /** Text that is punctuation, digits, or whitespace carries no language. */
 const NOTHING_TO_TRANSLATE = /^[\s\d$€.,:%•·—–→✦✓✕✱★☆|/\\()[\]{}#@!?'"-]*$/;
