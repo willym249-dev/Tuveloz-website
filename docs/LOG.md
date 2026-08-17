@@ -13,6 +13,42 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-17 — Zeo's "same video every time" was the renderer, not the premise
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+shape of the mistake is the useful part, and because a session reading the
+2026-08-10 Zeo entry should know the story continued. The work is in the Zeo
+repository on `claude/video-generation-issue-2fqtzc`.
+
+**What happened.** On 2026-08-15 Zeo was fixed so that a video request naming no
+scene invents an original premise instead of reusing a hard-coded constant. That
+fix worked and was verified live — three consecutive inventions, three different
+stories. On 2026-08-17 the owner reported the identical original complaint,
+having seen no change at all.
+
+Both were true. The premise varied; the picture did not. Zeo's procedural
+renderer recognised so few words that nearly any story collapsed to the same
+defaults — an anonymous "Hero", walking, in front of the same backdrop, because
+each of those three was a literal constant reached whenever the vocabulary
+missed. Measured by rendering one frame per premise: a rooftop gardener, a pearl
+diver, and a clockmaker differed by under one greyscale level per pixel. Even
+two stories that did agree on a setting drew the same skyline, since each
+backdrop's layout was hardcoded too.
+
+**The lesson worth keeping.** The 2026-08-15 fix was verified at the layer it
+changed. It generated three different premises and that was checked and true.
+Nothing measured the artifact the owner actually receives, so a fix that changed
+nothing the owner could see looked complete for two days. When a complaint is
+about output, the test has to assert on the output — not on the stage believed
+to be at fault. The new test in Zeo compares rendered frames for that reason;
+ten of its fifteen cases fail on the code that was thought to be fixed.
+
+Second-order: the same session found that "make a video yourself" was making a
+video *about Zeo* — the word survived into the scene description and resolved to
+the character. A request that says who chooses is not a request for a subject.
+
+---
+
 ## 2026-08-16 — The failing DMARC sender is real, and the rua mailbox is not a black hole
 
 Two open questions about email authentication closed in the same sitting, both
