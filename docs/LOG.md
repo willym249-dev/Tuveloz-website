@@ -13,12 +13,26 @@ entries to catch up. Write one before you finish.
 
 ---
 
-## 2026-08-17 — Zeo's search has been dead for a year, and said so as if it were the question's fault
+## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
+
+> **Corrected the same evening. Read this first.** This entry originally said
+> Microsoft had retired Bing's `&format=rss` feed on 2025-08-11 and that it
+> answered every query with an empty channel. **That is false.** Measured from a
+> GitHub runner that evening, with Zeo's own User-Agent, its `_HTML_ACCEPT`
+> header and its 20,000-byte cap, the feed returned ten results for every query
+> tried — including the three the owner had just watched Zeo fail on. The claim
+> came from a search result describing other people's reports, written up as
+> settled fact by a session that could not reach a single search host to check
+> it. Bing's feed is not dead; the original text is kept below with this notice
+> because the shape of the error is worth more than a tidy page.
+>
+> Why searching actually failed on `zeo-home` is **still unknown**. It is a
+> question about that machine, not about the backend.
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
 mistake is the same one as the entry below it, arriving from the other
 direction, and because a session that reads either should read both. The work is
-in the Zeo repository, merged as `dbdbf82` (pull request #6).
+in the Zeo repository: `dbdbf82` (#6), then the correction in `7f3270e` (#17).
 
 **What happened.** The owner asked Zeo whether any games were on. Zeo replied
 that it had searched the web and "the search returned nothing usable, so I have
@@ -55,6 +69,28 @@ what the owner receives, saw a well-formed honest sentence, and never asked
 whether the machinery behind it was running at all. Both are answered the same
 way: assert on the artifact, and make the artifact say which failure it is.
 
+**The bigger lesson, added with the correction above.** Everything up to here
+was written about a cause that was never checked. The session could not reach
+any search host, searched the web *about* the feed instead, found other people
+describing empty responses, and promoted that into a fact — then shipped four
+changes on it, one of which put four dead hosts ahead of the working one and
+made searching worse than it found it.
+
+Three habits that would have caught it, none of them clever:
+
+- **A second-hand report is evidence about reports, not about the thing.** "I
+  read that this is broken" and "I asked it and it is broken" are different
+  claims, and only one of them justifies a fix.
+- **When you cannot reach the thing, say so in the artifact.** The pull requests
+  said "I could not verify this" in the body while the code, the comments and
+  the commit messages asserted the retirement flatly. The caveat has to live
+  where the claim lives.
+- **Find the compute that can check.** A GitHub runner has ordinary internet and
+  was available the entire time. Nine minutes of using it settled what a day of
+  reasoning had got backwards. When a container cannot see something, the
+  question is which reachable machine can — not how confidently the gap can be
+  argued across.
+
 **Update, same day: the config edit was removed rather than documented.** The
 paragraph that used to sit here said searching stayed broken until the owner
 hand-edited `runtime.web_lookup.backend` and `runtime.web_learning.backend` on
@@ -84,12 +120,18 @@ Two things that came out of it are worth more than the fix:
   twice the single-host timeout. Checking the cost of a change is part of the
   change.
 
-**Now open.** Nothing Tuveloz-side is blocked, and nothing is owed on
-`zeo-home` beyond `git pull` and a restart. What is still unverified: no
-session in this container can reach a search host, so whether any of the
-candidates is actually alive has not been confirmed from here. The failure mode
-is bounded — if every one is dead, Zeo behaves exactly as it does now and says
-so — but "search works again" is a claim only the owner's machine can settle.
+**Now open — and this is the part a later session should act on.** Nothing
+Tuveloz-side is blocked, and nothing is owed on `zeo-home` beyond `git pull` and
+a restart, or the word `selfupdate` typed to Zeo.
+
+**The original fault is still undiagnosed.** Bing's feed answers normally from
+outside, with Zeo's exact headers, byte cap and queries, so whatever made
+searching fail on `zeo-home` is specific to that machine — its network, its
+`agent_config.json`, or something not yet guessed. Nothing in this repository
+can see it. `search status` run on that machine reports which host answered and
+with what, and that output is the missing evidence; anyone picking this up
+should start by asking for it rather than by theorising, which is precisely the
+trap the correction at the top of this entry records.
 
 ---
 
