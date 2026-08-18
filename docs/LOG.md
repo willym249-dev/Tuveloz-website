@@ -13,6 +13,57 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-18 — "Get better" never reached Zeo's upgrade, in either window
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+owner had asked for this repeatedly and been told, in effect, no — and because
+the cause is the `zeo_verb_admission` failure arriving for the third time in a
+place nobody was watching. The work is in the Zeo repository on
+`claude/self-upgrade-intent-owner-wording`.
+
+**What happened.** The owner reported telling Zeo to get better, over and over,
+and watching nothing happen. Zeo has a working verified self-upgrade; the
+owner's words could not reach it. Measured directly against both recognisers:
+`get better`, `zeo get better`, `you need to get better`, `be better`,
+`do better`, `get smarter`, `work on yourself`, `learn from your mistakes` and
+`be like gpt and claude` all missed. Every accepted phrasing required an
+improvement verb from a short list — upgrade, improve, enhance, evolve — with a
+reflexive object behind it. That is not how the owner talks, so the feature was
+reachable mainly by wordings he would have had to be taught.
+
+**The part that made it intermittent.** Two recognisers answered the question.
+`zeo_window_command._self_improvement_intent` served the desktop box and
+`zeo_handlers_general._owner_requested_self_upgrade` served the chat UI, each a
+hand-written copy of the other with nothing forcing them to agree. They had
+drifted: `be as good as claude`, `make yourself as good as chat gpt` and
+`zeo improve` ran a real upgrade in one window and were swallowed as
+conversation in the other. Earlier sessions had widened the desktop copy —
+the patterns comparing Zeo to ChatGPT and Claude are visibly a response to the
+owner asking for exactly that — and left the chat UI where it was. So the same
+sentence worked or did nothing depending on which window was open, which reads
+from the outside as an assistant that ignores you at random.
+
+**The lesson worth keeping.** Two of these have now been recorded here and this
+is the third: a hand-written set that mirrors another with nothing forcing
+agreement will drift, and the drift surfaces as a feature that works for
+whoever wrote the test and not for the person using it. The repair is the same
+one `zeo_verb_admission` already describes — make agreement mandatory rather
+than remembered. The rules now live in one module both call sites import, and
+`test_self_upgrade_intent` fails the build if the two surfaces ever answer
+differently, in either direction.
+
+Second-order, and the more expensive half: recognition was never the thing to
+test. A phrasing can be understood and still not run anything, so the new tests
+assert that the owner's words reach the `self_improve` action, not that a regex
+returned true. This is the 2026-08-15 video mistake again — verify the artifact
+the owner receives, not the stage believed to be at fault.
+
+**Now open.** The branch is pushed; no pull request opened yet. The 22 failures
+in Zeo's 1871-test suite are pre-existing Windows-path and local-Ollama
+failures on a Linux runner, byte identical before and after the change.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
