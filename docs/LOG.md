@@ -13,6 +13,59 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-18 — Zeo was reading the owner's tone as the subject of his request
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+most expensive half of this was invisible — no error, no wrong answer to point
+at, just instructions that quietly reached nothing — and because it is the third
+and fourth instance of the pattern in the two entries below. The work is in the
+Zeo repository, merged as #20.
+
+**What happened.** The owner typed "I said get the rucking connector you're not
+listening" and Zeo replied with four numbered steps for attaching weight plates
+to a backpack. A phone had autocorrected "fucking" into a real word — f and r are
+neighbours on the keyboard — and Zeo read the real word as the subject.
+
+**The half that was costing more.** Every recogniser in Zeo's routing chain
+matches on word adjacency, and the owner swears in most instructions. So "make
+him fucking smarter" matched no self-upgrade wording at all: the word in the
+middle broke the adjacency between "make him" and "smarter". The owner had been
+giving that instruction for a long time and it had been reaching nothing, with
+no error to notice — it simply became ordinary chat, and Zeo talked about
+improving instead of improving. Swearing is not decoration in this owner's
+messages; it is present in most of them, so a matcher that breaks on it is a
+matcher that mostly does not run.
+
+**What was decided.** Tone is stripped for routing only. The unmodified message
+still reaches the chat model, memory, and the conversation log, because how the
+owner said it is sometimes the point — this decides only which words are treated
+as the subject. Repairs for genuinely ambiguous words ("rucking", "ducking" are
+ordinary English) are conditional on the message already being exasperated,
+which is exactly when the owner is least likely to be asking about weighted
+backpacks. A message that is only a complaint is left whole, so cleaning can
+never hand the router an empty command.
+
+**A regression this caused, and how it was caught.** Placing the cleaning at the
+top of the router broke `test_conversation_repair`: "i already said what i
+wanted" is how the owner asks for his previous request to be continued, and the
+handler that does that reads the frustration itself as its signal — so cleaning
+first removed the very words that route it there. The fix was ordering, not a
+weakened test. This is the argument for running the whole suite against a
+baseline rather than only the tests near the change: the broken feature was one
+the owner actively relies on, in a file the change never touched.
+
+**The lesson worth keeping.** A guard that reads the owner's words has to be
+tested against the way the owner actually writes, not the way the feature's
+author would phrase it. Every wording in this repository's self-upgrade tests
+had been written by someone composing a clean example sentence; none of them
+swore, none was autocorrected, and none carried a complaint. The owner's real
+messages do all three at once, and the corpus that finally caught this is
+literally copied out of his screenshots.
+
+**Now open.** Nothing. Merged as #20 with the two entries below.
+
+---
+
 ## 2026-08-18 — Zeo denied a capability the owner had just watched it use
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
@@ -64,8 +117,8 @@ two hand-written recognisers in the entry below. Both were fixed the same way �
 move the rule to the single place every path passes through, so a path added
 later is covered by default rather than by memory.
 
-**Now open.** The branch carries both this and the entry below; no pull request
-opened yet.
+**Now open.** Nothing. Merged to Zeo's `main` as #20, together with the entry
+below and the autocorrect finding above.
 
 ---
 
@@ -114,9 +167,9 @@ assert that the owner's words reach the `self_improve` action, not that a regex
 returned true. This is the 2026-08-15 video mistake again — verify the artifact
 the owner receives, not the stage believed to be at fault.
 
-**Now open.** The branch is pushed; no pull request opened yet. The 22 failures
-in Zeo's 1871-test suite are pre-existing Windows-path and local-Ollama
-failures on a Linux runner, byte identical before and after the change.
+**Now open.** Nothing. Merged to Zeo's `main` as #20. The 22 failures in Zeo's
+1891-test suite are pre-existing Windows-path and local-Ollama failures on a
+Linux runner, byte identical before and after the change.
 
 ---
 
