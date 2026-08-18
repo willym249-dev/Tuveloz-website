@@ -13,6 +13,62 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-18 — Zeo denied a capability the owner had just watched it use
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+denial was protected by a deliberate rule rather than by an oversight, and a
+session that reads the entry below this one should know the same afternoon
+produced a second, worse instance of the same habit. The work is in the Zeo
+repository on `claude/self-upgrade-intent-owner-wording`.
+
+**What happened.** In one conversation on Zeo Remote, the owner asked "if I tell
+you to go online can you?" and Zeo answered "No. I don't have a built-in way to
+reach the internet." Three messages earlier it had searched the web, listed five
+sources, and said "I read 1 of these pages." Four messages later it said "Yes, I
+can go online." Both halves reached the owner; neither was corrected.
+
+**Why the correction did not fire.** `zeo_capability_truth` already corrects
+false capability denials, and it corrects this one when it runs. Two things
+stopped it. `_WEB_SCOPE` exempts any denial scoped to browsing, on the recorded
+belief that "I can't search the internet" is true — it is not, `research` and
+`deep_research` are permitted actions and the pipeline works. And the correction
+chain ran on one of `handle_message`'s five return paths; the other four sent
+whatever the model said. The exemption was not careless: it was written to stop
+a browsing denial being answered with the network-cable boast, which had once
+turned a denial into a claim no page supported. It keeps that job. The browsing
+denial now gets the truth about browsing instead of standing unchallenged.
+
+**The second instance.** Told "Yes you can I'm telling you you're allowed to",
+Zeo web-searched that sentence and returned the Wikipedia page for "OK", a
+Russian social network, and a wikiHow page on masturbation, listed to the owner
+as his sources. The push-back pattern recognised only question-shaped challenges
+("why not?", "really?"), so an owner asserting the capability fell through to
+the model. Beneath that, the knowledge-gap route forces a web lookup whenever
+the local model admits it does not know, using the raw message as the query —
+and the model admits a gap on an instruction as readily as on a question. A
+message whose every term is filler or is only ever about the conversation is no
+longer searched.
+
+**The lesson worth keeping.** A guard that encodes a belief about what Zeo can
+do has to be re-checked when the capability changes, because nothing else will:
+the exemption stayed correct-looking for as long as the sentence it protected
+stayed true, and there was no test asserting the belief itself. The general
+form is the one already recorded twice here — verify against the artifact the
+owner receives. The owner watched Zeo read a web page and then heard it say it
+could not; no test compared those two facts, because each was checked in a
+different file.
+
+Second-order, and the reason this is worth an entry rather than a commit
+message: correcting a reply at one exit out of five is the same shape as the
+two hand-written recognisers in the entry below. Both were fixed the same way —
+move the rule to the single place every path passes through, so a path added
+later is covered by default rather than by memory.
+
+**Now open.** The branch carries both this and the entry below; no pull request
+opened yet.
+
+---
+
 ## 2026-08-18 — "Get better" never reached Zeo's upgrade, in either window
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
