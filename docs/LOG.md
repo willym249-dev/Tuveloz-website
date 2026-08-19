@@ -13,18 +13,19 @@ entries to catch up. Write one before you finish.
 
 ---
 
-## 2026-08-19 — Zeo answered build requests with the small talk model, and never said they were cut off
+## 2026-08-19 — Zeo could not build anything, and four separate faults hid why
 
 **Why this is here.** Zeo is the owner's local assistant and the Tuveloz-side
 sessions keep ending up in his repository. The work is in the Zeo repository on
-branch `claude/unclear-issue-9zi4ni`. The part worth carrying across is the
-capability gap at the end, which is not fixed and is an owner decision.
+branch `claude/unclear-issue-9zi4ni`. All four are fixed. The part worth
+carrying across is the fourth: Zeo can now create a file, in one registered
+folder, and every write there still waits for the owner.
 
 **What happened.** The owner asked Zeo on his phone to code a mini VR app. What
 came back filled the screen with the raw HTML file set in Georgia serif,
 wrapped, with the opening ` ```html ` fence printed as a line of body text.
 
-Three faults, stacked:
+Four faults, stacked:
 
 1. **The renderer required a closing fence.** The pattern was
    ``/```[^\n]*\n?([\s\S]*?)```/g``. No closing fence, no match, and the
@@ -55,18 +56,37 @@ Three faults, stacked:
    wrong model with a tenth of the room it needed, and read as Zeo failing to
    understand the request. The verb and the thing built now decide.
 
-**Still open: Zeo cannot create a file.** `zeo_code_hands` refuses a path
-that is not already a file, and `apply_unified_patch` rejects `new file mode`
-outright, so "build me an app" can only ever end as text in the chat box —
-never a file Zeo can save, run its own test against, and hand back. Both
-blocks are deliberate and both are right for editing someone else's project:
-a create has no previous version to diff, snapshot, or roll back to, which is
-what the whole approval path is built on. It is the wrong answer for new work
-that belongs to nobody yet. The shape that fits without weakening anything is
-a scratch workspace — one folder, empty, where a create is allowed because
-there is nothing there to damage, going through the same queue and the same
-audit trail. **That is an owner decision, not a config edit**, and it has not
-been made.
+4. **Zeo could not create a file at all.** The deepest of the four, and the
+   reason the other three were only ever going to get him to a better-looking
+   dead end. `zeo_code_hands` refused a path that was not already a file, and
+   `apply_unified_patch` rejected `new file mode` outright, so "build me an
+   app" could only ever end as text in a chat box however well it was
+   understood and however much room it was given.
+
+   Both blocks are right for editing someone else's project, and the reason is
+   not a permission level: an edit has a previous version to diff, snapshot,
+   and go back to, and every guard in the approval path is built on comparing
+   what is there with what is proposed. A create has none of that. That is an
+   argument about existing projects, and it says nothing about work that does
+   not exist yet.
+
+   Fixed by naming a place rather than relaxing a check. A third registry,
+   `code_new_work_workspaces`, on the same reasoning that splits the existing
+   two — a key that grants something should be the key whose name says so.
+   Creating is allowed only in a workspace registered there; Zeo's own folder
+   and every registered project still refuse it. Queue-only, because this is
+   where work the owner has never seen appears. One folder is registered by
+   default, made on first use, because a capability behind a config edit is a
+   capability the owner does not have. Removing the entry restores the old
+   behaviour exactly.
+
+   Reachable in plain English, which was the other half of it: ask for
+   something, then say *"save it as vr/index.html"*. The file name is never
+   guessed. The code is read whole from the transcript rather than from
+   `recent_conversation`, which caps each message at 2,000 characters — saving
+   the first 2,000 characters of a generated file writes something that looks
+   complete and does not run, which is the exact failure the rest of this
+   entry is about.
 
 **The lesson, which is the same one as 2026-08-17.** The test guarding this
 renderer passed the entire time it was broken. It asserted that the source
