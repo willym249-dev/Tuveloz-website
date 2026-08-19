@@ -13,18 +13,18 @@ entries to catch up. Write one before you finish.
 
 ---
 
-## 2026-08-19 — Zeo's code answers were arriving as prose, and half of them were cut off
+## 2026-08-19 — Zeo answered build requests with the small talk model, and never said they were cut off
 
 **Why this is here.** Zeo is the owner's local assistant and the Tuveloz-side
 sessions keep ending up in his repository. The work is in the Zeo repository on
-branch `claude/unclear-issue-9zi4ni`; the part worth carrying across is the
-second finding, which is not fixed.
+branch `claude/unclear-issue-9zi4ni`. The part worth carrying across is the
+capability gap at the end, which is not fixed and is an owner decision.
 
 **What happened.** The owner asked Zeo on his phone to code a mini VR app. What
 came back filled the screen with the raw HTML file set in Georgia serif,
 wrapped, with the opening ` ```html ` fence printed as a line of body text.
 
-Two separate faults, stacked:
+Three faults, stacked:
 
 1. **The renderer required a closing fence.** The pattern was
    ``/```[^\n]*\n?([\s\S]*?)```/g``. No closing fence, no match, and the
@@ -34,14 +34,39 @@ Two separate faults, stacked:
    A file you cannot copy off the phone is not an answer to "can you code
    this".
 
-2. **A reply that hits the token ceiling is delivered as if it were whole.**
-   This is why there was no closing fence. Nothing in Zeo reads `done_reason`
-   from the local runner, so generation stopping at `num_predict` looks
-   identical to generation finishing. A coding request routes to the main
-   model at `max_tokens` 4096, which a single-file app exceeds easily. **Still
-   open.** The renderer can only see the cut when it lands inside a code
-   block; a prose answer that runs out mid-sentence still arrives looking
-   complete.
+2. **A reply that hit the token ceiling was delivered as if it were whole.**
+   This is why there was no closing fence. Nothing read `done_reason` from the
+   local runner, so generation stopping at `num_predict` looked identical to
+   generation finishing, and the only way to find out was to run the file.
+   Fixed: the stop reason is read from both runners, marked in the one wrapper
+   every routed chat call passes through, and turned into a sentence at the
+   one exit every reply leaves by. It closes an unclosed fence before adding
+   itself, or Zeo Remote would render the sentence as the last line of the
+   file it is about.
+
+3. **A build request was not recognised as coding work unless it named a
+   language.** The worst of the three, and the one the owner was actually
+   pointing at. `zeo_model_router` classified on programming vocabulary, so
+   "Can you code your own mini virtual reality?" matched on *code* and got the
+   main model with 4096 tokens — while "build me a mini VR app" and "make me a
+   snake game" matched nothing, were classified as ordinary conversation, and
+   went to the **small chat model with 768 tokens**. No finished file fits in
+   768 tokens. Every plain-English build request was therefore answered by the
+   wrong model with a tenth of the room it needed, and read as Zeo failing to
+   understand the request. The verb and the thing built now decide.
+
+**Still open: Zeo cannot create a file.** `zeo_code_hands` refuses a path
+that is not already a file, and `apply_unified_patch` rejects `new file mode`
+outright, so "build me an app" can only ever end as text in the chat box —
+never a file Zeo can save, run its own test against, and hand back. Both
+blocks are deliberate and both are right for editing someone else's project:
+a create has no previous version to diff, snapshot, or roll back to, which is
+what the whole approval path is built on. It is the wrong answer for new work
+that belongs to nobody yet. The shape that fits without weakening anything is
+a scratch workspace — one folder, empty, where a create is allowed because
+there is nothing there to damage, going through the same queue and the same
+audit trail. **That is an owner decision, not a config edit**, and it has not
+been made.
 
 **The lesson, which is the same one as 2026-08-17.** The test guarding this
 renderer passed the entire time it was broken. It asserted that the source
