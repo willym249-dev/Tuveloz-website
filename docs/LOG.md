@@ -13,6 +13,50 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-19 — Zeo's code answers were arriving as prose, and half of them were cut off
+
+**Why this is here.** Zeo is the owner's local assistant and the Tuveloz-side
+sessions keep ending up in his repository. The work is in the Zeo repository on
+branch `claude/unclear-issue-9zi4ni`; the part worth carrying across is the
+second finding, which is not fixed.
+
+**What happened.** The owner asked Zeo on his phone to code a mini VR app. What
+came back filled the screen with the raw HTML file set in Georgia serif,
+wrapped, with the opening ` ```html ` fence printed as a line of body text.
+
+Two separate faults, stacked:
+
+1. **The renderer required a closing fence.** The pattern was
+   ``/```[^\n]*\n?([\s\S]*?)```/g``. No closing fence, no match, and the
+   whole message — fences included — fell through to the paragraph path. Fixed:
+   the closing fence is optional, an unclosed block renders as code and is
+   labelled as cut off, and blocks now carry the language and a copy button.
+   A file you cannot copy off the phone is not an answer to "can you code
+   this".
+
+2. **A reply that hits the token ceiling is delivered as if it were whole.**
+   This is why there was no closing fence. Nothing in Zeo reads `done_reason`
+   from the local runner, so generation stopping at `num_predict` looks
+   identical to generation finishing. A coding request routes to the main
+   model at `max_tokens` 4096, which a single-file app exceeds easily. **Still
+   open.** The renderer can only see the cut when it lands inside a code
+   block; a prose answer that runs out mid-sentence still arrives looking
+   complete.
+
+**The lesson, which is the same one as 2026-08-17.** The test guarding this
+renderer passed the entire time it was broken. It asserted that the source
+contained a `createElement('pre')` somewhere — true, and silent about which
+replies ever reach it. Every long code reply had been failing for as long as
+the feature existed. A test that checks a string is present is not a test that
+the behaviour happens; the renderer test now runs the function and asserts what
+comes out.
+
+**Also.** The remote shell's gzip budget went 21504 → 22528 for 849 bytes, with
+the reason recorded in the test docstring beside the two earlier raises. The
+budget is doing its job — it made the spend a decision instead of a drift.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
