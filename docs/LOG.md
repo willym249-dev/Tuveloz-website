@@ -13,6 +13,61 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-19 — The Investing panel was a menu of buttons; the answer was in a chat bubble
+
+**What happened.** The owner opened Zeo Investing on his phone and got a wall
+of buttons — Readiness, VRP report, Scan candidates, Paper review, five lessons,
+and a Greeks calculator asking him to type a spot price. Every button did the
+same thing: close the panel, send a text command to chat, and print a report
+there. He asked for it to show what is worth picking, over the whole market,
+and said plainly that he expected to be told it could not be done.
+
+It could. Most of it already existed.
+
+**The scan was already market-wide and already ranked.** `zeo_options_scanner`
+screens every US stock through the gainers/losers and relative-volume screens,
+pulls option chains for what clears the move, price, volume, participation and
+market-cap gates, and orders what survives by a score. What it did with that
+ranking was render a text report sized for a desktop and deliver it into a chat
+bubble. That is the whole complaint: the answer existed and was unreadable at
+the moment it had to be read.
+
+Now a read-only `/api/investing/scan` returns the ranking as data and the panel
+lays it out as cards — rank, ticker, direction and move, the contract spelled
+the way it is bought, and the numbers that decide, including the most one
+contract can lose.
+
+**Two real defects found while doing it:**
+
+1. **The mover feed silently truncated to 20 and never paged.** `page_size`
+   above 20 was clamped, so `max_underlyings` past 20 was a setting that did
+   nothing. It pages now and stops on a short page. The snapshot calls are
+   batched, because a request whose length grows with the width of the scan
+   fails at whichever width the service stops accepting — which arrives as
+   "it broke when I widened it", naming nothing.
+
+2. **The default looked at 10 names.** Out of a ranking of every US stock. The
+   top of a market-wide list was being presented as the market. Defaults are
+   30 underlyings and 12 alerts now, ceilings 120 and 40.
+
+**No safety floor moved**, and the test that guarded them was guarding the
+width ceilings in the same assertion. Those are two different kinds of limit —
+one decides whether a candidate is safe to look at, the other bounds how many
+option-chain requests a scan costs — and it is now two tests. Confusing them is
+how "look at more of the market" comes to read as "loosen a gate". Live trading
+stays locked; the scanner produces alerts and nothing here reaches an order.
+
+**Also: the ranking now says why.** The score was one float with nothing saying
+what produced it, so a rank had to be trusted whole or ignored whole. It is
+itemised — move, participation, liquidity, spread cost, delta fit, timing — and
+each card carries a line naming what carried it and what is costing it. Same
+arithmetic, same order.
+
+**Not verified against the live provider.** This session had no Webull SDK and
+no market data. The paging and batching are tested against the scanner's fakes
+and reviewed by hand, not observed against the real screener. Worth watching
+the first live scan after the update.
+
 ## 2026-08-19 — Zeo could not build anything, and four separate faults hid why
 
 **Why this is here.** Zeo is the owner's local assistant and the Tuveloz-side
