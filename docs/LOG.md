@@ -63,10 +63,38 @@ itemised — move, participation, liquidity, spread cost, delta fit, timing — 
 each card carries a line naming what carried it and what is costing it. Same
 arithmetic, same order.
 
+**Then the same again for the paper record.** The journal holds every measured
+round trip and `review` turned it into one sentence in a chat bubble. The panel
+now shows the record and the last twelve closes.
+
+**The piece that was being thrown away:** `_profile_metrics` measures a selector
+on a chronological train/validation split of the real journal, and
+`maybe_promote` asked it about exactly one profile — the next one up — and
+discarded the rest on every call. The evidence for *which of these strategies
+works* was computed and dropped, every time. `strategy_scoreboard` now measures
+all five side by side, same split and same arithmetic as the promotion decision.
+A selector without enough trades on both sides reports how many more it needs
+rather than a figure: not-yet-measured and measured-and-poor are opposite
+claims, and an average over four trades is not a weak measurement, it is not one.
+
+**News** was already gathered and already attached to practice plans, and
+invisible unless the owner opened a plan. It rides the top six candidate cards
+now — scenario and source count. Only six, because each is a live lookup and
+news on the eleventh-ranked candidate is not what he is choosing between. A
+failed lookup costs the context, never the candidate, and says so.
+
 **Not verified against the live provider.** This session had no Webull SDK and
-no market data. The paging and batching are tested against the scanner's fakes
-and reviewed by hand, not observed against the real screener. Worth watching
-the first live scan after the update.
+no market data. The paging, batching, and the live news lookups are tested
+against fakes and reviewed by hand, not observed against the real screener.
+Worth watching the first live scan after the update.
+
+**The pattern across all of it.** Nothing here was missing. The scan was
+market-wide, the ranking was real, the journal was complete, the selectors were
+being measured properly, and the news was being fetched. Every one of them
+ended as prose in a chat window or as a number computed and dropped on the
+floor. Four sessions of "make it do X" were all the same defect wearing
+different clothes: capability that exists and cannot be reached from where the
+owner is standing is capability he does not have.
 
 ## 2026-08-19 — Zeo could not build anything, and four separate faults hid why
 
