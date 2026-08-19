@@ -24,6 +24,7 @@ self-contained page.
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
 | [`operations/email-authentication.md`](operations/email-authentication.md) | What authenticates Tuveloz email, does SPF/DKIM/DMARC align for the sending domain, and in what order should DMARC be tightened? |
 | [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |
+| [`operations/zeo-verify-before-asserting.md`](operations/zeo-verify-before-asserting.md) | Why does Zeo state that things do not exist when he simply cannot see them, and what rule block goes in his system prompt to stop it? |
 | [`operations/evidence-scanner-activation.md`](operations/evidence-scanner-activation.md) | How do I turn on the evidence malware scanner, and how do I confirm it actually works rather than just reporting success? |
 | [`operations/security-and-data-incident-plan.md`](operations/security-and-data-incident-plan.md) | What do I do in the first hour of a data exposure, account takeover, or vendor breach — and what must not be deleted while doing it? |
 | [`operations/vehicle-incident-claims-and-stop-work-plan.md`](operations/vehicle-incident-claims-and-stop-work-plan.md) | What do I do when someone is hurt or a vehicle is damaged on a job — how does work stop, payment hold, and evidence get preserved without directing the repair? |

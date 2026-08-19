@@ -179,6 +179,12 @@ Diagnosis rules:
    and cannot verify rather than asserting something does not exist.
 ```
 
+Rule 6 generalises, and on 2026-08-19 it had to. A companion block —
+`Verification rules`, for claims about the world rather than about Zeo's own
+machinery — is in
+[`zeo-verify-before-asserting.md`](zeo-verify-before-asserting.md). Both belong
+in `DEFAULT_SYSTEM_PROMPT`, and both are deliberately short.
+
 ### Asked directly, Zeo says he has no memory file
 
 His answer, 2026-08-10: *"I don't have a specific memory file. I operate

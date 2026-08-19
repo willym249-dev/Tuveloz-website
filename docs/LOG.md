@@ -13,6 +13,69 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-19 — Zeo called a patented idea unbuilt, which is the same defect a fourth time
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because it
+completes a pattern the three entries below already describe from different
+angles, and because the fix is now written down rather than rediscovered.
+Filed as [`operations/zeo-verify-before-asserting.md`](operations/zeo-verify-before-asserting.md).
+
+**What happened.** Asked what he could build that nobody had built, Zeo
+proposed a "digital twin" of the house that predicts what the owner does next,
+and said it "effectively doesn't exist yet", would work "with 90% accuracy",
+needed the owner's RTX 5080 because of "massive local compute", and could be
+licensed to manufacturers "who currently have no idea how to make their devices
+proactive". Four searches, about four minutes, falsified all four. The field is
+Washington State University's CASAS, running since the 2000s with ~30 published
+home datasets; reported accuracy on this family of tasks spans 38.3% to 98.7%
+depending on how the task is defined, so the bare "90%" names nothing; the
+workhorse models are decision trees and gradient boosting, with published work
+pushing them onto edge hardware; and **US 11,551,103 B2, "Data-driven activity
+prediction"**, is granted to WSU with an abstract that restates Zeo's paragraph.
+The one business the answer proposed runs at that patent. Whether any given
+implementation reads on its claims is counsel's question — the defect is that
+an answer about licensing raised the opposite of it. Zeo also proposed ingesting
+household camera feeds without once reaching the consent question that a
+Maryland household raises.
+
+**The pattern.** Absence reported as non-existence, confidently, with no marker
+that the check never happened. 2026-08-10: "I don't have a specific memory
+file", with three memory stores beside him on disk. 2026-08-17: "the search
+returned nothing usable", from a backend that had answered empty for a year.
+2026-08-17: a Claude session promoting "I read that Bing's feed is dead" into
+fact and shipping four changes on it, retracted the same evening. Now this. The
+third is in the list deliberately — the same error from a better-equipped
+assistant is what makes it a design problem rather than a small-model problem.
+
+**The correction that would have made it worse.** The obvious response to that
+answer is to ask for more original thinking, and it is wrong. The answer was
+not too conventional; it was the most predictable output available — digital
+twin, prediction, local GPU, license to manufacturers, closing question.
+Originality is a claim about the world, and no amount of trying to sound
+original establishes one. The search is not the chore before the creative part.
+It is the creative part, because the gap is only visible once the occupied
+ground is on the page. The searches that killed the four claims also handed
+over the real gap: published work optimises prediction accuracy, and nobody
+prices being wrong, even though acting unasked has an asymmetric cost that
+comes apart from accuracy exactly at the rare events worth acting on.
+
+**Decisions made.** A seven-line `Verification rules` block, written to sit in
+`DEFAULT_SYSTEM_PROMPT` in `zeo_local_brain.py` beside the existing diagnosis
+rules. Kept to seven lines on purpose: the 2026-08-10 entry measured that
+prompt at 4805 tokens against a runner keeping 2050, and a prompt that grows
+every time someone is disappointed is how that defect returns.
+
+**Now open.** The rules assume searching works, and on `zeo-home` that is still
+unproven — the code fix landed (`804b95e`) but the original machine-specific
+fault was never diagnosed. Order of operations, per the new document: `git pull`
+and restart or type `selfupdate`, then run `search status` and capture what it
+reports, then install the block. Installing rules that require verification onto
+an assistant that cannot verify produces one that correctly refuses to assert
+anything, which is honest and useless. That `search status` output is also the
+evidence the 2026-08-17 entry below is still waiting on.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
