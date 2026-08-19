@@ -116,16 +116,59 @@ that decides whether a prediction is confident enough, and cheap enough to be
 wrong about, to act on unasked.** That is a claim with a shape: it can be
 tested, it can be wrong, and it is not what the WSU patent describes.
 
-And the experiment that costs an afternoon and no GPU: take CASAS Aruba, which
-is public and already labelled, and run the dumbest possible baseline — predict
-the most common next activity for this hour of this weekday, from a lookup
-table. If that scores anywhere near the published numbers, then the RTX 5080
-was never the bottleneck and the entire premise of the original answer is dead
-before a line of inference code is written. Ruling the idea out that cheaply is
-the good outcome, not the disappointing one.
-
 Note what that answer does not contain: an invented percentage, a compliment
 about the owner's hardware, or a request for permission to start.
+
+## The experiment, run
+
+Leaving the above as a suggestion would have been the same defect one more
+time, so it was run. [`zeo-activity-prediction-baseline.py`](zeo-activity-prediction-baseline.py)
+is stdlib-only Python, no dependencies and no GPU: it generates a synthetic
+household, predicts with lookup tables, and scores three ways. It takes about a
+second.
+
+**A lookup table scores 90.5%.** Not a model — counting, then dividing. That
+figure held at 90.5–90.6% across seeds 1, 2, 7, 13 and 42 at 500 simulated
+days. The number Zeo invented as the impressive outcome is approximately what
+the task hands you for free, which makes it the floor a real system has to
+clear rather than the target it aims at. On the identical task, simply
+switching from "always guess the commonest activity" (34.8%) to the lookup
+table moves the headline 55 points with no learning anywhere in it.
+
+**That 90.5% is a popularity contest.** Averaged over classes rather than
+samples it falls to about 61%, and the breakdown says why: `Sleep`, `Away` and
+`Relax` are ~77% of the day and are recalled 93–98%, while `LeaveHome` (0.4% of
+the day) is recalled **0.0%** and `NightWaking` about 11%. The headline survives
+the rare events precisely because they are rare — and the rare events are the
+only ones worth waking a house for.
+
+**The part nobody measures.** Zeo's example was: "it pre-heats the water or
+orders the beans before you ask." Scored as a decision, with a benefit for
+acting correctly, a cost for acting wrongly and a smaller cost for missing, the
+two halves of that sentence get opposite answers:
+
+| Action | Cost of being wrong | Best policy | Gain over doing nothing |
+| --- | --- | --- | --- |
+| Pre-heat the kettle | small (0.5× the benefit) | act on the prediction | **+125 to +212**, every seed |
+| Order the beans | large (12× the benefit) | **never act at all** | **0.0**, every seed |
+
+Ordering the beans is net-negative at *every* confidence threshold tested. The
+optimum is to never do it. Both halves of that sentence run on the same
+predictor at the same accuracy — what separates them is the price of being
+wrong, which is the one quantity an accuracy figure cannot carry. That is the
+gap named above, now with a number against it.
+
+**What this does not show.** The household is synthetic, from a hand-written
+generator, so the digits describe that generator and not anyone's home. Treat
+the *shape* as the result: base rates dominate the headline, rare classes
+collapse underneath it, and action cost decides feasibility independently of
+accuracy. The real run is CASAS Aruba, which is public and labelled, and it has
+not been done — no loader is included because there is no copy of that data
+here to test one against, and shipping an untested parser is the exact mistake
+this document is about. The first draft of the generator was also too regular:
+every confidence threshold returned an identical, flawless result, which is a
+benchmark flattering its predictor. Day-level variation — working from home,
+skipping breakfast, eating out — was added before any of the above was read.
 
 ## The rule block
 

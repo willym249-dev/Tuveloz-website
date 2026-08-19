@@ -59,6 +59,22 @@ over the real gap: published work optimises prediction accuracy, and nobody
 prices being wrong, even though acting unasked has an asymmetric cost that
 comes apart from accuracy exactly at the rare events worth acting on.
 
+**The experiment was run rather than suggested.** Leaving it as a proposal
+would have been the same defect once more, so
+`operations/zeo-activity-prediction-baseline.py` (stdlib Python, no GPU, about a
+second) generates a synthetic household and predicts with lookup tables. A
+lookup table scores **90.5%**, stable across five seeds — the figure Zeo invented
+as the impressive outcome is roughly what the task hands you for free, so it is
+the floor rather than the target. Averaged over classes it falls to ~61%:
+`LeaveHome` is 0.4% of the day and is recalled 0.0%, and the rare events are the
+only ones worth acting on. Scored as a *decision* rather than a prediction, the
+two halves of Zeo's own example split — pre-heating the kettle gains +125 to
++212 over doing nothing, while ordering the beans is net-negative at every
+confidence threshold, so the optimum is never to do it. Same predictor, same
+accuracy; what separates them is the price of being wrong, which no accuracy
+figure carries. The household is synthetic, so the shape transfers and the
+digits do not; CASAS Aruba is the real run and has not been done.
+
 **Decisions made.** A seven-line `Verification rules` block, written to sit in
 `DEFAULT_SYSTEM_PROMPT` in `zeo_local_brain.py` beside the existing diagnosis
 rules. Kept to seven lines on purpose: the 2026-08-10 entry measured that
