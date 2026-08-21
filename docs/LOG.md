@@ -13,6 +13,68 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-21 — Checking a fix is general, not that it works
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+method is reusable and the owner asked for it by name: the way to tell a real
+repair from a patch shaped like the sentence that exposed the bug. The work is
+in the Zeo repository on `claude/native-coder-instruction-grammar-guards`.
+
+**What happened.** A session was building a deterministic contract repairer for
+`zeo_native_coder.py` — the module that makes exact code edits with no model
+call, and whose whole claim is that it "refuses ambiguity instead of guessing."
+It said it would prove the repairer general by testing renamed variables and
+unseen quote positions. That is the right instinct and it is not proof, because
+the session grading the work also chose the cases.
+
+Auditing the module on `main` directly turned up two instructions it was
+reading two ways, both from the same cause. Both regexes are matched with
+`fullmatch`, and a `fullmatch` that cannot succeed one way backtracks and
+succeeds another, so an ambiguous sentence comes back as one confident reading:
+
+- A quoted literal could swallow the quote closing it. `replace "ALPHA" with
+  "say "hi""` returned a supported patch writing `say "hi" = 1`.
+- An assignment value could span lines. `set VALUE to 1\nimport os` returned an
+  "exact assignment update" whose patch added a second line of source. It is
+  valid Python, so the syntax check downstream had nothing to object to.
+
+Both are fixed and the fix is pushed. The second one matters more, and it is
+the one the stated plan would have missed: a repairer that finds *the first*
+branch consuming a forbidden character fixes the quote case and stops.
+
+**The lesson worth keeping.** A test suite written after a fix, by whoever wrote
+the fix, will pass. It has to be made to fail on purpose, twice:
+
+- **Against the unfixed code.** 114 failures. A suite that is green before and
+  after proves only that it ran.
+- **Against a deliberately narrow fake fix** — one that special-cases the exact
+  sentence that exposed the bug, plus a little generalisation for cover. 112
+  still failing. This is the check that answers "is it an exact-string patch",
+  and it is cheap: write the dishonest fix yourself and see whether your own
+  audit lets it through.
+
+Two more that came out of it:
+
+- **A refusal suite passes if the guard refuses everything.** So the same file
+  has to pin what must keep working — here, the cross-quoted literal the refusal
+  message tells the caller to use, and the multi-line snippet swap that stays
+  legal because the rule is about assignment values and not about literals. A
+  guard is wrong when it is too wide, not only when it is too narrow.
+- **The audit was wrong first, and caught itself.** It began by refusing a
+  newline before or after an assignment value. That is whitespace — `strip()`
+  and the `\s+` in the pattern remove it — and the surviving instruction is
+  unambiguous. Thirty red assertions, and the fault was in the test, not the
+  guard. Fixing the code to satisfy them would have taught the module to refuse
+  something correct.
+
+**On verifying without regressing.** The Zeo suite has 24 failures on Linux
+before any change — Windows paths, UI checks. Reporting "the tests pass" would
+have been false and reporting the failures as new would have been worse. Both
+runs were captured by name and diffed: identical. Counts matching is not the
+same as the same tests failing, and only one of those is evidence.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
