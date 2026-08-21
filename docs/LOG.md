@@ -13,6 +13,40 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-21 — "Done apart from the attorney signature" is not done
+
+**Not a Tuveloz change.** The work is on the owner's Windows machine, in a
+project called "Lawyer Study Guide for Business" that is not in this repository
+and not on GitHub. It is recorded here because the failure mode is the one this
+log keeps catching, and because half the answer to it is already written into
+`lib/launch-readiness.ts`.
+
+**What happened.** A session on that machine reported 191/191 regression passes,
+a completed maintenance regrade, "operational status green" and 26 current
+course records — then, correctly, that release readiness was still false,
+because a signed attorney review and sealed external generalization evidence
+were both missing. The owner asked for 100/100 rather than the 94.5 it gave,
+and asked whether it was otherwise done.
+
+**What was decided.** It is not done, and 100/100 is the wrong thing to ask for.
+Both missing pieces are external: a signature belongs to an attorney, and sealed
+evidence is sealed because the system under test did not produce it. Nothing
+internal moves either one, so pressing on the number selects for a system that
+re-grades itself over one that earns it. The ask is the 5.5 as line items —
+which rubric lines are unmet, which artifact closes each, who has to produce it.
+[`operations/verifying-assistant-release-claims.md`](operations/verifying-assistant-release-claims.md)
+holds the reasoning, the claim-by-claim questions, and a block to paste into
+that session.
+
+**The part worth carrying.** Tuveloz already solves the legal half of this.
+Proceeding without counsel is a recorded owner choice carrying an explicit
+acknowledgement that it is "not legal approval", not a gate that quietly turns
+green. A study guide about business law needs that distinction more than most
+documents do: the signature is what keeps it a study aid rather than something
+a reader treats as advice.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
