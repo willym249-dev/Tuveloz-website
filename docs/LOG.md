@@ -13,6 +13,75 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-22 — Zeo got a sports betting desk, and two of its guards were not guarding
+
+**Why this is here.** Nothing Tuveloz-side changed, and nothing Tuveloz-side is
+blocked. It is recorded for the same reason the Zeo entries below it are: Zeo
+reads this project under a read-only workspace, the owner works in both, and a
+session that hears "the betting tab is wrong" needs to know where that code
+lives. The work is in the Zeo repository on branch
+`claude/zeo-gambling-trades-stats-ue03qh`, commit `0f7d28c`. **Do not look for
+it here** — this repository has no `bet` verb and should not grow one.
+
+**What was asked and what was built.** The owner asked for a gambling tab on
+Zeo's investing page: live games, the stats behind them, who to back, and when
+an underdog has a real case, MMA and boxing included. `zeo_betting.py` reads
+ESPN's public scoreboards for eleven leagues — UFC, PFL and boxing among them —
+takes the book's margin out of the published moneyline, and compares that fair
+price against a bounded model. It surfaces as a second tab in the window the
+**Investing** button opens, a **Sports** button beside it, and a **Sportsbook**
+panel in Zeo Remote.
+
+**The shape it was given, and why.** The same fail-closed pattern this project
+uses, because the honest version of "who should I bet" is not a pick:
+
+- **Zeo cannot place a wager.** No sportsbook adapter, no credential, no
+  submission path. That is deliberately harder than `zeo_investing`, which has
+  a real broker port held shut by two switches — here there is no port, so
+  there is no switch to flip by mistake. `bet log` records a bet the owner
+  already placed.
+- **No stake is a recommendation until the record earns it.** Every call is
+  written to an append-only ledger at the price it was made at, and scored
+  against the market's own probability. The gate needs 200 settled calls and a
+  win over that benchmark. Kelly numbers print as what they *would* say.
+- **Matchup evidence is capped** at 0.18 log-odds per lever and 0.45 in total,
+  because every input is public and already in the price.
+
+**The part worth carrying forward.** Two guards were found reporting coverage
+they did not have, both while wiring this up, and both are the same failure
+this project keeps meeting:
+
+- `zeo_verb_admission.parser_subcommands` scraped `sub` but not `subcommand`,
+  so every branch spelled the longer way came back empty — which that function
+  reports as "cannot tell", and the test then skips. `invest radar`,
+  `invest analyze`, `invest analyse` and `invest counsel` have been swallowed
+  as chat by the desktop box for as long as they have existed. The remote page
+  runs two of them from buttons, which is exactly why nobody noticed.
+- `run_zeo_precommit.related_test_modules` paired `zeo_x.py` only with
+  `test_zeo_x.py`. The repository mostly names them `test_x.py`, so the gate
+  saw 39 of 203 modules and missed 90 that do have tests. Most staged edits
+  were gated by nothing, and looked gated.
+
+Both are fixed. The lesson is the one already written into
+`zeo_verb_admission`'s own docstring and proved again twice: a guard that
+returns "nothing found" is indistinguishable from a guard that found nothing
+wrong, and only the first one is a bug. Anything in either repository that
+scrapes source text to check itself is worth asking that question about.
+
+**Now open, and it is a real gap.** The container this was written in cannot
+reach `site.api.espn.com`, so **no parser in it has met a live payload.**
+Everything is guarded field by field and a missing field becomes a stated
+absence rather than a substituted zero, but the failure to expect is a lever
+that silently never fires — which looks exactly like a matchup with no mismatch
+in it. `bet sources <league> <id>` was written to answer that: it reports which
+ESPN fields actually arrived. `ZEO_BETTING.md` §7 is the checklist to run on
+`zeo-home`, and §6 names the one step a commit could not take — the nine
+`bet_*` actions are in Zeo's `DEFAULT_CONFIG` and example config, but
+`agent_config.json` is gitignored, so the live config needs them added by hand
+or every `bet` command returns "not allowed by runtime allowlist".
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
