@@ -214,11 +214,56 @@ market"; `bet sources` is what tells those apart. **Closing-line value** stays
 an estimate until the archive has a stretch of days in it. **The gate needs 200
 settled calls** and has zero.
 
-`ZEO_BETTING.md` §11 is the checklist to run on `zeo-home`, and §9 names the one
-step a commit could not take — the nine `bet_*` actions are in Zeo's
-`DEFAULT_CONFIG` and example config, but `agent_config.json` is gitignored, so
-the live config needs them added by hand or every `bet` command returns "not
-allowed by runtime allowlist".
+**Update: the config step is done, and it is a command now rather than a
+chore.** The nine `bet_*` actions needed adding to the live, gitignored
+`agent_config.json`, whose lists *replace* `DEFAULT_CONFIG`'s rather than
+merging with them — so shipping a built-in action leaves every older config
+refusing it, with a message that reads like a policy decision nobody made.
+
+`zeo_config_adopt.py` closes that under one rule: **it can only add a name
+`DEFAULT_CONFIG` already carries at the same path.** Not a name off the command
+line, not from the example file, not a pattern. The widest thing it can do is
+make a machine agree with committed, reviewable code; it never removes, and
+running it twice does nothing the first run did not.
+
+Writing its tests found a real defect in the first draft, in the dangerous
+direction. Both allowlists read as *unrestricted* when empty —
+`if not allowed: return True` — so filling an empty one in would have quietly
+taken a machine from unrestricted to restricted-to-whatever-the-defaults-list
+and broken every action that list did not name. The docstring claimed to handle
+it; the code handled absent but not empty. That is the same shape as the two
+guards this entry already records: the claim and the code agreed in prose and
+disagreed in fact.
+
+It ran on `zeo-home`, against `C:\Users\...\Zeo\agent_config.json`: eighteen
+names added across two lists, the previous file kept as `agent_config.json.bak1`,
+and read back — 136 actions allowed, built-in actions still missing none. **The
+`bet` verb works there at the next Zeo restart.** The refusal message also names
+the command now, so this never has to be diagnosed twice.
+
+**And the odds key is a box, not a terminal.** The Sports tab has a Price
+sources panel that takes the key masked, empties itself once the write
+succeeds, and offers Remove beside Store. The handling sits in
+`zeo_odds_providers`, not the window, because a test that must import a tkinter
+module only runs where tkinter exists — the same platform-dependent test bug
+this branch had already fixed once in the price archive. Its tests are all
+about what must not come back out: the confirmation sentence carries neither
+the key, nor a prefix of it, nor its length, and is byte-identical for two
+different keys.
+
+**Still open**, now three rather than four. **The fight price mapping has never
+met a real priced fight**, because ESPN prices none: where a bout carries no
+home/away labels the two prices are matched by list order, and if that is
+backwards then every read on every fight is inverted and nothing in the output
+looks wrong. Storing a key exercises it first, so the first thing to do after
+storing one is compare a bout against any public odds screen. **The second
+source has never sent a request**, and its failure mode is a board that matches
+nothing, which reads exactly like "no market"; `bet sources` distinguishes them.
+**Closing-line value** stays an estimate until the archive has a stretch of days
+in it, and the gate still needs 200 settled calls against zero today.
+
+`ZEO_BETTING.md` §9 is the one-command version of the config step and §11 is the
+verification checklist.
 
 ---
 
