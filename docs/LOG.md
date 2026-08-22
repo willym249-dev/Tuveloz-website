@@ -68,14 +68,50 @@ returns "nothing found" is indistinguishable from a guard that found nothing
 wrong, and only the first one is a bug. Anything in either repository that
 scrapes source text to check itself is worth asking that question about.
 
-**Now open, and it is a real gap.** The container this was written in cannot
-reach `site.api.espn.com`, so **no parser in it has met a live payload.**
+**Update, same day: the biggest guess was wrong, and it was found without a
+live payload.** The egress policy on the cloud environment blocks every host
+except GitHub and the package registries — `example.com` is blocked too, so it
+was never about ESPN. GitHub being reachable turned out to be enough: the
+public `pseudo-r/Public-ESPN-API` repository documents ESPN's undocumented
+endpoints with live verification dates, and reading it corrected two things
+that no amount of local testing would have.
+
+**ESPN publishes no career statistics for MMA at all.** `common/v3/.../
+athletes/{id}/stats` returns 404 for that sport, as do the league-scoped
+athlete `statistics` and `splits` endpoints. The SLpM and takedown-defence
+figures everyone quotes are UFCStats numbers, not ESPN's. The desk had been
+written to read them out of ESPN's summary payload, which has never contained
+them — so the grappling and striking levers, the two with the best claim to be
+worth running, could not fire and never would have. Nothing in the output would
+have said so; it would have looked like a card with no mismatches on it. Those
+rates are now *derived* in `zeo_fighter_stats.py` by summing ESPN's per-fight
+counts over a fighter's recent bouts and dividing by the minutes actually
+fought, with the sample size attached to every read and the results cached.
+
+**The odds block names the favourite.** ESPN publishes `favorite` and
+`underdog` flags, and often the athlete id, beside each moneyline. Prices are
+now matched to competitors by id where one is given, which removes the failure
+that would have inverted a whole league silently. Boxing is marked unconfirmed
+— ESPN's own enumeration lists seventeen sports and boxing is not among them —
+and Bellator was added, since UFC, PFL and Bellator are the three MMA
+promotions its site API is known to serve.
+
+**The lesson.** A blocked host is not always a blocked question. What could not
+be reached was ESPN; what was actually needed was the shape of its payloads,
+and that was sitting in a public repository the whole time. Worth asking, next
+time a network policy stops a piece of work, whether the server is wanted or
+the knowledge is.
+
+**Still open.** The container still cannot reach `site.api.espn.com`, so **no
+parser has met a live payload.**
 Everything is guarded field by field and a missing field becomes a stated
 absence rather than a substituted zero, but the failure to expect is a lever
 that silently never fires — which looks exactly like a matchup with no mismatch
-in it. `bet sources <league> <id>` was written to answer that: it reports which
-ESPN fields actually arrived. `ZEO_BETTING.md` §7 is the checklist to run on
-`zeo-home`, and §6 names the one step a commit could not take — the nine
+in it. One command now answers it: `py -3.12 zeo_betting_capture.py` reads each
+league once and prints what arrived, including every statistic name the alias
+tables do not recognise and whether the per-fight derivation worked at all.
+`ZEO_BETTING.md` §8 is the checklist to run on `zeo-home`, and §7 names the one
+step a commit could not take — the nine
 `bet_*` actions are in Zeo's `DEFAULT_CONFIG` and example config, but
 `agent_config.json` is gitignored, so the live config needs them added by hand
 or every `bet` command returns "not allowed by runtime allowlist".
