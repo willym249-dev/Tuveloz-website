@@ -20,15 +20,17 @@ blocked. It is recorded for the same reason the Zeo entries below it are: Zeo
 reads this project under a read-only workspace, the owner works in both, and a
 session that hears "the betting tab is wrong" needs to know where that code
 lives. The work is in the Zeo repository on branch
-`claude/zeo-gambling-trades-stats-ue03qh`, commit `0f7d28c`. **Do not look for
-it here** — this repository has no `bet` verb and should not grow one.
+`claude/zeo-gambling-trades-stats-ue03qh`, through commit `f00268f`. **Do not
+look for it here** — this repository has no `bet` verb and should not grow one.
 
 **What was asked and what was built.** The owner asked for a gambling tab on
 Zeo's investing page: live games, the stats behind them, who to back, and when
 an underdog has a real case, MMA and boxing included. `zeo_betting.py` reads
-ESPN's public scoreboards for eleven leagues — UFC, PFL and boxing among them —
-takes the book's margin out of the published moneyline, and compares that fair
-price against a bounded model. It surfaces as a second tab in the window the
+public scoreboards for twenty-six leagues — the American majors, the college
+surfaces, nine football leagues, both tennis tours and the fight cards — takes
+the books' margin out of the published moneyline, and compares that fair price
+against a bounded model. (It began at eleven leagues and one source; both grew
+over the day, see the updates below.) It surfaces as a second tab in the window the
 **Investing** button opens, a **Sports** button beside it, and a **Sportsbook**
 panel in Zeo Remote.
 
@@ -155,19 +157,68 @@ silent by construction: no exception, no wrong number, just a feature that
 reports having found nothing. Those are the ones that survive a test suite,
 because a test written from the same misunderstanding agrees with the code.
 
-**Still open.** The container still cannot reach `site.api.espn.com`, so **no
-parser has met a live payload.**
-Everything is guarded field by field and a missing field becomes a stated
-absence rather than a substituted zero, but the failure to expect is a lever
-that silently never fires — which looks exactly like a matchup with no mismatch
-in it. One command now answers it: `py -3.12 zeo_betting_capture.py` reads each
-league once and prints what arrived, including every statistic name the alias
-tables do not recognise and whether the per-fight derivation worked at all.
-`ZEO_BETTING.md` §8 is the checklist to run on `zeo-home`, and §7 names the one
-step a commit could not take — the nine
-`bet_*` actions are in Zeo's `DEFAULT_CONFIG` and example config, but
-`agent_config.json` is gitignored, so the live config needs them added by hand
-or every `bet` command returns "not allowed by runtime allowlist".
+**Update: one source was the remaining weakness, so it is no longer one.**
+The owner asked whether it had to be ESPN, and the live runs had already
+answered: ESPN prices no MMA, has no boxing sport to ask, and listed exactly
+one book — DraftKings — on every single contest measured. So the shop had
+nothing to shop and the whole desk inherited one feed's gaps.
+
+A price is now something several sources are asked for, merged and deduped by
+book name so the same sportsbook reached twice is one opinion rather than two.
+A source is a class with two methods; adding a third changes nothing else.
+`the-odds-api.com` went in as the second, because it covers exactly the two
+sports ESPN cannot and carries more books on the ones both cover. Its key
+lives in the same OS vault the broker credentials use and appears in no
+config, commit, log line or message — it stays inert until the owner stores
+one, and says so in a sentence rather than failing.
+
+The matcher between two feeds is where this gets dangerous: "Man United" and
+"Manchester United" are one team, "New York Liberty" and "New York Knicks" are
+not, and a wrong match prices the wrong game while looking exactly like a right
+one. It refuses rather than guesses when two contests both fit, and it is the
+most heavily tested file on the desk.
+
+**And Zeo now keeps its own price history, which is the only thing here nobody
+else has.** Every other number on that desk is borrowed. `zeo_price_archive.
+jsonl` is an append-only log of what each book was charging each time Zeo
+looked — prices and team names, nothing personal, gitignored. It cannot be
+backfilled: either something wrote the price down at the time or that
+information does not exist, which is precisely why no free tool has it. It
+turns closing-line value from an estimate into a measurement, makes line
+movement readable, and accumulates labelled training data whether or not
+anyone is looking.
+
+**Verified, then the rig came down.** The ninth run on `zeo-home` was green —
+173 tests on Windows, a live WNBA board at -148/+124 and a 4.1% hold with all
+four team levers firing and naming their numbers, and the archive writing two
+snapshots. The one failure before it was a test bug worth naming: the
+"unwritable archive" case pointed at `/proc`, which is only unwritable on
+Linux, so on the owner's Windows machine the write succeeded and the guard
+failed for the right reason. It points at a path under an existing file now,
+which no operating system will let you create a directory in.
+
+The temporary capture workflow and its script are deleted. That runner's own
+standing workflow accepts only trusted `main` code by policy, and this one ran
+branch code on it — read-only, for one specific question, and not something to
+leave standing past the answer.
+
+**Still open.** Four things, in the order they would hurt. **The fight price
+mapping has never met a real priced fight**, because ESPN prices none: where a
+bout carries no home/away labels the two prices are matched by list order, and
+if that is backwards then every read on every fight is inverted and nothing in
+the output looks wrong. The second source will exercise it first, so the first
+thing to do after storing a key is compare one bout against any public odds
+screen. **That source has never sent a request** — no key is stored — and its
+failure mode is a board that matches nothing, which reads exactly like "no
+market"; `bet sources` is what tells those apart. **Closing-line value** stays
+an estimate until the archive has a stretch of days in it. **The gate needs 200
+settled calls** and has zero.
+
+`ZEO_BETTING.md` §11 is the checklist to run on `zeo-home`, and §9 names the one
+step a commit could not take — the nine `bet_*` actions are in Zeo's
+`DEFAULT_CONFIG` and example config, but `agent_config.json` is gitignored, so
+the live config needs them added by hand or every `bet` command returns "not
+allowed by runtime allowlist".
 
 ---
 
