@@ -262,8 +262,38 @@ nothing, which reads exactly like "no market"; `bet sources` distinguishes them.
 **Closing-line value** stays an estimate until the archive has a stretch of days
 in it, and the gate still needs 200 settled calls against zero today.
 
-`ZEO_BETTING.md` §9 is the one-command version of the config step and §11 is the
-verification checklist.
+**Update: the fight desk has numbers now.** The largest remaining hole was that
+four of the levers with the best claim to being worth running — grappling
+mismatch, puncher's chance, volume gap, striking defence — had no inputs at
+all, because ESPN publishes no MMA statistics of any kind. A card with no
+mismatches on it looks exactly like a quiet night, which is the worst way for
+a feature to fail.
+
+MMA statistics are now a source layer of their own, the same shape as the
+price sources, with UFCStats as the first real entry: its eight career rates
+cover six of the seven lever inputs, and its tale of the tape feeds the reach
+and age levers. Three previously-dark levers have tests proving they fire. It
+publishes no career knockdown rate, so puncher's chance stays dark and the
+read says so — a silent absence is indistinguishable from a bout with no
+mismatch in it.
+
+**The part that generalises: an HTML source fails by going quiet**, in the
+direction of "this thing has no data", which is the same failure shape as the
+three guards above. So it parses by label rather than by position or CSS class
+(a test renames every class on the page and still reads the numbers off it),
+reports unrecognised labels instead of dropping them, and treats a stat that
+did not parse as *absent* rather than zero — because a zero takedown-defence
+figure fires a lever at full strength on a fighter nobody has information
+about. Manners are fixed in code rather than configurable: one request at a
+time, spaced, capped, cached for a day. It is off until the owner turns it on,
+because reading somebody's public pages on a schedule is their decision.
+
+Boxing gets nothing: BoxRec forbids automated access and no free alternative
+exists, so boxing is priced and not scouted, and says so rather than implying
+the fighters are featureless.
+
+`ZEO_BETTING.md` §10 is the one-command version of the config step, §5 is the
+MMA statistics source, and §12 is the verification checklist.
 
 ---
 
