@@ -96,11 +96,33 @@ that would have inverted a whole league silently. Boxing is marked unconfirmed
 and Bellator was added, since UFC, PFL and Bellator are the three MMA
 promotions its site API is known to serve.
 
+**Two more, found the same way, and the first is the largest of all.**
+`sportsdataverse/sportsdataverse-py` is a public library that carries recorded
+ESPN payloads as test fixtures. Fifty-five real contests across eight leagues
+were run through the parser: every one parsed whole — names, home and away,
+overall records, scores, state, start time. **And not one of them carried a
+price.** Eight recorded scoreboards have no `odds` key at all, and ESPN's
+endpoint documentation lists betting odds only under the core API, per
+competition. The desk had been reading the moneyline off the card, so against
+real data it would have priced nothing and reported "no moneyline published
+yet" on every game on the board — an entire feature that looks like a quiet
+evening rather than a bug. Prices are now fetched per contest.
+
+The second was a missing path segment. The fighter drill-down needs
+`/v2/sports/{sport}/leagues/{league}/athletes/{id}/eventlog`, and it had been
+built without `leagues` — because the site API's equivalent path does not have
+one. Every request would have 404'd and every fighter would have come back with
+no rates, which reads as a card of fighters nobody has information about. Both
+URLs now match, character for character, what that working library sends.
+
 **The lesson.** A blocked host is not always a blocked question. What could not
 be reached was ESPN; what was actually needed was the shape of its payloads,
 and that was sitting in a public repository the whole time. Worth asking, next
 time a network policy stops a piece of work, whether the server is wanted or
-the knowledge is.
+the knowledge is. Three defects were found this way and every one of them was
+silent by construction: no exception, no wrong number, just a feature that
+reports having found nothing. Those are the ones that survive a test suite,
+because a test written from the same misunderstanding agrees with the code.
 
 **Still open.** The container still cannot reach `site.api.espn.com`, so **no
 parser has met a live payload.**
