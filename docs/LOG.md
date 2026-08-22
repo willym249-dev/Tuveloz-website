@@ -115,11 +115,42 @@ one. Every request would have 404'd and every fighter would have come back with
 no rates, which reads as a card of fighters nobody has information about. Both
 URLs now match, character for character, what that working library sends.
 
+**Update: it was run on `zeo-home`, seven times, and four more defects fell
+out.** The cloud session cannot reach that machine, but the machine is a
+self-hosted GitHub Actions runner and it was online, so a read-only workflow
+on the branch put the capture there and the job log brought the answer back.
+Prices, injuries and head-to-head now read live: Yankees -108 against Toronto
++101 through DraftKings, Sabally and Fiebich correctly ruled out, "IND leads
+series 2-1".
+
+The four, all of them silent:
+
+- **The moneyline is not on the scoreboard.** Every league, every run,
+  `priced on card 0`. It is a per-competition core-API endpoint.
+- **A missing `leagues` path segment** would have 404'd every fighter lookup.
+- **The fighter id is on the competitor**, not the nested athlete, so every
+  bout reported nobody having any statistics.
+- **The head-to-head block is called `seasonseries`.** This looked for two
+  other names, found neither anywhere, and reported "head to head no" on
+  every game for as long as it existed.
+
+And one that was not silent, which is worse. A live Premier League read came
+back at **-16.6% hold** with both sides reported as positive expected value,
+because soccer can end level and the draw was not in the de-vig. Fixing that
+exposed a second half: the model still forced the two sides to sum to one,
+handing the draw's entire share to the favourite, so Manchester United showed
+89.9% against a fair price of 71.2% and the difference was called a
+twenty-cent edge. It reads 71.7% and -4.0c now.
+
 **The lesson.** A blocked host is not always a blocked question. What could not
 be reached was ESPN; what was actually needed was the shape of its payloads,
 and that was sitting in a public repository the whole time. Worth asking, next
 time a network policy stops a piece of work, whether the server is wanted or
-the knowledge is. Three defects were found this way and every one of them was
+the knowledge is. And a second one, from the runs that followed: a number that
+looks plausible is not evidence. Every one of these survived a test suite,
+because a test written from the same misunderstanding agrees with the code —
+and the one that would have cost real money was the one that looked most like
+a finding. Three defects were found this way and every one of them was
 silent by construction: no exception, no wrong number, just a feature that
 reports having found nothing. Those are the ones that survive a test suite,
 because a test written from the same misunderstanding agrees with the code.
