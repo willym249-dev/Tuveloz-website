@@ -51,6 +51,18 @@ identical code currently produces different provenance depending on who checked
 it out. Pinning line endings in `.gitattributes` is what makes any of those
 digests mean something to a second person.
 
+**And check the whole class before pinning anything.** A sweep of every
+committed digest of a committed file in the Zeo repository found ten, and they
+do not agree. The three holdout manifests pin their source as LF. The three
+`*_search_designs.json` files pin `zeo_holdout_universe_2020_2024.json` as
+CRLF, which makes `zeo_alpha_nightly`'s snapshot check the same defect pointing
+the other way — it verifies on the owner's machine and fails on every LF
+checkout. The obvious repair, pinning everything to LF, would have moved which
+machine is broken rather than fixing it, and it would have been shipped as a
+fix. Two conventions in one repository is the finding; the JSON half is left
+alone deliberately, because re-recording a frozen design is a decision about
+evidence and not a bug fix.
+
 ---
 
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
