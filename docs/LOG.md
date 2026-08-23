@@ -13,6 +13,46 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-22 — A seal that could not be verified on the machine that matters
+
+**Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
+failure is the same shape this log keeps meeting from new directions, and
+because sessions work in both repositories. The work is in the Zeo repository
+on branch `claude/holdout-seal-line-endings`.
+
+**What happened.** Zeo's owner-hosted nightly on `main` failed on 2026-08-22
+(run 32561102320): 3,512 tests, one error. `load_suite("holdout")` raised
+`Coding holdout seal mismatch: source_sha256`. That seal is the evidence
+machinery behind the sealed, exactly-once model runs — the thing that makes
+"this suite was frozen before the model saw it" checkable by someone else.
+
+The suite had not drifted. All three manifests record the LF-byte digest of
+their source, the check hashed the raw bytes of the working copy, and the
+repository had no `.gitattributes` — so the Windows runner checks the same
+commit out as CRLF and hashes bytes that were never committed. The seal failed
+on the one machine where the runs actually happen and passed everywhere else.
+It was the first nightly to include those files; they had landed the previous
+morning, so it had never been true before.
+
+**The lesson worth keeping.** The failure named the field that disagreed and
+nothing about how, and those are not the same information. A line-ending
+difference and a tampered suite produce the identical message, the second
+reading is the alarming one, and the alarming reading is the one a person acts
+on. This log already holds two versions of that mistake — a search that
+reported an empty feed as an unlucky question, and a video stage verified
+everywhere except the artifact the owner receives. Here it arrives as a check
+that could not say whether the environment moved the bytes or someone moved the
+tasks.
+
+The second half is narrower and worth carrying anyway: **a digest of a
+checked-out file is a claim about a checkout, not about a commit.** The same
+run claims also record controller and local-brain hashes taken the same way, so
+identical code currently produces different provenance depending on who checked
+it out. Pinning line endings in `.gitattributes` is what makes any of those
+digests mean something to a second person.
+
+---
+
 ## 2026-08-17 — Zeo's search failed, and the diagnosis was wrong for most of a day
 
 > **Corrected the same evening. Read this first.** This entry originally said
