@@ -13,6 +13,65 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-24 — A second business was proposed, and the state it would run in ruled it out
+
+**Why this is here.** Nothing in the code changed. It is recorded because a
+future session will meet this idea again — it is genuinely attractive and it
+recurs on every "business ideas" list — and because the reason to decline it is
+a fact about Maryland that nobody would guess from the pitch. The assessment is
+in [`business/medical-bill-auditing-assessment.md`](business/medical-bill-auditing-assessment.md).
+
+**What was proposed.** Audit individuals' hospital bills for coding errors, fight
+the errors, take 25–40% of the savings. No capital, no inventory, contingency
+removes all sales friction, a week of studying CPT and HCPCS is enough to start,
+and almost nobody serves individuals.
+
+**What checking found.** Three of the four premises do not survive contact.
+
+The 60–80% error rate is sold by the people who sell the service — Medical
+Billing Advocates of America and CoPatient put it at 75–80%, the AMA measured
+~7.1% of paid claims, and NerdWallet found 49% of Medicare claims. An eleven-fold
+spread that sorts by whether the source profits when the number is high. The
+"almost nobody serves individuals" claim is simply false in 2026: Goodbill,
+Resolve, CoPatient and ClaimMedic all serve individuals, Dollar For and the
+Patient Advocate Foundation do it free, and there is an affiliate comparison
+layer on top, which only grows where commissions exist.
+
+The contingency premise is the interesting failure. It removes friction from the
+sale and relocates the risk to collection, where it is worse: save a broke person
+$9,000, invoice $2,700, and you are an unsecured creditor of someone whose
+defining trait is not paying unsecured medical creditors. Resolve — the most
+established operator — charges a $249–$499 deposit up front. The market already
+retreated from the premise.
+
+**The finding worth keeping.** Maryland has run an all-payer hospital rate-setting
+system since 1971, the only one in the United States. Every payer pays the same
+rate at a given hospital, so hospitals cannot discount for anyone. The core move
+in this industry — attacking an inflated chargemaster price — has nothing to
+attack here, because the gap it exploits was regulated away fifty-five years ago.
+The second lever, charity care enrollment, Maryland also mandates: HB 565 (2021)
+requires eligibility to be determined at the time of service, and HB 694 required
+hospitals to find and refund patients they wrongly charged, roughly $200 million
+for 2017–2021. What remains is real coding errors, the hardest of the three
+levers and the one furthest from a week of study.
+
+So the business is strongest where Tuveloz has no presence and weakest in the
+county where it operates. That inversion is the whole finding, and it is not
+visible from any version of the pitch.
+
+**The methodological note, because this log keeps meeting it.** The four primary
+legal sources — Justia, the Maryland General Assembly, the Department of Labor,
+and the People's Law Library — are all blocked by the egress proxy from this
+environment. The Debt Settlement Services Act details ($1,000 registration,
+$50,000 bond, no fee before an actual settlement) therefore come from secondary
+summaries, and the statutory fee cap in § 12-1010 could not be confirmed at all.
+That is the same condition as the 2026-08-17 entry below, where a session wrote
+up an unreachable claim as settled fact. The assessment says so in its own
+sources section rather than presenting a tidy page, and the open item is dated
+so the statute actually gets read if the idea is ever revived.
+
+---
+
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the

@@ -4,7 +4,10 @@ Plans, market research, pricing decisions, provider programs, and growth
 strategy. The reasoning behind business choices goes here so it survives past
 the conversation that produced it.
 
-Nothing filed yet.
+| Document | What it answers |
+| --- | --- |
+| [`launch-gate-briefing.md`](launch-gate-briefing.md) | What does each of the 18 launch gates ask, who may answer it, and what evidence already exists? |
+| [`medical-bill-auditing-assessment.md`](medical-bill-auditing-assessment.md) | Should the owner start a medical bill auditing business on contingency? Checked 2026-08-24; recommended against in Maryland, with the reasons and the version that could work. |
 
 Related material that lives elsewhere: the founding provider program, outreach
 kits, growth playbook, and Montgomery County worklist are in

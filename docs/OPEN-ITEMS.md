@@ -52,6 +52,7 @@ When you close something significant, write a matching entry in
 | 2026-08-25 | Answer the 18 launch gates in `/admin/launch-readiness`. `npm run readiness` confirms production currently holds **zero** recorded decisions, so every gate is pending | hello@tuveloz.com | open |
 | 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
 | 2026-09-15 | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all. Date is a review checkpoint, not a commitment — the work is contingent on discovery opening | hello@tuveloz.com | open |
+| 2026-09-28 | Go/no-go on the medical bill auditing venture, assessed 2026-08-24 in `business/medical-bill-auditing-assessment.md` and recommended against as proposed. If it is revived, two things must happen **before any client is taken**: read Md. Code Fin. Inst. § 12-1001 and § 12-1010 directly for the fee cap and exemptions (four primary legal sources were unreachable when the assessment was written), and decide audit-only flat-fee versus contingency, which is what determines whether state registration and a $50,000 bond apply at all. Date is a review checkpoint, not a commitment to pursue | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 

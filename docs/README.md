@@ -60,6 +60,7 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 | --- | --- |
 | [`business/`](business/) | Plans, pricing decisions, market notes, and provider programs added from here on. |
 | [`business/launch-gate-briefing.md`](business/launch-gate-briefing.md) | What does each of the 18 launch gates ask, who is allowed to answer it, and what evidence already exists in the code? |
+| [`business/medical-bill-auditing-assessment.md`](business/medical-bill-auditing-assessment.md) | Should Tuveloz's owner start a medical bill auditing business on contingency? Why Maryland's all-payer rate setting removes most of the opportunity, and what registration it would require. |
 | [`../brand/outreach/`](../brand/outreach/) | Provider recruitment kits, the founding provider program, the growth playbook, and the Montgomery County outreach worklist. |
 | [`../brand/ads/`](../brand/ads/) | Ad concepts, production briefs, and finished cuts. |
 | [`../brand/social-media-kit/`](../brand/social-media-kit/) | Profile and cover images for every platform, plus the brand colors and how to regenerate assets. |
