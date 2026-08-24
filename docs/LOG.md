@@ -61,6 +61,33 @@ put it in the Zeo repository, which is private, and should notice that the
 public/private distinction applies to branch names and commit messages and not
 only to file contents.
 
+**Update 2026-08-24, later the same day.** The Zeo side is rebuilding the public
+page as a small isolated Cloudflare Worker holding no database, uploads,
+accounts, generation or checkout, which removes the public tunnel into the
+owner's PC. That is the right change on its own terms, and it also repairs a
+fragility reported in the same session: the page had been left running on
+background processes with its two scheduled-task installers removed, so it would
+not have survived a reboot. A Worker has no such dependency. The health endpoint
+in that session reported `storefront_ready: true`, `checkout_ready: false`,
+`generation_ready: false`, so the product locks are holding.
+
+**It does not discharge the row in `OPEN-ITEMS.md`, and a future session should
+not close that row because the hosting improved.** The risk recorded above is
+about the registrable domain and the legal entity, not about where the bytes are
+served from. `creator.tuveloz.com` is a record in the `tuveloz.com` Cloudflare
+zone — a subdomain cannot be anything else — so rebuilding it as a Worker keeps
+it in the same zone, on the same Cloudflare account, under the same entity, and
+leaves the Stripe exposure, the launch-gate diligence and the mail-reputation
+question exactly where they were. The Worker version arguably tightens the
+coupling rather than loosening it, by putting a second Worker in the account that
+also serves the marketplace. Verified 2026-08-24: the hostname still answers on
+the same Cloudflare addresses as the apex.
+
+The row closes when the domain, the entity, the bank account, the processor and
+the email are separate. Nothing about the hosting boundary is a substitute for
+that, and the two changes are easy to confuse because both are described as
+"separating" the site.
+
 ---
 
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
