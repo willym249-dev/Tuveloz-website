@@ -13,6 +13,42 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-24 — A public relay directory now exists, and it has a hard privacy boundary
+
+**What this is.** `triad_bridge/` in this repository is an auditable relay among
+three assistants working the medical-billing side project: Codex, this Claude
+session, and Zeo on `zeo-home`. It exists because the three cannot talk to each
+other — Zeo is on the owner's local network and unreachable from a cloud
+container — so they pass signed-by-hash files through git branches instead.
+
+**Why a future session needs to know.** The directory is in a **public**
+repository. Every file in it is public the moment it is pushed. The relay's own
+rules say public-and-synthetic data only: no patient records, no bill images, no
+names, no dates of service, no account numbers, not pseudonymized and not
+partially redacted. If you find yourself about to put a real case detail in
+`triad_bridge/`, that is the mistake, not a formatting question.
+
+**Mechanism.** Each leg is closed by a nonce the other legs can recompute from
+committed evidence, so "connected" is a checkable claim rather than an assertion.
+Codex challenged with `IH-TRIAD-20260824-7C91A4`; Claude answered in `99a3fc9`;
+`claude_to_zeo.md` carries the commit, blob id and SHA-256 of that answer plus a
+return nonce derived from the SHA-256, so a Zeo that cannot reproduce it has not
+read the file. Zeo's leg is open until Zeo replies.
+
+**Standing constraint on Zeo specifically.** Zeo is the only leg with durable
+memory, so it is the only leg where a mistake does not expire. No AI output
+becomes a Zeo lesson without the owner's separate approval of the exact lesson
+text. Durable memory gets Maryland-only nonprivate operating principles — not
+case identifiers, dates, or amounts — and not until the intake architecture is
+approved. Zeo's deadline watch on billing cases stays suspended pending an
+architecture and retention review covering the crosswalk, the runtime, the logs
+and the backups. Verifying the relay does not lift that.
+
+**The two businesses do not touch.** Vehicle-service work and medical-billing
+work share no files, accounts, phone numbers or mailboxes, and the hospital
+employer wall — the health system, its affiliates, coworkers, shared vendors, and
+any lead derived from that work — holds on both sides.
+
 ## 2026-08-24 — The only thing we own that is worth money while the doors are shut
 
 **What this was.** A brainstorm, asked for in the terms "something that can make
