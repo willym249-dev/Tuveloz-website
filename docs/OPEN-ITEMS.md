@@ -52,6 +52,7 @@ When you close something significant, write a matching entry in
 | 2026-08-25 | Answer the 18 launch gates in `/admin/launch-readiness`. `npm run readiness` confirms production currently holds **zero** recorded decisions, so every gate is pending | hello@tuveloz.com | open |
 | 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
 | 2026-09-15 | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all. Date is a review checkpoint, not a commitment — the work is contingent on discovery opening | hello@tuveloz.com | open |
+| 2026-09-07 | Move `creator.tuveloz.com` off this registrable domain. It serves an unrelated venture (adult content generation, built in the Zeo repository) and Stripe prohibits that category, so a shared domain and entity risks a review of the *marketplace's* Stripe account — the payment path the whole launch depends on. Also reaches launch-gate diligence and `updates.tuveloz.com` mail reputation. Needs a separate domain, LLC, bank account, processor and email, and must land **before** any merchant application, which archives the domain and entity it is given | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 

@@ -13,6 +13,56 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-24 — A second business on the marketplace's registrable domain
+
+**Why this is here.** Nothing in the application changed, and no code moved. It
+is recorded because the finding reaches Tuveloz's payment processor, its launch
+gates, and its mail — none of which is obvious from the fact that produced it,
+which is only a subdomain.
+
+**What was found.** `creator.tuveloz.com` serves an unrelated venture — adult
+content generation, built in the Zeo repository and tunnelled from the owner's
+Windows machine. The site itself is locked: checkout and generation are both
+switched off pending underwriting, identity verification and output review, and
+a previous session corrected two badges that had implied review was already
+running. That lock is correct and nothing here asks for it to be lifted. The
+problem is not the site's state. It is the domain it is on.
+
+**Why it matters to this repository.** Three consequences, none hypothetical:
+
+- **The Stripe account.** Tuveloz's entire payment path is Stripe, still
+  code-locked in `lib/stripe.ts`. Stripe prohibits adult content. A shared
+  entity and a shared registrable domain is exactly the fact pattern that
+  triggers a review of the *other* account, and losing the marketplace's
+  processor mid-launch costs months of appeal rather than a reconfiguration.
+- **Diligence.** Seventeen of the eighteen gates in `lib/launch-readiness.ts`
+  name an outside authority — insurer, CPA, processor, legal reviewer,
+  screening reviewer. Each of them searches the domain before signing, and the
+  gates currently hold zero recorded decisions.
+- **Deliverability.** The DKIM and DMARC work in flight is on
+  `updates.tuveloz.com`, the same registrable domain. Adult classification by
+  mail filters and corporate proxies is a deliverability question for the
+  marketplace's transactional mail, not only a reputational one.
+
+**The decision.** Separate domain, separate entity, separate bank account,
+separate processor, separate email — and do it *before* any merchant
+application, because the application asks for the domain and the entity and
+then archives both. A domain registration and an LLC filing are the whole cost.
+The row is in `OPEN-ITEMS.md` dated 2026-09-07.
+
+**The part worth carrying past this entry.** This repository is public, so a
+branch name is a disclosure. The branch this assessment was written on is
+`claude/adult-site-monetization-mrc6uw`, already pushed, and it names the
+second business in the marketplace's own source history. The assessment itself
+was deliberately **not** committed here for the same reason — it was delivered
+to the owner outside the repository, and only this Tuveloz-side risk was
+filed. A future session asked to write up anything about that venture should
+put it in the Zeo repository, which is private, and should notice that the
+public/private distinction applies to branch names and commit messages and not
+only to file contents.
+
+---
+
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
