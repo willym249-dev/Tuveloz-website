@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Itemized Repair Invoice — Maryland</title>
+<style>
+  @page { size: letter; margin: 0.45in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #101418;
+    font-size: 9pt;
+    line-height: 1.3;
+    width: 7.6in;
+    margin: 0 auto;
+  }
+  header.sheet { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5pt solid #0f6b3f; padding-bottom: 5pt; }
+  h1 { font-size: 15pt; line-height: 1.1; }
+  .kicker { font-size: 7.5pt; font-weight: 700; letter-spacing: 0.13em; color: #0f6b3f; text-transform: uppercase; }
+  .doc-number { text-align: right; font-size: 8pt; color: #33414c; }
+  h2 { font-size: 8.5pt; letter-spacing: 0.09em; text-transform: uppercase; color: #0f6b3f; margin: 6pt 0 2pt; }
+  .grid { display: grid; gap: 3pt 10pt; }
+  .grid.two { grid-template-columns: 1fr 1fr; }
+  .grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .grid.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .field { border-bottom: 0.75pt solid #98a3ad; padding-top: 8pt; }
+  .field span { font-size: 7pt; color: #55636f; text-transform: uppercase; letter-spacing: 0.06em; }
+  .field.filled { padding-top: 0; }
+  .field.filled strong { display: block; font-size: 10pt; font-weight: 600; padding-bottom: 1pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 3pt; }
+  th { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.05em; color: #55636f; text-align: left; border-bottom: 0.75pt solid #55636f; padding: 2pt 3pt; }
+  td { border-bottom: 0.5pt solid #c3ccd3; height: 13pt; padding: 2pt 3pt; }
+  td.money, th.money { text-align: right; width: 0.72in; }
+  .rights { border: 1.25pt solid #101418; padding: 5pt 7pt; margin-top: 6pt; }
+  .rights h3 { font-size: 10.5pt; text-transform: uppercase; letter-spacing: 0.04em; }
+  .rights p { margin-top: 3pt; }
+  .notice { font-size: 7.5pt; color: #33414c; margin-top: 5pt; line-height: 1.3; }
+  .notice strong { color: #101418; }
+  .box { border: 0.75pt solid #55636f; padding: 5pt 6pt; margin-top: 6pt; break-inside: avoid; }
+  .rights, table, .grid { break-inside: avoid; }
+  .fold { break-before: page; }
+  .fold-note { font-size: 7pt; color: #55636f; text-align: right; margin-top: 6pt; letter-spacing: 0.05em; text-transform: uppercase; }
+  .check { font-size: 9pt; margin-top: 3pt; }
+  .check::before { content: "\2610"; font-size: 12pt; margin-right: 4pt; vertical-align: -1pt; }
+  .totals { width: 2.5in; margin-left: auto; margin-top: 4pt; }
+  .totals td { border-bottom: 0.5pt solid #c3ccd3; height: 13pt; }
+  .totals td.label { font-size: 8pt; color: #33414c; }
+  .totals tr.grand td { border-top: 1.25pt solid #101418; border-bottom: 0; font-weight: 700; font-size: 10.5pt; }
+  footer { margin-top: 7pt; border-top: 0.75pt solid #c3ccd3; padding-top: 4pt; font-size: 6.8pt; color: #55636f; line-height: 1.35; }
+  footer .credit { color: #0f6b3f; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="sheet">
+  <div>
+    <div class="kicker">Maryland vehicle repair · Md. Code, Com. Law § 14-1001</div>
+    <h1>Itemized Repair Invoice</h1>
+  </div>
+  <div class="doc-number">
+    Invoice No. ______________<br>
+    Date ______ / ______ / __________
+  </div>
+</header>
+
+
+<h2>Repair business</h2>
+<div class="grid three"><div class="field"><span>Business name</span></div><div class="field"><span>Maryland registration number</span></div><div class="field"><span>Phone</span></div></div>
+<div class="grid two"><div class="field"><span>Street address</span></div><div class="field"><span>City, state, ZIP</span></div></div>
+
+<h2>Customer</h2>
+<div class="grid three"><div class="field"><span>Name</span></div><div class="field"><span>Phone</span></div><div class="field"><span>Email</span></div></div>
+<div class="grid two"><div class="field"><span>Street address</span></div><div class="field"><span>City, state, ZIP</span></div></div>
+
+<h2>Vehicle</h2>
+<div class="grid four"><div class="field"><span>Year / make / model</span></div><div class="field"><span>VIN</span></div><div class="field"><span>Odometer</span></div><div class="field"><span>License plate</span></div></div>
+
+<div class="grid two"><div class="field"><span>Related estimate number</span></div><div class="field"><span>Date work completed</span></div></div>
+
+<h2>Work performed</h2>
+<p class="notice">List labor and parts separately. Every part carries its number and its condition; every labor line carries the time and the mechanic who did it.</p>
+<table>
+  <thead>
+    <tr>
+      <th style="width:0.62in;">Type</th>
+      <th>Description of labor or part</th>
+      <th style="width:1.05in;">Part number</th>
+      <th style="width:0.95in;">New / used / rebuilt / recond.</th>
+      <th class="money">Qty × unit</th>
+      <th class="money">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+    <tr><td></td><td></td><td></td><td></td><td class="money"></td><td class="money"></td></tr>
+  </tbody>
+</table>
+
+<div class="grid two" style="margin-top:4pt;">
+  <div>
+    <h2 style="margin-top:2pt;">Labor detail</h2>
+    <table>
+      <thead>
+        <tr><th>Mechanic name or identifier</th><th style="width:0.8in;">Hours</th><th class="money">Rate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td></td><td></td><td class="money"></td></tr>
+        <tr><td></td><td></td><td class="money"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div><table class="totals">
+  <tr><td class="label">Labor</td><td class="money"></td></tr>
+  <tr><td class="label">Parts</td><td class="money"></td></tr>
+  <tr><td class="label">Sublet / other</td><td class="money"></td></tr>
+  <tr><td class="label">Tax</td><td class="money"></td></tr>
+  <tr class="grand"><td class="label">Total due</td><td class="money"></td></tr>
+</table></div>
+</div>
+
+<div class="box">
+  <p class="check">Replaced parts were returned to the customer.</p>
+  <p class="check">Replaced parts were retained because a warranty agreement requires their return to the manufacturer.</p>
+  <p class="check">The customer declined the return of replaced parts.</p>
+  <p class="check">The final total exceeded the written estimate by more than 10%, and the customer's consent is recorded on the estimate before that work began.</p>
+</div>
+
+<div class="box">
+  <p>All labor performed and parts replaced were necessary to perform the repairs described on this invoice.</p>
+  <p style="margin-top:4pt;">I certify that this vehicle has been tested or test driven when needed and that the mechanic's work was performed satisfactorily.</p>
+  <div class="grid three" style="margin-top:5pt;">
+    <div class="field"><span>Repair business signature</span></div>
+    <div class="field"><span>Printed name and title</span></div>
+    <div class="field"><span>Date</span></div>
+  </div>
+</div>
+
+<p class="fold-note">Continued on the back of this sheet</p>
+<div class="fold">
+
+<div class="rights">
+  <h3>Customer's Rights</h3>
+  <p>You may request a written estimate for repairs which cost in excess of $50. You may not be charged any amount ten percent in excess of the written estimate without your consent. You are entitled to the return of any replaced parts except when parts are required to be returned to the manufacturer under a warranty agreement. Repairs not originally authorized by you may not be charged to you without your consent.</p>
+</div>
+<p class="notice"><strong>Manufacturer Special Policy Adjustment Programs.</strong> Federal law requires manufacturers to furnish the National Highway Traffic Safety Administration (N.H.T.S.A.) with bulletins describing any defects in their vehicles. You may obtain copies of these bulletins from either the manufacturer or N.H.T.S.A. In addition, certain consumer publications or organizations publish this information, which may be available for a fee or for free.</p>
+<p class="notice">Under certain circumstances, the repair facility may not be responsible for damage to the customer's vehicle while it is on the facility's premises. The customer should ask the repair facility about the extent of its responsibility and insurance coverage.</p>
+
+
+<div class="grid three" style="margin-top:8pt;">
+  <div class="field"><span>Customer signature</span></div>
+  <div class="field"><span>Printed name</span></div>
+  <div class="field"><span>Copy given to customer on</span></div>
+</div>
+<p class="notice">If you collect this signature electronically instead of on paper, the customer has to agree to transact electronically first, and has to be able to keep the exact record they signed.</p>
+</div>
+
+<footer>
+  <p>This is a blank form, not legal advice. It reproduces the notices in Md. Code, Com. Law § 14-1001 and the record structure Tuveloz implements in software. Confirm it against the current statute and your own adviser before relying on it, and keep your completed copies for your records.</p>
+  <p style="margin-top:3pt;">Form version maryland-repair-records-2026-08-01-v2 · <span class="credit">Provided free by Tuveloz — tuveloz.com</span></p>
+</footer>
+</body>
+</html>

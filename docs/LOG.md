@@ -13,6 +13,63 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-24 — The only thing we own that is worth money while the doors are shut
+
+**What this was.** A brainstorm, asked for in the terms "something that can make
+us money right now." The finding is not an idea, it is an inventory result:
+**nothing on tuveloz.com can be bought.** Every transactional path returns 503
+by design and should keep doing so, the public directory returns 503 with it,
+and `npm run readiness` still shows zero recorded decisions against the 18
+gates. Seventeen of those gates need an outside party who charges money. So the
+order is money, then sign-offs, then launch — and the money cannot come from the
+marketplace.
+
+**The idea that survived.** `lib/maryland-repair-records.ts` implements
+Md. Code, Com. Law § 14-1001 — the Customer's Rights notice, the 10% consent
+rule, return of replaced parts, itemized lines with part condition and labor,
+the test-drive certification. It was built as marketplace plumbing. It is also
+the thing most solo operators in this county get wrong today, and it is worth
+something to them **with our launch date left blank**. That last clause is the
+whole test. A paid listing, a sold lead, a membership fee — every one of them is
+a charge for access to a marketplace that has no customers. The paperwork is not.
+
+`brand/repair-paperwork-pack/` is now the two forms, generated from those
+constants rather than retyped, print-ready as two sides of one sheet.
+`npm run pack:repair-docs` rebuilds them; the same command with `--business`
+stamps someone's details on, which is the entire fulfillment cost of selling a
+personalized pack. `tests/repair-paperwork-pack.test.mjs` regenerates and fails
+the build on drift, so a shop's printed form and our stored records cannot end
+up carrying different statutory sentences.
+
+The reasoning, the ranked alternatives, and the kill list are in
+[`business/revenue-before-launch.md`](business/revenue-before-launch.md).
+
+**The lesson worth keeping.** The obvious pre-launch revenue ideas — paid
+listings, selling leads, a provider membership fee, taking a fleet contract and
+subcontracting it out — all fail the same way, and it took writing them in a row
+to see it. Each one sells *access to the marketplace*, and the marketplace is
+shut, so each is a charge for nothing. Two of them are worse than nothing: a
+sold lead is the paused `request` and `discovery` actions with the guards off,
+and a fleet contract makes Tuveloz the party controlling the work, which trades
+away the classification the whole product is built to hold. **The only sellable
+thing a closed marketplace has is whatever it knows that is true off-platform.**
+Here that is the statute, already encoded, sitting unused behind a lock.
+
+**Second-order effect, probably larger than the revenue.** Outreach currently
+opens with "apply to a marketplace with no customers yet" and plans five DMs a
+day against it (`brand/outreach/moco-outreach-worklist.md`). The same five DMs
+opening with free, genuinely useful paperwork make the application the second
+thing said instead of the first. If the free pack does not start conversations,
+that is a real answer about this county's operators, obtained for $0 instead of
+after building a subscription product.
+
+**What is not decided.** The $49 price is a starting number, not researched. The
+Stripe Payment Link, the Google Business Profile, the broker conversation, and
+the CPA question about Maryland's treatment of a digital product all need a
+person and are in [`OPEN-ITEMS.md`](OPEN-ITEMS.md). No lock was touched and none
+should be: the pack is a first-party sale of our own document, with no Connect,
+no payout, and no marketplace object anywhere in it.
+
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the

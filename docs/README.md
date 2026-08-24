@@ -60,9 +60,11 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 | --- | --- |
 | [`business/`](business/) | Plans, pricing decisions, market notes, and provider programs added from here on. |
 | [`business/launch-gate-briefing.md`](business/launch-gate-briefing.md) | What does each of the 18 launch gates ask, who is allowed to answer it, and what evidence already exists in the code? |
+| [`business/revenue-before-launch.md`](business/revenue-before-launch.md) | What can Tuveloz actually charge for while every transactional path is closed, which obvious ideas are traps, and what is the sequence? |
 | [`../brand/outreach/`](../brand/outreach/) | Provider recruitment kits, the founding provider program, the growth playbook, and the Montgomery County outreach worklist. |
 | [`../brand/ads/`](../brand/ads/) | Ad concepts, production briefs, and finished cuts. |
 | [`../brand/social-media-kit/`](../brand/social-media-kit/) | Profile and cover images for every platform, plus the brand colors and how to regenerate assets. |
+| [`../brand/repair-paperwork-pack/`](../brand/repair-paperwork-pack/) | The Maryland estimate and itemized invoice a repair business owes its customer, as print-ready forms generated from the statute implementation. |
 | [`marketing/`](marketing/) | What the "I've Got This" video series is and how each episode is produced, including the Higgsfield runbook. |
 
 ## Historical
