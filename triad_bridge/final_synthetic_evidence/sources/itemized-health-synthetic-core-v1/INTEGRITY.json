@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256",
+  "scope": "payload files; verify.mjs and this manifest are excluded from the digest set",
+  "files": [
+    { "path": "audit.mjs", "sha256": "461dff02e9c2bb76dd861f9084cad016418e601df5706969677a89b1b51074e7" },
+    { "path": "audit.test.mjs", "sha256": "ca24034d12ff3d5accf84d9fc58faaaa1b855e6f80b5fc66d3c70f12c5a04af7" },
+    { "path": "fixtures/01_all_rules.json", "sha256": "23df97620e512562ed00a349fbb2cd0b58a1a71a61f62a2e065a0e5d8eb6526d" },
+    { "path": "fixtures/02_clean_control.json", "sha256": "8cc4eee3ae93ecdc04b6a9b504728326bc2f24239209b24305c50766d33c066f" },
+    { "path": "fixtures/03_boundaries_nearmiss.json", "sha256": "694aa638533a9fcae2e1daa7790cb210102eb9a3332aa3d690f7c98bf6c27940" },
+    { "path": "fixtures/04_multiple_and_ordering.json", "sha256": "f05bf0db2e05d254884ac5748cf6832bd31cc7ed9b93602a3d54eb4579e8c031" },
+    { "path": "fixtures/05_invalid_shape.json", "sha256": "14de83915147d685e31b536c310feff512fdc10d5f35e3ba5c1fe8c5e9186001" },
+    { "path": "fixtures/06_invalid_semantics.json", "sha256": "af2e9a21bbfadb0cc587ec56428f7b2f54d106ce1fbda7ae984e4e6e2ce26879" },
+    { "path": "README.md", "sha256": "c1742ae24ff2186be58033d8590d7bc5851e9a243290a1aa4fdd25c894df36c6" },
+    { "path": "TRIAD_DECISION.md", "sha256": "e885bd79f55b6045f614b1fcf87875f564e2868530c53e48e5d17eadabbd7ae4" }
+  ]
+}

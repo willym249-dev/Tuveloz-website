@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bill review closing report</title>
+<style>@page { size: letter; margin: 0.6in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Segoe UI", Arial, sans-serif; color: #16191d; font-size: 10pt; line-height: 1.45; width: 7.3in; margin: 0 auto; }
+header.doc { border-bottom: 2.5pt solid #1c4f8b; padding-bottom: 7pt; margin-bottom: 10pt; display: flex; justify-content: space-between; align-items: flex-end; }
+h1 { font-size: 16pt; line-height: 1.15; }
+.kicker { font-size: 7.5pt; font-weight: 700; letter-spacing: 0.14em; color: #1c4f8b; text-transform: uppercase; }
+.docmeta { text-align: right; font-size: 8pt; color: #4a5561; }
+h2 { font-size: 9pt; letter-spacing: 0.1em; text-transform: uppercase; color: #1c4f8b; margin: 12pt 0 4pt; border-bottom: 0.5pt solid #c8d0d8; padding-bottom: 2pt; }
+p { margin-bottom: 5pt; }
+ol, ul { margin: 0 0 6pt 16pt; }
+li { margin-bottom: 3pt; }
+.grid { display: grid; gap: 4pt 12pt; margin-bottom: 4pt; }
+.two { grid-template-columns: 1fr 1fr; }
+.three { grid-template-columns: 1fr 1fr 1fr; }
+.field { border-bottom: 0.75pt solid #8b96a2; padding-top: 13pt; }
+.field span { font-size: 7pt; color: #4a5561; text-transform: uppercase; letter-spacing: 0.06em; }
+.box { border: 1pt solid #4a5561; padding: 7pt 9pt; margin: 7pt 0; break-inside: avoid; }
+.box.strong { border-width: 1.5pt; border-color: #16191d; }
+.check { margin-top: 4pt; }
+.check::before { content: "\2610"; font-size: 12pt; margin-right: 5pt; vertical-align: -1pt; }
+table { width: 100%; border-collapse: collapse; margin: 4pt 0; }
+th { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.05em; color: #4a5561; text-align: left; border-bottom: 0.75pt solid #4a5561; padding: 3pt; }
+td { border-bottom: 0.5pt solid #c8d0d8; padding: 4pt 3pt; height: 20pt; vertical-align: top; }
+.note { font-size: 8pt; color: #4a5561; }
+footer { margin-top: 12pt; border-top: 0.75pt solid #c8d0d8; padding-top: 5pt; font-size: 7pt; color: #4a5561; }
+.brandslot { color: #1c4f8b; font-weight: 700; }
+</style>
+</head>
+<body>
+<header class="doc">
+  <div>
+    <div class="kicker">Bill review — closing report</div>
+    <h1>What we questioned on your bill,<br>and where things stand now</h1>
+  </div>
+  <div class="docmeta"><span class="brandslot">[YOUR BUSINESS NAME]</span><br>File No. ______________<br>Report date [date]</div>
+</header>
+
+<div class="grid three">
+  <div class="field filled"><strong>[Client name]</strong><span>Prepared for</span></div>
+  <div class="field filled"><strong>[Facility / facilities]</strong><span>Accounts reviewed</span></div>
+  <div class="field filled"><strong>[dates]</strong><span>Dates of service</span></div>
+</div>
+
+<h2>The short version</h2>
+<p style="font-size:10.5pt;">[Two or three plain sentences. Say which points are settled and which are <em>questions raised</em> rather than established errors — a bill alone cannot prove a charge was medically wrong. What we were asked to look at, what turned out to be wrong, and where the account stands now. Write this so it can be read on its own — most people will read this paragraph and the totals table and nothing else.]</p>
+
+<h2>Financial assistance</h2>
+<div class="box">
+  <p class="check">You qualified for financial assistance. $[amount] was written off. <strong>You were charged nothing on this</strong> — it is yours by right under Maryland law and no fee applies to it.</p>
+  <p class="check">You did not qualify on the income tested. [State which threshold and why.]</p>
+  <p class="check">Assistance was applied for and is still pending. Expected decision [date].</p>
+  <p class="check">Your income was re-tested for a change in circumstances within 240 days of the first bill. [Describe.]</p>
+</div>
+
+<h2>What we questioned, line by line</h2>
+<table>
+  <thead>
+    <tr>
+      <th style="width:0.5in;">Line</th>
+      <th style="width:0.75in;">Code</th>
+      <th>The possible discrepancy, and what was asked</th>
+      <th class="money">Charged</th>
+      <th style="width:1.15in;">Outcome</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>[n]</td><td>[code]</td><td>[e.g. Room charge for the day you were discharged]</td><td class="money">$[amt]</td><td>[Removed]</td></tr>
+    <tr><td>[n]</td><td>[code]</td><td>[e.g. Billed separately though part of a bundled procedure]</td><td class="money">$[amt]</td><td>[Corrected]</td></tr>
+    <tr><td>[n]</td><td>[code]</td><td>[e.g. Quantity billed exceeded what the record supports]</td><td class="money">$[amt]</td><td>[Disputed — declined]</td></tr>
+  </tbody>
+</table>
+<p class="note">Where an outcome reads <em>disputed — declined</em>, the provider looked at the line and kept the charge. That does not mean the question was wrong to ask — it means they did not agree. It is not a dead end either; what you can do next is at the end of this report.</p>
+
+<h2>What was requested, and when</h2>
+<table>
+  <thead>
+    <tr><th style="width:1.05in;">Date</th><th>To whom</th><th>What you asked for</th><th style="width:1.4in;">What happened</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>[date]</td><td>[facility, name/ref]</td><td>[You requested the itemized statement]</td><td>[Received [date]]</td></tr>
+    <tr><td>[date]</td><td>[facility, name/ref]</td><td>[You submitted the packet — [n] questions]</td><td>[Corrected statement [date]]</td></tr>
+    <tr><td>[date]</td><td>[radiology / anesthesia / lab]</td><td>[You submitted a separate assistance application]</td><td>[ ]</td></tr>
+  </tbody>
+</table>
+
+<h2>Where the account stands</h2>
+<table class="totals" style="width:3.4in;">
+  <tr><td class="label">What you were asked to pay at the start</td><td class="money">$[baseline]</td></tr>
+  <tr><td class="label">Written off through financial assistance</td><td class="money">−$[amount]</td></tr>
+  <tr><td class="label">Removed or corrected after being questioned</td><td class="money">−$[amount]</td></tr>
+  <tr><td class="label">Adjusted by your insurance</td><td class="money">−$[amount]</td></tr>
+  <tr class="grand"><td class="label">What you owe now</td><td class="money">$[final]</td></tr>
+</table>
+
+<h2>What this cost you</h2>
+<div class="box strong">
+  <p style="font-size:11pt;"><strong>Nothing.</strong> No fee, no percentage, no deposit. This review was done free while the service is in its pilot.</p>
+  <p style="margin-top:5pt;">Nothing was or will be charged on any financial assistance you received — that is yours by law.</p>
+</div>
+
+<h2>What is still open, and what you can do next</h2>
+<ol>
+  <li>[e.g. The question raised on line [code] was declined. The Maryland Attorney General's <strong>Health Education and Advocacy Unit</strong> mediates billing and insurance disputes at no cost to you, and publishes its own outcome figures. If you want to take it there, we can help you put the file together — the decision and the case are yours.]</li>
+  <li>[e.g. The [radiology] account is still pending its own assistance decision, expected [date].]</li>
+  <li>[e.g. Nothing further is outstanding. This account is closed.]</li>
+</ol>
+
+<div class="box">
+  <p><strong>Your records.</strong> The documents you trusted us with are held encrypted, and only the people who worked on your file can open them. They will be destroyed [__] months from today — sooner if you ask, and you never need a reason. If something on this account is still open we hold them until it closes, then destroy them and tell you we have.</p>
+</div>
+
+<footer>
+  <p>This report describes a review of billing documents. It is not legal advice and it is not medical advice. It does not assess whether the care you received was appropriate — only whether what you were billed for it is supported by the records.</p>
+  <p style="margin-top:3pt;"><span class="brandslot">[YOUR BUSINESS NAME]</span> · [phone] · [email]</p>
+</footer>
+
+</body>
+</html>

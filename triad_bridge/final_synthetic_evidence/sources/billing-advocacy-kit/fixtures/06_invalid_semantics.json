@@ -1,0 +1,30 @@
+{
+  "_comment": "SYNTHETIC TEST DATA. Structurally shaped but intentionally invalid domain values.",
+  "schemaVersion": "1.0",
+  "file": "SYN-006",
+  "admission": "2026-08-03T09:00:00-04:00",
+  "discharge": "2026-08-02T09:00:00-04:00",
+  "lines": [
+    { "n": 1, "date": "2026-08-02", "rev": "0300", "code": "S6001", "desc": "Synthetic valid reference line", "qty": 1, "unit": 10.00, "amount": 10.00 },
+    { "n": 1, "date": "2026-08-02", "rev": "0300", "code": "S6002", "desc": "Synthetic duplicate line number", "qty": 1, "unit": 10.00, "amount": 10.00 },
+    { "n": 2, "date": "2026-02-30", "rev": "0300", "code": "S6003", "desc": "Synthetic invalid calendar date", "qty": 1, "unit": 10.00, "amount": 10.00 },
+    { "n": 3, "date": "2026-08-02", "rev": "0300", "code": "S6004", "desc": "Synthetic invalid numeric values", "qty": 0, "unit": -1.00, "amount": 1.001 }
+  ],
+  "billedTotal": -1.00,
+  "eob": {
+    "allowed": 0.00,
+    "planPaid": 0.00,
+    "patientResponsibility": 0.00,
+    "notCovered": [
+      { "line": 99, "reason": "synthetic unknown reference" }
+    ]
+  },
+  "reconciliation": {
+    "billDocumentRef": "SYN-006-BILL",
+    "eobDocumentRef": "SYN-006-EOB",
+    "billMatchKey": "SYN-006-ENCOUNTER",
+    "eobMatchKey": "SYN-006-ENCOUNTER",
+    "matchBasis": "synthetic_fixture"
+  },
+  "patientBilledAmount": 0.00
+}

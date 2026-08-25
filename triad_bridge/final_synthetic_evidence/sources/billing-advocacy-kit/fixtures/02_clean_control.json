@@ -1,0 +1,14 @@
+{
+  "_comment": "SYNTHETIC TEST DATA. Clean control with no EOB.",
+  "schemaVersion": "1.0",
+  "file": "SYN-002",
+  "admission": "2026-05-10T18:00:00-04:00",
+  "discharge": "2026-05-12T09:00:00-04:00",
+  "lines": [
+    { "n": 1, "date": "2026-05-10", "rev": "0250", "code": "S1001", "desc": "Synthetic single-dose medicine", "qty": 1, "unit": 25.00, "amount": 25.00 },
+    { "n": 2, "date": "2026-05-11", "rev": "0300", "code": "S1002", "desc": "Synthetic laboratory panel", "qty": 1, "unit": 75.00, "amount": 75.00 },
+    { "n": 3, "date": "2026-05-10", "rev": "0120", "code": "ROOM", "desc": "Synthetic room and board", "qty": 2, "unit": 500.00, "amount": 1000.00 }
+  ],
+  "billedTotal": 1100.00,
+  "patientBilledAmount": 1100.00
+}

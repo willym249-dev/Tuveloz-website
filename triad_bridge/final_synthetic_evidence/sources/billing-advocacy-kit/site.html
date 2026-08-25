@@ -1,0 +1,234 @@
+<title>Maryland Bill Review</title>
+<style>
+:root{
+  --ground:#faf9f6; --surface:#ffffff; --panel:#f2f1ea;
+  --ink:#1a1d1a; --muted:#5a6159;
+  --accent:#2f5d43; --accent-soft:#e6efe8;
+  --rule:#e2e0d9; --shadow:0 1px 2px rgba(26,29,26,.05),0 12px 32px -22px rgba(26,29,26,.4);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131512; --surface:#1b1e1a; --panel:#222621;
+    --ink:#e9ebe6; --muted:#99a196;
+    --accent:#7fb894; --accent-soft:#1f2a22;
+    --rule:#2a2e28; --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -22px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131512; --surface:#1b1e1a; --panel:#222621;
+  --ink:#e9ebe6; --muted:#99a196;
+  --accent:#7fb894; --accent-soft:#1f2a22;
+  --rule:#2a2e28; --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 32px -22px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;
+  -webkit-text-size-adjust:100%;}
+.wrap{max-width:44rem;margin:0 auto;padding:0 1.3rem 5rem;}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:500;text-wrap:balance;line-height:1.25;}
+
+/* hero */
+.hero{padding:4rem 0 2rem;border-bottom:1px solid var(--rule);}
+.locale{font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 1rem;}
+h1{font-size:clamp(2.1rem,6.5vw,3.1rem);line-height:1.12;letter-spacing:-.015em;margin:0 0 1.1rem;}
+.lede{font-size:1.16rem;color:var(--muted);margin:0 0 1.6rem;max-width:34rem;}
+.cta{display:inline-block;background:var(--accent);color:var(--ground);text-decoration:none;
+  font-weight:700;font-size:1rem;padding:.85rem 1.6rem;border-radius:2px;}
+.cta:hover{filter:brightness(1.08);}
+.cta:focus-visible{outline:2px solid var(--ink);outline-offset:3px;}
+.cta-note{font-size:.92rem;color:var(--muted);margin:.75rem 0 0;}
+
+/* the honesty block — the differentiator, so it goes first */
+.free{background:var(--accent-soft);border-left:3px solid var(--accent);
+  padding:1.4rem 1.5rem;margin:2.5rem 0;border-radius:0 3px 3px 0;}
+.free h2{font-size:1.35rem;margin:0 0 .6rem;}
+.free p{margin:0 0 .7rem;}
+.free p:last-child{margin-bottom:0;}
+
+section{margin-top:3rem;}
+h2{font-size:1.6rem;letter-spacing:-.01em;margin:0 0 .9rem;}
+h3{font-size:1.1rem;margin:0 0 .35rem;}
+p{margin:0 0 1rem;}
+
+/* what we check */
+.checks{display:grid;gap:.65rem;grid-template-columns:1fr;margin:0;padding:0;list-style:none;}
+@media(min-width:36rem){.checks{grid-template-columns:1fr 1fr;}}
+.checks li{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:.8rem .95rem;font-size:.95rem;}
+.checks strong{display:block;font-weight:600;margin-bottom:.15rem;}
+.checks span{color:var(--muted);font-size:.89rem;}
+
+/* maryland rights */
+.rights{border-top:1px solid var(--rule);margin:0;padding:0;list-style:none;}
+.rights li{border-bottom:1px solid var(--rule);padding:1rem 0;}
+.rights h3{font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.98rem;font-weight:700;line-height:1.4;margin-bottom:.25rem;}
+.rights p{margin:0;color:var(--muted);font-size:.95rem;}
+
+/* steps — a real sequence, so numbered */
+.steps{list-style:none;margin:0;padding:0;counter-reset:step;}
+.steps li{counter-increment:step;position:relative;padding:0 0 1.5rem 3.2rem;}
+.steps li:not(:last-child)::after{content:"";position:absolute;left:1.05rem;top:2.1rem;bottom:.2rem;
+  width:1px;background:var(--rule);}
+.steps li::before{content:counter(step);position:absolute;left:0;top:0;
+  width:2.1rem;height:2.1rem;border-radius:50%;background:var(--accent);color:var(--ground);
+  display:grid;place-items:center;font-weight:700;font-size:.9rem;
+  font-variant-numeric:tabular-nums;}
+.steps h3{font-family:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:1rem;font-weight:700;padding-top:.2rem;line-height:1.4;margin-bottom:.2rem;}
+.steps p{margin:0;color:var(--muted);font-size:.96rem;}
+
+/* cost */
+.cost{background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:1.5rem;box-shadow:var(--shadow);}
+.cost .headline{font-family:Georgia,"Times New Roman",serif;font-size:1.75rem;margin:0 0 .5rem;}
+.cost ul{margin:1rem 0 0;padding-left:1.15rem;}
+.cost li{margin-bottom:.5rem;font-size:.97rem;}
+
+/* not */
+.not{border:1px solid var(--rule);border-radius:3px;padding:1.3rem 1.5rem;background:var(--panel);}
+.not h2{font-size:1.25rem;}
+.not ul{margin:0;padding-left:1.15rem;}
+.not li{margin-bottom:.45rem;font-size:.96rem;}
+
+footer{margin-top:3.5rem;padding-top:1.4rem;border-top:1px solid var(--rule);
+  color:var(--muted);font-size:.87rem;}
+footer p{margin:0 0 .6rem;}
+.contact{background:var(--accent-soft);border-radius:3px;padding:1.4rem 1.5rem;margin-top:2.5rem;text-align:center;}
+.contact h2{margin-bottom:.5rem;}
+.contact p{color:var(--muted);margin-bottom:1.1rem;}
+</style>
+
+<div class="wrap">
+<div style="border:2px solid #a8541c;background:#f8eee4;color:#16191d;padding:.9rem 1.1rem;margin:0 0 1.2rem;font-family:system-ui,sans-serif;font-size:.9rem;line-height:1.45;"><strong>INTERNAL SYNTHETIC TESTING ONLY — NOT IN SERVICE.</strong> No real records, no real clients, no sales. This page is a draft used for internal testing while legal classification, secure intake, employer clearance, and Maryland rule verification are all still outstanding.</div>
+
+<header class="hero">
+  <p class="locale">Serving Maryland</p>
+  <h1>Someone should read that bill properly. Let it be us.</h1>
+  <p class="lede">A big hospital bill is frightening, and getting one does not mean you did anything wrong. We go through yours line by line — against the codes, the dates, and what your insurance allowed — and write up everything worth asking about, with the source for each point, for you to send. You do not need to understand any of it to ask us to look.</p>
+  <p class="cta-note" style="font-size:1rem;"><strong>Not open yet.</strong> We are not taking bills until a tested secure way to receive them is in place. Free when it opens.</p>
+</header>
+
+<div class="free" style="border-left-color:var(--signal, #a8541c);">
+  <h2>Being straight with you about where this is up to</h2>
+  <p>This service is new, and it is running as a <strong>free pilot</strong>. No charge, no card, no deposit, no success fee — not now, and not later without asking you first. There is no catch in that sentence and no small print underneath it.</p>
+  <p>Two reasons. We would rather build the first cases carefully than quickly. And we are putting a written question to the Maryland Office of Financial Regulation about exactly how a service like this should be registered — until we have their answer, we are not charging anyone.</p>
+  <p style="margin-bottom:0;"><strong>What you get:</strong> the review, and a written packet with a source cited for every point in it. <strong>You</strong> review it, sign it, and send it — it is your bill and your name on it.</p>
+</div>
+
+<div class="free">
+  <h2>Before anything else, we check whether you should be paying at all</h2>
+  <p><strong>Maryland law sets a floor that hospitals cannot go below.</strong> Free medically necessary care at or below 200% of the federal poverty level. Above that, a required sliding scale: <strong>at least 75% off</strong> between 201% and 250%, and <strong>at least 60% off</strong> between 251% and 300%. Below 500% there is a separate hardship route if your family's medical debt over twelve months is more than a quarter of your income.</p>
+  <p>A hospital may be more generous than that. It may not be less. <strong>And this applies to qualified Maryland residents regardless of citizenship or immigration status.</strong></p>
+  <p>If you are somewhere in the middle — too far above the line for free care, nowhere near able to pay — that sliding scale is the part worth asking about by name.</p>
+  <p>If you qualify, we tell you — and we <strong>charge you nothing</strong> on anything written off that way. We will also point you to <strong>Dollar For</strong>, a non-profit that helps with those applications for free, and to the Maryland Attorney General's <strong>Health Education and Advocacy Unit</strong>, which mediates billing disputes at no cost.</p>
+  <p>We would much rather tell you that on the first call than have you pay for something you could have had free. If one of those services is the whole answer for you, that is a good outcome and we will say so.</p>
+</div>
+
+<section>
+  <h2>What we would check</h2>
+  <p>A summary shows you a total. An itemized bill shows every line, and that is what we work through. Everything we find is <strong>a question to put to the hospital</strong>, never a conclusion about your care — and we will always tell you which is which, including when the honest answer is that a charge looks correct.</p>
+  <ul class="checks">
+    <li><strong>Possible duplicates</strong><span>The same service appearing twice</span></li>
+    <li><strong>Separately billed items</strong><span>Charges that may belong to one code</span></li>
+    <li><strong>Quantities to question</strong><span>Units that look high for the time involved</span></li>
+    <li><strong>Dates that do not line up</strong><span>Charges dated outside your stay</span></li>
+    <li><strong>Bill against your EOB</strong><span>Whether the two agree</span></li>
+    <li><strong>Surprise out-of-network</strong><span>Charges you were never warned about</span></li>
+    <li><strong>Facility fees</strong><span>Maryland requires disclosure when you book</span></li>
+    <li><strong>Maryland rate rules</strong><span>Rates here are set by a state commission — the applicable rate order comes first, any published price file second</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>What Maryland already gives you</h2>
+  <ul class="rights">
+    <li>
+      <h3>Free care under 200% of the poverty level</h3>
+      <p>Not the hospital's choice — state law. Reduced cost below 500% with hardship.</p>
+    </li>
+    <li>
+      <h3>240 days to re-test your income</h3>
+      <p>If you lost hours or lost a job <em>after</em> the bill arrived, your situation now can count. It is worth asking about.</p>
+    </li>
+    <li>
+      <h3>Medical debt stays off your credit report</h3>
+      <p>Since October 2025, providers, their agents, and collectors cannot report it.</p>
+    </li>
+    <li>
+      <h3>No interest if you qualify for assistance</h3>
+      <p>And no lien on your home over a medical debt.</p>
+    </li>
+    <li>
+      <h3>Hospital rates are regulated here</h3>
+      <p>Maryland is the only state where a commission sets hospital rates. Your charges sit inside a structure that can be asked about.</p>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li>
+      <h3>Intake is not open</h3>
+      <p><strong>Please do not send us any records.</strong> There is no secure way to receive them yet. When there is, we will ask for <em>one</em> document at a time and tell you exactly why each is needed.</p>
+    </li>
+    <li>
+      <h3>We check assistance first</h3>
+      <p>Household size and rough income. If you qualify for free or reduced care, that comes before anything else.</p>
+    </li>
+    <li>
+      <h3>You request the itemized bill</h3>
+      <p>You may never have been sent one — it is not what hospitals send by default. We tell you exactly what to ask for and what words to use, and you make the request.</p>
+    </li>
+    <li>
+      <h3>We read every line</h3>
+      <p>Against the codes, the dates, what your insurance allowed, and the hospital's own published prices.</p>
+    </li>
+    <li>
+      <h3>We write it up for you to send</h3>
+      <p>A packet for the hospital, and for each separate company that billed you. You read it, sign it, and send it — with a script for the call if you want one.</p>
+    </li>
+    <li>
+      <h3>You get a written report</h3>
+      <p>What we questioned, what was asked, and what changed. Yours to keep.</p>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <h2>What it costs</h2>
+  <div class="cost">
+    <p class="headline">Nothing.</p>
+    <p>No fee, no percentage, no deposit, no card. This is a free pilot and we are not charging anyone while it runs.</p>
+    <ul>
+      <li>If that ever changes, you will be told in writing before any work is done, and you will be free to walk away.</li>
+      <li>We never handle your money. Anything you pay goes to the hospital, never to us.</li>
+      <li>Financial assistance you qualify for is yours by law. We will never take a share of it.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="not">
+  <h2>What we are not</h2>
+  <ul>
+    <li>We are not lawyers, and nothing here is legal advice. We do not represent you to anyone — you send your own letters and make your own calls, and we help you prepare them.</li>
+    <li>We are not doctors, and we do not review whether care was appropriate.</li>
+    <li>We do not negotiate or settle debts. If a charge is correct, it is correct — our work is establishing what you actually owe.</li>
+    <li>We do not touch homeowners, auto, or property claims.</li>
+    <li>We cannot promise a result, and we cannot tell you from a bill alone whether a charge was medically correct — some questions need your chart and a qualified coder. We tell you which is which.</li>
+  </ul>
+</section>
+
+<div class="contact" id="start">
+  <h2>We are not open yet — and we would rather say so</h2>
+  <p>There is no form on this page on purpose. Your medical bill should not travel by email, by text, or through a contact box, and we are not going to ask you for one until there is a properly tested, secure way to receive it. You should not have to take that on trust, and we would rather wait than ask you to.</p>
+  <p style="margin-bottom:0;">When that exists, this is where it will be — with the details of how your records are handled, before you send anything.</p>
+</div>
+
+<footer>
+  <p><strong>[YOUR BUSINESS NAME]</strong> — medical bill review for Maryland patients.</p>
+  <p>Free help also exists and you should know about it: <strong>Dollar For</strong> assists with hospital charity care applications at no cost, the Maryland Attorney General's <strong>Health Education and Advocacy Unit</strong> mediates medical billing and insurance disputes for free, and <strong>SHIP</strong> counsels Medicare beneficiaries at no charge.</p>
+  <p>This page describes a document review and patient advocacy service. It is not legal advice, not medical advice, and not debt settlement.</p>
+</footer>
+
+</div>

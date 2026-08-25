@@ -1,0 +1,35 @@
+{
+  "_comment": "SYNTHETIC TEST DATA. Multiple findings exercise stable rule-then-line ordering.",
+  "schemaVersion": "1.0",
+  "file": "SYN-004",
+  "admission": "2026-07-10T09:00:00-04:00",
+  "discharge": "2026-07-12T09:00:00-04:00",
+  "lines": [
+    { "n": 1, "date": "2026-07-09", "rev": "0300", "code": "S3001", "desc": "Synthetic pre-stay panel", "qty": 1, "unit": 50.00, "amount": 50.00 },
+    { "n": 2, "date": "2026-07-10", "rev": "0300", "code": "S3002", "desc": "Synthetic arithmetic case A", "qty": 2, "unit": 30.00, "amount": 65.00 },
+    { "n": 3, "date": "2026-07-10", "rev": "0300", "code": "80053", "desc": "Synthetic duplicate panel", "qty": 1, "unit": 100.00, "amount": 100.00 },
+    { "n": 4, "date": "2026-07-10", "rev": "0300", "code": "80053", "desc": "Synthetic duplicate panel", "qty": 1, "unit": 100.00, "amount": 100.00 },
+    { "n": 5, "date": "2026-07-10", "rev": "0300", "code": "80053", "desc": "Synthetic duplicate panel", "qty": 1, "unit": 100.00, "amount": 100.00 },
+    { "n": 6, "date": "2026-07-11", "rev": "0270", "code": "S3006", "desc": "Synthetic non-covered supply", "qty": 1, "unit": 75.00, "amount": 75.00 },
+    { "n": 7, "date": "2026-07-11", "rev": "0300", "code": "S3007", "desc": "Synthetic arithmetic case B", "qty": 3, "unit": 20.00, "amount": 61.00 },
+    { "n": 8, "date": "2026-07-13", "rev": "0320", "code": "S3008", "desc": "Synthetic post-stay imaging", "qty": 1, "unit": 40.00, "amount": 40.00 }
+  ],
+  "billedTotal": 591.00,
+  "eob": {
+    "allowed": 1000.00,
+    "planPaid": 500.00,
+    "patientResponsibility": 500.00,
+    "notCovered": [
+      { "line": 6, "reason": "synthetic coverage reason A" },
+      { "line": 8, "reason": "synthetic coverage reason B" }
+    ]
+  },
+  "reconciliation": {
+    "billDocumentRef": "SYN-004-BILL",
+    "eobDocumentRef": "SYN-004-EOB",
+    "billMatchKey": "SYN-004-ENCOUNTER",
+    "eobMatchKey": "SYN-004-ENCOUNTER",
+    "matchBasis": "synthetic_fixture"
+  },
+  "patientBilledAmount": 500.00
+}

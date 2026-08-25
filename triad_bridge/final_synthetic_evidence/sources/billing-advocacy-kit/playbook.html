@@ -1,0 +1,398 @@
+<title>Billing Desk Playbook</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root {
+  --ground: #fbfbfa;
+  --surface: #ffffff;
+  --panel: #f1f4f3;
+  --ink: #171c1f;
+  --muted: #5d6a70;
+  --accent: #0b6b63;
+  --accent-soft: #e2efed;
+  --signal: #a8541c;
+  --signal-soft: #f8eee4;
+  --rule: #dfe3e2;
+  --shadow: 0 1px 2px rgba(23, 28, 31, .06), 0 8px 24px -16px rgba(23, 28, 31, .3);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #12181a;
+    --surface: #1a2225;
+    --panel: #212b2e;
+    --ink: #e8eceb;
+    --muted: #94a3a5;
+    --accent: #4fbfae;
+    --accent-soft: #1c302f;
+    --signal: #e0954a;
+    --signal-soft: #32261a;
+    --rule: #2c383b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #12181a;
+  --surface: #1a2225;
+  --panel: #212b2e;
+  --ink: #e8eceb;
+  --muted: #94a3a5;
+  --accent: #4fbfae;
+  --accent-soft: #1c302f;
+  --signal: #e0954a;
+  --signal-soft: #32261a;
+  --rule: #2c383b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 40rem; margin: 0 auto; padding: 0 1.15rem 4rem; }
+
+/* ── masthead ─────────────────────────────── */
+.masthead { padding: 2.4rem 0 1.3rem; }
+.eyebrow {
+  font-size: .7rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 .5rem;
+}
+h1 {
+  font-size: clamp(1.9rem, 7vw, 2.5rem); line-height: 1.08;
+  font-weight: 700; letter-spacing: -.02em; margin: 0 0 .7rem;
+  text-wrap: balance;
+}
+.standfirst { color: var(--muted); font-size: 1rem; margin: 0; max-width: 34rem; }
+
+/* ── the always-on rule ───────────────────── */
+.gate {
+  display: flex; gap: .85rem; align-items: flex-start;
+  background: var(--signal-soft); border: 1px solid var(--signal);
+  border-radius: 3px; padding: .85rem 1rem; margin: 1.5rem 0 0;
+}
+.gate .mark { color: var(--signal); font-weight: 700; font-size: .95rem; flex: none; }
+.gate p { margin: 0; font-size: .93rem; }
+
+/* ── log strip ────────────────────────────── */
+.logstrip { background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: 1rem 1.1rem; margin-top: 1rem; box-shadow: var(--shadow); }
+.logstrip h2 { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 .6rem; font-weight: 700; }
+.logfields { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: .5rem; margin: 0 0 .6rem; padding: 0; list-style: none; }
+.logfields li { font-size: .86rem; font-weight: 500; padding: .4rem .55rem; background: var(--panel); border-radius: 2px; border-left: 2px solid var(--accent); }
+.logstrip p { margin: 0; font-size: .85rem; color: var(--muted); }
+
+/* ── sticky jump ──────────────────────────── */
+.jump {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--ground) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--rule);
+  margin: 1.8rem -1.15rem 0; padding: .55rem 1.15rem;
+  display: flex; gap: .4rem; overflow-x: auto;
+  scrollbar-width: none;
+}
+.jump::-webkit-scrollbar { display: none; }
+.jump a {
+  flex: none; text-decoration: none; color: var(--muted);
+  font-size: .82rem; font-weight: 600; letter-spacing: .01em;
+  padding: .38rem .7rem; border: 1px solid var(--rule); border-radius: 100px;
+  white-space: nowrap; background: var(--surface);
+}
+.jump a:hover, .jump a:focus-visible { color: var(--accent); border-color: var(--accent); }
+
+/* ── call cards ───────────────────────────── */
+.call { margin-top: 2.2rem; scroll-margin-top: 3.6rem; }
+.callhead { display: flex; gap: .8rem; align-items: baseline; margin-bottom: .15rem; }
+.num {
+  font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+  color: var(--ground); background: var(--accent);
+  padding: .2rem .45rem; border-radius: 2px; flex: none;
+  font-variant-numeric: tabular-nums;
+}
+h2.calltitle { font-size: 1.28rem; font-weight: 700; letter-spacing: -.012em; margin: 0; line-height: 1.2; }
+.purpose { color: var(--muted); font-size: .93rem; margin: 0 0 .9rem; }
+
+/* ── the script ───────────────────────────── */
+.say {
+  position: relative; width: 100%; text-align: left; display: block;
+  font-family: "Source Serif 4", Georgia, serif;
+  font-size: 1.06rem; line-height: 1.5;
+  background: var(--panel); border: 0; border-left: 3px solid var(--accent);
+  border-radius: 0 3px 3px 0; color: var(--ink);
+  padding: .9rem 1rem .9rem 1.05rem; margin: 0 0 .8rem;
+  cursor: pointer;
+}
+.say:hover { background: var(--accent-soft); }
+.say:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.say .tag {
+  display: block; font-family: Archivo, sans-serif;
+  font-size: .64rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: .4rem;
+}
+.say .copied { position: absolute; top: .55rem; right: .7rem; font-family: Archivo, sans-serif; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); opacity: 0; transition: opacity .18s; }
+.say.done .copied { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .say .copied { transition: none; } }
+
+/* ── prose bits ───────────────────────────── */
+.call p { margin: 0 0 .8rem; font-size: .96rem; }
+.call p.lead-in { color: var(--muted); font-size: .9rem; margin-bottom: .45rem; }
+.call ol, .call ul { margin: 0 0 .9rem; padding-left: 1.15rem; }
+.call li { margin-bottom: .45rem; font-size: .95rem; }
+strong { font-weight: 600; }
+.pivot { background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: .85rem 1rem; margin: 0 0 .9rem; }
+.pivot h3 { font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; color: var(--accent); margin: 0 0 .5rem; font-weight: 700; }
+.pivot ol { margin: 0; padding-left: 1.1rem; }
+.pivot li { font-size: .93rem; }
+
+/* ── escalation ───────────────────────────── */
+.ladder { list-style: none; margin: 0; padding: 0; counter-reset: rung; }
+.ladder li {
+  counter-increment: rung; position: relative;
+  padding: .55rem 0 .55rem 2.3rem; border-bottom: 1px solid var(--rule);
+  font-size: .95rem;
+}
+.ladder li:last-child { border-bottom: 0; }
+.ladder li::before {
+  content: counter(rung); position: absolute; left: 0; top: .55rem;
+  width: 1.55rem; text-align: center;
+  font-size: .74rem; font-weight: 700; color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--accent); border-radius: 2px; line-height: 1.45;
+}
+
+/* ── works / kills ────────────────────────── */
+.split { display: grid; gap: .8rem; grid-template-columns: 1fr; }
+@media (min-width: 34rem) { .split { grid-template-columns: 1fr 1fr; } }
+.split section { background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: .9rem 1rem; }
+.split h3 { font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; margin: 0 0 .55rem; font-weight: 700; }
+.split .good h3 { color: var(--accent); }
+.split .bad h3 { color: var(--signal); }
+.split ul { margin: 0; padding-left: 1.05rem; }
+.split li { font-size: .91rem; margin-bottom: .35rem; }
+
+/* ── the wall ─────────────────────────────── */
+.wall { border: 2px solid var(--signal); border-radius: 3px; padding: 1.1rem 1.2rem; margin-top: 2.4rem; background: var(--signal-soft); }
+.wall h2 { font-size: .74rem; letter-spacing: .15em; text-transform: uppercase; color: var(--signal); margin: 0 0 .6rem; font-weight: 700; }
+.wall p { margin: 0 0 .6rem; font-size: .96rem; }
+.wall p:last-child { margin-bottom: 0; }
+
+footer { margin-top: 2.6rem; padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .82rem; }
+h2.section { font-size: 1.28rem; font-weight: 700; letter-spacing: -.012em; margin: 2.2rem 0 .8rem; scroll-margin-top: 3.6rem; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Maryland · Pilot · Scripts for the patient</p>
+    <h1>Billing Desk Playbook</h1>
+    <p class="standfirst">The calls, in order, once per account. Tap any script to copy it.</p>
+    <p class="standfirst" style="margin-top:.5rem;font-size:.9rem;"><strong>During the pilot the patient makes every call, in their own name.</strong> These are their scripts. You coach, you prepare, you listen in if they want — you do not speak for them. Never balance negotiation.</p>
+  </header>
+
+  <div class="gate">
+    <span class="mark">STOP</span>
+    <p><strong>A HIPAA authorization is not authority to represent anyone.</strong> It lets a provider release records — it does not let you appeal, negotiate, settle, or speak as someone's representative. During the pilot the patient calls about their own account, which needs no authorization at all. Have the account number and dates of service in front of them before they dial.</p>
+  </div>
+
+  <div class="logstrip">
+    <h2>Log every call — all four, no exceptions</h2>
+    <ul class="logfields">
+      <li>Date &amp; time</li>
+      <li>Who you spoke to</li>
+      <li>What they committed to</li>
+      <li>Date you'll chase it</li>
+    </ul>
+    <p>Half of what you win comes from being the only party who wrote down what was promised.</p>
+  </div>
+
+  <nav class="jump" aria-label="Jump to a call">
+    <a href="#call1">1 · Itemized bill</a>
+    <a href="#call2">2 · Assistance</a>
+    <a href="#call3">3 · Dispute</a>
+    <a href="#call4">4 · Insurance</a>
+    <a href="#call5">5 · Orphan bills</a>
+    <a href="#escalation">Escalation</a>
+    <a href="#wall">The wall</a>
+  </nav>
+
+  <article class="call" id="call1">
+    <div class="callhead"><span class="num">CALL 1</span><h2 class="calltitle">Ask for the itemized bill</h2></div>
+    <p class="purpose">The highest-value call there is. A summary statement is not an itemized bill, and it is not what hospitals send by default. Make this call before any analysis, on every account.</p>
+
+    <button class="say" type="button">
+      <span class="tag">Opening</span><span class="copied">Copied</span>
+      "Hi, I'm calling about my account, [number], for services on [date]. My date of birth is [DOB]. I need two things. First, a fully itemized statement — the detailed line items with revenue codes, CPT and HCPCS codes, units, and dates of service. Not the summary. Second, I'd like to ask that the account be noted as under review while I go through it — could you tell me what protection, if any, that actually gives me against collection activity?"
+    </button>
+
+    <p class="lead-in">If they ask what format</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"The UB-04 as submitted, plus the detailed charge line items."</button>
+
+    <p class="lead-in">If they say the summary is all they have</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Every facility can produce a detailed itemization from the billing system. I'm requesting it under the patient's right to an itemized statement. Can you route this to whoever runs charge detail?"</button>
+
+    <p class="lead-in">Close every call this way, always</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Can I get your first name and a reference number for this call? And what date should I expect that by?"</button>
+
+    <p><strong>Chase at:</strong> the date they gave you, plus one day.</p>
+  </article>
+
+  <article class="call" id="call2">
+    <div class="callhead"><span class="num">CALL 2</span><h2 class="calltitle">Financial assistance, before anything else</h2></div>
+    <p class="purpose">Always second, even when you're sure they earn too much. Published eligibility limits vary enormously between hospitals — the same family qualifies at one and not at another across town.</p>
+
+    <button class="say" type="button">
+      <span class="tag">Opening</span><span class="copied">Copied</span>
+      "I'd like a copy of the facility's financial assistance policy and the plain-language summary, plus the application form. Can you tell me what income threshold you use, whether it's based on federal poverty level percentage, and whether the policy covers the physician and ancillary charges or only the facility charge?"
+    </button>
+
+    <p class="lead-in">Then this exact question — the answer decides your whole fee</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"If the patient is approved, does the approval apply to the radiology, anesthesia, pathology, and lab bills too — or do those have to be applied for separately?"</button>
+
+    <p>The answer is usually <em>separately</em>. That's Call 5, and it's where a lot of the real money sits.</p>
+
+    <div class="pivot">
+      <h3>Maryland — free care is the law, not the hospital's choice</h3>
+      <ol>
+        <li>Hospitals must provide <strong>free medically necessary care at or below 200% of the federal poverty level</strong>, and reduced-cost care below 500% where there's financial hardship. This is statute, not policy. Say so.</li>
+        <li>Income counts as of the time of service <strong>or</strong> as changed within <strong>240 days after the first bill</strong>. Ask every client, every time, the question nobody asks — and it's below.</li>
+        <li>Since 1 October 2025: medical debt can't be reported to credit bureaus by the provider, its agents, or collectors; no lien on a primary residence over it; and <strong>no interest may be charged to anyone who qualifies for free or reduced-cost care</strong>. Say all three to a frightened client on the first call.</li>
+        <li>If the account is with a collection agency, the provider–agency contract must carry the credit-reporting prohibition. Without it that contract is <strong>void and unenforceable</strong> — worth asking about.</li>
+      </ol>
+    </div>
+
+    <p class="lead-in">Ask this of every Maryland client — it re-opens cases that look closed</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Has anything changed with your income since this bill showed up — hours cut, job lost, out of work sick? Maryland lets us use your situation now, not just at the time of service, for up to 240 days after the first bill."</button>
+    <p><strong>If they qualify:</strong> tell the client, help them apply, and charge nothing on the write-off. Say plainly that Dollar For does this free and give them the choice. You are not charging anyone anyway, and you gain someone you were straight with.</p>
+  </article>
+
+  <article class="call" id="call3">
+    <div class="callhead"><span class="num">CALL 3</span><h2 class="calltitle">The dispute, after the audit</h2></div>
+    <p class="purpose">Never before the review is finished. One call, with a list, naming specific lines. Each line is a <strong>question to put to them</strong>, not a conclusion — a bill alone cannot establish that a charge was medically wrong.</p>
+
+    <button class="say" type="button">
+      <span class="tag">Opening</span><span class="copied">Copied</span>
+      "I have questions about specific line items on my account, [number]. I'll put this in writing today, and I'd like to go through them now so it's on the record. Line [X], [code], on [date] — I was discharged the morning of the [date], so can you check whether that day's room charge belongs there? Line [Y] — [code] and [code] are billed separately; can you confirm whether they should be under [bundled code]? Line [Z] — the quantity billed is [n]; can you check that against the record?"
+    </button>
+
+    <p class="lead-in">Then the request that actually moves things</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Please route this account to coding review and charge integrity. Can you also tell me in writing what this review does or does not do about collection activity while it is open?"</button>
+
+    <p class="lead-in">When you have their published rate in front of you</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"I'm asking how this charge reconciles to the hospital's HSCRC-approved rate for that revenue centre and unit. Your posted standard charge file lists [code] at $[amount] and I was billed $[amount] — I understand the posted file isn't itself the price I owe, so I'd like to understand the difference."</button>
+
+    <p class="lead-in">Maryland — if there's a separate outpatient facility fee on the bill</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"There's an outpatient facility fee on this account. Under the Facility Fee Right-to-Know Act the disclosure has to be given at the time of scheduling, in writing and orally, with a signed acknowledgment. Can you produce the signed acknowledgment for this appointment?"</button>
+
+    <div class="gate" style="margin: 0 0 .8rem;">
+      <span class="mark">CHECK</span>
+      <p>The $400 good-faith-estimate threshold was set <strong>for calendar year 2022</strong> and later indexing is unconfirmed. Confirm the current figure before you say a number on a call — see the claims register.</p>
+    </div>
+    <p class="lead-in">If the client was uninsured or self-pay and got an estimate</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"I was self-pay and received a good faith estimate, and the final bill is higher than it. I am looking into the patient-provider dispute resolution process. Can you tell me what the current threshold and time limit are, and what happens to collection activity — I understand any pause depends on formally initiating a dispute, not on considering one."</button>
+
+    <p><strong>Get in writing:</strong> what's under review, who has it, and the expected close date. Send a written summary the same day repeating those three things back.</p>
+  </article>
+
+  <article class="call" id="call4">
+    <div class="callhead"><span class="num">CALL 4</span><h2 class="calltitle">Insurance, when the denial is the problem</h2></div>
+    <p class="purpose">Different building, different rules. The patient calls about their own claim. Nobody acts for the patient during the pilot, so no such authority is needed or held.</p>
+
+    <button class="say" type="button">
+      <span class="tag">Opening</span><span class="copied">Copied</span>
+      "I'm calling about my own claim, [number], denied on [date], denial code [code]. I need three things: the specific plan language the denial relies on, the criteria or guideline used, and confirmation of the deadline to file the internal appeal."
+    </button>
+
+    <div class="pivot">
+      <h3>Three questions that decide whether you appeal or just fix a mistake</h3>
+      <ol>
+        <li>"Was this denied for medical necessity, or is this a coding or eligibility issue?" — coding and eligibility problems get <em>reprocessed</em>, not appealed. Far faster.</li>
+        <li>"Can this be sent back for reprocessing rather than appeal?"</li>
+        <li>"What's the exact deadline, and where do I send it?"</li>
+      </ol>
+    </div>
+
+    <p><strong>Work out the appeal deadline on day one, and record how it was determined.</strong> Do not assume it runs from the date on the letter — depending on the plan it may run from notice or from receipt, and the controlling document is the denial notice or the summary plan description, not a rule of thumb. Have a person verify it against that document. A missed deadline is serious, but it is <strong>not automatically unrecoverable</strong> — that depends on the plan and the reason. Never tell a consumer either that it can be fixed or that it cannot.</p>
+  </article>
+
+  <article class="call" id="call5">
+    <div class="callhead"><span class="num">CALL 5</span><h2 class="calltitle">The orphan bills</h2></div>
+    <p class="purpose">One visit produces four to six bills from separate companies — facility, radiologist, anesthesiologist, pathologist, lab, sometimes an ambulance service. Each has its own billing office and its own assistance policy, and each is easy to overlook.</p>
+
+    <p>Run Calls 1 through 3 against every single one. Then ask each:</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Do you have your own financial assistance policy, and do you honor the hospital's charity care determination?"</button>
+    <p>Some do — worth asking each one rather than assuming.</p>
+
+    <p class="lead-in">For out-of-network charges on an in-network visit</p>
+    <button class="say" type="button"><span class="copied">Copied</span>"Was the patient given notice and consent for out-of-network billing before the service? If not, how is this not a surprise billing protection issue?"</button>
+  </article>
+
+  <h2 class="section" id="escalation">Escalation ladder</h2>
+  <p>Move up one rung per unanswered promise. Don't skip rungs; don't sit on rung one forever.</p>
+  <ol class="ladder">
+    <li>Billing representative</li>
+    <li>Billing supervisor — <em>"I've called three times, spoken to [names], and been told twice this was under review. Can I speak with a supervisor?"</em></li>
+    <li>Patient advocate or patient relations office — most hospitals have one, few patients ask</li>
+    <li>The facility's compliance line, on coding accuracy specifically</li>
+    <li><strong>Maryland only —</strong> hospital rates here are set by the Health Services Cost Review Commission, the only such regulator in the country. Ask it as a question, never a threat: <em>"Can you show me how this charge reconciles to the hospital's HSCRC-approved rate structure?"</em> A Maryland billing office knows exactly what that means.</li>
+    <li><strong>Maryland — HEAU.</strong> The Attorney General's Health Education and Advocacy Unit mediates medical billing and insurance disputes <strong>free</strong>, including financial assistance applications and debt collection. Tell every client it exists, unprompted — it is free and for many people it is the whole answer, not a fallback. Where a consumer chooses to go to HEAU, a complete file helps them present their own case. <strong>We have no evidence that anything we prepare changes an HEAU outcome, and no such claim may be made.</strong></li>
+    <li>Written complaint to the Maryland Insurance Administration on the plan side</li>
+    <li>For non-profit hospitals: charity care obligations are a condition of their tax status, and saying so out loud on rung four changes the tone</li>
+  </ol>
+
+  <h2 class="section">What works, what ends the call</h2>
+  <div class="split">
+    <section class="good">
+      <h3>Works</h3>
+      <ul>
+        <li>Account number in the first sentence</li>
+        <li>Naming a specific line and a specific code</li>
+        <li>Asking who owns the next step, and by what date</li>
+        <li>Repeating back what they said</li>
+        <li>Everything in writing the same day</li>
+        <li>Being unfailingly pleasant to someone who didn't cause this</li>
+      </ul>
+    </section>
+    <section class="bad">
+      <h3>Ends badly</h3>
+      <ul>
+        <li>Anger at the representative</li>
+        <li>Vague "this is too high"</li>
+        <li>Threatening to sue</li>
+        <li>Guessing at codes, or asserting a charge is wrong when it is a question to ask</li>
+        <li>Claiming to speak for someone you have no authority to speak for</li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="wall" id="wall">
+    <h2>The wall — absolute</h2>
+    <p><strong>Never touch your employer's systems for any of this.</strong> Not to look up an account, not to check a policy, not to "just see" something. Knowledge of how hospitals work is yours and walks out the door with you. Access to a specific patient record does not, and using it is a firing and potentially a criminal matter.</p>
+    <p><strong>Never take a client billed by anywhere in the health system you work for — affiliates, subsidiaries, joint ventures, and employed physician groups included. No coworkers, and no lead that came through work.</strong> If one turns up at intake, say so immediately and refer it out. It's in the client agreement for exactly this reason.</p>
+  </section>
+
+  <footer>
+    Working draft, pilot use. Pair with the signed pilot terms, which is the only engagement document. The patient calls about their own account, in their own name, and nobody speaks for them.
+  </footer>
+</div>
+
+<script>
+document.querySelectorAll(".say").forEach(function (block) {
+  block.addEventListener("click", function () {
+    var clone = block.cloneNode(true);
+    clone.querySelectorAll(".tag, .copied").forEach(function (n) { n.remove(); });
+    var text = clone.textContent.trim().replace(/\s+/g, " ");
+    var done = function () {
+      block.classList.add("done");
+      setTimeout(function () { block.classList.remove("done"); }, 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, done);
+    } else {
+      done();
+    }
+  });
+});
+</script>

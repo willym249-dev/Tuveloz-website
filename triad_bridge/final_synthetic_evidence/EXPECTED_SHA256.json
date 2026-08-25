@@ -1,0 +1,18 @@
+{
+  "format": "sorted-zip-stored-v1",
+  "fixedTimestamp": "1980-01-01T00:00:00",
+  "packages": {
+    "itemized-health-synthetic-core-v1-2026-08-24.zip": {
+      "files": 12,
+      "bytes": 73871,
+      "sourceTreeSha256": "8943947d5fa40db36ae32fc9dc192e83170584cc9f0febbe2a06da2f4ca520ae",
+      "archiveSha256": "37974f1eda3373c35b0e106e2f9cc6e8f164e7946ee01181187de7052785083c"
+    },
+    "claude-tabletop-kit-corrected-2026-08-24.zip": {
+      "files": 35,
+      "bytes": 566751,
+      "sourceTreeSha256": "5b15601c8ceaa3dd60c49e437b187a43fb87ed85e49bf5f1b6f6857314662828",
+      "archiveSha256": "ed516285e60304e91242bf658ac138827d28cf2aeaa8cecfb76cc01f17d915bf"
+    }
+  }
+}

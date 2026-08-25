@@ -1,0 +1,34 @@
+{
+  "_comment": "SYNTHETIC TEST DATA. Invented. No real person, provider, or account.",
+  "schemaVersion": "1.0",
+  "file": "SYN-001",
+  "admission": "2026-04-02T14:20:00-04:00",
+  "discharge": "2026-04-03T10:15:00-04:00",
+  "lines": [
+    { "n": 1, "date": "2026-04-02", "rev": "0250", "code": "J2405", "desc": "Synthetic anti-nausea injection 4mg", "qty": 6, "unit": 52.00, "amount": 312.00 },
+    { "n": 2, "date": "2026-04-02", "rev": "0300", "code": "80053", "desc": "Synthetic metabolic panel", "qty": 1, "unit": 289.00, "amount": 289.00 },
+    { "n": 3, "date": "2026-04-02", "rev": "0300", "code": "80053", "desc": "Synthetic metabolic panel", "qty": 1, "unit": 289.00, "amount": 289.00 },
+    { "n": 4, "date": "2026-04-02", "rev": "0120", "code": "ROOM", "desc": "Synthetic room and board", "qty": 2, "unit": 2450.00, "amount": 4900.00 },
+    { "n": 5, "date": "2026-04-03", "rev": "0270", "code": "A4550", "desc": "Synthetic supply tray", "qty": 1, "unit": 128.00, "amount": 128.00 },
+    { "n": 6, "date": "2026-04-05", "rev": "0320", "code": "71046", "desc": "Synthetic two-view imaging", "qty": 1, "unit": 410.00, "amount": 410.00 },
+    { "n": 7, "date": "2026-04-02", "rev": "0450", "code": "99284", "desc": "Synthetic emergency visit", "qty": 1, "unit": 1890.00, "amount": 1890.00 },
+    { "n": 8, "date": "2026-04-03", "rev": "0636", "code": "J1200", "desc": "Synthetic antihistamine injection 50mg", "qty": 3, "unit": 41.00, "amount": 132.00 }
+  ],
+  "billedTotal": 8420.00,
+  "eob": {
+    "allowed": 5120.00,
+    "planPaid": 4096.00,
+    "patientResponsibility": 1024.00,
+    "notCovered": [
+      { "line": 5, "reason": "included in synthetic room rate" }
+    ]
+  },
+  "reconciliation": {
+    "billDocumentRef": "SYN-001-BILL",
+    "eobDocumentRef": "SYN-001-EOB",
+    "billMatchKey": "SYN-001-ENCOUNTER",
+    "eobMatchKey": "SYN-001-ENCOUNTER",
+    "matchBasis": "synthetic_fixture"
+  },
+  "patientBilledAmount": 1436.00
+}
