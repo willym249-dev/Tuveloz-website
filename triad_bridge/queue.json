@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "boundary": "public-and-synthetic-only",
+  "note": "Single shared board for the triad. Edit only rows whose owner is you. A row may claim state 'delivered' only if its deliverable file actually exists on its branch; relay.mjs checks that and fails if it does not.",
+  "agents": {
+    "owner": "Decides. Only party who may sign, send, pay, or approve a Zeo lesson.",
+    "claude": "Cloud container behind an egress proxy. Can search the web, cannot open law.justia.com, labor.maryland.gov, peoples-law.org or legalfix.com. Branch: claude/revenue-brainstorm-d5y7ts",
+    "codex": "Local, unrestricted network. Primary-source retrieval and adversarial audit. Branch: codex/triad-relay-20260824",
+    "zeo": "Local, durable memory. Independent verification. No durable lesson without the owner approving exact text."
+  },
+  "tasks": [
+    {
+      "id": "MD-1003",
+      "title": "Md. Fin. Inst. 12-1003 Applicability of subtitle, verbatim text",
+      "owner": "codex",
+      "state": "open",
+      "deliverable": "triad_bridge/codex_maryland_findings.md",
+      "branch": "codex/triad-relay-20260824",
+      "blocks": [
+        "MD-VERIFY",
+        "PRODUCT-SHAPE",
+        "OFR-EMAIL"
+      ],
+      "why": "The exemption list. Four searches returned the heading only, and every primary source is EGRESS_BLOCKED from Claude's container."
+    },
+    {
+      "id": "MD-1002",
+      "title": "Registration requirement: who must register and on what trigger, verbatim",
+      "owner": "codex",
+      "state": "open",
+      "deliverable": "triad_bridge/codex_maryland_findings.md",
+      "branch": "codex/triad-relay-20260824",
+      "blocks": [
+        "MD-VERIFY",
+        "PRODUCT-SHAPE"
+      ],
+      "why": "Determines whether the trigger is providing the service, advertising it, or taking a fee."
+    },
+    {
+      "id": "MD-MED",
+      "title": "Any medical or health care bill specific treatment in subtitle, COMAR, or OFR guidance",
+      "owner": "codex",
+      "state": "open",
+      "deliverable": "triad_bridge/codex_maryland_findings.md",
+      "branch": "codex/triad-relay-20260824",
+      "blocks": [
+        "MD-VERIFY",
+        "PRODUCT-SHAPE"
+      ],
+      "why": "A clean negative is a real answer and must be stated as one, not left blank."
+    },
+    {
+      "id": "MD-1006",
+      "title": "Confirm registration fee amount from statute",
+      "owner": "codex",
+      "state": "open",
+      "deliverable": "triad_bridge/codex_maryland_findings.md",
+      "branch": "codex/triad-relay-20260824",
+      "blocks": [],
+      "why": "Claude has a single-source figure of $1,000 issue and $1,000 renew. Single source is not confirmation."
+    },
+    {
+      "id": "MD-VERIFY",
+      "title": "Independently verify Codex's Maryland findings against the quoted text",
+      "owner": "zeo",
+      "state": "blocked",
+      "deliverable": "triad_bridge/zeo_maryland_verify.md",
+      "branch": "codex/triad-relay-20260824",
+      "blocks": [
+        "PRODUCT-SHAPE"
+      ],
+      "why": "Two independent readings before a legal conclusion changes the product. Blocked until MD-1003 is delivered."
+    },
+    {
+      "id": "INTAKE-ARCH",
+      "title": "Secure intake and retention architecture: crosswalk, runtime, logs, backups",
+      "owner": "claude",
+      "state": "open",
+      "deliverable": "pending",
+      "branch": "claude/revenue-brainstorm-d5y7ts",
+      "blocks": [
+        "ZEO-WATCH",
+        "FIRST-CLIENT"
+      ],
+      "why": "No document may be accepted from a client until this exists. Design only; nothing built here touches real records."
+    },
+    {
+      "id": "ZEO-WATCH",
+      "title": "Zeo deadline watch on billing cases",
+      "owner": "zeo",
+      "state": "blocked",
+      "deliverable": "pending",
+      "branch": "pending",
+      "blocks": [],
+      "why": "Suspended by standing decision until INTAKE-ARCH is reviewed. Connecting the relay did not lift this."
+    },
+    {
+      "id": "PRODUCT-SHAPE",
+      "title": "Decide launch shape given the Maryland verdict",
+      "owner": "owner",
+      "state": "blocked",
+      "deliverable": "owner decision",
+      "branch": "none",
+      "blocks": [
+        "FIRST-CLIENT"
+      ],
+      "why": "If balance negotiation is covered and no exemption fits, the likely shape is error correction plus assistance screening only, and register before negotiating. Owner's call, not an agent's."
+    },
+    {
+      "id": "OFR-EMAIL",
+      "title": "Send the OFR classification question from the correct mailbox",
+      "owner": "owner",
+      "state": "blocked",
+      "deliverable": "owner action",
+      "branch": "none",
+      "blocks": [
+        "PRODUCT-SHAPE"
+      ],
+      "why": "Drafted but unsent, and sitting in the vehicle-business mailbox, which crosses the two businesses. Blocked so the question sent matches what MD-1003 turns up."
+    },
+    {
+      "id": "EMPLOYER",
+      "title": "Written outside-employment clearance",
+      "owner": "owner",
+      "state": "open",
+      "deliverable": "owner action",
+      "branch": "none",
+      "blocks": [
+        "FIRST-CLIENT"
+      ],
+      "why": "Employer wall: the health system, affiliates, coworkers, shared vendors, and any work-derived lead stay out of this business."
+    },
+    {
+      "id": "FIRST-CLIENT",
+      "title": "Accept a first paying client",
+      "owner": "owner",
+      "state": "blocked",
+      "deliverable": "owner action",
+      "branch": "none",
+      "blocks": [],
+      "why": "Gated on everything above. Nothing here is sellable until PRODUCT-SHAPE, INTAKE-ARCH and EMPLOYER all clear."
+    }
+  ]
+}
