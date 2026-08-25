@@ -12,9 +12,9 @@
  * This version enumerates every entry type, requires an EXACT allowlist entry
  * naming file, pattern and reason for each permitted hit, and compares PDF
  * text to its HTML source with an extractor-stable flattened alphanumeric
- * edit distance, ordered heading anchors, ordered numeric literals and
- * spacing-insensitive policy anchors. Extractor-sensitive token gaps remain
- * visible as diagnostics but cannot decide the verdict.
+ * edit distance, ordered heading anchors, ordered numeric and financial
+ * literals, and spacing-insensitive policy contexts. Extractor-sensitive
+ * token gaps remain visible as diagnostics but cannot decide the verdict.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -40,7 +40,7 @@ const EXPECTED_FILES = [
   "pilot-terms.pdf", "playbook.html", "referral-onepager.html",
   "referral-onepager.pdf", "site.html", "verify.mjs",
 ].sort();
-const EXPECTED_TREE_PAYLOAD_SHA256 = "ac323e739daf41adb9f21adc0c98c0f64c91c5d0abefde135bad7fe32a5c363e";
+const EXPECTED_TREE_PAYLOAD_SHA256 = "6fe1a9509f55f5b9c318a1db40b15c50e10953d4252cb157599d502ad41ffe3c";
 
 /** Forms removed from distribution. Any reappearance, in any format, fails. */
 const QUARANTINED = ["client-agreement", "appeal-representative", "hipaa-authorization"];
@@ -68,11 +68,11 @@ const BANNED = {
  * reclassified merely because punctuation disappeared during extraction.
  */
 const BANNED_CANONICAL = {
-  "fee offer": /nowin|contingenc|ofverified|cappedpercentage|successfee|weearnourfee|nothingunlessit(?:works|drops)/gi,
+  "fee offer": /contingenc|ofverified|cappedpercentage|successfee|weearnourfee|nothingunlessit(?:works|drops)/gi,
   "classification claim": /clearlyoutside|keeps(?:you|this|thework)outside|fallsoutsidetheact|notadebtsettlementservice/gi,
   prevalence: /most(?:hospital)?bills(?:have|contain)|mostpeople(?:never|havenever)|almostnobody|nobody(?:checks|tells)|plentyofpeople/gi,
   representation: /authorizedrepresentative|werepresent|asyouragent|onyourbehalf|ontheirbehalf/gi,
-  "registration cost": /1000|400issuance|50000(?:surety)?bond|2050|250/gi,
+  "registration cost": /400issuance|50000(?:surety)?bond/gi,
   "deadline overclaim": /cannotberepaired|endstheclaimpermanently|secondandlastbite|dateonthe(?:denial)?letter/gi,
   "collection promise": /collectionsmust(?:pause|stop)|holdbillingandcollection|stoptheclock|collectionsneedtostop/gi,
   "privacy overclaim": /needsnobaa|nobaaisrequired|cannotbetiedtoaperson|nothingidentifyingsurvives|makesthe.{0,25}(?:question|baa).{0,15}(?:moot|goaway)|nomonthlyfee/gi,
@@ -81,6 +81,14 @@ const BANNED_CANONICAL = {
   "stale form reference": /threeforms|sixclient|recordsauthorization|representativedesignation|serviceagreement|feearithmetic/gi,
   "insecure intake": /senduswhatyouhave|aphotoisfine|email(?:me|us)(?:the|your)(?:bill|records)/gi,
   "generic ambulance": /ambulancecharges/gi,
+};
+
+/** Literal glyph matchers preserve true word boundaries while tolerating
+ * spaces or punctuation between every character. This avoids treating
+ * "knowing" as "no win" after flattening.
+ */
+const BANNED_GLYPH_LITERALS = {
+  "fee offer": ["no win"],
 };
 
 /**
@@ -317,6 +325,26 @@ function numericSignature(text) {
   return compact.match(/\d+(?:[./:\-]\d+)*/g) ?? [];
 }
 
+/** Signs, currency markers, amount placeholders and percentages carry
+ * semantics that the alphanumeric and numeric-only streams deliberately lose.
+ */
+function financialSignature(text) {
+  const compact = fold(text)
+    .replace(/[−‐‑‒–—]/gu, "-")
+    .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1")
+    .replace(/\s+/gu, " ");
+  const amount = String.raw`\$\s*(?:\[\s*[\p{L}\p{N}_ -]{1,48}\s*\]|\d+(?:\.\d+)?)`;
+  const signedAmount = String.raw`(?:[+-]\s*)?${amount}`;
+  const parenthesizedAmount = String.raw`\(\s*${amount}\s*\)`;
+  const percentage = String.raw`(?:[+-]\s*)?\d+(?:\.\d+)?\s*%`;
+  const pattern = new RegExp(`${parenthesizedAmount}|${signedAmount}|${percentage}`, "gu");
+  return [...compact.matchAll(pattern)].map((match) => {
+    const token = match[0].replace(/\s+/gu, "");
+    if (token.startsWith("(") && token.endsWith(")")) return `-${token.slice(1, -1)}`;
+    return token;
+  });
+}
+
 function htmlHeadingStreams(html) {
   return [...html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)]
     .map((match) => {
@@ -436,6 +464,44 @@ function matchedCanonicalPhrases(text, re) {
   return [...comparisonStream(text).matchAll(re)].map((match) => match[0]);
 }
 
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchedGlyphLiterals(text, phrases = []) {
+  const folded = fold(text);
+  const matches = [];
+  for (const phrase of phrases) {
+    const glyphs = Array.from(comparisonStream(phrase));
+    const body = glyphs.map(escapeRegExp).join(String.raw`[^\p{L}\p{N}]*`);
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])${body}(?![\\p{L}\\p{N}])`, "gu");
+    for (const _match of folded.matchAll(re)) matches.push(comparisonStream(phrase));
+  }
+  return matches;
+}
+
+/** Counts alone cannot distinguish "no success fee" from "a success fee".
+ * Bind every canonical policy anchor to its nearby canonical context so a
+ * negation or other short qualifier cannot be reversed under the drift cap.
+ */
+function canonicalPolicyContexts(text, radius = 20) {
+  const stream = comparisonStream(text);
+  const contexts = [];
+  for (const [label, re] of Object.entries(BANNED_CANONICAL)) {
+    for (const match of stream.matchAll(re)) {
+      const start = match.index ?? 0;
+      const end = start + match[0].length;
+      contexts.push({
+        label,
+        anchor: match[0],
+        before: stream.slice(Math.max(0, start - radius), start),
+        after: stream.slice(end, end + radius),
+      });
+    }
+  }
+  return contexts;
+}
+
 function occurrenceCounts(values) {
   const counts = new Map();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
@@ -486,8 +552,28 @@ function assertPdfComparatorContract() {
   if (JSON.stringify(numericSignature("Amount $1.00")) === JSON.stringify(numericSignature("Amount $100"))) {
     throw new Error("numeric signature accepted a materially changed amount");
   }
+  if (JSON.stringify(financialSignature("Reduction − $ [ amount ] and rate 20 %")) !== JSON.stringify(financialSignature("Reduction -$[amount] and rate 20%"))) {
+    throw new Error("financial signature rejected equivalent extractor formatting");
+  }
+  if (JSON.stringify(financialSignature("Reduction −$[amount]")) === JSON.stringify(financialSignature("Reduction $[amount]"))) {
+    throw new Error("financial signature accepted a dropped reduction sign");
+  }
   if (!matchedCanonicalPhrases("w e r e p r e s e n t y o u", BANNED_CANONICAL.representation).length) {
     throw new Error("spacing-insensitive policy anchors missed letter-spaced representation text");
+  }
+  if (!matchedGlyphLiterals("n o - w i n", BANNED_GLYPH_LITERALS["fee offer"]).length) {
+    throw new Error("glyph policy matcher missed letter-spaced no-win text");
+  }
+  if (matchedGlyphLiterals("worth knowing", BANNED_GLYPH_LITERALS["fee offer"]).length) {
+    throw new Error("glyph policy matcher treated knowing as no-win text");
+  }
+  const noFeeContext = canonicalPolicyContexts("No charge, no deposit, no success fee.");
+  const reversedFeeContext = canonicalPolicyContexts("No charge, no deposit, a success fee.");
+  if (JSON.stringify(noFeeContext) === JSON.stringify(reversedFeeContext)) {
+    throw new Error("policy context accepted a reversed fee promise");
+  }
+  if (JSON.stringify(noFeeContext) !== JSON.stringify(canonicalPolicyContexts("N o c h a r g e, n o d e p o s i t, n o s u c c e s s f e e."))) {
+    throw new Error("policy context rejected equivalent letter-spaced text");
   }
   if (JSON.stringify(numericSignature(htmlNumericText("<ol><li>Alpha</li><li value='4'>Beta</li><li>Gamma</li></ol>"))) !== JSON.stringify(["1", "4", "5"])) {
     throw new Error("ordered-list markers were not materialized for numeric comparison");
@@ -594,6 +680,8 @@ let pdfBannedHits = 0;
 let pdfExtraBannedHits = 0;
 let pdfCanonicalBannedHits = 0;
 let pdfExtraCanonicalBannedHits = 0;
+let pdfGlyphBannedHits = 0;
+let pdfExtraGlyphBannedHits = 0;
 if (!extractor) {
   fails += 1;
   console.log("FAIL no usable python3/python/py runtime with pypdf (PDF comparison inconclusive)");
@@ -626,6 +714,12 @@ for (const p of pdfs) {
   const pdfNumbers = numericSignature(text);
   const sourceNumbers = numericSignature(htmlNumericText(sourceHtml));
   const numericSignatureMatch = JSON.stringify(pdfNumbers) === JSON.stringify(sourceNumbers);
+  const pdfFinancial = financialSignature(text);
+  const sourceFinancial = financialSignature(sourceText);
+  const financialSignatureMatch = JSON.stringify(pdfFinancial) === JSON.stringify(sourceFinancial);
+  const pdfPolicyContexts = canonicalPolicyContexts(text);
+  const sourcePolicyContexts = canonicalPolicyContexts(sourceText);
+  const policyContextMatch = JSON.stringify(pdfPolicyContexts) === JSON.stringify(sourcePolicyContexts);
   let extraBanned = 0;
   for (const [label, re] of Object.entries(BANNED)) {
     const pdfPhrases = matchedPhrases(text, re);
@@ -659,6 +753,23 @@ for (const p of pdfs) {
       fails += uncoveredCanonicalExcess;
       console.log(`FAIL PDF-only spacing-insensitive banned phrase ${basename(p)} [${label}] excess ${uncoveredCanonicalExcess}`);
     }
+    const glyphPhrases = BANNED_GLYPH_LITERALS[label] ?? [];
+    const pdfGlyphPhrases = matchedGlyphLiterals(text, glyphPhrases);
+    const sourceGlyphCounts = occurrenceCounts(matchedGlyphLiterals(sourceText, glyphPhrases));
+    pdfGlyphBannedHits += pdfGlyphPhrases.length;
+    const seenPdfGlyph = occurrenceCounts(pdfGlyphPhrases);
+    let glyphExcess = 0;
+    for (const [phrase, count] of seenPdfGlyph) {
+      glyphExcess += Math.max(0, count - (sourceGlyphCounts.get(phrase) ?? 0));
+    }
+    const uncoveredGlyphExcess = Math.max(0, glyphExcess - rawExtraForLabel);
+    if (uncoveredGlyphExcess) {
+      extraBanned += uncoveredGlyphExcess;
+      pdfExtraBannedHits += uncoveredGlyphExcess;
+      pdfExtraGlyphBannedHits += uncoveredGlyphExcess;
+      fails += uncoveredGlyphExcess;
+      console.log(`FAIL PDF-only glyph-spaced banned phrase ${basename(p)} [${label}] excess ${uncoveredGlyphExcess}`);
+    }
   }
   pdfComparisons.push({
     pdf: basename(p),
@@ -686,6 +797,16 @@ for (const p of pdfs) {
     numericSignatureMatch,
     pdfNumericSha256: createHash("sha256").update(JSON.stringify(pdfNumbers)).digest("hex"),
     sourceNumericSha256: createHash("sha256").update(JSON.stringify(sourceNumbers)).digest("hex"),
+    financialLiterals: pdfFinancial.length,
+    sourceFinancialLiterals: sourceFinancial.length,
+    financialSignatureMatch,
+    pdfFinancialSha256: createHash("sha256").update(JSON.stringify(pdfFinancial)).digest("hex"),
+    sourceFinancialSha256: createHash("sha256").update(JSON.stringify(sourceFinancial)).digest("hex"),
+    policyContexts: pdfPolicyContexts.length,
+    sourcePolicyContexts: sourcePolicyContexts.length,
+    policyContextMatch,
+    pdfPolicyContextSha256: createHash("sha256").update(JSON.stringify(pdfPolicyContexts)).digest("hex"),
+    sourcePolicyContextSha256: createHash("sha256").update(JSON.stringify(sourcePolicyContexts)).digest("hex"),
     extraBanned,
   });
   if (canonicalDrift > 0.02) {
@@ -706,6 +827,14 @@ for (const p of pdfs) {
         .find((i) => pdfNumbers[i] !== sourceNumbers[i]);
     console.log(`FAIL PDF numeric signature ${basename(p)}: ordered literal mismatch at index ${mismatch ?? -1}`);
   }
+  if (!financialSignatureMatch) {
+    fails += 1;
+    console.log(`FAIL PDF financial signature ${basename(p)}: signs, amounts, currency markers or percentages differ`);
+  }
+  if (!policyContextMatch) {
+    fails += 1;
+    console.log(`FAIL PDF policy context ${basename(p)}: a spacing-insensitive policy qualifier or nearby context differs`);
+  }
   if (orderedTokenDrift > 0.02 || gaps.maxPdfOnlyRun > 1 || gaps.maxSourceOnlyRun > 1) {
     console.log(`WARN extractor-sensitive PDF token diagnostics ${basename(p)}: ${(orderedTokenDrift * 100).toFixed(1)}% drift; PDF-only run ${gaps.maxPdfOnlyRun}; source-only run ${gaps.maxSourceOnlyRun}`);
   }
@@ -715,7 +844,7 @@ const evidence = {
   node: process.version,
   platform: `${process.platform}-${process.arch}`,
   verifierSha256: createHash("sha256").update(readFileSync(VERIFIER_PATH)).digest("hex"),
-  pdfComparator: "flattened-alphanumeric-edit-v2+ordered-headings+numeric-signature+canonical-policy-anchors",
+  pdfComparator: "flattened-alphanumeric-edit-v3+ordered-headings+numeric-financial-signatures+canonical-policy-contexts",
   pdfComparatorSelfTest,
   pdfExtractor: extractor ? [extractor.command, ...extractor.prefix].join(" ") : null,
   python: extractor?.python ?? null,
@@ -736,6 +865,8 @@ const evidence = {
   pdfExtraBannedHits,
   pdfCanonicalBannedHits,
   pdfExtraCanonicalBannedHits,
+  pdfGlyphBannedHits,
+  pdfExtraGlyphBannedHits,
   pdfComparisons,
 };
 
