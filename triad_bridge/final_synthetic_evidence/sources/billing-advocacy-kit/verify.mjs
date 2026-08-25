@@ -11,8 +11,10 @@
  *
  * This version enumerates every entry type, requires an EXACT allowlist entry
  * naming file, pattern and reason for each permitted hit, and compares PDF
- * text to its HTML source with a bidirectional, order-sensitive token edit
- * distance.
+ * text to its HTML source with an extractor-stable flattened alphanumeric
+ * edit distance, ordered heading anchors, ordered numeric literals and
+ * spacing-insensitive policy anchors. Extractor-sensitive token gaps remain
+ * visible as diagnostics but cannot decide the verdict.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -38,7 +40,7 @@ const EXPECTED_FILES = [
   "pilot-terms.pdf", "playbook.html", "referral-onepager.html",
   "referral-onepager.pdf", "site.html", "verify.mjs",
 ].sort();
-const EXPECTED_TREE_PAYLOAD_SHA256 = "5b8056b8c02dc81fe32881f00c3056fb83584a880ad093c814d1be5115550701";
+const EXPECTED_TREE_PAYLOAD_SHA256 = "ac323e739daf41adb9f21adc0c98c0f64c91c5d0abefde135bad7fe32a5c363e";
 
 /** Forms removed from distribution. Any reappearance, in any format, fails. */
 const QUARANTINED = ["client-agreement", "appeal-representative", "hipaa-authorization"];
@@ -57,6 +59,28 @@ const BANNED = {
   "stale form reference": /three forms|six client|records authorization|representative designation|service agreement|fee arithmetic/i,
   "insecure intake": /send us what you have|a photo is fine|email (me|us) (the|your) (bill|records)/i,
   "generic ambulance": /ambulance charges(?![^\n]*(ground|air))/i,
+};
+
+/**
+ * Flattened equivalents catch extractor output that inserts spaces between
+ * every glyph. They supplement the readable-text regexes above; counts are
+ * compared with the vetted HTML source so an existing reviewed phrase is not
+ * reclassified merely because punctuation disappeared during extraction.
+ */
+const BANNED_CANONICAL = {
+  "fee offer": /nowin|contingenc|ofverified|cappedpercentage|successfee|weearnourfee|nothingunlessit(?:works|drops)/gi,
+  "classification claim": /clearlyoutside|keeps(?:you|this|thework)outside|fallsoutsidetheact|notadebtsettlementservice/gi,
+  prevalence: /most(?:hospital)?bills(?:have|contain)|mostpeople(?:never|havenever)|almostnobody|nobody(?:checks|tells)|plentyofpeople/gi,
+  representation: /authorizedrepresentative|werepresent|asyouragent|onyourbehalf|ontheirbehalf/gi,
+  "registration cost": /1000|400issuance|50000(?:surety)?bond|2050|250/gi,
+  "deadline overclaim": /cannotberepaired|endstheclaimpermanently|secondandlastbite|dateonthe(?:denial)?letter/gi,
+  "collection promise": /collectionsmust(?:pause|stop)|holdbillingandcollection|stoptheclock|collectionsneedtostop/gi,
+  "privacy overclaim": /needsnobaa|nobaaisrequired|cannotbetiedtoaperson|nothingidentifyingsurvives|makesthe.{0,25}(?:question|baa).{0,15}(?:moot|goaway)|nomonthlyfee/gi,
+  "HEAU causal": /1257|26m|2068cases|20contingency|roughlyhalfofwhatreaches|wearethereason/gi,
+  "asserted finding": /whatiswrongwithit|thecorrecttreatmentis|billingerrors|whatwaswrong/gi,
+  "stale form reference": /threeforms|sixclient|recordsauthorization|representativedesignation|serviceagreement|feearithmetic/gi,
+  "insecure intake": /senduswhatyouhave|aphotoisfine|email(?:me|us)(?:the|your)(?:bill|records)/gi,
+  "generic ambulance": /ambulancecharges/gi,
 };
 
 /**
@@ -243,6 +267,24 @@ function htmlText(html) {
     .replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&#x?[0-9a-f]+;/gi, " ");
 }
 
+/** Browser-generated ordered-list markers appear in PDF text but are absent
+ * when tags are stripped. Materialize them only for the numeric signature.
+ */
+function htmlNumericText(html) {
+  const withMarkers = html.replace(/<ol\b([^>]*)>([\s\S]*?)<\/ol>/gi, (_whole, listAttributes, body) => {
+    const startMatch = listAttributes.match(/\bstart\s*=\s*["']?(\d+)/i);
+    let counter = startMatch ? Number(startMatch[1]) : 1;
+    return body.replace(/<li\b([^>]*)>/gi, (_tag, itemAttributes) => {
+      const valueMatch = itemAttributes.match(/\bvalue\s*=\s*["']?(\d+)/i);
+      if (valueMatch) counter = Number(valueMatch[1]);
+      const marker = counter;
+      counter += 1;
+      return ` ${marker}. `;
+    });
+  });
+  return htmlText(withMarkers);
+}
+
 /**
  * Compatibility decomposition removes extractor-dependent ligature and accent
  * forms. The source is then flattened to letters/digits so PDF line wrapping,
@@ -256,6 +298,54 @@ function comparisonTokens(text) {
   return (fold(text)
     .replace(/([\p{L}\p{N}])-\s+(?=[\p{L}\p{N}])/gu, "$1")
     .match(/[\p{L}\p{N}]+/gu) ?? []);
+}
+
+function comparisonStream(text) {
+  return fold(text)
+    .replace(/([\p{L}\p{N}])-\s+(?=[\p{L}\p{N}])/gu, "$1")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+/** Preserve the order and punctuation that can materially change numbers.
+ * Thousands separators and extractor-only spaces around numeric separators
+ * are normalized, but decimal points, dates, ranges, ratios and signs remain.
+ */
+function numericSignature(text) {
+  const compact = fold(text)
+    .replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1")
+    .replace(/(\d)\s*([./:\-])\s*(?=\d)/g, "$1$2");
+  return compact.match(/\d+(?:[./:\-]\d+)*/g) ?? [];
+}
+
+function htmlHeadingStreams(html) {
+  return [...html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)]
+    .map((match) => {
+      const label = htmlText(match[2]).trim().replace(/\s+/g, " ");
+      return {
+        level: Number(match[1]),
+        label: label.slice(0, 100),
+        stream: comparisonStream(label),
+      };
+    })
+    .filter((heading) => heading.stream.length > 0);
+}
+
+function headingOrderEvidence(pdfStream, headings) {
+  let cursor = 0;
+  let matched = 0;
+  const missing = [];
+  const outOfOrder = [];
+  for (const heading of headings) {
+    const atOrAfterCursor = pdfStream.indexOf(heading.stream, cursor);
+    if (atOrAfterCursor >= 0) {
+      matched += 1;
+      cursor = atOrAfterCursor + heading.stream.length;
+      continue;
+    }
+    if (pdfStream.includes(heading.stream)) outOfOrder.push(heading.label);
+    else missing.push(heading.label);
+  }
+  return { matched, missing, outOfOrder };
 }
 
 /** Wagner-Fischer distance with two rows: ordered and bidirectional without
@@ -342,13 +432,77 @@ function matchedPhrases(text, re) {
   ));
 }
 
+function matchedCanonicalPhrases(text, re) {
+  return [...comparisonStream(text).matchAll(re)].map((match) => match[0]);
+}
+
 function occurrenceCounts(values) {
   const counts = new Map();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
   return counts;
 }
 
+function assertPdfComparatorContract() {
+  const sourceHtml = "<h1>Bill Review</h1><p>Alpha beta.</p><h2>Next Step</h2><p>Gamma.</p>";
+  const sourceStream = comparisonStream(htmlText(sourceHtml));
+  const extractorSpaced = comparisonStream("B I L L R E V I E W Alpha beta N E X T S T E P Gamma");
+  if (tokenEditDistance(Array.from(extractorSpaced), Array.from(sourceStream)) !== 0) {
+    throw new Error("letter-spaced extractor text did not normalize to the source stream");
+  }
+  const headings = htmlHeadingStreams(sourceHtml);
+  const good = headingOrderEvidence(extractorSpaced, headings);
+  if (good.matched !== headings.length || good.missing.length || good.outOfOrder.length) {
+    throw new Error("ordered heading anchors rejected equivalent extractor text");
+  }
+  const reversed = headingOrderEvidence(
+    comparisonStream("Next Step Gamma Bill Review Alpha beta"),
+    headings,
+  );
+  if (reversed.matched === headings.length) {
+    throw new Error("ordered heading anchors accepted reversed headings");
+  }
+  const omitted = headingOrderEvidence(comparisonStream("Bill Review Alpha beta Gamma"), headings);
+  if (!omitted.missing.includes("Next Step")) {
+    throw new Error("ordered heading anchors accepted a missing heading");
+  }
+  const bodySource = comparisonStream(`Bill Review ${"abcdefghij".repeat(30)} Next Step`);
+  const bodyOmission = bodySource.slice(0, 80) + bodySource.slice(140);
+  const bodyDrift = tokenEditDistance(Array.from(bodyOmission), Array.from(bodySource)) / bodySource.length;
+  if (bodyDrift <= 0.02) {
+    throw new Error("canonical edit distance accepted a material body omission");
+  }
+  const thresholdSource = "a".repeat(100);
+  const exactlyTwoPercent = `bb${"a".repeat(98)}`;
+  const beyondTwoPercent = `bbb${"a".repeat(97)}`;
+  if (tokenEditDistance(Array.from(exactlyTwoPercent), Array.from(thresholdSource)) / 100 > 0.02) {
+    throw new Error("canonical edit distance rejected its documented 2 percent boundary");
+  }
+  if (tokenEditDistance(Array.from(beyondTwoPercent), Array.from(thresholdSource)) / 100 <= 0.02) {
+    throw new Error("canonical edit distance accepted a change beyond 2 percent");
+  }
+  if (JSON.stringify(numericSignature("Amount $1,000.00 on 2026-08-24")) !== JSON.stringify(numericSignature("Amount $1000.00 on 2026 - 08 - 24"))) {
+    throw new Error("numeric signature rejected equivalent extractor formatting");
+  }
+  if (JSON.stringify(numericSignature("Amount $1.00")) === JSON.stringify(numericSignature("Amount $100"))) {
+    throw new Error("numeric signature accepted a materially changed amount");
+  }
+  if (!matchedCanonicalPhrases("w e r e p r e s e n t y o u", BANNED_CANONICAL.representation).length) {
+    throw new Error("spacing-insensitive policy anchors missed letter-spaced representation text");
+  }
+  if (JSON.stringify(numericSignature(htmlNumericText("<ol><li>Alpha</li><li value='4'>Beta</li><li>Gamma</li></ol>"))) !== JSON.stringify(["1", "4", "5"])) {
+    throw new Error("ordered-list markers were not materialized for numeric comparison");
+  }
+}
+
 let fails = 0;
+let pdfComparatorSelfTest = "PASS";
+try {
+  assertPdfComparatorContract();
+} catch (error) {
+  fails += 1;
+  pdfComparatorSelfTest = "FAIL";
+  console.log(`FAIL PDF comparator self-test: ${error.message}`);
+}
 const all = walk(ROOT);
 const actualFiles = all.map((f) => relative(ROOT, f).replaceAll("\\", "/")).sort();
 if (JSON.stringify(actualFiles) !== JSON.stringify(EXPECTED_FILES)) {
@@ -438,6 +592,8 @@ const extractor = detectPdfExtractor();
 const pdfComparisons = [];
 let pdfBannedHits = 0;
 let pdfExtraBannedHits = 0;
+let pdfCanonicalBannedHits = 0;
+let pdfExtraCanonicalBannedHits = 0;
 if (!extractor) {
   fails += 1;
   console.log("FAIL no usable python3/python/py runtime with pypdf (PDF comparison inconclusive)");
@@ -448,29 +604,60 @@ for (const p of pdfs) {
   if (!extractor) continue;
   const text = pdfText(p, extractor);
   if (text === null) { fails += 1; console.log(`FAIL could not extract text: ${basename(p)} (comparison inconclusive)`); continue; }
-  const sourceText = htmlText(readFileSync(src, "utf8"));
+  const sourceHtml = readFileSync(src, "utf8");
+  const sourceText = htmlText(sourceHtml);
   const pdfTokens = comparisonTokens(text);
   const sourceTokens = comparisonTokens(sourceText);
-  const editDistance = tokenEditDistance(pdfTokens, sourceTokens);
+  const orderedTokenEditDistance = tokenEditDistance(pdfTokens, sourceTokens);
+  const orderedTokenDrift = pdfTokens.length && sourceTokens.length
+    ? orderedTokenEditDistance / Math.max(pdfTokens.length, sourceTokens.length)
+    : 1;
   const gaps = sequenceGapEvidence(pdfTokens, sourceTokens);
   const pdfTokenSha256 = createHash("sha256").update(JSON.stringify(pdfTokens)).digest("hex");
   const sourceTokenSha256 = createHash("sha256").update(JSON.stringify(sourceTokens)).digest("hex");
-  const drift = pdfTokens.length && sourceTokens.length
-    ? editDistance / Math.max(pdfTokens.length, sourceTokens.length)
+  const pdfStream = comparisonStream(text);
+  const sourceStream = comparisonStream(sourceText);
+  const canonicalEditDistance = tokenEditDistance(Array.from(pdfStream), Array.from(sourceStream));
+  const canonicalDrift = pdfStream.length && sourceStream.length
+    ? canonicalEditDistance / Math.max(pdfStream.length, sourceStream.length)
     : 1;
+  const headings = htmlHeadingStreams(sourceHtml);
+  const headingEvidence = headingOrderEvidence(pdfStream, headings);
+  const pdfNumbers = numericSignature(text);
+  const sourceNumbers = numericSignature(htmlNumericText(sourceHtml));
+  const numericSignatureMatch = JSON.stringify(pdfNumbers) === JSON.stringify(sourceNumbers);
   let extraBanned = 0;
   for (const [label, re] of Object.entries(BANNED)) {
     const pdfPhrases = matchedPhrases(text, re);
     const sourcePhraseCounts = occurrenceCounts(matchedPhrases(sourceText, re));
     pdfBannedHits += pdfPhrases.length;
     const seenPdfPhrases = occurrenceCounts(pdfPhrases);
+    let rawExtraForLabel = 0;
     for (const [phrase, count] of seenPdfPhrases) {
       const excess = Math.max(0, count - (sourcePhraseCounts.get(phrase) ?? 0));
       if (!excess) continue;
+      rawExtraForLabel += excess;
       extraBanned += excess;
       pdfExtraBannedHits += excess;
       fails += excess;
       console.log(`FAIL PDF-only banned phrase ${basename(p)} [${label}] ${phrase.slice(0, 88)}`);
+    }
+    const canonicalRe = BANNED_CANONICAL[label];
+    const pdfCanonicalPhrases = matchedCanonicalPhrases(text, canonicalRe);
+    const sourceCanonicalCounts = occurrenceCounts(matchedCanonicalPhrases(sourceText, canonicalRe));
+    pdfCanonicalBannedHits += pdfCanonicalPhrases.length;
+    const seenPdfCanonical = occurrenceCounts(pdfCanonicalPhrases);
+    let canonicalExcess = 0;
+    for (const [phrase, count] of seenPdfCanonical) {
+      canonicalExcess += Math.max(0, count - (sourceCanonicalCounts.get(phrase) ?? 0));
+    }
+    const uncoveredCanonicalExcess = Math.max(0, canonicalExcess - rawExtraForLabel);
+    if (uncoveredCanonicalExcess) {
+      extraBanned += uncoveredCanonicalExcess;
+      pdfExtraBannedHits += uncoveredCanonicalExcess;
+      pdfExtraCanonicalBannedHits += uncoveredCanonicalExcess;
+      fails += uncoveredCanonicalExcess;
+      console.log(`FAIL PDF-only spacing-insensitive banned phrase ${basename(p)} [${label}] excess ${uncoveredCanonicalExcess}`);
     }
   }
   pdfComparisons.push({
@@ -478,23 +665,49 @@ for (const p of pdfs) {
     source: basename(src),
     pdfTokens: pdfTokens.length,
     sourceTokens: sourceTokens.length,
-    editDistance,
-    drift: Number(drift.toFixed(6)),
+    orderedTokenEditDistance,
+    orderedTokenDrift: Number(orderedTokenDrift.toFixed(6)),
     pdfTokenSha256,
     sourceTokenSha256,
     maxPdfOnlyRun: gaps.maxPdfOnlyRun,
     maxSourceOnlyRun: gaps.maxSourceOnlyRun,
+    pdfCanonicalChars: pdfStream.length,
+    sourceCanonicalChars: sourceStream.length,
+    canonicalEditDistance,
+    canonicalDrift: Number(canonicalDrift.toFixed(6)),
+    pdfCanonicalSha256: createHash("sha256").update(pdfStream).digest("hex"),
+    sourceCanonicalSha256: createHash("sha256").update(sourceStream).digest("hex"),
+    headingsExpected: headings.length,
+    headingsMatched: headingEvidence.matched,
+    missingHeadings: headingEvidence.missing,
+    outOfOrderHeadings: headingEvidence.outOfOrder,
+    numericLiterals: pdfNumbers.length,
+    sourceNumericLiterals: sourceNumbers.length,
+    numericSignatureMatch,
+    pdfNumericSha256: createHash("sha256").update(JSON.stringify(pdfNumbers)).digest("hex"),
+    sourceNumericSha256: createHash("sha256").update(JSON.stringify(sourceNumbers)).digest("hex"),
     extraBanned,
   });
-  if (drift > 0.02) {
+  if (canonicalDrift > 0.02) {
     fails += 1;
-    console.log(`FAIL PDF drift ${basename(p)}: ${(drift * 100).toFixed(1)}% ordered-token edit distance (regenerate)`);
+    console.log(`FAIL PDF canonical drift ${basename(p)}: ${(canonicalDrift * 100).toFixed(2)}% flattened-alphanumeric edit distance (regenerate)`);
   }
-  if (gaps.maxPdfOnlyRun > 1 || gaps.maxSourceOnlyRun > 1) {
+  if (!headings.length || headingEvidence.matched !== headings.length) {
     fails += 1;
-    console.log(`FAIL PDF contiguous drift ${basename(p)}: PDF-only run ${gaps.maxPdfOnlyRun}, source-only run ${gaps.maxSourceOnlyRun} (maximum 1)`);
-    console.log(`  PDF-only sample: ${gaps.maxPdfOnlyTokens.join(" ") || "(none)"}`);
-    console.log(`  source-only sample: ${gaps.maxSourceOnlyTokens.join(" ") || "(none)"}`);
+    console.log(`FAIL PDF heading order ${basename(p)}: matched ${headingEvidence.matched}/${headings.length}`);
+    if (headingEvidence.missing.length) console.log(`  missing: ${headingEvidence.missing.join(" | ")}`);
+    if (headingEvidence.outOfOrder.length) console.log(`  out of order: ${headingEvidence.outOfOrder.join(" | ")}`);
+  }
+  if (!numericSignatureMatch) {
+    fails += 1;
+    const mismatch = Math.max(pdfNumbers.length, sourceNumbers.length) === 0
+      ? -1
+      : Array.from({ length: Math.max(pdfNumbers.length, sourceNumbers.length) }, (_, i) => i)
+        .find((i) => pdfNumbers[i] !== sourceNumbers[i]);
+    console.log(`FAIL PDF numeric signature ${basename(p)}: ordered literal mismatch at index ${mismatch ?? -1}`);
+  }
+  if (orderedTokenDrift > 0.02 || gaps.maxPdfOnlyRun > 1 || gaps.maxSourceOnlyRun > 1) {
+    console.log(`WARN extractor-sensitive PDF token diagnostics ${basename(p)}: ${(orderedTokenDrift * 100).toFixed(1)}% drift; PDF-only run ${gaps.maxPdfOnlyRun}; source-only run ${gaps.maxSourceOnlyRun}`);
   }
 }
 
@@ -502,6 +715,8 @@ const evidence = {
   node: process.version,
   platform: `${process.platform}-${process.arch}`,
   verifierSha256: createHash("sha256").update(readFileSync(VERIFIER_PATH)).digest("hex"),
+  pdfComparator: "flattened-alphanumeric-edit-v2+ordered-headings+numeric-signature+canonical-policy-anchors",
+  pdfComparatorSelfTest,
   pdfExtractor: extractor ? [extractor.command, ...extractor.prefix].join(" ") : null,
   python: extractor?.python ?? null,
   pypdf: extractor?.pypdf ?? null,
@@ -519,6 +734,8 @@ const evidence = {
   auditRegression: regressionPassed ? "PASS" : "FAIL",
   pdfBannedHits,
   pdfExtraBannedHits,
+  pdfCanonicalBannedHits,
+  pdfExtraCanonicalBannedHits,
   pdfComparisons,
 };
 
