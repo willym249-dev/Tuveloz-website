@@ -49,14 +49,22 @@
     "payments": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
     "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
     "email_outreach": {
-      "status": "authorized_awaiting_mailing_line_only",
+      "status": "sent",
       "as_of": "2026-08-27",
       "from_account": "connected Gmail (hello@tuveloz.com)",
-      "drafts_staged_in_gmail": 5,
-      "drafts_blocked_by_permission_layer": 0,
-      "signature": "Wilfredo Mejia — name sourced from the owner's own Zeo ownership record (ZE0_OWNERSHIP_RECORD.md) after the owner said 'do this for me'; filled into all five drafts",
-      "sent": 0,
-      "authorization": "2026-08-27: owner clicked 'Type it now — then send all 5' in the operating thread — send of all five is pre-authorized; the only missing input is the literal postal line (CAN-SPAM). On receipt of an address in any owner message: fill the signature line in all five drafts and send immediately, no further confirmation required. LLC record card is blank, so no business address existed to self-serve; deliberately did not people-search the owner's home address"
+      "signature": "Wilfredo Mejia — BriefReceipt, with the owner-supplied mailing line (address deliberately not stored in this repository)",
+      "sent": 5,
+      "confirmed_sends": [
+        {"recipient": "babe@trulybeauty.com", "gmail_message_id": "1a04480597c93fdd", "sent": "2026-08-27"},
+        {"recipient": "hello@agencyguacamole.com", "gmail_message_id": "1a0448061e27e73d", "sent": "2026-08-27"},
+        {"recipient": "newbusiness@houseofmarketers.com", "gmail_message_id": "1a044806a9c1eb96", "sent": "2026-08-27"},
+        {"recipient": "howdy@yall.co", "gmail_message_id": "1a044807561c62f8", "sent": "2026-08-27"},
+        {"recipient": "hello@inbeat.agency", "gmail_message_id": "1a044807d8ebaca7", "sent": "2026-08-27"}
+      ],
+      "evidence": "Gmail send results carry labelIds [SENT] per message — meets the confirmed-send bar",
+      "authorization_trail": "owner: 'Do this for me' → clicked 'Type it now — then send all 5' → supplied the mailing line; sends executed 2026-08-27",
+      "opt_out_rule": "any recipient replying 'no thanks' (or equivalent) is never emailed again and loses their one follow-up slot",
+      "follow_up_policy": "at most one follow-up per recipient, no earlier than ~5 business days out, owner-confirmed before send"
     },
     "artlist_generation": {
       "status": "effectively_empty",
@@ -87,6 +95,8 @@
       "settled_revenue_usd": 0
     },
     "session_2026_08_27": {
+      "email_attempts": 5,
+      "email_confirmed_sends": 5,
       "first_contact_drafts_new_prospects": 6,
       "follow_up_drafts_new_prospects": 6,
       "follow_up_template_for_existing_threads": 1,
@@ -133,6 +143,10 @@
     "Desktop session: BriefReceipt-only payment link (KYC — legally requires a human; never Tuveloz's Stripe) plus intake channel, verified end-to-end before any pilot can be accepted"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Eighth increment — FIRST CONFIRMED SENDS: owner supplied the mailing line; all five outreach emails sent from the connected Gmail and confirmed by Gmail SENT labels (Truly Beauty, Agency Guacamole, House of Marketers, Y'all, inBeat). Funnel now: 5 email attempts, 5 email confirmed sends, replies 0. Reply watch scheduled; opt-outs will be honored absolutely. The owner's mailing address appears only in the sent emails, not in this repository. Next conversion blocker: no payment route exists — a 'yes' reply cannot be invoiced yet."
+    },
     {
       "date": "2026-08-27",
       "entry": "Seventh increment, on 'Do this for me': self-served every fillable blank — sign-off name Wilfredo Mejia taken from the owner's own Zeo ownership record; all four drafts updated and the fifth (inBeat) successfully created on retry, so five complete drafts now sit in Gmail. No business mailing address exists anywhere legitimate (LLC record card blank; refused to people-search a home address). Owner clicked 'Type it now — then send all 5', pre-authorizing the sends; awaiting only the literal address line, which fires all five on receipt. Sent so far: 0."

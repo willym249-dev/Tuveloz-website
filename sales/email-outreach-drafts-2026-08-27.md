@@ -77,4 +77,13 @@ assets").
 
 | Date | Recipient | Owner confirmation | Result |
 |------|-----------|--------------------|--------|
-| — | — | nothing sent | — |
+| 2026-08-27 | babe@trulybeauty.com | "Do this for me" → send-all click → mailing line supplied | SENT (Gmail id 1a04480597c93fdd) |
+| 2026-08-27 | hello@agencyguacamole.com | same authorization | SENT (Gmail id 1a0448061e27e73d) |
+| 2026-08-27 | newbusiness@houseofmarketers.com | same authorization | SENT (Gmail id 1a044806a9c1eb96) |
+| 2026-08-27 | howdy@yall.co | same authorization | SENT (Gmail id 1a044807561c62f8) |
+| 2026-08-27 | hello@inbeat.agency | same authorization | SENT (Gmail id 1a044807d8ebaca7) |
+
+All five were sent with the signature "Wilfredo Mejia — BriefReceipt" plus the
+owner-supplied mailing line (kept out of this repository). Any "no thanks"
+reply permanently removes that recipient from outreach, including their one
+follow-up slot.
