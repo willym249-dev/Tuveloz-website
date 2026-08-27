@@ -780,6 +780,35 @@ export const customerVehicles = sqliteTable(
 );
 
 /**
+ * Private maintenance reminders a customer keeps for their own vehicles. The
+ * due date and mileage are always customer-entered — Tuveloz never invents a
+ * manufacturer interval — and a reminder never requests service, holds a
+ * price, contacts a provider, or affects eligibility.
+ */
+export const customerServiceReminders = sqliteTable(
+  "customer_service_reminders",
+  {
+    id: text("id").primaryKey(),
+    customerEmail: text("customer_email").notNull(),
+    vehicle: text("vehicle").notNull(),
+    service: text("service").notNull(),
+    dueDate: text("due_date").notNull().default(""),
+    dueMileage: integer("due_mileage").notNull().default(0),
+    currentMileage: integer("current_mileage").notNull().default(0),
+    note: text("note").notNull().default(""),
+    sourceRequestId: text("source_request_id").notNull().default(""),
+    status: text("status").notNull().default("active"),
+    createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("customer_service_reminders_email_status_idx")
+      .on(table.customerEmail, table.status, table.dueDate),
+    index("customer_service_reminders_source_idx").on(table.sourceRequestId),
+  ],
+);
+
+/**
  * Businesses that want multi-vehicle service when the marketplace opens.
  * Recording interest is not an account, a contract, or a promise of service.
  */
