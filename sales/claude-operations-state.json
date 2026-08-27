@@ -110,9 +110,13 @@
     "Approve/decline sending any of the 6 individualized first-contact drafts (per recipient, after resolving [VERIFY] markers)",
     "Supply the 2026-08-26 thread list so the single follow-up per active thread can be individualized, then approve each send",
     "Approve/decline publishing either of the 2 educational Instagram post drafts (after confirming FTC quotes against the live page)",
-    "Decide whether and when to verify/enable the payment and private-intake routes — prerequisite to accepting any pilot"
+    "Review/approve sales/pilot-intake-checklist-2026-08-27.md, create a BriefReceipt-only payment rail (never Tuveloz's Stripe), and verify both routes end-to-end — prerequisite to accepting any pilot; state flips from disabled_and_unverified only after verification"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Second increment: drafted pilot-intake-checklist-2026-08-27.md defining complete intake, the receipt deliverable spec, clock rules, and the owner actions needed before the intake/payment routes can go live. Routes remain disabled_and_unverified. Still nothing sent, published, or spent; Codex credits spent: 0."
+    },
     {
       "date": "2026-08-27",
       "entry": "Claude took over as operations lead on branch claude/briefreceipt-ops-lead-b5a6yz. Found b77b91c absent from origin; reconstructed handoff + state. No-spend work: 6 prospects researched with sources, 6+6 outreach drafts, 1 follow-up template for existing threads, 2 educational IG post drafts. Nothing sent, published, or spent. Zeo BLOCKED route_not_ready; Codex credits spent: 0."

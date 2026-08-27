@@ -89,3 +89,4 @@ only.
 | `prospect-research-2026-08-27.md` | Qualified prospect list with sources |
 | `outreach-drafts-2026-08-27.md` | First-contact and follow-up drafts (nothing sent) |
 | `instagram-post-drafts-2026-08-27.md` | Two educational post drafts (not published) |
+| `pilot-intake-checklist-2026-08-27.md` | What "complete intake" means; route stays disabled until owner-verified |
