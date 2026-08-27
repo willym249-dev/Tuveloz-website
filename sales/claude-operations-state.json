@@ -134,6 +134,10 @@
   "history": [
     {
       "date": "2026-08-27",
+      "entry": "Sixth increment: owner offered their Instagram password. Declined permanently per the standing boundary (never store or enter credentials — the owner's own rule, and the product's public promise), reinforced by verified facts: instagram.com is unreachable from this environment, and automated DM access risks the @briefreceipt account. Owner advised never to paste the password into any AI conversation and to rotate it if already shared anywhere. The offer changes nothing operationally: email sends still await only the sign-off name and mailing line."
+    },
+    {
+      "date": "2026-08-27",
       "entry": "Fifth increment: owner confirmed email as the send channel and offered whatever info is needed. Send contract stated explicitly in the operating thread: the owner's next message containing sign-off name + business mailing line fires the four staged emails (plus inBeat on 'include inBeat'), and is treated as the exact per-action confirmation for those specific sends. Instagram reachability from this environment tested and confirmed impossible (proxy refuses the connection), independent of the never-enter-credentials rule. Nothing sent yet."
     },
     {
