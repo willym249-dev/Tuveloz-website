@@ -55,15 +55,24 @@ unlocks individualized follow-ups for the eight active threads.
 
 ## Desktop session — about 25 minutes, payments and intake
 
-**4. Create the payment rail** (separate account from Tuveloz's Stripe — never
-reuse it):
-   1. In Stripe (or Square/PayPal — any of the three works): create a product
-      "BriefReceipt founding pilot", $99 one-time.
-   2. Create a hosted **payment link** for it. The processor handles all card
-      data; BriefReceipt never sees a card number.
-   3. Run one test-mode transaction end-to-end; refund it.
-   4. Paste **only the public payment-link URL** into this chat. Never paste
-      API keys, logins, or dashboard screenshots — to me or anyone.
+**4. Create the payment rail — decided 2026-08-27: Stripe Payment Link** on a
+brand-new Stripe account (never Tuveloz's locked Stripe; PayPal Business is
+the acceptable fallback only if an account already exists):
+   1. stripe.com → Sign up with an inbox you actually read.
+   2. Activate the account: business type **Individual / sole proprietor**,
+      name Wilfredo Mejia, the Germantown address, industry "consulting /
+      professional services", website field: `instagram.com/briefreceipt`.
+   3. Add the bank account for payouts (Stripe-side identity check — this is
+      the part that legally requires you).
+   4. Settings → set the **statement descriptor to BRIEFRECEIPT** so card
+      statements don't show a stranger's name.
+   5. Products → Add product: "BriefReceipt founding pilot", **$99, one-time**
+      → **Create payment link**; turn on collecting the customer's email.
+   6. Open the link in a browser and confirm it shows BriefReceipt and $99 —
+      that's the verification; no need to charge yourself.
+   7. Paste **only the public payment-link URL** into the operating thread.
+      Never paste API keys, logins, or dashboard screenshots — to anyone.
+   Fees: roughly 2.9% + 30¢, about $3.17 per pilot — you keep ~$95.83.
 
 **5. Pick the intake channel.** Simplest: a dedicated email address or alias
 for intake, checked against `pilot-intake-checklist-2026-08-27.md`. Say which
