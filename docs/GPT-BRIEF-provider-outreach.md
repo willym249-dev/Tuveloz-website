@@ -72,8 +72,9 @@ Each turn, the owner pastes one of:
 2. For each: copy their post text into GPT with "personalize" → paste GPT's
    message into the DM → send → mark the row `Sent — <date>`.
 3. Storefront businesses (Tier 1 additions): use the Zeo letter from the
-   worklist via their website contact form or phone instead — ask GPT only to
-   tailor the first sentence to that business.
+   worklist by phone, or by contact form per the worklist's channel note —
+   ask GPT to tailor the opening line to that business, every time, so no two
+   sends are identical.
 4. Replies: paste into GPT with "reply" for the compliant response.
 
 ## 5. Output format
