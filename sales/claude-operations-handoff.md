@@ -90,3 +90,5 @@ only.
 | `outreach-drafts-2026-08-27.md` | First-contact and follow-up drafts (nothing sent) |
 | `instagram-post-drafts-2026-08-27.md` | Two educational post drafts (not published) |
 | `pilot-intake-checklist-2026-08-27.md` | What "complete intake" means; route stays disabled until owner-verified |
+| `owner-runbook-2026-08-27.md` | The owner's ~40-minute scripted slice: publish, send, handles, payment rail |
+| `assets/post-1-missing-tag.png`, `assets/post-2-usage-window.png` | Ready-to-upload 1080×1080 graphics for the two education posts |

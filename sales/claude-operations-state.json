@@ -101,18 +101,23 @@
     "data_handling": "company-level public facts only; no emails, phone numbers, or personal data stored"
   },
   "gaps_and_risks": [
-    "Recipient list for the ten 2026-08-26 attempts is not in this repository; the eight active threads cannot get individualized follow-ups until the owner supplies it",
+    "Recipient list for the ten 2026-08-26 attempts is not in this repository; the eight active threads cannot get individualized follow-ups until the owner pastes the ten usernames (handles only, never conversation content)",
     "Payment and private-intake routes disabled and unverified — no pilot can be accepted even if a lead qualifies",
-    "All prospect evidence is search-index excerpts of official pages (direct fetches egress-blocked here); every [VERIFY] marker in the drafts must be resolved by a human before sending",
-    "Zero replies across 10 attempts as of 2026-08-26 — message-market fit unproven; new drafts change the hook to prospect-specific facts, but that is a hypothesis, not a result"
+    "DM handles for Truly Beauty, Pixi Beauty, and Agency Guacamole search-verified 2026-08-27; inBeat's handle is ambiguous (three similarly-named accounts), so their site form is the designated route; prospect-page evidence remains search-index excerpts, not first-hand reads",
+    "Zero replies across 10 attempts as of 2026-08-26 — message-market fit unproven; new drafts change the hook to prospect-specific facts, but that is a hypothesis, not a result",
+    "Owner stated 2026-08-27 that execution is the AI team's job; recorded division of labor: everything preparable is done Claude-side, while the Instagram session, payment-account identity, and the ten-handle list are physically owner-only, and per-action confirmation for sends/publishes remains the standing protocol"
   ],
   "pending_owner_confirmations": [
-    "Approve/decline sending any of the 6 individualized first-contact drafts (per recipient, after resolving [VERIFY] markers)",
-    "Supply the 2026-08-26 thread list so the single follow-up per active thread can be individualized, then approve each send",
-    "Approve/decline publishing either of the 2 educational Instagram post drafts (after confirming FTC quotes against the live page)",
-    "Review/approve sales/pilot-intake-checklist-2026-08-27.md, create a BriefReceipt-only payment rail (never Tuveloz's Stripe), and verify both routes end-to-end — prerequisite to accepting any pilot; state flips from disabled_and_unverified only after verification"
+    "Run the phone session in sales/owner-runbook-2026-08-27.md: publish posts 1 and 2 (graphics ready in sales/assets/), send the six first contacts — each send/publish is its own confirmation, logged from the owner's paste-back",
+    "Paste the ten usernames from the 2026-08-26 outreach (handles only) to unlock individualized follow-ups",
+    "Run the desktop session: BriefReceipt-only payment link (never Tuveloz's Stripe) plus intake channel, verified end-to-end before state flips from disabled_and_unverified",
+    "Optional: say 'switch to email' to move outreach to the connected Gmail, where Claude can execute sends with per-message owner approval (requires a BriefReceipt-appropriate sending address)"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Third increment, after owner directed that execution belongs to the AI team: search-verified DM handles (Truly, Pixi, Agency Guacamole; inBeat ambiguous, routed to site form), rendered both 1080x1080 post graphics locally into sales/assets/, and wrote owner-runbook-2026-08-27.md scripting the owner-only ~40 minutes (Instagram session, ten-handle list, payment rail). Offered email-channel outreach via connected Gmail with per-message approval as the one executable-by-Claude alternative. Still nothing sent or published; funnel unchanged; Zeo still BLOCKED; Codex credits spent: 0."
+    },
     {
       "date": "2026-08-27",
       "entry": "Second increment: drafted pilot-intake-checklist-2026-08-27.md defining complete intake, the receipt deliverable spec, clock rules, and the owner actions needed before the intake/payment routes can go live. Routes remain disabled_and_unverified. Still nothing sent, published, or spent; Codex credits spent: 0."

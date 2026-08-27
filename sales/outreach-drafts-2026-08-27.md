@@ -34,7 +34,7 @@ payment.
 
 ---
 
-## 1. Truly Beauty — IG DM to @trulybeauty `[VERIFY handle]`
+## 1. Truly Beauty — IG DM to @trulybeauty (search-verified 2026-08-27: instagram.com/trulybeauty, "Truly®", 818K followers)
 
 **First contact (draft):**
 
@@ -58,7 +58,7 @@ payment.
 > If a $99 pilot on 10 ambassador posts would be useful, I'll walk you through
 > intake; if not, thanks for reading this far.
 
-## 2. Pixi Beauty — IG DM to @pixibeauty `[VERIFY handle]`
+## 2. Pixi Beauty — IG DM to @pixibeauty (search-verified 2026-08-27: instagram.com/pixibeauty, "Pixi by Petra", ~3M followers; a second account @pixicosmetics exists — glance at pixibeauty.com's footer link before sending)
 
 **First contact (draft):**
 
@@ -79,7 +79,7 @@ payment.
 > that rarely happens at program scale. $99 founding pilot covers 10 posts if
 > you want to see it on real ones. Either way, no reply needed.
 
-## 3. Agency Guacamole — site contact form or IG DM `[VERIFY handle]`
+## 3. Agency Guacamole — IG DM to @agencyguacamole (search-verified 2026-08-27; bio matches the agency) or agencyguacamole.com/contact-us
 
 Agency angle: receipt as white-label campaign QA they can forward to clients.
 
@@ -104,7 +104,7 @@ Agency angle: receipt as white-label campaign QA they can forward to clients.
 > That's the kind of line a receipt catches before a client does. $99, 10
 > posts, two business days. If it's not for you, no reply needed.
 
-## 4. inBeat Agency — site contact form or IG DM `[VERIFY handle]`
+## 4. inBeat Agency — site contact form at inbeat.agency (primary route: three similarly-named IG accounts exist — @inbeat.social, @inbeatagency, @inbeat_agency — unresolved as of 2026-08-27, so the form avoids guessing)
 
 **First contact (draft):**
 
