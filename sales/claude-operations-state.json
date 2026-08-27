@@ -42,7 +42,9 @@
       "posts_visible": 3,
       "as_of": "2026-08-26",
       "refreshed_this_session": false,
-      "reason_not_refreshed": "no Instagram access from this environment; treat as dated, not current"
+      "reason_not_refreshed": "no Instagram access from this environment; treat as dated, not current",
+      "reachable_from_this_environment": false,
+      "reachability_verified": "2026-08-27 egress test: connections to instagram.com refused by the session proxy (no HTTP response), so no browser or tool here can reach Instagram at all; DM/publish automation from this session is physically impossible, separate from the credentials boundary that would forbid it anyway"
     },
     "payments": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
     "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
@@ -130,6 +132,10 @@
     "Desktop session: BriefReceipt-only payment link (KYC — legally requires a human; never Tuveloz's Stripe) plus intake channel, verified end-to-end before any pilot can be accepted"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Fifth increment: owner confirmed email as the send channel and offered whatever info is needed. Send contract stated explicitly in the operating thread: the owner's next message containing sign-off name + business mailing line fires the four staged emails (plus inBeat on 'include inBeat'), and is treated as the exact per-action confirmation for those specific sends. Instagram reachability from this environment tested and confirmed impossible (proxy refuses the connection), independent of the never-enter-credentials rule. Nothing sent yet."
+    },
     {
       "date": "2026-08-27",
       "entry": "Fourth increment, after owner reiterated the AI team owns customer acquisition and said to use Zeo for posts/videos: verified Zeo against its own repository (route remains not ready by ZEO_LOG.md's same-day entry; no substitution made); checked Artlist balance (1/16,500 credits until 2026-09-04 — no paid generation); activated the email channel with 4 first-contact drafts staged in the owner's Gmail (1 blocked by the session permission layer, text preserved; Pixi remains DM-only); hardened intake to collect caption text + screenshots so receipt delivery is fully executable from this environment. Sends still require owner name + mailing line + explicit 'send'. Nothing sent; funnel unchanged; Codex credits spent: 0."
