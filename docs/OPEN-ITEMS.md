@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-08-27
 
 The things that must not be forgotten. An expired insurance certificate, a
 lapsed registration, or a legal review gone stale can block provider activation
@@ -52,6 +52,9 @@ When you close something significant, write a matching entry in
 | 2026-08-25 | Answer the 18 launch gates in `/admin/launch-readiness`. `npm run readiness` confirms production currently holds **zero** recorded decisions, so every gate is pending | hello@tuveloz.com | open |
 | 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
 | 2026-09-15 | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all. Date is a review checkpoint, not a commitment — the work is contingent on discovery opening | hello@tuveloz.com | open |
+| 2026-09-03 | Run Zeo's real map sweep at home (`provider find` per trade and town) so the authoritative prospect store converges with the worklist's 11 web-sourced additions, and work Codex's falsification round from Zeo PR #105 (ZEO_CONSULT_LOG Challenge 003) | hello@tuveloz.com | open |
+| 2026-09-05 | Contact the 11 storefront additions in `brand/outreach/moco-outreach-worklist.md` using the quoted Zeo letter with a personalized opening line — by phone today; by contact form only after `LAUNCH_UPDATES_POSTAL_ADDRESS` is set and included, per the worklist's channel note. Cold email stays off until the postal-address and Workspace SPF/DKIM rows above land | hello@tuveloz.com | open |
+| 2026-09-10 | Send the first 25 personalized DMs from the refilled worklist — 5/day pacing per its anti-spam rules, with `docs/GPT-BRIEF-provider-outreach.md` pasted into ChatGPT as the personalization assistant | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 
@@ -60,10 +63,12 @@ Merge order matters here and is not visible from the pull request list.
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
 | 2026-08-18 | Merge PR #95 **before** PR #96 — #96 is stacked on #95's branch, not on `main`. Done 2026-08-11: #95 landed as `27b551f`, then #96 as `a522de8`, in that order | hello@tuveloz.com | done |
-| 2026-09-01 | Create the `tuveloz-app` repository. The earlier attempt failed with `403 Resource not accessible by integration`, so it needs owner permissions rather than another attempt from a session | hello@tuveloz.com | blocked |
-| 2026-09-30 | **Never merge PR #93.** Once `tuveloz-app` exists, move `mobile/` there following `mobile/docs/EXTRACTION.md`, then close #93, delete its branch, and remove the temporary "Related project" pointer from the root `README.md` | hello@tuveloz.com | open |
+| 2026-09-01 | Create the `tuveloz-app` repository. Done 2026-08-12: `willym249-dev/tuveloz-app` exists (private), with a new provider-first foundation merged as tuveloz-app#1 (`f379fd1`) — a replacement for #93's foundation, not an extraction of it; see the next row | hello@tuveloz.com | done |
+| 2026-09-30 | **Never merge PR #93** — resolved 2026-08-27. Verified that `tuveloz-app`'s foundation is a replacement, not the planned extraction (0 of the 91 `mobile/` files exist there in any form); the head is preserved at branch `archive/firebase-supabase-app-foundation` (`fdbfc57`) and the record on #93 is corrected. The old `claude/tuveloz-project-foundation-k1rutr` ref remains as a harmless duplicate of the archive — sessions cannot delete branches (permission layer refuses destructive git, twice confirmed), nothing depends on removing it, and it needs no tracking; trash it from the branches page if it ever bothers anyone | hello@tuveloz.com | done |
 | 2026-09-01 | Re-release Terms of Use and the Payment, Cancellation and Refund Policy so they carry the renamed Customer Service Fee. Done early, 2026-08-11 in #160: releases `terms-2026-08-11-r3` and `payment-policy-2026-08-11`, both hashes rebound to the deployed pages, and `PENDING_LEGAL_RELEASE` in the fee test is now empty | hello@tuveloz.com | done |
-| 2026-09-30 | Re-cut the features stranded on PR #33 and PR #46. Both pull requests are now closed, so the work only exists as whatever survives on their branches | hello@tuveloz.com | open |
+| 2026-09-30 | Re-cut the features stranded on PR #33 and PR #46. Done 2026-08-27 as three PRs re-authored from today's `main`: #179 maintenance reminders, #181 provider typical price ranges, #180 the owner AI request helper on the shared council. #33's catalog chunk was mostly superseded by the evolved eligibility matrix (tire, towing, and oil services already carry full evidence chains); the one remainder — a "minor repairs & maintenance" category — needs an owner decision on its evidence requirements before anyone builds it, so it is flagged in the row below, not built | hello@tuveloz.com | done |
+| 2026-09-30 | Merge PR #179 **before** PR #181 — #181 is stacked on #179's branch so migrations 0066 and 0067 cannot hit the documented number-collision trap; #180 is independent of both | hello@tuveloz.com | open |
+| — | Decide whether "minor repairs & maintenance" becomes a service category. It is the last piece of #33 and does not exist in `config/provider-eligibility-matrix.json`; adding a category means authoring its legal-evidence requirements, which is a reviewed compliance decision, not a config edit. Undated because it is optional scope, not a commitment | hello@tuveloz.com | open |
 
 ## Blocked on something outside the code
 

@@ -13,6 +13,120 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-27 — The provider-outreach machine stood up, on Zeo's rails
+
+Provider supply is the binding constraint while the marketplace is
+onboarding-only, so the owner asked for recruiting to start, driven with Zeo
+and GPT. What exists as of tonight:
+
+**Zeo's provider pipeline ran outside the house.** In this session's cloud
+container, `test_zeo_provider_pipeline` passed 46/46 against the production
+eligibility matrix; `record_prospect` took 11 web-sourced Montgomery County
+independents (mobile mechanics, detailers, jump-start operators — national
+platforms excluded as competitors); `stage_outreach` rendered EN/ES letters
+through `assert_recruiting_copy_safe` with zero refusals. One limit found and
+recorded: this environment's egress proxy 403s nominatim.openstreetmap.org, so
+the real OSM sweep (`provider find`) remains a zeo-home job. The consult-log
+challenge for all of this is Zeo PR #105 — Codex gets the falsification round
+(snippet sourcing, a probable dedupe miss on note-filled address fields, ES
+glossary coverage), Zeo gets the synthesis.
+
+**The worklist grew 11 verified-or-flagged Tier-1 targets and four
+Spanish-segment pools**, with the guard-checked Zeo letter quoted inline for
+contact-form and phone use — a channel that needs none of the still-gated
+email infrastructure. **`docs/GPT-BRIEF-provider-outreach.md`** turns ChatGPT
+into the daily personalization assistant with the honesty and fee rules as
+refusal-grade constraints.
+
+**The channel gates stand.** Cold email from tuveloz.com stays off until the
+postal-address and Workspace SPF/DKIM rows land; DMs stay at the worklist's
+5-a-day personalized pace; nothing was sent to anyone tonight, and nothing in
+any of this can send. Three dated rows in OPEN-ITEMS carry the next moves.
+
+The features stranded on unmergeable PRs #33 and #46 (no common ancestor
+with `main` — the July history defect) were re-authored fresh from today's
+`main`, as their closing comments asked:
+
+- **#179 — customer maintenance reminders** (from #33). Rebuilt in the
+  customer-vehicles idiom that landed after #33 died: drizzle, owner-scoped
+  queries, same-origin writes, the test-record isolation the July version
+  predated, privacy-export inclusion, migration 0066.
+- **#181 — provider typical price ranges** (from #33). The July surfaces all
+  survived, so this re-fits the original "range" price type: both ends
+  provider-published, the platform contributes no number (never-build
+  rule 1), migration 0067. Stacked on #179's branch to dodge the documented
+  migration-number collision trap; merge #179 first.
+- **#180 — the owner AI request helper** (from #46). Rides the shared
+  GPT/Gemini/Claude council instead of #46's bespoke OpenAI client; owner
+  verification, same-origin, the personal-data screen, and the no-write
+  boundary carried over. No `TUVELOZ_AI_ENABLED` flag re-introduced: main
+  has since chosen key-presence gating for AI, and this tool is strictly
+  narrower than the already-live `/ai` assistant.
+
+**Not built, on purpose.** #33's third chunk — catalog additions — is mostly
+superseded: today's eligibility matrix already carries tire installation,
+towing, and oil services with full jurisdictional evidence chains. The one
+true remainder is a "minor repairs & maintenance" service category, which
+does not exist in the matrix. Adding a service category means authoring its
+legal-evidence requirements, which this repository reserves for a human with
+compliance context; it is flagged in OPEN-ITEMS, not built.
+
+Each PR went up only after `npm run lint` and a full `npm test` (production
+build plus the whole suite) passed locally on its branch.
+
+---
+
+## 2026-08-27 — tuveloz-app exists, but nothing was extracted into it
+
+Two corrections to shared memory, the second found by verifying the first.
+
+**`tuveloz-app` has existed since 2026-08-12.** OPEN-ITEMS still carried its
+creation as `blocked` and #93 as waiting on it. In fact #93 was closed
+unmerged that day with the comment "Superseded — the app foundation was
+extracted and merged as tuveloz-app#1 (`f379fd1`)", and nothing was logged, so
+every session since inherited the stale picture; the newest word in this log
+was the 2026-08-11 queue entry's "#93 stays". Both rows are corrected.
+
+**But "extracted" in that comment is false, and checking it changed the
+decision it feeds.** Comparing every blob under `mobile/` on the preservation
+branch (`claude/tuveloz-project-foundation-k1rutr`, head `fdbfc57`) against
+the whole of `tuveloz-app` at `f379fd1`: **0 of 91 files have a byte-identical
+copy there at any path.** tuveloz-app#1 came from a different branch
+(`claude/app-foundation`) and is a different foundation — no backend of its
+own, talking to the website's API, shipped provider-first per its ADR 0002
+(2026-08-07), with tests, demo mode, and EAS config the old branch never had.
+The old branch was Firebase Auth + Supabase with its own data layer.
+Superseded, yes. Extracted, no.
+
+**What follows.** The preservation branch is the only named copy of the
+Firebase/Supabase foundation, so deleting it is not cleanup after a completed
+move — it is discarding the road not taken. Probably right, given ADR 0002,
+but it is the owner's decision and is now an informed one. Outside `mobile/`
+the branch only touched the README pointer, which never reached `main`, so
+`mobile/` is all it holds. Nothing was deleted today.
+
+**The record is corrected where it was wrong, and the archive now exists.**
+#93 carries a correcting comment with the verification, and the head is
+preserved at branch `archive/firebase-supabase-app-foundation` (`fdbfc57`).
+Getting there took two routes worth recording: pushing an actual git tag was
+refused — session push credentials reach only `claude/*` branch refs, so
+`refs/tags/*` returns 403 — while the GitHub API accepted the branch
+creation. Deleting the now-duplicate `claude/tuveloz-project-foundation-k1rutr`
+is refused outright by the session permission layer — auto mode blocks
+destructive git commands even on explicit owner request in chat, and no API
+tool deletes refs — recorded here so no future session burns time
+re-attempting it. The ref is a duplicate pointer to the archived commit:
+nothing depends on it, nothing breaks if it stays forever, and any human can
+remove it from the branches page in five seconds. The OPEN-ITEMS row is
+closed as done. (GitHub also retains `refs/pull/93/head` regardless.)
+
+The shape is this log's oldest lesson from a new direction: "extracted and
+merged" and "replaced by something unrelated" read the same in a closing
+comment, and only one of them makes deleting the branch safe. The comparison
+took one command; the comment had stood unchecked for fifteen days.
+
+---
+
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the

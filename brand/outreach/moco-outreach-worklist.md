@@ -87,6 +87,91 @@ county → skip.
 
 ---
 
+## Tier 1 additions — found 2026-08-27 (web sweep; recorded in Zeo's provider pipeline)
+
+Independent operators with stated MoCo coverage. National platforms found in the
+same sweep (Wrench, YourMechanic, InstantCarFix, Detail.com, DRIVE Roadside) are
+competitors, not recruits — excluded on purpose. Reach these through their **own
+website contact form or phone**, using the Zeo letter below — that channel needs
+none of the email infrastructure that is still gated.
+
+| # | Who | Where | Type | Note | Status |
+|---|-----|-------|------|------|--------|
+| 6 | Mobile Pro Auto Service LLC | [site](https://mobileproautoservice.com/) | Mobile mechanic | Site claims ASE Master, 20+ yrs, MoCo + Frederick + NW DC — strongest fit; confirm on contact | |
+| 7 | Mac's Mobile Mechanic | [site](https://www.macsmobilemechanic.com/) | Mobile mechanic | Upcounty MoCo (Damascus, Germantown, Clarksburg) + Frederick | |
+| 8 | Clutch Drive Solutions | [site](https://www.clutchdrivesolutions.com/battery-jump-start-and-replacement) | Jump start / roadside | Silver Spring, Bethesda, Takoma, Wheaton, Rockville — jump start is a launch service | |
+| 9 | Affordable Auto Rescue | [site](https://affordableautorescueservice.com/auto-jump-start/) | Jump start | 24/7, Silver Spring | |
+| 10 | Sharp Detail | [site](https://sharpdetailsilverspring.com/) | Detailing | Silver Spring / Takoma / Wheaton; 160+ Google reviews | |
+| 11 | Mobile One Services | [site](https://www.mobileoneservices.com/mobile-auto-detailing) | Detailing | Family-run since 1992; Rockville, Olney, Potomac | |
+| 12 | Mobile Car Detailing Boss | [site](https://www.mobilecardetailingboss.com/rockville-maryland/) | Detailing | ⚠️ Site claims county-wide coverage — verify | |
+| 13 | Rockville–Gaithersburg Mobile Car Detailing | [site](https://rockville-gaithersburg-mobile-car-d.vercel.app/) | Detailing | ⚠️ Likely solo operator — verify identity and area first | |
+| 14 | Precision Auto (mobile arm) | [site](https://precisionautoinc.com/services/mobile-auto-repair/) | Mobile mechanic | ⚠️ Shop-based; mobile within 5 mi of Germantown | |
+| 15 | J & J Benz Services | [site](https://jandjbenzservices.com/mobile-services/) | Mobile mechanic (Euro) | ⚠️ Laurel-based; confirm MoCo emphasis | |
+| 16 | Problem Cars Wanted (roadside) | [site](https://problemcarswanted.com/roadside-assistance-24-7.html) | Jump start / roadside | ⚠️ Their towing side is a paused Tuveloz category — pitch jump-start only | |
+
+**New pools for Tier 1b browsing** (Spanish-speaking segment + directories).
+Contact through each platform's own messaging or a published business line —
+**no cold texts** (telephone-solicitation exposure) — and the pacing and
+personalization rules at the top of this file apply here too:
+
+| Pool | Where | Why | Status |
+|------|-------|-----|--------|
+| YellowPages — "mecánico a domicilio", Wheaton–Silver Spring | [listing](https://www.yellowpages.com/wheaton-glenmont-silver-spring-md/mecanico-a-domicilio) | Spanish-speaking solo operators; use the kit's ES template | |
+| Mecánicos Hispanos — Silver Spring | [directory](https://mecanicoshispanos.us/maryland/silver-spring-md/) | Same segment, different directory | |
+| MecánicosADomicilio10 — Silver Spring | [directory](https://mecanicosadomicilio10.com/silver-spring-md/) | Same segment | |
+| Mechanic Advisor — Germantown mobile | [directory](https://www.mechanicadvisor.com/md/germantown/mobile-auto-repair) | Mobile-repair listings to mine for independents | |
+
+### The Zeo letter (for the storefront businesses above)
+
+All 11 were recorded through Zeo's provider pipeline in this session's
+isolated run; zeo-home's authoritative store picks them up after the
+2026-09-03 map sweep (`provider list` there will be empty until then). The
+letter needs nothing from Zeo — it is quoted in full below. **Personalize the
+opening line to the specific business every time** (the GPT brief does this in
+seconds); never send two identical copies — the same rule as every other
+channel in this file:
+
+> **Subject: Tuveloz — provider applications are open in Montgomery County**
+>
+> Hello,
+>
+> I'm writing to [business] because you do [trade] around Montgomery County,
+> Maryland.
+>
+> Tuveloz is a vehicle-service marketplace being built for Montgomery County.
+> To be straight with you about where it stands: we are not taking customer
+> jobs yet. Applications are the only thing open right now. I'd rather have
+> your paperwork reviewed before that changes than after.
+>
+> How it works for you when it does open:
+>
+> - You set your own prices. We never set or cap what you quote.
+> - You keep 100% of what you quote. The customer pays a 5% Customer Service
+>   Fee on top of your subtotal — it is added to their total, not subtracted
+>   from yours.
+> - You choose what to take on. Nothing is assigned to you, and turning
+>   something down costs you nothing.
+> - You stay independent. No exclusivity, no set schedule, no uniform, and
+>   nothing you have to buy from us.
+>
+> If that's worth ten minutes to you, the application is at
+> tuveloz.com/join. If it isn't, say so and I won't write again.
+>
+> Wilfredo
+
+(The quoted fee line uses the canonical name; Zeo's template currently renders
+"service fee", and that repair is filed with Codex in Zeo Challenge 003.)
+
+Channels, in the safe order: **phone is clean today.** Website contact forms
+usually deliver as email on the receiving end, and whether the commercial-email
+duties (postal address, opt-out) reach form-initiated messages is a **counsel
+question, not one this file settles** — so set `LAUNCH_UPDATES_POSTAL_ADDRESS`
+first (already an overdue row) and include the business address in any form
+message. Cold **email** from tuveloz.com stays off until that row and the
+Workspace SPF/DKIM rows in `docs/OPEN-ITEMS.md` land.
+
+---
+
 ## Tier 2 — Search recipes to refill the list
 
 Run each, then DM the independent operators you find. Copy-paste queries:
