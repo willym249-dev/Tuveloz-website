@@ -20,7 +20,7 @@ function marketplacePausedResponse() {
   );
 }
 
-const PRICE_TYPES = new Set(["starting_at", "fixed", "hourly", "quote"]);
+const PRICE_TYPES = new Set(["starting_at", "fixed", "range", "hourly", "quote"]);
 
 function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
@@ -37,6 +37,7 @@ async function responseData(provider: NonNullable<Awaited<ReturnType<typeof acti
     env.DB.prepare(
       `SELECT id, service, price_type AS priceType,
               starting_price_cents AS startingPriceCents,
+              maximum_price_cents AS maximumPriceCents,
               description, duration_minutes AS durationMinutes,
               active, created_at AS createdAt, updated_at AS updatedAt
          FROM provider_catalog_items
@@ -66,6 +67,7 @@ async function responseData(provider: NonNullable<Awaited<ReturnType<typeof acti
     priceTypes: [
       { value: "starting_at", label: "Starting at" },
       { value: "fixed", label: "Fixed price" },
+      { value: "range", label: "Typical range" },
       { value: "hourly", label: "Hourly rate" },
       { value: "quote", label: "Custom quote" },
     ],
@@ -111,6 +113,7 @@ export async function POST(request: Request) {
       const service = text(payload.service, 120);
       const priceType = text(payload.priceType, 30);
       const amount = Number(payload.startingPrice);
+      const maximumAmount = Number(payload.maximumPrice);
       const durationMinutes = Math.round(Number(payload.durationMinutes) || 0);
       const description = text(payload.description, 500);
       const active = payload.active === false ? "no" : "yes";
@@ -126,17 +129,33 @@ export async function POST(request: Request) {
       ) {
         return Response.json({ error: "Enter a valid provider price." }, { status: 400 });
       }
+      // Both ends of a typical range are the provider's own numbers; Tuveloz
+      // only checks that they read as a range. The written quote still decides
+      // every job.
+      if (
+        priceType === "range"
+        && (!Number.isFinite(maximumAmount)
+          || maximumAmount < amount
+          || maximumAmount > 100_000)
+      ) {
+        return Response.json(
+          { error: "Enter a range maximum that is at least the minimum price." },
+          { status: 400 },
+        );
+      }
       if (durationMinutes < 0 || durationMinutes > 7 * 24 * 60) {
         return Response.json({ error: "Enter a valid estimated duration." }, { status: 400 });
       }
       await env.DB.prepare(
         `INSERT INTO provider_catalog_items
            (id, provider_id, service, price_type, starting_price_cents,
-            description, duration_minutes, active, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            maximum_price_cents, description, duration_minutes, active,
+            created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
          ON CONFLICT(provider_id, service) DO UPDATE SET
            price_type = excluded.price_type,
            starting_price_cents = excluded.starting_price_cents,
+           maximum_price_cents = excluded.maximum_price_cents,
            description = excluded.description,
            duration_minutes = excluded.duration_minutes,
            active = excluded.active,
@@ -147,6 +166,7 @@ export async function POST(request: Request) {
         service,
         priceType,
         priceType === "quote" ? 0 : Math.round(amount * 100),
+        priceType === "range" ? Math.round(maximumAmount * 100) : 0,
         description,
         durationMinutes,
         active,
