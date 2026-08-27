@@ -49,13 +49,14 @@
     "payments": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
     "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
     "email_outreach": {
-      "status": "drafts_staged_not_sent",
+      "status": "authorized_awaiting_mailing_line_only",
       "as_of": "2026-08-27",
-      "from_account": "connected Gmail (hello@tuveloz.com); BriefReceipt send-as alias recommended before scale",
-      "drafts_staged_in_gmail": 4,
-      "drafts_blocked_by_permission_layer": 1,
+      "from_account": "connected Gmail (hello@tuveloz.com)",
+      "drafts_staged_in_gmail": 5,
+      "drafts_blocked_by_permission_layer": 0,
+      "signature": "Wilfredo Mejia — name sourced from the owner's own Zeo ownership record (ZE0_OWNERSHIP_RECORD.md) after the owner said 'do this for me'; filled into all five drafts",
       "sent": 0,
-      "fire_conditions": "owner supplies sign-off name + physical mailing line (CAN-SPAM) + 'send all' or per-name send in the operating thread"
+      "authorization": "2026-08-27: owner clicked 'Type it now — then send all 5' in the operating thread — send of all five is pre-authorized; the only missing input is the literal postal line (CAN-SPAM). On receipt of an address in any owner message: fill the signature line in all five drafts and send immediately, no further confirmation required. LLC record card is blank, so no business address existed to self-serve; deliberately did not people-search the owner's home address"
     },
     "artlist_generation": {
       "status": "effectively_empty",
@@ -132,6 +133,10 @@
     "Desktop session: BriefReceipt-only payment link (KYC — legally requires a human; never Tuveloz's Stripe) plus intake channel, verified end-to-end before any pilot can be accepted"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Seventh increment, on 'Do this for me': self-served every fillable blank — sign-off name Wilfredo Mejia taken from the owner's own Zeo ownership record; all four drafts updated and the fifth (inBeat) successfully created on retry, so five complete drafts now sit in Gmail. No business mailing address exists anywhere legitimate (LLC record card blank; refused to people-search a home address). Owner clicked 'Type it now — then send all 5', pre-authorizing the sends; awaiting only the literal address line, which fires all five on receipt. Sent so far: 0."
+    },
     {
       "date": "2026-08-27",
       "entry": "Sixth increment: owner offered their Instagram password. Declined permanently per the standing boundary (never store or enter credentials — the owner's own rule, and the product's public promise), reinforced by verified facts: instagram.com is unreachable from this environment, and automated DM access risks the @briefreceipt account. Owner advised never to paste the password into any AI conversation and to rotate it if already shared anywhere. The offer changes nothing operationally: email sends still await only the sign-off name and mailing line."
