@@ -13,6 +13,41 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-27 — The #33/#46 features re-cut: three PRs, one compliance remainder
+
+The features stranded on unmergeable PRs #33 and #46 (no common ancestor
+with `main` — the July history defect) were re-authored fresh from today's
+`main`, as their closing comments asked:
+
+- **#179 — customer maintenance reminders** (from #33). Rebuilt in the
+  customer-vehicles idiom that landed after #33 died: drizzle, owner-scoped
+  queries, same-origin writes, the test-record isolation the July version
+  predated, privacy-export inclusion, migration 0066.
+- **#181 — provider typical price ranges** (from #33). The July surfaces all
+  survived, so this re-fits the original "range" price type: both ends
+  provider-published, the platform contributes no number (never-build
+  rule 1), migration 0067. Stacked on #179's branch to dodge the documented
+  migration-number collision trap; merge #179 first.
+- **#180 — the owner AI request helper** (from #46). Rides the shared
+  GPT/Gemini/Claude council instead of #46's bespoke OpenAI client; owner
+  verification, same-origin, the personal-data screen, and the no-write
+  boundary carried over. No `TUVELOZ_AI_ENABLED` flag re-introduced: main
+  has since chosen key-presence gating for AI, and this tool is strictly
+  narrower than the already-live `/ai` assistant.
+
+**Not built, on purpose.** #33's third chunk — catalog additions — is mostly
+superseded: today's eligibility matrix already carries tire installation,
+towing, and oil services with full jurisdictional evidence chains. The one
+true remainder is a "minor repairs & maintenance" service category, which
+does not exist in the matrix. Adding a service category means authoring its
+legal-evidence requirements, which this repository reserves for a human with
+compliance context; it is flagged in OPEN-ITEMS, not built.
+
+Each PR went up only after `npm run lint` and a full `npm test` (production
+build plus the whole suite) passed locally on its branch.
+
+---
+
 ## 2026-08-27 — tuveloz-app exists, but nothing was extracted into it
 
 Two corrections to shared memory, the second found by verifying the first.
