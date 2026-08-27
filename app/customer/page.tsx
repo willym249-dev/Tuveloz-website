@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { primeAccountHeaderState } from "../components/account-header-state";
 import { CustomerAccountTools } from "../components/customer-account-tools";
+import { CustomerServiceRemindersTools } from "../components/customer-service-reminders-tools";
 import { CustomerVehiclesTools } from "../components/customer-vehicles-tools";
 import { ReferralPanel } from "../components/referral-panel";
 import { CustomerPaymentMethods } from "../components/customer-payment-methods";
@@ -53,7 +54,7 @@ type CustomerAccount = {
   payments: CustomerPayment[];
 };
 
-type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | "payments" | "saved" | "vehicles" | "share" | "settings";
+type CustomerView = "requests" | "quotes" | "active" | "messages" | "history" | "payments" | "saved" | "vehicles" | "reminders" | "share" | "settings";
 
 const ACTIVE_JOB_STATUSES = new Set(["quote accepted", "on my way", "arrived"]);
 const HISTORY_JOB_STATUSES = new Set(["completed", "cancelled", "canceled"]);
@@ -67,6 +68,7 @@ const CUSTOMER_VIEWS = new Set<CustomerView>([
   "payments",
   "saved",
   "vehicles",
+  "reminders",
   "share",
   "settings",
 ]);
@@ -115,6 +117,11 @@ const CUSTOMER_VIEW_COPY: Record<CustomerView, {
     title: "My vehicles",
     emptyTitle: "No saved vehicles yet",
     emptyText: "Save the vehicles you own so you do not retype them on every request.",
+  },
+  reminders: {
+    title: "Service reminders",
+    emptyTitle: "No reminders yet",
+    emptyText: "Keep your own maintenance schedule — you set the due date or mileage.",
   },
   share: {
     title: "Share Tuveloz",
@@ -334,6 +341,7 @@ export default function CustomerPage() {
                 ["payments", "Payments"],
                 ["saved", "Saved providers"],
                 ["vehicles", "My vehicles"],
+                ["reminders", "Service reminders"],
                 ["share", "Share Tuveloz"],
                 ["settings", "Profile & settings"],
               ] as Array<[CustomerView, string]>).map(([view, label]) => (
@@ -363,6 +371,8 @@ export default function CustomerPage() {
                 <JobMessages audience="customer" />
               ) : activeView === "vehicles" ? (
                 <CustomerVehiclesTools />
+              ) : activeView === "reminders" ? (
+                <CustomerServiceRemindersTools />
               ) : activeView === "share" ? (
                 <ReferralPanel role="customer" />
               ) : activeView === "saved" || activeView === "settings" ? (
