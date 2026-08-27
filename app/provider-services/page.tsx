@@ -9,6 +9,7 @@ type CatalogItem = {
   service: string;
   priceType: string;
   startingPriceCents: number;
+  maximumPriceCents: number;
   description: string;
   durationMinutes: number;
   active: string;
@@ -37,11 +38,16 @@ type ToolsResponse = {
 
 function priceLabel(item: CatalogItem) {
   if (item.priceType === "quote") return "Custom quote";
-  const amount = new Intl.NumberFormat(undefined, {
+  const formatter = new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: "USD",
-  }).format(item.startingPriceCents / 100);
+  });
+  const amount = formatter.format(item.startingPriceCents / 100);
   if (item.priceType === "starting_at") return `Starting at ${amount}`;
+  if (item.priceType === "range") {
+    const maximum = Math.max(item.maximumPriceCents, item.startingPriceCents);
+    return `Typically ${amount}–${formatter.format(maximum / 100)}`;
+  }
   if (item.priceType === "hourly") return `${amount} per hour`;
   return amount;
 }
@@ -101,6 +107,7 @@ export default function ProviderServicesPage() {
       service: values.service,
       priceType: values.priceType,
       startingPrice: values.startingPrice,
+      maximumPrice: values.maximumPrice,
       durationMinutes: values.durationMinutes,
       description: values.description,
       active: values.active === "on",
@@ -158,6 +165,11 @@ export default function ProviderServicesPage() {
                   Your price ($)
                   <input name="startingPrice" type="number" min="0" max="100000" step="0.01" placeholder="0.00" />
                   <small>Leave at 0 when the service requires a custom quote. This is your provider price, not a promise that every job will cost the same.</small>
+                </label>
+                <label>
+                  Typical range maximum ($)
+                  <input name="maximumPrice" type="number" min="0" max="100000" step="0.01" placeholder="0.00" />
+                  <small>Only used with the Typical range price type. You set both ends yourself; your written quote still decides every job.</small>
                 </label>
                 <label>
                   How long it usually takes (minutes)

@@ -14,6 +14,7 @@ type PublicProvider = {
     service: string;
     priceType: string;
     startingPriceCents: number;
+    maximumPriceCents: number;
     description: string;
     durationMinutes: number;
   }>;
@@ -29,11 +30,16 @@ type PublicProvider = {
 
 function priceLabel(item: PublicProvider["catalog"][number]) {
   if (item.priceType === "quote") return "Custom quote";
-  const amount = new Intl.NumberFormat(undefined, {
+  const formatter = new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: "USD",
-  }).format(item.startingPriceCents / 100);
+  });
+  const amount = formatter.format(item.startingPriceCents / 100);
   if (item.priceType === "starting_at") return `Starting at ${amount}`;
+  if (item.priceType === "range") {
+    const maximum = Math.max(item.maximumPriceCents, item.startingPriceCents);
+    return `Typically ${amount}–${formatter.format(maximum / 100)}`;
+  }
   if (item.priceType === "hourly") return `${amount} per hour`;
   return amount;
 }

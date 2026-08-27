@@ -49,6 +49,7 @@ type CatalogRow = {
   service: string;
   priceType: string;
   startingPriceCents: number;
+  maximumPriceCents: number;
   description: string;
   durationMinutes: number;
 };
@@ -176,6 +177,7 @@ export async function GET(request: Request) {
     env.DB.prepare(
       `SELECT id, service, price_type AS priceType,
               starting_price_cents AS startingPriceCents,
+              maximum_price_cents AS maximumPriceCents,
               description, duration_minutes AS durationMinutes
          FROM provider_catalog_items
         WHERE provider_id = ? AND active = 'yes'
