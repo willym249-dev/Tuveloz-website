@@ -73,6 +73,29 @@ against the brief" / "Campaign QA you can forward to clients" / "The
 disclosure check gifting campaigns skip" / "An external QA line for creator
 assets").
 
+## Positive-reply response template (pre-approved structure, sent only on the owner's OK per reply)
+
+Used when a prospect answers with interest. Individualize the first line to
+their reply; the rest is fixed. Requires the live payment link before sending.
+
+> Thanks — glad it landed. Here's everything needed to start, all at once:
+>
+> 1. **The brief** — the document or the exact requirement lines, pasted as
+>    text you own. (Please don't forward DM threads or chat exports — we
+>    don't accept those.)
+> 2. **Up to 10 public Instagram post URLs**, and for each post the caption
+>    text (copy-pasted) plus one full screenshot as the public sees it.
+> 3. **Campaign dates / usage terms** if they're not in the brief.
+> 4. **Payment ($99, one-time):** [PAYMENT LINK]
+>
+> The two-business-day clock starts when everything above is in and payment
+> is accepted — if something's missing I'll say exactly what, and the clock
+> waits. You'll get one plain receipt per post: BRIEF SAYS / POST SHOWS /
+> MATCH, MISS, or UNVERIFIABLE, line by line. Not legal advice — what you do
+> with each line is your call.
+>
+> Wilfredo Mejia — BriefReceipt
+
 ## Send log
 
 | Date | Recipient | Owner confirmation | Result |
