@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-08-27
 
 The things that must not be forgotten. An expired insurance certificate, a
 lapsed registration, or a legal review gone stale can block provider activation
@@ -60,8 +60,8 @@ Merge order matters here and is not visible from the pull request list.
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
 | 2026-08-18 | Merge PR #95 **before** PR #96 — #96 is stacked on #95's branch, not on `main`. Done 2026-08-11: #95 landed as `27b551f`, then #96 as `a522de8`, in that order | hello@tuveloz.com | done |
-| 2026-09-01 | Create the `tuveloz-app` repository. The earlier attempt failed with `403 Resource not accessible by integration`, so it needs owner permissions rather than another attempt from a session | hello@tuveloz.com | blocked |
-| 2026-09-30 | **Never merge PR #93.** Once `tuveloz-app` exists, move `mobile/` there following `mobile/docs/EXTRACTION.md`, then close #93, delete its branch, and remove the temporary "Related project" pointer from the root `README.md` | hello@tuveloz.com | open |
+| 2026-09-01 | Create the `tuveloz-app` repository. Done 2026-08-12: `willym249-dev/tuveloz-app` exists (private), with a new provider-first foundation merged as tuveloz-app#1 (`f379fd1`) — a replacement for #93's foundation, not an extraction of it; see the next row | hello@tuveloz.com | done |
+| 2026-09-30 | **Never merge PR #93** — resolved 2026-08-27. Verified that `tuveloz-app`'s foundation is a replacement, not the planned extraction (0 of the 91 `mobile/` files exist there in any form); the head is preserved at branch `archive/firebase-supabase-app-foundation` (`fdbfc57`) and the record on #93 is corrected. The old `claude/tuveloz-project-foundation-k1rutr` ref remains as a harmless duplicate of the archive — sessions cannot delete branches (permission layer refuses destructive git, twice confirmed), nothing depends on removing it, and it needs no tracking; trash it from the branches page if it ever bothers anyone | hello@tuveloz.com | done |
 | 2026-09-01 | Re-release Terms of Use and the Payment, Cancellation and Refund Policy so they carry the renamed Customer Service Fee. Done early, 2026-08-11 in #160: releases `terms-2026-08-11-r3` and `payment-policy-2026-08-11`, both hashes rebound to the deployed pages, and `PENDING_LEGAL_RELEASE` in the fee test is now empty | hello@tuveloz.com | done |
 | 2026-09-30 | Re-cut the features stranded on PR #33 and PR #46. Both pull requests are now closed, so the work only exists as whatever survives on their branches | hello@tuveloz.com | open |
 

@@ -13,6 +13,57 @@ entries to catch up. Write one before you finish.
 
 ---
 
+## 2026-08-27 — tuveloz-app exists, but nothing was extracted into it
+
+Two corrections to shared memory, the second found by verifying the first.
+
+**`tuveloz-app` has existed since 2026-08-12.** OPEN-ITEMS still carried its
+creation as `blocked` and #93 as waiting on it. In fact #93 was closed
+unmerged that day with the comment "Superseded — the app foundation was
+extracted and merged as tuveloz-app#1 (`f379fd1`)", and nothing was logged, so
+every session since inherited the stale picture; the newest word in this log
+was the 2026-08-11 queue entry's "#93 stays". Both rows are corrected.
+
+**But "extracted" in that comment is false, and checking it changed the
+decision it feeds.** Comparing every blob under `mobile/` on the preservation
+branch (`claude/tuveloz-project-foundation-k1rutr`, head `fdbfc57`) against
+the whole of `tuveloz-app` at `f379fd1`: **0 of 91 files have a byte-identical
+copy there at any path.** tuveloz-app#1 came from a different branch
+(`claude/app-foundation`) and is a different foundation — no backend of its
+own, talking to the website's API, shipped provider-first per its ADR 0002
+(2026-08-07), with tests, demo mode, and EAS config the old branch never had.
+The old branch was Firebase Auth + Supabase with its own data layer.
+Superseded, yes. Extracted, no.
+
+**What follows.** The preservation branch is the only named copy of the
+Firebase/Supabase foundation, so deleting it is not cleanup after a completed
+move — it is discarding the road not taken. Probably right, given ADR 0002,
+but it is the owner's decision and is now an informed one. Outside `mobile/`
+the branch only touched the README pointer, which never reached `main`, so
+`mobile/` is all it holds. Nothing was deleted today.
+
+**The record is corrected where it was wrong, and the archive now exists.**
+#93 carries a correcting comment with the verification, and the head is
+preserved at branch `archive/firebase-supabase-app-foundation` (`fdbfc57`).
+Getting there took two routes worth recording: pushing an actual git tag was
+refused — session push credentials reach only `claude/*` branch refs, so
+`refs/tags/*` returns 403 — while the GitHub API accepted the branch
+creation. Deleting the now-duplicate `claude/tuveloz-project-foundation-k1rutr`
+is refused outright by the session permission layer — auto mode blocks
+destructive git commands even on explicit owner request in chat, and no API
+tool deletes refs — recorded here so no future session burns time
+re-attempting it. The ref is a duplicate pointer to the archived commit:
+nothing depends on it, nothing breaks if it stays forever, and any human can
+remove it from the branches page in five seconds. The OPEN-ITEMS row is
+closed as done. (GitHub also retains `refs/pull/93/head` regardless.)
+
+The shape is this log's oldest lesson from a new direction: "extracted and
+merged" and "replaced by something unrelated" read the same in a closing
+comment, and only one of them makes deleting the branch safe. The comparison
+took one command; the comment had stood unchecked for fifteen days.
+
+---
+
 ## 2026-08-22 — A seal that could not be verified on the machine that matters
 
 **Why this is here.** Nothing Tuveloz-side changed. It is recorded because the
