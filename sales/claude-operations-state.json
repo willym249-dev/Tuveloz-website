@@ -14,7 +14,8 @@
       "reason": "route_not_ready — no approved Zeo-owned chat checkpoint or attested BrainGateway installed",
       "observed": "2026-08-27",
       "substitution_prohibited": "Never substitute Qwen, Ollama, or another model and call it Zeo",
-      "real_interactions_this_session": 0
+      "real_interactions_this_session": 0,
+      "verified_against_zeo_repo": "2026-08-27: cloned willym249-dev/Zeo (read-only) and confirmed from its own ZEO_LOG.md newest entry (2026-08-27) that 'checkpoint, BrainGateway, and route readiness remain false'. The promoted zeo-model-executive-v9 is a decision router bound to 127.0.0.1:8795 on the owner's machine — per ZEO_MODEL.md 'not yet a complete general-purpose prose generator' — so by Zeo's own records it cannot chat or generate pictures/videos today and is unreachable from this environment. The owner's belief that Zeo currently generates videos and pictures does not match Zeo's records; owner informed 2026-08-27."
     },
     "codex": {
       "role": "asynchronous verifier for requested or higher-risk checks only",
@@ -44,7 +45,21 @@
       "reason_not_refreshed": "no Instagram access from this environment; treat as dated, not current"
     },
     "payments": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
-    "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" }
+    "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
+    "email_outreach": {
+      "status": "drafts_staged_not_sent",
+      "as_of": "2026-08-27",
+      "from_account": "connected Gmail (hello@tuveloz.com); BriefReceipt send-as alias recommended before scale",
+      "drafts_staged_in_gmail": 4,
+      "drafts_blocked_by_permission_layer": 1,
+      "sent": 0,
+      "fire_conditions": "owner supplies sign-off name + physical mailing line (CAN-SPAM) + 'send all' or per-name send in the operating thread"
+    },
+    "artlist_generation": {
+      "status": "effectively_empty",
+      "as_of": "2026-08-27",
+      "detail": "AI Suite 16500 plan has 1 of 16,500 credits remaining; renews 2026-09-04. No paid image/video generation until renewal absent explicit owner go. Free local rendering (headless Chromium) produced both post graphics and remains available at zero cost."
+    }
   },
   "funnel": {
     "definitions": {
@@ -108,12 +123,17 @@
     "Owner stated 2026-08-27 that execution is the AI team's job; recorded division of labor: everything preparable is done Claude-side, while the Instagram session, payment-account identity, and the ten-handle list are physically owner-only, and per-action confirmation for sends/publishes remains the standing protocol"
   ],
   "pending_owner_confirmations": [
-    "Run the phone session in sales/owner-runbook-2026-08-27.md: publish posts 1 and 2 (graphics ready in sales/assets/), send the six first contacts — each send/publish is its own confirmation, logged from the owner's paste-back",
+    "FIRE THE EMAILS: reply with sign-off name + business mailing line (CAN-SPAM) + 'send all' (or per-name) — four drafts are staged in Gmail; Claude sends and logs. Optional: a BriefReceipt send-as alias first",
+    "inBeat draft: approve a retry of the Gmail draft creation, or paste the preserved text from email-outreach-drafts-2026-08-27.md yourself",
+    "Phone session (sales/owner-runbook-2026-08-27.md): publish posts 1 and 2 (graphics ready) and send the Pixi/Truly-style DMs if wanted alongside email; paste back what happened for logging",
     "Paste the ten usernames from the 2026-08-26 outreach (handles only) to unlock individualized follow-ups",
-    "Run the desktop session: BriefReceipt-only payment link (never Tuveloz's Stripe) plus intake channel, verified end-to-end before state flips from disabled_and_unverified",
-    "Optional: say 'switch to email' to move outreach to the connected Gmail, where Claude can execute sends with per-message owner approval (requires a BriefReceipt-appropriate sending address)"
+    "Desktop session: BriefReceipt-only payment link (KYC — legally requires a human; never Tuveloz's Stripe) plus intake channel, verified end-to-end before any pilot can be accepted"
   ],
   "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Fourth increment, after owner reiterated the AI team owns customer acquisition and said to use Zeo for posts/videos: verified Zeo against its own repository (route remains not ready by ZEO_LOG.md's same-day entry; no substitution made); checked Artlist balance (1/16,500 credits until 2026-09-04 — no paid generation); activated the email channel with 4 first-contact drafts staged in the owner's Gmail (1 blocked by the session permission layer, text preserved; Pixi remains DM-only); hardened intake to collect caption text + screenshots so receipt delivery is fully executable from this environment. Sends still require owner name + mailing line + explicit 'send'. Nothing sent; funnel unchanged; Codex credits spent: 0."
+    },
     {
       "date": "2026-08-27",
       "entry": "Third increment, after owner directed that execution belongs to the AI team: search-verified DM handles (Truly, Pixi, Agency Guacamole; inBeat ambiguous, routed to site form), rendered both 1080x1080 post graphics locally into sales/assets/, and wrote owner-runbook-2026-08-27.md scripting the owner-only ~40 minutes (Instagram session, ten-handle list, payment rail). Offered email-channel outreach via connected Gmail with per-message approval as the one executable-by-Claude alternative. Still nothing sent or published; funnel unchanged; Zeo still BLOCKED; Codex credits spent: 0."

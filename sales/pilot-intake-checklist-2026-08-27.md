@@ -24,10 +24,15 @@ wire to a real route.
    **We never accept or store forwarded DM threads, chat exports, or
    screenshots of private conversations** — that is a hard boundary, not a
    convenience.
-2. **Up to 10 public Instagram post URLs.** Public posts only — no login, no
-   password, no account access, ever. A post that is private, deleted, or
-   region-blocked gets its receipt line marked UNVERIFIABLE rather than
-   guessed at.
+2. **Up to 10 public Instagram post URLs, and for each post the caption text
+   (copy-pasted by the customer) plus one full-view screenshot of the post as
+   the public sees it.** Public posts only — no login, no password, no account
+   access, ever; screenshots come from the customer's own public view, never
+   from inside an account. The caption text and screenshot are what receipts
+   quote, which keeps every receipt verifiable by the customer and producible
+   even when a post is later edited or an automated fetch is blocked. A post
+   that is private, deleted, or missing its caption/screenshot gets its
+   receipt line marked UNVERIFIABLE rather than guessed at.
 3. **Scope confirmation** — which brief requirements to check. Default scope:
    every objectively checkable line item — required tags and hashtags,
    required mentions, required caption elements, posting dates and windows,

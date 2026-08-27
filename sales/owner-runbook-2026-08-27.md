@@ -80,11 +80,14 @@ confirm both routes actually worked once.
 | a reply screenshot or its gist | reply → qualified or not, judged honestly |
 | payment-link URL + "test worked" | payments → verified; intake goes live per checklist |
 
-## Standing offer — the one piece I can truly take over
+## Email channel — ACTIVATED 2026-08-27
 
-If you would rather outreach run on **email** instead of Instagram DMs, I have
-hands there (your connected Gmail): I would adapt each draft, you approve per
-message with one line ("send it"), and I send and log it. Requirements first:
-a BriefReceipt-appropriate sending address (cold outreach from a Tuveloz
-address muddles two businesses), and your per-message OK stays — that is
-protocol, not friction. Say "switch to email" and I will prepare it.
+Four first-contact emails now sit as drafts in your Gmail (Truly Beauty,
+Agency Guacamole, House of Marketers, Y'all); the inBeat draft text is in
+`email-outreach-drafts-2026-08-27.md` after a session permission block, and
+Pixi stays on the DM route. To fire them, reply in the operating thread with:
+your sign-off name, a business mailing line (CAN-SPAM requires a physical
+postal address in commercial email — a PO box works), optionally a
+BriefReceipt send-as alias, and the word **"send all"** (or "send <name>").
+Claude fills the placeholders, sends, and logs each attempt and confirmed
+send. Opt-outs are honored absolutely.
