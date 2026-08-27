@@ -207,6 +207,9 @@ export default function AdminTestLabPage() {
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: ".65rem", alignItems: "flex-start" }}>
+            <Link href="/admin/test-lab/ai" style={{ ...secondaryButtonStyle, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>
+              Tuveloz AI Test
+            </Link>
             <Link href="/admin" style={{ ...secondaryButtonStyle, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>
               Back to Owner Center
             </Link>
