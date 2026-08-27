@@ -1,0 +1,125 @@
+{
+  "business": "BriefReceipt",
+  "file_purpose": "Source of truth for BriefReceipt funnel numbers and operating status. Every number carries a date and a basis. Never promote a number past what its evidence supports.",
+  "state_version": "reconstructed-2026-08-27.1",
+  "updated": "2026-08-27",
+  "provenance": {
+    "note": "Original handoff commit b77b91c (CLAUDE.md + sales/claude-operations-handoff.md + sales/claude-operations-state.json) is absent from origin willym249-dev/Tuveloz-website, verified 2026-08-27. This file is reconstructed on branch claude/briefreceipt-ops-lead-b5a6yz from the owner's handoff message of 2026-08-27; the Claude operating conversation is the visible operating thread."
+  },
+  "team_protocol": {
+    "operating_lead": "Claude (this conversation)",
+    "zeo": {
+      "role": "first reviewer, only when its genuine Zeo-owned route is available",
+      "status": "BLOCKED",
+      "reason": "route_not_ready — no approved Zeo-owned chat checkpoint or attested BrainGateway installed",
+      "observed": "2026-08-27",
+      "substitution_prohibited": "Never substitute Qwen, Ollama, or another model and call it Zeo",
+      "real_interactions_this_session": 0
+    },
+    "codex": {
+      "role": "asynchronous verifier for requested or higher-risk checks only",
+      "credits_spent_this_session": 0,
+      "basis": "nothing in this session met the higher-risk bar; conserving credits per owner instruction"
+    },
+    "truthfulness_rule": "Never claim a conversation with Zeo or Codex happened unless a real response or verification packet exists"
+  },
+  "offer": {
+    "name": "founding pilot",
+    "price_usd": 99,
+    "billing": "one-time",
+    "scope": "one supplied brief compared with up to 10 finished Instagram posts, one plain receipt per post",
+    "turnaround": "two business days, clock starts only after complete intake and accepted payment",
+    "boundaries": [
+      "no Instagram password needed",
+      "no legal advice",
+      "customer makes final approval and payment decisions"
+    ]
+  },
+  "channels": {
+    "instagram": {
+      "handle": "@briefreceipt",
+      "posts_visible": 3,
+      "as_of": "2026-08-26",
+      "refreshed_this_session": false,
+      "reason_not_refreshed": "no Instagram access from this environment; treat as dated, not current"
+    },
+    "payments": { "status": "disabled_and_unverified", "as_of": "2026-08-27" },
+    "private_intake": { "status": "disabled_and_unverified", "as_of": "2026-08-27" }
+  },
+  "funnel": {
+    "definitions": {
+      "draft": "text written and stored; nothing sent",
+      "attempt": "a send was tried; delivery not yet confirmed",
+      "confirmed_send": "evidence exists the message went through",
+      "reply": "recipient wrote back, any content",
+      "qualified_lead": "reply showing real pilot interest from someone who could buy",
+      "paid_pilot": "intake complete AND payment accepted",
+      "settled_revenue": "money actually settled after fees and refund windows"
+    },
+    "totals": {
+      "as_of": "2026-08-26",
+      "basis": "owner-verified evidence dated 2026-08-26; not refreshable from this environment, so dated rather than current",
+      "attempts": 10,
+      "confirmed_active_dm_threads": 8,
+      "blocked_requests": 1,
+      "unconfirmed_attempts": 1,
+      "replies": 0,
+      "qualified_leads": 0,
+      "paid_pilots": 0,
+      "settled_revenue_usd": 0
+    },
+    "session_2026_08_27": {
+      "first_contact_drafts_new_prospects": 6,
+      "follow_up_drafts_new_prospects": 6,
+      "follow_up_template_for_existing_threads": 1,
+      "instagram_post_drafts": 2,
+      "attempts": 0,
+      "confirmed_sends": 0,
+      "replies": 0,
+      "qualified_leads": 0,
+      "paid_pilots": 0,
+      "settled_revenue_usd": 0,
+      "note": "drafts are not sent messages; no external action of any kind was performed this session"
+    }
+  },
+  "prospects": {
+    "tier_a_researched_not_contacted": [
+      "Truly Beauty",
+      "Pixi Beauty",
+      "Agency Guacamole",
+      "inBeat Agency",
+      "House of Marketers",
+      "Y'all (yall.co)"
+    ],
+    "watchlist": [
+      "Bleum / Bleum Creative (identity ambiguous across listicles)",
+      "Clover PR",
+      "HD Beauty Skincare Boutique",
+      "K-beauty labels: Beauty of Joseon, Round Lab, Anua, Torriden"
+    ],
+    "detail": "sales/prospect-research-2026-08-27.md",
+    "data_handling": "company-level public facts only; no emails, phone numbers, or personal data stored"
+  },
+  "gaps_and_risks": [
+    "Recipient list for the ten 2026-08-26 attempts is not in this repository; the eight active threads cannot get individualized follow-ups until the owner supplies it",
+    "Payment and private-intake routes disabled and unverified — no pilot can be accepted even if a lead qualifies",
+    "All prospect evidence is search-index excerpts of official pages (direct fetches egress-blocked here); every [VERIFY] marker in the drafts must be resolved by a human before sending",
+    "Zero replies across 10 attempts as of 2026-08-26 — message-market fit unproven; new drafts change the hook to prospect-specific facts, but that is a hypothesis, not a result"
+  ],
+  "pending_owner_confirmations": [
+    "Approve/decline sending any of the 6 individualized first-contact drafts (per recipient, after resolving [VERIFY] markers)",
+    "Supply the 2026-08-26 thread list so the single follow-up per active thread can be individualized, then approve each send",
+    "Approve/decline publishing either of the 2 educational Instagram post drafts (after confirming FTC quotes against the live page)",
+    "Decide whether and when to verify/enable the payment and private-intake routes — prerequisite to accepting any pilot"
+  ],
+  "history": [
+    {
+      "date": "2026-08-27",
+      "entry": "Claude took over as operations lead on branch claude/briefreceipt-ops-lead-b5a6yz. Found b77b91c absent from origin; reconstructed handoff + state. No-spend work: 6 prospects researched with sources, 6+6 outreach drafts, 1 follow-up template for existing threads, 2 educational IG post drafts. Nothing sent, published, or spent. Zeo BLOCKED route_not_ready; Codex credits spent: 0."
+    },
+    {
+      "date": "2026-08-26",
+      "entry": "Owner-verified baseline: @briefreceipt with 3 posts visible; 10 outreach attempts (8 confirmed active DM threads, 1 blocked request, 1 unconfirmed); 0 replies, 0 qualified leads, 0 paid pilots, $0 settled revenue. Payments and private intake disabled and unverified."
+    }
+  ]
+}

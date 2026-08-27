@@ -250,3 +250,16 @@ documentation files use lowercase-hyphenated names and start with the status
 header described in the filing guide. Prefer editing an existing document over
 adding a near-duplicate, and add a row to `docs/README.md` for anything new so
 it can be found again.
+
+## BriefReceipt operations (separate business, same repository)
+
+This repository also carries the operating state for **BriefReceipt**, a
+separate small business run by the same owner. If your task mentions
+BriefReceipt, start at
+[`sales/claude-operations-handoff.md`](sales/claude-operations-handoff.md) and
+treat `sales/claude-operations-state.json` as the source of truth for funnel
+numbers. BriefReceipt work stays inside `sales/` — it never touches Tuveloz
+code, config, or policy documents, and everything in "Before you change
+something" above still applies. External actions (sending messages, publishing
+posts, credentials, payments, private intake) require the owner's exact
+confirmation per action.
