@@ -13,7 +13,35 @@ entries to catch up. Write one before you finish.
 
 ---
 
-## 2026-08-27 — The #33/#46 features re-cut: three PRs, one compliance remainder
+## 2026-08-27 — The provider-outreach machine stood up, on Zeo's rails
+
+Provider supply is the binding constraint while the marketplace is
+onboarding-only, so the owner asked for recruiting to start, driven with Zeo
+and GPT. What exists as of tonight:
+
+**Zeo's provider pipeline ran outside the house.** In this session's cloud
+container, `test_zeo_provider_pipeline` passed 46/46 against the production
+eligibility matrix; `record_prospect` took 11 web-sourced Montgomery County
+independents (mobile mechanics, detailers, jump-start operators — national
+platforms excluded as competitors); `stage_outreach` rendered EN/ES letters
+through `assert_recruiting_copy_safe` with zero refusals. One limit found and
+recorded: this environment's egress proxy 403s nominatim.openstreetmap.org, so
+the real OSM sweep (`provider find`) remains a zeo-home job. The consult-log
+challenge for all of this is Zeo PR #105 — Codex gets the falsification round
+(snippet sourcing, a probable dedupe miss on note-filled address fields, ES
+glossary coverage), Zeo gets the synthesis.
+
+**The worklist grew 11 verified-or-flagged Tier-1 targets and four
+Spanish-segment pools**, with the guard-checked Zeo letter quoted inline for
+contact-form and phone use — a channel that needs none of the still-gated
+email infrastructure. **`docs/GPT-BRIEF-provider-outreach.md`** turns ChatGPT
+into the daily personalization assistant with the honesty and fee rules as
+refusal-grade constraints.
+
+**The channel gates stand.** Cold email from tuveloz.com stays off until the
+postal-address and Workspace SPF/DKIM rows land; DMs stay at the worklist's
+5-a-day personalized pace; nothing was sent to anyone tonight, and nothing in
+any of this can send. Three dated rows in OPEN-ITEMS carry the next moves.
 
 The features stranded on unmergeable PRs #33 and #46 (no common ancestor
 with `main` — the July history defect) were re-authored fresh from today's

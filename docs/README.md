@@ -75,6 +75,7 @@ where one disagrees with a file above, the file above wins.
 | [`SESSION-HANDOFF.md`](SESSION-HANDOFF.md) | What a second assistant was told about this repo on 2026-08-08, when work was split across parallel sessions. |
 | [`GPT-BRIEF-got-this-ads.md`](GPT-BRIEF-got-this-ads.md) | The scope handed to GPT for the ad series in that split. |
 | [`GPT-BRIEF-signup-improvements.md`](GPT-BRIEF-signup-improvements.md) | The scope handed to GPT for signup copy in that split. |
+| [`GPT-BRIEF-provider-outreach.md`](GPT-BRIEF-provider-outreach.md) | The standing brief that turns ChatGPT into the daily outreach personalization assistant, with the honesty and fee rules as hard constraints. |
 
 ## Where the rules actually live
 

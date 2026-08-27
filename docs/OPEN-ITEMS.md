@@ -52,6 +52,9 @@ When you close something significant, write a matching entry in
 | 2026-08-25 | Answer the 18 launch gates in `/admin/launch-readiness`. `npm run readiness` confirms production currently holds **zero** recorded decisions, so every gate is pending | hello@tuveloz.com | open |
 | 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
 | 2026-09-15 | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all. Date is a review checkpoint, not a commitment — the work is contingent on discovery opening | hello@tuveloz.com | open |
+| 2026-09-03 | Run Zeo's real map sweep at home (`provider find` per trade and town) so the authoritative prospect store converges with the worklist's 11 web-sourced additions, and work Codex's falsification round from Zeo PR #105 (ZEO_CONSULT_LOG Challenge 003) | hello@tuveloz.com | open |
+| 2026-09-05 | Contact the 11 storefront additions in `brand/outreach/moco-outreach-worklist.md` through each business's own contact form or phone, using the Zeo letter (`provider draft <id>` for each). Cold email stays off until the postal-address and Workspace SPF/DKIM rows above land | hello@tuveloz.com | open |
+| 2026-09-10 | Send the first 25 personalized DMs from the refilled worklist — 5/day pacing per its anti-spam rules, with `docs/GPT-BRIEF-provider-outreach.md` pasted into ChatGPT as the personalization assistant | hello@tuveloz.com | open |
 
 ## Pull requests in flight
 
