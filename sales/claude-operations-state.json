@@ -64,7 +64,18 @@
       "evidence": "Gmail send results carry labelIds [SENT] per message — meets the confirmed-send bar",
       "authorization_trail": "owner: 'Do this for me' → clicked 'Type it now — then send all 5' → supplied the mailing line; sends executed 2026-08-27",
       "opt_out_rule": "any recipient replying 'no thanks' (or equivalent) is never emailed again and loses their one follow-up slot",
-      "follow_up_policy": "at most one follow-up per recipient, no earlier than ~5 business days out, owner-confirmed before send"
+      "follow_up_policy": "at most one follow-up per recipient, no earlier than ~5 business days out, owner-confirmed before send",
+      "replies": [
+        {
+          "from": "babe@trulybeauty.com",
+          "received": "2026-08-27T20:59Z",
+          "classification": "reply, NOT a qualified lead",
+          "basis": "templated triage response; misread the pitch as an influencer collaboration request and pointed to their ambassador application form; zero engagement with the offer; not an opt-out",
+          "learning": "1) babe@ is a creator-facing triage inbox — pitches there get pattern-matched to 'influencer application'. 2) The reply opens 'Hi Tuveloz' — the connected Gmail's display name is 'Tuveloz Team', so the recipient never registered the BriefReceipt name. Sender identity has a measured cost now, not a theoretical one.",
+          "action": "short correction reply drafted, awaiting owner approval; does NOT spend Truly's one follow-up slot (conversation continuation, not a cold follow-up)"
+        }
+      ],
+      "bounces": "none as of 2026-08-28T00:37Z check"
     },
     "artlist_generation": {
       "status": "effectively_empty",
@@ -97,6 +108,8 @@
     "session_2026_08_27": {
       "email_attempts": 5,
       "email_confirmed_sends": 5,
+      "email_replies": 1,
+      "email_qualified_leads": 0,
       "first_contact_drafts_new_prospects": 6,
       "follow_up_drafts_new_prospects": 6,
       "follow_up_template_for_existing_threads": 1,
@@ -143,6 +156,10 @@
     "Desktop session: BriefReceipt-only payment link (KYC — legally requires a human; never Tuveloz's Stripe) plus intake channel, verified end-to-end before any pilot can be accepted"
   ],
   "history": [
+    {
+      "date": "2026-08-28",
+      "entry": "Reply-watch check #1 (00:37Z): FIRST REPLY received — babe@trulybeauty.com at 20:59Z, a templated triage response redirecting to their ambassador application form. Classified honestly as reply=1, qualified=0. No bounces on any of the five sends. Two learnings recorded: creator-facing inboxes pattern-match pitches to 'influencer application', and the Gmail display name 'Tuveloz Team' meant the recipient never saw the BriefReceipt name ('Hi Tuveloz'). Correction reply drafted, awaiting owner approval; watch re-armed ~24h. Payment link still missing."
+    },
     {
       "date": "2026-08-27",
       "entry": "Eighth increment — FIRST CONFIRMED SENDS: owner supplied the mailing line; all five outreach emails sent from the connected Gmail and confirmed by Gmail SENT labels (Truly Beauty, Agency Guacamole, House of Marketers, Y'all, inBeat). Funnel now: 5 email attempts, 5 email confirmed sends, replies 0. Reply watch scheduled; opt-outs will be honored absolutely. The owner's mailing address appears only in the sent emails, not in this repository. Next conversion blocker: no payment route exists — a 'yes' reply cannot be invoiced yet."

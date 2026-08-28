@@ -96,6 +96,30 @@ their reply; the rest is fixed. Requires the live payment link before sending.
 >
 > Wilfredo Mejia — BriefReceipt
 
+## Replies received
+
+**Truly Beauty (babe@trulybeauty.com), 2026-08-27 20:59Z** — templated triage
+response: read the pitch as an influencer collaboration request, pointed to
+their ambassador application page, "our team will contact you as soon as
+there's availability." Classified: reply, not qualified. Notable: it opens
+"Hi Tuveloz" — the Gmail display name buried the BriefReceipt identity.
+
+**Drafted correction reply (NOT sent — awaiting owner approval; does not
+spend Truly's follow-up slot):**
+
+> Hi — one quick correction so this doesn't sit in the wrong queue: I'm not
+> applying to be an ambassador. BriefReceipt is a service *for* the team that
+> runs your ambassador program — we check finished ambassador posts against
+> your own program guidelines (required tags, mentions, dates) and hand back
+> one plain receipt per post, so you can see at a glance which posts matched
+> the brief. $99 founding pilot, 10 posts, two business days.
+>
+> If someone on the ambassador-program ops side is the right reader, I'd be
+> grateful for a forward. And if it's not useful, "no thanks" works and I
+> won't write again.
+>
+> Wilfredo Mejia — BriefReceipt
+
 ## Send log
 
 | Date | Recipient | Owner confirmation | Result |
