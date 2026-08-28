@@ -58,7 +58,11 @@ unlocks individualized follow-ups for the eight active threads.
 **4. Create the payment rail — decided 2026-08-27: Stripe Payment Link** on a
 brand-new Stripe account (never Tuveloz's locked Stripe; PayPal Business is
 the acceptable fallback only if an account already exists):
-   1. stripe.com → Sign up with an inbox you actually read.
+   1. You do NOT need a new login: open your existing Stripe (the Tuveloz
+      login), click the account picker top-left → **"Create new account"** →
+      name it BriefReceipt. One login, two fully separate accounts — separate
+      money, separate records. (No existing Stripe? Then stripe.com → sign
+      up.)
    2. Activate the account: business type **Individual / sole proprietor**,
       name Wilfredo Mejia, the Germantown address, industry "consulting /
       professional services", website field: `instagram.com/briefreceipt`.
