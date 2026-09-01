@@ -1,5 +1,11 @@
 {
   "business": "BriefReceipt",
+  "operation_status": {
+    "state": "PAUSED",
+    "by": "owner instruction ('pause'), 2026-09-01",
+    "meaning": "No sends, no publishes, no scheduled reply-watch checks, no proactive status messages until the owner says to resume. All drafts stay drafts; nothing pending is cancelled, only frozen. The Gmail inbox is NOT being monitored while paused — replies to the five sent emails will sit unanswered until resume.",
+    "how_to_resume": "Owner says 'resume' (or gives any new instruction) in the operating thread: re-arm the reply watch, sweep Gmail for anything that arrived during the pause, and pick up the pending approvals (Truly correction reply; four follow-up drafts, eligibility date passed or passing; Stripe payment link still absent)."
+  },
   "file_purpose": "Source of truth for BriefReceipt funnel numbers and operating status. Every number carries a date and a basis. Never promote a number past what its evidence supports.",
   "state_version": "reconstructed-2026-08-27.1",
   "updated": "2026-08-27",
