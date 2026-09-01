@@ -120,6 +120,56 @@ spend Truly's follow-up slot):**
 >
 > Wilfredo Mejia — BriefReceipt
 
+## Follow-up drafts — prepared 2026-09-01, eligible to send Wed 2026-09-03
+
+Rules: one follow-up per recipient, ever — each of these is the last touch,
+and says so honestly. Sent as a reply in the same Gmail thread. Requires the
+owner's confirmation ("send follow-ups", or per-name); even then nothing goes
+before 2026-09-03. Excluded: **Truly Beauty** (they replied — their thread has
+the pending correction reply instead) and **Pixi Beauty** (never emailed; DM
+route).
+
+**Agency Guacamole (reply in thread 1a0447fa4881da07):**
+
+> Last note from me — the FTC treats gifted and commissioned posts the same
+> way: a material connection, disclosed where people can actually see it, not
+> behind "more." A receipt per deliverable is the cheapest proof you can hand
+> a client that their campaign held up. $99 founding pilot, 10 posts, two
+> business days. If it's not for you, no reply needed — I won't write again.
+>
+> Wilfredo Mejia — BriefReceipt
+
+**inBeat Agency (reply in thread 1a044804303619ab):**
+
+> Last note from me — the FTC's influencer guide is blunt that a disclosure
+> tucked behind "more" is likely to be missed. At micro-influencer volume
+> that's not a knowledge problem, it's a checking problem: nobody re-reads 40
+> captions. That check is the whole product — $99 founding pilot, 10 posts,
+> one plain receipt each. If it's not useful, no reply needed — I won't write
+> again.
+>
+> Wilfredo Mejia — BriefReceipt
+
+**House of Marketers (reply in thread 1a0447ff47afd74d):**
+
+> Last note from me — when a gifted creator does post, "thanks to X for the
+> free product" counts as disclosure only where people can see it. A receipt
+> records exactly that, per post: tag present, placement visible, dates in
+> window. $99 founding pilot across 10 posts. If it's not useful, no reply
+> needed — I won't write again.
+>
+> Wilfredo Mejia — BriefReceipt
+
+**Y'all (reply in thread 1a044803be538df4):**
+
+> Last note from me — the check I'd start with on performance creative is
+> usage dates: a 90-day window in a brief is a calendar entry almost nobody
+> makes, and boosted posts outlive it quietly. A receipt records live date,
+> window, and last day per post. $99, 10 posts. If it's not useful, no reply
+> needed — I won't write again.
+>
+> Wilfredo Mejia — BriefReceipt
+
 ## Send log
 
 | Date | Recipient | Owner confirmation | Result |
