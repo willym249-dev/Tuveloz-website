@@ -102,6 +102,7 @@ export default function AccountPage() {
   const [phone, setPhone] = useState("");
   const [phoneCodeRequested, setPhoneCodeRequested] = useState(false);
   const [phoneConsent, setPhoneConsent] = useState(false);
+  const [phoneSignInAvailable, setPhoneSignInAvailable] = useState(false);
   const [passwordChallengeRequested, setPasswordChallengeRequested] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
   const [passkeySupported, setPasskeySupported] = useState(false);
@@ -113,6 +114,13 @@ export default function AccountPage() {
   const [privacyReturn, setPrivacyReturn] = useState(false);
 
   useEffect(() => {
+    fetch("/api/auth/options", { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) return;
+      const options = (await response.json()) as { phoneSignIn?: boolean };
+      setPhoneSignInAvailable(options.phoneSignIn === true);
+    }).catch(() => {
+      // Keep password and email sign-in available when this check cannot load.
+    });
     if (browserSupportsWebAuthn()) {
       platformAuthenticatorIsAvailable()
         .then((available) => setPasskeySupported(available))
@@ -855,14 +863,14 @@ export default function AccountPage() {
               >
                 Email me a one-time code instead
               </button>
-              <button
+              {phoneSignInAvailable && <button
                 className="account-code-backup"
                 disabled={busy}
                 onClick={() => chooseMode("phone")}
                 type="button"
               >
                 Text me a one-time code instead
-              </button>
+              </button>}
             </form>
           )}
 
@@ -1156,7 +1164,7 @@ export default function AccountPage() {
             </form>
           )}
 
-          {mode === "phone" && !phoneCodeRequested && (
+          {phoneSignInAvailable && mode === "phone" && !phoneCodeRequested && (
             <form className="account-login-form" onSubmit={requestPhoneSignInCode}>
               <label>
                 Mobile phone number
@@ -1199,7 +1207,7 @@ export default function AccountPage() {
             </form>
           )}
 
-          {mode === "phone" && phoneCodeRequested && (
+          {phoneSignInAvailable && mode === "phone" && phoneCodeRequested && (
             <form className="account-login-form" onSubmit={verifyPhoneSignInCode}>
               <label>
                 6-digit sign-in code

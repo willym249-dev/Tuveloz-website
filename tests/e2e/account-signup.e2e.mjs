@@ -377,7 +377,7 @@ async function main() {
   // contains them and a source-level check cannot prove they reach anyone.
   const browser = await launchChromium();
   cleanups.push(() => browser.close());
-  const page = await browser.newPage({ viewport: { width: 900, height: 1250 } });
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 
   // The form is disabled while the page checks for an existing session.
   // Clicking before that resolves hits an unhydrated button and is dropped.
@@ -397,8 +397,25 @@ async function main() {
     await page.waitForTimeout(400);
   };
 
-  await page.goto(`${origin}/account`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("[data-language-control]", { timeout: 60_000 });
+  await page.getByRole("button", { name: "Open main menu", exact: true }).click();
+  await page.waitForSelector('.menu-button[aria-expanded="true"]');
+  assert.ok(await page.locator('#main-navigation a[href="/faq"]').isVisible(), "the mobile menu must expose navigation links");
+  await page.getByRole("button", { name: "Close main menu", exact: true }).click();
+  await page.waitForSelector('.menu-button[aria-expanded="false"]');
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "the mobile homepage must not overflow horizontally");
+  await page.locator(".hero .button.primary").click();
+  await page.waitForURL((url) => url.pathname === "/account" && url.searchParams.get("mode") === "create" && url.searchParams.get("role") === "customer");
   await waitForInteractive();
+  log("PASS — mobile menu works and the homepage account button opens signup directly");
+
+  const authOptions = await (await fetch(`${origin}/api/auth/options`)).json();
+  assert.deepEqual(authOptions, { phoneSignIn: false }, "the SMS launch lock must be reflected by available sign-in methods");
+  await selectMode("Sign in");
+  assert.equal(await page.getByRole("button", { name: "Text me a one-time code instead", exact: true }).count(), 0, "unavailable text-message sign-in must not be offered");
+  assert.ok(await page.getByRole("button", { name: "Email me a one-time code instead", exact: true }).isVisible(), "email sign-in must stay available");
+  log("PASS — unavailable SMS is hidden while email sign-in remains available");
 
   // Provider guidance: without it the server's refusal reads as success and the
   // applicant waits on an email that is never sent.
@@ -479,6 +496,12 @@ async function main() {
     .find((cookie) => cookie.name.includes("tuveloz_session"));
   assert.ok(session, "creating an account must establish a session");
   log("PASS — a customer account was created and signed in");
+
+  await page.goto(`${origin}/`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('.hero .button.primary[href="/customer"]', { timeout: 60_000 });
+  await page.locator(".hero .button.primary").click();
+  await page.waitForURL((url) => url.pathname === "/customer");
+  log("PASS — the signed-in homepage account button returns to the customer workspace");
 
   // 9. The throttle is legible to the person, not only to the API -----------
   await page.context().clearCookies();

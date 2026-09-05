@@ -43,6 +43,12 @@ The existing browser account-signup fixture is now a separate release-check
 job. It uses only local D1 and a loopback mail catcher to exercise role/mode
 buttons, password feedback, code delivery, account creation and throttling.
 Its result must pass before production deployment; record the actual run result.
+Manual checks also found that sign-in offered SMS while delivery was locked
+off. A public capability endpoint now exposes only the sender's readiness
+boolean; the account page offers phone sign-in only when it is true. The SMS
+lock and server delivery checks remain unchanged. The browser fixture now
+also exercises the mobile menu, direct guest signup, signed-in workspace
+return, and hiding unavailable SMS while email sign-in stays available.
 
 The first browser report for PR #192 incorrectly passed without asserting that
 Spanish URLs remained Spanish. It has been corrected to failed with the actual
