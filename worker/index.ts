@@ -11,7 +11,7 @@ import { cleanupProviderApplicationVerificationState } from "../lib/provider-app
 import { processPendingCloudmersiveEvidenceScans } from "../lib/cloudmersive-evidence-scanner";
 import { processPendingMessageImageScans } from "../lib/message-image-scanner";
 import { cleanupSupersededStripeIdentitySessions } from "../lib/stripe-identity-verification";
-import { spanishPageResponse } from "./spanish-page";
+import { englishPageAlternates, spanishPageResponse } from "./spanish-page";
 
 interface Env {
   APP_ENVIRONMENT?: string;
@@ -226,7 +226,10 @@ const worker = {
       );
     }
 
-    return securedResponse(response, url, staging);
+    const pageResponse = request.method === "GET" && acceptsHtml
+      ? englishPageAlternates(url, response)
+      : response;
+    return securedResponse(pageResponse, url, staging);
   },
 };
 

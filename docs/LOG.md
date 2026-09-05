@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Provider search previews and reciprocal language links corrected
+
+The owner's Search Console domain property is accessible. Its sitemap report
+shows Success, 46 discovered URLs and a September 1 read. The August 27 indexing
+report lists four indexed pages and 46 exclusions, including 42 discovered but
+not indexed. URL inspection specifically reports `/join` as discovered but not
+indexed. Google's September 5 smartphone live test can fetch the page, permits
+indexing and recognizes its correct canonical. These are different states;
+neither a successful sitemap nor a live test proves search inclusion.
+
+Live HTML exposed concrete preview errors: `/join` inherited the homepage's
+social title and URL, every shared page claimed providers were joining "right
+now" without evidence, and Spanish previews retained English descriptions and
+the English social URL. Homepage copy now states applications are open and
+bookings are closed. The application gets its own title, description and URL,
+with matching Spanish copy and the existing image. Spanish social URLs and
+locale match the Spanish page. Reviewed English pages now link back to their
+Spanish twins, completing the previously one-way language relationship.
+No Spanish URL is created for an unreviewed page.
+
+Lint, the production build and all 546 tests passed. Actual local rendered
+HTML passed checks for canonical/social URLs, reciprocal language links,
+translated descriptions and unchanged preview images. Two source-check
+mismatches during development were resolved without weakening their intended
+guards: the original response remains immutable and canonical-removal ordering
+is checked within the Spanish handler. Production publication and Google's
+indexing response must be recorded separately from this local verification.
+
+PR #190 is already deployed as `79aa093`, with 20 live checks passing. The owner
+approved Cloudmersive Basic at $19.99/month, but its checkout still requires a
+payment card; no purchase is confirmed and production scanning remains off.
+All customer-job, payment, SMS and provider/service activation locks remain.
+
 ## 2026-09-05 - Scanner response deadlines repaired; capacity decision pending
 
 Both Cloudmersive callers cleared their 45-second timer when fetch returned
