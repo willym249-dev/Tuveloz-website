@@ -13,6 +13,7 @@
  * page has untranslated copy.
  */
 import { readFileSync } from "node:fs";
+import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
 const baseUrl = (process.argv[2] || process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
@@ -95,6 +96,28 @@ for (const path of readyPaths) {
     if (missing.length > 12) console.error(`    …and ${missing.length - 12} more`);
   } else {
     console.log(`✓ ${path} — fully translated (${strings.length} strings)`);
+  }
+  if (path === "/join") {
+    // The signup form translates itself, so the dictionary walk above skips
+    // it. Exercise the actual language switch to cover that boundary too.
+    await page.getByRole("button", { name: "Cambiar toda la página a español", exact: true }).click();
+    await page.getByRole("heading", { name: "Su negocio. Su precio. Su horario.", exact: true }).waitFor();
+    const scopes = await page.locator(".provider-service-groups .service-scope > small").allTextContents();
+    assert.ok(scopes.length > 0, "provider scope check must inspect real services");
+    for (const scope of scopes) {
+      assert.ok(scope.trim() && !known.has(scope.trim()), `provider scope stayed English: ${scope}`);
+    }
+    const firstScope = page.locator(".provider-service-groups .service-scope > small").first();
+    const spanishScope = (await firstScope.textContent()).trim();
+    await page.locator(".provider-service-groups .service-group > summary").first().click();
+    await page.locator(".provider-service-groups .service-scope > summary").first().click();
+    await firstScope.waitFor({ state: "visible" });
+    await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
+    await page.getByRole("heading", { name: "Your business. Your price. Your schedule.", exact: true }).waitFor();
+    const englishScope = (await firstScope.textContent()).trim();
+    assert.notEqual(englishScope, spanishScope, "scope must switch back to English");
+    assert.ok(known.has(englishScope), "scope must return to its catalog wording");
+    console.log(`✓ /join — Spanish provider panel and ${scopes.length} service descriptions switch both ways`);
   }
   await page.close();
 }

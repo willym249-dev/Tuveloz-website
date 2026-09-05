@@ -1,6 +1,6 @@
 # Tuveloz support reliability and provider application fixes
 
-- **Status:** draft; tested locally, not deployed
+- **Status:** active; deployed in PR #183
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-04
 - **Applies to:** public assistant, owner support, provider onboarding
@@ -44,6 +44,15 @@ The customer-launch state, provider requirements, and pinned policy releases
 are unchanged.
 
 ## Verification and limits
+
+Production update: commit `c508a95f65656385d5a2503f657b65de60d4e51f`
+deployed successfully in [run 33934287388](https://github.com/willym249-dev/Tuveloz-website/actions/runs/33934287388).
+Twelve independent live HTTP checks and English/Spanish browser checks passed.
+The labeled support test was subsequently found in the monitored owner inbox;
+Gmail displayed `send.updates.tuveloz.com` as mailed-by and
+`updates.tuveloz.com` as signed-by. Owner replies through Google Workspace need
+separate authentication verification. The bullets below retain the original
+pre-release checks.
 
 - Regression reproduced: the initial availability tests failed five of seven
   cases against the original handler. Published-answer and Spanish cases pass

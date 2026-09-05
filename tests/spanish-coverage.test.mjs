@@ -109,3 +109,15 @@ test("the marketing copy people decide on is translated", async () => {
     );
   }
 });
+
+test("every provider service description has a Spanish translation", async () => {
+  const [policy, dictionary] = await Promise.all([
+    read("lib/provider-policy.ts"), read("lib/spanish-dictionary.ts"),
+  ]);
+  const metadata = policy.split("const SERVICE_METADATA = {")[1].split("} as const satisfies")[0];
+  const descriptions = [...metadata.matchAll(/description: ("(?:[^"\\]|\\.)*")/g)];
+  assert.ok(descriptions.length >= 25, "must inspect the actual service catalog");
+  for (const [, description] of descriptions) {
+    assert.ok(dictionary.includes(`${description}: "`), `missing Spanish for ${description}`);
+  }
+});

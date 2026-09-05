@@ -1664,7 +1664,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
       {view !== "home" && (
       <section className="section providers" id="providers">
-        <div className="provider-panel" data-manual-language>
+        <div className="provider-panel">
           <div className="provider-copy">
             <span className="kicker light">For providers</span>
             <h2>Your business. Your price. Your schedule.</h2>
@@ -1706,7 +1706,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </section>
           </div>
 
-          <div id="provider-apply">
+          <div id="provider-apply" data-manual-language>
             <ProviderSignupForm />
           </div>
         </div>

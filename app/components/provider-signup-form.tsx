@@ -43,6 +43,7 @@ import { activeVariants } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
+import { spanishText } from "../../lib/spanish-dictionary";
 import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
@@ -936,7 +937,7 @@ export function ProviderSignupForm() {
       }}
       onSubmit={handleFinalSubmit}
     >
-      <div className="step-indicator" aria-label="Application steps">
+      <div className="step-indicator" aria-label={providerFormIsSpanish ? "Pasos de la solicitud" : "Application steps"}>
         {visibleSteps.map((id, index) => (
           <span className={step === id ? "on" : ""} key={id}>
             {index + 1}. {providerFormIsSpanish
@@ -1093,7 +1094,7 @@ export function ProviderSignupForm() {
                                   ? "Qué incluye y qué no"
                                   : "What's included and not included"}
                               </summary>
-                              <small>{service.description}</small>
+                              <small>{providerFormIsSpanish ? spanishText[service.description] ?? service.description : service.description}</small>
                             </details>
                           </div>
                         );
@@ -1902,7 +1903,7 @@ export function ProviderSignupForm() {
               </label>
           {/*
             DO NOT translate the two acceptance texts below, and do not add
-            them to the spanishText dictionary. The enclosing panel is marked
+            them to the spanishText dictionary. The enclosing form wrapper is marked
             data-manual-language, and this local wrapper is a second barrier
             in case a future refactor moves the legal text outside that panel.
 

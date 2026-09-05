@@ -36,6 +36,7 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-09-07 | Complete the owner-only Google Workspace service-continuity check and record the outcome privately | hello@tuveloz.com | open |
 | 2026-08-24 | Name a person to monitor `dmarc@tuveloz.com`. Receipt is no longer in question — checked 2026-08-16, Google's aggregate reports do arrive (three on file, 08-08 through 08-12), and most are unread. Only the reader is missing, and until someone reads them the `rua` address is decorative and DMARC stays at `p=none` | hello@tuveloz.com | open |
 | 2026-09-14 | Rotate the DKIM key for `updates.tuveloz.com` to 2048-bit; Resend issued the current 1024-bit default | hello@tuveloz.com | open |
 | 2026-09-21 | Review a full month of DMARC aggregate reports and inventory every legitimate sender before any enforcement change | hello@tuveloz.com | open |

@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-04 - Provider Spanish coverage and production support receipt
+
+PR #183 deployed as `c508a95`; 12 live HTTP checks and browser checks passed.
+The labeled owner-support test was received in the monitored owner inbox,
+with Gmail displaying `updates.tuveloz.com` as the signing domain. This proves
+that support handoff, not the separate Workspace reply path.
+
+The provider introduction was unintentionally inside the manual-translation
+barrier, leaving it English in Spanish mode. The barrier now covers only the
+form; the introduction uses the shared dictionary, while the form explicitly
+translates service descriptions and its step label. All 25 catalog descriptions
+have translations; the rendered check switches the panel and 23 offered
+descriptions to Spanish and back. Legal acknowledgments keep their existing
+barriers. Lint, build, and 522 tests passed, as did rendered coverage for eight
+marketing routes. Logo, social profile, Gmail appearance, and Google Search
+branding changes remain deferred by the owner.
+
+The Workspace sender still needs its Google SPF include and verified DKIM
+setup; DNS and Admin changes await account access. See
+[email authentication](operations/email-authentication.md). Owner-only account
+administration details are retained privately.
+
+---
+
 ## 2026-09-04 - Available policy answers and an owner support handoff
 
 The live assistant returned `AI_UNCONFIGURED` for basic Tuveloz questions.

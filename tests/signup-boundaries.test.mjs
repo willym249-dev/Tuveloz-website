@@ -55,7 +55,7 @@ function interfaceLiterals(text) {
 test("dictionary keys never target the manually translated provider signup subtree", () => {
   assert.match(
     homepage,
-    /<div className="provider-panel" data-manual-language>[\s\S]*?<ProviderSignupForm/,
+    /<div id="provider-apply" data-manual-language>\s*<ProviderSignupForm/,
   );
   const dictionaryKeys = new Set(quotedDictionaryKeys(siteLanguage));
   const providerLiterals = interfaceLiterals(providerSignup);

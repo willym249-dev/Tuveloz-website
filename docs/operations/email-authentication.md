@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-16
+- **Last reviewed:** 2026-09-04
 
 What authenticates Tuveloz email, how the sending domain is configured today,
 and the deliberate sequence for tightening DMARC. Every account on the platform
@@ -17,6 +17,27 @@ fallback. A delivery failure is not a degraded experience — it locks out every
 customer and every provider at the same time, with no workaround.
 
 ## Current configuration
+
+September 4 recheck: root SPF is still
+`v=spf1 include:_spf.porkbun.com ~all`, the default Workspace selector
+`google._domainkey.tuveloz.com` returns NXDOMAIN, and DMARC remains `p=none`.
+Cloudflare is the authoritative DNS host. A custom Workspace selector has not
+been ruled out; inspect Google Admin before creating or replacing a key.
+
+The proposed root TXT update is
+`v=spf1 include:_spf.porkbun.com include:_spf.google.com ~all`. It preserves
+the current forwarding authorization while adding the existing Workspace
+sender. Update the existing SPF record, keeping other TXT records intact.
+No DNS change has been applied in this continuation. Google Admin and
+Cloudflare currently require owner sign-in.
+[Google SPF setup](https://knowledge.workspace.google.com/admin/security/set-up-spf),
+[Google DKIM setup](https://knowledge.workspace.google.com/admin/security/set-up-dkim).
+
+The deployed support form's labeled test reached the owner inbox. Gmail shows
+mailed-by `send.updates.tuveloz.com`, signed-by `updates.tuveloz.com`, and TLS.
+This confirms receipt and those displayed properties for one application
+message. It does not establish Workspace reply authentication, universal inbox
+placement, or a captured full `Authentication-Results` header.
 
 The sending identity is `alerts@updates.tuveloz.com` (`wrangler.jsonc`), sent
 through Resend, which delivers via Amazon SES.
