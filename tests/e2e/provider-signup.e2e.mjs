@@ -367,6 +367,10 @@ async function main() {
       ...payload,
       challengeId: challengeBody.challengeId,
       verificationCode: caught.code,
+      analyticsAttribution: {
+        utm_source: "e2e", utm_campaign: "provider_first_5", variants: { provider_hero: "A" },
+        email: "must-not-enter-analytics@example.invalid",
+      },
     }),
   });
   const submitBody = await submitRes.json();
@@ -407,6 +411,44 @@ async function main() {
     "the schema default is what a fresh application should carry",
   );
   log("provider signup verified");
+
+  // Saved applications, not a browser's success screen, determine completion.
+  const completions = () => d1(workdir, "SELECT props FROM analytics_events WHERE event='provider_application_submitted';");
+  assert.equal(completions().length, 1, "one new application must create one server completion");
+  assert.deepEqual(JSON.parse(completions()[0].props), {
+    utm_source: "e2e", utm_campaign: "provider_first_5", variants: { provider_hero: "A" },
+  });
+  const duplicateChallengeRes = await fetch(`${origin}/api/providers/challenge`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(payload),
+  });
+  assert.equal(duplicateChallengeRes.status, 202);
+  const duplicateChallenge = await duplicateChallengeRes.json();
+  const duplicateMail = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(duplicateMail.to[0], applicantEmail);
+  const duplicateSubmitRes = await fetch(`${origin}/api/providers`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({
+      ...payload, challengeId: duplicateChallenge.challengeId, verificationCode: duplicateMail.code,
+      analyticsAttribution: { utm_source: "duplicate" },
+    }),
+  });
+  assert.equal(duplicateSubmitRes.status, 202, "repeat signup retains its privacy-preserving response");
+  assert.equal(completions().length, 1, "repeat signup must not inflate recruitment totals");
+  assert.equal(d1(workdir, `SELECT id FROM provider_applications WHERE email='${applicantEmail}';`).length, 1);
+  for (const event of ["provider_application_submitted", "provider_signup_completed"]) {
+    const forged = await fetch(`${origin}/api/analytics`, {
+      method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({ event }),
+    });
+    assert.equal(forged.status, 400, "public telemetry must reject claimed application completions");
+  }
+  const stage = await fetch(`${origin}/api/analytics`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({
+      event: "provider_verification_requested", props: { utm_source: "e2e", email: applicantEmail },
+    }),
+  });
+  assert.equal(stage.status, 202, "valid stage events must still work");
+  const stageRows = d1(workdir, "SELECT props FROM analytics_events WHERE event='provider_verification_requested';");
+  assert.deepEqual(JSON.parse(stageRows[0].props), { utm_source: "e2e" });
+  log("server-confirmed campaign tracking, repeat signup and forged-event rejection verified");
 
   // 10. Customer account signup ------------------------------------------------
   // The other half of "can people actually sign up". A customer never touches

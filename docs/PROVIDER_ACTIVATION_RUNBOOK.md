@@ -35,6 +35,20 @@ and at least one needs counsel review. That is by design.
 
 ---
 
+## September 4 configuration audit
+
+The deployed secret-name inventory includes the dedicated Stripe Identity key,
+webhook secret, and reusable flow ID; their presence does not prove valid values
+or an operational flow. The source still leaves the provider allowlist empty
+and Identity live-mode permission false. Neither setting has a deployed secret
+override. Cloudmersive's API key and scanner callback secret are absent, and
+the scanner provider is `unconfigured`. These gaps must be resolved before the
+runtime canaries; existing application submission remains available.
+
+Focused scanner and identity tests passed. They use local/synthetic evidence and
+are not proof of live vendor operation. No live identity verification or upload
+scan was performed by this audit.
+
 ## Phase 1 — Cloudflare secrets
 
 Set as encrypted Worker secrets. All are fail-closed: a wrong or missing value

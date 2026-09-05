@@ -17,7 +17,7 @@ import {
 } from "../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { CUSTOMER_STEPS, PROVIDER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
-import { track } from "../lib/analytics";
+import { campaignAttribution, track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { useAccountHeaderState } from "./components/account-header-state";
 import { AddressAutocompleteInput } from "./components/address-autocomplete-input";
@@ -262,6 +262,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   );
 
   useEffect(() => {
+    // Preserve landing-page attribution before navigating to the provider form.
+    campaignAttribution();
     if (view === "provider") {
       track("provider_signup_started", { variants: activeVariants() });
     }

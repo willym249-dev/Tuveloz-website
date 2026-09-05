@@ -38,7 +38,7 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
-import { track } from "../../lib/analytics";
+import { campaignAttribution, track } from "../../lib/analytics";
 import { activeVariants } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
@@ -787,6 +787,7 @@ export function ProviderSignupForm() {
             // or its hash — the server records it after the application is
             // stored, and it changes nothing about review or eligibility.
             referralCode: referralCode(),
+            analyticsAttribution: { ...campaignAttribution(), variants: activeVariants() },
             // Promotional texts only. Reaching an applicant about their own
             // application is transactional and never depends on this.
             smsMarketingConsent: values["provider-sms-marketing-consent"] === "yes",
@@ -812,7 +813,6 @@ export function ProviderSignupForm() {
         setLegalConfirmed(false);
         setStep(1);
         setApplicationSent(true);
-        track("provider_signup_completed", { variants: activeVariants() });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Please try again.";
         setApplicationError(message);
@@ -846,6 +846,7 @@ export function ProviderSignupForm() {
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
       setChallengeResetNotice("");
+      track("provider_verification_requested", { variants: activeVariants() });
     } catch (error) {
       setConfirmingSubmit(false);
       const message = error instanceof Error ? error.message : "Please try again.";
