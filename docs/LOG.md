@@ -11,6 +11,20 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Provider application adapts to the available column width
+
+A visual check at a 929px browser width found the provider form squeezed into a
+278px column, leaving a service-category label only about 23px wide. The provider
+panel now fits columns to the space available, keeping each at least 420px wide
+when room permits and stacking the form below the introduction otherwise. The
+existing phone layout stays in place. This changes layout only; application
+state, requirements, actions, wording and launch guards are unchanged.
+
+At the same 929px width, local Chrome now shows a 671px form with a readable
+283px category-label area, no horizontal overflow and no browser warnings or
+errors. The application anchor also opens the form correctly. Required CI and
+live verification remain prerequisites for publication.
+
 ## 2026-09-05 - Full TypeScript checking and executable guarded-query regressions
 
 The required verification workflow now generates Cloudflare runtime and binding
