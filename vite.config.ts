@@ -1,3 +1,4 @@
+import "./scripts/image-parser-policy.mjs";
 import vinext from "vinext";
 import { defineConfig } from "vite";
 
