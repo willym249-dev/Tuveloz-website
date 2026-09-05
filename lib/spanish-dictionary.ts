@@ -772,7 +772,7 @@ export const spanishText: Record<string, string> = {
   "You’re signed in. This page is public information, not a sign-out.": "Su sesión sigue abierta. Esta página es información pública, no un cierre de sesión.",
   "Back to your account →": "Volver a su cuenta →",
   "Back to your provider workspace →": "Volver a su espacio de proveedor →",
-  "You're signed in and your spot is saved. Nothing here books anything or charges you.": "Su sesión está abierta y su lugar está apartado. Nada aquí reserva servicios ni le cobra.",
+  "You're signed in. Customer requests and bookings are not open yet, and nothing here charges you.": "Su sesión está abierta. Las solicitudes de clientes y las reservas todavía no están disponibles, y nada aquí le cobra.",
   "Tuveloz sign in": "Inicio de sesión de Tuveloz",
   "Welcome to Tuveloz.": "Bienvenido a Tuveloz.",
   "Access your customer requests, provider application, or approved-provider workspace.": "Acceda a sus solicitudes de cliente, su solicitud de proveedor o su espacio de proveedor aprobado.",
@@ -834,9 +834,9 @@ export const spanishText: Record<string, string> = {
   // --- Public marketing surface: homepage, both landers, how-it-works, the
   // assistant, FAQ, and safety. Added when Spanish was switched back on for
   // these paths. The legal pages stay English and say so on the page. ---
-  "Almost open · Montgomery County, MD": "Casi abrimos · Condado de Montgomery, MD",
+  "Preparing to launch · Montgomery County, MD": "Preparando el lanzamiento · Condado de Montgomery, MD",
   "Details": "Detalles",
-  "Local pros near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.": "Profesionales locales cerca de usted se están registrando ahora mismo. En cuanto abramos, podrá decir qué necesita su carro y recibir precios.",
+  "Provider applications are open in Montgomery County. Customer requests and bookings are not open yet.": "Aceptamos solicitudes de proveedores en el Condado de Montgomery. Las solicitudes de clientes y las reservas todavía no están disponibles.",
   "Making an account today is free, and it doesn't book anything or charge you.": "Crear una cuenta hoy es gratis, y no reserva nada ni le cobra.",
   "Save my spot — free": "Aparte mi lugar — gratis",
   "Save my spot": "Aparte mi lugar",
@@ -1075,7 +1075,7 @@ export const spanishText: Record<string, string> = {
   "What about parts?": "¿Y las piezas?",
   "Prices here cover the labor, so you buy the part yourself. We'll help you pin down the exact part before the appointment, so nobody wastes a trip on the wrong one.": "Los precios aquí cubren la mano de obra, así que usted compra la pieza. Le ayudamos a definir la pieza exacta antes de la cita, para que nadie pierda el viaje por una pieza equivocada.",
   "When can I post a job?": "¿Cuándo puedo publicar un trabajo?",
-  "Very soon. Local pros across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.": "Muy pronto. Profesionales locales de todo el Condado de Montgomery, Maryland se están registrando ahora mismo, y publicar trabajos se abre en cuanto terminemos de dejar todo listo. Cree su cuenta hoy y será de los primeros: registrarse no envía una solicitud, no contacta a un proveedor, no reserva un servicio ni le cobra.",
+  "We haven't announced a launch date. Provider applications are open while we complete the required reviews. You can create a free account now; this does not submit a request, contact a provider, book service, or charge you.": "No hemos anunciado una fecha de lanzamiento. Aceptamos solicitudes de proveedores mientras completamos las revisiones requeridas. Puede crear una cuenta gratis ahora; esto no envía una solicitud, no contacta a un proveedor, no reserva un servicio ni le cobra.",
   "My car needs something that's not on the list. Now what?": "Mi carro necesita algo que no está en la lista. ¿Ahora qué?",
   "Tell us anyway! The jobs people ask about most are the ones we add next, and the areas people ask about decide where we go after Montgomery County.": "¡Díganos de todas formas! Los trabajos que más nos preguntan son los que agregamos después, y las áreas que más nos piden deciden a dónde vamos después del Condado de Montgomery.",
   "Tuveloz AI gives general guidance only. It is not a diagnosis, an inspection, or a price quote, and it does not choose a provider. Answers about how Tuveloz works come from our published policies — the linked page is always the real thing, and for anything it can't answer, email": "Tuveloz AI da solo orientación general. No es un diagnóstico, ni una inspección, ni una cotización, y no elige un proveedor. Las respuestas sobre cómo funciona Tuveloz vienen de nuestras políticas publicadas: la página enlazada siempre es lo real, y para lo que no pueda responder, escriba a",

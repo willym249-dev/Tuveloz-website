@@ -89,7 +89,7 @@ const faqs = [
   {
     question: "When can I post a job?",
     answer:
-      "Very soon. Local pros across Montgomery County, Maryland are signing up right now, and posting jobs opens once we've finished getting everything ready. Make your account today and you're first in line — signing up does not submit a request, contact a provider, book service, or charge you.",
+      "We haven't announced a launch date. Provider applications are open while we complete the required reviews. You can create a free account now; this does not submit a request, contact a provider, book service, or charge you.",
   },
   {
     question: "My car needs something that's not on the list. Now what?",

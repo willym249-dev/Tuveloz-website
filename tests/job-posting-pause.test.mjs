@@ -40,7 +40,7 @@ test("customer signups stay open while new job requests and payments are paused"
   assert.match(postJobPage, /Customer requests and quotes open at launch/);
   assert.match(
     postJobPage,
-    /posting jobs opens once we've finished getting everything ready/,
+    /We haven't announced a launch date\. Provider applications are open while we complete the required reviews/,
   );
   assert.match(postJobPage, /account\?role=customer&mode=create/);
   assert.match(postJobPage, /href="\/join"/);
