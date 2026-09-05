@@ -27,6 +27,10 @@ are untouched. Mutation work is coalesced, idempotent and cancelled on cleanup.
 Five behavioral regressions and the real-browser fixture cover the mismatch,
 repeated reconciliation, missing optional tags, route boundaries and switching
 back to English. Google indexing remains unproven until its separate retest.
+The first CI browser attempt passed its metadata assertions, then hit the
+existing development error overlay while clicking English. The fixture now
+records that identified hydration warning and dismisses its developer-only
+overlay through the Dismiss control; other browser errors remain failures.
 The earlier development hydration-recovery warning remains a broader design
 follow-up. No customer, payment, SMS or provider/service launch lock is changed.
 
