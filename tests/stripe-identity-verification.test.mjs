@@ -23,7 +23,7 @@ test("identity policy requires an exact normalized signer name and age 18", () =
   assert.equal(verifiedDobIsAdult(null, asOf), false);
 });
 
-test("provider session creation is signed-in, same-origin, consented, bound, and uses the reviewed reusable flow", async () => {
+test("provider session creation is signed-in, same-origin, consented, bound, and uses explicit reviewed document checks", async () => {
   const [route, stripe, schema] = await Promise.all([
     read("app/api/provider-identity-verification/route.ts"),
     read("lib/stripe.ts"),
@@ -41,9 +41,12 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(route, /immutablePerformingPersonName\(evidence\.normalizedSnapshot\)/);
   assert.match(route, /relationshipPath !== "independent_startup"/);
   assert.match(route, /MAX_ATTEMPTS_PER_DAY = 3/);
-  assert.match(route, /verification_flow: getStripeIdentityVerificationFlowId\(\)/);
-  assert.doesNotMatch(route, /type: "document"/);
-  assert.doesNotMatch(route, /options: \{ document:/);
+  assert.match(route, /type: "document"/);
+  assert.match(route, /require_live_capture: true/);
+  assert.match(route, /require_matching_selfie: true/);
+  assert.match(route, /require_id_number: false/);
+  assert.match(route, /allowed_types: \["driving_license", "id_card", "passport"\]/);
+  assert.doesNotMatch(route, /verification_flow:/);
   assert.match(route, /tuveloz_application_evidence_id/);
   assert.match(route, /externalIdentityAgeVerificationIsCurrent\(person, now\)/);
   assert.match(route, /expiredConfiguredManualIdentityAgeVerificationCanBeReplaced\(person, now\)/);
@@ -83,7 +86,7 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(stripe, /providers\.includes\("stripe_identity"\)/);
   assert.match(stripe, /STRIPE_IDENTITY_WEBHOOK_SECRET/);
   assert.match(stripe, /STRIPE_IDENTITY_SECRET_KEY/);
-  assert.match(stripe, /STRIPE_IDENTITY_VERIFICATION_FLOW_ID/);
+  assert.doesNotMatch(stripe, /STRIPE_IDENTITY_VERIFICATION_FLOW_ID/);
   // Identity live mode was deliberately code-released for the provider-side
   // launch; live capture still requires the STRIPE_IDENTITY_ALLOW_LIVE_MODE
   // secret and a dedicated rk_live_ key. Payments stay code-locked separately.
@@ -109,7 +112,7 @@ test("identity webhook uses a separate signature, retrieves outputs, and fails c
   assert.match(route, /constructEventAsync/);
   assert.match(route, /STRIPE_IDENTITY_WEBHOOK_SECRET/);
   assert.match(route, /endpoint: "identity"/);
-  assert.match(route, /expand: \["verified_outputs"\]/);
+  assert.match(route, /expand: \["verified_outputs\.dob"\]/);
   assert.match(route, /claimStripeWebhookEvent/);
   assert.match(route, /failStripeWebhookEvent/);
   assert.match(receipts, /\| "identity"/);
@@ -118,8 +121,8 @@ test("identity webhook uses a separate signature, retrieves outputs, and fails c
   assert.match(recorder, /verifiedDobIsAdult\(outputs\.dob, checkedAt\)/);
   assert.match(recorder, /verifiedIdentityNameMatches\(/);
   assert.match(recorder, /providerModeMatches\(row, session\.livemode\)/);
-  assert.match(recorder, /session\.type === "verification_flow"/);
-  assert.match(recorder, /session\.verification_flow === getStripeIdentityVerificationFlowId\(\)/);
+  assert.match(recorder, /session\.type === "document"/);
+  assert.match(recorder, /session\.verification_flow === undefined/);
   assert.match(recorder, /require_live_capture === true/);
   assert.match(recorder, /require_matching_selfie === true/);
   assert.match(recorder, /require_id_number !== true/);

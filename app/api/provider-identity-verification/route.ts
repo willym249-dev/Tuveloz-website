@@ -27,7 +27,6 @@ import {
 } from "../../../lib/provider-verification-evidence";
 import {
   getStripeIdentityClient,
-  getStripeIdentityVerificationFlowId,
   siteUrlFor,
   stripeErrorResponse,
   stripeIdentityModeMatchesProvider,
@@ -343,7 +342,17 @@ async function createAttempt(
 
   const stripe = getStripeIdentityClient();
   const created = await stripe.identity.verificationSessions.create({
-    verification_flow: getStripeIdentityVerificationFlowId(),
+    // Keep required checks visible in the retrieved session. Stripe does not
+    // return flow settings and forbids options alongside verification_flow.
+    type: "document",
+    options: {
+      document: {
+        allowed_types: ["driving_license", "id_card", "passport"],
+        require_live_capture: true,
+        require_matching_selfie: true,
+        require_id_number: false,
+      },
+    },
     client_reference_id: row.id,
     provided_details: { email: account.provider.email },
     metadata: {

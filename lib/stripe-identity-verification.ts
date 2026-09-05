@@ -15,7 +15,6 @@ import {
 } from "./identity-verification-policy";
 import {
   getStripeIdentityClient,
-  getStripeIdentityVerificationFlowId,
   stripeIdentityModeMatchesProvider,
 } from "./stripe";
 import {
@@ -106,8 +105,10 @@ export function stripeIdentitySessionBindingMatches(
   return session.id === row.stripeVerificationSessionId
     && session.livemode === Boolean(row.livemode)
     && session.client_reference_id === row.id
-    && session.type === "verification_flow"
-    && session.verification_flow === getStripeIdentityVerificationFlowId()
+    // Reusable verification flows return options: null, which cannot prove
+    // the checks below. Only explicit document sessions are accepted.
+    && session.type === "document"
+    && session.verification_flow === undefined
     && documentOptions?.require_live_capture === true
     && documentOptions.require_matching_selfie === true
     && documentOptions.require_id_number !== true

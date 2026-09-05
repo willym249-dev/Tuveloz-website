@@ -11,6 +11,46 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-04 - Real Stripe tests found and repaired two Identity contract errors
+
+The owner authorized official Stripe CLI access limited to test mode. The
+Identity account application was submitted; the dashboard still requires the
+owner's separate real Identity verification before live use. No live key,
+payment, payout, real person's documents, or production provider record was used.
+
+A real hosted reusable-flow test returned `options: null` even when verified.
+Tuveloz's mandatory settings comparison therefore rejected the session before
+releasing its URL. Stripe also rejects explicit options alongside a flow ID.
+Creation now uses `type: document` with explicit document types, live capture,
+matching selfie, and no ID-number check. The returned settings and all immutable
+applicant/session bindings remain mandatory; unverifiable old flows stay rejected.
+The obsolete flow-ID configuration requirement is removed, with deployment and
+vendor instructions updated in the activation runbook.
+
+The first signed success then exposed another contract error: expanding only
+`verified_outputs` returns names but omits DOB. The existing adult check blocked
+that result. The verified-event handler now explicitly expands
+`verified_outputs.dob`; no ID number or images are requested, and no raw DOB or
+verified name is persisted. The test key already had the required permission.
+The blocked terminal record was preserved; final proof used a fresh applicant.
+
+Validation: lint, build and all 533 tests passed with zero skips, including
+fail-before/pass-after behavioral regressions for both contracts. The isolated
+local-D1 signup fixture verified applications, email-code handling, campaign
+idempotence, customer signup and provider sign-in using a local mail catcher.
+Real Stripe-hosted synthetic failure remained pending without identity evidence.
+Real synthetic success reached the app through the official CLI's signed callback
+and atomically bound identity and age evidence to the correct local test person.
+The authenticated return reported complete; replaying the same event was a no-op
+and a bad signature was rejected. Application review remained outstanding.
+
+The account's existing test webhook was temporarily disabled to keep these QA
+events away from production, then restored to Active with its original settings.
+The temporary CLI login was logged out and its session revoked; temporary copied
+secrets were removed without revoking the owner's existing restricted test key. Scanner access, genuine live
+Identity proof and the owner launch reviews remain unfinished. Customer jobs,
+live payments, SMS and provider activation guards retain their existing settings.
+
 ## 2026-09-04 - Owner measurements and accurate public launch status
 
 PR #185 deployed successfully as `a67ad41`. All 15 independent live HTTP checks
