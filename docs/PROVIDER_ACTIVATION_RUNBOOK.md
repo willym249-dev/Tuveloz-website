@@ -45,9 +45,13 @@ override. Cloudmersive's API key and scanner callback secret are absent, and
 the scanner provider is `unconfigured`. These gaps must be resolved before the
 runtime canaries; existing application submission remains available.
 
-Focused scanner and identity tests passed. They use local/synthetic evidence and
-are not proof of live vendor operation. No live identity verification or upload
-scan was performed by this audit.
+Focused scanner and identity tests passed. The subsequent owner-authorized
+Stripe test used real hosted synthetic failure/success and signed callbacks to
+an isolated local D1 database. It exposed and repaired the flow-options and DOB
+expansion errors described below; the final test approval and applicant return
+were verified. This is test-mode vendor proof, not a genuine live canary. No
+live identity verification or upload scan was performed. Stripe's Identity
+dashboard still requires the owner's own additional identity verification.
 
 ## Phase 1 — Cloudflare secrets
 
@@ -58,10 +62,27 @@ blocks activation but never opens payments.
 ```bash
 npx wrangler secret put STRIPE_IDENTITY_SECRET_KEY          # dedicated rk_live_ Identity key, NOT the payments key
 npx wrangler secret put STRIPE_IDENTITY_WEBHOOK_SECRET      # whsec_ for the Identity webhook destination only
-npx wrangler secret put STRIPE_IDENTITY_VERIFICATION_FLOW_ID # vf_ for a LIVE flow: gov doc + live capture + matching selfie; DL/ID/passport only; ID-number/email/phone OFF
 npx wrangler secret put STRIPE_IDENTITY_ALLOW_LIVE_MODE     # the literal string: true
 npx wrangler secret put IDENTITY_VERIFICATION_PROVIDERS     # include stripe_identity
 ```
+
+The application creates `type: document` sessions with explicit live capture,
+matching selfie, and driving-license/ID-card/passport options. It verifies those
+options on every retrieved session before accepting a result. Reusable
+`verification_flow` sessions return `options: null` in Stripe's API and cannot
+prove this configuration; the old flow-ID secret is no longer used. Existing
+unverifiable flow sessions remain rejected. Review any such pending attempt
+through the owner process before retrying; never mark it approved manually or
+relax binding checks.
+
+The dedicated restricted key needs Identity session/report access (write for
+session creation) and **Access recent sensitive verification results: Read**.
+Only a signed verified event retrieves `verified_outputs.dob`; expanding the
+parent `verified_outputs` alone omits DOB. Names and DOB are checked in memory
+against the immutable application and age-18 rule, never saved as extra fields.
+No document number or image expansion is requested. Verify these permissions
+with a fresh test result; a credential-shaped string is insufficient.
+See [Stripe's sensitive result access guide](https://docs.stripe.com/identity/access-verification-results).
 
 **Evidence malware scanner (Cloudmersive):**
 ```bash

@@ -14,7 +14,7 @@ export const STRIPE_LIVE_MODE_ENABLED = false as const;
 // Identity has a separate release lock from payments. This constant was
 // deliberately enabled for the provider-side launch (2026-08-04): live
 // verification still requires the STRIPE_IDENTITY_ALLOW_LIVE_MODE secret, a
-// dedicated rk_live_ Identity key, the verification-flow ID, and the webhook
+// dedicated rk_live_ Identity key and the webhook
 // secret — none of which ship with the code. Payments remain code-locked
 // separately via STRIPE_LIVE_MODE_ENABLED above.
 export const STRIPE_IDENTITY_LIVE_MODE_ENABLED = true as const;
@@ -48,16 +48,6 @@ function stripeIdentityKeyMode(value: string) {
 export function stripeIdentityLiveModeEnabled() {
   return Boolean(STRIPE_IDENTITY_LIVE_MODE_ENABLED)
     && runtimeEnvironment().STRIPE_IDENTITY_ALLOW_LIVE_MODE === "true";
-}
-
-export function getStripeIdentityVerificationFlowId() {
-  const flowId = requiredRuntimeValue("STRIPE_IDENTITY_VERIFICATION_FLOW_ID");
-  if (!/^vf_[A-Za-z0-9]+$/.test(flowId)) {
-    throw new StripeConfigurationError(
-      "STRIPE_IDENTITY_VERIFICATION_FLOW_ID is not a valid Stripe verification-flow ID.",
-    );
-  }
-  return flowId;
 }
 
 /**
@@ -100,13 +90,11 @@ export function stripeIdentityConfigurationReady() {
     .map((value) => value.trim().toLowerCase());
   const key = runtime.STRIPE_IDENTITY_SECRET_KEY?.trim() ?? "";
   const keyMode = stripeIdentityKeyMode(key);
-  const flowId = runtime.STRIPE_IDENTITY_VERIFICATION_FLOW_ID?.trim() ?? "";
   const webhookSecret = runtime.STRIPE_IDENTITY_WEBHOOK_SECRET?.trim() ?? "";
   const safeKeyConfigured = keyMode === "test"
     || (keyMode === "live" && stripeIdentityLiveModeEnabled());
   return providers.includes("stripe_identity")
     && safeKeyConfigured
-    && /^vf_[A-Za-z0-9]+$/.test(flowId)
     && webhookSecret.startsWith("whsec_");
 }
 

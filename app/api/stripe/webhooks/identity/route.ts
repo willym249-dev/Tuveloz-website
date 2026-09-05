@@ -74,10 +74,12 @@ export async function POST(request: Request) {
       // Webhook snapshots can arrive out of order. Retrieve Stripe's current
       // session for every supported status event. Sensitive verified outputs
       // are expanded only for a signed verified event and never persisted.
+      // DOB requires its own expansion; expanding the parent returns names
+      // without the DOB needed for the existing adult-verification check.
       const current = await stripe.identity.verificationSessions.retrieve(
         eventSession.id,
         event.type === "identity.verification_session.verified"
-          ? { expand: ["verified_outputs"] }
+          ? { expand: ["verified_outputs.dob"] }
           : undefined,
       );
       handled = event.type === "identity.verification_session.verified"
