@@ -206,7 +206,9 @@ const worker = {
     // that becomes Spanish after a script runs. Only reviewed paths have a twin;
     // anything else under /es is a 404 rather than an untranslated page wearing
     // a Spanish URL.
-    if (request.method === "GET" && acceptsHtml) {
+    // Crawlers can send */* or no Accept header. The Spanish handler itself
+    // checks reviewed paths and the returned content type before translating.
+    if (request.method === "GET" || request.method === "HEAD") {
       const spanish = await spanishPageResponse(url, request, (englishRequest) =>
         handler.fetch(englishRequest, env, ctx));
       if (spanish) return securedResponse(spanish, url, staging);
@@ -226,7 +228,7 @@ const worker = {
       );
     }
 
-    const pageResponse = request.method === "GET" && acceptsHtml
+    const pageResponse = request.method === "GET" || request.method === "HEAD"
       ? englishPageAlternates(url, response)
       : response;
     return securedResponse(pageResponse, url, staging);

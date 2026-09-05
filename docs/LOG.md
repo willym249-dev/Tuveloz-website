@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Spanish browser language and crawler routing corrected
+
+PR #192 is deployed as `1fce795`, with 551 tests and 20 live release checks
+passing. Its warmer copy and punctuation repair are published. Subsequent
+Google live inspection exposed a separate 404 on `/es/join`. Direct HTTP
+reproduction returned 200 only with `Accept: text/html`; wildcard, missing
+Accept and HEAD requests returned 404. The Worker now routes Spanish GET/HEAD
+requests by their reviewed path and checks the returned content type instead
+of requiring a browser-specific Accept header. Non-HTML responses are untouched.
+
+The browser also reverted explicit `/es` URLs to English after hydration,
+hid the language switch there and replaced every page title with the homepage
+title. The language snapshot now honors reviewed Spanish URLs. The English
+switch returns to the corresponding English path with query/anchor intact;
+blocked storage no longer breaks the switch. Page-specific titles are retained.
+Five behavioral regression checks were added. Lint, production build and all
+556 tests pass without skips. Local browser checks show Spanish persists after
+initialization and the English switch works. The existing development warning
+from translating SSR text before React hydration still appears; this change
+repairs the resulting language selection, not the broader localization design.
+Record the production and Google retest outcomes separately.
+
+The first browser report for PR #192 incorrectly passed without asserting that
+Spanish URLs remained Spanish. It has been corrected to failed with the actual
+language mismatches retained. Future browser verification must assert final
+language and page title after client initialization as well as raw HTTP output.
+
+Google reports no security issues and no manual actions. The owner-approved
+Cloudmersive Basic $19.99/month purchase was attempted once using the checkout's
+saved payment option. The vendor could not charge it; no subscription is
+confirmed. The owner must change the payment method or resolve it with the
+bank before a further attempt. Scanner processing remains off. All customer,
+payment, SMS and provider/service launch locks remain in place.
+
 ## 2026-09-05 - Warmer public copy and escaped Spanish text repair
 
 The owner asked for research and more appealing, warm, human wording. Reviewed

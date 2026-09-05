@@ -117,17 +117,29 @@ function translateInterface(root: ParentNode, language: SiteLanguage) {
 // serve the crawlable /es twins. One list, so a page cannot be Spanish-ready in
 // the browser and absent from search, or the reverse.
 export { SPANISH_READY_PATHS, pathHasSpanish } from "../../lib/spanish-routes";
-import { pathHasSpanish } from "../../lib/spanish-routes";
+import { englishPathFor, pathHasSpanish } from "../../lib/spanish-routes";
+
+let inMemoryLanguage: SiteLanguage | undefined;
 
 function getLanguageSnapshot(): SiteLanguage {
   if (typeof window === "undefined") return "en";
+  // An explicit Spanish URL must survive hydration and any saved preference.
+  if (englishPathFor(window.location.pathname) !== null) return "es";
   // A page without reviewed Spanish stays English no matter what is stored.
   if (!pathHasSpanish(window.location.pathname)) return "en";
-  return window.localStorage.getItem(LANGUAGE_KEY) === "es" ? "es" : "en";
+  if (inMemoryLanguage) return inMemoryLanguage;
+  try {
+    return window.localStorage.getItem(LANGUAGE_KEY) === "es" ? "es" : "en";
+  } catch {
+    return "en";
+  }
 }
 
 function subscribeLanguage(listener: () => void) {
-  const handle = () => listener();
+  const handle = (event: Event) => {
+    if (event.type === "storage") inMemoryLanguage = undefined;
+    listener();
+  };
   window.addEventListener("storage", handle);
   window.addEventListener(LANGUAGE_EVENT, handle);
   return () => {
@@ -137,7 +149,17 @@ function subscribeLanguage(listener: () => void) {
 }
 
 function setStoredLanguage(language: SiteLanguage) {
-  window.localStorage.setItem(LANGUAGE_KEY, language);
+  inMemoryLanguage = language;
+  try {
+    window.localStorage.setItem(LANGUAGE_KEY, language);
+  } catch {
+    // The switch remains usable when browser storage is unavailable.
+  }
+  const englishPath = englishPathFor(window.location.pathname);
+  if (language === "en" && englishPath !== null) {
+    window.location.assign(`${englishPath}${window.location.search}${window.location.hash}`);
+    return;
+  }
   window.dispatchEvent(new Event(LANGUAGE_EVENT));
 }
 
@@ -158,9 +180,8 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
-    document.title = language === "es"
-      ? "Tuveloz | Opciones para clientes. Libertad para proveedores."
-      : "Tuveloz | Customer Choice. Provider Freedom.";
+    // Keep each page's title instead of replacing every title with the brand.
+    translateInterface(document.head, language);
     translateInterface(document.body, language);
     const observer = new MutationObserver(() => {
       window.queueMicrotask(() => translateInterface(document.body, language));
@@ -198,7 +219,7 @@ export function SiteLanguageButton() {
   useEffect(() => {
     // After paint, matching how the rest of the site defers client-only state,
     // so the server and client first render agree.
-    const ready = pathHasSpanish(window.location.pathname);
+    const ready = pathHasSpanish(englishPathFor(window.location.pathname) ?? window.location.pathname);
     queueMicrotask(() => setAvailable(ready));
   }, []);
 
