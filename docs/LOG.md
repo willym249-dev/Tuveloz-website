@@ -11,7 +11,7 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-04 - Owner dashboard measurement note
+## 2026-09-04 - Owner measurements and accurate public launch status
 
 PR #185 deployed successfully as `a67ad41`. All 15 independent live HTTP checks
 passed, including exact-release/schema checks and rejection of claimed completion
@@ -21,6 +21,14 @@ describing events as people and omitting the API's measurement note. The page no
 describes records and events accurately and displays the existing note about
 repeats, historical coverage, and missing telemetry. This is a display-only
 follow-up; event storage, signup, and all release gates remain as tested in #185.
+
+The public launch banner and customer FAQ also claimed that local providers
+were signing up "right now" and launch would be "very soon," without measured
+support for those statements. English and Spanish now state that applications
+are open, customer bookings are closed, and a launch date has not been announced.
+The signed-in banner no longer claims an account reserves a place in line.
+The canonical 5% fee definition and all 15 fee-consistency checks were verified
+before editing marketing copy. No branding assets or legal policy text changed.
 
 ## 2026-09-04 - Saved provider applications and email authentication
 

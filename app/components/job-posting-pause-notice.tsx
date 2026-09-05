@@ -9,7 +9,7 @@ import { useAccountHeaderState } from "./account-header-state";
 // job yet, and signing up books nothing and costs nothing — in the words a
 // person would actually use.
 const LAUNCH_BANNER_MESSAGE =
-  "Local pros near you are signing up right now. As soon as we open, you'll be able to say what your car needs and get prices back.";
+  "Provider applications are open in Montgomery County. Customer requests and bookings are not open yet.";
 
 const LAUNCH_BANNER_DETAIL =
   "Making an account today is free, and it doesn't book anything or charge you.";
@@ -18,7 +18,7 @@ const LAUNCH_BANNER_DETAIL =
 // signed in to go make an account is what makes a public page read as a
 // sign-out, so the banner speaks to the session it can actually see.
 const SIGNED_IN_BANNER_DETAIL =
-  "You're signed in and your spot is saved. Nothing here books anything or charges you.";
+  "You're signed in. Customer requests and bookings are not open yet, and nothing here charges you.";
 
 // Pages where a banner button would duplicate what the page already offers:
 // the provider pages carry "Apply free" in a sticky header, and /account is
@@ -157,7 +157,7 @@ export function JobPostingPauseNotice() {
       >
         <div className="tuveloz-launch-pause-copy">
           <div className="tuveloz-launch-pause-heading">
-            <strong>Almost open · Montgomery County, MD</strong>
+            <strong>Preparing to launch · Montgomery County, MD</strong>
             <button
               aria-controls="tuveloz-launch-pause-details"
               aria-expanded={expanded}
