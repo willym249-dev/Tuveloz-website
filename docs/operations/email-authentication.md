@@ -18,18 +18,18 @@ customer and every provider at the same time, with no workaround.
 
 ## Current configuration
 
-September 4 recheck: root SPF is still
-`v=spf1 include:_spf.porkbun.com ~all`, the default Workspace selector
-`google._domainkey.tuveloz.com` returns NXDOMAIN, and DMARC remains `p=none`.
-Cloudflare is the authoritative DNS host. A custom Workspace selector has not
-been ruled out; inspect Google Admin before creating or replacing a key.
+September 4 repair verified: root SPF is now
+`v=spf1 include:_spf.porkbun.com include:_spf.google.com ~all`, and
+`google._domainkey.tuveloz.com` publishes the 2048-bit Workspace public key.
+Google Admin reports that DKIM authentication is active. One owner-authorized
+message from `hello@tuveloz.com` reached a separate Gmail inbox; its received
+Authentication-Results reported SPF, DKIM (`d=tuveloz.com; s=google`), and DMARC
+all passing. The recipient address and account-administration details remain
+private. This is one controlled delivery, not a guarantee of future placement.
 
-The proposed root TXT update is
-`v=spf1 include:_spf.porkbun.com include:_spf.google.com ~all`. It preserves
-the current forwarding authorization while adding the existing Workspace
-sender. Update the existing SPF record, keeping other TXT records intact.
-No DNS change has been applied in this continuation. Google Admin and
-Cloudflare currently require owner sign-in.
+Cloudflare remains the authoritative DNS host. Registrar forwarding and the
+Resend subdomain records were preserved. DMARC remains `p=none` pending the
+separate sender-inventory and report review below.
 [Google SPF setup](https://knowledge.workspace.google.com/admin/security/set-up-spf),
 [Google DKIM setup](https://knowledge.workspace.google.com/admin/security/set-up-dkim).
 
@@ -42,7 +42,8 @@ placement, or a captured full `Authentication-Results` header.
 The sending identity is `alerts@updates.tuveloz.com` (`wrangler.jsonc`), sent
 through Resend, which delivers via Amazon SES.
 
-Verified 2026-08-10 by direct DNS query:
+Historical baseline, verified 2026-08-10 by direct DNS query (root Workspace
+records were repaired September 4 as described above):
 
 | Record | Value | State |
 | --- | --- | --- |
@@ -62,7 +63,7 @@ Resend key is still 1024-bit. Two additions from that check:
 | `tuveloz.com` MX | `smtp.google.com` | Google Workspace receives mail |
 | `google._domainkey.tuveloz.com` | — | NXDOMAIN, no Workspace DKIM |
 
-### The sender the reports are most likely to surface first
+### Historical Workspace finding (resolved September 4)
 
 The root domain receives at Google Workspace, and `hello@tuveloz.com` is the
 address used throughout this repository. Nothing here covers mail **sent** from
@@ -146,9 +147,9 @@ enforcement before that inventory is complete silently sends real mail to spam.
    An unread `rua` address makes the record decorative. **Receipt is confirmed
    (2026-08-16); naming the reader is not.**
 2. Stay at `p=none` for a full reporting month. Read the reports.
-3. Fix the Workspace sender before enforcement — add a Google SPF include to the
-   root record and publish a Workspace DKIM selector. This step was contingent
-   until 2026-08-16 and is now known to be required.
+3. Workspace sender repaired September 4: Google SPF and 2048-bit DKIM are
+   configured, with one received message passing SPF, DKIM, and DMARC. Continue
+   checking aggregate reports before enforcement.
 4. Only then move to `p=quarantine`, deliberately, once every legitimate sender
    is known to align.
 5. Rotate DKIM to a 2048-bit key. The current key is Resend's 1024-bit default —

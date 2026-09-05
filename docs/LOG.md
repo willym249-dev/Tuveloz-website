@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-04 - Saved provider applications and email authentication
+
+Provider completion previously came from a browser beacon after a generic 202,
+so repeating an existing application could inflate recruitment results. New
+completion events now originate only after a new application transaction commits;
+the event ID is idempotent and telemetry errors cannot fail the application.
+Tagged campaign labels and A/B assignments travel separately from verified
+application evidence. The public analytics endpoint rejects claimed completions,
+bounds JSON, checks same origin, rate limits, and drops unrecognized properties.
+Tracking survives blocked beacons and preserves landing attribution through
+navigation. The email-code stage is now measured.
+
+The owner dashboard separately counts actual non-test application records and
+uses server-confirmed completion events for campaigns. It calls browser totals
+events, removes unsupported abandonment/winner claims, and explains historical
+coverage, repeated visits, and telemetry loss. Legacy browser completions stay
+visible only as raw historical counts. Submission is not provider approval.
+
+Workspace DNS and one outgoing message are now verified: Google SPF include,
+2048-bit Google DKIM, and SPF/DKIM/DMARC pass at the receiving inbox. The `www`
+hostname now redirects permanently to the apex while preserving path and query.
+Account-administration details and recipient information remain private. The
+email runbook and completed deadline record are updated.
+
+Scanner and identity configuration still need the steps recorded in the
+provider activation runbook. No live vendor canary is claimed. Provider
+applications remain open; marketplace/payment/SMS locks and deferred branding
+work retain their existing state.
+
+Validation: lint, production build and all 527 tests passed, including focused
+scanner/Identity checks and new behavioral tracking checks. The isolated local
+signup test passed with fresh migrations, a saved campaign attribution, repeat
+application deduplication, forged-event rejection, provider sign-in, customer
+signup, and local notification delivery. Deployment is verified separately.
+
+The first Linux CI run reached a saved application, then failed with
+`UND_ERR_SOCKET` on the next request after synchronous D1 assertions. The
+fixture now requests fresh HTTP connections to avoid reusing an idle socket
+while its close event is queued. This change is confined to the local test
+transport; write requests are never automatically retried and every application
+assertion remains required. CI must pass on this revision before release.
+
 ## 2026-09-04 - Provider Spanish coverage and production support receipt
 
 PR #183 deployed as `c508a95`; 12 live HTTP checks and browser checks passed.

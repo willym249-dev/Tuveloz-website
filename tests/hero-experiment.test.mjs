@@ -38,7 +38,8 @@ test("hero and pitch each render both variants and tag the start event", async (
 test("submitted applications are attributed to the active variants", async () => {
   const form = await read("app/components/provider-signup-form.tsx");
   assert.match(form, /activeVariants/);
-  assert.match(form, /track\("provider_signup_completed",\s*\{\s*variants: activeVariants\(\)/);
+  assert.match(form, /analyticsAttribution: \{ \.\.\.campaignAttribution\(\), variants: activeVariants\(\)/);
+  assert.doesNotMatch(form, /track\("provider_signup_completed"/);
 });
 
 test("owner funnel reports conversion per variant for every experiment", async () => {

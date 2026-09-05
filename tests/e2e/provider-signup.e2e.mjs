@@ -32,6 +32,12 @@ const APP_PORT = 3011; // deliberately not 3000-3003: those belong to other sess
 const wrangler = join(repoRoot, "node_modules", "wrangler", "bin", "wrangler.js");
 
 const log = (msg) => console.log(`[e2e] ${msg}`);
+// Synchronous Wrangler database assertions can hold this process's event loop
+// past the dev server's idle timeout. Use fresh connections so Undici cannot
+// reuse a socket whose close event is still queued. Never retry a write.
+const fixtureFetch = (url, options = {}) => fetch(url, {
+  ...options, headers: { ...options.headers, connection: "close" },
+});
 // maxBuffer is raised well past Node's 1 MB default: `d1 migrations apply`
 // prints a table row per migration, and the suite crossed that ceiling at
 // sixty migrations with an ENOBUFS that looks nothing like the real cause.
@@ -275,7 +281,7 @@ async function main() {
   cleanups.push(() => catcher.kill());
   await waitFor(
     "mail catcher",
-    async () => (await fetch(`http://127.0.0.1:${mailPort}/messages`)).ok,
+    async () => (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages`)).ok,
     180_000,
     () => catcherFailure,
   );
@@ -322,7 +328,7 @@ async function main() {
       return true;
     }, 240_000);
     log(`dev server announced ${origin}`);
-    await waitFor("dev server", async () => (await fetch(`${origin}/api/health`)).ok);
+    await waitFor("dev server", async () => (await fixtureFetch(`${origin}/api/health`)).ok);
   } catch (error) {
     console.error(`[e2e] dev server never answered. Log at ${serverLog}:`);
     console.error(serverExit ? `server ` : "server still running");
@@ -345,7 +351,7 @@ async function main() {
   assert.ok(policy.version, "provider eligibility matrix has no schema_version");
 
   const payload = buildPayload(policy);
-  const challengeRes = await fetch(`${origin}/api/providers/challenge`, {
+  const challengeRes = await fixtureFetch(`${origin}/api/providers/challenge`, {
     method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(payload),
   });
   const challengeBody = await challengeRes.json();
@@ -354,19 +360,23 @@ async function main() {
   log("challenge issued");
 
   // 7. Read the code out of the catcher, not an inbox --------------------------
-  const caught = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  const caught = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
   assert.equal(caught.to[0], applicantEmail, "code went to the wrong recipient");
   assert.match(caught.code, /^\d{6}$/, `no 6-digit code in: ${caught.text}`);
   log(`code captured: ${caught.code}`);
 
   // 8. Complete the application ------------------------------------------------
-  const submitRes = await fetch(`${origin}/api/providers`, {
+  const submitRes = await fixtureFetch(`${origin}/api/providers`, {
     method: "POST",
     headers: sameOriginHeaders(origin),
     body: JSON.stringify({
       ...payload,
       challengeId: challengeBody.challengeId,
       verificationCode: caught.code,
+      analyticsAttribution: {
+        utm_source: "e2e", utm_campaign: "provider_first_5", variants: { provider_hero: "A" },
+        email: "must-not-enter-analytics@example.invalid",
+      },
     }),
   });
   const submitBody = await submitRes.json();
@@ -408,22 +418,60 @@ async function main() {
   );
   log("provider signup verified");
 
+  // Saved applications, not a browser's success screen, determine completion.
+  const completions = () => d1(workdir, "SELECT props FROM analytics_events WHERE event='provider_application_submitted';");
+  assert.equal(completions().length, 1, "one new application must create one server completion");
+  assert.deepEqual(JSON.parse(completions()[0].props), {
+    utm_source: "e2e", utm_campaign: "provider_first_5", variants: { provider_hero: "A" },
+  });
+  const duplicateChallengeRes = await fixtureFetch(`${origin}/api/providers/challenge`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(payload),
+  });
+  assert.equal(duplicateChallengeRes.status, 202);
+  const duplicateChallenge = await duplicateChallengeRes.json();
+  const duplicateMail = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(duplicateMail.to[0], applicantEmail);
+  const duplicateSubmitRes = await fixtureFetch(`${origin}/api/providers`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({
+      ...payload, challengeId: duplicateChallenge.challengeId, verificationCode: duplicateMail.code,
+      analyticsAttribution: { utm_source: "duplicate" },
+    }),
+  });
+  assert.equal(duplicateSubmitRes.status, 202, "repeat signup retains its privacy-preserving response");
+  assert.equal(completions().length, 1, "repeat signup must not inflate recruitment totals");
+  assert.equal(d1(workdir, `SELECT id FROM provider_applications WHERE email='${applicantEmail}';`).length, 1);
+  for (const event of ["provider_application_submitted", "provider_signup_completed"]) {
+    const forged = await fixtureFetch(`${origin}/api/analytics`, {
+      method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({ event }),
+    });
+    assert.equal(forged.status, 400, "public telemetry must reject claimed application completions");
+  }
+  const stage = await fixtureFetch(`${origin}/api/analytics`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({
+      event: "provider_verification_requested", props: { utm_source: "e2e", email: applicantEmail },
+    }),
+  });
+  assert.equal(stage.status, 202, "valid stage events must still work");
+  const stageRows = d1(workdir, "SELECT props FROM analytics_events WHERE event='provider_verification_requested';");
+  assert.deepEqual(JSON.parse(stageRows[0].props), { utm_source: "e2e" });
+  log("server-confirmed campaign tracking, repeat signup and forged-event rejection verified");
+
   // 10. Customer account signup ------------------------------------------------
   // The other half of "can people actually sign up". A customer never touches
   // the provider application; they create a password account, which is open
   // while the marketplace itself is closed.
-  const customerCodeRes = await fetch(`${origin}/api/auth/password/request`, {
+  const customerCodeRes = await fixtureFetch(`${origin}/api/auth/password/request`, {
     method: "POST",
     headers: sameOriginHeaders(origin),
     body: JSON.stringify({ email: customerEmail, role: "customer", purpose: "create" }),
   });
   assert.ok(customerCodeRes.ok, `customer code request failed (${customerCodeRes.status})`);
 
-  const customerMail = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  const customerMail = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
   assert.equal(customerMail.to[0], customerEmail, "customer code went to the wrong recipient");
   assert.match(customerMail.code, /^\d{6}$/, `no 6-digit code in: ${customerMail.text}`);
 
-  const customerCreateRes = await fetch(`${origin}/api/auth/password/complete`, {
+  const customerCreateRes = await fixtureFetch(`${origin}/api/auth/password/complete`, {
     method: "POST",
     headers: sameOriginHeaders(origin),
     body: JSON.stringify({
@@ -469,17 +517,17 @@ async function main() {
   // eligibility comes from the application, not from a completed review, so a
   // brand-new applicant must be able to create a password account and land on
   // onboarding — never on the "no active exact-service access" error.
-  const providerCodeRes = await fetch(`${origin}/api/auth/password/request`, {
+  const providerCodeRes = await fixtureFetch(`${origin}/api/auth/password/request`, {
     method: "POST",
     headers: sameOriginHeaders(origin),
     body: JSON.stringify({ email: applicantEmail, role: "provider", purpose: "create" }),
   });
   assert.ok(providerCodeRes.ok, `provider code request failed (${providerCodeRes.status})`);
 
-  const providerMail = await (await fetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  const providerMail = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
   assert.equal(providerMail.to[0], applicantEmail, "provider code went to the wrong recipient");
 
-  const providerCreateRes = await fetch(`${origin}/api/auth/password/complete`, {
+  const providerCreateRes = await fixtureFetch(`${origin}/api/auth/password/complete`, {
     method: "POST",
     headers: sameOriginHeaders(origin),
     body: JSON.stringify({
@@ -499,7 +547,7 @@ async function main() {
 
   const sessionCookie = (providerCreateRes.headers.get("set-cookie") ?? "").split(";")[0];
   assert.ok(sessionCookie, "provider signup returned no session cookie");
-  const accountRes = await fetch(`${origin}/api/account`, {
+  const accountRes = await fixtureFetch(`${origin}/api/account`, {
     headers: { ...sameOriginHeaders(origin), cookie: sessionCookie },
   });
   const accountBody = await accountRes.json();

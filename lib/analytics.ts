@@ -8,12 +8,13 @@
  * to change.
  */
 
+import { ATTRIBUTION_KEYS, cleanAnalyticsProps } from "./analytics-policy";
+
 export type AnalyticsEvent =
   | "provider_signup_started"
   | "provider_step1_completed"
   | "provider_step2_completed"
-  | "provider_step2_abandoned"
-  | "provider_signup_completed"
+  | "provider_verification_requested"
   | "provider_first_quote_sent"
   // Account creation is role-neutral: both customers and provider applicants
   // create sign-in credentials here. The role travels in props rather than in
@@ -31,14 +32,6 @@ export type AnalyticsEvent =
   // than on follower count alone.
   | "social_follow_clicked";
 
-const ATTRIBUTION_KEYS = [
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_content",
-  "utm_term",
-] as const;
-
 type AttributionKey = (typeof ATTRIBUTION_KEYS)[number];
 type Attribution = Partial<Record<AttributionKey, string>>;
 
@@ -47,7 +40,8 @@ const ATTRIBUTION_VALUE_LIMIT = 120;
 
 function cleanAttributionValue(value: string | null) {
   if (!value) return "";
-  return value.trim().slice(0, ATTRIBUTION_VALUE_LIMIT);
+  const label = value.trim();
+  return label.length <= ATTRIBUTION_VALUE_LIMIT && /^[a-z0-9][a-z0-9_-]*$/i.test(label) ? label : "";
 }
 
 /**
@@ -56,7 +50,8 @@ function cleanAttributionValue(value: string | null) {
  * the landing attribution across those navigations without creating a durable
  * cross-session profile.
  */
-function campaignAttribution(): Attribution {
+export function campaignAttribution(): Attribution {
+  if (typeof window === "undefined") return {};
   const fromUrl: Attribution = {};
   const search = new URLSearchParams(window.location.search);
   for (const key of ATTRIBUTION_KEYS) {
@@ -87,21 +82,24 @@ function campaignAttribution(): Attribution {
 
 export function track(event: AnalyticsEvent, props: Record<string, unknown> = {}) {
   if (typeof window === "undefined") return;
-  const payload = JSON.stringify({
-    event,
-    props: { ...campaignAttribution(), ...props },
-    at: new Date().toISOString(),
-  });
-  const sent = typeof navigator.sendBeacon === "function"
-    && navigator.sendBeacon("/api/analytics", new Blob([payload], { type: "application/json" }));
-  if (!sent) {
-    fetch("/api/analytics", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: payload,
-      keepalive: true,
-    }).catch(() => {
-      // Analytics is supporting data; a failed beacon must not block the user.
+  try {
+    const payload = JSON.stringify({
+      event,
+      props: cleanAnalyticsProps({ ...campaignAttribution(), ...props }),
+      at: new Date().toISOString(),
     });
-  }
+    let sent = false;
+    try {
+      sent = typeof navigator.sendBeacon === "function"
+        && navigator.sendBeacon("/api/analytics", new Blob([payload], { type: "application/json" }));
+    } catch { /* Some browsers reject beacons; try fetch below. */ }
+    if (!sent) {
+      fetch("/api/analytics", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(() => { /* Analytics must not block the user. */ });
+    }
+  } catch { /* Browser API failures must never interrupt signup. */ }
 }

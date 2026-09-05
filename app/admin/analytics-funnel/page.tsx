@@ -32,11 +32,11 @@ type CampaignRow = {
 };
 
 type WindowPayload = {
+  savedApplications: number;
   provider: FunnelStage[];
   customer: FunnelStage[];
   context: {
     requirementsStepCompleted: number;
-    requirementsStepAbandoned: number;
     providerFirstQuoteSent: number;
   };
   experiments: Record<string, ExperimentRow[]>;
@@ -49,8 +49,9 @@ function CampaignAttribution({ rows }: { rows: CampaignRow[] }) {
     <section style={{ marginTop: "1.75rem" }}>
       <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Provider campaign results</h2>
       <p className="hint" style={{ margin: "0 0 0.75rem", fontSize: "0.82rem" }}>
-        Signup starts and completed applications from tagged campaign links.
-        Untagged visits are excluded from this table.
+        Form-open events and new applications saved from tagged links since server
+        tracking began. Untagged activity is excluded. Ratios are directional;
+        repeat visits and missing telemetry affect them.
       </p>
       {rows.length === 0 ? (
         <p className="hint" style={{ margin: 0 }}>No tagged provider visits in this window yet.</p>
@@ -63,7 +64,7 @@ function CampaignAttribution({ rows }: { rows: CampaignRow[] }) {
                 <th style={{ textAlign: "left", padding: "0.3rem 0.6rem" }}>Creative</th>
                 <th style={{ textAlign: "right", padding: "0.3rem 0.6rem" }}>Started</th>
                 <th style={{ textAlign: "right", padding: "0.3rem 0.6rem" }}>Submitted</th>
-                <th style={{ textAlign: "right", padding: "0.3rem 0" }}>Conversion</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0" }}>Submitted / opens</th>
               </tr>
             </thead>
             <tbody>
@@ -117,7 +118,7 @@ const EXPERIMENT_META: Array<{
   {
     name: "founding_cta",
     title: "Founding-banner button",
-    labels: { A: "“Join free”", B: "“Claim my spot”" },
+    labels: { A: "“Apply free”", B: "“Claim my spot”" },
   },
 ];
 
@@ -131,12 +132,6 @@ function Experiment({
   rows: ExperimentRow[];
 }) {
   const totalStarted = rows.reduce((sum, row) => sum + row.started, 0);
-  const leader = rows.reduce<ExperimentRow | null>((best, row) => {
-    if (row.started === 0) return best;
-    if (!best || row.conversion > best.conversion) return row;
-    return best;
-  }, null);
-  const enoughData = totalStarted >= 100 && rows.every((row) => row.started >= 30);
   return (
     <section style={{ marginTop: "1.5rem" }}>
       <h3 style={{ fontSize: "0.98rem", margin: "0 0 0.35rem" }}>{title}</h3>
@@ -148,19 +143,17 @@ function Experiment({
             <thead>
               <tr>
                 <th style={{ textAlign: "left", padding: "0.3rem 0.6rem 0.3rem 0", opacity: 0.7 }}>Variant</th>
-                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Visitors</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Form opens</th>
                 <th style={{ textAlign: "right", padding: "0.3rem 0.6rem", opacity: 0.7 }}>Submitted</th>
-                <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Conversion</th>
+                <th style={{ textAlign: "right", padding: "0.3rem 0", opacity: 0.7 }}>Submitted / opens</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
-                const isLeader = enoughData && leader?.variant === row.variant;
                 return (
                   <tr key={row.variant}>
                     <td style={{ padding: "0.3rem 0.6rem 0.3rem 0" }}>
                       <strong>{row.variant}</strong> {labels[row.variant] ?? ""}
-                      {isLeader && <span style={{ marginLeft: "0.4rem" }}>★ leading</span>}
                     </td>
                     <td style={{ padding: "0.3rem 0.6rem", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                       {row.started}
@@ -177,9 +170,8 @@ function Experiment({
             </tbody>
           </table>
           <p className="hint" style={{ margin: "0.5rem 0 0", fontSize: "0.78rem" }}>
-            {enoughData
-              ? "Enough data to read a direction — but confirm the gap holds before you commit."
-              : "Small sample so far. Wait for at least ~30 visitors per variant before trusting the winner."}
+            Event counts do not establish an experiment winner. Review comparable
+            cohorts and enough completed applications before changing the copy.
           </p>
         </>
       )}
@@ -192,8 +184,8 @@ function Experiments({ windows }: { windows: WindowPayload["experiments"] }) {
     <section style={{ marginTop: "1.75rem" }}>
       <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.35rem" }}>Copy experiments</h2>
       <p className="hint" style={{ margin: "0 0 0.25rem", fontSize: "0.82rem" }}>
-        Which wording turns visitors into submitted applications. Real, first-party
-        conversion — no guesswork, nothing shared with a third party.
+        First-party form events and server-confirmed new submissions by wording.
+        These are event ratios, not a statistical result or unique visitor counts.
       </p>
       {EXPERIMENT_META.map((meta) => (
         <Experiment
@@ -349,7 +341,7 @@ function Funnel({ title, stages, empty }: { title: string; stages: FunnelStage[]
   return (
     <section style={{ marginTop: "1.5rem" }}>
       <h2 style={{ fontSize: "1.05rem", margin: "0 0 0.75rem" }}>{title}</h2>
-      {startCount === 0 ? (
+      {stages.every((stage) => stage.count === 0) ? (
         <p className="hint" style={{ margin: 0 }}>{empty}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -368,7 +360,7 @@ function Funnel({ title, stages, empty }: { title: string; stages: FunnelStage[]
                 <span style={{ fontVariantNumeric: "tabular-nums", opacity: 0.85 }}>
                   <strong>{stage.count}</strong>
                   {index > 0 && (
-                    <> · {stage.pctOfStart}% of start · {stage.pctOfPrev}% of prev</>
+                    <> · {startCount > 0 ? `${stage.pctOfStart}% of opening events` : "no opening events recorded"}</>
                   )}
                 </span>
               </div>
@@ -383,7 +375,7 @@ function Funnel({ title, stages, empty }: { title: string; stages: FunnelStage[]
                 <div
                   style={{
                     height: "100%",
-                    width: `${Math.max(stage.pctOfStart, startCount > 0 && stage.count > 0 ? 2 : 0)}%`,
+                    width: `${Math.min(100, Math.max(stage.pctOfStart, stage.count > 0 ? 2 : 0))}%`,
                     background: "var(--brand-accent, #f97316)",
                     borderRadius: "999px",
                     transition: "width 200ms ease",
@@ -392,7 +384,7 @@ function Funnel({ title, stages, empty }: { title: string; stages: FunnelStage[]
               </div>
               {index > 0 && stage.droppedFromPrev > 0 && (
                 <p className="hint" style={{ margin: "0.15rem 0 0", fontSize: "0.78rem" }}>
-                  {stage.droppedFromPrev} dropped off at this step
+                  {stage.droppedFromPrev} fewer events than the previous stage; this does not prove abandonment
                 </p>
               )}
             </div>
@@ -484,8 +476,14 @@ export default function AnalyticsFunnelPage() {
             ))}
           </div>
 
+          <p className="hint" style={{ marginTop: "1rem" }}>
+            <strong>{active.savedApplications}</strong> saved provider applications in this
+            window, excluding test providers. This total includes applications saved
+            before campaign tracking began and does not mean they are approved.
+          </p>
+
           <Funnel
-            title="Provider applications"
+            title="Provider application events"
             stages={active.provider}
             empty="No provider signups have started in this window yet."
           />
@@ -497,11 +495,8 @@ export default function AnalyticsFunnelPage() {
           <p className="hint" style={{ marginTop: "0.75rem" }}>
             Requirements step (only shown for services that need proof or legal documents):{" "}
             <strong>{active.context.requirementsStepCompleted}</strong> completed it
-            {active.context.requirementsStepAbandoned > 0 && (
-              <>, {active.context.requirementsStepAbandoned} abandoned it</>
-            )}
-            . A gap between &ldquo;Your services&rdquo; and &ldquo;Submitted&rdquo; is partly this
-            skippable step, not only drop-off.
+            . This optional stage is shown separately. Event gaps can include applicants
+            still completing the form and missed telemetry.
           </p>
 
           <Funnel

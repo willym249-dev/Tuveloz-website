@@ -42,6 +42,7 @@ import { PROVIDER_POLICY_BUNDLE_VERSION } from "../../../lib/policies";
 import { recordPhoneContactConsent } from "../../../lib/phone-contact-consent";
 import { recordReferralSignup } from "../../../lib/referrals";
 import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
+import { recordProviderApplicationSubmitted } from "../../../lib/provider-application-analytics";
 
 const NO_STORE_HEADERS = { "cache-control": "private, no-store" };
 const EMAIL_CONTROL_SCOPE =
@@ -454,6 +455,8 @@ export async function POST(request: Request) {
       }
       return genericCompleteResponse();
     }
+
+    await recordProviderApplicationSubmitted(providerId, body.analyticsAttribution);
 
     // Optional, provider-declared certificates (e.g. ASE) go into the existing
     // provider_submitted_credentials pipeline as pending + not-public. The owner

@@ -1,39 +1,37 @@
 import { getDb } from "../../../db";
 import { analyticsEvents } from "../../../db/schema";
 
-const KNOWN_EVENTS = new Set([
-  "provider_signup_started",
-  "provider_step1_completed",
-  "provider_step2_completed",
-  "provider_step2_abandoned",
-  "provider_signup_completed",
-  "provider_first_quote_sent",
-  "account_create_started",
-  "account_create_code_sent",
-  "account_created",
-  "customer_request_started",
-  "customer_request_posted",
-  "quote_received",
-  "quote_accepted",
-  "job_completed",
-  "social_follow_clicked",
-]);
+import { CLIENT_ANALYTICS_EVENTS, cleanAnalyticsProps } from "../../../lib/analytics-policy";
+import { readLimitedJsonObject, RequestBodyTooLargeError } from "../../../lib/limited-json";
+import { isStrictSameOriginWriteRequest } from "../../../lib/request-security";
+import { consumeFixedWindow, rateLimitKeyHash } from "../../../lib/public-write-rate-limit";
+
+const reply = (body: unknown, status: number) => Response.json(body, {
+  status, headers: { "cache-control": "no-store" },
+});
 
 export async function POST(request: Request) {
+  if (!isStrictSameOriginWriteRequest(request)) return reply({ error: "Origin required." }, 403);
+  let body: Record<string, unknown>;
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const event = typeof body.event === "string" ? body.event : "";
-    if (!KNOWN_EVENTS.has(event)) {
-      return Response.json({ error: "Unknown event." }, { status: 400 });
+    body = await readLimitedJsonObject(request, 4096);
+  } catch (error) {
+    return reply({ error: "Invalid event body." }, error instanceof RequestBodyTooLargeError ? 413 : 400);
+  }
+  const event = typeof body.event === "string" ? body.event : "";
+  if (!CLIENT_ANALYTICS_EVENTS.has(event)) return reply({ error: "Unknown event." }, 400);
+  try {
+    const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
+    if (!await consumeFixedWindow("analytics-ip", await rateLimitKeyHash(ip), 120, 60_000)) {
+      return reply({ error: "Too many events." }, 429);
     }
     await getDb().insert(analyticsEvents).values({
       id: crypto.randomUUID(),
       event,
-      props: JSON.stringify(body.props ?? {}),
+      props: JSON.stringify(cleanAnalyticsProps(body.props)),
     });
-    return Response.json({ ok: true }, { status: 202 });
-  } catch (error) {
-    console.error("Unable to record analytics event", error);
-    return Response.json({ error: "Could not record event." }, { status: 400 });
+    return reply({ ok: true }, 202);
+  } catch {
+    return reply({ error: "Could not record event." }, 503);
   }
 }

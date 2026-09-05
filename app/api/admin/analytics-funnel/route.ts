@@ -1,6 +1,7 @@
-import { and, count, gte, inArray } from "drizzle-orm";
+import { and, count, eq, gte, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
-import { analyticsEvents, launchUpdateSubscribers } from "../../../../db/schema";
+import { analyticsEvents, launchUpdateSubscribers, providerApplications } from "../../../../db/schema";
+import { PROVIDER_APPLICATION_SUBMITTED } from "../../../../lib/analytics-policy";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
 import { ASSISTANT_EVENT, type AssistantEventProps } from "../../../../lib/ai/assistant-telemetry";
 import { POLICY_ENTRIES } from "../../../../lib/ai/policy-knowledge";
@@ -19,7 +20,8 @@ type StepDef = { key: string; event: string; label: string };
 const PROVIDER_FUNNEL: StepDef[] = [
   { key: "started", event: "provider_signup_started", label: "Opened the provider form" },
   { key: "services", event: "provider_step1_completed", label: "Finished step: Your services" },
-  { key: "submitted", event: "provider_signup_completed", label: "Submitted the application" },
+  { key: "verification", event: "provider_verification_requested", label: "Requested the email verification code" },
+  { key: "submitted", event: PROVIDER_APPLICATION_SUBMITTED, label: "Saved a new application (server confirmed)" },
 ];
 
 const CUSTOMER_FUNNEL: StepDef[] = [
@@ -34,6 +36,8 @@ const ALL_EVENTS = [
   "provider_step2_completed",
   "provider_step2_abandoned",
   "provider_signup_completed",
+  "provider_verification_requested",
+  PROVIDER_APPLICATION_SUBMITTED,
   "provider_first_quote_sent",
   "customer_request_started",
   "customer_request_posted",
@@ -138,12 +142,13 @@ function readVariant(props: string | null, name: string): string {
   return "";
 }
 
-// Real conversion per copy variant, so wording is judged by data, not taste.
+// Event ratios per copy variant; repeated visits and unmatched time windows
+// mean these are supporting data, not unique-visitor conversion or significance.
 // Rows without a valid A/B variant are ignored rather than lumped into a
 // misleading bucket.
 async function experimentsSince(sinceValue: string | null): Promise<Record<string, ExperimentRow[]>> {
   const db = getDb();
-  const events = ["provider_signup_started", "provider_signup_completed"];
+  const events = ["provider_signup_started", PROVIDER_APPLICATION_SUBMITTED];
   const eventFilter = inArray(analyticsEvents.event, events);
   const rows = await db
     .select({ event: analyticsEvents.event, props: analyticsEvents.props })
@@ -191,7 +196,7 @@ function readCampaign(props: string | null) {
 async function campaignsSince(sinceValue: string | null): Promise<CampaignRow[]> {
   const eventFilter = inArray(analyticsEvents.event, [
     "provider_signup_started",
-    "provider_signup_completed",
+    PROVIDER_APPLICATION_SUBMITTED,
   ]);
   const rows = await getDb()
     .select({ event: analyticsEvents.event, props: analyticsEvents.props })
@@ -218,14 +223,15 @@ function windowPayload(
   counts: Map<string, number>,
   experiments: Record<string, ExperimentRow[]>,
   campaigns: CampaignRow[],
+  savedApplications: number,
 ) {
   return {
+    savedApplications,
     provider: buildFunnel(PROVIDER_FUNNEL, counts),
     customer: buildFunnel(CUSTOMER_FUNNEL, counts),
     context: {
       // Step 2 is conditional — see note above.
       requirementsStepCompleted: counts.get("provider_step2_completed") ?? 0,
-      requirementsStepAbandoned: counts.get("provider_step2_abandoned") ?? 0,
       providerFirstQuoteSent: counts.get("provider_first_quote_sent") ?? 0,
     },
     experiments,
@@ -235,6 +241,14 @@ function windowPayload(
 }
 
 const TOPIC_LABELS = new Map(POLICY_ENTRIES.map((entry) => [entry.id, entry.question]));
+
+// Authoritative counts include earlier applications and do not rely on beacons.
+async function savedApplicationsSince(since: string | null) {
+  const real = eq(providerApplications.isTestProvider, "no");
+  const [row] = await getDb().select({ value: count() }).from(providerApplications)
+    .where(since ? and(real, gte(providerApplications.createdAt, since)) : real);
+  return Number(row?.value ?? 0);
+}
 
 /**
  * What the assistant has been asked and whether its money answers stayed
@@ -356,6 +370,7 @@ export async function GET(request: Request) {
     const [
       allTime, last30, last7, expAll, exp30, exp7, campaignAll, campaign30, campaign7,
       assistantAll, assistant7, launchList,
+      savedAll, saved30, saved7,
     ] = await Promise.all([
       countsSince(null),
       countsSince(since30),
@@ -369,15 +384,18 @@ export async function GET(request: Request) {
       assistantSummary(null),
       assistantSummary(since7),
       launchListSummary(since7),
+      savedApplicationsSince(null),
+      savedApplicationsSince(since30),
+      savedApplicationsSince(since7),
     ]);
     return Response.json(
       {
         generatedAt: new Date(now).toISOString(),
-        note: "First-party funnel from analytics_events. Step 2 (Requirements) is conditional and shown as context, not a mainline stage, because the form skips it when selected services need no proof or legal documents.",
+        note: "Saved application totals come from application records and exclude test providers. Funnel stages are event counts, not unique people or matched cohorts; repeat visits and different time windows can change the ratios. Email-code and server-confirmed submission events began with the tracking repair; older browser-reported completions remain only in raw counts. Blocked or failed telemetry can undercount. Requirements is a conditional step.",
         windows: {
-          allTime: windowPayload(allTime, expAll, campaignAll),
-          last30: windowPayload(last30, exp30, campaign30),
-          last7: windowPayload(last7, exp7, campaign7),
+          allTime: windowPayload(allTime, expAll, campaignAll, savedAll),
+          last30: windowPayload(last30, exp30, campaign30, saved30),
+          last7: windowPayload(last7, exp7, campaign7, saved7),
         },
         assistant: { allTime: assistantAll, last7: assistant7 },
         launchList,
