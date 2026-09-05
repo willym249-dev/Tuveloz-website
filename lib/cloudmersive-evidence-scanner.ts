@@ -237,8 +237,9 @@ async function processOnePendingScan(pending: PendingScan, apiKey: string) {
   formData.append("inputFile", new File([bytes], scannerFileName, { type: contentType }));
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("Cloudmersive scan timeout"), SCAN_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
   let response: Response;
+  let rawResult: string;
   try {
     response = await fetch(CLOUDMERSIVE_ADVANCED_SCAN_URL, {
       method: "POST",
@@ -246,19 +247,21 @@ async function processOnePendingScan(pending: PendingScan, apiKey: string) {
       body: formData,
       signal: controller.signal,
     });
+    if (!response.ok) {
+      // Release the unread error body. Authentication, quota, rate-limit and
+      // vendor failures leave the D1 row pending for a later cron retry.
+      controller.abort();
+      throw new RetryableCloudmersiveError(
+        `cloudmersive_http_${response.status}`,
+        `Cloudmersive scan returned HTTP ${response.status}.`,
+      );
+    }
+    // Fetch resolves at the headers; keep the deadline through the body read.
+    rawResult = await readBoundedResponse(response);
   } finally {
     clearTimeout(timeout);
   }
-  if (!response.ok) {
-    // Authentication, quota, rate-limit, and vendor failures do not prove the
-    // file safe or unsafe. Leave the D1 row pending for a later cron retry.
-    throw new RetryableCloudmersiveError(
-      `cloudmersive_http_${response.status}`,
-      `Cloudmersive scan returned HTTP ${response.status}.`,
-    );
-  }
 
-  const rawResult = await readBoundedResponse(response);
   let result: unknown;
   try {
     result = JSON.parse(rawResult);

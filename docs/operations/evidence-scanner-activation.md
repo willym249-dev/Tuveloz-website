@@ -2,14 +2,16 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-05
 - **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the Cloudmersive scheduled scanner,
   and the `evidence_file_security_and_scanner` launch gate
 
-The scanner is built and tested; nothing here is code work. What is missing is a
-vendor account, two secrets, and one config value. This is the order to do them
-in, and — the part worth reading — how to tell it actually works rather than
-merely reports success.
+The owner-approved free Cloudmersive account exists and its API key is stored
+as an encrypted Worker secret. Production processing remains off:
+`EVIDENCE_SCAN_PROVIDER` is `unconfigured` and the callback secret is not set.
+The free plan does not cover the site's 10 MB upload allowance. Resolve vendor
+capacity before setting the remaining secret and enabling processing, then
+verify a guarded production scan. No paid subscription has been approved.
 
 The interface contract is
 [`../EVIDENCE_SCANNER_CALLBACK.md`](../EVIDENCE_SCANNER_CALLBACK.md). This
@@ -22,7 +24,9 @@ callback must do.
 - `lib/cloudmersive-scan-policy.ts` — configuration test and result classifier
 - `lib/evidence-scan-result-recorder.ts` — the shared D1 recorder
 - `app/api/internal/evidence-scan-result/route.ts` — the signed callback
-- `tests/cloudmersive-evidence-scanner.test.mjs` — 13 tests, passing today
+- `tests/cloudmersive-evidence-scanner.test.mjs` — result-policy, binding and retry checks
+- `tests/cloudmersive-transport.test.mjs` — streamed-response deadlines, error-body
+  cleanup and fail-closed outcomes for evidence and message images
 - A cron trigger every 15 minutes (`wrangler.jsonc`), which calls
   `processPendingCloudmersiveEvidenceScans()` from `worker/index.ts`
 
@@ -40,10 +44,22 @@ config last.
 
 ### 1. Vendor account
 
-Create a Cloudmersive account with a plan that includes the **Advanced Virus
+Use a Cloudmersive account with a plan that includes the **Advanced Virus
 Scan** endpoint. The basic scan endpoint is not enough — the scanner requires the
 advanced threat flags, and a clean result is recorded only when all of them are
-explicitly false, the virus list is empty, and a verified file format is present.
+explicitly false, the virus list is explicitly empty or null, and a verified
+file format is present.
+
+On September 5, 2026, the public [small-business pricing](https://cloudmersive.com/pricing-small-business)
+and [plan selector](https://portal.cloudmersive.com/selectplan) list the free
+tier at 600 calls/month, one request/second and 3.5 MB. Basic lists
+$19.99 USD/month, 10,000 calls/month, two requests/second and a general 1 GB
+file limit; individual API limits can differ. Confirm Advanced Virus Scan
+coverage for the site's actual `10 * 1024 * 1024` byte limit and the account's
+checkout terms before purchasing. Existing code does not coordinate a shared
+rate limit between evidence and message-image sweeps; include quota and 429
+retry behavior in the activation rehearsal. Do not silently reduce the site's
+upload allowance or subscribe without owner approval.
 
 ### 2. Two secrets, set by the owner
 
@@ -105,6 +121,12 @@ request `pending` for retry — not clean. A missing, oversized, or
 hash-mismatched R2 object is a terminal local integrity error recorded as
 non-clean. If you can, verify one non-clean outcome before relying on the clean
 one: a scanner that cannot fail has not been shown to work.
+
+The 45-second vendor deadline covers both response headers and the complete
+bounded response body. A vendor that starts responding and then stalls must
+still time out, with no terminal clean verdict. HTTP failures release their
+unread bodies. Result recording starts only after the full body is received
+and classified; network deadlines do not interrupt database recording.
 
 ## What it still does not do
 
