@@ -33,6 +33,13 @@ from translating SSR text before React hydration still appears; this change
 repairs the resulting language selection, not the broader localization design.
 Record the production and Google retest outcomes separately.
 
+The owner also requested all-button testing. A read-only navigation audit found
+325 internal links across 24 public pages resolved successfully, including
+their destination anchors. Manual purpose checks found the homepage's account
+buttons took visitors to another marketing page. They now use the shared
+account-aware button: guests reach account creation directly, while signed-in
+visitors return to their workspace. No real application or email was submitted.
+
 The first browser report for PR #192 incorrectly passed without asserting that
 Spanish URLs remained Spanish. It has been corrected to failed with the actual
 language mismatches retained. Future browser verification must assert final
