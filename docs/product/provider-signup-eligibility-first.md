@@ -1,68 +1,79 @@
-# Provider signup: show eligibility before asking for choices
+# Provider signup: choose services, see the checklist, then apply
 
-- **Status:** draft
+- **Status:** implemented
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
-- **Applies to:** provider signup form, provider landing page
+- **Last reviewed:** 2026-09-05
+- **Applies to:** English and Spanish provider signup
 
-Records the reasoning from pull request #108, which was closed unmerged on
-2026-08-11 because its code had gone stale. The problem it identified is real
-and unfixed; this document keeps the thinking so it can be rebuilt against the
-current form rather than rediscovered.
+Applicants should understand what they are applying for and what happens next.
+The September 5 revision starts with service choices, then shows the documents
+and questions for those services, and finally collects business details and
+required acknowledgments. Applicants can apply before their documents are
+ready. Customer bookings and service activation still require approval.
 
-## The problem
+## What changed
 
-The provider flow asks an applicant to choose services before telling them
-whether they qualify or what will be reviewed. Someone who does not know
-whether they are eligible is being asked to commit to specifics first, and the
-application itself sits behind repeated promotional content on the landing
-page. The order is backwards: the question a prospective provider arrives with
-is "can I do this at all", and the flow answers it last.
+The first step explains the current application area and that bookings are not
+open yet. Internal application-tier labels are no longer shown. County
+registration guidance is available inside a collapsed detail in the checklist,
+only when the existing requirement engine calls for that registration.
 
-## What was proposed
+The checklist shows every required document once and identifies exactly which
+selected services need it. Previously, only identical document sets were grouped:
+battery replacement and A/C work repeated their shared county registration and
+owner-operator attestation. Those services now produce four checklist items
+instead of six, retaining the battery-handling plan and A/C certificate as
+service-specific requirements.
+This is a display change; it does not automatically reuse uploads or change
+the evidence needed for each service review.
 
-1. **Reframe the provider call to action as a requirements check** rather than
-   an invitation to apply. The applicant's first question is eligibility, so
-   the entry point should answer that.
-2. **A short three-step eligibility path before business details**, so the
-   applicant learns where they stand before filling in anything specific.
-3. **A registration or credential-review cue next to each selected service**,
-   so the consequence of a selection is visible at the moment it is made
-   rather than discovered at the upload step.
-4. **Say plainly that an applicant may apply before their documents are
-   complete**, while job access stays disabled until approval.
-5. **Remove nonessential marketing sections that sit ahead of the application**
-   on the provider landing page.
+Unverified requirements use neutral bullets. Self-reported answers no longer
+produce a claim that legal requirements are confirmed. Applicants who select
+"Not yet" or "Not sure" are told they can continue and what still needs review.
+The confirmation clearly separates receipt of an application, email verification,
+and approval to provide services.
 
-## What has since landed
+Background review flags no longer display an empty legal-question section for
+photo-only work. The section and acknowledgment appear when there is an actual
+applicable question. On phones, changing steps now moves focus and scrolls to
+the next step below the fixed navigation, instead of leaving applicants below
+the form when the next step is shorter.
 
-Point 4 shipped on 2026-08-10 by a different route. The form now shows the
-count of distinct documents a selection requires, with the line "You don't need
-them right now. The next step shows you exactly which ones." Anyone reviving
-this work should treat point 4 as done and check the others against the current
-form before assuming they are still missing.
+## Current competitor reference points
 
-## Why the original pull request was not rebased
+Reviewed on September 5, 2026:
 
-#108 branched at `724fa7a` and edited 67 lines of
-`app/components/provider-signup-form.tsx`. Seven commits touched that file
-afterwards — the document-count preview, the signup lineage reconciliation, the
-legal-only requirements and W-9 step, and the clickwrap translation barrier in
-#123. The file it was written against no longer exists in that shape, and two
-separate stale branches that day produced diffs that appeared to delete live
-features purely because they were behind. Rebuilding against the current form
-is cheaper and safer than transplanting the diff.
+- [Taskrabbit's Tasker signup instructions](https://support.taskrabbit.com/hc/en-us/articles/46260467885979-How-Do-I-Become-a-Tasker)
+  describe staged setup with skills and location, account details, and later
+  identity verification. Tuveloz follows a clear sequence while keeping its
+  own service-specific review rules.
+- [Wrench's technician app listing, published by Wrench Inc.](https://play.google.com/store/apps/details?hl=en&id=com.wrench.techapp3)
+  distinguishes signup, profile completion, and activation, and emphasizes
+  provider control over schedules and service areas. Tuveloz likewise makes
+  the application-to-approval distinction explicit.
 
-## Constraints on any rebuild
+These are usability reference points, not evidence of improved conversion or
+proof that Tuveloz outperforms either business. No competitor's fees, earnings,
+approval timelines, or legal requirements were copied into Tuveloz.
 
-- An eligibility preview must not become an eligibility *decision*. Approval
-  stays server-side in `config/provider-eligibility-matrix.json` and the
-  launch-readiness gates; a friendlier front end must not imply a provider is
-  cleared for a service they have not been approved for.
-- The legal acknowledgments are clickwrap evidence. They sit inside
-  `data-manual-language` and a local `data-no-interface-translation` barrier
-  (#123) because the backend records the exact English text presented. Do not
-  move, reorder, or translate them while restructuring the steps around them.
-- Requirements shown must stay legally-required-only, including every IRS
-  obligation. Do not let a "simpler" eligibility screen quietly drop the W-9
-  step or add requirements that no law imposes.
+## Boundaries and verification
+
+- Requirement selection and approval remain in the existing policy engine and
+  server-side launch gates. The checklist does not make an eligibility decision.
+- Required legal acknowledgments, W-9 information, recorded English acceptance
+  text, and translation barriers remain unchanged. Platform safety/experience
+  checks are identified alongside applicable paperwork rather than represented
+  as laws that apply to everyone.
+- Executable tests verify the exact document/service associations, all pairs of
+  independently selectable services, changing selections, photo-only work,
+  empty selections, and preservation of policy metadata.
+- Release verification includes the full suite, typechecking, lint, actual
+  English/Spanish form checks, and the existing isolated signup CI fixtures.
+
+## Earlier proposal
+
+PR #108 was closed unmerged on August 11 after its form implementation became
+stale. It proposed an eligibility preview before business details. The current
+revision was built against the current form instead of transplanting that diff.
+It preserves the useful principle of explaining the next steps early while
+waiting for service choices before showing requirements that depend on them.
