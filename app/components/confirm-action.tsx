@@ -1,5 +1,7 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
+
 type ConfirmActionProps = {
   title: string;
   message: string;
@@ -26,7 +28,7 @@ export function ConfirmAction({
   onBack,
 }: ConfirmActionProps) {
   return (
-    <div className="quote-confirm action-confirm important-confirm" role="group" aria-label={title}>
+    <InterfaceCopy><div className="quote-confirm action-confirm important-confirm" role="group" aria-label={title}>
       <strong>{title}</strong>
       <p>{message}</p>
       <div>
@@ -47,6 +49,6 @@ export function ConfirmAction({
           {backLabel}
         </button>
       </div>
-    </div>
+    </div></InterfaceCopy>
   );
 }

@@ -1,6 +1,9 @@
+"use client";
+
+import { InterfaceCopy } from "./interface-copy";
 import type { ReactNode } from "react";
 
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
 import { SaveMySpotButton } from "./save-my-spot-button";
 
@@ -33,7 +36,7 @@ export function PublicInfoPage({
   children?: ReactNode;
 }) {
   return (
-    <main className="public-info-shell">
+    <InterfaceCopy><main className="public-info-shell">
       <PublicSiteHeader />
 
       <section className="public-info-hero">
@@ -82,6 +85,6 @@ export function PublicInfoPage({
       </section>
 
       <PublicSiteFooter />
-    </main>
+    </main></InterfaceCopy>
   );
 }

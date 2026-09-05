@@ -1,7 +1,8 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { useAccountHeaderState } from "./account-header-state";
 import { SiteLanguageButton } from "./site-language";
 import { SocialLinks } from "./social-links";
@@ -26,7 +27,7 @@ export function PublicSiteHeader({
   const { accountHref, accountLabel, signedIn } = useAccountHeaderState();
 
   return (
-    <header className="site-header">
+    <InterfaceCopy><header className="site-header">
       <Link className="brand" href="/" aria-label="Tuveloz home">
         <BrandMark />
         <span>Tuveloz</span>
@@ -72,13 +73,13 @@ export function PublicSiteHeader({
           </Link>
         )}
       </div>
-    </header>
+    </header></InterfaceCopy>
   );
 }
 
 export function PublicSiteFooter() {
   return (
-    <footer>
+    <InterfaceCopy><footer>
       <Link className="brand footer-brand" href="/">
         <BrandMark /><span>Tuveloz</span>
       </Link>
@@ -112,6 +113,6 @@ export function PublicSiteFooter() {
         <span>© 2026 Tuveloz. All rights reserved.</span>
         <span>Signing up local pros and customers in Montgomery County, Maryland.</span>
       </div>
-    </footer>
+    </footer></InterfaceCopy>
   );
 }

@@ -8,7 +8,7 @@ test("Tuveloz AI is served in-app at /ai instead of an external subdomain", asyn
   const [page, homepage, postJob] = await Promise.all([
     source("app/ai/page.tsx"),
     source("app/page.tsx"),
-    source("app/post-job/page.tsx"),
+    source("app/components/customer-lander.tsx"),
   ]);
 
   assert.match(page, /TuvelozAiAssistant/);

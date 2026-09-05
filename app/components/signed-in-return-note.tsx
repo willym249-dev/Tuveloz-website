@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { InterfaceCopy } from "./interface-copy";
+import { SiteLink as Link } from "./site-link";
 import { useAccountHeaderState } from "./account-header-state";
 
 /**
@@ -15,11 +16,11 @@ export function SignedInReturnNote() {
   if (!signedIn) return null;
 
   return (
-    <div className="signed-in-return-note" role="status">
+    <InterfaceCopy><div className="signed-in-return-note" role="status">
       <strong>You&rsquo;re signed in. This page is public information, not a sign-out.</strong>
       <Link href={accountHref}>
         {state === "provider" ? "Back to your provider workspace →" : "Back to your account →"}
       </Link>
-    </div>
+    </div></InterfaceCopy>
   );
 }

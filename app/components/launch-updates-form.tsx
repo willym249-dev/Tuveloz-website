@@ -1,6 +1,8 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { useState } from "react";
+import { useSiteLanguage } from "./site-language";
 import {
   LAUNCH_UPDATE_CONSENT_TEXT_EN,
   LAUNCH_UPDATE_CONSENT_TEXT_ES,
@@ -13,11 +15,13 @@ import {
  */
 export function LaunchUpdatesForm({
   source,
-  spanish = false,
+  spanish: spanishOverride,
 }: {
   source: string;
   spanish?: boolean;
 }) {
+  const { language } = useSiteLanguage();
+  const spanish = spanishOverride ?? language === "es";
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -26,16 +30,16 @@ export function LaunchUpdatesForm({
 
   if (done) {
     return (
-      <p className="launch-updates-done" role="status">
+      <InterfaceCopy><p className="launch-updates-done" role="status">
         {spanish
           ? "Listo — le escribiremos cuando el lanzamiento se acerque. Revise su correo para la confirmación."
           : "Done — we'll write when launch gets close. Check your email for the confirmation."}
-      </p>
+      </p></InterfaceCopy>
     );
   }
 
   return (
-    <form
+    <InterfaceCopy><form
       className="launch-updates-form"
       onSubmit={async (event) => {
         event.preventDefault();
@@ -91,6 +95,6 @@ export function LaunchUpdatesForm({
           : (spanish ? "Recibir novedades" : "Get launch updates")}
       </button>
       {error && <p className="form-error" role="alert">{error}</p>}
-    </form>
+    </form></InterfaceCopy>
   );
 }

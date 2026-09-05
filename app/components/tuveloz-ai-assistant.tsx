@@ -1,7 +1,8 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { useSiteLanguage } from "./site-language";
 import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
 import { starterQuestions, type PolicyAudience } from "../../lib/ai/policy-knowledge";
@@ -103,7 +104,7 @@ export function TuvelozAiAssistant() {
   }
 
   return (
-    <main className="public-info-shell ai-page">
+    <InterfaceCopy><main className="public-info-shell ai-page">
       <PublicSiteHeader navigationId="ai-main-navigation" cta={audience === "provider" ? "provider" : "customer"} />
 
       <section className="public-info-hero">
@@ -242,6 +243,6 @@ export function TuvelozAiAssistant() {
       </section>
 
       <PublicSiteFooter />
-    </main>
+    </main></InterfaceCopy>
   );
 }

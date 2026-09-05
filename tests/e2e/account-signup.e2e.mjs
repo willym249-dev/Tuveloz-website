@@ -39,6 +39,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { assertSpanishRendering } from "./spanish-rendering-checks.mjs";
 
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const APP_PORT = 3013; // not 3011: that belongs to provider-signup.e2e.mjs
@@ -540,33 +541,8 @@ async function main() {
   );
   log("PASS — the throttle message reaches the visitor");
 
-  // Google renders JavaScript: correct raw HTML alone did not protect the
-  // Spanish canonical when hydration restored the English page metadata.
-  await page.goto(`${origin}/es/join`, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector('[data-language-control]', { timeout: 60_000 });
-  await page.waitForFunction(() => document.documentElement.lang === "es"
-    && document.querySelector('link[rel="canonical"]')?.getAttribute("href") === "https://tuveloz.com/es/join");
-  assert.equal(await page.locator('meta[property="og:url"]').getAttribute("content"), "https://tuveloz.com/es/join");
-  assert.equal(await page.locator('meta[property="og:locale"]').getAttribute("content"), "es_US");
-  assert.match(await page.title(), /Únase como proveedor/);
-  // This fixture uses the development server. Its known SSR text-translation
-  // warning opens a developer overlay, which production does not include.
-  // Record and dismiss only that identified warning through its own control;
-  // never force clicks through an overlay or suppress unexpected page errors.
-  const developmentOverlay = page.locator("#__vinext_dev_error_overlay_root");
-  if (await developmentOverlay.locator('[data-testid="vinext-dev-error-backdrop"]').count()) {
-    assert.match(await developmentOverlay.innerText(), /Hydration failed because the server rendered text didn't match the client/);
-    assert.ok(browserErrors.every((message) => message.startsWith("Hydration failed because")), "unexpected browser error must fail the fixture");
-    log("KNOWN LIMITATION — pre-existing Spanish hydration recovery warning; metadata assertions passed, development overlay dismissed explicitly");
-    await developmentOverlay.getByRole("button", { name: "Dismiss", exact: true }).click();
-  }
-  await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
-  await page.waitForURL((url) => url.pathname === "/join");
-  await page.waitForSelector('[data-language-control]', { timeout: 60_000 });
-  assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://tuveloz.com/join");
-  assert.match(await page.title(), /Join as a Provider/);
-  assert.ok(browserErrors.every((message) => message.startsWith("Hydration failed because")), "unexpected browser error must fail the fixture");
-  log("PASS — rendered Spanish metadata survives hydration and switching to English restores the English page");
+  assert.deepEqual(browserErrors, [], "account scenarios must not produce browser errors");
+  await assertSpanishRendering(browser, origin, log);
 
   // Delivery staying local is established by assertEnvironmentIsSafe before a
   // server exists, and by the exact send counts in the parity check above. A

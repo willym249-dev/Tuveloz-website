@@ -158,6 +158,8 @@ const worker = {
   },
 
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    request = new Request(request);
+    request.headers.delete("x-tuveloz-render-language");
     const url = new URL(request.url);
 
     // Keep one public origin. Cloudflare's custom-domain Worker can receive

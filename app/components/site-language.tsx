@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 export type SiteLanguage = "en" | "es";
 
@@ -19,40 +20,12 @@ const LANGUAGE_EVENT = "tuveloz-language-change";
 // bundle. Re-exported here because callers and the tests import them from
 // this module, and because the browser half is what they were written for.
 export { spanishText, spanishPlaceholders } from "../../lib/spanish-dictionary";
-import { spanishText, spanishPlaceholders } from "../../lib/spanish-dictionary";
+import { translatedValue } from "../../lib/spanish-interface-text";
 import { synchronizeSpanishMetadata } from "../../lib/spanish-browser-metadata";
 
 type TextState = { source: string; applied: string };
 const textStates = new WeakMap<Text, TextState>();
 const attributeStates = new WeakMap<Element, Map<string, TextState>>();
-
-function translatedPattern(value: string) {
-  let match = value.match(/^(\d+) completed-job (review|reviews)$/);
-  if (match) return `${match[1]} ${match[2] === "review" ? "reseña" : "reseñas"} de trabajos completados`;
-  match = value.match(/^(\d+) currently listed (service|services)$/);
-  if (match) return `${match[1]} ${match[2] === "service" ? "servicio actualmente publicado" : "servicios actualmente publicados"}`;
-  match = value.match(/^(\d+) currently listed vehicle services$/);
-  if (match) return `${match[1]} servicios para vehículos actualmente publicados`;
-  match = value.match(/^At least (\d+) characters$/);
-  if (match) return `Al menos ${match[1]} caracteres`;
-  match = value.match(/^(\d+) characters or fewer$/);
-  if (match) return `${match[1]} caracteres o menos`;
-  match = value.match(/^Use at least (\d+) characters\.$/);
-  if (match) return `Use al menos ${match[1]} caracteres.`;
-  match = value.match(/^Use no more than (\d+) characters\.$/);
-  if (match) return `Use no más de ${match[1]} caracteres.`;
-  match = value.match(/^· policy version (.+)$/);
-  if (match) return `· versión de la política ${match[1]}`;
-  return value;
-}
-
-function translatedValue(source: string, attribute?: "placeholder" | "title" | "aria-label") {
-  const match = source.match(/^(\s*)([\s\S]*?)(\s*)$/);
-  if (!match) return source;
-  const [, before, core, after] = match;
-  const dictionary = attribute === "placeholder" ? spanishPlaceholders : spanishText;
-  return `${before}${dictionary[core] ?? translatedPattern(core)}${after}`;
-}
 
 function ignored(node: Node) {
   const element = node instanceof Element ? node : node.parentElement;
@@ -172,12 +145,22 @@ const SiteLanguageContext = createContext<{
   setLanguage: () => undefined,
 });
 
-export function SiteLanguageProvider({ children }: { children: ReactNode }) {
+export function SiteLanguageProvider({ children, initialLanguage = "en" }: {
+  children: ReactNode;
+  initialLanguage?: SiteLanguage;
+}) {
+  const pathname = usePathname();
   const language = useSyncExternalStore<SiteLanguage>(
     subscribeLanguage,
     getLanguageSnapshot,
-    (): SiteLanguage => "en",
+    (): SiteLanguage => initialLanguage,
   );
+
+  useEffect(() => {
+    // Client navigation can retain this layout while changing the URL. Notify
+    // the language store after navigation, including English-only pages.
+    window.dispatchEvent(new Event(LANGUAGE_EVENT));
+  }, [pathname]);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -185,7 +168,6 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
     const translatePage = () => {
       translateInterface(document.head, language);
       if (language === "es") synchronizeSpanishMetadata(document, window.location.pathname);
-      translateInterface(document.body, language);
     };
     translatePage();
     let active = true;
@@ -206,7 +188,6 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
       attributeFilter: ["placeholder", "title", "aria-label", "content", "href"],
     };
     observer.observe(document.head, options);
-    observer.observe(document.body, options);
     return () => { active = false; observer.disconnect(); };
   }, [language]);
 
@@ -226,6 +207,7 @@ export function useSiteLanguage() {
  * page would promise a translation that does not exist.
  */
 export function SiteLanguageButton() {
+  const pathname = usePathname();
   const { language, setLanguage } = useSiteLanguage();
   const [available, setAvailable] = useState(false);
   const nextLanguage = language === "en" ? "es" : "en";
@@ -235,7 +217,7 @@ export function SiteLanguageButton() {
     // so the server and client first render agree.
     const ready = pathHasSpanish(englishPathFor(window.location.pathname) ?? window.location.pathname);
     queueMicrotask(() => setAvailable(ready));
-  }, []);
+  }, [pathname]);
 
   if (!available) return null;
 
