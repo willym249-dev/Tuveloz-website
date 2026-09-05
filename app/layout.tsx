@@ -2,6 +2,7 @@ import { requestPageMetadata } from "../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
+import { TUVELOZ_SOCIAL_PROFILES } from "../lib/brand-profile";
 import { AccountToolsDock } from "./components/account-tools-dock";
 import { JobPostingPauseNotice } from "./components/job-posting-pause-notice";
 import { ProviderPublicActions } from "./components/provider-public-actions";
@@ -16,7 +17,7 @@ const englishMetadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   title: {
-    default: "Tuveloz | Customer Choice. Provider Freedom.",
+    default: "Tuveloz | Vehicle Services in Montgomery County, MD",
     template: "%s | Tuveloz",
   },
   description:
@@ -29,7 +30,8 @@ const englishMetadata: Metadata = {
     apple: "/apple-touch-icon.png?v=6",
   },
   openGraph: {
-    title: "Tuveloz | Customer Choice. Provider Freedom.",
+    title: "Tuveloz | Vehicle Services in Montgomery County, MD",
+    siteName: "Tuveloz",
     description:
       "Tuveloz is preparing to launch vehicle services in Montgomery County, MD. Provider applications are open and free. Customer bookings are not open yet.",
     url: "https://tuveloz.com/",
@@ -44,6 +46,7 @@ const englishMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@TuvelozApp",
     images: ["/og-image.png?v=6"],
   },
 };
@@ -55,11 +58,23 @@ export async function generateMetadata(): Promise<Metadata> {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://tuveloz.com/#organization",
   name: "Tuveloz",
+  legalName: "TUVELOZ LLC",
   url: "https://tuveloz.com",
   logo: "https://tuveloz.com/icon-512.png?v=6",
   email: "hello@tuveloz.com",
   areaServed: "Montgomery County, Maryland",
+  sameAs: TUVELOZ_SOCIAL_PROFILES.map(({ href }) => href),
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://tuveloz.com/#website",
+  name: "Tuveloz",
+  url: "https://tuveloz.com/",
+  publisher: { "@id": "https://tuveloz.com/#organization" },
 };
 
 export default async function RootLayout({
@@ -81,6 +96,10 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <SiteLanguageProvider initialLanguage={language}>
           <StagingEnvironmentBanner />

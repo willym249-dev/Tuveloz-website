@@ -808,9 +808,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="trust-section" aria-labelledby="trust-heading">
         <div className="trust-intro">
           <span className="kicker light">What you can expect</span>
-          <h2 id="trust-heading">Feel informed before you decide.</h2>
+          <h2 id="trust-heading">{view === "provider" ? "Your application, at your pace." : "Feel informed before you decide."}</h2>
           <p className="trust-intro-text">
-            Choosing someone to work on your car is a big decision. You deserve to understand the work, the price, and who will be doing it.
+            {view === "provider"
+              ? "Choose the work you offer, see what's needed, and finish when you're ready. You don't need your documents in hand to get started."
+              : "Choosing someone to work on your car is a big decision. You deserve to understand the work, the price, and who will be doing it."}
           </p>
           {view === "home" && (
             <p className="trust-origin">
@@ -824,15 +826,19 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
         <div className="trust-grid">
           <article className="trust-card">
-            <span className="trust-card-label">A connection to local help</span>
+            <span className="trust-card-label">{view === "provider" ? "Start with your services" : "A connection to local help"}</span>
             <p>
-              When bookings open, Tuveloz will help you compare local providers and keep the agreed work and price in one place. The provider you choose will do the work.
+              {view === "provider"
+                ? "Select only the work you'd like to offer. We'll show you the next steps for those choices, so you can decide whether Tuveloz fits your business."
+                : "When bookings open, Tuveloz will help you compare local providers and keep the agreed work and price in one place. The provider you choose will do the work."}
             </p>
           </article>
           <article className="trust-card">
-            <span className="trust-card-label">Real local businesses</span>
+            <span className="trust-card-label">{view === "provider" ? "Add documents when you're ready" : "Real local businesses"}</span>
             <p>
-              Providers set their own prices and hours. They work independently of Tuveloz, and you choose whose services fit your needs.
+              {view === "provider"
+                ? "Your checklist explains what we'll need for review. Start the application now, then add your documents through your private dashboard."
+                : "Providers set their own prices and hours. They work independently of Tuveloz, and you choose whose services fit your needs."}
             </p>
           </article>
           <article className="trust-card">

@@ -2,17 +2,9 @@ import { InterfaceCopy } from "./interface-copy";
 import type { SVGProps } from "react";
 import { track } from "../../lib/analytics";
 import { LaunchUpdatesForm } from "./launch-updates-form";
+import { TUVELOZ_SOCIAL_PROFILES } from "../../lib/brand-profile";
 
 type SocialPlatform = "facebook" | "instagram" | "x" | "tiktok" | "google";
-
-const SOCIAL_LINKS: Array<{ platform: SocialPlatform; label: string; href: string }> = [
-  { platform: "instagram", label: "Instagram", href: "https://www.instagram.com/tuveloz/" },
-  { platform: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@tuveloz" },
-  { platform: "facebook", label: "Facebook", href: "https://www.facebook.com/profile.php?id=61592855153188" },
-  { platform: "x", label: "X", href: "https://x.com/TuvelozApp" },
-  // Google Business Profile link pending — add here once available:
-  // { platform: "google", label: "Google", href: "" },
-];
 
 function SocialIcon({ platform, ...props }: { platform: SocialPlatform } & SVGProps<SVGSVGElement>) {
   return (
@@ -43,7 +35,7 @@ function SocialIcon({ platform, ...props }: { platform: SocialPlatform } & SVGPr
 export function SocialLinks({ className = "", source }: { className?: string; source?: string }) {
   return (
     <InterfaceCopy><div className={`footer-social ${className}`.trim()}>
-      {SOCIAL_LINKS.map(({ platform, label, href }) => (
+      {TUVELOZ_SOCIAL_PROFILES.map(({ platform, label, href }) => (
         <a
           key={platform}
           href={href}
