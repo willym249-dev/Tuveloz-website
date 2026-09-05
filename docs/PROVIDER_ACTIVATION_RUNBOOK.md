@@ -83,6 +83,33 @@ Do not silently reduce the existing upload limit or purchase a plan. Confirm
 capacity for both provider evidence and message-image scans before setting the
 secrets below, which enables scheduled processing of queued files.
 
+### Isolated pipeline proof (September 5)
+
+A subsequent local workerd test applied all 66 repository migrations to fresh
+D1 and used isolated R2 with the actual upload validation/storage, scheduled
+scanner, result recorder, audit and notification modules. A real clean PNG
+result was recorded with its exact file hash and consumed pending request. A
+prohibited text upload was rejected by validation, then deliberately seeded into
+local quarantine to exercise the downstream real-vendor failed-result path.
+A mismatched file hash produced a local error without uploading bytes to the
+vendor. Replayed results created no additional result/audit/notification rows;
+altered result hashes returned 409. Two protective notifications were captured
+locally. The provider stayed new/unreviewed, service eligibility stayed blocked,
+and every evidence row still required review. No production data or payments
+were used. This proves the isolated pipeline, not the public upload authorization
+route or the required production runtime canary.
+
+The fixture initially failed because it passed Node FormData directly across
+Miniflare's separate Fetch implementation, then because its seeded SQLite
+timestamps omitted the zone and local Windows workerd parsed them as EDT.
+Both fixture errors were corrected: encode multipart bytes and headers before
+dispatch, and seed the explicit UTC ISO timestamps used by the real upload route.
+No production source change was needed. Separately, Cloudmersive classified an
+eight-byte PNG header as malware-clean with no invalid-file flag. Malware-clean
+does not prove that an image is complete, decodable, authentic or acceptable as
+business evidence; preserve the separate evidence review. The production
+file-size/plan mismatch above remains unresolved.
+
 ## Phase 1 — Cloudflare secrets
 
 Set as encrypted Worker secrets. All are fail-closed: a wrong or missing value

@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Guarded scanner pipeline verified in isolated workerd
+
+PR #188 is live as `c58a141`, with deployment run 33944641724 successful and
+19 independent live checks passing. The owner clarified that their completed
+Stripe verification was from the original payment-account setup. The additional
+check required to access Stripe Identity remains at the phone handoff; do not
+represent it as complete or restart it without a reason.
+
+The free scanner was then exercised through the actual storage/scanner/recorder
+modules in local workerd, fresh D1 with all 66 migrations, and isolated R2. A
+real clean PNG result, a prohibited text file seeded into quarantine after
+upload validation rejected it, and a hash mismatch all followed the intended
+guarded transitions. Results consumed exactly one pending request, duplicate
+replays were idempotent, changed hashes returned 409, and two protective emails
+were caught locally. Provider/evidence review and service activation stayed
+blocked. The final run made two real Cloudmersive calls with synthetic files;
+earlier diagnostic runs made four more. No production data, real identity,
+outbound email, charge or payout was used.
+
+Two initial failures were test-fixture errors: multipart encoding across Fetch
+implementations and zone-less SQLite timestamps parsed as local EDT. Both were
+corrected to match the real application. Cloudmersive also accepted a truncated
+PNG header as malware-clean, so do not equate malware clearance with file
+usability or genuine evidence. Temporary key copies were deleted after testing.
+The 3.5 MB free-plan limit versus 10 MB uploads, production scanner configuration
+and canary, additional Stripe owner verification and launch reviews remain open.
+
 ## 2026-09-05 - Real Cloudmersive response repaired; free account evaluated
 
 The owner approved and received PR #187: merge `3a7c28c`, deployment run
