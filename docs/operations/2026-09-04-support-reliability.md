@@ -88,3 +88,21 @@ Attaching Zeo later needs an authenticated server-side integration and a
 verified ready chat runtime; the public website must not expose the owner's
 private Zeo management interface. Published policy answers and owner contact
 should remain available if that runtime is unavailable.
+
+## September 5 connection recheck
+
+The current Zeo checkout's `zeo_brain_gateway.py --route chat` still reports
+`checkpoint_ready: false`, `brain_gateway_ready: false`, and
+`route_ready: false`. Its error is `route_not_ready`; an interface or reachable
+owner UI does not supply the missing general checkpoint and inference runtime.
+No Zeo model request was made and no outside model was substituted. This is a
+readiness result, not a new implementation or an independent Claude review.
+
+The eventual connection must be a dedicated authenticated server-side answer
+endpoint with no owner administration or tool execution. Use bounded input and
+output, a deadline, abuse/cost controls, and the existing reviewed policy-answer
+and owner-contact fallback. Test unavailable, slow, malformed, and unauthorized
+responses before enabling generated answers. Keep owner escalation explicit:
+only the visitor's editable message and consented reply details are sent; do
+not silently forward the chat transcript. The current support route already
+enforces that consent boundary.

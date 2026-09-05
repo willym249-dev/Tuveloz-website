@@ -2,14 +2,16 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-05
 - **Applies to:** the 18 launch gates in `lib/launch-readiness.ts`
 
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
 who is allowed to answer it, and what the code already implements — with file
 references, so a reviewer confirms findings instead of interviewing someone from
-scratch. `npm run readiness` confirms production currently holds **zero**
-recorded decisions.
+scratch. The authenticated production review page was refreshed on September 5,
+2026: all eighteen review controls showed Pending, with no approved gate visible.
+There are **seventeen required gates and one optional employee/trainee lane**.
+Recheck the live page before recording a decision; this is a dated snapshot.
 
 This document records evidence. It decides nothing. Gates are answered in
 `/admin/launch-readiness`, each decision stores who made it and an evidence
@@ -17,22 +19,28 @@ reference, and **nothing here is a reason to flip a marketplace lock.**
 
 ## Read this first
 
-**Only one gate is answerable by the owner alone.** The other seventeen name an
-outside authority — insurance carrier, CPA, payment processor, official legal or
-licensing source, security reviewer, or screening reviewer. Gathering evidence
-does not remove that requirement; it only means the outside party reviews a
-documented position rather than assembling one.
+**Only one gate names the owner as its sole evidence authority.** The others
+also name official sources or a specific reviewer, vendor, insurer, or tax
+adviser. An official-source requirement is not a requirement to hire counsel;
+that remains an owner choice. A source link also cannot substitute for an
+actual insurance decision, vendor result, or review of the implemented workflow.
 
-**Two gates cannot be answered honestly yet, whoever signs**, because the thing
-they attest to does not exist:
+**The scanner and identity integrations are built, but their operational proof
+is incomplete.** Do not repeat account creation or describe these as unbuilt:
 
 | Gate | Blocker |
 | --- | --- |
-| `evidence_file_security_and_scanner` | `EVIDENCE_SCAN_PROVIDER` is `"unconfigured"` in `wrangler.jsonc:51`. The gate requires a real external malware scanner. |
-| `provider_identity_and_business_verification` | `IDENTITY_VERIFICATION_PROVIDERS` is empty (`wrangler.jsonc:52`). |
+| `evidence_file_security_and_scanner` | Cloudmersive account and both encrypted scanner secrets exist. The account still shows Free Tier; processing remains `unconfigured`. Confirm paid capacity, test the full upload limit, then prove the guarded production scan and complete security review. |
+| `provider_identity_and_business_verification` | Live Stripe Identity is configured with its dedicated key, signed webhook, and `stripe_identity` provider setting. The live review page still lacks a current approved session bound to a genuine provider's active personnel record. |
 
-Send either to a reviewer now and you are asking them to certify something
-unbuilt. Configure first, then review.
+Reviewers can examine the implementation now. Final approval still needs the
+missing operational results. Stripe business-account verification is separate
+from a provider applicant's ID and selfie check.
+
+The other immediate account issue is Google Workspace continuity. On September
+5, Gmail still warned of suspension on September 7, and Google Admin required
+another password check. See the dated item in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md).
+Mailbox access does not establish that billing is current.
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
@@ -46,22 +54,24 @@ review older than one year — see the recurring reviews in
 **`entity_authority_domain_and_code`** — *business, required*
 Confirm LLC records, ownership authority, domain control, code ownership,
 contractor assignments, and essential vendor contracts.
-*Existing evidence:* mostly a records question, but three of its six parts are
-verifiable from this repository and public DNS, and were checked on 2026-08-16.
+*Existing evidence:* the record cards separate technical observations from the
+owner's formation, authority, contract, and contribution records.
 
 | Part | Evidence |
 | --- | --- |
-| Domain control | `tuveloz.com` nameservers are `ainsley.ns.cloudflare.com` and `kolton.ns.cloudflare.com`; SPF includes `_spf.porkbun.com` (registrar); MX is `smtp.google.com`; `updates.tuveloz.com` carries a Resend DKIM key |
-| Code ownership | 961 commits, five authors: `willym249-dev` (737), `Claude` (214 + 6), and CI identities (4). **No third-party human contributor has ever committed**, so there is no outside author to have assigned copyright from |
-| Essential vendors | The ones the product actually depends on, from config: Cloudflare (DNS, Workers, D1, R2), Porkbun (registrar), Google Workspace (mail), Resend (transactional mail), Stripe (payments). Cloudmersive and an identity provider are named in config but unconfigured |
+| Domain control | The [domain record card](../records/domain-registration-tuveloz-com.md) and [email authentication runbook](../operations/email-authentication.md) hold the evidence. The September 4 Google SPF/DKIM repair supersedes this briefing's old registrar-only SPF observation. |
+| Code ownership | The [contribution record](../records/code-ownership-and-contributors.md) identifies the scope and limits of Git metadata. Author labels do not establish ownership, licenses, or absence of outside contributions. |
+| Essential vendors | Cloudflare, Porkbun, Google Workspace, Resend, Stripe payments/Identity, and Cloudmersive are recorded in the [vendor card](../records/essential-vendor-accounts.md). Account access, an active subscription, and approval of the business model are separate evidence. |
 
 That leaves LLC records, ownership authority, and contractor assignments — all
 documents held outside this repository, each of which wants a card in
-[`../records/`](../records/). The contractor part should be quick: the commit
-history above is the evidence that there are no third-party assignments to chase.
+[`../records/`](../records/). Ask the owner to confirm contributions and any
+required assignments from actual records; do not infer that answer from names
+in commit history. A limited business-mail search on September 5 did not locate
+formation or insurance documents, which does not establish that they are absent.
 
-It remains the one gate that needs nobody else, and therefore the cheapest to
-close.
+The owner can assemble this evidence while the vendor and specialist reviews
+are pending.
 
 ### Owner plus an official legal or licensing source
 
@@ -90,12 +100,27 @@ test-drive certification.
 
 ### Security or privacy reviewer
 
+**`provider_identity_and_business_verification`** — *provider compliance, required*
+Also needs the identity vendor and an official legal or licensing source.
+*Existing:* the dedicated Stripe Identity integration, adult and same-person
+checks, guarded webhook recording, and isolated vendor test outcomes. The
+[activation runbook](../PROVIDER_ACTIVATION_RUNBOOK.md) records the setup already
+completed. *Still needed:* one consenting genuine applicant completes the
+Tuveloz provider flow using their own ID and selfie; the signed vendor result
+must match the current application/personnel record. Then review business
+registration matching, corrections, retention, and public verification claims.
+Do not create a fake provider or reuse the owner's Stripe business verification.
+
 **`evidence_file_security_and_scanner`** — *security, required* — **BLOCKED**
 Restricted storage, access logs, download controls, backups, deletion, and a
 real external scanner; a pending scan must keep evidence quarantined.
 *Existing:* quarantine-until-clean is enforced — the compliance route refuses to
 open a file unless the latest scan row reports `clean`, and a missing row blocks
-too. *Missing:* the scanner itself. `EVIDENCE_SCAN_PROVIDER` is `unconfigured`.
+too. The scheduled Cloudmersive adapter, authenticated recorder, and retry and
+timeout checks are implemented. *Missing:* active plan capacity, a full-size
+vendor test, and a guarded production scan. Both secrets were confirmed present
+on September 5; `EVIDENCE_SCAN_PROVIDER` remains `unconfigured`. Follow the
+[scanner activation runbook](../operations/evidence-scanner-activation.md).
 
 **`privacy_retention_and_data_rights`** — *privacy, required*
 *Existing:* `app/privacy-center/` and `app/api/privacy-center/` including an
@@ -171,14 +196,15 @@ fails if they drift again. A second test pins the one path that writes a quote
 never mispriced anything: the default was only reachable by code that forgot to
 pass a value.
 
-**The live column default in D1 is still 1000, deliberately.** SQLite cannot
+**An August 11 note records the D1 column default as 1000.** That database
+default was not rechecked for this September 5 briefing. SQLite cannot
 alter a column default in place, so changing it means rebuilding
 `provider_quotes` — a table touched by fourteen migrations and carrying the two
 real-only authorization triggers from `0041`. Rebuilding to change a fallback
 that application code never reaches trades a real risk of dropping a launch
 guard against a theoretical one. Worth raising at this gate so the CPA sees the
-actual state: every quote row is written with 500, and the stale default is
-unreachable rather than merely unused.
+actual state: the application explicitly writes 500, and the historical default
+needs a fresh schema inspection before anyone treats it as current evidence.
 
 **`checkout_fee_receipt_copy`** — *payments, required* — also needs a legal source
 *Existing:* the fee has one canonical name across every surface, enforced by
@@ -211,14 +237,45 @@ before treating it as ordinary product work.
 
 ## Suggested order
 
-1. **`entity_authority_domain_and_code`** — nobody else required.
-2. **Write the two missing documents** — the security and data incident plan, and
-   the vehicle incident, claims and stop-work plan. Both are gates whose evidence
-   is a document that does not exist yet, and neither needs an outside party to
-   draft.
-3. **Configure the scanner and identity providers**, unblocking two gates.
-4. **Then engage outside parties**, each with the relevant section above rather
-   than a blank questionnaire.
+1. **Protect business mail continuity.** Resolve the Google Workspace billing
+   notice by September 7. Google Admin can be opened from a phone; no password
+   belongs in chat or this repository.
+2. **Resolve Cloudmersive billing, then verify capacity.** The approved Basic
+   purchase has not succeeded. Do not retry an unchanged declined method.
+   Preserve quarantine until the actual file-size and scan checks pass.
+3. **Complete a genuine provider Identity check.** The applicant uses
+   [provider onboarding](https://tuveloz.com/provider-onboarding) in their own
+   account. Their ID/selfie goes directly to Stripe's hosted flow. A successful
+   check does not activate any service or payment.
+4. **Complete the existing review packet.** The two incident plans already
+   exist; fill their owner and insurer contact gaps and retain the rehearsal
+   evidence. Collect formation/authority records, insurer decisions, processor
+   approval, tax review, and applicable official-source mappings.
+5. **Record only supported decisions.** Each authority supplies its own evidence
+   reference, review or issue date, and validity date. Keep missing items pending.
+
+## Questions ready for the required reviewers
+
+These are preparation notes, not sent messages or claimed approvals. Supply
+private originals through an appropriate private channel; public source code
+should contain only record cards and sanitized evidence references.
+
+| Recipient or evidence source | Material to review | Specific result needed |
+| --- | --- | --- |
+| Owner | Formation and ownership records, domain and vendor cards, contribution record | Confirm who can bind the LLC, where originals are kept, and any contributor assignments or licenses. |
+| Official legal/licensing sources | Eligibility matrix, application and acceptance flow, repair records, published policies | Map each exact service and jurisdiction to applicable requirements and implemented duties; identify unresolved interpretations. |
+| Insurance broker/carrier | Exact service list, independent mobile-provider model, incident plan | Written platform and provider coverage decisions, exclusions, effective/expiry dates, claims contacts, and notification duties. A provider's certificate alone does not prove platform coverage. |
+| Stripe/payment processor | Connect configuration, separate transfers, refund/dispute and payout controls | An account-specific decision covering this marketplace model, supported services, loss responsibility, reserves, and payout controls. Bank linking alone does not supply that decision. |
+| CPA/tax adviser | Provider quote, 5% customer fee, ledger, refunds, chargebacks and receipts | Confirm seller/merchant-of-record treatment, collection and reporting responsibilities, and treatment of every amount; list assumptions needing evidence. |
+| Security/privacy reviewer and identity vendor | Scanner and Identity canaries, storage/access/deletion controls, privacy and incident plans | Verify the actual results, matching rules, retention/deletion, access boundaries and recovery exercises; state scope and limitations. |
+| Screening/compliance reviewer | Existing no-criminal-background-check position and public wording | Confirm the claims match checks actually performed and document applicable source requirements. |
+
+The County's [registration guidance](https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html)
+specifically includes mobile repair businesses. It was retrieved in this review;
+use it as a source, then verify each actual provider's registration. Maryland's
+[repair invoice statute](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=14-1003)
+is a separate source for invoice content and retention. Neither source proves
+Tuveloz's implementation or a particular provider compliant by itself.
 
 Insurance, the CPA, the payment processor, and an official legal source are named
 here because the gates name them, not as a substitute for the work above.

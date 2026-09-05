@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Remote setup progress and current launch evidence
+
+The owner is away from the home computer; continue available work without
+requiring desktop sign-ins. Cloudmersive still shows Free Tier after the earlier
+declined Basic purchase. Its API key already existed. The missing random
+64-character callback secret was generated in memory and stored as an encrypted
+Worker secret, without printing or saving its value. The active deployment
+contains both secret names; all other bindings and the deployed application
+release were unchanged, and application/database/schema health passed. Scanner
+processing remains `unconfigured`; no vendor scan or further purchase occurred.
+
+The owner dashboard was refreshed: all eighteen launch review controls remain
+Pending, with no active exact services or current provider-bound Identity canary.
+The review packet now distinguishes completed integration setup from missing
+operational results, identifies the actual reviewer evidence, and directs a
+genuine applicant through their own Identity check. The two incident plans
+already exist and need their remaining contacts and review evidence. Corrected
+the contribution card's unsupported inference that Git author names establish
+ownership or absence of outside contributions.
+
+Google Admin still requires the owner's password check. Business Gmail remains
+accessible and still warns of a September 7 service-continuity deadline; the
+existing dated follow-up was refreshed. A limited search did not locate company
+formation or insurance correspondence, which does not prove those records do
+not exist elsewhere. No messages were sent or reviewer decisions invented.
+
+Zeo's current BrainGateway chat check returned `route_not_ready`, with both the
+general checkpoint and attested runtime unavailable. Its connection remains
+blocked; Tuveloz's existing policy answers and consented owner support remain
+the available path. No legacy model was relabeled as Zeo, no Zeo source was
+changed, and no new Claude review is claimed. Website copy, application logic,
+legal-policy hashes, marketplace, payment, SMS, and provider-activation guards
+were not changed by this documentation update.
+
 ## 2026-09-05 - Provider application adapts to the available column width
 
 A visual check at a 929px browser width found the provider form squeezed into a

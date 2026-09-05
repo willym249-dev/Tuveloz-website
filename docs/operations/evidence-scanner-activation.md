@@ -6,12 +6,14 @@
 - **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the Cloudmersive scheduled scanner,
   and the `evidence_file_security_and_scanner` launch gate
 
-The owner-approved free Cloudmersive account exists and its API key is stored
-as an encrypted Worker secret. Production processing remains off:
-`EVIDENCE_SCAN_PROVIDER` is `unconfigured` and the callback secret is not set.
-The free plan does not cover the site's 10 MB upload allowance. Resolve vendor
-capacity before setting the remaining secret and enabling processing, then
-verify a guarded production scan. The owner approved Basic at $19.99/month on
+The owner-approved Cloudmersive account exists. Its API key and random 64-character
+callback secret are stored as encrypted Worker secrets; both names were verified
+in the active deployment on September 5. No secret value was printed or saved
+locally during callback-secret setup. Production processing remains off:
+`EVIDENCE_SCAN_PROVIDER` is `unconfigured`.
+The account still shows Free Tier, which does not cover the site's 10 MB upload
+allowance. Resolve vendor capacity before enabling processing, then verify a
+guarded production scan. The owner approved Basic at $19.99/month on
 September 5. The first payment attempt failed; no paid subscription is confirmed.
 The checkout is waiting for a changed payment method or resolution with the bank.
 
@@ -63,7 +65,11 @@ rate limit between evidence and message-image sweeps; include quota and 429
 retry behavior in the activation rehearsal. Do not silently reduce the site's
 upload allowance or subscribe without owner approval.
 
-### 2. Two secrets, set by the owner
+### 2. Two secrets, set by an authorized operator
+
+Both secrets are already present as of September 5. Preserve them; these commands
+are for initial setup or a separately coordinated rotation, not a reason to
+rotate working credentials every session.
 
 Never in `wrangler.jsonc`, never committed. From the repository root:
 
