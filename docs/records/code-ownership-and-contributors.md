@@ -1,56 +1,57 @@
 # Code ownership and contributors
 
-- **Status:** active
+- **Status:** partial evidence; owner records still required
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-16
+- **Last reviewed:** 2026-09-05
 
-Who has written the code this business runs on, and therefore whose copyright it
-is. This card exists because a launch gate asks, and because the answer turned
-out to be simpler than expected.
+This card inventories repository authorship metadata for the company-authority
+gate. It does not establish copyright ownership or satisfy an assignment or
+license requirement by itself.
 
 ## Details
 
 | Field | Value |
 | --- | --- |
-| **Type** | Ownership record |
-| **Issued by** | Not issued — established by the repository's own history |
-| **Issued on** | First commit in this repository |
-| **Expires** | Does not expire, but goes stale the moment someone new commits |
-| **Identifier** | Not applicable |
-| **Where the original is kept** | The git history itself, and the GitHub repository |
+| **Type** | Contribution inventory and ownership evidence |
+| **Source** | Git history plus separately held contribution, assignment, and license records |
+| **Snapshot** | `origin/main` at `e09a82ca4898f1c81efbb78120b012e5bda8c489` |
+| **Reviewed on** | 2026-09-05 |
+| **Expires** | Refresh when code or contributors change; the launch approval has its own validity date |
+| **Private originals** | Owner still needs to identify where relevant records are kept |
 
 ## What it covers
 
-Measured 2026-08-16 with `git shortlog -sne --all` across 961 commits. Every
-author who has ever committed:
+`git rev-list --count origin/main` returned 427 commits. The command
+`git shortlog -sn origin/main` returned these author labels:
 
-| Author | Commits | What they are |
-| --- | --- | --- |
-| `willym249-dev <willym249@gmail.com>` | 737 | The owner |
-| `Claude <noreply@anthropic.com>` | 214 | AI assistant, working at the owner's direction |
-| `Claude <hello@tuveloz.com>` | 6 | The same, under the business address |
-| `Tuveloz Automation <actions@…>` | 3 | CI |
-| `github-actions[bot]` | 1 | CI |
+| Author label | Commits in this main-branch snapshot |
+| --- | --- |
+| `willym249-dev` | 358 |
+| `Claude` | 69 |
 
-**No third-party human has ever committed to this repository.** That is the part
-worth recording: there is no outside author holding copyright in this code, and
-therefore no contractor IP assignment to chase, request, or produce. The
-contractor-assignments half of the entity gate is answered by absence.
+This scope is main only. It is not comparable to the former August 16 count of
+961 across all locally available branches. Author labels can be configured;
+they do not independently verify a person's identity, contribution rights, or
+the provenance of copied assets and dependencies.
 
-Work produced by an AI assistant at the owner's direction is not a third-party
-human contribution, and the two Claude identities above are that. If the
-classification of such output ever matters to a reviewer, this card is where the
-question surfaces — it is not settled here.
+The former wording inferred that no third-party human contribution or IP
+assignment could exist because none appeared under another author label. That
+inference is withdrawn. Commit metadata alone cannot support it.
+
+The owner confirms the people and organizations that contributed code, assets,
+or other material, including work introduced through another person's commits.
+Retain applicable agreements, assignments, permissions, and dependency/asset
+license records privately. Record a justified "not applicable" only after that
+review, not solely from the shortlog.
 
 ## What depends on it
 
 - `entity_authority_domain_and_code` — the code-ownership and
   contractor-assignment parts
-- Any future engagement of an outside developer, which would immediately make
-  this card wrong
+- Any new contributor, imported material, or unresolved provenance question
 
 ## Reminder
 
-Re-run `git shortlog -sne --all` before answering the entity gate, and again if
-anyone outside the list above is given commit access. The value of this card is
-that it is current; a stale one asserts the opposite of what it should.
+Refresh the scoped inventory before answering the entity gate and identify the
+relevant private record references. Do not place signed private agreements,
+personal identifiers, or credentials in the public repository.

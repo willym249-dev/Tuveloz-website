@@ -1,5 +1,9 @@
 # Provider Activation Runbook (owner)
 
+- **Status:** active; operational proof and launch reviews incomplete
+- **Owner:** hello@tuveloz.com
+- **Last reviewed:** 2026-09-05
+
 Internal operations doc. How to take the provider side from "applications open"
 to "qualifying providers go active for real." Not public copy.
 
@@ -8,8 +12,9 @@ to "qualifying providers go active for real." Not public copy.
 - Provider applications are open. Signup is simplified (autosave, optional
   phone, minimal solo fields).
 - The Stripe **Identity** live-mode code lock is released
-  (`STRIPE_IDENTITY_LIVE_MODE_ENABLED = true` in `lib/stripe.ts`). Identity is
-  still fail-closed on the missing secrets below.
+  (`STRIPE_IDENTITY_LIVE_MODE_ENABLED = true` in `lib/stripe.ts`). The dedicated
+  live secrets and provider settings are configured; a genuine provider-bound
+  verification result is still missing.
 - The identity readiness gate now passes on **one** vendor-proven path (Stripe
   Identity today) instead of demanding a second non-Stripe vendor.
 - Payments stay code-locked (`STRIPE_LIVE_MODE_ENABLED = false`), marketplace
@@ -199,13 +204,22 @@ with a fresh test result; a credential-shaped string is insufficient.
 See [Stripe's sensitive result access guide](https://docs.stripe.com/identity/access-verification-results).
 
 **Evidence malware scanner (Cloudmersive):**
+Both encrypted secrets are already present as of September 5. Preserve them
+unless rotation is required; these are the initial setup commands:
+
 ```bash
-npx wrangler secret put EVIDENCE_SCAN_PROVIDER        # the literal string: cloudmersive
-npx wrangler secret put CLOUDMERSIVE_API_KEY          # Cloudmersive advanced virus-scan API key
-npx wrangler secret put EVIDENCE_SCAN_WEBHOOK_SECRET  # 32+ characters
+node node_modules/wrangler/bin/wrangler.js secret put CLOUDMERSIVE_API_KEY
+node node_modules/wrangler/bin/wrangler.js secret put EVIDENCE_SCAN_WEBHOOK_SECRET
 ```
 
-Redeploy after setting secrets. (`owner_access`, `account_auth`,
+`EVIDENCE_SCAN_PROVIDER` is an existing plain-text setting in `wrangler.jsonc`,
+not a secret. Leave it `unconfigured` until the account plan and the full upload
+limit are verified, then change it to `cloudmersive` through the reviewed
+GitHub deployment. The account still shows Free Tier; the approved Basic
+purchase has not succeeded. Follow the
+[scanner activation procedure](operations/evidence-scanner-activation.md).
+
+Recheck the deployed secret names and settings. (`owner_access`, `account_auth`,
 `email_delivery`, and `private_evidence_storage` are already configured — the
 site runs — but re-confirm them in `/admin/launch-readiness` if the dashboard
 flags any.)
@@ -215,10 +229,14 @@ flags any.)
 Configuration strings alone never pass these gates. Each needs one real result
 recorded through its guarded pipeline.
 
-1. **Identity canary** — after Phase 1 deploys, complete **one real Stripe
-   Identity verification yourself** at `/provider-onboarding`. The signed
-   webhook writes a current approved live-mode session bound to a guard-stamped
-   active personnel record. That single record is the canary.
+1. **Identity canary** — a consenting genuine provider applicant completes
+   **their own ID and selfie check** at `/provider-onboarding`, signed in to
+   their provider account. The owner participates only if they are also a real
+   applicant; the owner's Stripe business-account verification does not count.
+   The signed webhook must write a current approved live-mode session bound to
+   the applicant's guard-stamped active personnel record. Confirm that actual
+   result rather than treating return from Stripe as success. Identity and
+   selfie documents stay in Stripe's hosted flow, not chat or this repository.
 2. **Scanner canary** — upload **one real evidence file** so Cloudmersive
    returns a terminal result that lands in D1 with its consumed pending request
    and authenticated-scanner audit event.

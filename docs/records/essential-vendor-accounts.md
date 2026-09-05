@@ -2,11 +2,11 @@
 
 - **Status:** partly verified — account details awaiting the owner
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-16
+- **Last reviewed:** 2026-09-05
 
-The vendors the product actually stops working without. Read from configuration
-on 2026-08-16, so this is what the code depends on rather than what anyone
-remembers signing up for.
+The product's vendor dependencies. Configuration and account access are
+observations, not proof of subscription continuity or approval of the business
+model. Recheck billing and contract records before approving a launch gate.
 
 ## Details
 
@@ -27,20 +27,28 @@ remembers signing up for.
 | Porkbun | The domain name itself | [`domain-registration-tuveloz-com.md`](domain-registration-tuveloz-com.md) |
 | Google Workspace | Business mail, including `hello@tuveloz.com` | — |
 | Resend | Every sign-in code, account creation, and password reset | — |
-| Stripe | Payments, once live mode is ever enabled | Needs one — `stripe_connect_business_model` requires the processor's own approval, which is a document |
+| Stripe | Provider Identity checks now; payments after a separate release | Dedicated live Identity key and signed webhook configured. A genuine provider result and the separate `stripe_connect_business_model` evidence are still required. |
+| Cloudmersive | Malware scanning before uploaded evidence can leave quarantine | Account and both encrypted secrets exist. Free Tier still shown on September 5; paid capacity and operational proof remain incomplete. |
 
-Named in configuration but **not yet accounts**: Cloudmersive (evidence
-scanning, `EVIDENCE_SCAN_PROVIDER` is `"unconfigured"`) and an identity
-verification provider (`IDENTITY_VERIFICATION_PROVIDERS` is empty). Both block a
-launch gate each. See
+Cloudmersive processing remains off (`EVIDENCE_SCAN_PROVIDER` is
+`"unconfigured"`). Stripe Identity is configured with
+`IDENTITY_VERIFICATION_PROVIDERS = "stripe_identity"`; the provider-bound live
+canary has not passed. See
 [`../operations/evidence-scanner-activation.md`](../operations/evidence-scanner-activation.md).
+
+Google Workspace still displayed a billing-continuity notice on September 5
+with a September 7 deadline. Gmail was accessible, but Google Admin required
+another password check. The dated follow-up is in
+[`../OPEN-ITEMS.md`](../OPEN-ITEMS.md). Mail authentication passing does not
+resolve a billing notice.
 
 ## What depends on it
 
 - `entity_authority_domain_and_code` — the essential-vendor-contracts part
 - `stripe_connect_business_model` — Stripe's approval of the actual marketplace
   model is its own artefact and belongs in its own card
-- `evidence_file_security_and_scanner` — blocked until a scanner account exists
+- `evidence_file_security_and_scanner` — still needs capacity, an actual scan,
+  and security review even though the account and credentials exist
 
 ## Reminder
 
