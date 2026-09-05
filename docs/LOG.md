@@ -11,6 +11,19 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Browser fixture separates authenticated and signed-out scenarios
+
+PR #194 passed its PR checks and merged as `4c2dd24`, but the production gate
+caught a timing race in the account browser fixture. After confirming the
+signed-in workspace URL, the fixture cleared cookies while that page's session
+check was still in flight. Its redirect aborted navigation to the next test
+scenario with `net::ERR_ABORTED`. Production correctly stayed on PR #193.
+
+The fixture now closes the authenticated page and creates a fresh browser
+context for the signed-out throttle scenario. No assertions, retries, website
+behavior or launch locks were relaxed. This release also carries PR #194's
+previously tested rendered-Spanish-metadata correction through the same gates.
+
 ## 2026-09-05 - Rendered Spanish search metadata stays on its Spanish URL
 
 PR #193 deployed as `56237ea`, with 556 tests, the mobile/account browser
