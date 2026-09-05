@@ -14,6 +14,48 @@ function load(name) {
   return exports;
 }
 const { synchronizeSpanishMetadata } = load("spanish-browser-metadata");
+const { spanishPageMetadata } = load("spanish-page-metadata");
+
+test("Spanish metadata resolves before rendering without changing its English source", () => {
+  const source = {
+    title: "Join as a Provider — Free Signup",
+    description: "An unknown description stays intact.",
+    alternates: { canonical: "/join" },
+    openGraph: {
+      title: "Join as a Provider — Free Signup | Tuveloz",
+      url: "https://tuveloz.com/join",
+      locale: "en_US",
+      images: [{ url: "/og-image.png?v=6" }],
+    },
+  };
+  const original = structuredClone(source);
+  const result = spanishPageMetadata(source, "/join");
+  assert.equal(result.title.absolute, "Únase como proveedor — Registro gratis | Tuveloz");
+  assert.equal(result.openGraph.title, result.title.absolute);
+  assert.equal(result.openGraph.url, "https://tuveloz.com/es/join");
+  assert.equal(result.alternates.canonical, result.openGraph.url);
+  assert.equal(result.openGraph.locale, "es_US");
+  assert.deepEqual(result.openGraph.images, source.openGraph.images);
+  assert.equal(result.description, source.description);
+  assert.deepEqual(source, original);
+});
+
+test("the root metadata preserves its title template and follows the requested Spanish route", () => {
+  const result = spanishPageMetadata({
+    title: { default: "Tuveloz | Customer Choice. Provider Freedom.", template: "%s | Tuveloz" },
+    openGraph: { url: "https://tuveloz.com/", locale: "en_US" },
+  }, "/about");
+  assert.equal(result.title.default, "Tuveloz | Opciones para clientes. Libertad para proveedores.");
+  assert.equal(result.title.template, "%s | Tuveloz");
+  assert.equal(result.openGraph.url, "https://tuveloz.com/es/about");
+});
+
+test("metadata without a reviewed Spanish route is returned unchanged", () => {
+  const source = { title: "Terms of Use", alternates: { canonical: "/terms" } };
+  for (const path of ["", "/terms", "/es/terms", "/missing"]) {
+    assert.equal(spanishPageMetadata(source, path), source);
+  }
+});
 
 function fixture() {
   let writes = 0;

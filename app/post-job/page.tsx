@@ -1,3 +1,4 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import { CustomerLander } from "../components/customer-lander";
 import { InterfaceCopy } from "../components/interface-copy";
 import type { Metadata } from "next";
@@ -16,7 +17,7 @@ import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { CustomerRequestForm } from "../components/customer-request-form";
 import { PublicSiteHeader } from "../components/public-chrome";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "For Customers — Real Quotes From Local Pros",
   description:
     "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.",
@@ -24,6 +25,10 @@ export const metadata: Metadata = {
     canonical: "/post-job",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default async function PostJobPage() {
   if (CUSTOMER_JOB_POSTING_PAUSED) {

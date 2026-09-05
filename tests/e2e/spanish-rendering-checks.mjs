@@ -46,6 +46,9 @@ export async function assertSpanishRendering(browser, origin, log) {
       await waitForLanguage("es");
       await page.waitForFunction((url) => document.querySelector('link[rel="canonical"]')?.getAttribute("href") === url,
         `https://tuveloz.com${path}`);
+      for (const selector of ['title', 'link[rel="canonical"]', 'meta[name="description"]']) {
+        assert.equal(await page.locator(selector).count(), 1, `${path}: duplicate ${selector} after hydration`);
+      }
       assert.equal(await page.locator('meta[property="og:url"]').getAttribute("content"), `https://tuveloz.com${path}`);
       assert.equal(await page.locator('meta[property="og:locale"]').getAttribute("content"), "es_US");
       const untranslated = await page.evaluate((knownEnglish) => {

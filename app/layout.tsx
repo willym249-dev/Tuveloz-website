@@ -1,3 +1,4 @@
+import { requestPageMetadata } from "../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
@@ -8,7 +9,7 @@ import { SiteLanguageProvider } from "./components/site-language";
 import { StagingEnvironmentBanner } from "./components/staging-environment-banner";
 import "./globals.css";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   metadataBase: new URL("https://tuveloz.com"),
   alternates: {
     canonical: "/",
@@ -46,6 +47,10 @@ export const metadata: Metadata = {
     images: ["/og-image.png?v=6"],
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 const organizationSchema = {
   "@context": "https://schema.org",

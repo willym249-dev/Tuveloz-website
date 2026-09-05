@@ -1,7 +1,8 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { PublicInfoPage } from "../components/public-info-page";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "Safety & Trust",
   description:
     "How Tuveloz verifies providers: law-based checks, service-specific evidence review, limited information sharing, and clear quotes.",
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
     canonical: "/safety",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default function SafetyPage() {
   return (

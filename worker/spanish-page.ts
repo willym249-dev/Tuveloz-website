@@ -191,6 +191,7 @@ export async function spanishPageResponse(
   englishUrl.pathname = englishPath;
   const renderRequest = new Request(englishUrl.toString(), request);
   renderRequest.headers.set("x-tuveloz-render-language", "es");
+  renderRequest.headers.set("x-tuveloz-render-path", englishPath);
   const response = await render(renderRequest);
 
   const type = response.headers.get("content-type") ?? "";

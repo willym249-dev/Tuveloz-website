@@ -17,7 +17,10 @@ Spanish body text previously changed after React rendered its HTML, so hydration
 compared Spanish HTML with English components and discarded the rendered page.
 The Worker now supplies the initial Spanish language to the layout and language
 provider. Shared React render boundaries translate reviewed body copy before
-rendering on both sides; the HTML rewriter handles only head metadata. The
+rendering on both sides. Request-aware metadata also resolves reviewed Spanish
+before React renders the head; rewriting English head tags alone made React add
+duplicate tags during hydration. The HTML rewriter retains the reciprocal
+language links and defensive head normalization. The
 customer lander renders inside a client component so streamed server children
 cannot escape that translation. Its copy and launch gate are unchanged.
 
@@ -28,8 +31,10 @@ banner returns to English on legal pages. Spanish public links use their reviewe
 Worker-served document URLs rather than requesting an unregistered RSC route.
 The launch-update form sends the language actually selected on the page.
 
-Build and all 567 tests passed locally. Six new behavior checks cover rendered
-copy, placeholders, handlers, form values, exclusions and navigation. The account
+Build and all 570 tests passed locally. Nine new behavior checks cover rendered
+copy, placeholders, handlers, form values, exclusions, navigation and metadata.
+Cold-browser checks passed all eight Spanish routes with exactly one title,
+description, canonical, social URL and locale. The account
 browser fixture now checks all eight Spanish pages, complete reviewed copy,
 metadata, mobile width, legal-page transitions and provider draft preservation.
 Its former hydration-warning exception and overlay dismissal are removed: any
