@@ -377,7 +377,7 @@ async function main() {
   // contains them and a source-level check cannot prove they reach anyone.
   const browser = await launchChromium();
   cleanups.push(() => browser.close());
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  let page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   const browserErrors = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
 
@@ -506,7 +506,13 @@ async function main() {
   log("PASS — the signed-in homepage account button returns to the customer workspace");
 
   // 9. The throttle is legible to the person, not only to the API -----------
-  await page.context().clearCookies();
+  // End the authenticated page before starting the signed-out scenario.
+  // Clearing its cookies during the workspace's in-flight session check can
+  // trigger a redirect that aborts the next page.goto with ERR_ABORTED.
+  // browser.newPage creates a separate context, with no inherited cookies.
+  await page.close();
+  page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  page.on("pageerror", (error) => browserErrors.push(error.message));
   await page.goto(`${origin}/account?mode=create&role=customer`, { waitUntil: "domcontentloaded" });
   await waitForInteractive();
   const throttledEmail = `e2e-throttle+${stamp}@tuveloz.invalid`;
