@@ -46,6 +46,13 @@ signup test passed with fresh migrations, a saved campaign attribution, repeat
 application deduplication, forged-event rejection, provider sign-in, customer
 signup, and local notification delivery. Deployment is verified separately.
 
+The first Linux CI run reached a saved application, then failed with
+`UND_ERR_SOCKET` on the next request after synchronous D1 assertions. The
+fixture now requests fresh HTTP connections to avoid reusing an idle socket
+while its close event is queued. This change is confined to the local test
+transport; write requests are never automatically retried and every application
+assertion remains required. CI must pass on this revision before release.
+
 ## 2026-09-04 - Provider Spanish coverage and production support receipt
 
 PR #183 deployed as `c508a95`; 12 live HTTP checks and browser checks passed.
