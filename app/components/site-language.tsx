@@ -20,6 +20,7 @@ const LANGUAGE_EVENT = "tuveloz-language-change";
 // this module, and because the browser half is what they were written for.
 export { spanishText, spanishPlaceholders } from "../../lib/spanish-dictionary";
 import { spanishText, spanishPlaceholders } from "../../lib/spanish-dictionary";
+import { synchronizeSpanishMetadata } from "../../lib/spanish-browser-metadata";
 
 type TextState = { source: string; applied: string };
 const textStates = new WeakMap<Text, TextState>();
@@ -181,19 +182,32 @@ export function SiteLanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     // Keep each page's title instead of replacing every title with the brand.
-    translateInterface(document.head, language);
-    translateInterface(document.body, language);
+    const translatePage = () => {
+      translateInterface(document.head, language);
+      if (language === "es") synchronizeSpanishMetadata(document, window.location.pathname);
+      translateInterface(document.body, language);
+    };
+    translatePage();
+    let active = true;
+    let queued = false;
     const observer = new MutationObserver(() => {
-      window.queueMicrotask(() => translateInterface(document.body, language));
+      if (queued) return;
+      queued = true;
+      window.queueMicrotask(() => {
+        queued = false;
+        if (active) translatePage();
+      });
     });
-    observer.observe(document.body, {
+    const options = {
       childList: true,
       subtree: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ["placeholder", "title", "aria-label"],
-    });
-    return () => observer.disconnect();
+      attributeFilter: ["placeholder", "title", "aria-label", "content", "href"],
+    };
+    observer.observe(document.head, options);
+    observer.observe(document.body, options);
+    return () => { active = false; observer.disconnect(); };
   }, [language]);
 
   return (

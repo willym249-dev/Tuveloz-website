@@ -532,6 +532,22 @@ async function main() {
   );
   log("PASS — the throttle message reaches the visitor");
 
+  // Google renders JavaScript: correct raw HTML alone did not protect the
+  // Spanish canonical when hydration restored the English page metadata.
+  await page.goto(`${origin}/es/join`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector('[data-language-control]', { timeout: 60_000 });
+  await page.waitForFunction(() => document.documentElement.lang === "es"
+    && document.querySelector('link[rel="canonical"]')?.getAttribute("href") === "https://tuveloz.com/es/join");
+  assert.equal(await page.locator('meta[property="og:url"]').getAttribute("content"), "https://tuveloz.com/es/join");
+  assert.equal(await page.locator('meta[property="og:locale"]').getAttribute("content"), "es_US");
+  assert.match(await page.title(), /Únase como proveedor/);
+  await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
+  await page.waitForURL((url) => url.pathname === "/join");
+  await page.waitForSelector('[data-language-control]', { timeout: 60_000 });
+  assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"), "https://tuveloz.com/join");
+  assert.match(await page.title(), /Join as a Provider/);
+  log("PASS — rendered Spanish metadata survives hydration and switching to English restores the English page");
+
   // Delivery staying local is established by assertEnvironmentIsSafe before a
   // server exists, and by the exact send counts in the parity check above. A
   // closing "at least one message was captured" would restate that without
