@@ -11,6 +11,17 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-04 - Owner dashboard measurement note
+
+PR #185 deployed successfully as `a67ad41`. All 15 independent live HTTP checks
+passed, including exact-release/schema checks and rejection of claimed completion
+events. The authenticated dashboard loaded its saved-application total and new
+email-code stage. Live review caught an older introductory paragraph still
+describing events as people and omitting the API's measurement note. The page now
+describes records and events accurately and displays the existing note about
+repeats, historical coverage, and missing telemetry. This is a display-only
+follow-up; event storage, signup, and all release gates remain as tested in #185.
+
 ## 2026-09-04 - Saved provider applications and email authentication
 
 Provider completion previously came from a browser beacon after a generic 202,

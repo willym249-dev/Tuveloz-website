@@ -437,10 +437,9 @@ export default function AnalyticsFunnelPage() {
         <span className="kicker">Owner control center</span>
         <h1>Funnel, launch list &amp; AI</h1>
         <p>
-          Where people drop off between opening a form and finishing it, how many are
-          waiting on the launch list, and what Tuveloz AI is being asked. Data comes only
-          from this site&rsquo;s own event log — nothing is shared with a third party, and
-          no email address or visitor question is stored here.
+          Saved applications, form-stage activity, the launch list, and Tuveloz support
+          topics. These summaries use Tuveloz records and first-party events. Contact
+          details and message text are not shown here.
         </p>
       </section>
 
@@ -454,6 +453,7 @@ export default function AnalyticsFunnelPage() {
 
       {active && (
         <>
+          <p className="hint">{data?.note}</p>
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", margin: "1rem 0" }}>
             {(Object.keys(WINDOW_LABELS) as WindowKey[]).map((key) => (
               <button
