@@ -16,7 +16,7 @@ import {
   PARTS_SOURCE_OPTIONS,
 } from "../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
-import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
+import { CUSTOMER_STEPS, PROVIDER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { useAccountHeaderState } from "./components/account-header-state";
@@ -134,7 +134,7 @@ const providerReasons: Array<{
     // nothing is deducted, but the fee IS sized by the provider's price, and the
     // Customer Agreement says so. See PROVIDER_PAYOUT_DISCLOSURE in
     // lib/customer-fee.ts, and the guard in tests/customer-fee-consistency.test.mjs.
-    text: "Keep 100% of your quoted price — no subscription, no lead fees, and nothing deducted from your payout. The 5% Customer Service Fee is calculated on your price and charged to the customer on top of it.",
+    text: "Keep 100% of your quoted price — no subscription or lead fees. The 5% Customer Service Fee is added to the customer's total, never deducted from your quoted price. Payout timing and adjustments follow the payment policy.",
   },
   {
     icon: "open-jobs",
@@ -670,16 +670,16 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   : "Your wrench. Your rules."}
                 <br />
                 <span className="hero-value-line">
-                  We bring the customers.
+                  Join before customer launch.
                 </span>
               </h1>
               <p>
-                You bring the skills — Tuveloz brings the customers and knocks out the
-                paperwork. Free to join, keep 100% of your quoted price, no exclusivity,
+                You bring the skills - apply now to prepare for customer launch.
+                Tuveloz keeps quotes, invoices, and records in one place. Free to join, keep 100% of your quoted price, no exclusivity,
                 no lead fees.
               </p>
               <ul className="hero-highlights">
-                <li><span aria-hidden="true">✓</span> Free to apply, about 10 minutes</li>
+                <li><span aria-hidden="true">✓</span> Free to apply. Save and finish later.</li>
                 <li><span aria-hidden="true">✓</span> You set your prices and your hours</li>
                 <li><span aria-hidden="true">✓</span> Quotes, invoices, and records in one place</li>
               </ul>
@@ -848,11 +848,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
           </article>
           <article className="trust-card">
-            <span className="trust-card-label">We check what the law says to check</span>
+            <span className="trust-card-label">Checks matched to the service</span>
             <p>
-              If a job needs a license or registration by law, we ask for it and
-              confirm it before anyone can offer that job here. Nothing extra, just
-              what&apos;s actually required.
+              We check the documents required for the service and work location,
+              along with Tuveloz safety and competency requirements, before that
+              service can be activated.
             </p>
           </article>
           {view === "provider" ? (
@@ -935,8 +935,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h3>Run your work on your terms.</h3>
             <p>
               Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots
-              now. Pick the jobs you want, send us anything the law asks for, and your
-              workspace is set up before the first customer shows up.
+              now. Pick your services and see the documents and checks they need.
+              Apply now to prepare your workspace before customer launch.
             </p>
             <ul>
               <li><span aria-hidden="true">✓</span> Your hours, your prices</li>
@@ -1028,18 +1028,18 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           {CUSTOMER_JOB_POSTING_PAUSED && (
             <p>
               {view === "provider"
-                ? "That's the whole thing. Jobs start flowing when we open, so get your profile ready now and you can quote from day one."
+                ? "Apply now to prepare your profile. Quoting opens after your services and the marketplace pass launch review; applying does not guarantee jobs."
                 : "That's really all there is to it. You can't post a job just yet, but sign up now and you're first in line when we open."}
             </p>
           )}
           {CUSTOMER_JOB_POSTING_PAUSED && (
-            <Link className="text-link" href={view === "provider" ? "/join" : "/post-job"}>
+            <Link className="text-link" href={view === "provider" ? "/join#provider-apply" : "/post-job"}>
               {view === "provider" ? "Apply free →" : "Save my spot →"}
             </Link>
           )}
         </div>
         <div className="steps">
-          {CUSTOMER_STEPS.map((step) => (
+          {(view === "provider" ? PROVIDER_STEPS : CUSTOMER_STEPS).map((step) => (
             <article key={step.number}>
               <span>{step.number}</span>
               <div>
@@ -1667,11 +1667,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="provider-panel" data-manual-language>
           <div className="provider-copy">
             <span className="kicker light">For providers</span>
-            {view === "provider" ? (
-              <h1>Your business. Your price. Your schedule.</h1>
-            ) : (
-              <h2>Your business. Your price. Your schedule.</h2>
-            )}
+            <h2>Your business. Your price. Your schedule.</h2>
             <p>
               This is your business — run it your way. Tuveloz doesn&apos;t employ, train, or assign work to providers;
               you pick the jobs that fit and name your price. Sign up free — no listing fee, no subscription.

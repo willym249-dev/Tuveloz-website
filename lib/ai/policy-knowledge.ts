@@ -41,21 +41,21 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
   {
     id: "customer-fee",
     hedged: true,
-    audience: "customer",
+    audience: "both",
     question: "What does Tuveloz charge me?",
-    keywords: ["fee", "cost", "charge", "commission", "5%", "price", "total", "surcharge"],
+    keywords: ["fee", "fees", "cost", "charge", "commission", "5%", "price", "total", "surcharge"],
     answer:
-      "The pro sets their own price for the labor. On top of that, the current design adds a 5% Customer Service Fee to your total, shown as its own line before you confirm — never folded into the pro's price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
+      "The pro sets their own price for the labor. On top of that, the current design adds a 5% Customer Service Fee to the customer's total, shown as its own line before confirmation - never deducted from the pro's quoted price. That percentage and how it is handled are still going through compliance and tax review, so treat it as the plan rather than a locked-in number.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
     anchor: "5% customer service fee",
   },
   {
     id: "customer-parts",
-    audience: "customer",
+    audience: "both",
     question: "Who buys the parts?",
     keywords: ["part", "parts", "oem", "aftermarket", "buy", "supply", "battery", "labor only"],
     answer:
-      "You do. Prices on Tuveloz cover labor only, so any part is something you purchase separately — it is not included in the pro's quote and Tuveloz does not sell, source, or pay for it. The request flow is built to pin down the exact part before the appointment so nobody wastes a trip on the wrong one.",
+      "The customer purchases parts separately. Prices on Tuveloz cover labor only - parts are not included in the pro's quote and Tuveloz does not sell, source, or pay for them. The planned request flow records the exact part before the appointment so nobody wastes a trip on the wrong one.",
     source: { label: "Customer Agreement", href: "/customer-agreement" },
     anchor: "labor-only",
   },
@@ -84,7 +84,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     hedged: true,
     audience: "customer",
     question: "What happens if something goes wrong with the work?",
-    keywords: ["refund", "dispute", "complaint", "problem", "wrong", "bad job", "chargeback", "cancel"],
+    keywords: ["refund", "refunds", "dispute", "disputes", "complaint", "problem", "wrong", "bad job", "chargeback", "cancel"],
     answer:
       "Raise it with the pro first, since the work is a direct agreement between the two of you. Tuveloz keeps the job record, the written authorization, and the payment trail, and the payment policy sets out how cancellations, refunds, and disputes are meant to be handled. Those protections are part of the payment design that is still under review, so read the policy page rather than relying on a summary.",
     source: { label: "Payment, Cancellation, and Refund Policy", href: "/payments" },
@@ -125,9 +125,9 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     id: "provider-documents",
     audience: "provider",
     question: "What paperwork do I need to send?",
-    keywords: ["license", "licence", "registration", "insurance", "documents", "paperwork", "evidence", "requirements", "approval"],
+    keywords: ["license", "licence", "registration", "insurance", "documents", "paperwork", "evidence", "requirements", "approval", "apply", "applying", "sign up", "application"],
     answer:
-      "Only what the specific jobs you pick actually require by law. If a service legally needs a license, registration, or insurance, we ask for it and confirm it before that service can go live for you — and if a service needs nothing, we do not invent a requirement. You can browse and pick services freely while you decide; nothing is locked in.",
+      "Start your free provider application at /join. The application shows the requirements for your selected services and where you work, including legally required documents and Tuveloz's safety and competency checks. Any required evidence must be reviewed before that service can go live for you. You can browse and pick services while you decide; you do not need to upload everything to start.",
     source: { label: "Provider pathways", href: "/provisional-provider-policy" },
     anchor: "provisional",
   },
@@ -185,20 +185,27 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
 ];
 
 /** Starter questions for the assistant's empty state, per audience. */
-export function starterQuestions(audience: PolicyAudience, limit = 4) {
+export function starterQuestions(audience: PolicyAudience, limit = 4, language: "en" | "es" = "en") {
   return POLICY_ENTRIES
     .filter((entry) => entry.audience === audience || entry.audience === "both")
     .slice(0, limit)
-    .map((entry) => entry.question);
+    .map((entry) => language === "es" ? SPANISH_POLICY[entry.id].question : entry.question);
+}
+
+function normalize(text: string) {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9%]+/g, " ").trim();
 }
 
 function scoreEntry(entry: PolicyEntry, words: readonly string[], haystack: string) {
   let score = 0;
-  for (const keyword of entry.keywords) {
-    if (haystack.includes(keyword)) score += keyword.includes(" ") ? 3 : 2;
+  const spanish = SPANISH_POLICY[entry.id];
+  if ([entry.question, spanish.question].some(question => normalize(question) === haystack)) return 100;
+  for (const keyword of new Set([...entry.keywords, ...spanish.keywords].map(normalize))) {
+    const specific = /^(fees?|commission|surcharge|privacy|refunds?|disputes?|paperwork|documents|requirements|apply|applying|application|exclusivity|exclusive|insurance|piezas|repuestos|tarifa|comision|privacidad|reembolsos?|documentos|requisitos|solicitud|aplicar|exclusividad)$/;
+    if (` ${haystack} `.includes(` ${keyword} `)) score += keyword.includes(" ") || specific.test(keyword) ? 3 : 2;
   }
   for (const word of words) {
-    if (word.length > 3 && entry.question.toLowerCase().includes(word)) score += 1;
+    if (word.length > 3 && normalize(`${entry.question} ${spanish.question}`).split(" ").includes(word)) score += 1;
   }
   return score;
 }
@@ -213,7 +220,7 @@ export function findPolicyEntries(
   audience: PolicyAudience,
   limit = 3,
 ): PolicyEntry[] {
-  const haystack = message.toLowerCase();
+  const haystack = normalize(message);
   const words = haystack.split(/[^a-z0-9%]+/).filter(Boolean);
   return POLICY_ENTRIES
     .filter((entry) => entry.audience === audience || entry.audience === "both")
@@ -268,6 +275,67 @@ export function replyKeepsRequiredHedges(
 }
 
 /** The approved wording, used verbatim when a reply fails the hedge guard. */
-export function vettedAnswer(entries: readonly PolicyEntry[]) {
-  return entries.map((entry) => entry.answer).join("\n\n");
+export function vettedAnswer(entries: readonly PolicyEntry[], language: "en" | "es" = "en") {
+  return entries.map((entry) => language === "es" ? SPANISH_POLICY[entry.id].answer : entry.answer).join("\n\n");
 }
+
+// Translations stay beside the published English answers so both languages are
+// reviewed together. This is a policy guide, not generated model output.
+const SPANISH_POLICY: Record<string, { question: string; keywords: string[]; answer: string }> = {
+  "customer-fee": {
+    question: "¿Cuánto cobra Tuveloz?", keywords: ["cuanto cobra", "costo", "tarifa", "comision", "precio", "cobran"],
+    answer: "El profesional fija su precio por la mano de obra. El diseño actual añade un Customer Service Fee del 5% al total del cliente, en una línea separada antes de confirmar; no se descuenta del precio cotizado por el profesional. El porcentaje y su aplicación siguen en revisión de cumplimiento e impuestos; todavía son una propuesta.",
+  },
+  "customer-parts": {
+    question: "¿Quién compra las piezas?", keywords: ["piezas", "repuestos", "compra", "comprar", "solo mano de obra"],
+    answer: "El cliente compra las piezas por separado. Los precios de Tuveloz cubren solo mano de obra; las piezas no están incluidas en la cotización. Tuveloz no vende, busca ni paga las piezas. El flujo previsto registra la pieza exacta antes de la cita.",
+  },
+  "customer-no-obligation": {
+    question: "¿Tengo que aceptar una cotización?", keywords: ["aceptar", "cotizacion", "rechazar", "obligacion"],
+    answer: "No. Consultar y comparar es gratis; puede rechazar todas las cotizaciones. Usted elige quién hace el trabajo y retirarse no tiene costo.",
+  },
+  "customer-privacy": {
+    question: "¿Quién puede ver mi dirección y teléfono?", keywords: ["direccion", "telefono", "privacidad", "datos personales"],
+    answer: "Los profesionales que evalúan si cotizar solo ven lo necesario para decidir. Su dirección exacta y datos de contacto se comparten con el profesional que elija. En el Centro de Privacidad puede revisar, exportar o pedir que eliminemos su información.",
+  },
+  "customer-refunds": {
+    question: "¿Qué pasa si el trabajo sale mal?", keywords: ["reembolso", "reembolsos", "disputa", "reclamo", "trabajo sale mal"],
+    answer: "Hable primero con el profesional: el trabajo es un acuerdo directo entre ustedes. El diseño de pagos prevé registros, autorización escrita y procedimientos para cancelaciones, reembolsos y disputas. Estas protecciones siguen en revisión; consulte la política de pagos para los detalles.",
+  },
+  "provider-payout": {
+    question: "¿Cómo y cuándo recibo mi pago?", keywords: ["pago", "cobro", "transferencia", "deposito", "me pagan", "recibo"],
+    answer: "Usted cotiza su mano de obra y conserva ese subtotal: el Customer Service Fee del 5% se añade al total del cliente. El diseño prevé pagos mediante Stripe y la transferencia tras completar el trabajo y presentar evidencia. Los detalles siguen sujetos a aprobación del procesador, seguro y contabilidad; consulte la política antes de contar con una fecha de pago.",
+  },
+  "provider-independence": {
+    question: "¿Voy a trabajar como empleado de Tuveloz?", keywords: ["empleado", "empleo", "jefe", "independiente", "contratista"],
+    answer: "No. Usted dirige su propio negocio y fija sus precios, horario, área de servicio y forma de trabajar. Tuveloz no emplea, capacita, patrocina, asigna ni supervisa a usted ni a sus ayudantes. Su negocio se encarga de contratar, pagar, capacitar y supervisar a su equipo.",
+  },
+  "provider-exclusivity": {
+    question: "¿Puedo conservar mis clientes y usar otras plataformas?", keywords: ["exclusividad", "exclusivo", "mis clientes", "otras plataformas"],
+    answer: "Sí. Tuveloz no exige exclusividad. Puede conservar sus clientes, trabajar en otras plataformas y rechazar trabajos. No está obligado a aceptar, cotizar ni completar un trabajo específico.",
+  },
+  "provider-documents": {
+    question: "¿Qué documentos necesito enviar?", keywords: ["documentos", "licencia", "registro", "seguro", "requisitos", "papeles", "solicitud", "aplicar", "inscribirme"],
+    answer: "Empiece su solicitud gratuita de proveedor en /join. La solicitud muestra los requisitos de sus servicios y lugares de trabajo: documentos exigidos por ley y controles de seguridad y competencia de Tuveloz. La evidencia requerida debe revisarse antes de activar un servicio. Puede explorar y elegir servicios sin subir todo para empezar.",
+  },
+  "provider-conduct": {
+    question: "¿Cuáles son las reglas para tratar con los clientes?", keywords: ["conducta", "reglas", "fuera de la plataforma"],
+    answer: "Cotice con honestidad, mantenga el trabajo en la plataforma para que ambas partes tengan el mismo registro, proteja los datos del cliente y no presione a nadie. Incumplir puede pausar o terminar su acceso. Consulte la página de conducta antes de su primer trabajo.",
+  },
+  "provider-job-records": {
+    question: "¿Qué debo registrar durante un trabajo?", keywords: ["registrar", "fotos", "autorizacion", "factura", "orden de cambio"],
+    answer: "Aceptar una cotización crea una autorización escrita para el trabajo acordado. El trabajo adicional necesita aprobación del cliente mediante una orden de cambio. Se registra con fotos el estado del vehículo, avance, piezas y finalización; esa evidencia también respalda el pago.",
+  },
+  "both-what-tuveloz-is": {
+    question: "¿Qué es Tuveloz?", keywords: ["que es", "como funciona", "empresa", "mercado"],
+    answer: "Tuveloz es un mercado local de servicios para vehículos en Montgomery County, Maryland, que conecta clientes con profesionales independientes: mecánicos, detalladores, instaladores de polarizado, servicios móviles y talleres. El diseño reúne cotizaciones, autorizaciones, registros, facturas y pagos. Tuveloz no repara vehículos; el trabajo es un acuerdo directo entre el cliente y el profesional elegido.",
+  },
+  "both-launch-state": {
+    question: "¿Ya puedo usar Tuveloz?", keywords: ["abierto", "disponible", "lanzamiento", "ya puedo", "reservar", "trabajos hoy"],
+    answer: "Todavía no para trabajos reales. Las cuentas y solicitudes de proveedores están abiertas, pero publicar trabajos, cotizar, reservar y pagar sigue desactivado hasta completar los controles legales y operativos. Crear una cuenta hoy no reserva nada ni tiene costo.",
+  },
+  "both-safety": {
+    question: "¿Qué hago si no es seguro conducir?", keywords: ["peligro", "emergencia", "humo", "incendio", "no es seguro conducir"],
+    answer: "Deténgase cuando sea seguro, aléjese del tráfico y llame al 911 o a un profesional. Su seguridad va primero. Tuveloz no es un servicio de emergencias ni de asistencia en carretera y no puede enviar ayuda.",
+  },
+};

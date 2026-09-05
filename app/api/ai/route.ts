@@ -111,7 +111,9 @@ function buildQuestion(message: string, history: ChatTurn[]) {
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
   try {
-    body = (await request.json()) as Record<string, unknown>;
+    const parsed: unknown = await request.json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("Invalid body");
+    body = parsed as Record<string, unknown>;
   } catch {
     return noStoreJson({ error: "Send a JSON body with a message." }, 400);
   }
@@ -123,13 +125,34 @@ export async function POST(request: Request) {
   const policyEntries = findPolicyEntries(message, audience);
 
   if (!message) {
-    return noStoreJson({ error: "Type what your vehicle is doing to get started." }, 400);
+    return noStoreJson({ error: language === "es" ? "Escriba su pregunta para empezar." : "Type your question to get started." }, 400);
+  }
+
+  // Published answers must work even with no model configured or an AI outage.
+  // Keep the launch boundary visible when a policy describes a future job flow.
+  if (policyEntries.length > 0) {
+    const launchNote = CUSTOMER_JOB_POSTING_PAUSED
+      ? language === "es"
+        ? "Las solicitudes de proveedores están abiertas. Los trabajos, reservas y pagos de clientes todavía no están disponibles.\n\n"
+        : "Provider applications are open. Customer jobs, bookings, and payments are not open yet.\n\n"
+      : "";
+    void recordAssistantAnswer(audience, policyEntries, true);
+    return noStoreJson({
+      reply: launchNote + vettedAnswer(policyEntries, language),
+      sources: policyEntries.map((entry) => entry.source)
+        .filter((source, index, all) => all.findIndex(item => item.href === source.href) === index),
+      mode: "policy-guide",
+      consulted: [],
+      cached: false,
+    });
   }
 
   if (!councilConfigured()) {
     return noStoreJson(
       {
-        error: "Tuveloz AI is not available right now. Please try again later.",
+        error: language === "es"
+          ? "No tengo una respuesta publicada para esa pregunta. La orientación por IA no está disponible. Use ‘Contactar al dueño’ para pedir ayuda."
+          : "I don't have a published answer to that question. AI guidance is unavailable. Use ‘Contact the owner’ to ask for help.",
         code: "AI_UNCONFIGURED",
       },
       503,
@@ -167,15 +190,22 @@ export async function POST(request: Request) {
       sources: policyEntries.map((entry) => entry.source),
       consulted: result.consulted.map((answer) => answer.provider),
       cached: result.cached,
+      mode: "ai",
     });
   } catch (error) {
     console.error("Tuveloz AI council request failed", error);
     return noStoreJson(
       {
-        error: "Tuveloz AI could not answer that just now. Please try again in a moment.",
+        error: language === "es"
+          ? "No pudimos responder ahora. Puede intentarlo de nuevo o contactar al dueño."
+          : "Tuveloz AI could not answer that just now. Try again or contact the owner.",
         code: "AI_UPSTREAM_ERROR",
       },
       502,
     );
   }
+}
+
+export async function GET() {
+  return noStoreJson({ mode: councilConfigured() ? "ai" : "policy-guide" });
 }

@@ -164,7 +164,7 @@ test("the provider pitch does not claim there is no commission", async () => {
   // a provider could fairly call misleading once they read both.
   assert.doesNotMatch(home, /no commission carved out/i);
   assert.doesNotMatch(home, /no commission\b/i);
-  assert.match(home, /nothing deducted from your payout/i);
+  assert.match(home, /never deducted from your quoted price/i);
   assert.match(home, /charged to the customer on top of it/i);
 });
 

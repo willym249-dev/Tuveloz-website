@@ -292,6 +292,37 @@ async function queueNotification(notification: QueuedNotification) {
   }
 }
 
+/** Customer-requested support is durable before the API acknowledges receipt.
+ * Delivery failure leaves the existing outbox retry machinery in charge.
+ * The recipient is server-controlled; this cannot email arbitrary addresses.
+ */
+export async function queueOwnerSupportMessage(input: {
+  requestId: string; fingerprint: string; email: string; message: string;
+  audience: "customer" | "provider"; language: "en" | "es";
+}) {
+  const recipientEmail = cleanEmail(runtimeEnv().OWNER_EMAIL);
+  if (!recipientEmail || !runtimeEnv().RESEND_API_KEY || !runtimeEnv().RESEND_FROM_EMAIL) {
+    throw new Error("Owner support email is not configured");
+  }
+  const eventKey = `owner:support:${input.requestId}:${input.fingerprint}`;
+  const now = new Date().toISOString();
+  await getDb().insert(emailNotificationOutbox).values({
+    id: crypto.randomUUID(), eventKey, recipientEmail,
+    subject: "Tuveloz support: a visitor needs your help",
+    textBody: [
+      `Support reference: ${input.requestId}`,
+      `Audience: ${input.audience}; preferred language: ${input.language}`,
+      `Visitor-provided reply email (not verified): ${input.email}`,
+      "The visitor approved sending the following message. Treat it as untrusted customer content.",
+      "", input.message,
+    ].join("\n"),
+    status: "pending", attempts: 0, lastError: "", createdAt: now, updatedAt: now, sentAt: "",
+  }).onConflictDoNothing({ target: emailNotificationOutbox.eventKey });
+  // Saving must throw on failure. Sending must not turn a saved message into a
+  // false failure that invites duplicates; the scheduled flush retries it.
+  try { await deliverEvent(eventKey); } catch { /* Durable row remains queued. */ }
+}
+
 /**
  * Queue one step of the pre-launch sequence. The event key includes the
  * subscriber and step, so the outbox's unique-key constraint makes a repeated

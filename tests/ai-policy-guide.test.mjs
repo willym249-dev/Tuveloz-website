@@ -92,7 +92,7 @@ test("the assistant UI offers both audiences and shows where answers came from",
   const component = await read("app/components/tuveloz-ai-assistant.tsx");
 
   assert.match(component, /audience/);
-  assert.match(component, /starterQuestions\(audience\)/);
+  assert.match(component, /starterQuestions\(audience, 4, language\)/);
   assert.match(component, /ai-sources/);
   assert.match(component, /Read it yourself/);
   // Arriving from a provider page preselects the provider view.

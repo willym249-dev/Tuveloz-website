@@ -5014,6 +5014,33 @@ label > small {
 }
 
 @media (max-width: 700px) {
+  #provider-apply .provider-form {
+    padding: 18px 12px;
+  }
+
+  #provider-apply .service-fieldset {
+    padding: 10px 6px;
+  }
+
+  .provider-service-groups .service-group > summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 12px 10px;
+  }
+
+  .provider-service-groups .service-group > summary > span {
+    grid-column: 1 / -1;
+  }
+
+  .provider-service-groups .service-group > summary b {
+    justify-self: start;
+  }
+
+  .provider-service-groups .service-group > .service-options {
+    padding: 6px;
+  }
+
   .customer-service-options {
     grid-template-columns: 1fr;
   }
@@ -5025,6 +5052,38 @@ label > small {
   .eligibility-questions {
     grid-template-columns: 1fr;
   }
+}
+
+.ai-support {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #66503e;
+  border-radius: 16px;
+  min-width: 0;
+}
+
+.ai-support input:not([type="checkbox"]),
+.ai-support textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.ai-support code {
+  overflow-wrap: anywhere;
+}
+
+.ai-support-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ai-support-consent input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .portal-alert {

@@ -56,6 +56,13 @@ if (LAUNCH_SERVICES.some((service) => (
   throw new Error("The launch services list references an unknown service code.");
 }
 
+/** The provider view describes the same planned flow from the pro's side. */
+export const PROVIDER_STEPS = [
+  { number: "01", title: "Choose work that fits", text: "After launch, review requests in your area for services you are cleared to offer. You decide whether to quote." },
+  { number: "02", title: "Send your own quote", text: "Set your labor price and describe the work you can do. You control your rates and availability." },
+  { number: "03", title: "The customer chooses", text: "If a customer accepts, confirm the scope and appointment together. Applying today does not book work or guarantee jobs." },
+] as const;
+
 /** The customer story in three beats, used on the homepage and the lander. */
 export const CUSTOMER_STEPS: ReadonlyArray<{
   number: string;

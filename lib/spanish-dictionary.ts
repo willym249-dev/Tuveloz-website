@@ -17,6 +17,26 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "Checks matched to the service": "Controles según el servicio",
+  "We check the documents required for the service and work location, along with Tuveloz safety and competency requirements, before that service can be activated.": "Revisamos los documentos requeridos para el servicio y lugar de trabajo, junto con los requisitos de seguridad y competencia de Tuveloz, antes de activar ese servicio.",
+  "Mechanics, detailers, tint installers, service trucks, and shops are claiming founding spots now. Pick your services and see the documents and checks they need. Apply now to prepare your workspace before customer launch.": "Mecánicos, detalladores, instaladores de polarizado, servicios móviles y talleres están solicitando lugares fundadores. Elija sus servicios y consulte los documentos y controles necesarios. Solicite ahora para preparar su espacio antes del lanzamiento para clientes.",
+  "Apply now to prepare your profile. Quoting opens after your services and the marketplace pass launch review; applying does not guarantee jobs.": "Solicite ahora para preparar su perfil. Las cotizaciones se habilitan cuando sus servicios y el mercado pasan la revisión de lanzamiento; solicitar no garantiza trabajos.",
+  "Choose work that fits": "Elija trabajos que le convengan",
+  "After launch, review requests in your area for services you are cleared to offer. You decide whether to quote.": "Tras el lanzamiento, revise solicitudes en su zona para servicios que tenga autorizados. Usted decide si cotizar.",
+  "Send your own quote": "Envíe su propia cotización",
+  "Set your labor price and describe the work you can do. You control your rates and availability.": "Fije su precio de mano de obra y describa el trabajo que puede hacer. Usted controla sus tarifas y disponibilidad.",
+  "The customer chooses": "El cliente elige",
+  "If a customer accepts, confirm the scope and appointment together. Applying today does not book work or guarantee jobs.": "Si el cliente acepta, confirmen juntos el alcance y la cita. Solicitar hoy no reserva ni garantiza trabajos.",
+  "Tuveloz help": "Ayuda de Tuveloz",
+  "Questions about Tuveloz? Start here.": "¿Tiene preguntas sobre Tuveloz? Empiece aquí.",
+  "Ask about fees, parts, applying as a provider, or how Tuveloz works. Read answers from our published policies and contact the owner if you still need help. Tuveloz AI does not diagnose your vehicle, dispatch help, guarantee pricing, or choose a provider.": "Pregunte sobre tarifas, piezas, solicitudes de proveedores o cómo funciona Tuveloz. Consulte respuestas de nuestras políticas y contacte al dueño si necesita más ayuda. Tuveloz AI no diagnostica su vehículo, envía ayuda, garantiza precios ni elige un proveedor.",
+  "Ask a question about Tuveloz": "Haga una pregunta sobre Tuveloz",
+  "Ask about Tuveloz, fees, or parts.": "Pregunte sobre Tuveloz, tarifas o piezas.",
+  "Join before customer launch.": "Únase antes del lanzamiento para clientes.",
+  "Free to apply. Save and finish later.": "Aplicar es gratis. Guarde y termine después.",
+  "You bring the skills - apply now to prepare for customer launch. Tuveloz keeps quotes, invoices, and records in one place. Free to join, keep 100% of your quoted price, no exclusivity, no lead fees.": "Usted aporta sus habilidades: solicite ahora para prepararse para el lanzamiento. Tuveloz reúne cotizaciones, facturas y registros. Unirse es gratis, conserva el 100% de su precio cotizado, sin exclusividad ni cuotas por contacto.",
+  "Keep 100% of your quoted price — no subscription or lead fees. The 5% Customer Service Fee is added to the customer's total, never deducted from your quoted price. Payout timing and adjustments follow the payment policy.": "Conserve el 100% de su precio cotizado, sin suscripción ni cuotas por contacto. La Tarifa de Servicio al Cliente del 5% se añade al total del cliente; no se descuenta de su cotización. Los plazos de pago y ajustes siguen la política de pagos.",
+
   "Tuveloz is not accepting customer service requests or payments yet. We are onboarding and reviewing local provider businesses first so customers will have meaningful choices when the marketplace opens.": "Tuveloz aún no acepta solicitudes de servicio ni pagos de clientes. Primero estamos incorporando y revisando negocios proveedores locales para que los clientes tengan buenas opciones cuando abra el mercado.",
   "Customer and provider accounts are available now. Creating an account does not submit a service request or charge you.": "Las cuentas de clientes y proveedores ya están disponibles. Crear una cuenta no envía una solicitud de servicio ni genera ningún cargo.",
   "Learn about Tuveloz": "Conozca Tuveloz",
@@ -1210,6 +1230,7 @@ export const spanishText: Record<string, string> = {
 };
 
 export const spanishPlaceholders: Record<string, string> = {
+  "Ask about Tuveloz, fees, or parts.": "Pregunte sobre Tuveloz, tarifas o piezas.",
   "Full name": "Nombre completo",
   "Example: Rockville or Silver Spring": "Ejemplo: Rockville o Silver Spring",
   "Example: Prince George's County": "Ejemplo: Condado de Prince George",

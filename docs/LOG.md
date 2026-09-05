@@ -11,6 +11,19 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-04 - Available policy answers and an owner support handoff
+
+The live assistant returned `AI_UNCONFIGURED` for basic Tuveloz questions.
+Published answers now work independently of AI in English and Spanish. Added
+an explicit, editable owner-help submission using the durable email outbox,
+origin validation, request limits, and honest queued/error states. Corrected
+mobile provider categories, the duplicate H1, signup requirements, and provider
+flow copy. Local browser delivery was verified using synthetic data and a local
+mail catcher. This remains an undeployed working copy; production signup and
+email delivery were not tested. Zeo chat reported `route_not_ready`; Claude's
+availability probe was denied (403), so no independent Claude review is claimed.
+See [support reliability](operations/2026-09-04-support-reliability.md).
+
 ---
 
 ## 2026-08-22 — A seal that could not be verified on the machine that matters

@@ -1178,8 +1178,8 @@ export function ProviderSignupForm() {
               <h3>{providerFormIsSpanish ? "Lo que subirá" : "What you'll upload"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "No necesita nada de esto ahora mismo. Son los únicos documentos que la ley exige para los trabajos que eligió — nada de más."
-                  : "You don't need any of this right now. These are the only documents the law requires for the jobs you picked — nothing extra."}
+                  ? "No necesita nada de esto ahora mismo. Estos requisitos corresponden a sus servicios y lugares de trabajo: documentos legales y controles de seguridad y competencia de Tuveloz."
+                  : "You don't need any of this right now. These requirements match your selected services and work locations, including legal documents and Tuveloz safety and competency checks."}
               </p>
               {requiredDocumentGroups.map((group, groupIndex) => (
                 <div key={groupIndex} className="legal-requirement-note">
