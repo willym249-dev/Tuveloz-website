@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAccountHeaderState } from "./account-header-state";
 
 /**
- * The "Save my spot — free" call to action, which is an invitation to create an
+ * The "Create a free account" call to action, which is an invitation to create an
  * account. Shown unchanged to a visitor without a session; for someone already
  * signed in it becomes a link into their own workspace, because telling a
  * signed-in customer to go make an account is what makes a public page read as
@@ -22,7 +22,7 @@ export function SaveMySpotButton({
 }) {
   const { accountHref, signedIn, state } = useAccountHeaderState();
   const label = !signedIn
-    ? "Save my spot — free"
+    ? "Create a free account"
     : state === "provider"
       ? "Go to your provider workspace"
       : "Go to your account";

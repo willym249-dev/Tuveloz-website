@@ -29,6 +29,21 @@ import { spanishText } from "./spanish-dictionary";
 /** Text that is punctuation, digits, or whitespace carries no language. */
 const NOTHING_TO_TRANSLATE = /^[\s\d$€.,:%•·—–→✦✓✕✱★☆|/\\()[\]{}#@!?'"-]*$/;
 
+/** Decode the escaped text emitted by React for dictionary lookup, once only. */
+export function decodeRenderedText(value: string): string {
+  const named: Record<string, string> = {
+    amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: "\u00a0",
+  };
+  return value.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi, (entity, name: string) => {
+    if (!name.startsWith("#")) return named[name.toLowerCase()] ?? entity;
+    const hex = name[1].toLowerCase() === "x";
+    const point = Number.parseInt(name.slice(hex ? 2 : 1), hex ? 16 : 10);
+    // Only normalize the characters escaped in rendered copy. Other entities
+    // retain their original bytes in the untranslated fallback.
+    return [34, 38, 39, 60, 62, 160].includes(point) ? String.fromCodePoint(point) : entity;
+  });
+}
+
 /**
  * Translate one run of text exactly as the browser would.
  *

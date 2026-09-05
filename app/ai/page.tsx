@@ -4,7 +4,7 @@ import { TuvelozAiAssistant } from "../components/tuveloz-ai-assistant";
 export const metadata: Metadata = {
   title: "Tuveloz AI",
   description:
-    "Bilingual, safety-first guidance that helps you describe what your vehicle needs and prepare a future service request. Tuveloz AI does not diagnose, dispatch help, guarantee pricing, or choose a provider.",
+    "Questions about Tuveloz? Find answers about fees, parts, and provider applications in English or Spanish, or send your question to the owner.",
   alternates: {
     canonical: "/ai",
   },

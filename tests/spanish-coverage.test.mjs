@@ -94,13 +94,13 @@ test("the marketing copy people decide on is translated", async () => {
   // the page is no longer fully translated and should not claim to be.
   for (const english of [
     "Any car issue.", // homepage hero
-    "Car trouble shouldn't leave you guessing.", // customer lander hero
-    "Be first in line for car jobs in Montgomery County.", // provider lander hero
+    "Car care should feel less stressful.", // customer lander hero
+    "Bring your car-care business to Tuveloz.", // provider lander hero
     "Ask once. Compare real prices. Pick who you like.", // how-it-works
     "Who is asking", // assistant
     "Frequently asked questions", // faq
     "Customer privacy", // safety
-    "Save my spot — free", // the primary call to action
+    "Create a free account", // the primary call to action
     "Apply free", // the provider call to action
   ]) {
     assert.ok(

@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Warmer public copy and escaped Spanish text repair
+
+The owner asked for research and more appealing, warm, human wording. Reviewed
+Taskrabbit, Thumbtack and YourMechanic's own pages; the sources and original
+Tuveloz adaptations are recorded in `business/2026-09-05-public-voice.md`.
+The homepage, provider and customer introductions, shared account buttons,
+help invitation and founding-program introduction now use direct, welcoming
+language. Unsupported first-in-line priority, current signup activity, blanket
+free-service language and unconditional price/payment promises were removed.
+Example quote cards identify example providers instead of invented businesses.
+Founding benefits and acceptance rules stay unchanged. The owner analytics
+labels identify that existing A/B totals include the earlier wording; they are
+not proof of conversion for this rewrite. English and Spanish copy match.
+
+Browser review also reproduced a production defect on `/es/join`: escaped
+apostrophes reached dictionary matching as raw HTML entities, then were escaped
+again. Those paragraphs stayed English and visibly printed `&#x27;`. The Worker
+now decodes rendered punctuation once for exact dictionary lookup, emits
+reviewed translations as text, and preserves the original escaped bytes for
+unknown text. It does not turn encoded markup into elements. Five behavioral
+regressions cover chunk splits, fallback bytes, encoded markup, single decoding
+and opaque script/style text. Local browser review confirmed translated provider
+copy without entity leaks. Lint, the production build and all 551 tests passed,
+with no failures or skips. All eight reviewed public pages were checked in the
+browser for dictionary coverage; the new account-link translation was added.
+CI and production deployment remain separate release checks.
+
+PR #191 is deployed as `9fbca2f`, with 546 tests, 20 live checks and rendered
+English/Spanish preview checks passing. Google can fetch the English application;
+indexing is not yet proven. The historical founding-page 404 validation started.
+Cloudmersive Basic at $19.99/month is approved but its checkout still needs a card;
+no paid subscription or production scanning is confirmed. Genuine provider ID
+verification remains for an actual applicant. Customer jobs, payments, SMS and
+provider/service activation locks remain; logos/icons and outreach sends are
+unchanged.
+
 ## 2026-09-05 - Provider search previews and reciprocal language links corrected
 
 The owner's Search Console domain property is accessible. Its sitemap report

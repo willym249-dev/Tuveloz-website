@@ -22,14 +22,14 @@ test("hero and pitch each render both variants and tag the start event", async (
   const page = await read("app/page.tsx");
   assert.match(page, /activeVariants\(\)/);
   // Hero variants.
-  assert.match(page, /Your wrench\. Your rules\./);
-  assert.match(page, /Be first in line for car jobs in Montgomery County\./);
+  assert.match(page, /Your skills belong here\./);
+  assert.match(page, /Bring your car-care business to Tuveloz\./);
   // Pitch variants.
   assert.match(page, /You’ve got the skills/);
   assert.match(page, /Your customers\. Your prices\. Your call\./);
   // Founding-banner CTA variants. Control matches the site-wide "Apply free"
   // wording; the variant tests a different phrasing against it.
-  assert.match(page, /Claim my spot/);
+  assert.match(page, /Start my application/);
   assert.match(page, /"Apply free"/);
   // Start event carries the per-visitor variant map.
   assert.match(page, /track\("provider_signup_started",\s*\{\s*variants: activeVariants\(\)/);

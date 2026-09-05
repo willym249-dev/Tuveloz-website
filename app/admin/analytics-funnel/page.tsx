@@ -99,12 +99,12 @@ const EXPERIMENT_META: Array<{
 }> = [
   {
     name: "provider_hero",
-    title: "Hero headline",
+    title: "Hero headline — totals include earlier wording",
     // B replaced 2026-08-13 (was "Do great work. Get paid."): step events were
     // not variant-stamped before that date, so no attributable reads were lost.
     labels: {
-      A: "“Your wrench. Your rules.”",
-      B: "“Be first in line for car jobs in Montgomery County.”",
+      A: "“Your skills belong here.” (copy updated Sep 5, 2026)",
+      B: "“Bring your car-care business to Tuveloz.” (copy updated Sep 5, 2026)",
     },
   },
   {
@@ -117,8 +117,8 @@ const EXPERIMENT_META: Array<{
   },
   {
     name: "founding_cta",
-    title: "Founding-banner button",
-    labels: { A: "“Apply free”", B: "“Claim my spot”" },
+    title: "Founding-banner button — totals include earlier wording",
+    labels: { A: "“Apply free”", B: "“Start my application” (copy updated Sep 5, 2026)" },
   },
 ];
 

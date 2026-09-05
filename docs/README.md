@@ -57,6 +57,8 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 
 ## Business
 
+[Public voice research](business/2026-09-05-public-voice.md): what established marketplaces can teach us about warm, accurate customer and provider wording.
+
 | Document | What it answers |
 | --- | --- |
 | [`business/`](business/) | Plans, pricing decisions, market notes, and provider programs added from here on. |
