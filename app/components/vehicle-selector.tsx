@@ -1,5 +1,6 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { useEffect, useMemo, useState } from "react";
 
 const commonMakes = [
@@ -284,7 +285,7 @@ export default function VehicleSelector({ onVehicleChange }: VehicleSelectorProp
   }
 
   return (
-    <section className="vehicle-selector" aria-labelledby="vehicle-selector-title">
+    <InterfaceCopy><section className="vehicle-selector" aria-labelledby="vehicle-selector-title">
       <div className="vehicle-selector-heading">
         <div>
           <strong id="vehicle-selector-title">Your vehicle</strong>
@@ -682,6 +683,6 @@ export default function VehicleSelector({ onVehicleChange }: VehicleSelectorProp
           </div>
         </div>
       )}
-    </section>
+    </section></InterfaceCopy>
   );
 }

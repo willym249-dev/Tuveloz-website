@@ -1,4 +1,6 @@
+import { requestPageMetadata } from "../lib/request-page-metadata";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
 import { AccountToolsDock } from "./components/account-tools-dock";
 import { JobPostingPauseNotice } from "./components/job-posting-pause-notice";
@@ -7,7 +9,7 @@ import { SiteLanguageProvider } from "./components/site-language";
 import { StagingEnvironmentBanner } from "./components/staging-environment-banner";
 import "./globals.css";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   metadataBase: new URL("https://tuveloz.com"),
   alternates: {
     canonical: "/",
@@ -46,6 +48,10 @@ export const metadata: Metadata = {
   },
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
+
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -56,13 +62,16 @@ const organizationSchema = {
   areaServed: "Montgomery County, Maryland",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The Worker sets this only for a reviewed Spanish route, replacing any
+  // visitor-supplied value before the request reaches the renderer.
+  const language = (await headers()).get("x-tuveloz-render-language") === "es" ? "es" : "en";
   return (
-    <html lang="en">
+    <html lang={language}>
       <body
         className="antialiased"
         data-customer-job-posting-paused={
@@ -73,7 +82,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
-        <SiteLanguageProvider>
+        <SiteLanguageProvider initialLanguage={language}>
           <StagingEnvironmentBanner />
           {CUSTOMER_JOB_POSTING_PAUSED && <JobPostingPauseNotice />}
           {children}

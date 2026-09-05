@@ -1,7 +1,8 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { TuvelozAiAssistant } from "../components/tuveloz-ai-assistant";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "Tuveloz AI",
   description:
     "Questions about Tuveloz? Find answers about fees, parts, and provider applications in English or Spanish, or send your question to the owner.",
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
     canonical: "/ai",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default function TuvelozAiPage() {
   return <TuvelozAiAssistant />;

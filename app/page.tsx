@@ -1,11 +1,12 @@
 ﻿"use client";
 
+import { InterfaceCopy } from "./components/interface-copy";
 import { FormEvent, useEffect, useState } from "react";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_CUSTOMER_TEXT_EN,
   SMS_MARKETING_CONSENT_TEXT_EN,
 } from "../lib/phone-consent-text";
-import Link from "next/link";
+import { SiteLink as Link } from "./components/site-link";
 import {
   CURRENT_LAUNCH_AREA,
   CUSTOMER_SERVICE_GROUPS,
@@ -604,7 +605,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   }
 
   return (
-    <main className={`public-site public-view-${view}`}>
+    <InterfaceCopy><main className={`public-site public-view-${view}`}>
       <header className="site-header">
         <Link className="brand" href="/" aria-label="Tuveloz home">
           <BrandMark />
@@ -2003,7 +2004,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span>Signing up local pros and customers in Montgomery County, Maryland.</span>
         </div>
       </footer>
-    </main>
+    </main></InterfaceCopy>
   );
 }
 

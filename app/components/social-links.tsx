@@ -1,3 +1,4 @@
+import { InterfaceCopy } from "./interface-copy";
 import type { SVGProps } from "react";
 import { track } from "../../lib/analytics";
 import { LaunchUpdatesForm } from "./launch-updates-form";
@@ -41,7 +42,7 @@ function SocialIcon({ platform, ...props }: { platform: SocialPlatform } & SVGPr
 
 export function SocialLinks({ className = "", source }: { className?: string; source?: string }) {
   return (
-    <div className={`footer-social ${className}`.trim()}>
+    <InterfaceCopy><div className={`footer-social ${className}`.trim()}>
       {SOCIAL_LINKS.map(({ platform, label, href }) => (
         <a
           key={platform}
@@ -57,7 +58,7 @@ export function SocialLinks({ className = "", source }: { className?: string; so
           <SocialIcon platform={platform} />
         </a>
       ))}
-    </div>
+    </div></InterfaceCopy>
   );
 }
 
@@ -85,7 +86,7 @@ export function FollowAlong({
   email?: boolean;
 }) {
   return (
-    <aside className={`follow-along follow-along-${tone}`}>
+    <InterfaceCopy><aside className={`follow-along follow-along-${tone}`}>
       <div className="follow-along-copy">
         <h3>{spanish ? "Síganos hasta el lanzamiento" : "Follow along until launch"}</h3>
         <p>
@@ -100,6 +101,6 @@ export function FollowAlong({
           <LaunchUpdatesForm source={source} spanish={spanish} />
         </div>
       )}
-    </aside>
+    </aside></InterfaceCopy>
   );
 }

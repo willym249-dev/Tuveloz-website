@@ -1,10 +1,11 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { TuvelozPublic } from "../page";
 
 const providerDescription =
   "Apply free to offer vehicle services in Montgomery County, MD. Set your prices and schedule, with no lead fees or exclusivity. Customer bookings are not open yet.";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "Join as a Provider — Free Signup",
   description: providerDescription,
   alternates: {
@@ -24,6 +25,10 @@ export const metadata: Metadata = {
     }],
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default function JoinPage() {
   return <TuvelozPublic view="provider" />;

@@ -1,7 +1,8 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { PublicInfoPage } from "../components/public-info-page";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "How It Works",
   description:
     "How Tuveloz works: tell us what your car needs once, compare real prices from local pros, and pick the one you like.",
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
     canonical: "/how-it-works",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default function HowItWorksPage() {
   return (

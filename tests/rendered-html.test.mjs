@@ -1404,7 +1404,7 @@ test("a signed-in visitor is never shown sign-up wording on a public page", asyn
       read("app/components/save-my-spot-button.tsx"),
       read("app/components/signed-in-return-note.tsx"),
       read("app/components/job-posting-pause-notice.tsx"),
-      read("app/post-job/page.tsx"),
+      read("app/components/customer-lander.tsx"),
       read("app/customer/page.tsx"),
       read("app/provider-jobs/page.tsx"),
       read("app/account/page.tsx"),

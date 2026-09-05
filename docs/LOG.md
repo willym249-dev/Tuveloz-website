@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Spanish pages render consistently before and after browser initialization
+
+Spanish body text previously changed after React rendered its HTML, so hydration
+compared Spanish HTML with English components and discarded the rendered page.
+The Worker now supplies the initial Spanish language to the layout and language
+provider. Shared React render boundaries translate reviewed body copy before
+rendering on both sides. Request-aware metadata also resolves reviewed Spanish
+before React renders the head; rewriting English head tags alone made React add
+duplicate tags during hydration. The HTML rewriter retains the reciprocal
+language links and defensive head normalization. The
+customer lander renders inside a client component so streamed server children
+cannot escape that translation. Its copy and launch gate are unchanged.
+
+Translation preserves button handlers, element keys, form values and manual or
+legal exclusions. Placeholder copy falls back to the existing reviewed text
+dictionary. Language changes also follow client navigation, so a retained launch
+banner returns to English on legal pages. Spanish public links use their reviewed
+Worker-served document URLs rather than requesting an unregistered RSC route.
+The launch-update form sends the language actually selected on the page.
+
+Build and all 570 tests passed locally. Nine new behavior checks cover rendered
+copy, placeholders, handlers, form values, exclusions, navigation and metadata.
+Cold-browser checks passed all eight Spanish routes with exactly one title,
+description, canonical, social URL and locale. The account
+browser fixture now checks all eight Spanish pages, complete reviewed copy,
+metadata, mobile width, legal-page transitions and provider draft preservation.
+Its former hydration-warning exception and overlay dismissal are removed: any
+browser error fails the fixture. Full release gates and live verification are
+required before this entry can be treated as production evidence.
+
+The standalone whole-project TypeScript command still reports diagnostics,
+including missing Cloudflare runtime types; it is not a passing check. No
+customer, live-payment, SMS, provider-activation or document-scanning lock changes.
+
 ## 2026-09-05 - Browser fixture separates authenticated and signed-out scenarios
 
 PR #194 passed its PR checks and merged as `4c2dd24`, but the production gate

@@ -1,7 +1,8 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import {
   emptyProviderSelfAssessment,
   evaluateProviderServices,
@@ -881,7 +882,7 @@ export function ProviderSignupForm() {
 
   if (applicationSent) {
     return (
-      <div className="success-message provider-success" role="status">
+      <InterfaceCopy><div className="success-message provider-success" role="status">
         <span>✓</span>
         <h3>{providerFormIsSpanish ? "¡Listo! Recibimos su solicitud." : "You're in — we've got your application."}</h3>
         <p>{providerFormIsSpanish
@@ -897,12 +898,12 @@ export function ProviderSignupForm() {
           {providerFormIsSpanish ? "Iniciar otra verificación" : "Start another verification"}
         </button>
         <FollowAlong source="provider_application_received" spanish={providerFormIsSpanish} tone="panel" />
-      </div>
+      </div></InterfaceCopy>
     );
   }
 
   return (
-    <form
+    <InterfaceCopy><form
       className="provider-form"
       onChange={(event) => {
         // Capture only the draft fields rendered right now, so navigating
@@ -2041,6 +2042,6 @@ export function ProviderSignupForm() {
           </small>
         </div>
       )}
-    </form>
+    </form></InterfaceCopy>
   );
 }

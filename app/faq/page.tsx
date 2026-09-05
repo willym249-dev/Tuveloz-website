@@ -1,7 +1,8 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 import { PublicInfoPage } from "../components/public-info-page";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "FAQ",
   description:
     "Answers to common questions about Tuveloz — how the marketplace works, fees, provider onboarding, and the customer launch in Montgomery County, MD.",
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
     canonical: "/faq",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 export default function FaqPage() {
   return (

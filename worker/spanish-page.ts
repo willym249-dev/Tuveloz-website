@@ -1,11 +1,10 @@
 /**
- * Serve the reviewed Spanish to whoever cannot run JavaScript — mainly crawlers.
+ * Serve reviewed Spanish pages to browsers and crawlers alike.
  *
- * The browser translates after paint, so the server emits English on every
- * request and search engines have only ever indexed English. This renders the
- * English page and rewrites its text on the way out, using the same dictionary
- * the browser uses, so `/es/join` is a real Spanish document rather than an
- * English one that becomes Spanish once a script runs.
+ * Render the existing route with an explicit Spanish language context. React
+ * translates body copy before rendering, using the same context on the client.
+ * Rewriting that body afterward would break hydration. This response pass now
+ * handles only head metadata and reciprocal language links.
  *
  * Deliberately narrow:
  *
@@ -172,7 +171,7 @@ class TranslateRun {
 /**
  * The Spanish twin of an English page, or null when there is no twin.
  *
- * `render` produces the ordinary English response for a path; this rewrites it.
+ * `render` receives the matching route with its initial Spanish language.
  * A non-HTML or failed response is returned untouched, because translating an
  * error page helps nobody.
  */
@@ -190,7 +189,10 @@ export async function spanishPageResponse(
 
   const englishUrl = new URL(url.toString());
   englishUrl.pathname = englishPath;
-  const response = await render(new Request(englishUrl.toString(), request));
+  const renderRequest = new Request(englishUrl.toString(), request);
+  renderRequest.headers.set("x-tuveloz-render-language", "es");
+  renderRequest.headers.set("x-tuveloz-render-path", englishPath);
+  const response = await render(renderRequest);
 
   const type = response.headers.get("content-type") ?? "";
   if (!response.ok || !type.includes("text/html")) return response;
@@ -218,7 +220,7 @@ export async function spanishPageResponse(
         element.onEndTag(() => translator.leaveOpaque());
       },
     })
-    .on("*", {
+    .on("head *", {
       text: (chunk: Text) => translator.text(chunk),
     })
     .transform(response);

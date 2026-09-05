@@ -1,10 +1,8 @@
 /**
  * Which URLs have a Spanish twin, and what the twin points at.
  *
- * Spanish is applied in the browser after paint, so the server emits English on
- * every request and a crawler has never seen it. `/es/<path>` is the crawlable
- * half: the same page, translated before it is sent. See
- * `docs/product/spanish-is-invisible-to-search.md`.
+ * `/es/<path>` uses the same reviewed copy when React renders on the server and
+ * in the browser. The Worker supplies the initial language and search metadata.
  *
  * Plain module with no React, because the Worker imports it. The list lives here
  * rather than in `site-language.tsx` for the same reason the dictionary does,

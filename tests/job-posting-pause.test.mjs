@@ -6,10 +6,13 @@ const launchStatus = await readFile(
   new URL("../lib/launch-status.ts", import.meta.url),
   "utf8",
 );
-const postJobPage = await readFile(
+const postJobPage = (await readFile(
   new URL("../app/post-job/page.tsx", import.meta.url),
   "utf8",
-);
+)) + (await readFile(
+  new URL("../app/components/customer-lander.tsx", import.meta.url),
+  "utf8",
+));
 const homepage = await readFile(
   new URL("../app/page.tsx", import.meta.url),
   "utf8",

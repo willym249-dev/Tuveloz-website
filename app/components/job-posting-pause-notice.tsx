@@ -1,7 +1,8 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { useState } from "react";
-import Link from "next/link";
+import { SiteLink as Link } from "./site-link";
 import { usePathname } from "next/navigation";
 import { useAccountHeaderState } from "./account-header-state";
 // The banner sits above every page, so it is the first voice a visitor hears.
@@ -45,7 +46,7 @@ export function JobPostingPauseNotice() {
   );
 
   return (
-    <>
+    <InterfaceCopy><>
       <style>{`
         .tuveloz-launch-pause {
           position: relative;
@@ -183,6 +184,6 @@ export function JobPostingPauseNotice() {
           </nav>
         )}
       </aside>
-    </>
+    </></InterfaceCopy>
   );
 }

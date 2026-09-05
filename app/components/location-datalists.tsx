@@ -1,3 +1,4 @@
+import { InterfaceCopy } from "./interface-copy";
 import {
   MONTGOMERY_COUNTY_MD_MUNICIPALITIES,
   MONTGOMERY_COUNTY_MD_ZIP_CODES,
@@ -8,7 +9,7 @@ export const ZIP_DATALIST_ID = "tuveloz-zip-options";
 
 export function LocationDatalists() {
   return (
-    <>
+    <InterfaceCopy><>
       <datalist id={MUNICIPALITY_DATALIST_ID}>
         {MONTGOMERY_COUNTY_MD_MUNICIPALITIES.map((name) => (
           <option key={name} value={name} />
@@ -19,6 +20,6 @@ export function LocationDatalists() {
           <option key={zip} value={zip} />
         ))}
       </datalist>
-    </>
+    </></InterfaceCopy>
   );
 }

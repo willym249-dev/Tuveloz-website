@@ -1,5 +1,6 @@
 "use client";
 
+import { InterfaceCopy } from "./interface-copy";
 import { useEffect, useRef, useState } from "react";
 
 let nextDatalistId = 0;
@@ -46,7 +47,7 @@ export function AddressAutocompleteInput({
   }, []);
 
   return (
-    <>
+    <InterfaceCopy><>
       <input
         defaultValue={defaultValue}
         list={datalistId}
@@ -61,6 +62,6 @@ export function AddressAutocompleteInput({
           <option key={suggestion} value={suggestion} />
         ))}
       </datalist>
-    </>
+    </></InterfaceCopy>
   );
 }

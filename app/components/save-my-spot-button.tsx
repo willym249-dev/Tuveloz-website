@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { InterfaceCopy } from "./interface-copy";
+import { SiteLink as Link } from "./site-link";
 import { useAccountHeaderState } from "./account-header-state";
 
 /**
@@ -28,8 +29,8 @@ export function SaveMySpotButton({
       : "Go to your account";
 
   return (
-    <Link className={className} href={signedIn ? accountHref : href}>
+    <InterfaceCopy><Link className={className} href={signedIn ? accountHref : href}>
       {label} {showArrow && <span>→</span>}
-    </Link>
+    </Link></InterfaceCopy>
   );
 }
