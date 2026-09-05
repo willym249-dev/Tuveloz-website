@@ -1,110 +1,54 @@
-# Tuveloz Social & Google Profile Copy (pre-launch)
+# Tuveloz public profile copy
 
-Positioning notes (borrowed from the best marketplaces): lead with the
-customer's outcome, not the company (Thumbtack, TaskRabbit); name the enemy —
-phone tag, guesswork pricing, waiting rooms (Turo's "skip the rental counter");
-sell providers ownership, not gig work (Uber's driver messaging in reverse).
-Every bio below follows that pattern: outcome first, place second, CTA last.
+Updated September 5, 2026. Pair these descriptions with the existing orange funnel-and-drop badge on navy. Use the icon-only file for circular profile pictures and the full wordmark for covers. Do not recreate the mark.
 
-Ready-to-paste bios and descriptions for every platform, written for the current
-phase: **provider onboarding open, customer requests not yet live**. Each block
-fits its platform's character limit. Pair every profile with the matching
-avatar from this folder (see README.md).
+## Shared facts
 
-Shared facts used everywhere:
-- What: Local marketplace for vehicle services — customers post a job, local
-  independent providers send quotes, the customer chooses.
-- Where: Montgomery County, Maryland (more areas by request).
-- Now: Onboarding independent providers. Free to join, no provider fees
-  (customers pay a small 5% Customer Service Fee).
-- Tagline: **Customer choice. Provider freedom.**
-- Site: https://tuveloz.com · Provider signup: https://tuveloz.com/join
-- Email: hello@tuveloz.com
+Tuveloz is building a vehicle-service marketplace in Montgomery County, Maryland. Provider applications are free. Providers set their own prices, choose their services and keep their own customers. Customer bookings, quotes and payments are not open yet. Applying begins a service-specific review; it does not guarantee approval or work. Never invent demand, earnings, reviews, a launch date or an applicant count.
 
----
+Website: https://tuveloz.com/
+Provider application: https://tuveloz.com/join
+Business email: hello@tuveloz.com
+Tagline: Customer choice. Provider freedom.
 
-## Instagram — @tuveloz (bio limit 150 chars)
+The website footer and Organization structured data use the same official profile registry in `lib/brand-profile.ts`.
 
-```
-Skip the phone tag 🚗 Post your car job, compare real quotes, you choose.
-Montgomery County, MD · Providers join free ⬇️
-```
-(122 chars. Website field: `https://tuveloz.com/join`)
+## Instagram - 140 characters
 
-## TikTok — @tuveloz (bio limit 80 chars)
+Building a car-care marketplace in Montgomery County, MD.
+Providers: apply free, set your prices.
+Bookings aren't open yet.
+tuveloz.com/join
 
-```
-Vehicle services, your price, your call 🚗 MoCo, MD. Join free: tuveloz.com/join
-```
-(80 chars, live as of Aug 2026. URL is inline because the account has no
-website-link field — TikTok only offers one to business accounts / 1k+
-followers. Switch to `Providers: join free ⬇️` + website field
-`https://tuveloz.com/join` once the link field unlocks.)
+The website field can be edited only in Instagram's mobile app. Its current homepage link remains useful; the bio also gives the direct provider route.
 
-## X — @TuvelozApp (bio limit 160 chars)
+## Facebook and X - 139 characters
 
-```
-Your car, real quotes, your call. The vehicle-services marketplace for Montgomery County, MD. Providers: run your own business — join free, no provider fees.
-```
-(157 chars. Location: `Montgomery County, MD` · Website: `https://tuveloz.com`)
+Building a car-care marketplace in Montgomery County, MD. Providers apply free and set their own prices. Customer bookings aren't open yet.
 
-## Facebook Page
+Website: https://tuveloz.com/join
+Location: Montgomery County, MD
 
-**Intro / short bio (101 chars):**
-```
-Vehicle services marketplace in Montgomery County, MD. Real quotes, your choice. Providers join free.
-```
+## TikTok - 77 characters
 
-**About / long description:**
-```
-Tuveloz is a local marketplace for vehicle services in Montgomery County, Maryland.
+MoCo car-care marketplace. Apply free: tuveloz.com/join. Bookings open later.
 
-For customers (launching soon): tell us what your vehicle needs — a jump start, battery replacement, detailing, wiper blades and bulbs, fluid top-offs, or a basic diagnostic. Local independent providers send you real quotes. You compare and choose the one that works — your schedule, your price, your call.
+Use the complete Montgomery County location in accompanying post copy. The short bio retains the application URL even when no clickable website field is available.
 
-For providers (onboarding now): run your own business, not somebody else's route. Set your own prices, choose your own jobs, keep your independence. Joining is free and there are no provider fees — you keep what you earn.
+## Google description - 547 characters
 
-Customer choice. Provider freedom.
+Tuveloz is an online vehicle-service marketplace preparing to launch in Montgomery County, Maryland. Independent mechanics, detailers and other vehicle-service businesses can apply now at no cost. Providers choose their services, set their prices and keep their own customers. Applications are reviewed for the specific services offered. Customer bookings, quotes and payments are not open yet. Tuveloz connects customers with independent provider businesses; it does not perform vehicle repairs. Learn more or start an application on our website.
 
-Apply as a provider: https://tuveloz.com/join
-Questions: hello@tuveloz.com
-```
-(Category suggestions: "Automotive Service" + "Internet Marketplace".)
+An existing Google listing must describe the actual business. Do not list Tuveloz as a 24-hour repair shop, invent opening hours or publish a private address. Google Business Profile eligibility is separate from organic Google Search: online-only marketplaces are not eligible solely because independent providers visit customers. Resolve eligibility with the owner before claiming that a Maps listing is ready.
 
-## Google Business Profile (description limit 750 chars)
+Sources checked September 5, 2026:
+- https://support.google.com/business/answer/13763036
+- https://developers.google.com/search/docs/appearance/structured-data/organization
+- https://developers.google.com/search/docs/appearance/site-names
+- https://developers.google.com/search/docs/appearance/favicon-in-search
 
-```
-Tuveloz is a local marketplace for vehicle services in Montgomery County, Maryland. Customers describe what their vehicle needs — battery and jump-start help, wiper blade and bulb replacement, fluid top-offs, detailing, or basic diagnostics — and local independent providers respond with real quotes. Customers compare options and choose what works for their schedule and budget.
+## Personal invitation style
 
-Independent providers are joining now: signing up is free with no provider fees, and providers set their own prices and choose their own jobs. Customer job posting opens soon.
+Use a short, relevant introduction, one specific reference to the business's public work, and the free application link. State that bookings are not open yet. Speak as the Tuveloz team, do not claim to have hired the business, and do not promise customers or income. Respect declines. Track actual sends separately from drafts and applications separately from approved providers.
 
-Customer choice. Provider freedom. Learn more or apply as a provider at tuveloz.com.
-```
-(~700 chars. Primary category: "Automotive service" or closest match; add
-website https://tuveloz.com and hello@tuveloz.com. Once the profile is live,
-add its share link to `app/components/social-links.tsx` where the Google entry
-is commented out.)
-
-## Pinned post / first post (use on all platforms)
-
-```
-🚗 Something new is coming to Montgomery County, MD.
-
-Tuveloz is a marketplace where you post what your vehicle needs and local independent providers send you real quotes. You compare. You choose. No pressure.
-
-Right now we're onboarding providers:
-✅ Free to join — no provider fees
-✅ Set your own prices, pick your own jobs
-✅ You keep what you earn
-
-Mechanics, detailers, roadside pros — claim your spot before customer launch: tuveloz.com/join
-
-Customer choice. Provider freedom.
-```
-
-## Do / don't (pre-launch)
-
-- ✅ Say "launching soon" / "onboarding providers now" — never imply customers
-  can book or pay today.
-- ✅ Push providers to /join; push curious customers to tuveloz.com to follow along.
-- ❌ Don't list specialized services (towing, tire repair, A/C) yet — only the
-  provisional launch services shown on the homepage.
+Avoid repeated generic promotional comments on unrelated posts. A published logo or an accepted indexing request is not proof of leads or customers.

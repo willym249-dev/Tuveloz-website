@@ -11,6 +11,22 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Provider welcome and consistent public identity
+
+The provider page now explains the application to applicants instead of
+reusing customer hiring advice. Cleaning-water and used-battery plans have
+plain-language checklist names with the official names retained. The tax setup
+note is shorter; required documents, acceptance text and approval rules remain
+unchanged.
+
+Google-facing metadata now names Tuveloz's vehicle-service market and location,
+declares the WebSite name and connects the Organization to the same four social
+profiles used by the footer. Existing master logos, favicons and preview artwork
+remain the source of truth. Updated English/Spanish copy and the profile-copy
+guide preserve the distinction between free applications and unavailable
+customer bookings. Public listing eligibility and Google processing remain
+separate from a successful website deployment.
+
 ## 2026-09-05 - Provider signup clarity and mobile step navigation
 
 Provider signup now starts with everyday service choices, followed by the

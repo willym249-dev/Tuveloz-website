@@ -273,8 +273,8 @@ function providerServicePlainLabel(
  * Everyday, plain-language names for the required documents. The policy matrix
  * keeps each document's exact legal name of record (which we still show, small,
  * so applicants recognize the real paperwork); this map only makes the first
- * line readable. Every document here is legally required for the selected job
- * and pathway — nothing is added or removed, only reworded. A document without
+ * line readable. Requirements come from the selected service and pathway
+ * policy — nothing is added or removed, only reworded. A document without
  * a plain entry falls back to its official label.
  */
 const PROVIDER_EVIDENCE_PLAIN_LABELS: Partial<
@@ -291,6 +291,14 @@ const PROVIDER_EVIDENCE_PLAIN_LABELS: Partial<
   no_employee_attestation: {
     en: "A short form saying it's just you — no employees",
     es: "Un formulario corto que dice que trabaja solo — sin empleados",
+  },
+  wash_water_plan: {
+    en: "Your plan for collecting and disposing of cleaning water",
+    es: "Su plan para recoger y desechar el agua de limpieza",
+  },
+  spent_battery_handling_plan: {
+    en: "Your plan for safely handling and recycling used batteries",
+    es: "Su plan para manejar y reciclar las baterías usadas de forma segura",
   },
   general_liability_coi: {
     en: "Proof of general liability insurance",
@@ -1162,8 +1170,8 @@ export function ProviderSignupForm() {
           )}
           <p className="hint">
             {providerFormIsSpanish
-              ? "Todos los proveedores también completan la configuración de impuestos y pagos antes del primer pago — allí firma el formulario de impuestos requerido (Formulario W-9 del IRS), y Tuveloz emite un 1099 por las ganancias anuales aplicables, como lo exige el Acuerdo de Proveedor."
-              : "Every provider also completes tax and payout setup before their first payout — that's where you sign the required tax form (IRS Form W-9), and Tuveloz issues a 1099 for applicable annual earnings, as the Provider Agreement requires."}
+              ? "Antes de su primer pago, completará sus datos fiscales y de cobro, incluido el Formulario W-9 del IRS requerido. Tuveloz emite un 1099 por las ganancias anuales aplicables."
+              : "You'll set up tax and payout details before your first payout, including the required IRS Form W-9. Tuveloz issues a 1099 for applicable annual earnings."}
           </p>
           {hasVisibleLegalRequirements && (
             <section className="provider-eligibility-guide">
