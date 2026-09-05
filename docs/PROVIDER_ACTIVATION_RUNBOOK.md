@@ -112,6 +112,47 @@ file-size/plan mismatch above remains unresolved.
 
 ## Phase 1 — Cloudflare secrets
 
+### September 5 owner access update
+
+The owner subsequently completed the additional Stripe Identity access check.
+The dashboard no longer marks it Required and Create verification is enabled.
+This supersedes the pending-owner status in the earlier September 4 audit; it
+does not constitute a provider-bound live canary. No identity documents or
+biometric data were retrieved to establish this status.
+
+The live key inventory has no dedicated website Identity key. A new key named
+`TUVELOZ Website Identity Live` is prepared but not created. The current Stripe
+UI names its required permissions **Identity Verification Results: Write** and
+**Recent Detailed Verification Results: Read**. All Detailed Verification
+Results and payment permissions should remain None. The latter recent-results
+permission allows the DOB expansion needed for the adult check; the application
+does not request document numbers, document images or selfie images.
+
+Automatic approval review stopped selecting these permissions because access
+to live sensitive identity results requires specific owner approval. A request
+for that exact scope and encrypted website-secret storage is pending. Do not
+interpret the completed account check as that approval. No live key, website
+Identity activation setting or payment setting was changed in this update.
+
+The live event-destination list currently contains the two existing Connect
+destinations and no Identity destination. Its import dialog offers the existing
+six-event test Identity webhook; inspecting and canceling that dialog did not
+import it. Preserve the test endpoint. Prepare a separate live snapshot
+destination for `https://tuveloz.com/api/stripe/webhooks/identity`, using the
+SDK-matching `2026-06-24.dahlia` version and these six events:
+
+- `identity.verification_session.created`
+- `identity.verification_session.processing`
+- `identity.verification_session.requires_input`
+- `identity.verification_session.verified`
+- `identity.verification_session.canceled`
+- `identity.verification_session.redacted`
+
+Store its signing secret with the dedicated Identity key, then complete the
+reviewed runtime-configuration and genuine-canary steps below. The dashboard
+access check did not perform those steps or establish the new key's live
+sensitive-results permission through a real provider result.
+
 Set as encrypted Worker secrets. All are fail-closed: a wrong or missing value
 blocks activation but never opens payments.
 

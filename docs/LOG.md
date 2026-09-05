@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Additional Stripe owner verification accepted
+
+The owner completed the phone handoff for Stripe Identity product access.
+Stripe's dashboard now shows Create verification enabled and the additional
+owner identity step without its Required status. This updates the prior log's
+pending-owner state. It does not prove a genuine provider-bound live canary.
+
+The live key list contains no dedicated website Identity key. Its configuration
+form is prepared, but automatic approval review stopped selecting live Identity
+write and recent sensitive-results read permissions pending the owner's specific
+approval. The requested scope includes DOB access for the existing adult check
+and encrypted Worker-secret storage, with no payment permissions. No new key or
+Identity activation switch was applied. Continue the existing setup after that
+approval; do not ask the owner to repeat the completed access verification.
+The live destination inventory shows two Connect destinations and no Identity
+destination; the import dialog offers the existing six-event test Identity
+webhook. It was inspected and canceled without importing or editing anything.
+The activation runbook records the exact separate live destination to prepare.
+
 ## 2026-09-05 - Guarded scanner pipeline verified in isolated workerd
 
 PR #188 is live as `c58a141`, with deployment run 33944641724 successful and
