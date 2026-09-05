@@ -42,7 +42,7 @@ export default function ProvidersDirectoryPage() {
           setProviders([]);
           return;
         }
-        const payload = await response.json().catch(() => ({ providers: [] }));
+        const payload = await response.json().catch(() => ({ providers: [] })) as { providers?: DirectoryProvider[] };
         setProviders(Array.isArray(payload.providers) ? payload.providers : []);
       })
       .catch(() => {

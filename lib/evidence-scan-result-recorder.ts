@@ -191,20 +191,20 @@ export async function recordAuthenticatedEvidenceScanResult(
   );
   const terminalInsert = db.insert(evidenceFileScans).select(
     db.select({
-      id: sql<string>`${scanId}`,
+      id: sql<string>`${scanId}`.as("id"),
       evidenceSubmissionId: evidenceFileScans.evidenceSubmissionId,
       providerId: evidenceFileScans.providerId,
-      scanProvider: sql<string>`${provider}`,
-      scanEngineVersion: sql<string>`${engineVersion}`,
-      status: sql<string>`${status}`,
-      threatName: sql<string>`${status === "infected" ? "See restricted external scan report" : ""}`,
+      scanProvider: sql<string>`${provider}`.as("scanProvider"),
+      scanEngineVersion: sql<string>`${engineVersion}`.as("scanEngineVersion"),
+      status: sql<string>`${status}`.as("status"),
+      threatName: sql<string>`${status === "infected" ? "See restricted external scan report" : ""}`.as("threatName"),
       fileHash: evidenceFileScans.fileHash,
-      requestedAt: sql<string>`${now}`,
-      completedAt: sql<string>`${new Date(scannedAt).toISOString()}`,
-      reviewedBy: sql<string>`${`authenticated_scanner:${provider}`}`,
-      reviewNotes: sql<string>`${`External scanner result ${resultId}; restricted report ${reportReference}`}`,
-      createdAt: sql<string>`${now}`,
-      updatedAt: sql<string>`${now}`,
+      requestedAt: sql<string>`${now}`.as("requestedAt"),
+      completedAt: sql<string>`${new Date(scannedAt).toISOString()}`.as("completedAt"),
+      reviewedBy: sql<string>`${`authenticated_scanner:${provider}`}`.as("reviewedBy"),
+      reviewNotes: sql<string>`${`External scanner result ${resultId}; restricted report ${reportReference}`}`.as("reviewNotes"),
+      createdAt: sql<string>`${now}`.as("createdAt"),
+      updatedAt: sql<string>`${now}`.as("updatedAt"),
     }).from(evidenceFileScans).where(pendingClaim).limit(1),
   ).returning({ id: evidenceFileScans.id });
   const pendingUpdate = db.update(evidenceFileScans).set({

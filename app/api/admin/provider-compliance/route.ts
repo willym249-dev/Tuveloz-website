@@ -495,7 +495,7 @@ function evaluateService(input: {
   serviceCode: ServiceCode;
   evidence: readonly EvidenceRow[];
   scans: ReadonlyMap<string, ScanRow>;
-  agreements: ReturnType<typeof currentAgreements>;
+  agreements: Awaited<ReturnType<typeof currentAgreements>>;
   activation: ActivationRow | undefined;
   sponsorProvider?: typeof providerApplications.$inferSelect;
   sponsorEligibility?: EligibilityRow;

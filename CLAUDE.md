@@ -197,11 +197,16 @@ Requirements resolve from the place the work happens, not uniformly:
 
 ```bash
 npm run lint
-npm test        # full production build, then 62 test files
+npm test        # full production build, then all feature tests
+npm run typecheck
 ```
 
 `npm test` builds before it tests, so it is slower than it looks but catches
 build breakage.
+
+`npm run typecheck` first regenerates the ignored Cloudflare declaration file
+from the installed Wrangler version, compatibility flags and bindings, then
+checks every TypeScript source file. CI requires this check before deployment.
 
 To see what the business still needs rather than what the code does:
 

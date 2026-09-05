@@ -37,6 +37,7 @@ yarn-error.log*
 
 # typescript
 next-env.d.ts
+/worker-configuration.d.ts
 /dist/
 /.wrangler/
 /.wrangler-staging.generated.json

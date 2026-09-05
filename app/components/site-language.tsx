@@ -63,7 +63,7 @@ function translateAttribute(element: Element, attribute: string, language: SiteL
   if (current !== applied) element.setAttribute(attribute, applied);
 }
 
-function translateInterface(root: ParentNode, language: SiteLanguage) {
+function translateInterface(root: Node & Pick<ParentNode, "querySelectorAll">, language: SiteLanguage) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let current = walker.nextNode();
   while (current) {
