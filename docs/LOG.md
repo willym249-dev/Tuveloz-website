@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Real Cloudmersive response repaired; free account evaluated
+
+The owner approved and received PR #187: merge `3a7c28c`, deployment run
+33943718850, both jobs successful and 19 independent live release checks passed.
+Stripe's additional owner verification, live canary and launch reviews remain
+outstanding; temporary test CLI access is revoked and the test webhook restored.
+
+Owner-authorized Google sign-in created an email-verified free Cloudmersive
+account and API key, with marketing email and sales-demo options off. No paid
+plan, production secret or real provider document was involved. Real advanced
+API calls using the application's exact header policy returned a clean PNG
+with `FoundViruses: null`. The classifier had required an array, so a valid
+clean response remained pending. Cloudmersive's official example documents null
+when no viruses are found. The classifier now accepts explicit null or an empty
+array while retaining every required false threat flag and verified-format
+check. Missing and malformed values remain blocked. The shared repair covers
+provider evidence and message-image classification.
+
+Validation: the regression failed before the fix and passed afterward; all
+534 tests, build and lint passed with zero skips. Repeated real advanced-API
+checks correctly classified a harmless PNG as clean and prohibited harmless
+text as failed. This is direct vendor contract proof, not a guarded production
+scan or provider approval. The free plan's published 3.5 MB file limit is below
+Tuveloz's 10 MB upload limit, and its one-call-per-second limit also needs capacity
+planning before production use. The activation runbook records the mismatch.
+Customer jobs, live payments, SMS and provider activation settings are unchanged.
+
 ## 2026-09-04 - Real Stripe tests found and repaired two Identity contract errors
 
 The owner authorized official Stripe CLI access limited to test mode. The
