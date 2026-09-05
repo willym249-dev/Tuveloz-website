@@ -1,12 +1,27 @@
 import type { Metadata } from "next";
 import { TuvelozPublic } from "../page";
 
+const providerDescription =
+  "Apply free to offer vehicle services in Montgomery County, MD. Set your prices and schedule, with no lead fees or exclusivity. Customer bookings are not open yet.";
+
 export const metadata: Metadata = {
   title: "Join as a Provider — Free Signup",
-  description:
-    "Apply free to offer vehicle services on Tuveloz in Montgomery County, MD. Keep 100% of your quoted price, set your own schedule, no exclusivity.",
+  description: providerDescription,
   alternates: {
     canonical: "/join",
+  },
+  openGraph: {
+    title: "Join as a Provider — Free Signup | Tuveloz",
+    description: providerDescription,
+    url: "https://tuveloz.com/join",
+    type: "website",
+    locale: "en_US",
+    images: [{
+      url: "/og-image.png?v=6",
+      width: 1200,
+      height: 630,
+      alt: "Tuveloz — Vehicle Services. Customer Choice. Provider Freedom.",
+    }],
   },
 };
 

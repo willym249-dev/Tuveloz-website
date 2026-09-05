@@ -1248,16 +1248,16 @@ export const spanishText: Record<string, string> = {
   // 2026-08-16. A key off by one character never matches and the entry is dead.
   "Tuveloz | Customer Choice. Provider Freedom.":
     "Tuveloz | Opciones para clientes. Libertad para proveedores.",
-  "Post what your vehicle needs and compare real quotes from local independent providers in Montgomery County, MD. Providers join free — customer launch coming soon.":
-    "Publique lo que su vehículo necesita y compare precios reales de proveedores independientes locales en Montgomery County, MD. Los proveedores se unen gratis — el lanzamiento para clientes es próximamente.",
+  "Tuveloz is preparing to launch vehicle services in Montgomery County, MD. Provider applications are open and free. Customer bookings are not open yet.":
+    "Tuveloz se prepara para ofrecer servicios para vehículos en Montgomery County, MD. Las solicitudes de proveedores están abiertas y son gratuitas. Las reservas de clientes aún no están abiertas.",
   "For Customers — Real Quotes From Local Pros | Tuveloz":
     "Para clientes — Precios reales de profesionales locales | Tuveloz",
   "Tell us what your car needs once and compare real prices from local pros in Montgomery County, MD. Free to ask, free to compare, and you can always say no.":
     "Díganos una sola vez qué necesita su carro y compare precios reales de profesionales locales en Montgomery County, MD. Preguntar es gratis, comparar es gratis, y siempre puede decir que no.",
   "Join as a Provider — Free Signup | Tuveloz":
     "Únase como proveedor — Registro gratis | Tuveloz",
-  "Apply free to offer vehicle services on Tuveloz in Montgomery County, MD. Keep 100% of your quoted price, set your own schedule, no exclusivity.":
-    "Solicite gratis para ofrecer servicios para vehículos en Tuveloz en Montgomery County, MD. Se queda con el 100% del precio que cotiza, fija su propio horario, sin exclusividad.",
+  "Apply free to offer vehicle services in Montgomery County, MD. Set your prices and schedule, with no lead fees or exclusivity. Customer bookings are not open yet.":
+    "Solicite gratis para ofrecer servicios para vehículos en Montgomery County, MD. Fije sus precios y horario, sin cuotas por contacto ni exclusividad. Las reservas de clientes aún no están abiertas.",
   "About | Tuveloz": "Acerca de | Tuveloz",
   "Tuveloz is a local vehicle-service marketplace for Montgomery County, MD — built around customer choice and independent provider freedom.":
     "Tuveloz es un mercado local de servicios para vehículos en Montgomery County, MD — construido en torno a las opciones del cliente y la libertad del proveedor independiente.",

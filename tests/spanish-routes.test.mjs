@@ -115,8 +115,9 @@ test("the English canonical is removed, not merely outnumbered", () => {
   assert.match(PAGE, /class DropInheritedCanonical[\s\S]*?element\.remove\(\)/);
   // Removal must be registered before the head append, or the appended one is
   // removed along with the inherited one.
+  const spanishHandler = PAGE.slice(PAGE.indexOf("export async function spanishPageResponse("));
   assert.ok(
-    PAGE.indexOf('.on(\'link[rel="canonical"]\'') < PAGE.indexOf('.on("head"'),
+    spanishHandler.indexOf('.on(\'link[rel="canonical"]\'') < spanishHandler.indexOf('.on("head"'),
     "the canonical must be dropped before the Spanish one is appended",
   );
 });

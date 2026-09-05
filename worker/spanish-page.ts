@@ -75,6 +75,14 @@ class TranslateLocale {
   }
 }
 
+class SpanishSocialUrl {
+  constructor(private readonly pathname: string) {}
+
+  element(element: Element) {
+    element.setAttribute("content", `${CANONICAL_ORIGIN}${this.pathname}`);
+  }
+}
+
 class TranslateAttribute {
   constructor(private readonly attribute: string) {}
 
@@ -94,19 +102,34 @@ class TranslateAttribute {
  * because that is what an unmatched locale should land on.
  */
 class Alternates {
-  constructor(private readonly englishPath: string, private readonly spanishPath: string) {}
+  constructor(
+    private readonly englishPath: string,
+    private readonly spanishPath: string,
+    private readonly includeCanonical = true,
+  ) {}
 
   element(element: Element) {
     const english = `${CANONICAL_ORIGIN}${this.englishPath}`;
     const spanish = `${CANONICAL_ORIGIN}${this.spanishPath}`;
     element.append(
-      `<link rel="canonical" href="${spanish}">` +
+      (this.includeCanonical ? `<link rel="canonical" href="${spanish}">` : "") +
         `<link rel="alternate" hreflang="es" href="${spanish}">` +
         `<link rel="alternate" hreflang="en" href="${english}">` +
         `<link rel="alternate" hreflang="x-default" href="${english}">`,
       { html: true },
     );
   }
+}
+
+/** Complete the reciprocal language links on the existing English page. */
+export function englishPageAlternates(url: URL, response: Response): Response {
+  const spanishPath = spanishPathFor(url.pathname);
+  if (!spanishPath || !response.ok || !response.headers.get("content-type")?.includes("text/html")) {
+    return response;
+  }
+  return new HTMLRewriter()
+    .on("head", new Alternates(url.pathname, spanishPath, false))
+    .transform(response);
 }
 
 /**
@@ -181,6 +204,7 @@ export async function spanishPageResponse(
     .on('meta[name="twitter:description"]', new TranslateAttribute("content"))
     .on('meta[name="twitter:title"]', new TranslateAttribute("content"))
     .on('meta[property="og:locale"]', new TranslateLocale())
+    .on('meta[property="og:url"]', new SpanishSocialUrl(spanishPath))
     .on("head", new Alternates(englishPath, spanishPath))
     .on("script, style, noscript", {
       element(element: Element) {

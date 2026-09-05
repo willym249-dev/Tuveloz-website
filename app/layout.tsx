@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s | Tuveloz",
   },
   description:
-    "Post what your vehicle needs and compare real quotes from local independent providers in Montgomery County, MD. Providers join free — customer launch coming soon.",
+    "Tuveloz is preparing to launch vehicle services in Montgomery County, MD. Provider applications are open and free. Customer bookings are not open yet.",
   icons: {
     icon: [
       { url: "/favicon.ico?v=6", sizes: "32x32" },
@@ -29,9 +29,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tuveloz | Customer Choice. Provider Freedom.",
     description:
-      "The vehicle-services marketplace for Montgomery County, MD. Real quotes, your choice. Providers are joining free right now — customer launch coming soon.",
+      "Tuveloz is preparing to launch vehicle services in Montgomery County, MD. Provider applications are open and free. Customer bookings are not open yet.",
     url: "https://tuveloz.com/",
     type: "website",
+    locale: "en_US",
     images: [{
       url: "/og-image.png?v=6",
       width: 1200,
