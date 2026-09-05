@@ -31,6 +31,30 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  account-signup:
+    name: Browser account signup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Install dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # A separate checkout keeps this fixture's local D1 and dummy mail
+      # settings isolated from the provider fixture in the verify job.
+      - name: Create and sign in to a customer account in the browser
+        run: npm run test:e2e:account
+
   verify:
     name: Lint, test, build, and migrate
     runs-on: ubuntu-latest

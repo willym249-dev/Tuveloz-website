@@ -39,6 +39,10 @@ their destination anchors. Manual purpose checks found the homepage's account
 buttons took visitors to another marketing page. They now use the shared
 account-aware button: guests reach account creation directly, while signed-in
 visitors return to their workspace. No real application or email was submitted.
+The existing browser account-signup fixture is now a separate release-check
+job. It uses only local D1 and a loopback mail catcher to exercise role/mode
+buttons, password feedback, code delivery, account creation and throttling.
+Its result must pass before production deployment; record the actual run result.
 
 The first browser report for PR #192 incorrectly passed without asserting that
 Spanish URLs remained Spanish. It has been corrected to failed with the actual
