@@ -11,6 +11,26 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Owner approved and connected dedicated live Identity credentials
+
+The owner approved the exact live Identity key scope and completed Stripe's
+authenticator challenge. The dedicated website key has Identity verification
+write and recent sensitive-results read access only; all unrelated permissions
+are None. A read-only request for a nonexistent session confirmed authentication
+and read scope without accessing a person's record. A separate live snapshot
+webhook uses the six handled Identity events and SDK-matching API version.
+The two credentials were stored as encrypted Worker secrets.
+
+The local storage wrapper initially mishandled Wrangler's Unicode output on
+Windows after the secret update completed. Deployment history confirmed secret
+versions were created; the wrapper now uses explicit UTF-8 and persists its
+sanitized result before printing. An attempted activation-secret update was
+rejected because those two names already exist as plaintext Worker bindings.
+The runbook is corrected and this change sets the two approved Identity values
+in `wrangler.jsonc` through the tested deployment path. No payment, customer-job,
+SMS, scanner or service-activation switch is enabled by the change. A genuine
+provider-bound live canary remains outstanding.
+
 ## 2026-09-05 - Additional Stripe owner verification accepted
 
 The owner completed the phone handoff for Stripe Identity product access.
