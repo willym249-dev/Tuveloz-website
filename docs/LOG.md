@@ -11,6 +11,29 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Rendered Spanish search metadata stays on its Spanish URL
+
+PR #193 deployed as `56237ea`, with 556 tests, the mobile/account browser
+fixture, provider signup, 20 independent live checks, 325 links across 24
+public pages, and 16 settled EN/ES browser pages passing. Google can now fetch
+`/es/join`, but its live inspection exposed a second metadata issue: JavaScript
+restored `/join` as the canonical and social URL with `en_US`, despite correct
+raw Spanish HTML. Browser inspection reproduced the mismatch.
+
+The language observer now also watches the document head. For reviewed explicit
+Spanish paths it restores the Spanish canonical, social URL/locale and reviewed
+metadata translations after client updates. English and unreviewed/legal paths
+are untouched. Mutation work is coalesced, idempotent and cancelled on cleanup.
+Five behavioral regressions and the real-browser fixture cover the mismatch,
+repeated reconciliation, missing optional tags, route boundaries and switching
+back to English. Google indexing remains unproven until its separate retest.
+The first CI browser attempt passed its metadata assertions, then hit the
+existing development error overlay while clicking English. The fixture now
+records that identified hydration warning and dismisses its developer-only
+overlay through the Dismiss control; other browser errors remain failures.
+The earlier development hydration-recovery warning remains a broader design
+follow-up. No customer, payment, SMS or provider/service launch lock is changed.
+
 ## 2026-09-05 - Spanish browser language and crawler routing corrected
 
 PR #192 is deployed as `1fce795`, with 551 tests and 20 live release checks
