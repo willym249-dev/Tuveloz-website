@@ -329,9 +329,10 @@ test("homepage prominently links to Tuveloz AI with clear boundaries", async () 
   );
 
   assert.ok(homeSource.includes('href="/ai"'));
-  assert.ok(homeSource.includes("A clearer way to describe what your vehicle needs."));
-  assert.ok(homeSource.includes("It does not diagnose, dispatch"));
-  assert.ok(homeSource.includes("guarantee pricing, or choose a provider."));
+  assert.ok(homeSource.includes("Have a question? You&apos;re welcome to ask."));
+  assert.ok(homeSource.includes("Our automated guide"));
+  assert.ok(homeSource.includes("using our published policies"));
+  assert.ok(homeSource.includes("send your question to the owner"));
 });
 
 test("homepage uses clear launch language and keeps its service icons visible", async () => {
@@ -1415,19 +1416,19 @@ test("a signed-in visitor is never shown sign-up wording on a public page", asyn
 
   // Every public surface that used to hardcode signed-out wording now asks who
   // is looking. A signed-in customer opening the customer launch status page
-  // from their workspace was shown "Sign in" and "Save my spot — free", which
+  // from their workspace was shown "Sign in" and "Create a free account", which
   // reads as having been signed out.
   for (const source of [publicChrome, saveMySpot, returnNote, banner]) {
     assert.ok(source.includes("useAccountHeaderState()"));
   }
   assert.ok(publicChrome.includes("signedIn ? accountLabel"));
-  assert.ok(saveMySpot.includes('"Save my spot — free"'));
+  assert.ok(saveMySpot.includes('"Create a free account"'));
   assert.ok(saveMySpot.includes('"Go to your account"'));
   assert.ok(banner.includes("SIGNED_IN_BANNER_DETAIL"));
 
   // The launch status page is the exact page reached from the workspace: no
   // hardcoded account-creation call to action may remain on it.
-  assert.ok(!landerPage.includes("Save my spot — free"));
+  assert.doesNotMatch(landerPage, /<(?:Link|a|button)\b[^>]*>\s*Create a free account/);
   assert.ok(landerPage.includes("<SaveMySpotButton"));
   assert.ok(landerPage.includes("<SignedInReturnNote />"));
 

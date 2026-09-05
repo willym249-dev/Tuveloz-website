@@ -68,7 +68,7 @@ export function PublicSiteHeader({
           <Link className="header-cta" href="/join">Apply free</Link>
         ) : (
           <Link className="header-cta" href="/account?role=customer&mode=create">
-            Save my spot
+            Create an account
           </Link>
         )}
       </div>

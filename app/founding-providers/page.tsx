@@ -24,7 +24,7 @@ export default function FoundingProvidersPage() {
     <PublicInfoPage
       kicker="Founding providers"
       title={`The first ${FOUNDING_COHORT_SIZE} are never charged a membership fee.`}
-      intro={`The first ${FOUNDING_COHORT_SIZE} providers accepted to Tuveloz signed up for a marketplace with no customers, no reviews, and no track record. This page states exactly what they get for that, and exactly what it does not mean. It is published so it can be held to.`}
+      intro={`Joining a new marketplace is a decision about your business, and we appreciate you considering Tuveloz. The first ${FOUNDING_COHORT_SIZE} providers accepted after review will receive the benefits below. Here is what the program includes, so you can decide whether it is a good fit.`}
       sections={[
         {
           title: "Who counts",

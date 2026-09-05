@@ -18,7 +18,7 @@
  *     Their contents are not language.
  */
 
-import { translateText } from "../lib/spanish-html";
+import { decodeRenderedText, translateText } from "../lib/spanish-html";
 import { SPANISH_PREFIX, englishPathFor, spanishPathFor } from "../lib/spanish-routes";
 
 const CANONICAL_ORIGIN = "https://tuveloz.com";
@@ -160,7 +160,12 @@ class TranslateRun {
     }
     const run = this.buffer;
     this.buffer = "";
-    chunk.replace(translateText(run), { html: false });
+    const decoded = decodeRenderedText(run);
+    const translated = translateText(decoded);
+    // HTMLRewriter supplies raw entity bytes. Unknown text must preserve those
+    // bytes rather than escaping them twice; reviewed translations stay text.
+    if (translated === decoded) chunk.replace(run, { html: true });
+    else chunk.replace(translated, { html: false });
   }
 }
 

@@ -178,7 +178,7 @@ export function JobPostingPauseNotice() {
                 {state === "provider" ? "Go to your provider workspace" : "Go to your account"}
               </Link>
             ) : (
-              <Link href="/account?role=customer&mode=create">Save my spot — free</Link>
+              <Link href="/account?role=customer&mode=create">Create a free account</Link>
             )}
           </nav>
         )}

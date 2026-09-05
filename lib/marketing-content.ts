@@ -43,8 +43,8 @@ export const LAUNCH_SERVICES: ReadonlyArray<{
   },
   {
     icon: "diagnostics",
-    title: "Find out what's wrong",
-    text: "A local mechanic comes to your car and figures out what's going on.",
+    title: "Help understanding a warning light",
+    text: "Ask about a code reading or eligible diagnostic service. A code reading alone does not confirm the cause or the repair.",
     serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
   },
 ];
@@ -82,6 +82,6 @@ export const CUSTOMER_STEPS: ReadonlyArray<{
   {
     number: "03",
     title: "Pick who you like",
-    text: "Line the prices up, pick the one that feels right — or pick nobody. Either way, it costs you nothing.",
+    text: "Compare the quotes you receive and ask questions. You can decline them all at no cost. If you book a service, review the work, fees, and total before accepting.",
   },
 ];
