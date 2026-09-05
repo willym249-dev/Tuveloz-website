@@ -58,6 +58,31 @@ test("only an explicit, complete advanced clean response becomes clean", () => {
   }).terminal, false);
 });
 
+test("a real clean response can contain an explicit null virus list, but absent or malformed lists fail closed", () => {
+  // Confirmed with a harmless PNG through the real advanced API. Cloudmersive
+  // also documents FoundViruses:null for a successful scan with no viruses.
+  assert.deepEqual(classifyCloudmersiveAdvancedResult({
+    ...cleanAdvancedResult, VerifiedFileFormat: ".png", FoundViruses: null,
+  }), { terminal: true, status: "clean" });
+  for (const malformed of [undefined, false, 0, "", {}, [{ VirusName: "synthetic threat" }]]) {
+    assert.equal(classifyCloudmersiveAdvancedResult({
+      ...cleanAdvancedResult, FoundViruses: malformed,
+    }).terminal, false);
+  }
+  for (const field of Object.keys(cleanAdvancedResult).filter(key => key.startsWith("Contains"))) {
+    for (const invalid of [true, null, undefined, "false"]) {
+      assert.equal(classifyCloudmersiveAdvancedResult({
+        ...cleanAdvancedResult, FoundViruses: null, [field]: invalid,
+      }).terminal, false, `${field}=${invalid}`);
+    }
+  }
+  for (const invalid of [null, undefined, "", "  "]) {
+    assert.equal(classifyCloudmersiveAdvancedResult({
+      ...cleanAdvancedResult, FoundViruses: null, VerifiedFileFormat: invalid,
+    }).terminal, false);
+  }
+});
+
 test("explicit non-clean scans become terminal but malformed responses stay retryable", () => {
   assert.deepEqual(classifyCloudmersiveAdvancedResult({
     CleanResult: false,

@@ -55,9 +55,13 @@ export function classifyCloudmersiveAdvancedResult(
     };
   }
 
+  // Cloudmersive returns an explicit null when it found no viruses. Missing
+  // fields and other non-array values remain invalid; every advanced threat
+  // flag must still be present and false before anything is marked clean.
+  const noVirusesFound = result.FoundViruses === null
+    || (Array.isArray(result.FoundViruses) && result.FoundViruses.length === 0);
   if (
-    !Array.isArray(result.FoundViruses)
-    || result.FoundViruses.length > 0
+    !noVirusesFound
     || typeof result.VerifiedFileFormat !== "string"
     || !result.VerifiedFileFormat.trim()
     || REQUIRED_FALSE_RESULT_FIELDS.some((field) => result[field] !== false)

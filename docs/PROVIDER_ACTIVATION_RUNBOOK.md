@@ -53,6 +53,36 @@ were verified. This is test-mode vendor proof, not a genuine live canary. No
 live identity verification or upload scan was performed. Stripe's Identity
 dashboard still requires the owner's own additional identity verification.
 
+PR #187 deployed as `3a7c28c` on September 5, with both deployment jobs and
+19 independent live release checks passing. The test-mode proof above does not
+change the outstanding live configuration, genuine canary or launch reviews.
+
+## September 5 scanner account and vendor contract check
+
+The owner approved Google sign-in and a free Cloudmersive account. The account
+is email-verified and its free API key is stored as an encrypted Worker secret;
+no paid plan was purchased. Scanner selection and the required callback secret
+remain unconfigured, so storing this key does not enable processing. Two direct
+advanced-API checks used harmless synthetic files and the application's exact
+header policy: a PNG returned clean and a prohibited text file returned failed.
+The clean response contained `FoundViruses: null`, which the previous classifier
+incorrectly rejected. Explicit null and an empty array now both mean no viruses;
+all advanced threat flags must still be present and false, and a nonempty
+verified format is required. Missing or malformed fields remain blocked.
+Cloudmersive also documents the null result in its
+[official API example](https://www.cloudmersive.com/blog/Testing-Cloudmersive-APIs-with-cURL).
+
+These checks prove the direct vendor contract only. They did not scan provider
+documents or create a guarded production D1/R2 canary. The production scanner
+is still unconfigured. Before enabling it, resolve the plan mismatch: the
+[published free evaluation tier](https://portal.cloudmersive.com/selectplan)
+limits files to 3.5 MB and calls to one per second, while Tuveloz accepts 10 MB
+uploads. Its public monthly allowance is 600 calls; this account's key dashboard
+currently shows 800, so verify the actual allowance rather than promising it.
+Do not silently reduce the existing upload limit or purchase a plan. Confirm
+capacity for both provider evidence and message-image scans before setting the
+secrets below, which enables scheduled processing of queued files.
+
 ## Phase 1 — Cloudflare secrets
 
 Set as encrypted Worker secrets. All are fail-closed: a wrong or missing value
