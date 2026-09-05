@@ -82,6 +82,9 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Typecheck application and Worker
+        run: npm run typecheck
+
       - name: Apply every migration to a fresh local D1 database
         run: |
           rm -rf .wrangler/state

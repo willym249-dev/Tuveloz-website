@@ -55,7 +55,7 @@ export function TuvelozAiAssistant() {
     const controller = new AbortController();
     void fetch("/api/ai", { signal: controller.signal, cache: "no-store" })
       .then(response => response.ok ? response.json() : null)
-      .then(data => { if (data?.mode === "ai") setMode("ai"); })
+      .then(data => { if (data && typeof data === "object" && "mode" in data && data.mode === "ai") setMode("ai"); })
       .catch(() => { /* send reports connectivity; keep policy prompts available */ });
     return () => controller.abort();
   }, []);

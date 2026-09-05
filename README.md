@@ -69,11 +69,16 @@ deployment credentials, API keys, or production environment values.
 
 ## Verify the source
 
-Run the production build and the included feature checks:
+Run lint, the production build and feature checks, and the full TypeScript check:
 
 ```bash
+npm run lint
 npm test
+npm run typecheck
 ```
+
+The type check regenerates Cloudflare runtime and binding declarations from
+Wrangler. The generated `worker-configuration.d.ts` stays out of Git.
 
 ## Deploy
 

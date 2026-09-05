@@ -1,4 +1,4 @@
-import { and, desc, eq, exists } from "drizzle-orm";
+import { and, desc, eq, exists, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../../../../db";
 import {
@@ -361,12 +361,12 @@ export async function GET(request: Request) {
         { status: 404, headers: PRIVATE_NO_STORE_HEADERS },
       );
     }
-    const [customerRequest] = await getDb().select({
+    const [customerRequest] = payment.requestId ? await getDb().select({
       customerEmail: customerRequests.email,
       accessToken: customerRequests.accessToken,
     }).from(customerRequests)
       .where(eq(customerRequests.id, payment.requestId))
-      .limit(1);
+      .limit(1) : [];
     const accountSession = await getAccountSession(request);
     const durableCustomerBindingMatches = payment.paymentType === "product"
       ? !payment.requestId
@@ -1301,8 +1301,8 @@ export async function POST(request: Request) {
     }).where(and(
       eq(stripePayments.id, paymentId),
       eq(stripePayments.status, "checkout_release_recheck"),
-      eq(stripePayments.requestId, requestId),
-      eq(stripePayments.quoteId, finalQuoteId),
+      requestId ? eq(stripePayments.requestId, requestId) : sql`0`,
+      finalQuoteId ? eq(stripePayments.quoteId, finalQuoteId) : sql`0`,
       eq(stripePayments.scopeVersion, paymentScopeVersion),
       eq(
         stripePayments.scopeAuthorizationDecisionId,

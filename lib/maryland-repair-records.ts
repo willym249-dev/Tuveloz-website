@@ -154,7 +154,7 @@ export function repairLineItemTotals(items: readonly RepairLineItem[]) {
   return totals;
 }
 
-export function stableRepairRecordJson(value: unknown) {
+export function stableRepairRecordJson(value: unknown): ReturnType<typeof JSON.stringify> {
   if (Array.isArray(value)) {
     return `[${value.map((item) => stableRepairRecordJson(item)).join(",")}]`;
   }

@@ -208,7 +208,7 @@ export default function CustomerPage() {
 
   useEffect(() => {
     fetch("/api/account", { cache: "no-store" }).then(async (response) => {
-      const result = await response.json();
+      const result = await response.json() as CustomerAccount & { error?: string };
       if (response.status === 401) {
         window.location.replace("/account?role=customer");
         return;
@@ -241,7 +241,7 @@ export default function CustomerPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ role: "provider" }),
     });
-    const result = await response.json();
+    const result = await response.json() as { error?: string; destination: string };
     setBusy(false);
     if (!response.ok) {
       setError(result.error || "Unable to switch workspaces.");

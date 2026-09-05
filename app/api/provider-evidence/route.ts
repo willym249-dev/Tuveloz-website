@@ -83,7 +83,7 @@ function expirationReminderSchedule(expiresAt: string, now: Date) {
   if (!expiresAt) return [];
   const expirationTime = Date.parse(`${expiresAt}T14:00:00.000Z`);
   if (!Number.isFinite(expirationTime) || expirationTime <= now.getTime()) return [];
-  const schedule = EXPIRATION_REMINDER_DAYS
+  const schedule: Array<{ reminderType: string; dueAt: string; days: number }> = EXPIRATION_REMINDER_DAYS
     .map((days) => ({
       reminderType: `evidence_expiration_${days}_day`,
       dueAt: new Date(expirationTime - days * DAY_MS).toISOString(),

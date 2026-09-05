@@ -30,6 +30,10 @@ type PreferenceRow = {
   marketingEmail: string;
   productUpdateEmail: string;
   optionalReminderEmail: string;
+  launchNotificationEmail: string;
+  launchNotificationConsentAt: string;
+  launchNotificationConsentVersion: string;
+  launchNotificationConsentSource: string;
   updatedAt: string;
 };
 

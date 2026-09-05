@@ -663,17 +663,17 @@ export const RELATIONSHIP_EVIDENCE_REQUIREMENTS: Readonly<
 > = Object.freeze({
   independent_startup: Object.freeze([
     "no_employee_attestation",
-  ]),
+  ] as const),
   sponsored_trainee_employee: Object.freeze([
     "workers_comp_coverage",
     "sponsored_personnel_roster",
     "sponsored_employment_attestation",
-  ]),
+  ] as const),
   provider_business_employee: Object.freeze([
     "workers_comp_coverage",
     "provider_personnel_roster",
     "provider_employee_record",
-  ]),
+  ] as const),
 });
 
 export const JURISDICTION_REGISTRY = PROVIDER_POLICY_MATRIX.jurisdiction_registry;

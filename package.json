@@ -12,6 +12,7 @@
     "deploy": "vinext deploy",
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "typecheck": "wrangler types --strict-vars=false && tsc --noEmit --incremental false",
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "ai:check": "node scripts/ai-selfcheck.mjs",
     "i18n:check": "node scripts/check-spanish-coverage.mjs",
