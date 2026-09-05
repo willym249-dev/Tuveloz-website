@@ -11,7 +11,9 @@ as an encrypted Worker secret. Production processing remains off:
 `EVIDENCE_SCAN_PROVIDER` is `unconfigured` and the callback secret is not set.
 The free plan does not cover the site's 10 MB upload allowance. Resolve vendor
 capacity before setting the remaining secret and enabling processing, then
-verify a guarded production scan. No paid subscription has been approved.
+verify a guarded production scan. The owner approved Basic at $19.99/month on
+September 5. The first payment attempt failed; no paid subscription is confirmed.
+The checkout is waiting for a changed payment method or resolution with the bank.
 
 The interface contract is
 [`../EVIDENCE_SCANNER_CALLBACK.md`](../EVIDENCE_SCANNER_CALLBACK.md). This

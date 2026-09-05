@@ -646,9 +646,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               Apply free
             </a>
           ) : (
-            <Link className="header-cta" href="/post-job">
-              Create an account
-            </Link>
+            <SaveMySpotButton className="header-cta" showArrow={false} />
           )}
         </div>
       </header>
@@ -725,7 +723,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </>
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
-                <SaveMySpotButton href="/post-job" />
+                <SaveMySpotButton />
                 <Link className="button secondary" href="/join">
                   I do car work — apply free <span>→</span>
                 </Link>
@@ -911,7 +909,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
               <li><span aria-hidden="true">✓</span> The last word is always yours</li>
             </ul>
-            <SaveMySpotButton href="/post-job" />
+            <SaveMySpotButton />
           </article>
 
           <article className="audience-card audience-provider-card">
@@ -1011,9 +1009,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
           )}
           {CUSTOMER_JOB_POSTING_PAUSED && (
-            <Link className="text-link" href={view === "provider" ? "/join#provider-apply" : "/post-job"}>
-              {view === "provider" ? "Apply free →" : "Create an account →"}
-            </Link>
+            view === "provider" ? (
+              <Link className="text-link" href="/join#provider-apply">Apply free →</Link>
+            ) : (
+              <SaveMySpotButton className="text-link" />
+            )
           )}
         </div>
         <div className="steps">
@@ -1955,7 +1955,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <>
             <h2>Let&apos;s make car care a little easier.</h2>
             <div>
-              <SaveMySpotButton className="button lime" href="/post-job" />
+              <SaveMySpotButton className="button lime" />
               <Link className="button ghost" href="/join">I do car work — apply free</Link>
             </div>
           </>

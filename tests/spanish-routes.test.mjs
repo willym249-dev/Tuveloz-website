@@ -131,9 +131,10 @@ test("the Worker never reaches the client component", () => {
   assert.match(PAGE, /from "\.\.\/lib\/spanish-routes"/);
 });
 
-test("the Worker only offers it for HTML page views", () => {
-  // An API call or an asset must not be routed through a translator.
-  assert.match(WORKER, /request\.method === "GET" && acceptsHtml/);
+test("the Worker routes Spanish reads without requiring a crawler Accept header", () => {
+  // The handler checks the response type; */* must not turn a real page into 404.
+  assert.match(WORKER, /request\.method === "GET" \|\| request\.method === "HEAD"/);
+  assert.match(PAGE, /if \(!response\.ok \|\| !type\.includes\("text\/html"\)\) return response/);
   assert.match(WORKER, /spanishPageResponse\(url, request,/);
 });
 
