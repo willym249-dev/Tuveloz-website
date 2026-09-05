@@ -83,7 +83,87 @@ Do not silently reduce the existing upload limit or purchase a plan. Confirm
 capacity for both provider evidence and message-image scans before setting the
 secrets below, which enables scheduled processing of queued files.
 
+### Isolated pipeline proof (September 5)
+
+A subsequent local workerd test applied all 66 repository migrations to fresh
+D1 and used isolated R2 with the actual upload validation/storage, scheduled
+scanner, result recorder, audit and notification modules. A real clean PNG
+result was recorded with its exact file hash and consumed pending request. A
+prohibited text upload was rejected by validation, then deliberately seeded into
+local quarantine to exercise the downstream real-vendor failed-result path.
+A mismatched file hash produced a local error without uploading bytes to the
+vendor. Replayed results created no additional result/audit/notification rows;
+altered result hashes returned 409. Two protective notifications were captured
+locally. The provider stayed new/unreviewed, service eligibility stayed blocked,
+and every evidence row still required review. No production data or payments
+were used. This proves the isolated pipeline, not the public upload authorization
+route or the required production runtime canary.
+
+The fixture initially failed because it passed Node FormData directly across
+Miniflare's separate Fetch implementation, then because its seeded SQLite
+timestamps omitted the zone and local Windows workerd parsed them as EDT.
+Both fixture errors were corrected: encode multipart bytes and headers before
+dispatch, and seed the explicit UTC ISO timestamps used by the real upload route.
+No production source change was needed. Separately, Cloudmersive classified an
+eight-byte PNG header as malware-clean with no invalid-file flag. Malware-clean
+does not prove that an image is complete, decodable, authentic or acceptable as
+business evidence; preserve the separate evidence review. The production
+file-size/plan mismatch above remains unresolved.
+
 ## Phase 1 — Cloudflare secrets
+
+### Approved live Identity connection (September 5)
+
+The owner explicitly approved connecting the restricted live Identity key to
+start document/selfie checks and read recent results for the adult check, then
+completed Stripe's required authenticator step. The dedicated key was created
+with only **Identity Verification Results: Write** and **Recent Detailed
+Verification Results: Read**. The API accepted its authentication and read scope
+for a deliberately nonexistent verification ID; no person's record was read or
+created. A separate **TUVELOZ Identity Live** webhook is active with the six
+events listed below, snapshot payloads and API version `2026-06-24.dahlia`.
+Both dedicated credentials were stored as encrypted Worker secrets.
+
+The two runtime activation settings are existing plaintext bindings in
+`wrangler.jsonc`. Cloudflare rejects adding secrets with those same names
+(`Binding name already in use`). Set them in the reviewed Worker configuration,
+as this change does; do not use the previously documented secret-put commands
+for those two names. Staging explicitly resets them to empty/false. Customer
+job posting, payments, SMS, scanner selection and provider/service activation
+retain their separate guards. A genuine provider-bound live result is still
+required; account access and credentials do not satisfy that canary.
+
+### Owner account access is separate from the provider canary
+
+The owner subsequently completed the additional Stripe Identity access check.
+The dashboard no longer marks it Required and Create verification is enabled.
+This supersedes the pending-owner status in the earlier September 4 audit; it
+does not constitute a provider-bound live canary. No identity documents or
+biometric data were retrieved to establish this status.
+
+The approved restricted key is named `TUVELOZ Website Identity Live`. All
+Detailed Verification Results and payment permissions remain None. The
+recent-results permission allows the DOB expansion needed for the adult check;
+the application does not request document numbers, document images or selfie
+images. Specific owner approval followed the automatic review stop recorded in
+the log; the account verification alone was not treated as that approval.
+
+The separate live snapshot destination uses
+`https://tuveloz.com/api/stripe/webhooks/identity`, the SDK-matching
+`2026-06-24.dahlia` version and these six events. The existing test Identity and
+two Connect destinations were preserved:
+
+- `identity.verification_session.created`
+- `identity.verification_session.processing`
+- `identity.verification_session.requires_input`
+- `identity.verification_session.verified`
+- `identity.verification_session.canceled`
+- `identity.verification_session.redacted`
+
+The signing secret and dedicated key are stored. Complete the reviewed
+runtime-configuration release and genuine-canary steps below. The dashboard
+access check did not establish the new key's live sensitive-results permission
+through a real provider result.
 
 Set as encrypted Worker secrets. All are fail-closed: a wrong or missing value
 blocks activation but never opens payments.
@@ -92,9 +172,13 @@ blocks activation but never opens payments.
 ```bash
 npx wrangler secret put STRIPE_IDENTITY_SECRET_KEY          # dedicated rk_live_ Identity key, NOT the payments key
 npx wrangler secret put STRIPE_IDENTITY_WEBHOOK_SECRET      # whsec_ for the Identity webhook destination only
-npx wrangler secret put STRIPE_IDENTITY_ALLOW_LIVE_MODE     # the literal string: true
-npx wrangler secret put IDENTITY_VERIFICATION_PROVIDERS     # include stripe_identity
 ```
+
+Deploy the reviewed `wrangler.jsonc` settings
+`STRIPE_IDENTITY_ALLOW_LIVE_MODE: "true"` and
+`IDENTITY_VERIFICATION_PROVIDERS: "stripe_identity"` with those secrets present.
+To pause new Identity sessions, deploy those settings as `"false"` and `""`;
+coordinate any pending Stripe webhook deliveries before pausing the integration.
 
 The application creates `type: document` sessions with explicit live capture,
 matching selfie, and driving-license/ID-card/passport options. It verifies those

@@ -11,6 +11,72 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Owner approved and connected dedicated live Identity credentials
+
+The owner approved the exact live Identity key scope and completed Stripe's
+authenticator challenge. The dedicated website key has Identity verification
+write and recent sensitive-results read access only; all unrelated permissions
+are None. A read-only request for a nonexistent session confirmed authentication
+and read scope without accessing a person's record. A separate live snapshot
+webhook uses the six handled Identity events and SDK-matching API version.
+The two credentials were stored as encrypted Worker secrets.
+
+The local storage wrapper initially mishandled Wrangler's Unicode output on
+Windows after the secret update completed. Deployment history confirmed secret
+versions were created; the wrapper now uses explicit UTF-8 and persists its
+sanitized result before printing. An attempted activation-secret update was
+rejected because those two names already exist as plaintext Worker bindings.
+The runbook is corrected and this change sets the two approved Identity values
+in `wrangler.jsonc` through the tested deployment path. No payment, customer-job,
+SMS, scanner or service-activation switch is enabled by the change. A genuine
+provider-bound live canary remains outstanding.
+
+## 2026-09-05 - Additional Stripe owner verification accepted
+
+The owner completed the phone handoff for Stripe Identity product access.
+Stripe's dashboard now shows Create verification enabled and the additional
+owner identity step without its Required status. This updates the prior log's
+pending-owner state. It does not prove a genuine provider-bound live canary.
+
+The live key list contains no dedicated website Identity key. Its configuration
+form is prepared, but automatic approval review stopped selecting live Identity
+write and recent sensitive-results read permissions pending the owner's specific
+approval. The requested scope includes DOB access for the existing adult check
+and encrypted Worker-secret storage, with no payment permissions. No new key or
+Identity activation switch was applied. Continue the existing setup after that
+approval; do not ask the owner to repeat the completed access verification.
+The live destination inventory shows two Connect destinations and no Identity
+destination; the import dialog offers the existing six-event test Identity
+webhook. It was inspected and canceled without importing or editing anything.
+The activation runbook records the exact separate live destination to prepare.
+
+## 2026-09-05 - Guarded scanner pipeline verified in isolated workerd
+
+PR #188 is live as `c58a141`, with deployment run 33944641724 successful and
+19 independent live checks passing. The owner clarified that their completed
+Stripe verification was from the original payment-account setup. The additional
+check required to access Stripe Identity remains at the phone handoff; do not
+represent it as complete or restart it without a reason.
+
+The free scanner was then exercised through the actual storage/scanner/recorder
+modules in local workerd, fresh D1 with all 66 migrations, and isolated R2. A
+real clean PNG result, a prohibited text file seeded into quarantine after
+upload validation rejected it, and a hash mismatch all followed the intended
+guarded transitions. Results consumed exactly one pending request, duplicate
+replays were idempotent, changed hashes returned 409, and two protective emails
+were caught locally. Provider/evidence review and service activation stayed
+blocked. The final run made two real Cloudmersive calls with synthetic files;
+earlier diagnostic runs made four more. No production data, real identity,
+outbound email, charge or payout was used.
+
+Two initial failures were test-fixture errors: multipart encoding across Fetch
+implementations and zone-less SQLite timestamps parsed as local EDT. Both were
+corrected to match the real application. Cloudmersive also accepted a truncated
+PNG header as malware-clean, so do not equate malware clearance with file
+usability or genuine evidence. Temporary key copies were deleted after testing.
+The 3.5 MB free-plan limit versus 10 MB uploads, production scanner configuration
+and canary, additional Stripe owner verification and launch reviews remain open.
+
 ## 2026-09-05 - Real Cloudmersive response repaired; free account evaluated
 
 The owner approved and received PR #187: merge `3a7c28c`, deployment run
