@@ -19,8 +19,10 @@ Stripe's additional owner verification, live canary and launch reviews remain
 outstanding; temporary test CLI access is revoked and the test webhook restored.
 
 Owner-authorized Google sign-in created an email-verified free Cloudmersive
-account and API key, with marketing email and sales-demo options off. No paid
-plan, production secret or real provider document was involved. Real advanced
+account and API key, with marketing email and sales-demo options off. The key
+is stored as an encrypted Worker secret, with scanner selection and its required
+callback secret still unconfigured. No paid plan or real provider document was
+involved. Real advanced
 API calls using the application's exact header policy returned a clean PNG
 with `FoundViruses: null`. The classifier had required an array, so a valid
 clean response remained pending. Cloudmersive's official example documents null

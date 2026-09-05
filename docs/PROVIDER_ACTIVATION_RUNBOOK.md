@@ -60,7 +60,9 @@ change the outstanding live configuration, genuine canary or launch reviews.
 ## September 5 scanner account and vendor contract check
 
 The owner approved Google sign-in and a free Cloudmersive account. The account
-is email-verified and has a free API key; no paid plan was purchased. Two direct
+is email-verified and its free API key is stored as an encrypted Worker secret;
+no paid plan was purchased. Scanner selection and the required callback secret
+remain unconfigured, so storing this key does not enable processing. Two direct
 advanced-API checks used harmless synthetic files and the application's exact
 header policy: a PNG returned clean and a prohibited text file returned failed.
 The clean response contained `FoundViruses: null`, which the previous classifier
