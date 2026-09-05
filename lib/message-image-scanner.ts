@@ -76,18 +76,23 @@ async function scanBytes(apiKey: string, bytes: ArrayBuffer, contentType: string
     type: contentType || "application/octet-stream",
   }));
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("message image scan timeout"), SCAN_TIMEOUT_MS);
-  let response: Response;
+  const timeout = setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
+  let rawResult: string;
   try {
-    response = await fetch(SCAN_URL, { method: "POST", headers: scanHeaders(apiKey), body: form, signal: controller.signal });
+    const response = await fetch(SCAN_URL, { method: "POST", headers: scanHeaders(apiKey), body: form, signal: controller.signal });
+    // Non-2xx never proves the file safe. Abort its unread body and retry later.
+    if (!response.ok) {
+      controller.abort();
+      throw new Error(`cloudmersive_http_${response.status}`);
+    }
+    // Fetch resolves at the headers; keep the deadline through the body read.
+    rawResult = await readBoundedResponse(response);
   } finally {
     clearTimeout(timeout);
   }
-  // Non-2xx never proves the file safe — retry later.
-  if (!response.ok) throw new Error(`cloudmersive_http_${response.status}`);
   let parsed: unknown;
   try {
-    parsed = JSON.parse(await readBoundedResponse(response));
+    parsed = JSON.parse(rawResult);
   } catch {
     throw new Error("cloudmersive_invalid_json");
   }

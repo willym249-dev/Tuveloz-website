@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Scanner response deadlines repaired; capacity decision pending
+
+Both Cloudmersive callers cleared their 45-second timer when fetch returned
+headers, before reading the response body. A vendor stall after headers could
+therefore hold a scan indefinitely. The deadline now covers the bounded body
+read; unread HTTP error bodies are aborted, and transport failures remain
+retryable without recording a clean verdict. Default AbortError reasons also
+preserve the evidence scanner's existing timeout classification.
+
+Twelve behavioral tests execute the actual scanner functions with synthetic
+streams and isolated network/timer/storage/recording boundaries. Before the
+repair, four failed: stalled-body deadlines and HTTP error-body release in each
+scanner. All twelve now pass, along with the production build, lint and all
+546 tests (zero failures or skips). No real files were sent for these tests.
+This entry records a locally verified repair; publication is a separate step.
+
+The activation runbook now reflects the existing free account and encrypted
+API key, the free plan's 3.5 MB limit versus the site's 10 MB uploads, and the
+current $19.99/month Basic option requiring owner purchase approval. Production
+scanning stays off. Live Identity configuration from PR #189 is deployed, but
+its genuine provider-bound verification remains outstanding; Stripe account
+owner verification must not be repeated as a substitute. Customer jobs, live
+payments, SMS and provider/service activation remain locked.
+
 ## 2026-09-05 - Owner approved and connected dedicated live Identity credentials
 
 The owner approved the exact live Identity key scope and completed Stripe's

@@ -30,7 +30,7 @@ test("scan sweep is a no-op until scanning is configured, and never trusts a non
   const scanner = await read("lib/message-image-scanner.ts");
   assert.match(scanner, /if \(!cloudmersiveScannerConfigured\(runtime\)\) \{\s*return \{ configured: false/);
   // Non-2xx or ambiguous verdicts leave the message pending (throw), never clean.
-  assert.match(scanner, /if \(!response\.ok\) throw new Error/);
+  assert.match(scanner, /if \(!response\.ok\) \{\s*controller\.abort\(\);\s*throw new Error/);
   assert.match(scanner, /classifyCloudmersiveAdvancedResult/);
   assert.match(scanner, /classification\.status === "clean" \? "clean" : "blocked"/);
   // A missing R2 object is blocked, not shown.
