@@ -18,7 +18,6 @@ import {
   POLICY_JURISDICTION,
   POLICY_STATUS,
   POLICY_VERSION,
-  PROVIDER_LEVEL_LABELS,
   providerLevelsForServices,
   SERVICES,
   type EvidenceRequirementCode,
@@ -27,8 +26,8 @@ import {
 import {
   getRequiredDocumentsForSelection,
   needsProofStep,
-  type RequiredDocument,
 } from "../../lib/service-tiers";
+import { groupProviderSignupDocuments, hasProviderSignupQuestions } from "../../lib/provider-signup-checklist";
 import {
   MAX_OPTIONAL_CERTIFICATES,
   OPTIONAL_CERTIFICATE_CATEGORIES,
@@ -146,8 +145,8 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
     id: "specialty",
     label: "Special jobs",
     labelEs: "Trabajos especiales",
-    description: "Jobs that need extra licenses or permits — like towing, window tint, or A/C.",
-    descriptionEs: "Trabajos que necesitan licencias o permisos adicionales — como remolque, polarizado o aire acondicionado.",
+    description: "Specialized work like towing, window tint, or A/C.",
+    descriptionEs: "Trabajos especializados como remolque, polarizado o aire acondicionado.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("specialty_provider")
     )),
@@ -343,32 +342,6 @@ function joinServiceNames(services: readonly string[], isSpanish: boolean) {
 }
 
 /**
- * Collapse the selected services into one block per identical document set, so
- * an applicant who picks ten jobs that all need the same three documents sees
- * that checklist once instead of ten times. Services with different required
- * documents keep their own block.
- */
-function groupRequiredDocuments(
-  entries: readonly { code: ServiceCode; label: string; documents: readonly RequiredDocument[] }[],
-  isSpanish: boolean,
-): Array<{ services: string[]; documents: readonly RequiredDocument[] }> {
-  const groups: Array<{ services: string[]; documents: readonly RequiredDocument[] }> = [];
-  const indexBySignature = new Map<string, number>();
-  for (const entry of entries) {
-    const signature = entry.documents.map((doc) => doc.code).slice().sort().join("|");
-    const serviceName = providerServicePlainLabel(entry.code, entry.label, isSpanish);
-    const existingIndex = indexBySignature.get(signature);
-    if (existingIndex === undefined) {
-      indexBySignature.set(signature, groups.length);
-      groups.push({ services: [serviceName], documents: entry.documents });
-    } else {
-      groups[existingIndex].services.push(serviceName);
-    }
-  }
-  return groups;
-}
-
-/**
  * Step 2 only exists when the chosen services actually carry requirements, so
  * a step's internal id is not the number the applicant sees. Display position
  * is derived from the visible steps instead of hand-patched at each call site.
@@ -377,8 +350,8 @@ type SignupStep = 1 | 2 | 3 | 4;
 
 const SIGNUP_STEP_LABELS: Record<SignupStep, { en: string; es: string }> = {
   1: { en: "Your services", es: "Sus servicios" },
-  2: { en: "Requirements", es: "Requisitos" },
-  3: { en: "Your business", es: "Su negocio" },
+  2: { en: "Your checklist", es: "Su lista" },
+  3: { en: "Your details", es: "Sus datos" },
   4: { en: "Sign and submit", es: "Firmar y enviar" },
 };
 
@@ -442,6 +415,8 @@ export function ProviderSignupForm() {
   const providerFormIsSpanish = language === "es";
 
   const [step, setStep] = useState<SignupStep>(1);
+  const stepContentRef = useRef<HTMLDivElement>(null);
+  const previousStep = useRef<SignupStep>(step);
   const [selectedProviderServices, setSelectedProviderServices] = useState<ServiceCode[]>([]);
   const [soloBusiness, setSoloBusiness] = useState(true);
   const [challengeResetNotice, setChallengeResetNotice] = useState("");
@@ -464,6 +439,19 @@ export function ProviderSignupForm() {
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
+
+  // Long service lists can leave a phone scrolled below the next step when
+  // its content is shorter. Bring the new step into view and move keyboard /
+  // screen-reader focus with it. The CSS scroll margin clears the sticky nav.
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    const frame = requestAnimationFrame(() => {
+      stepContentRef.current?.focus({ preventScroll: true });
+      stepContentRef.current?.scrollIntoView({ block: "start", behavior: "auto" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [step]);
 
   // Restore an unfinished application from this device. Runs once after mount
   // so server-rendered markup stays identical to the first client render; the
@@ -570,20 +558,15 @@ export function ProviderSignupForm() {
     : providerEligibilityResults.some((result) => result.status === "needs-review")
       ? "needs-review"
       : "ready";
-  const hasVisibleLegalRequirements = Object.values(providerLegalRequirements).some(Boolean);
+  const hasVisibleLegalRequirements = hasProviderSignupQuestions(providerLegalRequirements);
   const showProofStep = needsProofStep(selectedProviderServices, PROVIDER_PATHWAY);
   const requiredDocumentsBySelection = getRequiredDocumentsForSelection(
     selectedProviderServices,
     PROVIDER_PATHWAY,
   );
-  const requiredDocumentGroups = groupRequiredDocuments(
-    requiredDocumentsBySelection,
-    providerFormIsSpanish,
-  );
-  // Step 1 preview count. Two services can require the same document, and step 2
-  // renders it once per group, so the honest number is the distinct documents an
-  // applicant actually uploads — not the sum of the per-service lists. No time
-  // estimate goes with it: the flow has not been measured.
+  const requiredDocumentGroups = groupProviderSignupDocuments(requiredDocumentsBySelection);
+  // The preview and checklist both count a shared document once. Individual
+  // services still have their own evidence review and approval requirements.
   const requiredDocumentCount = new Set(
     requiredDocumentsBySelection.flatMap((entry) => entry.documents.map((doc) => doc.code)),
   ).size;
@@ -884,10 +867,10 @@ export function ProviderSignupForm() {
     return (
       <InterfaceCopy><div className="success-message provider-success" role="status">
         <span>✓</span>
-        <h3>{providerFormIsSpanish ? "¡Listo! Recibimos su solicitud." : "You're in — we've got your application."}</h3>
+        <h3>{providerFormIsSpanish ? "¡Gracias! Recibimos su solicitud." : "Thanks — we've received your application."}</h3>
         <p>{providerFormIsSpanish
-          ? "Esto es lo que sigue: (1) inicie sesión con el mismo correo, (2) suba la evidencia requerida para sus servicios, (3) nuestro equipo revisa y usted puede seguir el estado en su panel. Le avisaremos por correo en cada paso."
-          : "Here's what happens next: (1) sign in with the same email, (2) upload the evidence required for your services, (3) our team reviews and you can track the status from your dashboard. We'll email you at each step."}</p>
+          ? "Inicie sesión con el mismo correo para completar la lista de sus servicios y seguir la revisión en su panel. Le escribiremos cuando haya una actualización. Enviar la solicitud no activa servicios ni reservas."
+          : "Sign in with the same email to complete your service checklist and follow the review in your dashboard. We'll email you when there's an update. Submitting an application does not activate services or bookings."}</p>
         <p><small>{providerFormIsSpanish
           ? "Si ya existía una solicitud para este correo, se conservó esa solicitud; los cambios se hacen después de iniciar sesión."
           : "If an application already existed for this email, that one was kept — changes happen after you sign in."}</small></p>
@@ -965,64 +948,22 @@ export function ProviderSignupForm() {
       {stepError && <p className="form-error" ref={stepErrorRef} role="alert">{stepError}</p>}
 
       {step === 1 && (
-        <div data-signup-step="1">
-          <h3>{providerFormIsSpanish ? "Solicite unirse como proveedor" : "Apply to join as a provider"}</h3>
-          <p>{providerFormIsSpanish ? "Cuéntenos qué servicios ofrece." : "Tell us which services you offer."}</p>
+        <div data-signup-step="1" ref={stepContentRef} tabIndex={-1}>
+          <h3>{providerFormIsSpanish ? "¿Qué servicios le gustaría ofrecer?" : "What would you like to offer?"}</h3>
+          <p>{providerFormIsSpanish
+            ? "Elija los servicios que ya sabe hacer. Le mostraremos una lista de lo que necesita para esas opciones."
+            : "Choose services you already know how to do. We'll show you a checklist for those choices."}</p>
           <div className="legal-requirement-note" role="status">
             <strong>
               {providerFormIsSpanish
-                ? "Una cosa importante: esta solicitud es para revisión. Los trabajos reales se abren cuando sus servicios pasen la revisión de lanzamiento."
-                : "One thing to know: this application is for review. Real customer jobs open once your services pass launch review."}
+                ? "Solicite ahora. Agregue sus documentos después."
+                : "Apply now. Add your documents later."}
             </strong>
             <small>
               {providerFormIsSpanish
-                ? "¿Todavía no tiene registro del condado? Puede solicitar de todos modos — elija sus servicios y le mostraremos exactamente lo que cada uno necesita."
-                : "Not registered with the county yet? You can still apply — pick your services and we'll show you exactly what each one needs."}
+                ? "Las solicitudes están abiertas en el Condado de Montgomery. Las reservas de clientes aún no están abiertas."
+                : "Applications are open in Montgomery County. Customer bookings are not open yet."}
             </small>
-            <details className="legal-note-details">
-              <summary>
-                {providerFormIsSpanish
-                  ? "Por qué, y qué exige el Condado de Montgomery"
-                  : "Why, and what Montgomery County requires"}
-              </summary>
-              <small>
-                {providerFormIsSpanish
-                  ? "Las solicitudes y selecciones de servicios se aceptan solo para revisión. La activación requiere cumplimiento documentado de la ley aplicable, aprobación de la aseguradora y todos los controles gubernamentales, de agencias, ambientales, fiscales, de pagos, privacidad, seguridad y específicos del servicio que correspondan."
-                  : "Applications and service selections are accepted for review only. Activation requires documented compliance with applicable law, insurer approval, and every required government, agency, environmental, tax, payment, privacy, security, and service-specific control."}
-              </small>
-              <small>
-                <strong>
-                  {providerFormIsSpanish
-                    ? "El Condado de Montgomery no tiene una vía de reparaciones simples sin registro."
-                    : "Montgomery County has no unregistered simple-repair lane."}
-                </strong>{" "}
-                {providerFormIsSpanish
-                  ? "Un negocio móvil de reparación o mantenimiento debe contar con el registro OCP del Condado. Un propietario-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por su corredor para cada servicio específico."
-                  : "A mobile repair or maintenance business must hold the County OCP registration. An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service."}
-              </small>
-              <small>
-                {providerFormIsSpanish ? "Fuentes oficiales: " : "Official sources: "}{" "}
-                <a
-                  href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {providerFormIsSpanish
-                    ? "Guía de registro OCP del Condado de Montgomery"
-                    : "Montgomery County OCP registration guidance"}
-                </a>
-                {" · "}
-                <a
-                  href="https://codelibrary.amlegal.com/codes/montgomerycounty/latest/montgomeryco_md/0-0-0-138743"
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {providerFormIsSpanish
-                    ? "Capítulo 31A del Código del Condado"
-                    : "County Code Chapter 31A"}
-                </a>
-              </small>
-            </details>
           </div>
           <fieldset className="area-fieldset service-fieldset">
             <legend>{providerFormIsSpanish ? "Servicios que ofrece" : "Services you offer"}</legend>
@@ -1109,30 +1050,16 @@ export function ProviderSignupForm() {
             {hasSpecialtySelection && (
               <p className="tier-swap-notice" role="status">
                 {providerFormIsSpanish
-                  ? "Puede elegir todos los trabajos que realmente hace. Los trabajos especiales necesitan licencias o permisos adicionales, y cada uno se activa por separado cuando se verifica ese permiso — tener uno no activa los demás."
-                  : "Pick every job you actually do. Special jobs need extra licenses or permits, and each one turns on separately once that credential is verified — having one never turns on another."}
+                  ? "Elija todos los trabajos que realmente hace. Algunos servicios especializados requieren una licencia, permiso o certificado propio. Revisaremos cada servicio por separado."
+                  : "Pick every job you actually do. Some specialty services need their own license, permit, or certificate. We'll review each service separately."}
               </p>
             )}
             <small className="customer-service-note">
               {providerFormIsSpanish
-                ? "No hay una opción de “reparación general” a propósito — solo elija los trabajos exactos que hace."
-                : "There's no all-in-one “general repair” choice on purpose — just pick the exact jobs you do."}
+                ? "Elija solo los servicios que quiere que revisemos."
+                : "Choose only the services you want reviewed."}
             </small>
           </fieldset>
-          {providerLevels.length > 0 && (
-            <div className="provider-mode-preview" aria-live="polite">
-              <span>
-                {providerFormIsSpanish
-                  ? providerLevels.length > 1 ? "Niveles de la solicitud" : "Nivel de la solicitud"
-                  : providerLevels.length > 1 ? "Application tiers" : "Application tier"}
-              </span>
-              {providerLevels.map((level) => (
-                <strong className="provider-mode-badge" key={level}>
-                  {PROVIDER_LEVEL_LABELS[level]}
-                </strong>
-              ))}
-            </div>
-          )}
           {requiredDocumentCount > 0 && (
             <div className="legal-requirement-note" role="status" aria-live="polite">
               <strong>
@@ -1175,29 +1102,35 @@ export function ProviderSignupForm() {
       )}
 
       {step === 2 && showStep2 && (
-        <div data-signup-step="2">
+        <div data-signup-step="2" ref={stepContentRef} tabIndex={-1}>
           {requiredDocumentGroups.length > 0 && (
             <>
-              <h3>{providerFormIsSpanish ? "Lo que subirá" : "What you'll upload"}</h3>
+              <h3>{providerFormIsSpanish ? "La lista para sus servicios" : "Your service checklist"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "No necesita nada de esto ahora mismo. Estos requisitos corresponden a sus servicios y lugares de trabajo: documentos legales y controles de seguridad y competencia de Tuveloz."
-                  : "You don't need any of this right now. These requirements match your selected services and work locations, including legal documents and Tuveloz safety and competency checks."}
+                  ? "Puede solicitar antes de tener estos documentos listos. Corresponden a los servicios que eligió e incluyen los documentos aplicables y los controles de seguridad y experiencia de Tuveloz. Los documentos compartidos aparecen una sola vez."
+                  : "You can apply before these are ready. This list covers the services you chose, including applicable paperwork and Tuveloz safety and experience checks. Shared documents appear once."}
               </p>
               {requiredDocumentGroups.map((group, groupIndex) => (
                 <div key={groupIndex} className="legal-requirement-note">
-                  {requiredDocumentGroups.length > 1 && (
-                    <strong>
-                      {providerFormIsSpanish ? "Para " : "For "}
-                      {joinServiceNames(group.services, providerFormIsSpanish)}
-                    </strong>
-                  )}
+                  <strong>
+                    {group.serviceCodes.length === requiredDocumentsBySelection.length
+                      ? (providerFormIsSpanish ? "Para sus servicios seleccionados" : "For your selected services")
+                      : `${providerFormIsSpanish ? "Para " : "For "}${joinServiceNames(
+                        group.serviceCodes.map((code) => providerServicePlainLabel(
+                          code,
+                          SERVICES.find((service) => service.code === code)?.label ?? code,
+                          providerFormIsSpanish,
+                        )),
+                        providerFormIsSpanish,
+                      )}`}
+                  </strong>
                   <ul className="requirement-checklist">
                     {group.documents.map((doc) => {
                       const plain = providerDocumentPlainLabel(doc.code, providerFormIsSpanish);
                       return (
                         <li key={doc.code}>
-                          <span className="requirement-check" aria-hidden="true">✓</span>
+                          <span className="requirement-check" aria-hidden="true">•</span>
                           <span className="requirement-text">
                             <span>
                               {plain ?? doc.label}
@@ -1235,8 +1168,13 @@ export function ProviderSignupForm() {
           {hasVisibleLegalRequirements && (
             <section className="provider-eligibility-guide">
               <div className="eligibility-guide-heading">
-                <span>{providerFormIsSpanish ? "REQUISITOS LEGALES" : "LEGAL REQUIREMENTS"}</span>
+                <span>{providerFormIsSpanish ? "SOBRE SUS SERVICIOS" : "ABOUT YOUR SERVICES"}</span>
               </div>
+              <p className="hint">
+                {providerFormIsSpanish
+                  ? "Si algo todavía no está listo, elija “Todavía no” o “No estoy seguro”. Puede continuar con la solicitud y le ayudaremos a confirmar lo que falta."
+                  : "If something isn't ready, choose “Not yet” or “Not sure.” You can continue your application, and we'll help you confirm what's needed."}
+              </p>
               <div className="eligibility-questions">
                 {providerLegalRequirements.montgomeryRegistration && (
                   <div className="legal-question">
@@ -1273,6 +1211,38 @@ export function ProviderSignupForm() {
                       <option value="yes">{providerFormIsSpanish ? "Sí" : "Yes"}</option>
                       <option value="no">{providerFormIsSpanish ? "Todavía no" : "Not yet"}</option>
                     </select>
+                    <details className="legal-note-details">
+                      <summary>
+                        {providerFormIsSpanish ? "Guía de registro y fuentes" : "Registration guidance and sources"}
+                      </summary>
+                      <small>
+                        <strong>
+                          {providerFormIsSpanish
+                            ? "El Condado de Montgomery no tiene una vía de reparaciones simples sin registro."
+                            : "Montgomery County has no unregistered simple-repair lane."}
+                        </strong>{" "}
+                        {providerFormIsSpanish
+                          ? "Un negocio móvil de reparación o mantenimiento debe contar con el registro OCP del Condado. Un propietario-operador independiente necesita un negocio real, registro OCP vigente y cobertura confirmada por su corredor para cada servicio específico."
+                          : "A mobile repair or maintenance business must hold the County OCP registration. An independent owner-operator needs a real business, current OCP registration, and broker-confirmed coverage for each exact service."}
+                      </small>
+                      <small>
+                        <a
+                          href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {providerFormIsSpanish ? "Guía de registro OCP del Condado de Montgomery" : "Montgomery County OCP registration guidance"}
+                        </a>
+                        {" · "}
+                        <a
+                          href="https://codelibrary.amlegal.com/codes/montgomerycounty/latest/montgomeryco_md/0-0-0-138743"
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {providerFormIsSpanish ? "Capítulo 31A del Código del Condado" : "County Code Chapter 31A"}
+                        </a>
+                      </small>
+                    </details>
                   </div>
                 )}
                 {providerLegalRequirements.marylandCustomerPaperwork && (
@@ -1409,10 +1379,10 @@ export function ProviderSignupForm() {
               </div>
               <p className={`legal-check-status ${providerLegalStatus}`}>
                 {providerLegalStatus === "ready"
-                  ? (providerFormIsSpanish ? "Requisitos legales confirmados." : "Legal requirements confirmed.")
+                  ? (providerFormIsSpanish ? "Gracias. Verificaremos sus respuestas durante la revisión." : "Thanks. We'll verify your answers during review.")
                   : providerLegalStatus === "needs-review"
-                    ? (providerFormIsSpanish ? "Confirme los puntos marcados antes de la aprobación." : "Confirm the marked items before approval.")
-                    : (providerFormIsSpanish ? "Hay un requisito legal que todavía no se ha cumplido." : "A legal requirement is not complete yet.")}
+                    ? (providerFormIsSpanish ? "Puede continuar. Le ayudaremos a confirmar los puntos que faltan." : "You can continue. We'll help you confirm the outstanding items.")
+                    : (providerFormIsSpanish ? "Puede solicitar ahora. Estos puntos deben completarse antes de aprobar los servicios." : "You can apply now. These items need to be completed before services are approved.")}
               </p>
               <label className="legal-confirmation">
                 <input
@@ -1438,7 +1408,7 @@ export function ProviderSignupForm() {
       )}
 
       {step === 3 && (
-        <div data-signup-step="3">
+        <div data-signup-step="3" ref={stepContentRef} tabIndex={-1}>
           <h3>
             {providerFormIsSpanish ? "Usted y su negocio" : "You and your business"}
           </h3>
@@ -1838,8 +1808,8 @@ export function ProviderSignupForm() {
           <fieldset className="area-fieldset">
             <legend>
               {providerFormIsSpanish
-                ? "Firma y confirmaciones"
-                : "Signature and acknowledgments"}
+                ? "Revise y confirme"
+                : "Review and confirm"}
             </legend>
             <label className="policy-consent">
               <input
@@ -1955,8 +1925,8 @@ export function ProviderSignupForm() {
               </strong>
               <small>
                 {providerFormIsSpanish
-                  ? "Escriba el código de 6 dígitos enviado al correo anterior. El código vence en 10 minutos. Solo confirma el control del correo; no verifica identidad, edad, autoridad, registro del negocio, licencias, seguros, calificaciones ni elegibilidad para trabajos."
-                  : "Enter the 6-digit code sent to the email above. The code expires in 10 minutes. This proves email control only; it does not verify identity, age, authority, business registration, licensing, insurance, qualifications, or job eligibility."}
+                  ? "Escriba el código de 6 dígitos enviado al correo anterior. Vence en 10 minutos y solo confirma su correo. Sus servicios todavía necesitan revisión antes de aprobarse."
+                  : "Enter the 6-digit code sent to the email above. It expires in 10 minutes and confirms your email only. Your services still need review before approval."}
               </small>
               <small className="hint">
                 {providerFormIsSpanish

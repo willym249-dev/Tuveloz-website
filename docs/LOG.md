@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-05 - Provider signup clarity and mobile step navigation
+
+Provider signup now starts with everyday service choices, followed by the
+checklist for those choices and the applicant's details. Removed internal tier
+badges, shortened the surrounding copy in English and Spanish, and moved county
+registration guidance into an expandable detail beside the applicable question.
+The reviewed acceptance text, required identity/consent fields, tax information,
+policy matrix, approval engine, and launch/payment/SMS controls are unchanged.
+
+The checklist now groups each document by the exact services requiring it.
+The actual policy resolver and original grouping function reproduced six rows
+for battery plus A/C work; the revised helper produces four unique rows without
+losing county registration, the owner-operator attestation, battery handling,
+or the Section 609 certificate. Tests execute the real policy and service-tier
+modules, including relationship requirements above the raw matrix arrays.
+Neutral bullets replace checkmarks on documents that have not been verified.
+
+Manual phone checks found two additional problems: photo-only work could show
+an empty legal-question section because background review flags were counted as
+visible questions, and moving to a shorter step could leave the viewport below
+the form. The section now appears only for the six questions actually rendered;
+each step change moves keyboard focus and scrolls below the fixed navigation.
+An incomplete application still fails required-field validation, and applicants
+with paperwork marked "Not yet" can continue while approval remains pending.
+
+Local validation passed: 581 tests with zero skips, lint, typecheck, and the
+production build. Browser checks covered English and Spanish, 390px phone and
+929px tablet widths, mixed and photo-only selections, saved progress, back/next
+navigation, and required-field validation. A fresh load had no browser errors.
+The existing isolated browser CI now checks focused step navigation and both
+checklists as well. No real application, identity check, or payment was created.
+The product note records current Taskrabbit and Wrench reference points without
+claiming measured conversion gains or competitor superiority.
+
 ## 2026-09-05 - Remote setup progress and current launch evidence
 
 The owner is away from the home computer; continue available work without

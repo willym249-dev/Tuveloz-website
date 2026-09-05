@@ -105,8 +105,14 @@ export async function assertSpanishRendering(browser, origin, log) {
     assert.equal(await page.locator('input[name="provider-email"]').inputValue(), "e2e-language@tuveloz.invalid");
     await page.getByRole("button", { name: "Continuar →", exact: true }).click();
     await page.locator('[data-signup-step="2"]').waitFor();
+    await page.waitForFunction(() => document.activeElement?.matches('[data-signup-step="2"]'));
+    await page.waitForFunction(() => {
+      const top = document.querySelector('[data-signup-step="2"]')?.getBoundingClientRect().top;
+      return top >= 65 && top <= 160;
+    });
     await page.getByRole("button", { name: "← Regresar", exact: true }).click();
     await page.locator('[data-signup-step="1"]').waitFor();
+    await page.waitForFunction(() => document.activeElement?.matches('[data-signup-step="1"]'));
     assert.equal(await service.isChecked(), true);
     assert.equal(await page.locator('input[name="provider-email"]').inputValue(), "e2e-language@tuveloz.invalid");
     await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
@@ -124,6 +130,52 @@ export async function assertSpanishRendering(browser, origin, log) {
     assert.equal(await service.isChecked(), true);
     assert.deepEqual(errors, [], "Spanish and English navigation must not produce browser errors");
     log("PASS — language navigation, English legal layout, form forward/back steps and saved draft survive switching");
+
+    // Changing to photo-only work removes unrelated questions and paperwork.
+    // Keep all writes inside the account fixture; this form is never submitted.
+    await service.uncheck();
+    await page.locator('.provider-service-groups .service-group > summary')
+      .filter({ hasText: "Check & clean" }).click();
+    const photo = page.locator('input[name="provider-service"][value="photo_documentation_only"]');
+    await photo.check();
+    await page.getByRole("button", { name: "Continue →", exact: true }).click();
+    await page.locator('[data-signup-step="2"]').waitFor();
+    assert.equal(await page.locator('.requirement-checklist li').count(), 2);
+    assert.equal(await page.locator('.provider-eligibility-guide').count(), 0,
+      "do not ask an applicant to acknowledge an empty list of legal questions");
+    await page.getByRole("button", { name: "Continue →", exact: true }).click();
+    await page.locator('[data-signup-step="3"]').waitFor();
+    assert.equal(await page.locator('.provider-email-readback strong').textContent(), "e2e-language@tuveloz.invalid");
+    await page.getByRole("button", { name: "Send my application →", exact: true }).click();
+    assert.equal(await page.locator('[data-signup-step="3"]').count(), 1);
+    assert.equal(await page.locator('input[name="performing-person-first-name"]')
+      .evaluate((input) => input.validity.valueMissing), true);
+    await page.getByRole("button", { name: "← Back", exact: true }).click();
+    await page.locator('[data-signup-step="2"]').waitFor();
+    await page.getByRole("button", { name: "← Back", exact: true }).click();
+    await page.locator('[data-signup-step="1"]').waitFor();
+    await photo.uncheck();
+    await page.locator('.provider-service-groups .service-group > summary')
+      .filter({ hasText: "Everyday repair jobs" }).click();
+    await page.locator('input[name="provider-service"][value="battery_replacement"]').check();
+    await page.locator('.provider-service-groups .service-group > summary')
+      .filter({ hasText: "Special jobs" }).click();
+    await page.locator('input[name="provider-service"][value="motor_vehicle_ac_service"]').check();
+    await page.getByRole("button", { name: "Continue →", exact: true }).click();
+    await page.locator('[data-signup-step="2"]').waitFor();
+    const checklist = page.locator('.requirement-checklist li');
+    assert.equal(await checklist.count(), 4);
+    assert.equal(await checklist.filter({ hasText: "Montgomery County" }).count(), 1);
+    assert.equal(await checklist.filter({ hasText: "No-Employee Attestation" }).count(), 1);
+    assert.equal(await checklist.filter({ hasText: "Spent-Battery" }).count(), 1);
+    assert.equal(await checklist.filter({ hasText: "Section 609" }).count(), 1);
+    assert.equal(await page.locator('.legal-note-details').evaluate((detail) => detail.open), false);
+    await page.getByLabel("Do you have the required Montgomery County repair registration?", { exact: true }).selectOption("no");
+    await page.getByRole("checkbox", { name: "I understand the legal requirements shown for my selections.", exact: true }).check();
+    await page.getByRole("button", { name: "Continue →", exact: true }).click();
+    await page.locator('[data-signup-step="3"]').waitFor();
+    assert.deepEqual(errors, [], "service changes and checklist navigation must not cause browser errors");
+    log("PASS — photo-only checklist, shared battery/A/C documents, unfinished paperwork and required fields");
   } finally {
     await page.close();
   }

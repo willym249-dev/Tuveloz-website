@@ -300,7 +300,8 @@ test("provider UI freezes the reviewed payload and preserves the challenge while
   assert.match(page, /\.\.\.pendingApplicationPayload,[\s\S]*challengeId: applicationChallengeId,[\s\S]*verificationCode: applicationVerificationCode/);
   assert.match(page, /onChange=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.match(page, /Last step: enter the code we emailed you/);
-  assert.match(page, /This proves email control only/);
+  assert.match(page, /confirms your email only/);
+  assert.match(page, /Your services still need review before approval/);
   assert.match(page, /Verify email and continue/);
   assert.match(page, /If an application already existed for this email, that one was kept/);
   assert.doesNotMatch(page, /Verify email and submit application|Application saved\./);

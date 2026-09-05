@@ -156,9 +156,9 @@ test("signup no longer locks services from other tiers", async () => {
   assert.doesNotMatch(signupForm, /one application covers one service tier/);
   assert.doesNotMatch(signupForm, /disabled=\{isLocked\}/);
 
-  // Applicants are told specialty work unlocks per credential.
+  // Applicants are told every specialty service has its own review.
   assert.match(signupForm, /Pick every job you actually do/);
-  assert.match(signupForm, /each one turns on separately once that credential is verified/);
+  assert.match(signupForm, /We'll review each service separately/);
   assert.match(signupForm, /providerLevelsForServices/);
 });
 

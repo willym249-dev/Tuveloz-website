@@ -4953,8 +4953,12 @@ label > small {
   gap: 10px;
 }
 
+.provider-form [data-signup-step] {
+  scroll-margin-top: 100px;
+}
+
 .requirement-check {
-  color: #9af2ba;
+  color: #b9c8d4;
   flex: 0 0 auto;
   font-weight: 800;
   line-height: 1.5;
