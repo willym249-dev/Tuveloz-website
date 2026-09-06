@@ -26,6 +26,7 @@
     "test:e2e:provider-form": "node tests/e2e/provider-form.e2e.mjs",
     "test:e2e:public-guidance": "node tests/e2e/public-guidance.e2e.mjs",
     "test:e2e:public-forms": "node tests/e2e/public-forms.e2e.mjs",
+    "test:e2e:help": "node tests/e2e/help-page.e2e.mjs",
     "test:e2e:uploads": "node tests/e2e/provider-upload.e2e.mjs",
     "test:e2e:incident": "node tests/e2e/incident-payment-hold.e2e.mjs"
   },

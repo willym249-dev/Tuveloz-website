@@ -12,7 +12,7 @@ test("Tuveloz AI is served in-app at /ai instead of an external subdomain", asyn
   ]);
 
   assert.match(page, /TuvelozAiAssistant/);
-  assert.match(page, /title:\s*"Tuveloz AI"/);
+  assert.match(page, /title:\s*"Tuveloz Help"/);
 
   // Every "Tuveloz AI" call-to-action points at the in-app route, not the
   // old external host.

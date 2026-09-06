@@ -6,24 +6,25 @@ import { SiteLink as Link } from "./site-link";
 import { useSiteLanguage } from "./site-language";
 import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
 import { starterQuestions, type PolicyAudience } from "../../lib/ai/policy-knowledge";
+import { assistantProblem, assistantProblemMessage, readAssistantReply, type AssistantProblem, type AssistantSource } from "../../lib/ai/assistant-response";
+import { translateInterfaceValue } from "../../lib/spanish-react";
 
 import { OwnerSupportForm } from "./owner-support-form";
 
-type PolicySource = { label: string; href: string };
-type ChatTurn = { role: "user" | "assistant"; content: string; sources?: PolicySource[]; mode?: string };
+type ChatTurn = { role: "user" | "assistant"; content: string; sources?: AssistantSource[]; mode?: string };
 
 // Two things people arrive wanting: help putting words to a car problem, and
 // a straight answer about how Tuveloz works. The starters offer both, split by
 // who is asking.
 const VEHICLE_STARTERS = [
-  "My car won't start and I hear a clicking sound.",
-  "There's a new noise when I brake.",
-  "A warning light came on this morning.",
+  { en: "My car won't start and I hear a clicking sound.", es: "Mi carro no arranca y escucho un chasquido." },
+  { en: "There's a new noise when I brake.", es: "Hay un ruido nuevo cuando freno." },
+  { en: "A warning light came on this morning.", es: "Se encendió una luz de advertencia esta mañana." },
 ];
 
 const AUDIENCES: ReadonlyArray<{ id: PolicyAudience; label: string; hint: string }> = [
-  { id: "customer", label: "I need work done on my car", hint: "Ask how Tuveloz works or describe a car problem." },
-  { id: "provider", label: "I do car work", hint: "Ask about applying, quotes, documents, and payments." },
+  { id: "customer", label: "I need work done on my car", hint: "Ask about fees, parts, or choosing a provider." },
+  { id: "provider", label: "I do car work", hint: "Ask about applying, required documents, or getting paid." },
 ];
 
 export function TuvelozAiAssistant() {
@@ -32,15 +33,23 @@ export function TuvelozAiAssistant() {
   const [audience, setAudience] = useState<PolicyAudience>("customer");
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const [unansweredQuestion, setUnansweredQuestion] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<AssistantProblem | null>(null);
   const [mode, setMode] = useState("policy-guide");
   const [supportMessage, setSupportMessage] = useState<string | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const inputRevision = useRef(0);
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: "smooth" });
-  }, [turns, pending]);
+  }, [turns, pending, unansweredQuestion]);
+
+  useEffect(() => () => {
+    requestRef.current?.abort();
+    requestRef.current = null;
+  }, []);
 
   useEffect(() => {
     // A mechanic arriving from the provider pages shouldn't have to say so.
@@ -62,39 +71,51 @@ export function TuvelozAiAssistant() {
 
   async function send(message: string) {
     const trimmed = message.trim();
-    if (!trimmed || pending) return;
-    setError("");
-    const history = turns.slice(-8);
-    const nextTurns: ChatTurn[] = [...turns, { role: "user", content: trimmed }];
-    setTurns(nextTurns);
+    if (!trimmed || requestRef.current) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    const submittedRevision = inputRevision.current;
+    const timeout = window.setTimeout(() => controller.abort(), 45000);
+    const restoreDraft = () => setInput(current => inputRevision.current === submittedRevision ? trimmed : current);
+    setError(null);
+    // Only completed exchanges belong in the next question's history.
+    const history = turns.slice(-8).map(({ role, content }) => ({ role, content }));
+    setUnansweredQuestion(trimmed);
     setInput("");
     setPending(true);
     try {
       const response = await fetch("/api/ai", {
         method: "POST",
+        signal: controller.signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ message: trimmed, language, history, audience }),
       });
-      const data = (await response.json()) as {
-        reply?: string;
-        error?: string;
-        sources?: PolicySource[];
-        mode?: string;
-      };
-      if (!response.ok || !data.reply) {
-        setError(data.error || t("We couldn't answer that just now. Please try again.", "No pudimos responder en este momento. Inténtelo de nuevo."));
-        setInput(trimmed);
+      const data: unknown = await response.json().catch(() => null);
+      if (requestRef.current !== controller) return;
+      const answer = response.ok ? readAssistantReply(data) : null;
+      if (!answer) {
+        const problem = assistantProblem(response.status, data);
+        setError(problem);
+        if (problem === "unavailable") setMode("policy-guide");
+        restoreDraft();
         return;
       }
       setTurns((current) => [
         ...current,
-        { role: "assistant", content: data.reply as string, sources: data.sources ?? [], mode: data.mode },
+        { role: "user", content: trimmed },
+        { role: "assistant", content: answer.reply, sources: answer.sources, mode: answer.mode },
       ]);
+      setUnansweredQuestion(null);
     } catch {
-      setInput(trimmed);
-      setError(t("We couldn't connect. Check your connection and try again.", "No pudimos conectarnos. Revise su conexión e inténtelo de nuevo."));
+      if (requestRef.current !== controller) return;
+      restoreDraft();
+      setError("unconfirmed");
     } finally {
-      setPending(false);
+      window.clearTimeout(timeout);
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setPending(false);
+      }
     }
   }
 
@@ -119,6 +140,7 @@ export function TuvelozAiAssistant() {
           {AUDIENCES.map((option) => (
             <button
               aria-pressed={audience === option.id}
+              disabled={pending}
               className={audience === option.id ? "ai-audience-option is-active" : "ai-audience-option"}
               key={option.id}
               onClick={() => setAudience(option.id)}
@@ -144,20 +166,23 @@ export function TuvelozAiAssistant() {
         </div>
 
         <div className="ai-thread" ref={threadRef} aria-live="polite">
-          {turns.length === 0 && !pending && (
+          {turns.length === 0 && !unansweredQuestion && !pending && (
             <div className="ai-empty">
               <p>Not sure how to start? Try one of these:</p>
               <div className="ai-starters">
-                {(mode === "ai" && audience === "customer" ? VEHICLE_STARTERS : []).map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    className="ai-starter"
-                    onClick={() => void send(prompt)}
-                  >
-                    {prompt}
-                  </button>
-                ))}
+                {(mode === "ai" && audience === "customer" ? VEHICLE_STARTERS : []).map((question) => {
+                  const prompt = t(question.en, question.es);
+                  return (
+                    <button
+                      key={prompt}
+                      type="button"
+                      className="ai-starter"
+                      onClick={() => void send(prompt)}
+                    >
+                      {prompt}
+                    </button>
+                  );
+                })}
                 {starterQuestions(audience, 4, language).map((prompt) => (
                   <button
                     key={prompt}
@@ -182,24 +207,31 @@ export function TuvelozAiAssistant() {
                 <div className="ai-sources">
                   <span>{t("More details:", "Más detalles:")}</span>
                   {turn.sources.map((source) => (
-                    <Link href={source.href} key={source.href}>{source.label}</Link>
+                    <Link href={source.href} key={source.href}>{language === "es" ? translateInterfaceValue(source.label) : source.label}</Link>
                   ))}
                 </div>
               )}
             </div>
           ))}
 
+          {unansweredQuestion && (
+            <div className="ai-message ai-message-user" data-manual-language>
+              <span className="ai-message-author">{t("You", "Usted")}</span>
+              <p>{unansweredQuestion}</p>
+            </div>
+          )}
+
           {pending && (
             <div className="ai-message ai-message-assistant ai-message-pending">
-              <span className="ai-message-author">Tuveloz AI</span>
-              <p>Thinking…</p>
+              <span className="ai-message-author">Tuveloz guide</span>
+              <p>Finding an answer…</p>
             </div>
           )}
         </div>
 
-        {error && <p className="ai-error" data-manual-language role="alert">{error}</p>}
+        {error && <p className="ai-error" data-manual-language role="alert">{assistantProblemMessage(error, language)}</p>}
 
-        <form className="ai-composer" onSubmit={onSubmit}>
+        <form className="ai-composer" onSubmit={onSubmit} aria-busy={pending}>
           <label className="sr-only" htmlFor="ai-input">
             Ask a question about Tuveloz
           </label>
@@ -212,22 +244,25 @@ export function TuvelozAiAssistant() {
               ? "Ask how quoting, paperwork, or getting paid works…"
               : "Ask about Tuveloz, fees, or parts."}
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              inputRevision.current += 1;
+              setInput(event.target.value);
+            }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
+              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
                 void send(input);
               }
             }}
           />
           <button className="button ai" type="submit" disabled={pending || !input.trim()}>
-            {pending ? "Sending…" : "Ask Tuveloz AI"} <span aria-hidden="true">→</span>
+            {pending ? "Sending…" : "Ask a question"} <span aria-hidden="true">→</span>
           </button>
         </form>
         <div data-manual-language>
           <button type="button" className="button outline" aria-expanded={supportMessage !== null}
             onClick={() => setSupportMessage(current => current === null
-              ? input.trim() || [...turns].reverse().find(turn => turn.role === "user")?.content || ""
+              ? input.trim() || unansweredQuestion || [...turns].reverse().find(turn => turn.role === "user")?.content || ""
               : null)}>
             {t("Contact the owner", "Contactar al dueño")}
           </button>

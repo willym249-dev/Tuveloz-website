@@ -1,6 +1,9 @@
 import type { TuvelozIconName } from "../app/components/tuveloz-icons";
 import { SERVICE_CODES } from "./provider-policy";
 
+/** One introduction for both customer entry pages; name the provider explicitly. */
+export const CUSTOMER_INTRO = "We're building Tuveloz to help neighbors in Montgomery County find local vehicle services, compare quotes, and ask questions before choosing an independent service provider. You can create a free account today. Customer bookings are not open yet.";
+
 /**
  * Marketing copy shared by the homepage and the customer lander so the two
  * never drift apart. Each entry's serviceCodes must be real entries from
@@ -81,7 +84,7 @@ export const CUSTOMER_STEPS: ReadonlyArray<{
   },
   {
     number: "03",
-    title: "Pick who you like",
+    title: "Choose your provider",
     text: "Compare the quotes you receive and ask questions. You can decline them all at no cost. If you book a service, review the work, fees, and total before accepting.",
   },
 ];

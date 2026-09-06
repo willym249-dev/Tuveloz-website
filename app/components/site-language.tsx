@@ -226,10 +226,10 @@ export function SiteLanguageButton() {
       aria-label={language === "en" ? "Cambiar toda la página a español" : "Change the whole page to English"}
       className="site-language-button"
       data-language-control
+      lang={nextLanguage}
       onClick={() => setLanguage(nextLanguage)}
       type="button"
     >
-      <span aria-hidden="true">🌐</span>
       <strong>{language === "en" ? "Español" : "English"}</strong>
     </button>
   );

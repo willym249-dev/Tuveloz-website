@@ -17,7 +17,7 @@ import {
   PARTS_SOURCE_OPTIONS,
 } from "../lib/service-matching";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../lib/launch-status";
-import { CUSTOMER_STEPS, PROVIDER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
+import { CUSTOMER_INTRO, CUSTOMER_STEPS, PROVIDER_STEPS, LAUNCH_SERVICES } from "../lib/marketing-content";
 import { campaignAttribution, track } from "../lib/analytics";
 import { activeVariants } from "../lib/experiments";
 import { useAccountHeaderState } from "./components/account-header-state";
@@ -251,7 +251,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   // entered means there is nothing to consent about.
   const [contactPhoneEntered, setContactPhoneEntered] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const { accountHref, accountLabel } = useAccountHeaderState();
+  const { accountHref, accountLabel, signedIn } = useAccountHeaderState();
   // Control ("A") on first render so server and client match; the real assigned
   // A/B variants are set after mount in the experiment effect below.
   const [heroVariant, setHeroVariant] = useState("A");
@@ -640,7 +640,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             href={accountHref}
             onClick={() => setMenuOpen(false)}
           >
-            {accountLabel}
+            {signedIn ? accountLabel : "Sign in"}
           </Link>
           {view === "provider" ? (
             <a className="header-cta" href="#provider-apply">
@@ -652,6 +652,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </header>
 
+      {view !== "about" && (
       <section className="hero" id="top">
         <div className="hero-glow" />
         <div className="hero-copy">
@@ -694,12 +695,12 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </span>
               </h1>
               <p>
-                We&apos;re building Tuveloz to help neighbors in Montgomery County find local vehicle services, compare quotes, and ask questions before choosing someone. You can create a free account today. Customer bookings are not open yet.
+                {CUSTOMER_INTRO}
               </p>
               <ul className="hero-highlights">
                 <li><span aria-hidden="true">✓</span> Free to create your account</li>
                 <li><span aria-hidden="true">✓</span> Independent local businesses, no call center</li>
-                <li><span aria-hidden="true">✓</span> When we open, you decide who to hire — or no one</li>
+                <li><span aria-hidden="true">✓</span> When we open, you can choose a provider or decline every quote</li>
               </ul>
             </>
           ) : (
@@ -787,6 +788,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </div>
       </section>
 
+      )}
+
       <section className="proof-strip" aria-label="What Tuveloz promises today">
         {view === "provider" ? (
           <>
@@ -813,7 +816,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <p className="trust-intro-text">
             {view === "provider"
               ? "Choose the work you offer, see what's needed, and finish when you're ready. You don't need your documents in hand to get started."
-              : "Choosing someone to work on your car is a big decision. You deserve to understand the work, the price, and who will be doing it."}
+              : "Choosing a service provider for your car is a big decision. You deserve to understand the work, the price, and the business you'll be hiring."}
           </p>
           {view === "home" && (
             <p className="trust-origin">
@@ -902,7 +905,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
           <p>
             {view === "about"
-              ? "We're building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose who to work with, and providers set their own prices and hours."
+              ? "We're building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose their provider, and providers set their own prices and hours."
               : "Tuveloz keeps customers in control of their vehicle-service decisions and independent providers in control of their business."}
           </p>
         </div>
@@ -916,7 +919,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
             <ul>
               <li><span aria-hidden="true">✓</span> Compare the quotes you receive</li>
-              <li><span aria-hidden="true">✓</span> See who you&apos;re hiring before they touch your car</li>
+              <li><span aria-hidden="true">✓</span> Review each provider&apos;s details before booking</li>
               <li><span aria-hidden="true">✓</span> The last word is always yours</li>
             </ul>
             <SaveMySpotButton />
@@ -1981,7 +1984,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <p>An online marketplace for local vehicle services.</p>
         <div className="footer-links">
           <Link href="/about">About Tuveloz</Link>
-          <Link href="/ai">Tuveloz AI</Link>
+          <Link href={view === "provider" ? "/ai?for=provider" : "/ai"}>Get answers</Link>
           <Link href="/post-job">For customers</Link>
           <Link href="/join">For providers</Link>
           <Link href="/how-it-works">How it works</Link>
