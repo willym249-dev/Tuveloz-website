@@ -83,7 +83,7 @@ export function PublicSiteFooter() {
       <Link className="brand footer-brand" href="/">
         <BrandMark /><span>Tuveloz</span>
       </Link>
-      <p>Vehicle services built around customer choice and provider freedom.</p>
+      <p>An online marketplace for local vehicle services.</p>
       <div className="footer-links">
         <Link href="/about">About Tuveloz</Link>
         <Link href="/post-job">For customers</Link>

@@ -71,8 +71,8 @@ export default function ProvidersDirectoryPage() {
           ],
         },
         {
-          title: "What it does not mean",
-          text: "Do not read listing order as quality. Providers are listed alphabetically by business name, founding providers get no placement advantage, and nobody pays to appear higher. Choosing between them is the customer's job, which is the point.",
+          title: "How the directory is ordered",
+          text: "Businesses appear alphabetically by name. Founding providers get no placement advantage, and providers cannot pay to appear higher. The order is not a quality rating. You choose the provider that fits your needs.",
         },
       ]}
     >
@@ -84,11 +84,9 @@ export default function ProvidersDirectoryPage() {
 
         {closed && (
           <p className="local-link-note">
-            Provider profiles are not public yet. Tuveloz is in provider-onboarding
-            mode: businesses are applying and completing review now, and their
-            profiles open together with customer requests so the directory is
-            worth reading on the day it appears. Nothing here is hidden — there is
-            simply nothing to show a customer yet.
+            Provider profiles are not public yet. Local businesses are applying
+            and completing their checks. Approved profiles will become visible
+            when customer requests open.
           </p>
         )}
 

@@ -5,7 +5,7 @@ import { PublicInfoPage } from "../components/public-info-page";
 const englishMetadata: Metadata = {
   title: "How It Works",
   description:
-    "How Tuveloz works: tell us what your car needs once, compare real prices from local pros, and pick the one you like.",
+    "See how Tuveloz will connect you with local providers, help you compare quotes and let you choose. Customer bookings are not open yet.",
   alternates: {
     canonical: "/how-it-works",
   },
@@ -19,29 +19,29 @@ export default function HowItWorksPage() {
   return (
     <PublicInfoPage
       kicker="How it works"
-      title="Ask once. Compare real prices. Pick who you like."
-      intro="Local pros across Montgomery County are signing up now, and you'll be able to post a job the day we open. Here's how the whole thing goes, from your first message to the last."
+      title="Find help for your car, one step at a time."
+      intro="Provider applications are open in Montgomery County. Customer requests, quotes and payments are not open yet. Here's how booking will work when we launch."
       sections={[
         {
-          title: "1. Tell us what your car needs",
-          text: "Pick the job, tell us about your car, when you'd like it done, and how you want to handle the part. A sentence or two is plenty — you don't need to know what's wrong. This step opens to customers at launch.",
+          title: "1. Tell us what you need",
+          text: "Describe your vehicle, what you've noticed and when you'd like help. Choose where the work could happen and how you'll get any needed parts. You don't need to diagnose the problem yourself."
         },
         {
-          title: "2. We only show it to the right pros",
-          text: "Not everyone sees your job. We pass it only to pros who work in your area, are cleared for that exact work, and have already handed us whatever the law asks for. That means fewer, better replies instead of a pile of phone calls. It does not mean we can promise safety, quality, or results — nobody honestly can.",
+          title: "2. Hear from local providers",
+          text: "Your request goes to providers who cover your area and are approved for that service. Each business decides whether to send a quote and sets its own price. Your private contact details stay with the provider you select."
         },
         {
-          title: "3. Everyone here works for themselves, not for us",
-          text: "Everyone on Tuveloz runs their own business. TUVELOZ does not employ, train, sponsor, assign, or supervise providers or provider personnel. If a pro brings a helper, that person works for the pro's business, which handles their hiring, payroll, training, and supervision.",
+          title: "3. Compare and choose",
+          text: "Review the work, price and timing in each quote. Ask questions before deciding. You can turn down every quote at no cost. Checks and documents help you make a choice; they do not guarantee safety, quality or results."
         },
         {
-          title: "4. Their prices come back to you",
-          text: "Each pro decides whether to answer and sets their own price — we never set it for them. You read the prices next to each other, and see who's behind each one, before anybody touches your car. This step opens to customers at launch.",
+          title: "4. Agree on the work and appointment",
+          text: "Before accepting, you'll see the business and person doing the work, all charges and the refund terms. Confirm the appointment with your provider. Any extra work needs your approval, and the provider must remain cleared through payment."
         },
         {
-          title: "5. You pick — and picking nobody is fine",
-          text: "Say yes to the one you like and you'll see exactly which business and which person is coming. Or say no to all of them; that costs you nothing. We re-check that a pro is still cleared at every step after that, right through payment. This step opens to customers at launch.",
-        },
+          title: "Who does the work?",
+          text: "Your selected provider business performs the service. Tuveloz connects you online; it does not meet customers or work on vehicles. Tuveloz does not employ, train, sponsor, assign or supervise providers or their staff. Each provider business handles its own hiring, payroll, training and supervision."
+        }
       ]}
     />
   );

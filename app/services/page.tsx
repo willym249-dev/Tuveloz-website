@@ -38,25 +38,25 @@ export default function ServicesHubPage() {
           { label: "Services" },
         ]}
         kicker="Services at launch"
-        title="A short list, opened properly."
-        intro={`Tuveloz opens with ${LOCAL_SERVICES.length} services rather than a catalogue it cannot stand behind. Each one has to clear launch review before it opens to customers, and each provider is approved for specific services rather than waved through.`}
+        title="Services we're preparing to offer."
+        intro={`We're preparing ${LOCAL_SERVICES.length} service categories for Montgomery County. Providers apply for the work they offer, and each service opens after the required reviews are complete. Customer requests are not open yet.`}
         sections={[
           {
-            title: "Why the list is short",
-            text: "These are the services that can be done well on-site without specialised licensing, so providers can be onboarded honestly and customers are not sold work nobody has been checked for. Specialised services — tyres, air conditioning, towing — are added as separate categories once the evidence and insurance requirements for each are documented and met.",
+            title: "Starting with everyday vehicle needs",
+            text: "We're starting with a few common services. More work, such as tire repair, air conditioning and towing, can be added once the required documents, insurance and providers are in place.",
             points: [
               "A service opens only after it passes launch review.",
-              "Approval is per service, per provider — never a blanket sign-off.",
-              "Do not assume an umbrella licence. Tuveloz shows the exact evidence checked.",
+              "Providers are approved for the specific services they offer.",
+              "Each listing will explain which documents were checked.",
             ],
           },
           {
-            title: "How a quote is meant to work",
-            text: "You describe the vehicle and the problem once. Providers who are approved for that exact service and cover your area decide whether to quote. You compare what comes back and accept one, or none — accepting is what creates a written authorisation, and added work needs your approval as a change order.",
+            title: "How quotes will work",
+            text: "Describe your vehicle and what you need. Providers approved for that service in your area decide whether to send a quote. Compare the work and prices before choosing. Accepting a quote creates a written authorization for that work; any extra work needs your approval before it starts.",
             points: [
               "Providers set their own prices and receive them in full.",
-              "Nothing is charged for asking, and no quote obliges you to anything.",
-              "Parts are bought separately by the customer; provider amounts are labour only.",
+              "You can decline every quote at no cost.",
+              "Customers buy parts separately. Provider quotes cover labor only.",
             ],
           },
         ]}

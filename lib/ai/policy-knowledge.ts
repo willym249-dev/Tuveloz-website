@@ -170,7 +170,7 @@ export const POLICY_ENTRIES: readonly PolicyEntry[] = [
     answer:
       "Not for real jobs yet. Local pros are signing up across Montgomery County right now, and accounts are open for customers and pros both — but posting a job, quoting, booking, and paying stay switched off until each service clears its legal and operational checks. Making an account today books nothing and costs nothing.",
     source: { label: "How it works", href: "/how-it-works" },
-    anchor: "opens to customers at launch",
+    anchor: "Customer requests, quotes and payments are not open yet",
   },
   {
     id: "both-safety",

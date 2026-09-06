@@ -88,9 +88,11 @@ test("account and private-request surfaces describe launch mode without active-j
   assert.doesNotMatch(account, /href="\/#providers"/);
   assert.match(providerProfile, /className="button primary" href="\/post-job"/);
   assert.doesNotMatch(providerProfile, /href="\/#request"/);
-  // Every customer-facing step keeps its own "opens at launch" disclosure, so
-  // the friendlier headings can never read as a live service.
-  assert.equal((howItWorks.match(/opens to customers at launch/g) ?? []).length, 3);
+  // State availability before the steps so the whole flow is clearly future.
+  const launchNotice = "Customer requests, quotes and payments are not open yet";
+  assert.match(howItWorks, /how booking will work when we launch/);
+  assert.ok(howItWorks.indexOf(launchNotice) >= 0);
+  assert.ok(howItWorks.indexOf(launchNotice) < howItWorks.indexOf("sections="));
 });
 
 test("public discovery and bilingual launch copy stay aligned with onboarding-only mode", async () => {
