@@ -82,20 +82,20 @@ export default async function AreaServicePage({ params }: AreaServiceParams) {
         ]}
         kicker={`${service.name} · ${label}`}
         title={`${service.searchName} in ${area.name}.`}
-        intro={`${service.summary} Tuveloz is being built so you can describe the problem once and compare real quotes from independent providers near ${area.name} — but customer requests are not open yet.`}
+        intro={`${service.summary} We're preparing to connect customers in ${area.name} with independent providers reviewed for this work. Customer bookings are not open yet.`}
         sections={[
           {
             title: "What this covers",
-            text: `What is and is not included at launch. Anything outside this list is a different job and should be quoted as one.`,
+            text: "Check what is included and excluded, then confirm the details in your provider's quote before agreeing to any work.",
             points: [...service.covered],
           },
           {
             title: "What to have ready",
-            text: "The difference between a quote and a phone call is detail. When requests open, having these ready means a provider can price the job without a back-and-forth first.",
+            text: "When requests open, these details will help a provider understand what you need. It's fine if you don't know the technical terms.",
             points: [...service.describeForQuote],
           },
           {
-            title: `Getting to a vehicle in ${area.name}`,
+            title: "Help your provider find the vehicle",
             text: area.localCopy ?? "",
           },
         ]}

@@ -85,7 +85,7 @@ const AREAS: readonly ServiceAreaDefinition[] = [
     name: "Bethesda",
     zipCodes: ["20814", "20816", "20817"],
     localCopy:
-      "Bethesda is dense and close-in, and the parking reflects it: condominium and apartment garages, permit blocks, and a good deal of underground parking with height limits that a service van cannot always clear. When customer requests open, the detail worth putting in a request is not just the address but where the vehicle actually sits — a level and space number, a visitor bay, or a surface lot — because on this side of the county that is usually what decides whether a provider can reach the vehicle at all.",
+      "For a vehicle in Bethesda, include the ZIP code and where it is parked: a driveway, street space, lot, or garage. If it is in a garage, share the level, space number, entry instructions, and any vehicle-height limit. These details help a provider decide whether they can reach the vehicle and do the work there.",
   },
   { slug: "boyds", name: "Boyds", zipCodes: ["20841"] },
   { slug: "brookeville", name: "Brookeville", zipCodes: ["20833"] },
@@ -104,7 +104,7 @@ const AREAS: readonly ServiceAreaDefinition[] = [
     name: "Gaithersburg",
     zipCodes: ["20877", "20878", "20879", "20882"],
     localCopy:
-      "Gaithersburg is one of the county's largest incorporated cities and spreads across four ZIP codes, which is the practical thing to know here: two addresses both described as Gaithersburg can sit a long way apart, and a provider covering one end is not automatically covering the other. When customer requests open, the ZIP and cross street matter more here than in the compact areas — they are what tells a provider whether the stop actually fits their day.",
+      "Tuveloz's Gaithersburg launch area includes ZIP codes 20877, 20878, 20879, and 20882. When requests open, include your ZIP code and a nearby cross street so a provider can confirm their travel area. Add any parking or access information that could affect the visit.",
   },
   { slug: "garrett-park", name: "Garrett Park", zipCodes: ["20896"] },
   {
@@ -112,7 +112,7 @@ const AREAS: readonly ServiceAreaDefinition[] = [
     name: "Germantown",
     zipCodes: ["20874", "20876"],
     localCopy:
-      "Germantown is largely planned development, which means a lot of townhouse clusters, shared surface lots, and assigned spaces rather than individual driveways. The useful detail in a request is the cluster or building and the space, since numbered addresses in these developments are often not visible from where a provider parks. Its two ZIP codes also reach well out toward the up-county, so travel distance varies more than the single place name suggests.",
+      "Tuveloz lists 20874 and 20876 for the Germantown launch area. If your vehicle is in a shared parking lot, include the building and space number along with your ZIP code. Let the provider know about entry instructions and available workspace so they can confirm whether the service can be done there.",
   },
   { slug: "glenmont", name: "Glenmont", zipCodes: ["20902", "20906"] },
   { slug: "hillandale", name: "Hillandale", zipCodes: ["20903", "20904"] },
@@ -129,7 +129,7 @@ const AREAS: readonly ServiceAreaDefinition[] = [
     name: "Rockville",
     zipCodes: ["20850", "20851", "20852", "20853"],
     localCopy:
-      "Rockville is the county seat and mixes a dense centre with older residential streets, so the access situation changes considerably across its four ZIP codes: structured garages and permit parking toward the middle, private driveways further out. When customer requests open, saying which of those a vehicle is in saves a round of questions — it is the difference between a provider planning a stop and a provider guessing at one.",
+      "Tuveloz's Rockville launch area includes ZIP codes 20850, 20851, 20852, and 20853. Tell the provider whether your vehicle is in a driveway, street space, or garage, and note any parking restrictions. For garage parking, include the entrance and space number to help them find the vehicle.",
   },
   { slug: "sandy-spring", name: "Sandy Spring", zipCodes: ["20860", "20861", "20862"] },
   {
@@ -137,7 +137,7 @@ const AREAS: readonly ServiceAreaDefinition[] = [
     name: "Silver Spring",
     zipCodes: ["20901", "20902", "20903", "20904", "20905", "20906", "20910"],
     localCopy:
-      "Silver Spring covers seven ZIP codes and is the least uniform area in the county — a dense, built-up centre near the District line, and quieter residential streets further out. A great deal of the parking is apartment and condominium lots, permit blocks, and shared garages. When customer requests open, the space, level, or visitor bay is the detail that matters most, because here it usually decides whether a provider can physically get to the vehicle.",
+      "Tuveloz lists seven ZIP codes for Silver Spring, shown below. Include your ZIP code when requesting work so providers can check whether they serve your location. For apartment, condo, or shared-garage parking, add the building, level, space number, and any access limits that could affect the visit.",
   },
   { slug: "takoma-park", name: "Takoma Park", zipCodes: ["20912"] },
   { slug: "travilah", name: "Travilah", zipCodes: ["20850", "20854"] },
@@ -180,9 +180,9 @@ export type LocalServiceDefinition = {
 };
 
 /**
- * The launch services only — the same easy-entry, no-license set the homepage
- * shows. Specialised work (tyres, A/C, towing) stays off these pages until it
- * clears launch review, for the same reason it stays off the homepage.
+ * These public categories describe the planned launch services. Eligibility
+ * remains specific to each service code, provider, and work location; the
+ * descriptions must not imply that every service has the same requirements.
  */
 const SERVICES: readonly LocalServiceDefinition[] = [
   {
@@ -190,21 +190,21 @@ const SERVICES: readonly LocalServiceDefinition[] = [
     name: "Battery & jump start",
     searchName: "Car battery replacement and jump start",
     summary:
-      "A dead battery is the most common reason a vehicle will not start. This covers a jump start to get moving again, and replacing a 12-volt battery that will no longer hold a charge.",
+      "Help with a discharged 12-volt battery, including an approved jump start or standard battery replacement.",
     covered: [
       "Jump starting a vehicle with a discharged 12-volt battery.",
-      "Testing whether the battery still holds a charge, or whether it is the charging system at fault.",
+      "Confirming the correct battery type and fit before replacement.",
       "Replacing a standard 12-volt battery and cleaning up corroded terminals.",
       "Not covered at launch: hybrid and electric-vehicle traction batteries, which are high-voltage work.",
     ],
     describeForQuote: [
       "Whether the vehicle turns over slowly, clicks, or does nothing at all.",
       "Whether the lights and dashboard come on.",
-      "Whether it has been jump started recently, and how long it ran afterwards.",
+      "Whether it has been jump started recently, and how long it ran afterward.",
       "The year, make, and model — battery size and location vary by vehicle.",
     ],
     providerNote:
-      "Short, self-contained jobs that fit between longer appointments, with a part that is straightforward to source once the vehicle is known.",
+      "Offer jump starts or battery replacements within your approved service scope. Choose the requests that fit your schedule and travel area.",
     serviceCodes: ["provisional_12v_jump_start", "provisional_12v_battery_replacement"],
   },
   {
@@ -212,21 +212,21 @@ const SERVICES: readonly LocalServiceDefinition[] = [
     name: "Wipers & bulbs",
     searchName: "Wiper blade and bulb replacement",
     summary:
-      "Worn wiper blades and burnt-out exterior bulbs are small jobs that fail an inspection and make driving in rain or at night worse than it needs to be.",
+      "Replace worn wiper blades or approved conventional light bulbs. Confirm the part and the work included in your provider's quote.",
     covered: [
       "Replacing front and rear wiper blades.",
-      "Replacing burnt-out headlight, tail light, brake light, turn signal, and marker bulbs.",
-      "Checking that the replacement actually works before the job is finished.",
+      "Replacing approved conventional headlight, tail light, brake light, turn signal, and marker bulbs.",
+      "Checking that the replacement works before the job is finished.",
       "Not covered at launch: sealed LED assemblies and headlight units that require removing body panels.",
     ],
     describeForQuote: [
       "Which bulb or blade is out — front, rear, left, right.",
-      "Whether more than one is out at the same time, which can point at a fuse instead of a bulb.",
+      "Whether more than one light is out at the same time.",
       "The year, make, and model, so the right blade length and bulb type can be lined up.",
-      "Whether you are supplying the part or want the provider to.",
+      "Which replacement part you have, or whether you need help identifying the correct part to buy. Customers buy parts separately; Tuveloz quotes cover labor only.",
     ],
     providerNote:
-      "Quick work that pairs well with another job at the same stop, and an easy first completed job on a new profile.",
+      "Offer wiper or bulb replacements for vehicles within your approved scope. Confirm the customer has the correct parts before the appointment.",
     serviceCodes: [
       "provisional_wiper_blade_replacement",
       "provisional_conventional_bulb_replacement",
@@ -237,12 +237,12 @@ const SERVICES: readonly LocalServiceDefinition[] = [
     name: "Top off fluids",
     searchName: "Vehicle fluid top-off",
     summary:
-      "A limited top-up of the fluids that are safe to add without opening a sealed system — the routine check that keeps a low-fluid warning from turning into a repair.",
+      "Limited fluid top-offs within the provider's approved service scope. Fluid changes and repairs are separate services.",
     covered: [
       "Topping up washer fluid, coolant reservoir, and engine oil to the correct level.",
       "Reporting what was low, and by how much.",
       "Not covered at launch: flushes, drain-and-fill services, brake fluid, and anything requiring a sealed system to be opened.",
-      "A fluid that is repeatedly low is a leak, not a top-up. Providers are expected to say so rather than keep refilling it.",
+      "Tell your provider if fluid levels keep dropping; a top-off does not explain or fix the cause.",
     ],
     describeForQuote: [
       "Which fluid is low, and which warning light came on.",
@@ -251,7 +251,7 @@ const SERVICES: readonly LocalServiceDefinition[] = [
       "The year, make, and model, so the correct specification is used.",
     ],
     providerNote:
-      "Straightforward on-site work, and often the visit where a provider spots the job the customer did not know they needed.",
+      "Offer the approved fluid top-offs you are equipped to perform. Record the work completed and flag any concerns outside the agreed job.",
     serviceCodes: ["provisional_fluid_topoff_limited"],
   },
   {
@@ -259,7 +259,7 @@ const SERVICES: readonly LocalServiceDefinition[] = [
     name: "Car cleaning",
     searchName: "Car cleaning and detailing",
     summary:
-      "An exterior wash, an interior clean, or both — done where the vehicle already is rather than by waiting in line at a bay.",
+      "Interior cleaning and approved exterior washes, with the location and cleaning tasks agreed before work starts.",
     covered: [
       "Exterior hand washing and drying.",
       "Interior vacuuming, wiping down surfaces, and cleaning glass.",
@@ -273,7 +273,7 @@ const SERVICES: readonly LocalServiceDefinition[] = [
       "Whether water and power are available where the vehicle is parked.",
     ],
     providerNote:
-      "Longer bookings with pricing set by scope rather than by parts, and the work most likely to bring the same customer back.",
+      "Set your own price for the vehicle, cleaning tasks, and time involved. Agree on what's included before work starts.",
     serviceCodes: ["provisional_basic_detailing"],
   },
   {
@@ -281,7 +281,7 @@ const SERVICES: readonly LocalServiceDefinition[] = [
     name: "Find out what's wrong",
     searchName: "On-site vehicle diagnostics",
     summary:
-      "A warning light or a new noise, checked on-site so you find out what is actually going on before committing to a repair.",
+      "Get help documenting a warning light, trouble code, or vehicle symptom before deciding on further work.",
     covered: [
       "Reading and reporting stored diagnostic trouble codes.",
       "A visual, on-site check of what the vehicle is doing.",
@@ -295,7 +295,7 @@ const SERVICES: readonly LocalServiceDefinition[] = [
       "The year, make, and model.",
     ],
     providerNote:
-      "The job that most often leads to the next one, and the clearest place for a provider to show judgement rather than just price.",
+      "Describe the checks you offer and what the customer will receive. Separate code reading from any further diagnostic work.",
     serviceCodes: ["provisional_obd_read_only", "basic_vehicle_diagnostics"],
   },
 ] as const;
