@@ -296,7 +296,9 @@ test("provider UI freezes the reviewed payload and preserves the challenge while
   const page = await read("app/components/provider-signup-form.tsx");
 
   assert.match(page, /pendingApplicationPayload/);
-  assert.match(page, /fetch\("\/api\/providers\/challenge"/);
+  assert.match(page, /requestApplication\("challenge", payload\)/);
+  const request = await read("lib/provider-form-response.ts");
+  assert.match(request, /stage === "challenge" \? "\/api\/providers\/challenge" : "\/api\/providers"/);
   assert.match(page, /\.\.\.pendingApplicationPayload,[\s\S]*challengeId: applicationChallengeId,[\s\S]*verificationCode: applicationVerificationCode/);
   assert.match(page, /onChange=\{\(event\) => event\.stopPropagation\(\)\}/);
   assert.match(page, /Last step: enter the code we emailed you/);

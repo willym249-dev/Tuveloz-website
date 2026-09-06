@@ -17,6 +17,9 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "We couldn't confirm that a code was sent. Your details are still here. Please try again.": "No pudimos confirmar el envío del código. Sus datos siguen aquí. Intente de nuevo.",
+  "We couldn't confirm receipt of your application. Your details are still here. Please try again.": "No pudimos confirmar la recepción de su solicitud. Sus datos siguen aquí. Intente de nuevo.",
+  "That code is invalid or expired. Please check it or request a new one.": "El código no es válido o ya venció. Revíselo o solicite uno nuevo.",
   "We're building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose their provider, and providers set their own prices and hours.": "Estamos creando una forma de que los dueños de vehículos del Condado de Montgomery encuentren proveedores independientes. Los clientes eligen a su proveedor y los proveedores fijan sus propios precios y horarios.",
   "Ask how Tuveloz works or describe a car problem.": "Pregunte cómo funciona Tuveloz o describa un problema con su vehículo.",
   "Ask about applying, quotes, documents, and payments.": "Pregunte sobre las solicitudes, cotizaciones, documentos y pagos.",
