@@ -9,8 +9,11 @@
 The owner-approved Cloudmersive account exists. Its API key and random 64-character
 callback secret are stored as encrypted Worker secrets; both names were verified
 in the active deployment on September 5. No secret value was printed or saved
-locally during callback-secret setup. Production processing remains off:
-`EVIDENCE_SCAN_PROVIDER` is `unconfigured`.
+locally during callback-secret setup. The current deployment configuration selects
+the owner-PC ClamAV runner. Its separate `SELF_HOSTED_SCAN_SECRET` is encrypted
+in Cloudflare and protected locally with the owner's Windows account. A selected
+provider and installed task do not prove a successful or continuously available
+connection; verify the task, exact scan receipt and operational check below.
 The last account check showed Free Tier. On September 5 the first recorded
 Basic payment attempt failed; no paid subscription was confirmed. The owner
 has since asked to reduce document uploads to 3.5 MB and add photo resizing.
@@ -24,8 +27,8 @@ Do not purchase a plan, retry payment or send that email as part of scanner work
 A free, owner-PC alternative is implemented in
 [`../../scanner/README.md`](../../scanner/README.md). It combines ClamAV with
 strict PDF/image checks and a signed outbound connection. It has its own
-credential, installation, verification and rollback procedure. Its default is
-disabled; local tests do not establish a live connection or launch readiness.
+credential, installation, verification and rollback procedure. Local tests do
+not establish a live connection or launch readiness.
 The Cloudmersive instructions below remain a reference for a separately chosen
 vendor integration.
 

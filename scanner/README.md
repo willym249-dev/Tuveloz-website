@@ -4,8 +4,8 @@ This is an optional, owner-operated alternative to the Cloudmersive integration.
 It uses ClamAV and local PDF/image checks. There is no scanner subscription or
 per-file API fee. The owner's computer supplies power, memory and uptime.
 
-**Deployment default: disabled.** Adding these files or running their tests does
-not activate production processing. The site continues to quarantine uploads
+**Deployment selection: ClamAV.** Processing also requires the dedicated Worker
+credential and the owner's running background task. The site quarantines uploads
 until an authenticated, complete scan result arrives. Identity, insurance,
 licensing, provider acceptance and launch approval remain separate checks.
 
@@ -71,7 +71,7 @@ Docker. Use an owner-controlled Windows account and a maintained host.
 ## Activation
 
 Apply migration `0066_self_hosted_scan_jobs.sql` through the normal gated release.
-Keep `EVIDENCE_SCAN_PROVIDER=unconfigured` during preparation.
+For a new installation, keep `EVIDENCE_SCAN_PROVIDER=unconfigured` during preparation.
 
 An authorized operator must first install a fresh, dedicated 64-character random
 hex credential as the encrypted Worker secret `SELF_HOSTED_SCAN_SECRET`, and
