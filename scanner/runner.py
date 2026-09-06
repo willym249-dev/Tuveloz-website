@@ -140,7 +140,8 @@ class Client:
         raw = json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
         timestamp = str(int(time.time()))
         request = urllib.request.Request(self.origin + PATH, data=raw, method="POST", headers={
-            "Content-Type": "application/json", "x-tuveloz-scan-timestamp": timestamp,
+            "Content-Type": "application/json", "User-Agent": "TuvelozPrivateDocumentScanner/1.0",
+            "x-tuveloz-scan-timestamp": timestamp,
             "x-tuveloz-scan-signature": request_signature(self.secret, timestamp, raw),
         })
         deadline = time.monotonic() + 60
