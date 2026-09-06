@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { selfHostedScannerConfigured } from "../../../../lib/self-hosted-scan-protocol";
 import { count, desc, eq, inArray } from "drizzle-orm";
 import { getDb } from "../../../../db";
 import {
@@ -255,9 +256,10 @@ async function readinessPayload() {
   const privateEvidenceBucketBound = Boolean(runtime.BUCKET);
   const evidenceScanProvider = runtimeText(runtime, "EVIDENCE_SCAN_PROVIDER");
   const cloudmersiveApiKeyConfigured = Boolean(runtimeText(runtime, "CLOUDMERSIVE_API_KEY"));
-  const authenticatedScannerConfigured = Boolean(
+  const authenticatedScannerConfigured = selfHostedScannerConfigured(runtime) || Boolean(
     evidenceScanProvider
     && evidenceScanProvider !== "unconfigured"
+    && evidenceScanProvider !== "clamav"
     && runtimeText(runtime, "EVIDENCE_SCAN_WEBHOOK_SECRET").length >= 32
     && (evidenceScanProvider !== "cloudmersive" || cloudmersiveApiKeyConfigured),
   );
@@ -328,18 +330,22 @@ async function readinessPayload() {
     },
     {
       key: "authenticated_evidence_scanner",
-      title: "Cloudmersive scanner passed a guarded operational canary",
+      title: "Document scanner passed a guarded operational check",
       stage: "provider_onboarding",
       passed: runtimeCheckPassed("authenticated_evidence_scanner"),
       detail: evidenceScannerCanary.evidencePassed
-        ? `A recent Cloudmersive terminal response completed the guarded pending-request and audit path at ${evidenceScannerCanary.verifiedAt}; D1 canary record: ${evidenceScannerCanary.evidenceId}.`
+        ? `A recent ${evidenceScanProvider} result completed the guarded pending-request and audit path at ${evidenceScannerCanary.verifiedAt}; D1 check record: ${evidenceScannerCanary.evidenceId}.`
+        : evidenceScanProvider === "clamav"
+          ? authenticatedScannerConfigured
+            ? "ClamAV credentials are configured. A recent file scan with both document-policy and antivirus checks, its consumed request, and its audit record is still required."
+            : "ClamAV is selected, but its dedicated scanner credential is missing. Files remain quarantined."
         : authenticatedScannerConfigured && evidenceScanProvider === "cloudmersive"
           ? "Cloudmersive settings are present, but D1 has no recent vendor terminal result with its consumed pending request and exact authenticated-scanner audit event. Configuration alone does not pass this gate."
         : evidenceScanProvider === "cloudmersive" && !cloudmersiveApiKeyConfigured
           ? "Cloudmersive is selected, but CLOUDMERSIVE_API_KEY is missing. Files remain quarantined and pending."
           : evidenceScanProvider && evidenceScanProvider !== "unconfigured"
             ? `The ${evidenceScanProvider} provider setting has no supported guarded operational canary. Files remain quarantined and readiness remains blocked.`
-            : "Configure Cloudmersive, its API key, and a 32+ character EVIDENCE_SCAN_WEBHOOK_SECRET. Owners cannot mark a file clean manually.",
+            : "Connect the self-hosted ClamAV runner or a supported scanner, then complete its guarded operational check. Owners cannot mark a file clean manually.",
     },
     {
       key: "approved_identity_verification_provider",

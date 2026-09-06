@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!requirements.txt
+!document_policy.py
+!scan_file.py
+!runner.py

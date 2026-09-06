@@ -33,6 +33,7 @@ const REQUIRED_TABLES = [
   "customer_agreement_acceptances",
   "data_rights_requests",
   "evidence_file_scans",
+  "self_hosted_scan_jobs",
   "job_cancellations",
   "job_change_orders",
   "job_incidents",

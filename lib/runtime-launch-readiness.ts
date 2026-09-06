@@ -7,7 +7,9 @@ import {
   providerAuditEvents,
   providerIdentityVerificationSessions,
   providerPersonnel,
+  selfHostedScanJobs,
 } from "../db/schema";
+import { SELF_HOSTED_SCAN_PROVIDER, selfHostedScannerConfigured, validateSelfHostedScanProof } from "./self-hosted-scan-protocol";
 import {
   LAUNCH_GATE_CATALOG,
   launchDecisionState,
@@ -302,21 +304,23 @@ async function runtimeIdentityCanaries(now: number): Promise<RuntimeIdentityCana
 /**
  * A scanner provider name, callback-shaped secret, and API key are only
  * configuration. Operational readiness additionally requires a recent
- * Cloudmersive terminal response that the shared recorder atomically bound to
+ * scanner terminal response that the shared recorder atomically bound to
  * its pending request and then wrote to the hash-chained provider audit log.
  */
-async function runtimeCloudmersiveCanary(
+async function runtimeEvidenceScannerCanary(
   now: number,
 ): Promise<RuntimeEvidenceScannerCanary> {
   const runtime = env as unknown as Record<string, unknown>;
-  const configurationReady = cloudmersiveScannerConfigured(runtime);
+  const selfHosted = selfHostedScannerConfigured(runtime);
+  const scannerProvider = selfHosted ? SELF_HOSTED_SCAN_PROVIDER : CLOUDMERSIVE_PROVIDER;
+  const configurationReady = selfHosted || cloudmersiveScannerConfigured(runtime);
   const empty = emptyIdentityCanary(configurationReady);
   if (!configurationReady) return empty;
 
   const db = getDb();
   const terminalRows = (await db.select().from(evidenceFileScans).where(and(
-    eq(evidenceFileScans.scanProvider, CLOUDMERSIVE_PROVIDER),
-    eq(evidenceFileScans.scanEngineVersion, CLOUDMERSIVE_ENGINE_VERSION),
+    eq(evidenceFileScans.scanProvider, scannerProvider),
+    ...(selfHosted ? [] : [eq(evidenceFileScans.scanEngineVersion, CLOUDMERSIVE_ENGINE_VERSION)]),
     inArray(evidenceFileScans.status, ["clean", "infected", "failed"]),
   )).orderBy(desc(evidenceFileScans.completedAt)).limit(50)).filter((row) => {
     const completedAt = exactIsoTime(row.completedAt);
@@ -327,7 +331,7 @@ async function runtimeCloudmersiveCanary(
       && now - completedAt <= SCANNER_CANARY_MAX_AGE_MS
       && recordedAt >= completedAt
       && recordedAt - completedAt <= SCANNER_AUDIT_MAX_DELAY_MS
-      && row.reviewedBy === `authenticated_scanner:${CLOUDMERSIVE_PROVIDER}`
+      && row.reviewedBy === `authenticated_scanner:${scannerProvider}`
       && /^[0-9a-f]{64}$/.test(row.fileHash);
   });
   if (terminalRows.length === 0) return empty;
@@ -337,7 +341,7 @@ async function runtimeCloudmersiveCanary(
     eq(providerAuditEvents.eventType, "authenticated_evidence_scan_result"),
     eq(providerAuditEvents.entityType, "provider_evidence_submission"),
     eq(providerAuditEvents.actorType, "authenticated_scanner"),
-    eq(providerAuditEvents.actorId, CLOUDMERSIVE_PROVIDER),
+    eq(providerAuditEvents.actorId, scannerProvider),
     inArray(providerAuditEvents.outcome, ["clean", "infected", "failed"]),
     inArray(providerAuditEvents.entityId, evidenceIds),
   )).orderBy(desc(providerAuditEvents.occurredAt));
@@ -403,16 +407,22 @@ async function runtimeCloudmersiveCanary(
       const requestId = metadataText(metadata, "scanRequestId");
       const engineVersion = metadataText(metadata, "scanEngineVersion");
       const reportReference = metadataText(metadata, "reportReference");
-      if (
-        !/^cloudmersive:[0-9a-f]{64}$/.test(resultId)
-        || engineVersion !== CLOUDMERSIVE_ENGINE_VERSION
-        || !/^cloudmersive-(?:correlation|response-sha256):[A-Za-z0-9_-]+$/.test(
-          reportReference,
-        )
-        || terminal.reviewNotes
+      if (selfHosted) {
+        if (!/^self-hosted:[a-f0-9-]{36}$/.test(resultId)) continue;
+        const [job] = await db.select().from(selfHostedScanJobs)
+          .where(eq(selfHostedScanJobs.id, resultId.slice("self-hosted:".length))).limit(1);
+        if (terminal.scanEngineVersion !== engineVersion || !await validateSelfHostedScanProof(job, {
+          resultId, requestId, evidenceId: terminal.evidenceSubmissionId, providerId: terminal.providerId,
+          fileHash: terminal.fileHash, status: terminal.status, engineVersion, reportReference,
+          completedAt: terminal.completedAt,
+        })) continue;
+      } else if (!/^cloudmersive:[0-9a-f]{64}$/.test(resultId)
+          || engineVersion !== CLOUDMERSIVE_ENGINE_VERSION
+          || !/^cloudmersive-(?:correlation|response-sha256):[A-Za-z0-9_-]+$/.test(reportReference)) continue;
+      if (terminal.reviewNotes
           !== `External scanner result ${resultId}; restricted report ${reportReference}`
         || terminal.id
-          !== await sha256RuntimeText(`scanner-result:${CLOUDMERSIVE_PROVIDER}:${resultId}`)
+          !== await sha256RuntimeText(`scanner-result:${scannerProvider}:${resultId}`)
       ) continue;
       const request = requestRows.find((row) => row.id === requestId);
       if (
@@ -473,7 +483,7 @@ function runtimeStableInternalChecks(
     {
       key: "authenticated_evidence_scanner",
       stage: "provider_onboarding",
-      passed: evidenceScanProvider === CLOUDMERSIVE_PROVIDER
+      passed: [CLOUDMERSIVE_PROVIDER, SELF_HOSTED_SCAN_PROVIDER].includes(evidenceScanProvider)
         && evidenceScannerCanary.evidencePassed,
     },
     {
@@ -569,7 +579,7 @@ export async function runtimeLaunchReadiness(
     })),
     currentPlatformServiceActivations(),
     runtimeIdentityCanaries(now),
-    runtimeCloudmersiveCanary(now),
+    runtimeEvidenceScannerCanary(now),
   ]);
   const rows = decisionRows
     .filter((row): row is NonNullable<typeof row> => Boolean(row));

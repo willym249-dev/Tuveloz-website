@@ -33,6 +33,7 @@ function scannerConfiguration() {
     configured: Boolean(
       provider
       && provider !== "unconfigured"
+      && provider !== "clamav"
       && secret.length >= 32,
     ),
   };

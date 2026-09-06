@@ -135,7 +135,7 @@ test("scheduled scanner binds R2 bytes, hash, advanced policy, and shared result
   assert.match(recorder, /inserted\.length !== 1 \|\| claimed\.length !== 1/);
   assert.match(worker, /processPendingCloudmersiveEvidenceScans/);
   assert.match(runtime, /cloudmersiveScannerConfigured/);
-  assert.match(runtime, /runtimeCloudmersiveCanary/);
+  assert.match(runtime, /runtimeEvidenceScannerCanary/);
   assert.match(environment, /CLOUDMERSIVE_API_KEY=your_cloudmersive_api_key/);
   assert.doesNotMatch(scanner, /console\.[^(]+\([^\n]*(?:apiKey|CLOUDMERSIVE_API_KEY)/);
 });
@@ -222,17 +222,18 @@ test("Cloudmersive readiness needs recent guarded terminal D1 and audit proof", 
     read("app/api/admin/launch-readiness/route.ts"),
   ]);
   assert.match(runtime, /SCANNER_CANARY_MAX_AGE_MS = 30/);
-  assert.match(runtime, /eq\(evidenceFileScans\.scanProvider, CLOUDMERSIVE_PROVIDER\)/);
+  assert.match(runtime, /scannerProvider = selfHosted \? SELF_HOSTED_SCAN_PROVIDER : CLOUDMERSIVE_PROVIDER/);
+  assert.match(runtime, /eq\(evidenceFileScans\.scanProvider, scannerProvider\)/);
   assert.match(runtime, /inArray\(evidenceFileScans\.status, \["clean", "infected", "failed"\]\)/);
   assert.match(runtime, /eq\(providerAuditEvents\.eventType, "authenticated_evidence_scan_result"\)/);
   assert.match(runtime, /eq\(evidenceFileScans\.status, "result_received"\)/);
   assert.match(runtime, /metadata\.evidenceAutomaticallyAccepted !== false/);
   assert.match(runtime, /expectedAuditHash !== audit\.eventHash/);
   assert.match(runtime, /reasonCodes\[0\] !== `malware_scan_\$\{terminal\.status\}`/);
-  assert.match(runtime, /scanner-result:\$\{CLOUDMERSIVE_PROVIDER\}:\$\{resultId\}/);
+  assert.match(runtime, /scanner-result:\$\{scannerProvider\}:\$\{resultId\}/);
   assert.match(
     runtime,
-    /key: "authenticated_evidence_scanner",[\s\S]*?passed: evidenceScanProvider === CLOUDMERSIVE_PROVIDER[\s\S]*?evidenceScannerCanary\.evidencePassed/,
+    /key: "authenticated_evidence_scanner",[\s\S]*?passed: \[CLOUDMERSIVE_PROVIDER, SELF_HOSTED_SCAN_PROVIDER\]\.includes\(evidenceScanProvider\)[\s\S]*?evidenceScannerCanary\.evidencePassed/,
   );
   assert.match(admin, /Configuration alone does not pass this gate/);
   assert.match(admin, /consumed pending request and exact authenticated-scanner audit event/);
