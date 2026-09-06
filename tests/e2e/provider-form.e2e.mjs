@@ -74,6 +74,29 @@ const next = page => page.getByRole("button", { name: /^(Continue|Continuar)\s*â
 const back = page => page.getByRole("button", { name: /^â†\s*(Back|Regresar)$/ });
 const acknowledgment = page => page.locator(".legal-confirmation input");
 const currentStep = page => page.locator("[data-signup-step]").getAttribute("data-signup-step");
+async function settleViewport(page) {
+  // Step changes and validation messages scroll the real form. WebKit can
+  // finish its actionability check before smooth scrolling ends, so wait for
+  // the viewport to settle instead of retrying a click that missed its target.
+  await page.waitForFunction(() => new Promise(done => {
+    let previous = window.scrollY;
+    let stableFrames = 0;
+    function measure() {
+      const current = window.scrollY;
+      stableFrames = current === previous ? stableFrames + 1 : 0;
+      previous = current;
+      if (stableFrames >= 3) done(true);
+      else requestAnimationFrame(measure);
+    }
+    requestAnimationFrame(measure);
+  }));
+}
+async function confirmChecklist(page) {
+  await settleViewport(page);
+  await acknowledgment(page).scrollIntoViewIfNeeded();
+  await settleViewport(page);
+  await acknowledgment(page).check();
+}
 async function chooseService(page, code) {
   const input = page.locator(`input[name="provider-service"][value="${code}"]`);
   if (!await input.isVisible()) await page.locator(".service-group").filter({ has: input }).locator(":scope > summary").click();
@@ -83,7 +106,7 @@ async function freshDetails(page) {
   await chooseService(page, "battery_replacement");
   await page.locator('[name="provider-email"]').fill(baseDraft.fields["provider-email"]);
   await next(page).click();
-  await acknowledgment(page).check();
+  await confirmChecklist(page);
   await next(page).click();
   // The step transition deliberately moves keyboard focus in an animation
   // frame. Wait for that handoff before the browser starts typing, otherwise
@@ -140,7 +163,13 @@ try {
           try {
             await page.goto(`${origin}${language === "es" ? "/es" : ""}/join`);
             await page.locator("[data-signup-step]").waitFor();
-            if (draft) await page.getByText(language === "es" ? /Bienvenido de nuevo/ : /Welcome back/).waitFor();
+            if (draft) {
+              await page.getByText(language === "es" ? /Bienvenido de nuevo/ : /Welcome back/).waitFor();
+              const restoredStep = await currentStep(page);
+              if (restoredStep !== "1") {
+                await page.waitForFunction(step => document.activeElement?.matches(`[data-signup-step="${step}"]`), restoredStep);
+              }
+            }
             await action(page, result);
             await fitsPhone(page);
             assert.deepEqual(errors, [], "no React or browser errors");
@@ -148,7 +177,7 @@ try {
             result.status = "passed";
           } catch (error) {
             result.status = "failed";
-            result.error = error.message;
+            result.error = error.stack ?? error.message;
           } finally {
             if (outputDir && (result.status === "failed" || ["resume", "changed-services"].includes(name))) {
               await page.screenshot({ path: resolve(outputDir, `${browserType.name()}-${language}-${name}.png`), fullPage: true });
@@ -176,7 +205,7 @@ try {
           await next(page).click();
           assert.equal(await currentStep(page), "2", "unconfirmed checklist cannot advance");
           assert.equal(challenges.length, prior);
-          await acknowledgment(page).check();
+          await confirmChecklist(page);
           await next(page).click();
           await recordDraft(page, result, "resumed-details");
           for (const [name, value] of Object.entries(baseDraft.fields)) assert.equal(await page.locator(`[name="${name}"]`).inputValue(), value, `${name} survives resume`);
@@ -198,7 +227,7 @@ try {
           assert.equal(Object.hasOwn(saved, "applicationVerificationCode"), false);
         });
         await run("changed-services", { ...baseDraft, step: 2 }, async page => {
-          await acknowledgment(page).check();
+          await confirmChecklist(page);
           await next(page).click();
           await back(page).click();
           assert.equal(await acknowledgment(page).isChecked(), true, "unchanged selections keep the current-session confirmation");
@@ -209,7 +238,7 @@ try {
           assert.equal(await acknowledgment(page).isChecked(), false, "adding a service requires reviewing the changed checklist");
           await next(page).click();
           assert.equal(await currentStep(page), "2");
-          await acknowledgment(page).check();
+          await confirmChecklist(page);
           await next(page).click();
           assert.equal(await currentStep(page), "3");
           await back(page).click();
