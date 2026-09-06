@@ -35,6 +35,7 @@ import { ConfirmAction } from "./components/confirm-action";
 import { LegalHelp } from "./components/legal-help";
 import { ProviderSignupForm, SIGNUP_DRAFT_KEY } from "./components/provider-signup-form";
 import { SocialLinks } from "./components/social-links";
+import { LaunchHelpNotice } from "./components/launch-help-notice";
 
 
 // What the platform is built to carry so a provider can, as much as possible,
@@ -944,26 +945,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
 
       {view === "home" && CUSTOMER_JOB_POSTING_PAUSED && (
-        <section className="launch-help-section" aria-labelledby="launch-help-heading">
-          <div>
-            <span className="kicker">Need help today?</span>
-            <h2 id="launch-help-heading">If your car needs attention today</h2>
-          </div>
-          <div>
-            <p>
-              Tuveloz isn&apos;t dispatching service requests yet. If your car trouble is
-              urgent or the vehicle may be unsafe to drive, contact a local shop or
-              mobile mechanic directly, or call a licensed towing service.
-            </p>
-            <p>
-              If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
-              before continuing your trip.
-            </p>
-            <Link className="text-link" href="/post-job#launch-updates">
-              Join the list for launch updates →
-            </Link>
-          </div>
-        </section>
+        <LaunchHelpNotice updatesHref="/post-job#launch-updates" />
       )}
 
       {view !== "provider" && view !== "about" && (

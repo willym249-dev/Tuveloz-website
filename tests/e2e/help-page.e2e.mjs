@@ -47,6 +47,31 @@ const sendButton = page => page.locator(".ai-composer button[type=submit]");
 const userMessages = page => page.locator(".ai-message-user p");
 const answers = page => page.locator(".ai-message-assistant:not(.ai-message-pending) > p");
 
+async function assertReadable(page, selector) {
+  const contrasts = await page.locator(selector).evaluateAll(elements => {
+    const rgb = color => color.match(/[\d.]+/g).map(Number);
+    const luminance = channels => channels.slice(0, 3).map(value => {
+      const channel = value / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+    return elements.map(element => {
+      const ancestors = [];
+      for (let node = element; node; node = node.parentElement) ancestors.unshift(node);
+      let background = [255, 255, 255];
+      for (const node of ancestors) {
+        const color = rgb(getComputedStyle(node).backgroundColor);
+        const alpha = color[3] ?? 1;
+        background = background.map((value, index) => color[index] * alpha + value * (1 - alpha));
+      }
+      const style = getComputedStyle(element);
+      const light = luminance(rgb(style.color)), dark = luminance(background);
+      return { ratio: (Math.max(light, dark) + 0.05) / (Math.min(light, dark) + 0.05), color: style.color, background, fontSize: style.fontSize };
+    });
+  });
+  assert.ok(contrasts.length > 0, selector + " must be rendered");
+  for (const contrast of contrasts) assert.ok(contrast.ratio >= 4.5, selector + " must be readable: " + JSON.stringify(contrast));
+}
+
 async function submit(page, message) {
   if (message !== undefined) await input(page).fill(message);
   const button = sendButton(page);
@@ -154,6 +179,18 @@ try {
           assert.deepEqual(requests[1].history, [], "an unanswered attempt is not conversation history");
           assert.equal(requests[1].language, spanish ? "es" : "en");
           assert.equal(requests[1].audience, "provider");
+        });
+        await run("question-answer-and-error-contrast", [success, json(429, { error: "Synthetic rate limit" })], async page => {
+          await input(page).fill(question);
+          await assertReadable(page, ".ai-input");
+          await assertReadable(page, ".ai-safety-note");
+          await submit(page);
+          await answers(page).waitFor();
+          await assertReadable(page, ".ai-message-user p");
+          await assertReadable(page, ".ai-message-assistant > p");
+          await submit(page, nextQuestion);
+          await page.getByRole("alert").waitFor();
+          await assertReadable(page, ".ai-error");
         });
         await run("malformed-reply-recovery", [json(200, { reply: { private: "unexpected" }, mode: "ai" }), { status: 200, contentType: "text/html", body: "<h1>Temporary failure</h1>" }, success], async page => {
           for (let attempt = 0; attempt < 2; attempt++) {
