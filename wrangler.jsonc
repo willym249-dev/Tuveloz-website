@@ -48,7 +48,7 @@
   ],
   "vars": {
     "AUTH_EMAIL_HEADER": "cf-access-authenticated-user-email",
-    "EVIDENCE_SCAN_PROVIDER": "unconfigured",
+    "EVIDENCE_SCAN_PROVIDER": "clamav",
     "IDENTITY_VERIFICATION_PROVIDERS": "stripe_identity",
     // Physical mailing address printed at the foot of every launch-update
     // email. Required before the first marketing send — while it is empty the
