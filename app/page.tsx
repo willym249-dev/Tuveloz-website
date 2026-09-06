@@ -93,8 +93,8 @@ const providerDifferences: Array<{
 }> = [
   {
     icon: "quote",
-    title: "Bilingual to the fine print",
-    text: "Your quote, authorization, and invoice are built to read in English and Spanish — so you and your customer agree to the same words, not a rough translation.",
+    title: "English and Spanish support",
+    text: "Review the quote, work authorization and invoice in English or Spanish with your customer.",
   },
   {
     icon: "earnings",
@@ -103,13 +103,13 @@ const providerDifferences: Array<{
   },
   {
     icon: "services",
-    title: "Labor-only, done right",
-    text: "Customers bring the part. Tuveloz is designed to line up the exact part before your appointment, so a wrong part doesn't waste your trip.",
+    title: "Agree on parts before the visit",
+    text: "Review the needed parts with your customer before agreeing to the work. Customers purchase parts separately.",
   },
   {
     icon: "active-job",
-    title: "Made for mobile, not just the front desk",
-    text: "Appointments, records, and photo evidence work from any phone at the customer's location — built for mobile pros and service trucks, not only walk-in shops.",
+    title: "Tools for work on the go",
+    text: "Keep appointments, job notes and photos together while you're working at a customer's location or in your shop.",
   },
 ];
 
@@ -1699,12 +1699,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <div className="section-heading">
           <div>
             <span className="kicker">Why Tuveloz is different</span>
-            <h2>Built as a marketplace — so we can do what shop software can&apos;t.</h2>
+            <h2>Tools to keep each job organized.</h2>
           </div>
           <p>
-            Most tools are built for one front desk. Tuveloz is built around
-            independent providers and their customers, which lets us design for
-            trust, language, and mobile work from the ground up.
+            We&apos;re building tools to manage quotes, appointments and job records
+            in one place, while you stay in charge of your business.
           </p>
         </div>
         <div className="difference-grid">
@@ -1719,9 +1718,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           ))}
         </div>
         <p className="difference-note">
-          That&apos;s how we&apos;re building it for you. Jobs and payments switch on
-          as each one is ready — no surprises, and we&apos;ll keep you in the loop the
-          whole way.
+          These tools will be available for real jobs after the required launch
+          reviews. You can apply now and complete your service checklist before
+          customer bookings open.
         </p>
       </section>
       )}
@@ -1953,7 +1952,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <span className="kicker light">Montgomery County, Maryland</span>
         {view === "provider" ? (
           <>
-            <h2>We&apos;d like to meet the person behind the work.</h2>
+            <h2>Tell us about your business.</h2>
             <div>
               <a className="button lime" href="#provider-apply">Apply free <span>→</span></a>
             </div>
@@ -1976,7 +1975,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <Link className="brand footer-brand" href="/">
           <BrandMark /><span>Tuveloz</span>
         </Link>
-        <p>Vehicle services built around customer choice and provider freedom.</p>
+        <p>An online marketplace for local vehicle services.</p>
         <div className="footer-links">
           <Link href="/about">About Tuveloz</Link>
           <Link href="/ai">Tuveloz AI</Link>

@@ -5,7 +5,7 @@ import { PublicInfoPage } from "../components/public-info-page";
 const englishMetadata: Metadata = {
   title: "Safety & Trust",
   description:
-    "How Tuveloz verifies providers: law-based checks, service-specific evidence review, limited information sharing, and clear quotes.",
+    "Learn what Tuveloz checks for each service, how your information is shared and what you will see before accepting a quote.",
   alternates: {
     canonical: "/safety",
   },
@@ -19,30 +19,34 @@ export default function SafetyPage() {
   return (
     <PublicInfoPage
       kicker="Safety & trust"
-      title="Service-specific checks before any future job begins."
-      intro="Provider onboarding is open, but customer service requests and jobs are not yet available. Tuveloz is implementing service-specific evidence checks, limited information sharing, clear quotes, and role-specific access."
+      title="Know who's working on your car."
+      intro="Here's what Tuveloz checks, what providers can see and how you'll review a quote. Provider applications are open; customer bookings are not open yet."
       sections={[
         {
-          title: "Every job requires its own checks",
-          text: "Tuveloz reviews the requested service, assigned worker, location, date, evidence, current agreements, and any supervision requirement. Each label identifies the evidence checked; it does not guarantee safety, quality, or results.",
-          points: ["Service-specific review", "Person- and location-specific checks", "Expired evidence prevents job access"],
+          title: "Checks for the work you need",
+          text: "Before a job can go ahead, Tuveloz checks the service, the person doing the work, the location and date, current documents and agreements, and any required supervision. Each label says what was checked. These checks do not guarantee safety, quality or results.",
+          points: [
+            "Checks for the specific service",
+            "Checks for the person and location",
+            "Expired documents block access to jobs"
+          ]
         },
         {
           title: "Background checks",
-          text: "Tuveloz confirms only the specific license, registration, or insurance the law requires for a given service. It does not run criminal background checks on providers or their personnel, and being listed on Tuveloz is not a character endorsement. If a screening step is ever added for a specific service, Tuveloz will describe exactly what is checked and nothing more.",
+          text: "Tuveloz checks the license, registration or insurance required for a particular service. It does not run criminal background checks on providers or their staff. A listing is not a character endorsement. If a screening step is added, we will explain what it covers."
         },
         {
           title: "Customer privacy",
-          text: "Providers receive only the information needed to decide whether to quote. Private contact and service-address details are limited to the selected provider.",
+          text: "Providers receive only the information needed to decide whether to quote. Private contact and service-address details are limited to the selected provider."
         },
         {
-          title: "Transparent quotes",
-          text: "After launch approval, customers must see the provider subtotal, parts and labor, any separate Customer Service Fee, taxes or other charges, refund terms, and total before confirming.",
+          title: "See the full price before you agree",
+          text: "When bookings open, you'll see the provider's labor price, the separate Customer Service Fee, taxes or other charges, refund terms and the total before confirming. You buy any needed parts separately; parts are not paid for through Tuveloz."
         },
         {
-          title: "Independent choice",
-          text: "Customers choose their provider. Providers choose their jobs, prices, schedule, tools, and methods, subject to applicable law and the agreed job scope. TUVELOZ does not employ, train, assign, or supervise providers or provider personnel.",
-        },
+          title: "You choose your provider",
+          text: "You decide which provider to hire. Providers choose their jobs, prices, schedule, tools and methods within the law and the work you agree to. Tuveloz does not employ, train, assign or supervise providers or their staff."
+        }
       ]}
     />
   );

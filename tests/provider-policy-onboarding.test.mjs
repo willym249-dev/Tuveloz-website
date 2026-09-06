@@ -108,7 +108,7 @@ test("public onboarding and agreements clearly deny TUVELOZ employment or traini
   assert.match(signupForm, /provider business—not Tuveloz—is responsible for lawful\s+employment classification/);
   assert.ok(terms.includes("doesn&apos;t hire, employ, train, sponsor, assign"));
   assert.ok(providerAgreement.includes("doesn&apos;t promise you any customer work"));
-  assert.ok(faq.includes("Applicant-only accounts receive no training or jobs."));
+  assert.ok(faq.includes("An applicant account does not include training or jobs."));
   assert.ok(!homepage.includes("Training and application review only"));
 });
 

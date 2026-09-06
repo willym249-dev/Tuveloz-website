@@ -75,7 +75,7 @@ export default async function ServiceAreaPage({ params }: AreaParams) {
           },
           {
             title: "What you would be choosing between",
-            text: "Every provider on Tuveloz is an independent business, not an employee. Tuveloz does not assign one to you, does not set their price, and does not mark up their labour.",
+            text: "Every provider on Tuveloz is an independent business, not an employee. Tuveloz does not assign one to you, does not set their price, and does not mark up their labor.",
             points: [
               "Each provider sets and approves their own quote, and receives it in full.",
               "You compare what comes back and accept one, or none.",

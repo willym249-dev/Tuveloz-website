@@ -68,11 +68,11 @@ export function LocalLaunchPanel({
   return (
     <section className="local-launch-panel">
       <div>
-        <h2>Where this actually stands</h2>
+        <h2>Getting ready to open</h2>
         <p>{LOCAL_PAGE_LAUNCH_NOTICE}</p>
         <p className="local-launch-panel-secondary">
-          Creating an account does not submit a service request or charge you.
-          There is no waiting list to pay for and no position to lose.
+          Creating an account is free. It does not submit a service request,
+          book an appointment or charge you.
         </p>
         <div className="local-launch-panel-links">
           <Link className="button secondary" href="/how-it-works">How it works</Link>
@@ -80,10 +80,10 @@ export function LocalLaunchPanel({
         </div>
       </div>
       <div className="local-launch-panel-form">
-        <h3>Tell us you want {what}</h3>
+        <h3>Get updates about {what}</h3>
         <p className="local-launch-panel-form-note">
-          We record which service and area you asked about. That is how we decide
-          where to open first — and you will hear when it does.
+          Your interest helps us choose where to open. Select email updates below
+          if you would like to hear when customer requests become available.
         </p>
         <LaunchUpdatesForm source={source} />
       </div>
@@ -110,9 +110,8 @@ export function LocalProviderPanel({
       </p>
       <p>{PROVIDER_PAYOUT_DISCLOSURE}</p>
       <p className="local-provider-panel-note">
-        Applications are reviewed before any account is approved, and approval
-        covers specific services rather than a blanket sign-off. No provider can
-        accept real jobs until customer requests open.
+        We review each application and the requirements for the services you
+        choose. Approved providers can accept jobs once customer requests open.
       </p>
       <div>
         <Link className="button primary" href="/join">Join as a provider <span>→</span></Link>
@@ -137,8 +136,8 @@ export function LocalPricingNote() {
       </p>
       <p className="local-link-note">{CUSTOMER_FEE_WORKED_EXAMPLE}</p>
       <p className="local-link-note">
-        Accepting a quote is what creates a written authorisation. Work beyond it
-        needs your approval as a change order.
+        Accepting a quote creates a written authorization for the agreed work.
+        Any extra work needs your approval before it starts.
       </p>
     </section>
   );
