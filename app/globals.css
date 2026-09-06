@@ -12365,6 +12365,7 @@ footer > p,
 }
 
 .early-access-form {
+  scroll-margin-top: 100px;
   background: #111111;
   border: 1px solid #3b281d;
   border-radius: 22px;

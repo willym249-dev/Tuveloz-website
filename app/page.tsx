@@ -956,7 +956,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
               before continuing your trip.
             </p>
-            <Link className="text-link" href="/account?role=customer&mode=create">
+            <Link className="text-link" href="/post-job#launch-updates">
               Join the list for launch updates →
             </Link>
           </div>

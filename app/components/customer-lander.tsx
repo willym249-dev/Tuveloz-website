@@ -263,7 +263,7 @@ export function CustomerLander() {
             If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
             before continuing your trip.
           </p>
-          <Link className="text-link" href="/account?role=customer&mode=create">
+          <Link className="text-link" href="#launch-updates">
             Join the list for launch updates →
           </Link>
         </div>
@@ -289,11 +289,11 @@ export function CustomerLander() {
           </div>
         </div>
 
-        <div className="early-access-form">
-          <h3>Just want an email when we open?</h3>
+        <div className="early-access-form" id="launch-updates">
+          <h3>Want launch updates by email?</h3>
           <p>
-            Leave your address and we&apos;ll write you once, the day we open in
-            Montgomery County. No account needed.
+            Get occasional emails as we prepare to open in Montgomery County.
+            No account needed, and you can unsubscribe at any time.
           </p>
           <LaunchUpdatesForm source="customer-lander" />
         </div>
