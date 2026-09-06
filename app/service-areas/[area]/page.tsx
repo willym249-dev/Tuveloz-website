@@ -67,28 +67,19 @@ export default async function ServiceAreaPage({ params }: AreaParams) {
         ]}
         kicker={`${label} · ${LOCAL_AREA_COUNTY}`}
         title={`Vehicle services in ${area.name}.`}
-        intro={`Tuveloz is a local marketplace being built for ${LOCAL_AREA_COUNTY}: you describe what your vehicle needs, independent providers send real quotes, and you choose — or choose nothing at all. ${area.name} is inside the launch area. Customer requests are not open yet.`}
+        intro={`Tuveloz connects car owners with independent vehicle-service businesses. ${area.name} is part of our planned ${LOCAL_AREA_COUNTY} launch area. Provider applications are open; customer bookings are not open yet.`}
         sections={[
           {
-            title: `Getting to a vehicle in ${area.name}`,
+            title: "Help your provider find the vehicle",
             text: area.localCopy ?? "",
           },
           {
-            title: "What you would be choosing between",
-            text: "Every provider on Tuveloz is an independent business, not an employee. Tuveloz does not assign one to you, does not set their price, and does not mark up their labor.",
+            title: "You choose who to work with",
+            text: "When bookings open, you'll be able to compare quotes from independent providers serving your area. Providers set their own prices and decide which requests to answer. Tuveloz does not employ or assign them.",
             points: [
-              "Each provider sets and approves their own quote, and receives it in full.",
-              "You compare what comes back and accept one, or none.",
-              "Reviews are tied to completed jobs, so a track record has to be earned.",
-            ],
-          },
-          {
-            title: `Why ${area.name} is not open to customers yet`,
-            text: "Opening customer requests before enough local providers have cleared review would mean posting a job that nobody answers. Provider applications and evidence review run first, and each service opens only after it passes launch review — so the first request made here has somewhere to land.",
-            points: [
-              "Provider applications and evidence review: open now.",
-              "Customer requests, quotes, and payments: not available in any area.",
-              "Approval covers specific services for a specific provider, never a blanket sign-off.",
+              "Providers receive their full quoted price.",
+              "You can ask questions or decline a quote before agreeing to work.",
+              "Customer reviews will be linked to completed Tuveloz jobs.",
             ],
           },
         ]}
@@ -103,8 +94,8 @@ export default async function ServiceAreaPage({ params }: AreaParams) {
         <LocalPricingNote />
         <LocalAreaLinks
           areas={otherAreas}
-          heading="Other areas with a page"
-          note="Every area of the county is covered. These are the ones with something specific written about them."
+          heading="Explore other communities"
+          note="These communities are also in the planned launch area. Service availability will depend on the providers who complete review."
         />
         <LocalLaunchPanel source={`service-area-${area.slug}`} areaName={area.name} />
         <LocalProviderPanel areaName={area.name} />

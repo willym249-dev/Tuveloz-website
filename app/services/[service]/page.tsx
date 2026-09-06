@@ -64,21 +64,21 @@ export default async function ServicePage({ params }: ServiceParams) {
         ]}
         kicker={`${service.name} · ${LOCAL_AREA_COUNTY}`}
         title={`${service.searchName}.`}
-        intro={`${service.summary} Available across ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE} when Tuveloz opens to customers — which it has not yet.`}
+        intro={`${service.summary} We're preparing this service for ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE}. Availability will depend on reviewed providers in your area. Customer bookings are not open yet.`}
         sections={[
           {
             title: "What this covers",
-            text: "What is and is not included at launch. Anything outside this list is a different job and should be quoted as one.",
+            text: "Check what is included and excluded, then confirm the details in your provider's quote before agreeing to any work.",
             points: [...service.covered],
           },
           {
             title: "What to have ready",
-            text: "The difference between a quote and a phone call is detail. When requests open, having these ready means a provider can price the job without a back-and-forth first.",
+            text: "When requests open, these details will help a provider understand what you need. It's fine if you don't know the technical terms.",
             points: [...service.describeForQuote],
           },
           {
-            title: "Who would be doing the work",
-            text: "An independent provider business, not Tuveloz and not an employee of it. Tuveloz does not employ, train, assign, or supervise providers. Approval is granted for specific services after evidence review, and Tuveloz shows the exact evidence checked rather than claiming a blanket verification.",
+            title: "Who will do the work",
+            text: "The independent provider you choose will do the work. Tuveloz does not employ, train, assign, or supervise providers. We review each provider for the services they apply to offer, and their listing will explain which documents were checked.",
           },
         ]}
       >
@@ -88,7 +88,7 @@ export default async function ServicePage({ params }: ServiceParams) {
           service={service}
           publishedForService={areasWithPage}
           heading={`${service.name} by area`}
-          note={`All ${SERVICE_AREA_COVERAGE.length} areas of ${LOCAL_AREA_COUNTY} are covered. These are the ones with a page of their own.`}
+          note={`Our planned launch area includes ${SERVICE_AREA_COVERAGE.length} communities in ${LOCAL_AREA_COUNTY}. Available services will depend on the providers who complete review.`}
         />
         <LocalServiceLinks services={otherServices} heading="Other launch services" />
         <LocalLaunchPanel

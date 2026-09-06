@@ -19,7 +19,7 @@ import {
 export const metadata: Metadata = {
   title: "Service areas in Montgomery County, MD",
   description:
-    `The ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE} areas Tuveloz covers at launch, and the ZIP codes behind them. Provider applications are open; customer requests are not yet.`,
+    `Explore Tuveloz's planned launch area in ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE}. Provider applications are open; customer bookings are not open yet.`,
   alternates: { canonical: "/service-areas" },
 };
 
@@ -38,24 +38,16 @@ export default function ServiceAreasHubPage() {
           { label: "Service areas" },
         ]}
         kicker="Service areas"
-        title={`One county, covered properly.`}
-        intro={`Tuveloz is being built for ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE} first — all ${SERVICE_AREA_COVERAGE.length} areas, not a shortlist of the profitable ones. Customer requests are not open yet. Provider applications are.`}
+        title={`Starting in ${LOCAL_AREA_COUNTY}.`}
+        intro={`We're welcoming provider applications from ${LOCAL_AREA_COUNTY}, ${LOCAL_AREA_STATE}. The ${SERVICE_AREA_COVERAGE.length} communities below are part of our planned launch area. Customer bookings are not open yet.`}
         sections={[
           {
-            title: "Why one county",
-            text: `A marketplace is only useful when enough providers cover the area you are actually in. Launching thin across a whole state gets a customer a page with nobody on it, so the launch area stays at ${LOCAL_AREA_COUNTY} until it is genuinely covered here.`,
+            title: "Finding a provider in your area",
+            text: "When bookings open, available services will depend on which providers serve your location and have completed review. Being in the launch area does not guarantee that a provider is available for every service or time.",
             points: [
-              `All ${SERVICE_AREA_COVERAGE.length} areas of the county, including the small and rural ones.`,
-              "Providers set their own service areas — Tuveloz does not assign anyone a territory.",
-              "Somewhere else? You can request a future launch area from the About page.",
-            ],
-          },
-          {
-            title: "Why only some areas have a page",
-            text: "A page exists where there is something specific worth saying about working in that area — access, parking, how far apart the addresses sit. Publishing the same page 36 times with the name swapped would help nobody and would be treated as spam, correctly. The rest are covered identically; they get a page when there is a reason for one.",
-            points: [
-              "Which areas get a page next is decided by what people actually ask for below.",
-              "Coverage is not affected either way — the ZIP list is the same.",
+              "Providers choose their own service areas and schedules.",
+              "Each provider is reviewed for the services they offer.",
+              "You choose whether to accept any quote you receive.",
             ],
           },
         ]}

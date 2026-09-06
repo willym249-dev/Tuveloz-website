@@ -265,6 +265,9 @@ export function LocalCoverageStatement({
           .map((area) => area.name)
           .join(", ")}.
       </p>
+      <p className="local-link-note">
+        <Link href="/about#expansion">Outside Montgomery County? Request your area →</Link>
+      </p>
     </section>
   );
 }
