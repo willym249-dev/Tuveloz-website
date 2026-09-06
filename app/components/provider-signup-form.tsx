@@ -470,11 +470,12 @@ export function ProviderSignupForm() {
       if (cancelled) return;
       const draft = readSignupDraft();
       if (!draft) return;
-      if (Array.isArray(draft.selectedProviderServices)) {
-        setSelectedProviderServices(draft.selectedProviderServices.filter((code) => (
+      const restoredServices = Array.isArray(draft.selectedProviderServices)
+        ? draft.selectedProviderServices.filter((code) => (
           PROVIDER_REVIEW_SERVICES.some((service) => service.code === code)
-        )));
-      }
+        ))
+        : [];
+      setSelectedProviderServices(restoredServices);
       if (typeof draft.soloBusiness === "boolean") setSoloBusiness(draft.soloBusiness);
       if (Array.isArray(draft.selectedProviderWorkLocations)) {
         setSelectedProviderWorkLocations(draft.selectedProviderWorkLocations.filter((option) => (
@@ -484,20 +485,27 @@ export function ProviderSignupForm() {
       if (draft.providerAssessment && typeof draft.providerAssessment === "object") {
         setProviderAssessment({ ...emptyProviderSelfAssessment, ...draft.providerAssessment });
       }
+      const fields: Record<string, string> = {};
       if (draft.fields && typeof draft.fields === "object") {
-        const fields: Record<string, string> = {};
         for (const key of DRAFT_TEXT_FIELDS) {
           const value = draft.fields[key];
           if (typeof value === "string" && value) fields[key] = value;
         }
         setDraftFields(fields);
       }
-      // Only steps that actually render may be restored. Step 4 is declared in
-      // SignupStep but has no block yet, so restoring it — from a stale draft
-      // or a hand-edited localStorage value — would show an empty form with no
-      // way forward. Widen this only when a step 4 exists to land on.
-      if (draft.step === 1 || draft.step === 2 || draft.step === 3) {
-        setStep(draft.step);
+      // A saved step is only a hint: services may have changed, and the
+      // checklist acknowledgment must be given again in this session. Put
+      // that checkbox on screen instead of hiding it behind the final step.
+      // Incomplete / obsolete drafts return to services without losing text.
+      const firstStepComplete = restoredServices.length > 0
+        && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((fields["provider-email"] ?? "").trim());
+      if (firstStepComplete && (draft.step === 2 || draft.step === 3)) {
+        const hasQuestions = hasProviderSignupQuestions(getProviderLegalRequirementFlags(
+          restoredServices, SELECTED_PROVIDER_AREAS,
+        ));
+        const resumeChecklist = hasQuestions
+          || (draft.step === 2 && needsProofStep(restoredServices, PROVIDER_PATHWAY));
+        setStep(resumeChecklist ? 2 : 3);
       }
       setDraftRestored(true);
     });
@@ -689,6 +697,15 @@ export function ProviderSignupForm() {
 
   async function handleFinalSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (hasVisibleLegalRequirements && !legalConfirmed) {
+      resetChallenge();
+      setApplicationError("");
+      setStep(2);
+      showStepError(providerFormIsSpanish
+        ? "Revise la lista de sus servicios antes de continuar."
+        : "Please review your service checklist before continuing.");
+      return;
+    }
     const form = event.currentTarget;
     const formData = new FormData(form);
     const values = Object.fromEntries(formData.entries());
@@ -932,7 +949,7 @@ export function ProviderSignupForm() {
     >
       <div className="step-indicator" aria-label={providerFormIsSpanish ? "Pasos de la solicitud" : "Application steps"}>
         {visibleSteps.map((id, index) => (
-          <span className={step === id ? "on" : ""} key={id}>
+          <span aria-current={step === id ? "step" : undefined} className={step === id ? "on" : ""} key={id}>
             {index + 1}. {providerFormIsSpanish
               ? SIGNUP_STEP_LABELS[id].es
               : SIGNUP_STEP_LABELS[id].en}
@@ -947,9 +964,13 @@ export function ProviderSignupForm() {
 
       {draftRestored && !applicationChallengeId && (
         <p className="hint" role="status">
-          {providerFormIsSpanish
-            ? "Bienvenido de nuevo — guardamos su avance en este dispositivo. Puede continuar donde quedó."
-            : "Welcome back — we saved your progress on this device. Pick up where you left off."}
+          {step === 2 && hasVisibleLegalRequirements && !legalConfirmed
+            ? (providerFormIsSpanish
+              ? "Bienvenido de nuevo. Sus datos están guardados. Revise la lista de sus servicios antes de continuar."
+              : "Welcome back. Your details are saved. Please review your service checklist before continuing.")
+            : (providerFormIsSpanish
+              ? "Bienvenido de nuevo — guardamos su avance en este dispositivo. Puede continuar donde quedó."
+              : "Welcome back — we saved your progress on this device. Pick up where you left off.")}
         </p>
       )}
 
@@ -1022,6 +1043,7 @@ export function ProviderSignupForm() {
                                 type="checkbox"
                                 value={service.code}
                                 onChange={(event) => {
+                                  setLegalConfirmed(false);
                                   setSelectedProviderServices((current) => (
                                     event.target.checked
                                       ? [...current, service.code]
