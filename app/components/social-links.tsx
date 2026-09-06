@@ -83,8 +83,8 @@ export function FollowAlong({
         <h3>{spanish ? "Síganos hasta el lanzamiento" : "Follow along until launch"}</h3>
         <p>
           {spanish
-            ? "Publicamos novedades del lanzamiento y perfiles de proveedores. Es la forma más rápida de enterarse el día que se abran las solicitudes de clientes."
-            : "We post launch updates and provider spotlights. It's the fastest way to hear the day customer requests open."}
+            ? "Siga las novedades de Tuveloz en nuestras redes sociales mientras preparamos el lanzamiento."
+            : "Follow Tuveloz on social media for news as we get ready to launch."}
         </p>
       </div>
       <SocialLinks source={source} />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FLEET_SIZE_OPTIONS } from "../../lib/fleet-options";
+import { hasPublicFormReceipt, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../../lib/public-form-feedback";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   SMS_MARKETING_CONSENT_TEXT_EN,
@@ -24,7 +25,7 @@ export function FleetInquiryForm() {
   const [servicesNeeded, setServicesNeeded] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<PublicFormProblem | null>(null);
 
   if (done) {
     return (
@@ -42,9 +43,11 @@ export function FleetInquiryForm() {
   return (
     <form
       className="fleet-inquiry-form"
+      aria-busy={busy}
       onSubmit={async (event) => {
         event.preventDefault();
-        setError("");
+        if (busy) return;
+        setError(null);
         setBusy(true);
         try {
           const response = await fetch("/api/fleet-inquiry", {
@@ -62,15 +65,14 @@ export function FleetInquiryForm() {
               servicesNeeded,
             }),
           });
-          if (!response.ok) {
-            const payload = await response.json().catch(() => ({})) as { error?: string };
-            throw new Error(payload.error || "We could not save your fleet request.");
+          const payload: unknown = await response.json().catch(() => null);
+          if (!response.ok || !hasPublicFormReceipt(payload)) {
+            setError(publicFormProblem("fleet", response.status, payload));
+            return;
           }
           setDone(true);
-        } catch (submitError) {
-          setError(submitError instanceof Error
-            ? submitError.message
-            : "We could not save your fleet request.");
+        } catch {
+          setError("unconfirmed");
         } finally {
           setBusy(false);
         }
@@ -80,6 +82,8 @@ export function FleetInquiryForm() {
         <span>Business name</span>
         <input
           value={companyName}
+          disabled={busy}
+          autoComplete="organization"
           onChange={(event) => setCompanyName(event.target.value)}
           maxLength={120}
           required
@@ -89,6 +93,8 @@ export function FleetInquiryForm() {
         <span>Your name</span>
         <input
           value={contactName}
+          disabled={busy}
+          autoComplete="name"
           onChange={(event) => setContactName(event.target.value)}
           maxLength={120}
           required
@@ -99,6 +105,8 @@ export function FleetInquiryForm() {
         <input
           type="email"
           value={email}
+          disabled={busy}
+          autoComplete="email"
           onChange={(event) => setEmail(event.target.value)}
           maxLength={180}
           required
@@ -109,7 +117,11 @@ export function FleetInquiryForm() {
         <input
           type="tel"
           value={contactPhone}
-          onChange={(event) => setContactPhone(event.target.value)}
+          disabled={busy}
+          onChange={(event) => {
+            setContactPhone(event.target.value);
+            setSmsMarketingConsent(false);
+          }}
           maxLength={40}
           autoComplete="tel"
         />
@@ -119,6 +131,7 @@ export function FleetInquiryForm() {
         <span>How many vehicles?</span>
         <select
           value={fleetSize}
+          disabled={busy}
           onChange={(event) => setFleetSize(event.target.value)}
           required
         >
@@ -132,6 +145,7 @@ export function FleetInquiryForm() {
         <span>Vehicle types <small>(optional)</small></span>
         <input
           value={vehicleTypes}
+          disabled={busy}
           onChange={(event) => setVehicleTypes(event.target.value)}
           maxLength={200}
           placeholder="Cargo vans, box trucks, sedans…"
@@ -141,6 +155,7 @@ export function FleetInquiryForm() {
         <span>Where are the vehicles kept? <small>(optional)</small></span>
         <input
           value={municipality}
+          disabled={busy}
           onChange={(event) => setMunicipality(event.target.value)}
           maxLength={120}
           placeholder="Rockville, Silver Spring…"
@@ -150,6 +165,7 @@ export function FleetInquiryForm() {
         <span>What do you need most? <small>(optional)</small></span>
         <textarea
           value={servicesNeeded}
+          disabled={busy}
           onChange={(event) => setServicesNeeded(event.target.value)}
           maxLength={300}
           rows={3}
@@ -162,6 +178,7 @@ export function FleetInquiryForm() {
           <input
             type="checkbox"
             checked={smsMarketingConsent}
+            disabled={busy}
             onChange={(event) => setSmsMarketingConsent(event.target.checked)}
           />
           <span>{SMS_MARKETING_CONSENT_TEXT_EN}</span>
@@ -174,7 +191,7 @@ export function FleetInquiryForm() {
         and availability will depend on providers in your area.
       </p>
 
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {error && <p className="form-error" role="alert">{publicFormMessage("fleet", error)}</p>}
 
       <button className="button primary" type="submit" disabled={busy}>
         {busy ? "Sending…" : "Send fleet details"}
