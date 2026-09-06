@@ -8,7 +8,7 @@ const BASE_URL = "https://tuveloz.com";
 export const metadata: Metadata = {
   title: "Fleet and Business Vehicle Services in Montgomery County, MD",
   description:
-    "Running vans, trucks, or a company car pool in Montgomery County, MD? Tuveloz is building multi-vehicle service with independent local providers. Tell us about your fleet.",
+    "Help Tuveloz plan fleet services in Montgomery County, MD. Tell us about your business vehicles and the work you need from independent local providers.",
   // Relative, like every other page: Next resolves it against metadataBase, so
   // one place defines the origin. An absolute literal here would silently
   // disagree with metadataBase if the origin ever changes.
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Fleet and Business Vehicle Services | Tuveloz",
     description:
-      "Multi-vehicle service from independent local providers in Montgomery County, MD. Customer requests open soon — tell Tuveloz about your fleet.",
+      "Tell us about your business vehicles in Montgomery County, MD. Tuveloz is planning fleet services with independent providers; bookings are not open yet.",
     url: `${BASE_URL}/fleet`,
     type: "website",
   },
@@ -26,22 +26,22 @@ const FLEET_FAQS = [
   {
     question: "Can I book fleet service today?",
     answer:
-      "Not yet. Tuveloz is onboarding provider businesses in Montgomery County first, and customer requests, quotes, and payments stay off until each service's legal, insurance, and payment requirements are documented and satisfied. Telling us about your fleet now means you are first to hear when it opens.",
+      "Not yet. Provider applications are open, but customer requests, quotes, and payments are not available yet. Tell us about your fleet so we can follow up as plans develop.",
   },
   {
-    question: "How is this different from a shop account?",
+    question: "How will quotes work?",
     answer:
-      "Tuveloz is a marketplace, not a shop. Independent provider businesses quote your work and set their own prices, and you choose which quote to accept for each job. Providers keep 100% of what they quote; Tuveloz adds a 5% customer service fee that is shown before you accept.",
+      "Tuveloz connects you with independent provider businesses. They set their own prices, and you choose which quote to accept for each job. Providers keep 100% of what they quote. A separate 5% Customer Service Fee is added to your total and shown before you accept.",
   },
   {
-    question: "Do you come to our vehicles?",
+    question: "Can providers work at our location?",
     answer:
-      "That is the intent. Most providers onboarding with Tuveloz work at the customer's location, which for a fleet usually means your lot or depot rather than moving vehicles one at a time to a shop.",
+      "A provider who offers mobile service may be able to work at your lot or depot. When bookings open, confirm the location, access, and work included in the quote with that provider.",
   },
   {
     question: "Who is responsible for the work?",
     answer:
-      "The independent provider business that performs the service. Tuveloz does not employ, train, assign, or supervise providers, and a provider is never a Tuveloz employee or agent.",
+      "The independent business you choose performs the work. Tuveloz helps you connect with providers and compare their quotes. Tuveloz does not employ, train, assign, or supervise providers.",
   },
 ];
 
@@ -55,16 +55,14 @@ const faqSchema = {
   })),
 };
 
-const serviceSchema = {
+const pageSchema = {
   "@context": "https://schema.org",
-  "@type": "Service",
+  "@type": "WebPage",
   name: "Fleet and business vehicle services",
-  serviceType: "Fleet vehicle maintenance",
   description:
-    "Multi-vehicle service from independent local provider businesses in Montgomery County, Maryland.",
+    "Help Tuveloz plan connections between businesses and independent vehicle-service providers in Montgomery County, Maryland. Fleet bookings are not open yet.",
   url: `${BASE_URL}/fleet`,
-  areaServed: { "@type": "AdministrativeArea", name: "Montgomery County, Maryland" },
-  provider: { "@type": "Organization", name: "Tuveloz", url: BASE_URL },
+  publisher: { "@type": "Organization", name: "Tuveloz", url: BASE_URL },
   audience: { "@type": "BusinessAudience", audienceType: "Fleet operators and small businesses" },
 };
 
@@ -73,7 +71,7 @@ export default function FleetPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }}
       />
       <script
         type="application/ld+json"
@@ -82,13 +80,12 @@ export default function FleetPage() {
       <PublicPageShell>
         <section className="public-info-hero">
           <span className="kicker">Fleets and businesses</span>
-          <h1>Keep the whole fleet moving, without sending vehicles out one at a time.</h1>
+          <h1>Help us plan vehicle care for your business.</h1>
           <p>
-            If your business runs vans, trucks, or a pool of company cars in Montgomery
-            County, the expensive part of maintenance is rarely the repair — it is the
-            vehicle sitting idle while somebody drives it to a shop and waits. Tuveloz is
-            building multi-vehicle service with independent local providers who come to
-            where your vehicles already are.
+            Do you manage vans, trucks, or company cars in Montgomery County?
+            Tell us what your vehicles need. We&apos;re planning a way to connect
+            businesses with independent local providers, with quotes and records
+            for each vehicle. Fleet bookings are not open yet.
           </p>
         </section>
 
@@ -96,22 +93,22 @@ export default function FleetPage() {
           <article>
             <h2>What we&apos;re building for fleets</h2>
             <ul>
-              <li><span aria-hidden="true">✓</span>Save every vehicle once, then request work against any of them</li>
-              <li><span aria-hidden="true">✓</span>Independent providers quote their own prices — you compare and choose</li>
-              <li><span aria-hidden="true">✓</span>Service at your lot or depot instead of a shop trip per vehicle</li>
-              <li><span aria-hidden="true">✓</span>Photo and completion records kept per job, per vehicle</li>
+              <li><span aria-hidden="true">✓</span>Keep your business vehicles together in one account</li>
+              <li><span aria-hidden="true">✓</span>Compare quotes from independent providers and choose who to hire</li>
+              <li><span aria-hidden="true">✓</span>Discuss work at your location with providers who offer mobile service</li>
+              <li><span aria-hidden="true">✓</span>Keep photos and service records with each vehicle&apos;s jobs</li>
             </ul>
           </article>
           <article>
             <h2>Where this stands today</h2>
             <p>
               Provider applications are open. Customer requests, quotes, and payments are
-              not available yet — a service only turns on once its legal, government, and
-              insurance requirements are documented and satisfied.
+              not available yet. We&apos;re reviewing providers and the requirements
+              for each service before opening bookings.
             </p>
             <p>
-              Fleets that tell us what they run now are the ones we design the first
-              multi-vehicle release around.
+              Your feedback helps us understand which vehicles, services, and
+              locations businesses need us to support.
             </p>
             <p>
               <Link href="/how-it-works">See how the marketplace will work →</Link>
@@ -136,7 +133,7 @@ export default function FleetPage() {
         </section>
 
         <section className="public-info-actions">
-          <h2>Run vehicles for a living? So do our providers.</h2>
+          <h2>Explore Tuveloz</h2>
           <div>
             <Link className="button primary" href="/post-job">Check customer launch status <span>→</span></Link>
             <Link className="button secondary" href="/join">Join as a provider</Link>
