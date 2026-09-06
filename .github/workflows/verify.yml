@@ -101,6 +101,9 @@ jobs:
       - name: Verify saved provider applications and checklist changes in both languages
         run: npm run test:e2e:provider-form
 
+      - name: Verify public directory and status-page error recovery
+        run: npm run test:e2e:public-guidance
+
       - name: Apply every migration to a fresh local D1 database
         run: |
           rm -rf .wrangler/state

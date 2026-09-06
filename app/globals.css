@@ -8610,6 +8610,57 @@ footer > p,
   justify-content: space-between;
 }
 
+.system-status-page .account-card {
+  min-height: 0;
+}
+
+.system-status-availability {
+  display: grid;
+  margin: 0;
+}
+
+.system-status-availability > div {
+  align-items: baseline;
+  border-bottom: 1px solid #29465e;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.system-status-availability dt {
+  color: #adbdca;
+}
+
+.system-status-availability dd {
+  color: #f4f8fc;
+  font-weight: 750;
+  margin: 0;
+}
+
+.system-status-details {
+  border: 1px solid #29465e;
+  border-radius: 16px;
+  color: #f4f8fc;
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 20px;
+}
+
+.system-status-details > summary {
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.system-status-details .account-grid {
+  margin-top: 20px;
+}
+
+.system-status-details .owner-settings-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .account-count {
   align-items: center;
   background: rgba(255, 106, 0, 0.12);

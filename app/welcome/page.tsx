@@ -21,8 +21,8 @@ export default function WelcomePage() {
           <h1>Thank you for joining Tuveloz.</h1>
           <p>
             {isProvider
-              ? "Use your provider workspace to complete onboarding, submit evidence, list services for review, set future pricing and availability, and manage your business profile. Customer jobs, quotes, appointments, payments, and payouts open only after launch approval."
-              : "Your customer account is ready for account management now. After launch, you will be able to request service, compare independent providers and quotes, request appointments, and follow job updates; those customer actions and payments are not open yet."}
+              ? "Your provider account is ready. Start with the services you offer, then complete the application steps for those services. You can return to your account as you work through them. Customer bookings and payments are not open yet."
+              : "Your customer account is ready. You can manage your details now. When bookings open, you'll be able to request service, compare quotes, and choose an independent provider. Customer bookings and payments are not open yet."}
           </p>
         </div>
         <section className="account-card">
@@ -30,9 +30,9 @@ export default function WelcomePage() {
             <>
               <h2>Build your provider profile</h2>
               <p>
-                Add the services you want reviewed, provider-set prices, availability, service area,
-                and optional credentials. A credential that is legally required still needs
-                Tuveloz&apos;s separate official verification before the related service is activated.
+                Choose the services you offer and add your prices, availability, and service area.
+                We&apos;ll show you the documents needed for those services. Any required
+                credentials must be verified before you can offer the related work.
               </p>
               <div className="legal-actions">
                 <Link className="button primary" href="/provider-services">Add services and prices</Link>
@@ -43,9 +43,9 @@ export default function WelcomePage() {
             <>
               <h2>Start with your customer workspace</h2>
               <p>
-                Keep your account information together now. After customer launch,
-                you will be able to request an enabled exact service, compare eligible
-                independent providers, and choose whether to proceed.
+                Open your account to review your details, or check our launch page
+                to see what&apos;s available. Creating an account is free and
+                does not book a service.
               </p>
               <div className="legal-actions">
                 <Link className="button primary" href="/post-job">View customer launch status</Link>
@@ -54,7 +54,8 @@ export default function WelcomePage() {
             </>
           )}
           <p>
-            Tuveloz is an online marketplace. Independent providers—not Tuveloz—perform the vehicle services.
+            Tuveloz is an online marketplace that connects customers with independent
+            businesses. The provider you choose performs the vehicle service.
           </p>
         </section>
         <FollowAlong

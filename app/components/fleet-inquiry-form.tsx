@@ -29,11 +29,11 @@ export function FleetInquiryForm() {
   if (done) {
     return (
       <div className="fleet-form-done" role="status">
-        <strong>Recorded — thank you.</strong>
+        <strong>Thanks for telling us about your fleet.</strong>
         <p>
-          We have your fleet details. You will hear from Tuveloz when multi-vehicle
-          service opens in Montgomery County. Nothing has been booked or charged,
-          and this does not create an account.
+          We&apos;ve received your details and may follow up about your needs or
+          fleet service plans. This does not create an account, book a service,
+          or charge you.
         </p>
       </div>
     );
@@ -95,7 +95,7 @@ export function FleetInquiryForm() {
         />
       </label>
       <label>
-        <span>Email</span>
+        <span>Email address</span>
         <input
           type="email"
           value={email}
@@ -105,7 +105,7 @@ export function FleetInquiryForm() {
         />
       </label>
       <label>
-        <span>Phone <small>(optional — fastest way to reach you)</small></span>
+        <span>Phone <small>(optional)</small></span>
         <input
           type="tel"
           value={contactPhone}
@@ -170,14 +170,14 @@ export function FleetInquiryForm() {
 
       <p className="fleet-inquiry-note">
         Sending this records your interest only. It does not create an account,
-        book a service, or charge anything, and it is not a promise that any
-        service will be available.
+        book a service, or charge you. We haven&apos;t set a fleet launch date,
+        and availability will depend on providers in your area.
       </p>
 
       {error && <p className="form-error" role="alert">{error}</p>}
 
       <button className="button primary" type="submit" disabled={busy}>
-        {busy ? "Sending…" : "Tell Tuveloz about our fleet"}
+        {busy ? "Sending…" : "Send fleet details"}
       </button>
     </form>
   );

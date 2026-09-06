@@ -11,9 +11,13 @@ type DirectoryProvider = {
   headline: string;
   businessMunicipality: string;
   workMode: string;
-  areas: string[];
-  services: string[];
 };
+
+function isDirectoryProvider(value: unknown): value is DirectoryProvider {
+  return typeof value === "object" && value !== null
+    && ["slug", "businessName", "headline", "businessMunicipality", "workMode"]
+      .every((key) => typeof (value as Record<string, unknown>)[key] === "string");
+}
 
 /**
  * The public provider directory.
@@ -31,25 +35,39 @@ type DirectoryProvider = {
 export default function ProvidersDirectoryPage() {
   const [providers, setProviders] = useState<DirectoryProvider[] | null>(null);
   const [closed, setClosed] = useState(false);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/public-provider-directory")
+    const controller = new AbortController();
+    fetch("/api/public-provider-directory", { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
-        if (!active) return;
-        if (response.status === 503) {
+        const payload = await response.json() as { code?: string; providers?: unknown };
+        if (controller.signal.aborted) return;
+        if (response.status === 503 && payload?.code === "MARKETPLACE_ONBOARDING_ONLY") {
           setClosed(true);
           setProviders([]);
           return;
         }
-        const payload = await response.json().catch(() => ({ providers: [] })) as { providers?: DirectoryProvider[] };
-        setProviders(Array.isArray(payload.providers) ? payload.providers : []);
+        if (!response.ok || !Array.isArray(payload?.providers) || !payload.providers.every(isDirectoryProvider)) {
+          throw new Error("Directory unavailable");
+        }
+        setProviders(payload.providers);
       })
       .catch(() => {
-        if (active) setProviders([]);
+        if (controller.signal.aborted) return;
+        setError(true);
+        setProviders([]);
       });
-    return () => { active = false; };
-  }, []);
+    return () => controller.abort();
+  }, [attempt]);
+
+  function retry() {
+    setProviders(null);
+    setClosed(false);
+    setError(false);
+    setAttempt((value) => value + 1);
+  }
 
   return (
     <PublicInfoPage
@@ -59,27 +77,36 @@ export default function ProvidersDirectoryPage() {
       ]}
       kicker="Provider directory"
       title="The independent businesses on Tuveloz."
-      intro={`Every approved provider with a public profile in ${CURRENT_LAUNCH_AREA}. Each one is an independent business that sets its own prices and chooses its own work — Tuveloz does not employ, train, or assign them.`}
+      intro={`Get to know independent vehicle-service businesses in ${CURRENT_LAUNCH_AREA}. Providers set their own prices and choose which jobs to take. You decide who to hire.`}
       sections={[
         {
-          title: "What being listed here means",
-          text: "A profile appears once the business has been approved for at least one currently open service, its identity and business records have been verified, and any evidence that service requires is on file and current. It is not an endorsement, a ranking, or a guarantee of the work.",
+          title: "What we check",
+          text: "Before a profile is published, we review the provider's identity, business records, and required documents for the services they offer. Those records must be current, and at least one approved service must be open for bookings.",
           points: [
-            "Approval covers specific services, never a blanket sign-off.",
-            "Tuveloz shows the exact evidence checked for a service, person, and date.",
+            "Profiles explain which services and documents were reviewed.",
+            "A listing is not an endorsement or a guarantee of the work.",
             "Reviews come from completed jobs only.",
           ],
         },
         {
           title: "How the directory is ordered",
-          text: "Businesses appear alphabetically by name. Founding providers get no placement advantage, and providers cannot pay to appear higher. The order is not a quality rating. You choose the provider that fits your needs.",
+          text: "Businesses appear alphabetically by name. Providers cannot pay for a higher position, and founding providers get no placement advantage. The order is not a quality rating.",
         },
       ]}
     >
-      <section className="local-link-section">
-        <h2>Providers</h2>
+      <section className="local-link-section" aria-labelledby="directory-heading" aria-busy={providers === null}>
+        <h2 id="directory-heading">Providers</h2>
         {providers === null && (
-          <p className="local-link-note">Loading the directory…</p>
+          <p className="local-link-note" role="status">Loading the directory…</p>
+        )}
+
+        {error && (
+          <>
+            <p className="form-error" role="alert">
+              We couldn&apos;t load the provider directory. Please try again.
+            </p>
+            <button className="button secondary" type="button" onClick={retry}>Try again</button>
+          </>
         )}
 
         {closed && (
@@ -90,7 +117,7 @@ export default function ProvidersDirectoryPage() {
           </p>
         )}
 
-        {!closed && providers !== null && providers.length === 0 && (
+        {!error && !closed && providers !== null && providers.length === 0 && (
           <p className="local-link-note">
             No provider profiles are published yet.
           </p>
