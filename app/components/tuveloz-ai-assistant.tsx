@@ -38,6 +38,7 @@ export function TuvelozAiAssistant() {
   const [error, setError] = useState<AssistantProblem | null>(null);
   const [mode, setMode] = useState("policy-guide");
   const [supportMessage, setSupportMessage] = useState<string | null>(null);
+  const [supportOpen, setSupportOpen] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const inputRevision = useRef(0);
@@ -260,13 +261,16 @@ export function TuvelozAiAssistant() {
           </button>
         </form>
         <div data-manual-language>
-          <button type="button" className="button outline" aria-expanded={supportMessage !== null}
-            onClick={() => setSupportMessage(current => current === null
-              ? input.trim() || unansweredQuestion || [...turns].reverse().find(turn => turn.role === "user")?.content || ""
-              : null)}>
+          <button type="button" className="button outline" aria-expanded={supportOpen} aria-controls="owner-support-panel"
+            onClick={() => {
+              if (supportMessage === null) setSupportMessage(input.trim() || unansweredQuestion || [...turns].reverse().find(turn => turn.role === "user")?.content || "");
+              setSupportOpen(current => !current);
+            }}>
             {t("Contact the owner", "Contactar al dueño")}
           </button>
-          {supportMessage !== null && <OwnerSupportForm language={language} audience={audience === "provider" ? "provider" : "customer"} initialMessage={supportMessage} />}
+          <div id="owner-support-panel" hidden={!supportOpen}>
+            {supportMessage !== null && <OwnerSupportForm language={language} audience={audience === "provider" ? "provider" : "customer"} initialMessage={supportMessage} />}
+          </div>
         </div>
         <p className="ai-disclaimer">
           Tuveloz AI does not diagnose or inspect your vehicle, give a price quote,

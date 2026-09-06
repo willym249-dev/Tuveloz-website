@@ -110,6 +110,9 @@ jobs:
       - name: Verify bilingual help-page replies, retries, and mobile layout
         run: npm run test:e2e:help
 
+      - name: Verify owner-contact receipts, draft retention, and stalled sends
+        run: npm run test:e2e:support
+
       - name: Verify account forms recover from stalled and malformed responses
         run: npm run test:e2e:account-form
 

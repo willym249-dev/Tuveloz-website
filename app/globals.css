@@ -5118,6 +5118,9 @@ label > small {
 
 .ai-support input:not([type="checkbox"]),
 .ai-support textarea {
+  background: #080808;
+  border-color: #493123;
+  color: #f7f3ef;
   width: 100%;
   min-width: 0;
 }
@@ -11994,13 +11997,13 @@ footer > p,
 
 .ai-message-user p {
   background: var(--blue);
-  color: #fff;
+  color: #050505;
 }
 
 .ai-message-assistant p {
   background: var(--paper);
   border: 1px solid var(--line);
-  color: var(--ink);
+  color: #f7f3ef;
 }
 
 .ai-message-pending p {
@@ -12009,7 +12012,7 @@ footer > p,
 }
 
 .ai-error {
-  color: #c0392b;
+  color: #ffb3a5;
   font-size: 14px;
   margin: 0;
 }
@@ -12024,14 +12027,19 @@ footer > p,
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 14px;
-  color: var(--ink);
+  color: #f7f3ef;
   flex: 1;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.5;
   min-width: 0;
   padding: 12px 14px;
   resize: vertical;
+}
+
+.ai-input::placeholder {
+  color: #b6aaa1;
+  opacity: 1;
 }
 
 .ai-input:focus {

@@ -8,6 +8,7 @@ import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
 import { SaveMySpotButton } from "./save-my-spot-button";
 import { SignedInReturnNote } from "./signed-in-return-note";
 import { TuvelozIcon } from "./tuveloz-icons";
+import { LaunchHelpNotice } from "./launch-help-notice";
 
 const valueProps = [
   {
@@ -248,26 +249,7 @@ export function CustomerLander() {
         </div>
       </section>
 
-      <section className="launch-help-section" aria-labelledby="launch-help-heading">
-        <div>
-          <span className="kicker">Need help today?</span>
-          <h2 id="launch-help-heading">If your car needs attention today</h2>
-        </div>
-        <div>
-          <p>
-            Tuveloz isn&apos;t dispatching service requests yet. If your car trouble is
-            urgent or the vehicle may be unsafe to drive, contact a local shop or
-            mobile mechanic directly, or call a licensed towing service.
-          </p>
-          <p>
-            If you&apos;re not sure whether it&apos;s safe to drive, have the vehicle checked
-            before continuing your trip.
-          </p>
-          <Link className="text-link" href="#launch-updates">
-            Join the list for launch updates →
-          </Link>
-        </div>
-      </section>
+      <LaunchHelpNotice updatesHref="#launch-updates" />
 
       <section className="section early-access" id="early-access">
         <div className="early-access-copy">
