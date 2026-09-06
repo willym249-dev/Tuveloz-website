@@ -190,7 +190,7 @@ test("build limits provider onboarding to Montgomery County and collects expansi
 
   assert.ok(contents.includes("Local vehicle-service marketplace"));
   assert.ok(contents.includes("Provider onboarding now in Montgomery County, Maryland"));
-  assert.ok(contents.includes("Tuveloz provider onboarding currently focuses on Montgomery County, Maryland."));
+  assert.ok(contents.includes("Provider applications are open in Montgomery County, Maryland."));
   assert.ok(contents.includes("Bring Tuveloz to your area."));
   assert.ok(contents.includes("Request my area"));
   assert.ok(contents.includes("Enter a Montgomery County ZIP code"));

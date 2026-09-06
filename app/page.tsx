@@ -805,6 +805,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         )}
       </section>
 
+      {view !== "about" && (
       <section className="trust-section" aria-labelledby="trust-heading">
         <div className="trust-intro">
           <span className="kicker light">What you can expect</span>
@@ -870,6 +871,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           )}
         </div>
       </section>
+      )}
 
       {view === "home" && (
         <section className="ai-home-card" aria-labelledby="tuveloz-ai-heading">
@@ -891,7 +893,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">For our neighbors and local pros</span>
           {view === "about" ? (
             <h1 id="audience-heading">
-              Good car care starts with good connections.
+              About Tuveloz
             </h1>
           ) : (
             <h2 id="audience-heading">
@@ -899,8 +901,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </h2>
           )}
           <p>
-            Tuveloz keeps customers in control of their vehicle-service
-            decisions and independent providers in control of their business.
+            {view === "about"
+              ? "We're building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose who to work with, and providers set their own prices and hours."
+              : "Tuveloz keeps customers in control of their vehicle-service decisions and independent providers in control of their business."}
           </p>
         </div>
 
@@ -960,7 +963,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </section>
       )}
 
-      {view !== "provider" && (
+      {view !== "provider" && view !== "about" && (
       <section className="section services" id="services">
         <div className="section-heading">
           <div>
@@ -986,7 +989,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <div className="quote-icon"><TuvelozIcon name="quote" /></div>
           <div>
             <span className="kicker">Coming next</span>
-            <h3>Send a photo of that dent, get prices back.</h3>
+            <h3>Have another service in mind?</h3>
             <p>
               Have a dent, scuff, or paint job in mind? These services are still being considered. Tell us what you need so we can understand what matters to local car owners.
             </p>
@@ -998,6 +1001,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
+      {view !== "about" && (
       <section className="section how" id="how-it-works">
         <div className="how-intro">
           <span className="kicker light">
@@ -1035,8 +1039,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           ))}
         </div>
       </section>
+      )}
 
-      {view !== "home" && (
+      {view !== "home" && view !== "about" && (
       <section className="section reviews-section" id="reviews">
         <div className="reviews-heading">
           <div>
@@ -1108,7 +1113,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "provider" && view !== "home" && (
+      {view !== "provider" && view !== "home" && view !== "about" && (
       <section className="section request-section" id="request">
         <div className="request-copy">
           <span className="kicker">
@@ -1599,7 +1604,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && (
+      {view !== "home" && view !== "about" && (
       <section className="section provider-pitch" id="why-join">
         <div className="section-heading">
           <div>
@@ -1643,7 +1648,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && (
+      {view !== "home" && view !== "about" && (
       <section className="section providers" id="providers">
         <div className="provider-panel">
           <div className="provider-copy">
@@ -1660,12 +1665,11 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
             <section className="provider-handles" aria-labelledby="provider-handles-title">
               <div className="provider-handles-heading">
-                <span className="kicker light">Show up. Do the work.</span>
-                <h3 id="provider-handles-title">You fix the vehicle. We knock out the paperwork.</h3>
+                <span className="kicker light">More time for your work</span>
+                <h3 id="provider-handles-title">Keep the paperwork in one place.</h3>
                 <p>
-                  Booking dates, quotes, records, invoices, getting paid — the admin
-                  that eats everyone else&apos;s evenings lives in one workspace here.
-                  Spend your time under the hood, not buried in office work.
+                  We&apos;re building one place for appointments, quotes, job photos,
+                  and invoices, so you can spend more time on your work.
                 </p>
               </div>
               <div className="provider-handles-grid">
@@ -1680,9 +1684,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 ))}
               </div>
               <small className="provider-handles-note">
-                Get set up and poke around now — these tools go live for real jobs
-                when we open, and we&apos;ll keep you posted. You&apos;re always your own
-                business: we never set your prices, your hours, or how you work.
+                You can apply and explore now. Tools for managing customer jobs
+                become available when bookings open. You stay in charge of your
+                prices, hours, and work.
               </small>
             </section>
           </div>
@@ -1694,7 +1698,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && (
+      {view !== "home" && view !== "about" && (
       <section className="section difference-section" id="what-makes-us-different">
         <div className="section-heading">
           <div>
@@ -1731,10 +1735,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           <span className="kicker">Future expansion</span>
           <h2>Bring Tuveloz to your area.</h2>
           <p>
-            Tuveloz provider onboarding currently focuses on Montgomery County,
-            Maryland. Customers and providers elsewhere in Maryland or Washington,
-            DC can request their area. We&apos;ll use combined demand to choose where
-            to launch next.
+            Provider applications are open in Montgomery County, Maryland. If
+            you&apos;re elsewhere in Maryland or Washington, DC, tell us your area.
+            Your requests help us decide where to open next.
           </p>
           <div className="expansion-signals" aria-label="Expansion demand groups">
             <span>Customers</span>
@@ -1756,7 +1759,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           ) : (
             <>
               <h3>Request your area</h3>
-              <p>Four quick answers help us measure real local demand.</p>
+              <p>Tell us where you&apos;d like to use Tuveloz.</p>
               <fieldset className="expansion-audience-fieldset">
                 <legend>I am a…</legend>
                 <div className="expansion-role-options">
@@ -1891,7 +1894,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </fieldset>
               <fieldset className="feedback-choice-group">
                 <legend>Which tools would make a provider&apos;s work easier?</legend>
-                <p>Pick the tools that would genuinely help.</p>
+                <p>Choose any that would help your business.</p>
                 <div className="feedback-options">
                   {feedbackProviderOptions.map((option) => (
                     <label key={option}>
