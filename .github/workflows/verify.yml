@@ -73,8 +73,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Chromium for Spanish coverage
-        run: npx playwright install --with-deps chromium
+      - name: Install browsers for Spanish coverage and document uploads
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Lint
         run: npm run lint
@@ -84,6 +84,9 @@ jobs:
 
       - name: Typecheck application and Worker
         run: npm run typecheck
+
+      - name: Verify document resizing and bilingual upload forms in Chromium and WebKit
+        run: npm run test:e2e:uploads
 
       - name: Apply every migration to a fresh local D1 database
         run: |

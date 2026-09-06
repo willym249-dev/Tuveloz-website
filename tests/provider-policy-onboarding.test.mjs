@@ -123,7 +123,8 @@ test("private evidence stays scoped and work authorization documents are rejecte
   assert.ok(evidenceRoute.includes('status: "pending"'));
   assert.ok(evidenceRoute.includes('"cache-control": "private, no-store, max-age=0"'));
   assert.ok(storage.includes('access: "private"'));
-  assert.ok(storage.includes("MAX_EVIDENCE_BYTES = 10 * 1024 * 1024"));
+  // Exact 3.5 MB acceptance/rejection is exercised by provider-evidence-sizing.test.mjs.
+  assert.ok(storage.includes("value.size > MAX_EVIDENCE_BYTES"));
 });
 
 test("every operational stage uses the central eligibility model and no real provider fails open", async () => {

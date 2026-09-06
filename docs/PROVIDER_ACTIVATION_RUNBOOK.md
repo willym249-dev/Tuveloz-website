@@ -2,10 +2,19 @@
 
 - **Status:** active; operational proof and launch reviews incomplete
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-05
+- **Last reviewed:** 2026-09-06
 
 Internal operations doc. How to take the provider side from "applications open"
 to "qualifying providers go active for real." Not public copy.
+
+**September 6 upload update:** At the owner's request, new provider evidence
+uploads are capped at 3,500,000 bytes. Larger document photos can be resized
+locally with a readability preview; PDFs retain all pages and must fit the cap.
+The upload form supports English and Spanish. The earlier 10 MB capacity
+mismatch below is historical. Production-use terms, shared scanner capacity
+and a guarded live scan remain unresolved; no payment retry or scanner
+activation is authorized by this size change. See the current
+[scanner activation procedure](operations/evidence-scanner-activation.md).
 
 ## What is already true (code-side, shipped)
 

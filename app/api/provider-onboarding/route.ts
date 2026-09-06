@@ -524,6 +524,7 @@ async function responseData(
       id: account.provider.id,
       name: account.provider.name,
       email: account.provider.email,
+      preferredLanguage: account.provider.preferredLanguage,
       applicationStatus: account.provider.status,
       verificationStatus: account.provider.verificationStatus,
       requestedServices: selectedServices,

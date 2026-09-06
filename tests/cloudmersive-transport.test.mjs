@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { stripTypeScriptTypes } from "node:module";
 import test from "node:test";
 import { compileFunction } from "node:vm";
+import { MAX_EVIDENCE_BYTES } from "../lib/provider-evidence-limits.ts";
 
 import {
   CLOUDMERSIVE_ENGINE_VERSION,
@@ -37,6 +38,7 @@ async function fixture(t, kind, { status = 200, waitingForHeaders = false } = {}
   let requestStarted;
   const started = new Promise(resolve => { requestStarted = resolve; });
   const bindings = {
+    MAX_EVIDENCE_BYTES,
     setTimeout(callback, delay) {
       assert.equal(delay, 45_000);
       const id = Symbol("scanner deadline");

@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
+import { EVIDENCE_SIZE_ERROR, MAX_EVIDENCE_BYTES } from "./provider-evidence-limits";
 
-const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EVIDENCE_TYPES = new Map([
   ["application/pdf", "pdf"],
   ["image/jpeg", "jpg"],
@@ -82,7 +82,7 @@ export async function validateProviderEvidence(value: unknown) {
   }
   if (value.size > MAX_EVIDENCE_BYTES) {
     throw new ProviderEvidenceValidationError(
-      "The document must be 10 MB or smaller.",
+      EVIDENCE_SIZE_ERROR,
     );
   }
   const bytes = await value.arrayBuffer();

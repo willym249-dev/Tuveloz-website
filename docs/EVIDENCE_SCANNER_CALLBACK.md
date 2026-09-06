@@ -28,7 +28,7 @@ present: `EVIDENCE_SCAN_PROVIDER=cloudmersive`, `CLOUDMERSIVE_API_KEY`, and a
 32-or-more-character `EVIDENCE_SCAN_WEBHOOK_SECRET`.
 
 For each pending request, the Worker loads the private R2 object, caps it at
-the same 10 MB upload limit, recomputes SHA-256, and requires an exact match to
+the same 3.5 MB (3,500,000 byte) upload limit, recomputes SHA-256, and requires an exact match to
 the D1 evidence and scan records before sending any bytes to Cloudmersive's
 Advanced Virus Scan endpoint. The request blocks executables, invalid files,
 scripts, password-protected files, macros, XML external entities, insecure
