@@ -79,6 +79,16 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Set up Python for private document scanner checks
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Verify static document policy and offline scanner failures
+        run: |
+          python -m pip install --require-hashes -r scanner/requirements.txt
+          python -m unittest discover -s scanner -p 'test_*.py' -v
+
       - name: Test
         run: npm test
 

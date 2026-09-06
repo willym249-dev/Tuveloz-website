@@ -1640,6 +1640,28 @@ export const evidenceFileScans = sqliteTable(
   ],
 );
 
+export const selfHostedScanJobs = sqliteTable("self_hosted_scan_jobs", {
+  jobKey: text("job_key").primaryKey(),
+  id: text("id").notNull().unique(),
+  kind: text("kind").notNull(),
+  targetId: text("target_id").notNull(),
+  evidenceId: text("evidence_id").notNull().default(""),
+  providerId: text("provider_id").notNull().default(""),
+  storageKey: text("storage_key").notNull(),
+  contentType: text("content_type").notNull(),
+  fileHash: text("file_hash").notNull().default(""),
+  byteSize: integer("byte_size").notNull().default(0),
+  leaseUntil: text("lease_until").notNull(),
+  createdAt: text("created_at").notNull(),
+  resultStatus: text("result_status").notNull().default(""),
+  resultDigest: text("result_digest").notNull().default(""),
+  reportJson: text("report_json").notNull().default(""),
+  lastError: text("last_error").notNull().default(""),
+}, (table) => [
+  index("self_hosted_scan_jobs_lease_idx").on(table.resultStatus, table.leaseUntil),
+  check("self_hosted_scan_jobs_kind_check", sql`${table.kind} in ('evidence', 'message')`),
+]);
+
 export const customerAgreementAcceptances = sqliteTable(
   "customer_agreement_acceptances",
   {

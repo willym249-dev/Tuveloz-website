@@ -3,7 +3,7 @@
 - **Status:** active
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-06
-- **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the Cloudmersive scheduled scanner,
+- **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the supported document scanners,
   and the `evidence_file_security_and_scanner` launch gate
 
 The owner-approved Cloudmersive account exists. Its API key and random 64-character
@@ -18,6 +18,16 @@ Do not retry payment as part of that change. The advertised Free Tier is an
 evaluation plan; confirm its suitability, capacity and actual endpoint behavior
 before enabling processing. A smaller upload limit alone does not activate the
 scanner or establish that the free plan supports production use.
+
+The owner has declined a paid upgrade and deferred the vendor-support email.
+Do not purchase a plan, retry payment or send that email as part of scanner work.
+A free, owner-PC alternative is implemented in
+[`../../scanner/README.md`](../../scanner/README.md). It combines ClamAV with
+strict PDF/image checks and a signed outbound connection. It has its own
+credential, installation, verification and rollback procedure. Its default is
+disabled; local tests do not establish a live connection or launch readiness.
+The Cloudmersive instructions below remain a reference for a separately chosen
+vendor integration.
 
 ## Provider upload sizing
 
