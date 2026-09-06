@@ -110,6 +110,9 @@ jobs:
       - name: Verify bilingual help-page replies, retries, and mobile layout
         run: npm run test:e2e:help
 
+      - name: Verify account forms recover from stalled and malformed responses
+        run: npm run test:e2e:account-form
+
       - name: Apply every migration to a fresh local D1 database
         run: |
           rm -rf .wrangler/state

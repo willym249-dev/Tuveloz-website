@@ -15,6 +15,7 @@ import type {
 import { primeAccountHeaderState } from "../components/account-header-state";
 import { track } from "../../lib/analytics";
 import { REMEMBERED_EMAIL_KEY } from "../../lib/remembered-email";
+import { requestAccountResponse } from "../../lib/account-response";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -114,9 +115,10 @@ export default function AccountPage() {
   const [privacyReturn, setPrivacyReturn] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/options", { cache: "no-store" }).then(async (response) => {
+    const controller = new AbortController();
+    requestAccountResponse("/api/auth/options", { cache: "no-store", signal: controller.signal }, 15000).then((response) => {
       if (!response.ok) return;
-      const options = (await response.json()) as { phoneSignIn?: boolean };
+      const options = response.data as { phoneSignIn?: boolean };
       setPhoneSignInAvailable(options.phoneSignIn === true);
     }).catch(() => {
       // Keep password and email sign-in available when this check cannot load.
@@ -165,13 +167,13 @@ export default function AccountPage() {
         }
       });
     }
-    fetch("/api/account", { cache: "no-store" }).then(async (response) => {
+    requestAccountResponse("/api/account", { cache: "no-store", signal: controller.signal }, 15000).then((response) => {
       if (response.status === 401) {
         primeAccountHeaderState("signed-out");
         return;
       }
       if (!response.ok) return;
-      const result = (await response.json()) as { role?: Role; destination?: string };
+      const result = response.data as { role?: Role; destination?: string };
       if (result.role) {
         primeAccountHeaderState(result.role, result.destination ?? "");
         window.location.replace(destinationAfterSignIn(
@@ -180,7 +182,10 @@ export default function AccountPage() {
       }
     }).catch(() => {
       // The sign-in form remains available if the session check is unavailable.
-    }).finally(() => setChecking(false));
+    }).finally(() => {
+      if (!controller.signal.aborted) setChecking(false);
+    });
+    return () => controller.abort();
   }, []);
 
   function clearFlowMessages() {
@@ -246,12 +251,12 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/auth/password", {
+      const response = await requestAccountResponse("/api/auth/password", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, role, password }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
         challengeRequired?: boolean;
         error?: string;
         message?: string;
@@ -278,12 +283,12 @@ export default function AccountPage() {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/password/verify", {
+      const response = await requestAccountResponse("/api/auth/password/verify", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ code, email, role }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
         destination?: string;
         error?: string;
       };
@@ -318,16 +323,17 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/auth/password/request", {
+      const response = await requestAccountResponse("/api/auth/password/request", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, role, purpose }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
+        ok?: boolean;
         error?: string;
         message?: string;
       };
-      if (!response.ok) {
+      if (!response.ok || result.ok !== true) {
         setError(result.error || "Unable to send a verification code.");
         return;
       }
@@ -350,7 +356,7 @@ export default function AccountPage() {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/password/complete", {
+      const response = await requestAccountResponse("/api/auth/password/complete", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -365,7 +371,7 @@ export default function AccountPage() {
           launchNotificationConsent: launchNotification,
         }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
         destination?: string;
         error?: string;
       };
@@ -395,16 +401,17 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/auth/request-code", {
+      const response = await requestAccountResponse("/api/auth/request-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, role }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
+        ok?: boolean;
         error?: string;
         message?: string;
       };
-      if (!response.ok) {
+      if (!response.ok || result.ok !== true) {
         setError(result.error || "Unable to send a sign-in code.");
         return;
       }
@@ -423,12 +430,12 @@ export default function AccountPage() {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/verify-code", {
+      const response = await requestAccountResponse("/api/auth/verify-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, role, code }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
         destination?: string;
         error?: string;
       };
@@ -454,16 +461,17 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch("/api/auth/phone/request-code", {
+      const response = await requestAccountResponse("/api/auth/phone/request-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ phone }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
+        ok?: boolean;
         error?: string;
         message?: string;
       };
-      if (!response.ok) {
+      if (!response.ok || result.ok !== true) {
         setError(result.error || "Unable to send a sign-in code.");
         return;
       }
@@ -482,12 +490,12 @@ export default function AccountPage() {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/phone/verify-code", {
+      const response = await requestAccountResponse("/api/auth/phone/verify-code", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ phone, role, code }),
       });
-      const result = (await response.json()) as {
+      const result = response.data as {
         destination?: string;
         error?: string;
       };
@@ -508,11 +516,11 @@ export default function AccountPage() {
     setError("");
     setMessage("");
     try {
-      const optionsResponse = await fetch(
+      const optionsResponse = await requestAccountResponse(
         "/api/auth/passkeys/authenticate/options",
         { method: "POST" },
       );
-      const optionsResult = (await optionsResponse.json()) as {
+      const optionsResult = optionsResponse.data as {
         error?: string;
         options?: PublicKeyCredentialRequestOptionsJSON;
       };
@@ -524,7 +532,7 @@ export default function AccountPage() {
       const passkeyResponse = await startAuthentication({
         optionsJSON: optionsResult.options,
       });
-      const verificationResponse = await fetch(
+      const verificationResponse = await requestAccountResponse(
         "/api/auth/passkeys/authenticate/verify",
         {
           method: "POST",
@@ -532,7 +540,7 @@ export default function AccountPage() {
           body: JSON.stringify({ response: passkeyResponse }),
         },
       );
-      const verificationResult = (await verificationResponse.json()) as {
+      const verificationResult = verificationResponse.data as {
         destination?: string;
         error?: string;
       };
@@ -554,11 +562,11 @@ export default function AccountPage() {
     setBusy(true);
     setError("");
     try {
-      const optionsResponse = await fetch(
+      const optionsResponse = await requestAccountResponse(
         "/api/auth/passkeys/register/options",
         { method: "POST" },
       );
-      const optionsResult = (await optionsResponse.json()) as {
+      const optionsResult = optionsResponse.data as {
         error?: string;
         options?: PublicKeyCredentialCreationOptionsJSON;
       };
@@ -570,7 +578,7 @@ export default function AccountPage() {
       const passkeyResponse = await startRegistration({
         optionsJSON: optionsResult.options,
       });
-      const verificationResponse = await fetch(
+      const verificationResponse = await requestAccountResponse(
         "/api/auth/passkeys/register/verify",
         {
           method: "POST",
@@ -578,7 +586,7 @@ export default function AccountPage() {
           body: JSON.stringify({ response: passkeyResponse }),
         },
       );
-      const verificationResult = (await verificationResponse.json()) as {
+      const verificationResult = verificationResponse.data as {
         error?: string;
         ok?: boolean;
       };
@@ -615,11 +623,11 @@ export default function AccountPage() {
 
       <section className="account-main account-login-main">
         <div className="account-welcome">
-          <span className="account-kicker">Sign in to Tuveloz</span>
+          <span className="account-kicker">Your Tuveloz account</span>
           <h1>Welcome to Tuveloz.</h1>
           <p>
-            Access your customer account or provider application. Customer job
-            tools remain closed during provider onboarding.
+            Create an account, sign in, or continue your provider application.
+            Customer bookings are not open yet.
           </p>
         </div>
 
@@ -672,7 +680,7 @@ export default function AccountPage() {
               onClick={() => chooseRole("provider")}
               type="button"
             >
-              Provider applicant / provider
+              Provider
             </button>
           </div>
 
@@ -750,7 +758,7 @@ export default function AccountPage() {
               </p>
               <ul>
                 <li>Today: save your account and sign in securely.</li>
-                <li>At launch: post one request, compare local quotes, and choose.</li>
+                <li>At launch: request service, compare quotes, and choose a provider.</li>
               </ul>
             </div>
           )}
@@ -1256,8 +1264,8 @@ export default function AccountPage() {
           )}
           {!passkeySetupDestination && (
             <small className="account-security-note">
-              Passwords are securely hashed. Email codes expire in 10 minutes
-              and can be used once.
+              Keep your sign-in code private. Each code works once and expires
+              after 10 minutes.
             </small>
           )}
         </section>
@@ -1271,9 +1279,7 @@ export default function AccountPage() {
 
         <div className="account-owner-access">
           <p>
-            Owner and admin access is separate and protected by Cloudflare
-            Access. Customer or provider sign-in — by password, passkey, email
-            code, or phone code — never grants owner or admin access.
+            Customer and provider accounts do not give access to owner or admin tools.
           </p>
           <Link className="account-text-button" href="/admin">
             Owner/admin sign-in

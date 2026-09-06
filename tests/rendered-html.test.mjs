@@ -281,7 +281,7 @@ test("build provides secure password sign-in with verified email setup and a cod
   assert.ok(contents.includes("Finish signing in"));
   assert.ok(contents.includes("Provider workspace"));
   assert.ok(contents.includes("Customer workspace"));
-  assert.ok(contents.includes("Email codes expire in 10 minutes"));
+  assert.ok(contents.includes("Keep your sign-in code private. Each code works once and expires after 10 minutes."));
   assert.ok(contents.includes("Save this private link."));
   assert.ok(homeSource.includes("header-sign-in"));
   assert.ok(homeSource.includes("useAccountHeaderState()"));
