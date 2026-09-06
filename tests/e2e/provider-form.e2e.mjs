@@ -45,7 +45,7 @@ const server = createServer(async (request, response) => {
     for await (const chunk of request) chunks.push(chunk);
     challenges.push(JSON.parse(Buffer.concat(chunks).toString()));
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify({ challengeId: "synthetic-email-challenge" }));
+    response.end(JSON.stringify({ ok: true, challengeId: "synthetic-email-challenge" }));
     return;
   }
   if (assets.has(path)) {

@@ -113,6 +113,9 @@ jobs:
       - name: Verify account forms recover from stalled and malformed responses
         run: npm run test:e2e:account-form
 
+      - name: Verify provider submission receipts, retries, and address suggestions
+        run: npm run test:e2e:provider-submission
+
       - name: Apply every migration to a fresh local D1 database
         run: |
           rm -rf .wrangler/state

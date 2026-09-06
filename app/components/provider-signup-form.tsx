@@ -49,6 +49,7 @@ import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
 import { normalizeReferralCode } from "../../lib/referral-code";
 import { rememberEmailForSignIn } from "../../lib/remembered-email";
+import { providerFormFailure, requestProviderForm, type ProviderFormRequest } from "../../lib/provider-form-response";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES,
@@ -447,6 +448,34 @@ export function ProviderSignupForm() {
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
+  const applicationRequest = useRef<AbortController | null>(null);
+
+  useEffect(() => () => {
+    applicationRequest.current?.abort();
+    applicationRequest.current = null;
+  }, []);
+
+  async function requestApplication(stage: ProviderFormRequest, payload: Record<string, unknown>) {
+    if (applicationRequest.current) return null;
+    const controller = new AbortController();
+    applicationRequest.current = controller;
+    setApplicationBusy(true);
+    setApplicationError("");
+    try {
+      const reply = await requestProviderForm(stage, payload, controller.signal, providerFormIsSpanish);
+      return controller.signal.aborted ? null : reply;
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setApplicationError(error instanceof Error ? error.message : providerFormFailure(stage, providerFormIsSpanish));
+      }
+      return null;
+    } finally {
+      if (applicationRequest.current === controller) {
+        applicationRequest.current = null;
+        setApplicationBusy(false);
+      }
+    }
+  }
 
   // Long service lists can leave a phone scrolled below the next step when
   // its content is shorter. Bring the new step into view and move keyboard /
@@ -697,6 +726,7 @@ export function ProviderSignupForm() {
 
   async function handleFinalSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (applicationRequest.current) return;
     if (hasVisibleLegalRequirements && !legalConfirmed) {
       resetChallenge();
       setApplicationError("");
@@ -782,52 +812,38 @@ export function ProviderSignupForm() {
           : "Enter the 6-digit code sent to the application email.");
         return;
       }
-      setApplicationBusy(true);
-      setApplicationError("");
-      try {
-        const response = await fetch("/api/providers", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            ...pendingApplicationPayload,
-            challengeId: applicationChallengeId,
-            verificationCode: applicationVerificationCode,
-            // Attribution only. Never part of the verified application payload
-            // or its hash — the server records it after the application is
-            // stored, and it changes nothing about review or eligibility.
-            referralCode: referralCode(),
-            analyticsAttribution: { ...campaignAttribution(), variants: activeVariants() },
-            // Promotional texts only. Reaching an applicant about their own
-            // application is transactional and never depends on this.
-            smsMarketingConsent: values["provider-sms-marketing-consent"] === "yes",
-          }),
-        });
-        const result = (await response.json()) as { error?: string };
-        if (!response.ok) throw new Error(result.error || "Please try again.");
-        // The applicant proved control of this email seconds ago; prefill the
-        // /account sign-in so "Continue provider verification" doesn't ask
-        // them to retype it.
-        rememberEmailForSignIn(String(pendingApplicationPayload.email ?? ""));
-        form.reset();
-        clearSignupDraft();
-        setDraftFields({});
-        setDraftRestored(false);
-        setApplicationChallengeId("");
-        setApplicationVerificationCode("");
-        setPendingApplicationPayload(null);
-        setConfirmingSubmit(false);
-        setSelectedProviderServices([]);
-        setSelectedProviderWorkLocations([]);
-        setProviderAssessment(emptyProviderSelfAssessment);
-        setLegalConfirmed(false);
-        setStep(1);
-        setApplicationSent(true);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Please try again.";
-        setApplicationError(message);
-      } finally {
-        setApplicationBusy(false);
-      }
+      const result = await requestApplication("application", {
+        ...pendingApplicationPayload,
+        challengeId: applicationChallengeId,
+        verificationCode: applicationVerificationCode,
+        // Attribution only. Never part of the verified application payload
+        // or its hash — the server records it after the application is
+        // stored, and it changes nothing about review or eligibility.
+        referralCode: referralCode(),
+        analyticsAttribution: { ...campaignAttribution(), variants: activeVariants() },
+        // Promotional texts only. Reaching an applicant about their own
+        // application is transactional and never depends on this.
+        smsMarketingConsent: values["provider-sms-marketing-consent"] === "yes",
+      });
+      if (!result) return;
+      // The applicant proved control of this email seconds ago; prefill the
+      // /account sign-in so "Continue provider verification" doesn't ask
+      // them to retype it.
+      rememberEmailForSignIn(String(pendingApplicationPayload.email ?? ""));
+      form.reset();
+      clearSignupDraft();
+      setDraftFields({});
+      setDraftRestored(false);
+      setApplicationChallengeId("");
+      setApplicationVerificationCode("");
+      setPendingApplicationPayload(null);
+      setConfirmingSubmit(false);
+      setSelectedProviderServices([]);
+      setSelectedProviderWorkLocations([]);
+      setProviderAssessment(emptyProviderSelfAssessment);
+      setLegalConfirmed(false);
+      setStep(1);
+      setApplicationSent(true);
       return;
     }
 
@@ -837,54 +853,23 @@ export function ProviderSignupForm() {
       return;
     }
 
-    setApplicationBusy(true);
-    setApplicationError("");
-    try {
-      const response = await fetch("/api/providers/challenge", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = (await response.json()) as { error?: string; challengeId?: string };
-      if (!response.ok) throw new Error(result.error || "Please try again.");
-      if (!result.challengeId) {
-        throw new Error("A verification code could not be prepared. Please try again.");
-      }
-      setConfirmingSubmit(false);
+    const result = await requestApplication("challenge", payload);
+    setConfirmingSubmit(false);
+    if (result?.challengeId) {
       setPendingApplicationPayload(payload);
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
       setChallengeResetNotice("");
       track("provider_verification_requested", { variants: activeVariants() });
-    } catch (error) {
-      setConfirmingSubmit(false);
-      const message = error instanceof Error ? error.message : "Please try again.";
-      setApplicationError(message);
-    } finally {
-      setApplicationBusy(false);
     }
   }
 
   async function resendProviderApplicationCode() {
-    if (!pendingApplicationPayload) return;
-    setApplicationBusy(true);
-    setApplicationError("");
-    try {
-      const response = await fetch("/api/providers/challenge", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(pendingApplicationPayload),
-      });
-      const result = (await response.json()) as { error?: string; challengeId?: string };
-      if (!response.ok || !result.challengeId) {
-        throw new Error(result.error || "A new code could not be requested.");
-      }
+    if (!pendingApplicationPayload || applicationRequest.current) return;
+    const result = await requestApplication("challenge", pendingApplicationPayload);
+    if (result?.challengeId) {
       setApplicationChallengeId(result.challengeId);
       setApplicationVerificationCode("");
-    } catch (error) {
-      setApplicationError(error instanceof Error ? error.message : "Please try again.");
-    } finally {
-      setApplicationBusy(false);
     }
   }
 
@@ -1446,6 +1431,7 @@ export function ProviderSignupForm() {
 
       {step === 3 && (
         <div data-signup-step="3" ref={stepContentRef} tabIndex={-1}>
+          <fieldset className="provider-submit-fields" disabled={applicationBusy} aria-label={providerFormIsSpanish ? "Datos de su solicitud" : "Application details"}>
           <h3>
             {providerFormIsSpanish ? "Usted y su negocio" : "You and your business"}
           </h3>
@@ -2055,6 +2041,7 @@ export function ProviderSignupForm() {
               ? "Si la ley exige una licencia o un registro para el servicio y la ubicación seleccionados, Tuveloz debe recibir y verificar la prueba antes de aprobarlos. Si no corresponde una licencia gubernamental, Tuveloz no la solicitará por ese motivo; aún pueden exigirse seguros, competencia, documentos comerciales u otras pruebas del servicio."
               : "If the selected service and location legally require a license or registration, Tuveloz must receive and verify proof before approval. If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."}
           </small>
+          </fieldset>
         </div>
       )}
     </form></InterfaceCopy>
