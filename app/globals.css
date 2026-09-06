@@ -4957,6 +4957,28 @@ label > small {
   scroll-margin-top: 100px;
 }
 
+.provider-form .step-indicator {
+  display: grid;
+  gap: 10px;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  margin-bottom: 6px;
+}
+
+.provider-form .step-indicator > span {
+  border-bottom: 2px solid #394856;
+  color: #b9c8d4;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 8px 0;
+}
+
+.provider-form .step-indicator > .on {
+  border-color: #f28c28;
+  color: #ffe28a;
+}
+
 .requirement-check {
   color: #b9c8d4;
   flex: 0 0 auto;

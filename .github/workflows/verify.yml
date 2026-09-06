@@ -98,6 +98,9 @@ jobs:
       - name: Verify document resizing and bilingual upload forms in Chromium and WebKit
         run: npm run test:e2e:uploads
 
+      - name: Verify saved provider applications and checklist changes in both languages
+        run: npm run test:e2e:provider-form
+
       - name: Apply every migration to a fresh local D1 database
         run: |
           rm -rf .wrangler/state
