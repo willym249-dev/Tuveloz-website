@@ -1866,7 +1866,15 @@ export function ProviderSignupForm() {
               still a legal acknowledgment, and what it means in Spanish is a
               reviewed-copy decision rather than a string swap.
             */}
-            <div data-no-interface-translation>
+            {providerFormIsSpanish && (
+              <p className="hint">
+                Los acuerdos de abajo están en inglés. Abra los enlaces y léalos
+                antes de aceptar. Si necesita ayuda, escríbanos a{" "}
+                <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+                Puede guardar su solicitud y volver después.
+              </p>
+            )}
+            <div data-no-interface-translation lang="en">
               <label className="policy-consent">
               <input
                 required
