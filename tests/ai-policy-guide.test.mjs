@@ -94,7 +94,7 @@ test("the assistant UI offers both audiences and shows where answers came from",
   assert.match(component, /audience/);
   assert.match(component, /starterQuestions\(audience, 4, language\)/);
   assert.match(component, /ai-sources/);
-  assert.match(component, /Read it yourself/);
+  assert.match(component, /More details/);
   // Arriving from a provider page preselects the provider view.
   assert.match(component, /URLSearchParams\(window\.location\.search\)\.get\("for"\)/);
   assert.match(component, /JSON\.stringify\(\{ message: trimmed, language, history, audience \}\)/);

@@ -69,7 +69,7 @@ test("Spanish speakers get translated Tuveloz AI page copy", async () => {
     // policy guidance is not English-only the moment Spanish is switched on.
     "I need work done on my car",
     "I do car work",
-    "Read it yourself:",
+    "More details:",
   ]) {
     assert.match(language, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }

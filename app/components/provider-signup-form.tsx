@@ -1138,8 +1138,8 @@ export function ProviderSignupForm() {
               <h3>{providerFormIsSpanish ? "La lista para sus servicios" : "Your service checklist"}</h3>
               <p className="hint">
                 {providerFormIsSpanish
-                  ? "Puede solicitar antes de tener estos documentos listos. Corresponden a los servicios que eligió e incluyen los documentos aplicables y los controles de seguridad y experiencia de Tuveloz. Los documentos compartidos aparecen una sola vez."
-                  : "You can apply before these are ready. This list covers the services you chose, including applicable paperwork and Tuveloz safety and experience checks. Shared documents appear once."}
+                  ? "Puede enviar su solicitud ahora y agregar estos documentos después. Solo mostramos los documentos y las revisiones de seguridad y experiencia de Tuveloz para los servicios que eligió. Los documentos compartidos aparecen una sola vez."
+                  : "You can apply now and add these documents later. We only show the paperwork and Tuveloz safety and experience checks for your chosen services. Shared documents are listed once."}
               </p>
               {requiredDocumentGroups.map((group, groupIndex) => (
                 <div key={groupIndex} className="legal-requirement-note">
@@ -1167,7 +1167,7 @@ export function ProviderSignupForm() {
                               {doc.requiresExpiration === true
                                 ? (providerFormIsSpanish
                                     ? " — con su fecha de vencimiento"
-                                    : " — showing its expiry date")
+                                    : " — showing its expiration date")
                                 : ""}
                             </span>
                             {plain && (
@@ -1190,11 +1190,18 @@ export function ProviderSignupForm() {
               </p>
             </>
           )}
-          <p className="hint">
-            {providerFormIsSpanish
-              ? "Antes de su primer pago, completará sus datos fiscales y de cobro, incluido el Formulario W-9 del IRS requerido. Tuveloz emite un 1099 por las ganancias anuales aplicables."
-              : "You'll set up tax and payout details before your first payout, including the required IRS Form W-9. Tuveloz issues a 1099 for applicable annual earnings."}
-          </p>
+          <details className="provider-payout-details">
+            <summary>
+              {providerFormIsSpanish
+                ? "Los datos fiscales y de cobro se piden después"
+                : "Tax and payout details come later"}
+            </summary>
+            <p className="hint">
+              {providerFormIsSpanish
+                ? "Antes de su primer pago, completará sus datos fiscales y de cobro, incluido el Formulario W-9 del IRS requerido. Tuveloz emite un 1099 por las ganancias anuales aplicables."
+                : "You'll set up tax and payout details before your first payout, including the required IRS Form W-9. Tuveloz issues a 1099 for applicable annual earnings."}
+            </p>
+          </details>
           {hasVisibleLegalRequirements && (
             <section className="provider-eligibility-guide">
               <div className="eligibility-guide-heading">

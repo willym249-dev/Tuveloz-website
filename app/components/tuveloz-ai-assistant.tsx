@@ -22,8 +22,8 @@ const VEHICLE_STARTERS = [
 ];
 
 const AUDIENCES: ReadonlyArray<{ id: PolicyAudience; label: string; hint: string }> = [
-  { id: "customer", label: "I need work done on my car", hint: "Describe a problem, or ask how using Tuveloz works." },
-  { id: "provider", label: "I do car work", hint: "Repairs, detailing, tint — ask how quoting, getting paid, and the paperwork work." },
+  { id: "customer", label: "I need work done on my car", hint: "Ask how Tuveloz works or describe a car problem." },
+  { id: "provider", label: "I do car work", hint: "Ask about applying, quotes, documents, and payments." },
 ];
 
 export function TuvelozAiAssistant() {
@@ -82,7 +82,7 @@ export function TuvelozAiAssistant() {
         mode?: string;
       };
       if (!response.ok || !data.reply) {
-        setError(data.error || "Tuveloz AI could not answer that just now. Please try again.");
+        setError(data.error || t("We couldn't answer that just now. Please try again.", "No pudimos responder en este momento. Inténtelo de nuevo."));
         setInput(trimmed);
         return;
       }
@@ -92,7 +92,7 @@ export function TuvelozAiAssistant() {
       ]);
     } catch {
       setInput(trimmed);
-      setError("We couldn't reach Tuveloz AI. Check your connection and try again.");
+      setError(t("We couldn't connect. Check your connection and try again.", "No pudimos conectarnos. Revise su conexión e inténtelo de nuevo."));
     } finally {
       setPending(false);
     }
@@ -111,9 +111,9 @@ export function TuvelozAiAssistant() {
         <span className="kicker">Tuveloz help</span>
         <h1>Questions about Tuveloz? Start here.</h1>
         <p>
-          Ask about fees, parts, applying as a provider, or how Tuveloz works. Read answers
-          from our published policies and contact the owner if you still need help.
-          Tuveloz AI does not diagnose your vehicle, dispatch help, guarantee pricing, or choose a provider.
+          Ask about fees, parts, or applying as a provider. Our automated guide uses
+          Tuveloz&apos;s policies to answer your questions. If you need more help,
+          you can contact the owner below.
         </p>
         <div className="ai-audience" role="group" aria-label="Who is asking">
           {AUDIENCES.map((option) => (
@@ -134,8 +134,8 @@ export function TuvelozAiAssistant() {
       <section className="ai-assistant" aria-label="Tuveloz AI assistant">
         <p className="ai-availability" data-manual-language role="status">
           {mode === "ai"
-            ? t("Policy answers and AI guidance are available.", "Hay respuestas de políticas y orientación por IA.")
-            : t("Published policy answers are available. AI vehicle guidance is currently offline.", "Las respuestas de políticas están disponibles. La orientación de vehículos por IA está desconectada.")}
+            ? t("Ask about Tuveloz or describe a vehicle concern.", "Pregunte sobre Tuveloz o cuéntenos qué le preocupa de su vehículo.")
+            : t("You can ask about Tuveloz here. Help with vehicle questions is unavailable right now.", "Puede preguntar sobre Tuveloz aquí. La ayuda con preguntas sobre vehículos no está disponible por ahora.")}
         </p>
         <div className="ai-safety-note" role="note">
           <strong>Safety first.</strong> If your vehicle is unsafe — brakes failing, smoke, fire,
@@ -175,12 +175,12 @@ export function TuvelozAiAssistant() {
           {turns.map((turn, index) => (
             <div key={index} className={`ai-message ai-message-${turn.role}`} data-manual-language>
               <span className="ai-message-author">
-                {turn.role === "user" ? t("You", "Usted") : turn.mode === "policy-guide" ? t("Tuveloz policy guide", "Guía de políticas de Tuveloz") : "Tuveloz AI"}
+                {turn.role === "user" ? t("You", "Usted") : turn.mode === "policy-guide" ? t("Tuveloz guide", "Guía de Tuveloz") : "Tuveloz AI"}
               </span>
               <p>{turn.content}</p>
               {turn.sources && turn.sources.length > 0 && (
                 <div className="ai-sources">
-                  <span>{t("Read it yourself:", "Consúltelo aquí:")}</span>
+                  <span>{t("More details:", "Más detalles:")}</span>
                   {turn.sources.map((source) => (
                     <Link href={source.href} key={source.href}>{source.label}</Link>
                   ))}
@@ -221,7 +221,7 @@ export function TuvelozAiAssistant() {
             }}
           />
           <button className="button ai" type="submit" disabled={pending || !input.trim()}>
-            {pending ? "Sending…" : "Ask Tuveloz AI"} <span aria-hidden="true">✦</span>
+            {pending ? "Sending…" : "Ask Tuveloz AI"} <span aria-hidden="true">→</span>
           </button>
         </form>
         <div data-manual-language>
@@ -234,11 +234,10 @@ export function TuvelozAiAssistant() {
           {supportMessage !== null && <OwnerSupportForm language={language} audience={audience === "provider" ? "provider" : "customer"} initialMessage={supportMessage} />}
         </div>
         <p className="ai-disclaimer">
-          Tuveloz AI gives general guidance only. It is not a diagnosis, an inspection, or a price
-          quote, and it does not choose a provider. Answers about how Tuveloz works come from our
-          published policies — the linked page is always the real thing, and for anything it
-          can&apos;t answer, email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
-          Posting jobs and payments are not open yet.
+          Tuveloz AI does not diagnose or inspect your vehicle, give a price quote,
+          guarantee pricing, dispatch help, or choose a provider. Read the linked
+          policies for details. Need more help? Email <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+          Customer bookings and payments are not open yet.
         </p>
       </section>
 

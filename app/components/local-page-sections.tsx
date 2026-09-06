@@ -224,7 +224,7 @@ export function LocalZipCodes({ area }: { area: ServiceAreaDefinition }) {
       <p className="local-link-note">
         These are the ZIP codes Tuveloz treats as part of {areaLabel(area)}. Place
         names and postal boundaries overlap across Montgomery County, so a
-        neighbouring area may share one — this is Tuveloz&apos;s coverage list, not
+        neighboring area may share one — this is Tuveloz&apos;s coverage list, not
         an official boundary.
       </p>
       <ul className="local-zip-list">
@@ -245,12 +245,11 @@ export function LocalCoverageStatement({
   const publishedSlugs = new Set(published.map((area) => area.slug));
   return (
     <section className="local-link-section">
-      <h2>Every area in the launch</h2>
+      <h2>Where we&apos;re starting</h2>
       <p className="local-link-note">
-        Tuveloz covers all {areas.length} of these, including the small and rural
-        ones. The {published.length} with their own page below are where we have
-        written something worth reading; the rest are covered just the same, and
-        get a page when there is a reason for one.
+        Our first launch area is Montgomery County, Maryland. These {areas.length}
+        {" "}communities are part of that area. Available services will depend on
+        which local providers complete review.
       </p>
       <ul className="local-area-links">
         {published.map((area) => (
@@ -260,7 +259,7 @@ export function LocalCoverageStatement({
         ))}
       </ul>
       <p className="local-coverage-list">
-        Also covered:{" "}
+        Other communities in the launch area:{" "}
         {areas
           .filter((area) => !publishedSlugs.has(area.slug))
           .map((area) => area.name)
