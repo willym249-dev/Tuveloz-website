@@ -84,7 +84,7 @@ test("phone sign-in only creates a customer/provider session and never owner acc
   const accountPage = await source("app/account/page.tsx");
   assert.match(
     accountPage,
-    /Customer or provider sign-in[\s\S]*never grants owner or admin access\./,
+    /Customer and provider accounts do not give access to owner or admin tools\./,
   );
   assert.match(accountPage, /Owner\/admin sign-in/);
   assert.match(accountPage, /href="\/admin"/);
