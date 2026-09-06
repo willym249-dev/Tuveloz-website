@@ -23,6 +23,7 @@
     "mail:catch": "node scripts/dev-mail-catcher.mjs",
     "test:e2e": "node tests/e2e/provider-signup.e2e.mjs",
     "test:e2e:account": "node tests/e2e/account-signup.e2e.mjs",
+    "test:e2e:uploads": "node tests/e2e/provider-upload.e2e.mjs",
     "test:e2e:incident": "node tests/e2e/incident-payment-hold.e2e.mjs"
   },
   "dependencies": {

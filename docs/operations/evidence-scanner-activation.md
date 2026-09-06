@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-05
+- **Last reviewed:** 2026-09-06
 - **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the Cloudmersive scheduled scanner,
   and the `evidence_file_security_and_scanner` launch gate
 
@@ -11,11 +11,34 @@ callback secret are stored as encrypted Worker secrets; both names were verified
 in the active deployment on September 5. No secret value was printed or saved
 locally during callback-secret setup. Production processing remains off:
 `EVIDENCE_SCAN_PROVIDER` is `unconfigured`.
-The account still shows Free Tier, which does not cover the site's 10 MB upload
-allowance. Resolve vendor capacity before enabling processing, then verify a
-guarded production scan. The owner approved Basic at $19.99/month on
-September 5. The first payment attempt failed; no paid subscription is confirmed.
-The checkout is waiting for a changed payment method or resolution with the bank.
+The last account check showed Free Tier. On September 5 the first recorded
+Basic payment attempt failed; no paid subscription was confirmed. The owner
+has since asked to reduce document uploads to 3.5 MB and add photo resizing.
+Do not retry payment as part of that change. The advertised Free Tier is an
+evaluation plan; confirm its suitability, capacity and actual endpoint behavior
+before enabling processing. A smaller upload limit alone does not activate the
+scanner or establish that the free plan supports production use.
+
+## Provider upload sizing
+
+New evidence uploads and the scheduled scanner share `MAX_EVIDENCE_BYTES =
+3_500_000` in `lib/provider-evidence-limits.ts`. This uses decimal MB rather
+than 3.5 MiB to avoid exceeding either interpretation of the vendor limit.
+Photos up to 20 MB can be prepared locally in the provider's browser. Oversized
+JPG, PNG and WebP images are re-encoded as JPEG, keeping the full frame and
+displayed orientation. Attempts stop at 2400 pixels on the longest side and
+JPEG quality 0.86; smaller originals are not enlarged. The provider must check
+the resulting preview before submitting. This is not an automated guarantee
+of readability or document authenticity.
+
+Files already under the limit are unchanged. PDFs are never rasterized or
+trimmed; an oversized PDF receives issuer-copy/help instructions that preserve
+every page. The upload form supports English and Spanish and defaults to the
+provider's saved language. This does not release translated legal agreements.
+
+Existing stored evidence is not rewritten or deleted. An older oversized file
+that is still awaiting a scan remains non-clean and needs a correctly scoped
+replacement; it is never silently resized after its evidence hash was recorded.
 
 The interface contract is
 [`../EVIDENCE_SCANNER_CALLBACK.md`](../EVIDENCE_SCANNER_CALLBACK.md). This
@@ -59,8 +82,8 @@ and [plan selector](https://portal.cloudmersive.com/selectplan) list the free
 tier at 600 calls/month, one request/second and 3.5 MB. Basic lists
 $19.99 USD/month, 10,000 calls/month, two requests/second and a general 1 GB
 file limit; individual API limits can differ. Confirm Advanced Virus Scan
-coverage for the site's actual `10 * 1024 * 1024` byte limit and the account's
-checkout terms before purchasing. Existing code does not coordinate a shared
+coverage for the site's actual `3_500_000` byte limit and the account's
+terms before activating it. Existing code does not coordinate a shared
 rate limit between evidence and message-image sweeps; include quota and 429
 retry behavior in the activation rehearsal. Do not silently reduce the site's
 upload allowance or subscribe without owner approval.

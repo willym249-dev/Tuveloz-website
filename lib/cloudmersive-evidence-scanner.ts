@@ -11,6 +11,7 @@ import {
   type AuthenticatedEvidenceScanResult,
 } from "./evidence-scan-result-recorder";
 import { getProviderEvidence } from "./provider-evidence";
+import { MAX_EVIDENCE_BYTES } from "./provider-evidence-limits";
 import {
   CLOUDMERSIVE_PROVIDER,
   CLOUDMERSIVE_ENGINE_VERSION,
@@ -20,7 +21,6 @@ import {
 
 const CLOUDMERSIVE_ADVANCED_SCAN_URL = "https://api.cloudmersive.com/virus/scan/file/advanced";
 const ALLOWED_FILE_TYPES = ".pdf,.jpg,.jpeg,.png,.webp";
-const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
 const MAX_RESPONSE_BYTES = 128 * 1024;
 const SCAN_TIMEOUT_MS = 45_000;
 const DEFAULT_BATCH_SIZE = 5;

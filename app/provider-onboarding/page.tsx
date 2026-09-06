@@ -12,6 +12,7 @@ import {
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
 import { BrandMark } from "../components/tuveloz-icons";
+import { EvidenceUpload } from "../components/provider-evidence-upload";
 
 type EvidenceSubmission = {
   id: string;
@@ -87,6 +88,7 @@ type OnboardingResponse = {
     id: string;
     name: string;
     email: string;
+    preferredLanguage: string;
     applicationStatus: string;
     verificationStatus: string;
   };
@@ -158,87 +160,6 @@ function requirementLabel(status: Requirement["status"]) {
 
 function readableStatus(value: string) {
   return value.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
-}
-
-function EvidenceUpload({
-  requirement,
-  serviceCode,
-  supersedesEvidenceId = "",
-  onUploaded,
-}: {
-  requirement: Requirement;
-  serviceCode: string;
-  supersedesEvidenceId?: string;
-  onUploaded: () => Promise<void>;
-}) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const formData = new FormData(event.currentTarget);
-      formData.set("serviceCode", serviceCode);
-      formData.set("requirementKey", requirement.code);
-      if (supersedesEvidenceId) formData.set("supersedesEvidenceId", supersedesEvidenceId);
-      const response = await fetch("/api/provider-evidence", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await response.json().catch(() => ({})) as { error?: string; message?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to upload this evidence.");
-      event.currentTarget.reset();
-      setNotice(result.message || "Uploaded to the private quarantine for scanning and review.");
-      await onUploaded();
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Unable to upload this evidence.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <form className="provider-evidence-form" onSubmit={submit}>
-      <label>
-        Document
-        <input
-          accept="application/pdf,image/jpeg,image/png,image/webp"
-          name="document"
-          required
-          type="file"
-        />
-        <small>
-          Private PDF, JPG, PNG, or WebP; maximum 10 MB. The file stays quarantined
-          until its malware scan reports clean.
-        </small>
-      </label>
-      <label>
-        Issuer or source
-        <input maxLength={180} name="issuer" placeholder="Insurer, agency, school, or business" />
-      </label>
-      <label>
-        Effective date
-        <input name="effectiveAt" type="date" />
-      </label>
-      <label>
-        Expiration date{requirement.requiresExpiration ? " (required)" : ""}
-        <input name="expiresAt" required={requirement.requiresExpiration} type="date" />
-      </label>
-      <button className="button secondary" disabled={busy} type="submit">
-        {busy
-          ? "Uploading…"
-          : supersedesEvidenceId
-            ? "Upload corrected replacement"
-            : "Upload for scanning and review"}
-      </button>
-      {error && <small className="form-error" role="alert">{error}</small>}
-      {notice && <small className="portal-success" role="status">{notice}</small>}
-    </form>
-  );
 }
 
 function EvidenceAppealForm({
@@ -889,6 +810,7 @@ export default function ProviderOnboardingPage() {
                             )}
                             {requirement.uploadAllowed ? (
                               <EvidenceUpload
+                                preferredLanguage={data.provider.preferredLanguage}
                                 requirement={requirement}
                                 serviceCode={service.code}
                                 supersedesEvidenceId={
