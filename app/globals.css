@@ -181,10 +181,6 @@ a {
   padding: 8px 12px;
 }
 
-.site-language-button > span {
-  font-size: 15px;
-}
-
 .site-language-button strong {
   font-size: 12px;
   line-height: 1;
@@ -3631,10 +3627,6 @@ footer > p {
     padding: 7px 9px;
   }
 
-  .portal-header .site-language-button strong {
-    display: none;
-  }
-
   .portal-intro {
     padding: 42px 16px 28px;
   }
@@ -4978,6 +4970,7 @@ label > small {
   gap: 10px;
 }
 
+#provider-apply,
 .provider-form [data-signup-step] {
   scroll-margin-top: 100px;
 }
@@ -9509,10 +9502,6 @@ footer > p,
     padding: 7px 9px;
   }
 
-  .site-header .site-language-button strong {
-    display: none;
-  }
-
   .site-header .header-actions {
     gap: 5px;
     max-width: 100%;
@@ -9553,10 +9542,6 @@ footer > p,
     gap: 0;
     min-width: 40px;
     padding: 7px 9px;
-  }
-
-  .account-header .site-language-button strong {
-    display: none;
   }
 
   .account-header-actions {
@@ -10101,10 +10086,6 @@ footer > p,
   .policy-header .site-language-button {
     min-width: 40px;
     padding: 7px 9px;
-  }
-
-  .policy-header .site-language-button strong {
-    display: none;
   }
 
   .policy-header .account-home-link {
@@ -11978,6 +11959,7 @@ footer > p,
   flex-direction: column;
   gap: 4px;
   max-width: 88%;
+  min-width: 0;
 }
 
 .ai-message-author {
@@ -11995,6 +11977,7 @@ footer > p,
   margin: 0;
   padding: 12px 16px;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .ai-message-user {
@@ -12039,6 +12022,7 @@ footer > p,
   font-family: inherit;
   font-size: 15px;
   line-height: 1.5;
+  min-width: 0;
   padding: 12px 14px;
   resize: vertical;
 }
@@ -12561,6 +12545,7 @@ footer > p,
   font-size: 13px;
   font-weight: 700;
   padding: 5px 12px;
+  overflow-wrap: anywhere;
 }
 
 .ai-sources a:hover {

@@ -2,7 +2,7 @@
 
 import { InterfaceCopy } from "./interface-copy";
 import { SiteLink as Link } from "./site-link";
-import { CUSTOMER_STEPS, LAUNCH_SERVICES } from "../../lib/marketing-content";
+import { CUSTOMER_INTRO, CUSTOMER_STEPS, LAUNCH_SERVICES } from "../../lib/marketing-content";
 import { LaunchUpdatesForm } from "./launch-updates-form";
 import { PublicSiteFooter, PublicSiteHeader } from "./public-chrome";
 import { SaveMySpotButton } from "./save-my-spot-button";
@@ -17,8 +17,8 @@ const valueProps = [
   },
   {
     icon: "open-jobs" as const,
-    title: "Only the right people see it",
-    text: "Your job goes to pros near you who are cleared for that exact work — not to a giant call list. Way less phone tag.",
+    title: "Requests reach eligible local providers",
+    text: "After launch, your request will reach local providers approved for that service. Each provider decides whether to send a quote.",
   },
   {
     icon: "active-job" as const,
@@ -53,14 +53,14 @@ const faqs = [
       "Asking and comparing will be free. If you accept a job after launch, the current plan is the pro's labor price plus a separate 5% Tuveloz customer service fee. Final launch pricing and tax treatment are still under review, and you'll see the full total before confirming anything.",
   },
   {
-    question: "Do I have to say yes to any of them?",
+    question: "Do I have to accept a quote?",
     answer:
-      "Nope. Read them all, ask questions, and turn every one of them down if nothing feels right. It costs you nothing to walk away.",
+      "No. You can compare quotes, ask questions, and decline every quote at no cost.",
   },
   {
     question: "Who actually does the work?",
     answer:
-      "A local pro you picked yourself. We introduce the two of you and keep the paperwork straight — the work itself is between you and them.",
+      "The independent service provider you choose performs the work on your vehicle. Tuveloz connects you online and keeps the agreed work and price in one place.",
   },
   {
     question: "What about parts?",
@@ -98,12 +98,12 @@ export function CustomerLander() {
             <span className="hero-value-line">Local help. A choice you feel good about.</span>
           </h1>
           <p>
-            We&apos;re building Tuveloz to help neighbors in Montgomery County find local vehicle services, compare quotes, and ask questions before choosing someone. You can create a free account today. Customer bookings are not open yet.
+            {CUSTOMER_INTRO}
           </p>
           <ul className="hero-highlights">
             <li><span aria-hidden="true">✓</span> Free to create your account</li>
             <li><span aria-hidden="true">✓</span> Independent local businesses, no call center</li>
-            <li><span aria-hidden="true">✓</span> When we open, you decide who to hire — or no one</li>
+            <li><span aria-hidden="true">✓</span> When we open, you can choose a provider or decline every quote</li>
           </ul>
           <div className="hero-actions">
             <SaveMySpotButton />
