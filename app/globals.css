@@ -11381,6 +11381,42 @@ footer > p,
   max-width: 680px;
 }
 
+.customer-profile-fields {
+  border: 0;
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.customer-profile-fields input {
+  font-size: 16px;
+}
+
+.customer-profile-fields .area-options {
+  grid-template-columns: 1fr;
+}
+
+.customer-profile-fields .area-options label {
+  align-items: center;
+  display: flex;
+  min-height: 44px;
+}
+
+.customer-profile-fields input[type="checkbox"] {
+  accent-color: #ff6a00;
+  flex: 0 0 auto;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.saved-provider-panel .saved-provider-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+}
+
 .customer-profile-form input:disabled {
   color: #91a4b4;
   cursor: not-allowed;
