@@ -74,7 +74,7 @@ export default async function PostJobPage() {
           <Link className="button primary" href="/account?role=customer&mode=create">
             Create a customer account <span>→</span>
           </Link>
-          <Link className="button secondary" href="/join">
+          <Link className="button secondary" href="/join#provider-apply">
             Apply as an independent provider
           </Link>
         </div>

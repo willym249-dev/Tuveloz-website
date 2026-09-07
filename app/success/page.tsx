@@ -98,7 +98,7 @@ export default function StripeSuccessPage() {
         <div>
           <Link className="button primary" href="/customer">Customer account</Link>
           <Link className="button secondary" href="/payments">Payment policy</Link>
-          <Link className="button secondary" href="/join">Apply as a provider</Link>
+          <Link className="button secondary" href="/join#provider-apply">Apply as a provider</Link>
         </div>
       </section>
     </main>

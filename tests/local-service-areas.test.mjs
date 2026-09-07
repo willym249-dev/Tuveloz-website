@@ -186,7 +186,7 @@ test("structured data claims nothing the marketplace cannot back", async () => {
 test("every local page carries a canonical, breadcrumbs, the list and the application", async () => {
   const sections = await source("app/components/local-page-sections.tsx");
   assert.match(sections, /LaunchUpdatesForm/);
-  assert.match(sections, /href="\/join"/);
+  assert.match(sections, /href="\/join#provider-apply"/);
 
   for (const path of LOCAL_PAGE_FILES) {
     const file = await source(path);

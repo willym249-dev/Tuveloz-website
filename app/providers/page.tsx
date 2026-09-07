@@ -157,7 +157,7 @@ export default function ProvidersDirectoryPage() {
             customer on top of it, never deducted from your payout.
           </p>
           <div>
-            <Link className="button primary" href="/join">Join as a provider <span>→</span></Link>
+            <Link className="button primary" href="/join#provider-apply">Join as a provider <span>→</span></Link>
             <Link className="button secondary" href="/service-areas">Service areas</Link>
           </div>
         </section>

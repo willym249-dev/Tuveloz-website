@@ -430,7 +430,7 @@ async function main() {
   assert.match(providerText, /Providers apply first/i, "provider create mode must say applications come first");
   assert.match(providerText, /same email address you applied with/i, "returning applicants need the email-reuse instruction");
   assert.equal(
-    await page.locator('.account-value-prop a[href="/join"]').count(),
+    await page.locator('.account-value-prop a[href="/join#provider-apply"]').count(),
     1,
     "provider guidance must link to the application form",
   );
@@ -439,7 +439,7 @@ async function main() {
     /compare local quotes/i,
     "the provider panel must not inherit the customer booking promise",
   );
-  log("PASS — provider guidance is visible and points at /join");
+  log("PASS — provider guidance is visible and points at /join#provider-apply");
 
   await selectRole("Customer");
   await selectMode("Create account");

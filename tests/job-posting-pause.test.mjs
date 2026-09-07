@@ -46,7 +46,7 @@ test("customer signups stay open while new job requests and payments are paused"
     /We haven't announced a launch date\. Provider applications are open while we complete the required reviews/,
   );
   assert.match(postJobPage, /account\?role=customer&mode=create/);
-  assert.match(postJobPage, /href="\/join"/);
+  assert.match(postJobPage, /href="\/join#provider-apply"/);
   assert.match(postJobPage, /Get to know Tuveloz before we open\./);
   assert.match(postJobPage, /Nothing on this page submits a[\s\S]*request, contacts a provider, books service, or processes a payment/);
   assert.ok(

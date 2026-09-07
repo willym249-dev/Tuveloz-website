@@ -167,7 +167,7 @@ export default function ServiceStandardsPage() {
               arrival times, or authorize work on a customer&apos;s behalf.
             </p>
             <div className="hero-actions">
-              <Link className="button primary" href="/join">Join as a provider</Link>
+              <Link className="button primary" href="/join#provider-apply">Join as a provider</Link>
               <Link className="button secondary" href="/account?role=customer&mode=create">Create customer account</Link>
               <Link className="button secondary" href="/privacy-center">Privacy and data choices</Link>
             </div>

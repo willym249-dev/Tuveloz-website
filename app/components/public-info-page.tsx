@@ -80,7 +80,7 @@ export function PublicInfoPage({
         <h2>Ready when you are.</h2>
         <div>
           <SaveMySpotButton />
-          <Link className="button secondary" href="/join">I do car work — apply free</Link>
+          <Link className="button secondary" href="/join#provider-apply">I do car work — apply free</Link>
         </div>
       </section>
 

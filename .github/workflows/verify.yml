@@ -145,6 +145,7 @@ jobs:
           done
           curl -fsS "$BASE_URL/" > /dev/null
           npm run i18n:check
+          npm run test:e2e:signup-navigation
 
       # Boots a real dev server against the local D1 built above and drives the
       # whole provider signup flow, including the email gate. Delivery is

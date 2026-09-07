@@ -136,7 +136,7 @@ export default function FleetPage() {
           <h2>Explore Tuveloz</h2>
           <div>
             <Link className="button primary" href="/post-job">Check customer launch status <span>→</span></Link>
-            <Link className="button secondary" href="/join">Join as a provider</Link>
+            <Link className="button secondary" href="/join#provider-apply">Join as a provider</Link>
           </div>
         </section>
       </PublicPageShell>
