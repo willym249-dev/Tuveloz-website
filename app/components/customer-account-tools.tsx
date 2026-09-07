@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CUSTOMER_SERVICE_LOCATION_OPTIONS,
@@ -8,29 +8,14 @@ import {
 } from "../../lib/service-matching";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./location-datalists";
-
-type CustomerProfile = {
-  email: string;
-  displayName: string;
-  municipality: string;
-  zip: string;
-  serviceLocations: string[];
-  serviceAddress: string;
-};
-
-type CustomerProvider = {
-  id: string;
-  name: string;
-  service: string;
-  serviceArea: string;
-  publicSlug: string;
-};
-
-type CustomerTools = {
-  profile: CustomerProfile;
-  providerChoices: CustomerProvider[];
-  savedProviders: CustomerProvider[];
-};
+import {
+  CustomerToolsError,
+  hasCustomerProviderReceipt,
+  readCustomerTools,
+  readSavedCustomerProfile,
+  requestCustomerTools,
+  type CustomerTools,
+} from "../../lib/customer-tools-response";
 
 export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
   const [data, setData] = useState<CustomerTools | null>(null);
@@ -38,25 +23,49 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
   const [busyId, setBusyId] = useState("");
   const [saved, setSaved] = useState(false);
   const [serviceLocations, setServiceLocations] = useState<string[]>([]);
+  const [loadError, setLoadError] = useState(false);
+  const [signIn, setSignIn] = useState(false);
+  const [savedRevision, setSavedRevision] = useState(0);
+  const requestRef = useRef<AbortController | null>(null);
+
+  function showError(reason: unknown, fallback: string) {
+    setError(reason instanceof CustomerToolsError ? reason.message : fallback);
+    setSignIn(reason instanceof CustomerToolsError && reason.signIn);
+  }
 
   const load = useCallback(async () => {
+    if (requestRef.current) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setBusyId("loading");
     setError("");
+    setSignIn(false);
+    setLoadError(false);
+    const fallback = view === "saved" ? "We couldn't load your saved providers. Please try again."
+      : "We couldn't load your customer settings. Please try again.";
     try {
-      const response = await fetch("/api/customer-tools", { cache: "no-store" });
-      const result = await response.json() as CustomerTools & { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to load customer settings.");
+      const result = readCustomerTools(await requestCustomerTools(controller.signal, fallback));
+      if (controller.signal.aborted) return;
+      if (!result) throw new CustomerToolsError(fallback);
       setData(result);
       setServiceLocations(result.profile.serviceLocations);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Unable to load customer settings.");
+      if (!controller.signal.aborted) { showError(reason, fallback); setLoadError(true); }
+    } finally {
+      if (requestRef.current === controller) requestRef.current = null;
+      if (!controller.signal.aborted) setBusyId("");
     }
-  }, []);
+  }, [view]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void load();
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
   }, [load]);
 
   const savedIds = useMemo(
@@ -67,66 +76,97 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
   const providerMayVisit = serviceLocations.includes(CUSTOMER_SERVICE_LOCATION_OPTIONS[0]);
 
   async function updateProvider(providerId: string, action: "save-provider" | "remove-provider") {
+    if (requestRef.current || loadError) return;
+    const controller = new AbortController();
+    requestRef.current = controller;
     setBusyId(providerId);
     setError("");
+    setSignIn(false);
+    let confirmed = false;
+    const fallback = "We couldn't confirm the change to your saved providers. Please try again.";
+    const refreshFailure = "Your change was saved, but we couldn't refresh the list. Try again to see the latest list.";
     try {
-      const response = await fetch("/api/customer-tools", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action, providerId }),
-      });
-      const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to update saved providers.");
-      await load();
+      const result = await requestCustomerTools(controller.signal, fallback, { action, providerId });
+      if (controller.signal.aborted) return;
+      if (!hasCustomerProviderReceipt(result)) throw new CustomerToolsError(fallback);
+      confirmed = true;
+      const refreshed = readCustomerTools(await requestCustomerTools(controller.signal, refreshFailure));
+      if (controller.signal.aborted) return;
+      if (!refreshed) throw new CustomerToolsError(refreshFailure);
+      setData(refreshed);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Unable to update saved providers.");
+      if (!controller.signal.aborted) {
+        showError(reason, confirmed ? refreshFailure : fallback);
+        setLoadError(confirmed);
+      }
     } finally {
-      setBusyId("");
+      if (requestRef.current === controller) requestRef.current = null;
+      if (!controller.signal.aborted) setBusyId("");
     }
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (requestRef.current || !data) return;
     const form = event.currentTarget;
     const values = Object.fromEntries(new FormData(form).entries());
+    const expected = {
+      email: data.profile.email,
+      displayName: String(values.displayName ?? "").trim(),
+      municipality: String(values.municipality ?? "").trim(),
+      zip: String(values.zip ?? "").trim(),
+      serviceLocations: [...serviceLocations],
+      serviceAddress: providerMayVisit ? String(values.serviceAddress ?? "").trim() : "",
+    };
+    const controller = new AbortController();
+    requestRef.current = controller;
     setBusyId("profile");
     setSaved(false);
     setError("");
+    setSignIn(false);
+    const fallback = "We couldn't confirm your changes were saved. Your entries are still here. Please try again.";
     try {
-      const response = await fetch("/api/customer-tools", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const result = await requestCustomerTools(controller.signal, fallback, {
           action: "save-profile",
           displayName: values.displayName,
           municipality: values.municipality,
           zip: values.zip,
           serviceLocations,
           serviceAddress: providerMayVisit ? values.serviceAddress : "",
-        }),
       });
-      const result = await response.json() as { profile?: CustomerProfile; error?: string };
-      if (!response.ok || !result.profile) {
-        throw new Error(result.error || "Unable to save your profile.");
-      }
-      setData((current) => current ? { ...current, profile: result.profile as CustomerProfile } : current);
-      setServiceLocations(result.profile.serviceLocations);
+      if (controller.signal.aborted) return;
+      const profile = readSavedCustomerProfile(result, expected);
+      if (!profile) throw new CustomerToolsError(fallback);
+      setData((current) => current ? { ...current, profile } : current);
+      setServiceLocations(profile.serviceLocations);
+      setSavedRevision(revision => revision + 1);
       setSaved(true);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Unable to save your profile.");
+      if (!controller.signal.aborted) showError(reason, fallback);
     } finally {
-      setBusyId("");
+      if (requestRef.current === controller) requestRef.current = null;
+      if (!controller.signal.aborted) setBusyId("");
     }
   }
 
-  if (!data && !error) return <p className="admin-note">Loading customer settings…</p>;
+  const errorNotice = error && (
+    <div>
+      <p className="form-error" role="alert">{error}</p>
+      {signIn ? <Link className="button secondary" href="/account?role=customer&mode=signin">Sign in again</Link>
+        : loadError && <button className="button secondary" disabled={!!busyId} onClick={() => void load()} type="button">Try again</button>}
+    </div>
+  );
+  if (!data) return errorNotice
+    ? <div className="customer-settings-panel">{errorNotice}</div>
+    : <p className="admin-note" role="status">Loading customer settings…</p>;
 
   if (view === "settings") {
     return (
       <div className="customer-settings-panel">
-        {error && <p className="form-error" role="alert">{error}</p>}
+        {errorNotice}
         {data && (
-          <form className="customer-profile-form" key={`${data.profile.email}-${data.profile.displayName}-${data.profile.zip}`} onSubmit={saveProfile}>
+          <form className="customer-profile-form" key={savedRevision} onChange={() => setSaved(false)} onSubmit={saveProfile}>
+            <fieldset className="customer-profile-fields" disabled={!!busyId}>
             <LocationDatalists />
             <label>
               Account email
@@ -178,7 +218,8 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
             <button className="button primary" disabled={busyId === "profile"} type="submit">
               {busyId === "profile" ? "Saving…" : "Save profile and service area"}
             </button>
-            {saved && <p className="portal-success">✓ Profile and service area saved</p>}
+            </fieldset>
+            {saved && <p className="portal-success" role="status">✓ Profile and service area saved</p>}
           </form>
         )}
         <div className="customer-security-note">
@@ -191,7 +232,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
 
   return (
     <div className="saved-provider-panel">
-      {error && <p className="form-error" role="alert">{error}</p>}
+      {errorNotice}
       <p className="customer-tool-explainer">
         Save providers who previously sent a quote on one of your Tuveloz requests.
       </p>
@@ -216,7 +257,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
                   )}
                   <button
                     className="button secondary"
-                    disabled={busyId === provider.id}
+                    disabled={!!busyId || loadError}
                     onClick={() => void updateProvider(provider.id, "remove-provider")}
                     type="button"
                   >
@@ -240,7 +281,7 @@ export function CustomerAccountTools({ view }: { view: "saved" | "settings" }) {
                 <small>{provider.serviceArea}</small>
                 <button
                   className="button primary"
-                  disabled={busyId === provider.id}
+                  disabled={!!busyId || loadError}
                   onClick={() => void updateProvider(provider.id, "save-provider")}
                   type="button"
                 >

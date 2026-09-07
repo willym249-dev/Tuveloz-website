@@ -24,6 +24,7 @@
     "test:e2e": "node tests/e2e/provider-signup.e2e.mjs",
     "test:e2e:account": "node tests/e2e/account-signup.e2e.mjs",
     "test:e2e:account-form": "node tests/e2e/account-form.e2e.mjs",
+    "test:e2e:customer-tools": "node tests/e2e/customer-tools.e2e.mjs",
     "test:e2e:provider-form": "node tests/e2e/provider-form.e2e.mjs",
     "test:e2e:provider-submission": "node tests/e2e/provider-submission.e2e.mjs",
     "test:e2e:public-guidance": "node tests/e2e/public-guidance.e2e.mjs",

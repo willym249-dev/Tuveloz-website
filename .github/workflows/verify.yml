@@ -116,6 +116,9 @@ jobs:
       - name: Verify account forms recover from stalled and malformed responses
         run: npm run test:e2e:account-form
 
+      - name: Verify customer settings and saved-provider recovery
+        run: npm run test:e2e:customer-tools
+
       - name: Verify provider submission receipts, retries, and address suggestions
         run: npm run test:e2e:provider-submission
 
