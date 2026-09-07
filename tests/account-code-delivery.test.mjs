@@ -84,7 +84,7 @@ test("provider create mode explains that an application comes first", () => {
   ).slice(0, 900);
   assert.ok(panel.length > 0, "the provider create panel is gone");
   assert.match(panel, /Providers apply first/);
-  assert.match(panel, /href="\/join"/);
+  assert.match(panel, /href="\/join#provider-apply"/);
   assert.match(panel, /same email address you applied with/);
 });
 

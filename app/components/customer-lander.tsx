@@ -265,7 +265,7 @@ export function CustomerLander() {
           </ul>
           <div className="hero-actions">
             <SaveMySpotButton />
-            <Link className="button secondary" href="/join">
+            <Link className="button secondary" href="/join#provider-apply">
               I do car work — apply free
             </Link>
           </div>

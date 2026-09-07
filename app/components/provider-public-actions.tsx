@@ -64,7 +64,7 @@ function ProviderPublicClosedActions() {
           quotes, bookings, appointments, and payments remain closed.
         </p>
         <Link className="button primary" href="/account">Create or open an account</Link>
-        <Link className="button secondary" href="/join">Apply as a provider</Link>
+        <Link className="button secondary" href="/join#provider-apply">Apply as a provider</Link>
       </div>
     </details>
   );

@@ -783,7 +783,7 @@ export default function AccountPage() {
               <ul>
                 <li>
                   Not applied yet?{" "}
-                  <Link href="/join">Apply to join as a provider</Link>, then
+                  <Link href="/join#provider-apply">Apply to join as a provider</Link>, then
                   come back here to set your password.
                 </li>
                 <li>
@@ -1272,7 +1272,7 @@ export default function AccountPage() {
 
         <div className="account-login-help">
           <p>New provider? Verification starts with an application.</p>
-          <Link className="button secondary" href="/join">
+          <Link className="button secondary" href="/join#provider-apply">
             Apply to join <span>→</span>
           </Link>
         </div>

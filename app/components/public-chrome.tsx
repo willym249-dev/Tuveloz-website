@@ -66,7 +66,7 @@ export function PublicSiteHeader({
             My workspace
           </Link>
         ) : cta === "provider" ? (
-          <Link className="header-cta" href="/join">Apply free</Link>
+          <Link className="header-cta" href="/join#provider-apply">Apply free</Link>
         ) : (
           <Link className="header-cta" href="/account?role=customer&mode=create">
             Create an account

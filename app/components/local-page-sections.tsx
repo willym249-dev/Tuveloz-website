@@ -114,7 +114,7 @@ export function LocalProviderPanel({
         choose. Approved providers can accept jobs once customer requests open.
       </p>
       <div>
-        <Link className="button primary" href="/join">Join as a provider <span>→</span></Link>
+        <Link className="button primary" href="/join#provider-apply">Join as a provider <span>→</span></Link>
         <Link className="button secondary" href="/founding-providers">Founding providers</Link>
       </div>
     </section>

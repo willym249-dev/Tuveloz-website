@@ -41,7 +41,7 @@ export function PublicPageShell({
         <nav className={menuOpen ? "nav open" : "nav"} id={navId} aria-label="Main navigation">
           <Link href="/about" onClick={() => setMenuOpen(false)}>Learn about Tuveloz</Link>
           <Link href="/post-job" onClick={() => setMenuOpen(false)}>Customer launch status</Link>
-          <Link href="/join" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
+          <Link href="/join#provider-apply" onClick={() => setMenuOpen(false)}>Join as a provider</Link>
           <Link href="/fleet" onClick={() => setMenuOpen(false)}>Fleets</Link>
           <Link href="/how-it-works" onClick={() => setMenuOpen(false)}>How it works</Link>
           <Link href="/safety" onClick={() => setMenuOpen(false)}>Safety &amp; trust</Link>

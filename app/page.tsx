@@ -284,19 +284,18 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   }, []);
 
   useEffect(() => {
-    // On /join, a returning applicant wants to pick their in-progress application
-    // back up — so jump them straight to the form. A first-time visitor should
-    // meet the hero pitch first; don't yank them past it. A saved signup draft is
-    // our signal that this person has already started applying.
+    // Explicit Apply links and returning drafts go straight to the application.
+    // Visitors following the informational For providers link still see the intro.
     if (view !== "provider") return;
-    if (window.location.hash) return;
+    const applicationRequested = window.location.hash === "#provider-apply";
+    if (window.location.hash && !applicationRequested) return;
     let hasDraft = false;
     try {
       hasDraft = window.localStorage.getItem(SIGNUP_DRAFT_KEY) !== null;
     } catch {
       hasDraft = false;
     }
-    if (!hasDraft) return;
+    if (!applicationRequested && !hasDraft) return;
     let cancelled = false;
     const scrollToForm = () => {
       if (cancelled) return;
@@ -727,7 +726,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             ) : CUSTOMER_JOB_POSTING_PAUSED ? (
               <>
                 <SaveMySpotButton />
-                <Link className="button secondary" href="/join">
+                <Link className="button secondary" href="/join#provider-apply">
                   I do car work — apply free <span>→</span>
                 </Link>
               </>
@@ -736,7 +735,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <Link className="button primary" href="/post-job">
                   Get started — free <span>→</span>
                 </Link>
-                <Link className="button secondary" href="/join">
+                <Link className="button secondary" href="/join#provider-apply">
                   Join as a provider — free <span>→</span>
                 </Link>
               </>
@@ -937,7 +936,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <li><span aria-hidden="true">✓</span> Quotes, records, and invoices in one place</li>
               <li><span aria-hidden="true">✓</span> Keep your own customers — you&apos;re not tied to us</li>
             </ul>
-            <Link className="button secondary" href="/join">
+            <Link className="button secondary" href="/join#provider-apply">
               Apply free <span>→</span>
             </Link>
           </article>
@@ -1163,7 +1162,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </div>
             <div className="hero-actions">
               <SaveMySpotButton />
-              <Link className="button secondary" href="/join">
+              <Link className="button secondary" href="/join#provider-apply">
                 Apply as a provider
               </Link>
             </div>
@@ -1625,7 +1624,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <Link className="text-link" href="/founding-providers">Read founding provider details →</Link>
           </div>
           {view !== "provider" && (
-            <Link className="button lime" href="/join">
+            <Link className="button lime" href="/join#provider-apply">
               {foundingCtaVariant === "B" ? "Start my application" : "Apply free"} <span>→</span>
             </Link>
           )}
@@ -1950,7 +1949,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <h2>Let&apos;s make car care a little easier.</h2>
             <div>
               <SaveMySpotButton className="button lime" />
-              <Link className="button ghost" href="/join">I do car work — apply free</Link>
+              <Link className="button ghost" href="/join#provider-apply">I do car work — apply free</Link>
             </div>
           </>
         )}

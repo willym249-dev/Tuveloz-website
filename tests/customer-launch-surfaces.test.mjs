@@ -84,7 +84,7 @@ test("account and private-request surfaces describe launch mode without active-j
   assert.match(request, /CUSTOMER_JOB_POSTING_PAUSED && !job\?\.isTestJob/);
   assert.match(request, /No live customer request was opened/);
   assert.doesNotMatch(homepage, /href="\/storefront"/);
-  assert.match(account, /className="button secondary" href="\/join"/);
+  assert.match(account, /className="button secondary" href="\/join#provider-apply"/);
   assert.doesNotMatch(account, /href="\/#providers"/);
   assert.match(providerProfile, /className="button primary" href="\/post-job"/);
   assert.doesNotMatch(providerProfile, /href="\/#request"/);
