@@ -78,6 +78,83 @@ async function interfaceText(page) {
     return [...new Set(texts)];
   });
 }
+async function checkApplicationRecovery(browser) {
+  for (const spanish of [false, true]) for (const scenario of ["missing-pathway", "missing-name", "no-services"]) {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const state = fixture();
+    state.provider.preferredLanguage = spanish ? "Spanish" : "English";
+    state.identityVerification = { ...state.identityVerification, complete: false, status: "not_started", canStart: false,
+      ownerOperatorEligible: scenario !== "missing-pathway", manualReattestationRequired: scenario === "missing-name" };
+    if (scenario === "missing-pathway") state.pathway = null;
+    if (scenario !== "missing-name") state.services = [];
+    const posts = [], errors = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.route("**/*", route => {
+      const request = route.request();
+      if (!request.url().startsWith(origin)) return route.abort();
+      const pathname = new URL(request.url()).pathname;
+      if (!pathname.startsWith("/api/")) return route.continue();
+      if (request.method() === "GET") return route.fulfill(json(200, state));
+      const payload = request.postDataJSON(); posts.push({ pathname, payload });
+      return route.fulfill(json(200, posts.length === 1 ? {} : { ok: true, status: "queued", reference: payload.requestId }));
+    });
+    const caseName = `${browser.browserType().name()}-${spanish ? "es" : "en"}-recovery-${scenario}`;
+    try {
+      await page.goto(origin + "/provider-onboarding");
+      await page.locator('.provider-service-status-card').waitFor();
+      const recovery = page.locator('.provider-application-recovery');
+      await recovery.waitFor({ timeout: 3000 });
+      if (scenario === "missing-pathway") {
+        assert.equal(await page.locator('#identity-verification').count(), 0, "missing details must not label the applicant an employee or trainee");
+      }
+      const draft = spanish ? "Necesito ayuda para actualizar los datos de mi solicitud." : "Please help me update the details on my application.";
+      await recovery.getByRole('button', { name: spanish ? 'Pedir ayuda con mi solicitud' : 'Get help with my application' }).click();
+      const form = recovery.locator('form');
+      assert.equal(await form.locator('input[type="email"]').inputValue(), state.provider.email);
+      assert.doesNotMatch(await form.innerText(), /chat history|historial del chat/);
+      await form.locator('textarea').fill(draft);
+      await form.locator('input[type="checkbox"]').check();
+      await form.locator('button[type="submit"]').click();
+      await form.getByRole('alert').waitFor();
+      assert.equal(await form.locator('textarea').inputValue(), draft, "unconfirmed response preserves the help request");
+      assert.equal(await recovery.getByRole('status').count(), 0);
+      await form.locator('button[type="submit"]').click();
+      await recovery.getByRole('status').waitFor();
+      assert.equal(posts.length, 2);
+      assert.equal(posts[0].pathname, '/api/support');
+      assert.equal(posts[1].pathname, '/api/support');
+      assert.equal(posts[0].payload.requestId, posts[1].payload.requestId, "retry keeps the same request reference");
+      assert.equal(posts[1].payload.message, draft);
+      assert.equal(posts[1].payload.audience, 'provider');
+      assert.equal(posts[1].payload.language, spanish ? 'es' : 'en');
+      assert.equal(posts[1].payload.email, state.provider.email);
+      assert.equal(posts[1].payload.consent, true);
+      assert.deepEqual(errors, []);
+      for (const width of [320, 768, 1280, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+        const receiptLayout = await recovery.evaluate(card => {
+          const bottom = card.getBoundingClientRect().bottom;
+          return [...card.querySelectorAll('[role="status"], [role="status"] *')]
+            .filter(element => element.getBoundingClientRect().bottom > bottom + 1)
+            .map(element => ({ tag: element.tagName, excess: element.getBoundingClientRect().bottom - bottom }));
+        });
+        assert.deepEqual(receiptLayout, [], `the saved message and reference fit inside the card at ${width}px`);
+      }
+      if (outputDir && scenario === "missing-pathway") {
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+        await page.screenshot({ path: resolve(outputDir, `${caseName}.png`), fullPage: true });
+      }
+      report.cases.push({ name: caseName, status: 'passed' });
+      console.log(`PASS ${caseName}`);
+    } catch (error) {
+      console.error(`FAIL ${caseName}: ${error.message}; page errors: ${JSON.stringify(errors)}`);
+      throw error;
+    } finally { await page.close(); }
+  }
+}
+
 async function checkFullPage(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   let state = fixture();
@@ -133,6 +210,7 @@ async function checkFullPage(browser) {
       };
       await page.reload();
       await page.locator('.provider-service-status-card').waitFor();
+      assert.equal(await page.locator('.provider-application-recovery').count(), scenario === 'old-application' ? 1 : 0);
       await page.evaluate(() => document.querySelectorAll('details').forEach(item => { item.open = true; }));
       const english = await interfaceText(page);
       const englishOptions = await page.locator('option').allTextContents();
@@ -208,6 +286,8 @@ try {
   for (const browserType of [chromium, webkit]) {
     const browser = await browserType.launch({ headless: true });
     try {
+      await checkApplicationRecovery(browser);
+      if (process.env.ONBOARDING_TEST_RECOVERY_ONLY === "1") continue;
       await checkFullPage(browser);
       for (const spanish of [false, true]) for (const kind of Object.keys(actions)) {
         for (const outcome of kind === "agreements" ? ["success", "rejected", "unconfirmed"] : ["success", "rejected", "unconfirmed", "refresh-fails"]) {

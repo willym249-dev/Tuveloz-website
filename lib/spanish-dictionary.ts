@@ -17,6 +17,15 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "Your application needs updated details before you can finish the checklist.": "Necesitamos actualizar los datos de su solicitud para que pueda completar la lista de requisitos.",
+  "Let's finish your application details": "Completemos los datos de su solicitud",
+  "We need your current work arrangement and selected services before we can prepare your checklist.": "Necesitamos saber cómo trabaja actualmente y qué servicios desea ofrecer para preparar su lista de requisitos.",
+  "We need to confirm the name of the person who will do the work before starting the ID check.": "Necesitamos confirmar el nombre de la persona que realizará el trabajo antes de iniciar la verificación de identidad.",
+  "Tell us which vehicle services you want to offer so we can prepare your document checklist.": "Díganos qué servicios para vehículos desea ofrecer para preparar su lista de documentos.",
+  "Use the help form below to request an update to this application. You do not need to apply again.": "Use el formulario de ayuda que aparece abajo para pedir que actualicemos esta solicitud. No necesita enviar una nueva.",
+  "Get help with my application": "Pedir ayuda con mi solicitud",
+  "Your ID check can start after your application details are updated. Upload your ID and selfie only on Stripe's secure page.": "Su verificación de identidad podrá comenzar cuando se actualicen los datos de su solicitud. Envíe su identificación y selfie únicamente en la página segura de Stripe.",
+  "Your document checklist will appear after your application details are updated.": "Su lista de documentos aparecerá cuando se actualicen los datos de su solicitud.",
   "My account": "Mi cuenta",
 
   "Please check your request and try again.": "Revise su solicitud e inténtelo de nuevo.",

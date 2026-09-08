@@ -14,6 +14,7 @@ import {
 import { PROVIDER_TERMS_ACCEPTANCE_TEXT_ES, PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES } from "../../lib/provider-policy-spanish-text";
 import { BrandMark } from "../components/tuveloz-icons";
 import { EvidenceUpload } from "../components/provider-evidence-upload";
+import { OwnerSupportForm } from "../components/owner-support-form";
 import { spanishInterfaceTree } from "../../lib/spanish-react";
 
 type EvidenceSubmission = {
@@ -317,6 +318,7 @@ function DataRightsRequestForm({ onSubmitted, preferredLanguage }: {
 }
 
 export default function ProviderOnboardingPage() {
+  const [applicationHelpOpen, setApplicationHelpOpen] = useState(false);
   const [data, setData] = useState<OnboardingResponse | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -482,6 +484,10 @@ export default function ProviderOnboardingPage() {
     )))
     : [];
 
+  const applicationNeedsHelp = Boolean(data && (
+    !data.pathway || data.services.length === 0 || data.identityVerification.manualReattestationRequired
+  ));
+
   const content = (
     <main className="account-shell provider-onboarding-shell" lang={language}>
       <header className="account-header">
@@ -498,7 +504,9 @@ export default function ProviderOnboardingPage() {
         <div className="account-welcome">
           <span className="account-kicker">Provider application</span>
           <h1>Your next steps</h1>
-          <p>Choose a service below to see which documents to send and what still needs review.</p>
+          <p>{applicationNeedsHelp
+            ? "Your application needs updated details before you can finish the checklist."
+            : "Choose a service below to see which documents to send and what still needs review."}</p>
           <details>
             <summary>How your application is reviewed</summary>
             <p>
@@ -519,6 +527,25 @@ export default function ProviderOnboardingPage() {
         {!data && !error && <p className="admin-note">Loading your onboarding checklist…</p>}
         {data && (
           <div className="account-grid">
+            {applicationNeedsHelp && (
+              <section className="account-card provider-application-recovery">
+                <h2>Let&apos;s finish your application details</h2>
+                <p>{!data.pathway
+                  ? "We need your current work arrangement and selected services before we can prepare your checklist."
+                  : data.identityVerification.manualReattestationRequired
+                    ? "We need to confirm the name of the person who will do the work before starting the ID check."
+                    : "Tell us which vehicle services you want to offer so we can prepare your document checklist."}</p>
+                <p>Use the help form below to request an update to this application. You do not need to apply again.</p>
+                <button className="button secondary" type="button" aria-expanded={applicationHelpOpen}
+                  aria-controls="application-help-form" onClick={() => setApplicationHelpOpen(open => !open)}>
+                  Get help with my application
+                </button>
+                <div id="application-help-form" data-manual-language hidden={!applicationHelpOpen}>
+                  <OwnerSupportForm language={language} audience="provider" initialEmail={data.provider.email}
+                    context="provider-onboarding" initialMessage="" />
+                </div>
+              </section>
+            )}
             <section className="account-card">
               <div className="account-card-heading">
                 <div><span className="account-role">Policy v{data.policy.version}</span><h2>Your application</h2></div>
@@ -538,7 +565,7 @@ export default function ProviderOnboardingPage() {
               </p>
             </section>
 
-            <section className="account-card" id="identity-verification">
+            {data.pathway && <section className="account-card" id="identity-verification">
               <div className="account-card-heading">
                 <div>
                   <span className="account-role">Independent owner-operator only</span>
@@ -566,9 +593,7 @@ export default function ProviderOnboardingPage() {
               )}
               {data.identityVerification.manualReattestationRequired && (
                 <p className="form-error">
-                  This older application does not contain the required immutable performing-person
-                  name. Do not start Stripe Identity. Contact TUVELOZ for assisted re-attestation or
-                  the external manual identity-and-age review.
+                  Your ID check can start after your application details are updated. Upload your ID and selfie only on Stripe&apos;s secure page.
                 </p>
               )}
               {data.identityVerification.conflictingExternalVerificationRequiresReview && (
@@ -684,7 +709,7 @@ export default function ProviderOnboardingPage() {
                     </button>
                   </>
                 ) : null}
-            </section>
+            </section>}
 
             <section className="account-card provider-service-status-card">
               <div className="account-card-heading">
@@ -692,7 +717,7 @@ export default function ProviderOnboardingPage() {
                 <span className="account-count">{data.services.length}</span>
               </div>
               <p>We review your documents separately from your ID check. Only the requirements for your selected services appear here.</p>
-              {data.services.length === 0 && <p>No exact services are on this application.</p>}
+              {data.services.length === 0 && <p>Your document checklist will appear after your application details are updated.</p>}
               <div className="account-request-list">
                 {data.services.map((service) => (
                   <article className="account-request provider-onboarding-service" key={service.code}>
