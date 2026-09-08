@@ -234,8 +234,8 @@ test("provider approval requires applicable state and local proof without reques
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("Tuveloz must receive and verify proof before approval"));
-  assert.ok(contents.includes("If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."));
+  assert.ok(contents.includes("Tuveloz must verify the current certificate before approving the provider"));
+  assert.ok(contents.includes("We only show the paperwork and Tuveloz safety and experience checks for your chosen services. Shared documents are listed once."));
   assert.ok(contents.includes("repair-registration proof received and verified"));
   assert.ok(contents.includes("cannot be verified until the state and local requirements"));
 });
