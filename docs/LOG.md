@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-08 - Provider review receipts and a clearer next step
+
+The actual browser appeal form reproduced a false failure after a successful
+save: React cleared `event.currentTarget` while the request was awaiting its
+response, so resetting the form threw. Appeals, privacy requests and agreement
+acceptance now retain the form reference, require an explicit successful API
+receipt, and preserve entered text when a response is rejected or unconfirmed.
+Confirmed appeals and privacy requests remain successful even when the follow-up
+status refresh fails. Their receipt stays in the parent page when the original
+form is removed by the updated checklist.
+
+The page starts with the next step, places the selected-service document
+checklist directly after identity verification, and omits empty expiration and
+appeal panels. Application-review details remain available in an expandable
+section. Clearer copy distinguishes document review from ID verification and
+explains how to resume an unsuccessful Stripe check. Appeal/privacy forms and
+submission receipts use the saved applicant language. The surrounding private
+page and agreement presentation remain English-only; this is not a fully
+translated onboarding page. Reviewed
+consents, evidence requirements, issuer-verification controls and launch locks
+remain unchanged.
+
+Browser regression coverage uses the real React page, delayed local API fixtures,
+Chromium and WebKit, and English/Spanish applicant preferences. It checks 44 combinations of
+successful submissions, rejected/unconfirmed responses and refresh failures,
+including retained drafts, one request, confirmation visibility and mobile
+overflow. The test is part of required CI. No real provider document, approval,
+message, identity check or payment is created by these browser tests. Deployment
+is tracked separately through the pull request and production release workflow.
+
 ## 2026-09-05 - Provider welcome and consistent public identity
 
 The provider page now explains the application to applicants instead of
