@@ -459,6 +459,7 @@ export function ProviderSignupForm() {
     setApplicationBusy(false);
     setApplicationChallengeId("");
     setApplicationVerificationCode("");
+    setPendingApplicationPayload(null);
     setApplicationError("");
     stepContentRef.current?.querySelectorAll<HTMLInputElement>('input[type="checkbox"][required]')
       .forEach((input) => { input.checked = false; });

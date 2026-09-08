@@ -9258,6 +9258,16 @@ footer > p,
   text-underline-offset: 2px;
 }
 
+.provider-form .policy-consent > span {
+  color: #d7dfe5;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.provider-form .policy-consent a { font-weight: 600; }
+.provider-form .area-fieldset { border-color: #394856; }
+
 .account-login-message {
   margin: 16px 0 0;
   max-width: 620px;
