@@ -10,24 +10,6 @@ import { SignedInReturnNote } from "./signed-in-return-note";
 import { TuvelozIcon } from "./tuveloz-icons";
 import { LaunchHelpNotice } from "./launch-help-notice";
 
-const valueProps = [
-  {
-    icon: "quote" as const,
-    title: "Real prices, side by side",
-    text: "Compare the price and work described in each quote. If a provider needs more information or an in-person assessment, you can discuss that before agreeing to service.",
-  },
-  {
-    icon: "open-jobs" as const,
-    title: "Requests reach eligible local providers",
-    text: "After launch, your request will reach local providers approved for that service. Each provider decides whether to send a quote.",
-  },
-  {
-    icon: "active-job" as const,
-    title: "Options for where the work happens",
-    text: "For eligible services, a mobile provider may be able to come to you. The provider confirms whether your location is suitable before the appointment.",
-  },
-];
-
 const trustPoints = [
   {
     title: "You're never stuck",
@@ -91,12 +73,12 @@ export function CustomerLander() {
           <SignedInReturnNote />
           <div className="eyebrow">
             <span className="pulse" />
-            Customer launch is in preparation · Montgomery County, MD
+            For car owners in Montgomery County, MD
           </div>
           <h1>
-            Car care should feel less stressful.
+            Find local help for your car.
             <br />
-            <span className="hero-value-line">Local help. A choice you feel good about.</span>
+            <span className="hero-value-line">Get ready for our Montgomery County launch.</span>
           </h1>
           <p>
             {CUSTOMER_INTRO}
@@ -111,17 +93,13 @@ export function CustomerLander() {
             <a className="button secondary" href="#how-it-works">
               See how it works <span>→</span>
             </a>
-            <Link className="button ai" href="/ai">
-              Get answers <span>✦</span>
+            <Link className="text-link hero-text-link" href="/ai">
+              Get answers <span>→</span>
             </Link>
           </div>
-          <div className="hero-launch-note">
-            <strong>
-              We&apos;re onboarding providers for the services customers will need.
-              Customer requests open once the marketplace is ready.
-            </strong>
-            <Link href="/about#expansion">Outside the county? Request your area →</Link>
-          </div>
+          <p className="hero-area-note">
+            <Link className="text-link" href="/about#expansion">Outside the county? Request your area →</Link>
+          </p>
         </div>
 
         <div
@@ -151,38 +129,8 @@ export function CustomerLander() {
             </article>
           </div>
           <p className="hero-visual-caption">
-            A sneak peek, not a real job — this is what comparing prices will look like. Customer requests and quotes open at launch.
+            Example quote comparison. Customer requests and quotes are not open yet.
           </p>
-        </div>
-      </section>
-
-      <section className="proof-strip" aria-label="What Tuveloz promises customers">
-        <span><b>Free</b> to create your account</span>
-        <span><b>Independent</b> local businesses, no call center</span>
-        <span><b>Your choice</b> when customer requests open</span>
-        <span><b>No launch date yet</b> — we open when coverage is ready</span>
-      </section>
-
-      <section className="section lander-value" aria-labelledby="lander-value-heading">
-        <div className="section-heading">
-          <div>
-            <span className="kicker">Why customers use Tuveloz</span>
-            <h2 id="lander-value-heading">Stop guessing what a repair should cost.</h2>
-          </div>
-          <p>
-            An unexpected car problem can leave you with plenty of questions. Tuveloz is being built so you can compare the quotes you receive and understand what is included before deciding.
-          </p>
-        </div>
-        <div className="lander-value-grid">
-          {valueProps.map((item) => (
-            <article key={item.title}>
-              <span className="lander-value-icon">
-                <TuvelozIcon name={item.icon} />
-              </span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
         </div>
       </section>
 
@@ -284,8 +232,8 @@ export function CustomerLander() {
       <section className="section lander-faq" aria-labelledby="lander-faq-heading">
         <div className="section-heading">
           <div>
-            <span className="kicker">Questions people actually ask</span>
-            <h2 id="lander-faq-heading">Straight answers, no fine print.</h2>
+            <span className="kicker">Common questions</span>
+            <h2 id="lander-faq-heading">A few things you may be wondering.</h2>
           </div>
           <p>
             Don&apos;t see yours? There&apos;s more in the <Link className="text-link" href="/faq">full FAQ</Link>,
@@ -304,13 +252,13 @@ export function CustomerLander() {
 
       <section className="final-cta">
         <span className="kicker light">Montgomery County, Maryland</span>
-        <h2>Your car. Your quotes. Your call.</h2>
+        <h2>Join when you are ready.</h2>
         <div>
           <SaveMySpotButton className="button lime" />
           <Link className="button ghost" href="/how-it-works">See how it works</Link>
         </div>
         <p className="final-cta-note">
-          Free to join. Posting a job and paying through us starts the day we open.
+          Creating your account is free. We have not announced a booking launch date.
         </p>
       </section>
 

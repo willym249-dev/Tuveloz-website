@@ -17,6 +17,19 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "Vehicle services in Montgomery County, MD": "Servicios para vehículos en el condado de Montgomery, MD",
+  "For car owners in Montgomery County, MD": "Para dueños de carros en el condado de Montgomery, MD",
+  "Find local help for your car.": "Encuentre ayuda local para su carro.",
+  "Get ready for our Montgomery County launch.": "Prepárese para nuestra apertura en el condado de Montgomery.",
+  "Common questions": "Preguntas frecuentes",
+  "A few things you may be wondering.": "Respuestas a algunas de sus preguntas.",
+  "Join when you are ready.": "Regístrese cuando esté listo.",
+  "Creating your account is free. We have not announced a booking launch date.": "Crear su cuenta es gratis. Aún no hemos anunciado cuándo se podrán reservar servicios.",
+  "Example quote comparison. Customer requests and quotes are not open yet.": "Ejemplo de comparación de cotizaciones. Las solicitudes y cotizaciones de clientes aún no están disponibles.",
+  "Keep each appointment's date, time, location, and agreed work together.": "Mantenga juntos la fecha, la hora, el lugar y el trabajo acordado de cada cita.",
+  "Save quotes you use often, then adjust the work and price for each customer.": "Guarde las cotizaciones que usa con frecuencia y ajuste el trabajo y el precio para cada cliente.",
+  "Job photos and notes": "Fotos y notas del trabajo",
+  "Keep photos and notes from before, during, and after the work with each job.": "Guarde con cada trabajo las fotos y notas de antes, durante y después del servicio.",
   "We couldn't confirm that a code was sent. Your details are still here. Please try again.": "No pudimos confirmar el envío del código. Sus datos siguen aquí. Intente de nuevo.",
   "We couldn't confirm receipt of your application. Your details are still here. Please try again.": "No pudimos confirmar la recepción de su solicitud. Sus datos siguen aquí. Intente de nuevo.",
   "That code is invalid or expired. Please check it or request a new one.": "El código no es válido o ya venció. Revíselo o solicite uno nuevo.",
@@ -260,6 +273,7 @@ export const spanishText: Record<string, string> = {
   "Repairs, detailing, tint — ask how quoting, getting paid, and the paperwork work.": "Reparación, detallado, polarizado: pregunte cómo funcionan las cotizaciones, los pagos y el papeleo.",
   "Read it yourself:": "Léalo usted mismo:",
   "Ask how quoting, paperwork, or getting paid works…": "Pregunte cómo funcionan las cotizaciones, el papeleo o los pagos…",
+  "Get help with this page": "Obtenga ayuda con esta página",
   "Ask Tuveloz AI about this page": "Pregunte a Tuveloz AI sobre esta página",
   "Describe what your vehicle needs, clearly.": "Describa lo que necesita su vehículo, con claridad.",
   "Get bilingual, safety-first guidance that helps you organize what your vehicle is doing and prepare for a future service request. Tuveloz AI does not diagnose your vehicle, dispatch help, guarantee pricing, or choose a provider.": "Reciba orientación bilingüe centrada en la seguridad que le ayuda a organizar lo que hace su vehículo y a prepararse para una futura solicitud de servicio. Tuveloz AI no diagnostica su vehículo, no envía ayuda, no garantiza precios ni elige un proveedor.",

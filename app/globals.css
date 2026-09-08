@@ -279,6 +279,19 @@ a {
   margin-top: 34px;
 }
 
+.hero-actions .hero-text-link {
+  align-items: center;
+  display: inline-flex;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 4px;
+}
+
+.hero-copy > .hero-area-note {
+  font-size: 14px;
+  margin-top: 22px;
+}
+
 .button {
   align-items: center;
   border: 0;

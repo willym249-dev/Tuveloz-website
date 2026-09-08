@@ -25,7 +25,8 @@ import { AddressAutocompleteInput } from "./components/address-autocomplete-inpu
 import { SaveMySpotButton } from "./components/save-my-spot-button";
 import { LocationDatalists, MUNICIPALITY_DATALIST_ID, ZIP_DATALIST_ID } from "./components/location-datalists";
 import VehicleSelector from "./components/vehicle-selector";
-import { SiteLanguageButton } from "./components/site-language";
+import { hasPublicFormReceipt, requestPublicForm, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../lib/public-form-feedback";
+import { SiteLanguageButton, useSiteLanguage } from "./components/site-language";
 import {
   BrandMark,
   TuvelozIcon,
@@ -50,67 +51,24 @@ const providerHandled: Array<{
   text: string;
 }> = [
   {
-    icon: "open-jobs",
-    title: "Find requests near you",
-    text: "After launch, your dashboard will show local requests for services you are cleared to offer. You choose which ones to quote.",
-  },
-  {
     icon: "active-job",
     title: "Scheduling in one place",
-    text: "Confirm appointments and keep every job's date, time, and details together instead of chasing texts.",
+    text: "Keep each appointment's date, time, location, and agreed work together.",
   },
   {
     icon: "quote",
     title: "Quotes you can reuse",
-    text: "Reusable quote wording and your own set prices. Send a clear scope and price fast — no phone tag.",
+    text: "Save quotes you use often, then adjust the work and price for each customer.",
   },
   {
     icon: "gallery",
-    title: "Photo-backed job records",
-    text: "Snap photos of the car before, during, and after, straight from your phone. Your proof, on the record.",
+    title: "Job photos and notes",
+    text: "Keep photos and notes from before, during, and after the work with each job.",
   },
   {
     icon: "earnings",
-    title: "Invoices and payment handled",
+    title: "Invoices and receipts",
     text: "Keep the agreed work, authorization, invoice, and receipt together. Customer payments will become available after launch review.",
-  },
-  {
-    icon: "overview",
-    title: "Your numbers, private",
-    text: "Review your completed jobs and business activity in your account, away from your public profile.",
-  },
-];
-
-// What a marketplace can design for that single-shop software can't. Framed as
-// how Tuveloz is built — not live guarantees — to stay inside the site's
-// launch-honest voice (the note below the grid restates the launch caveat).
-// Each maps to something real in the model: bilingual EN/ES interface,
-// platform-run payment released on completion evidence, the labor-only /
-// customer-supplied-parts flow, and mobile/on-location job records.
-const providerDifferences: Array<{
-  icon: TuvelozIconName;
-  title: string;
-  text: string;
-}> = [
-  {
-    icon: "quote",
-    title: "English and Spanish support",
-    text: "Review the quote, work authorization and invoice in English or Spanish with your customer.",
-  },
-  {
-    icon: "earnings",
-    title: "Paid through the platform",
-    text: "The planned payment flow keeps payment records with the job. Payouts depend on completion evidence and the payment policy, including any holds or adjustments.",
-  },
-  {
-    icon: "services",
-    title: "Agree on parts before the visit",
-    text: "Review the needed parts with your customer before agreeing to the work. Customers purchase parts separately.",
-  },
-  {
-    icon: "active-job",
-    title: "Tools for work on the go",
-    text: "Keep appointments, job notes and photos together while you're working at a customer's location or in your shop.",
   },
 ];
 
@@ -220,6 +178,7 @@ function dollars(cents: number | undefined) {
 export type PublicView = "home" | "about" | "request" | "provider";
 
 export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
+  const { language } = useSiteLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
@@ -228,10 +187,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
   const [vehicleResetVersion, setVehicleResetVersion] = useState(0);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackBusy, setFeedbackBusy] = useState(false);
-  const [feedbackError, setFeedbackError] = useState("");
+  const [feedbackError, setFeedbackError] = useState<PublicFormProblem | null>(null);
   const [expansionSent, setExpansionSent] = useState(false);
   const [expansionBusy, setExpansionBusy] = useState(false);
-  const [expansionError, setExpansionError] = useState("");
+  const [expansionError, setExpansionError] = useState<PublicFormProblem | null>(null);
   const [expansionAudience, setExpansionAudience] = useState("");
   const [pendingSubmission, setPendingSubmission] = useState<
     "" | "request" | "feedback"
@@ -518,6 +477,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
   async function handleFeedbackSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (feedbackBusy) return;
     const form = event.currentTarget;
     const formData = new FormData(form);
     const jobsWanted = formData.getAll("jobs-wanted").map(String);
@@ -535,21 +495,21 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       || (providerFeatures.length === 0 && !providerOther)
       || (customerImprovements.length === 0 && !customerOther)
     ) {
-      setFeedbackError("Select at least one answer in each feedback section.");
+      setFeedbackError("feedback-sections");
       setPendingSubmission("");
       return;
     }
 
     if (pendingSubmission !== "feedback") {
-      setFeedbackError("");
+      setFeedbackError(null);
       setPendingSubmission("feedback");
       return;
     }
     setFeedbackBusy(true);
-    setFeedbackError("");
+    setFeedbackError(null);
 
     try {
-      const response = await fetch("/api/feedback", {
+      const response = await requestPublicForm("/api/feedback", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -560,14 +520,17 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           email: formData.get("feedback-email"),
         }),
       });
-      const result = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Please try again.");
+      if (!response.ok || !hasPublicFormReceipt(response.payload)) {
+        setFeedbackError(publicFormProblem("feedback", response.status, response.payload));
+        setPendingSubmission("");
+        return;
+      }
       form.reset();
       setPendingSubmission("");
       setFeedbackSent(true);
-    } catch (error) {
+    } catch {
       setPendingSubmission("");
-      setFeedbackError(error instanceof Error ? error.message : "Please try again.");
+      setFeedbackError("unconfirmed");
     } finally {
       setFeedbackBusy(false);
     }
@@ -575,13 +538,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
   async function handleExpansionSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (expansionBusy) return;
     const form = event.currentTarget;
     const formData = new FormData(form);
     setExpansionBusy(true);
-    setExpansionError("");
+    setExpansionError(null);
 
     try {
-      const response = await fetch("/api/expansion-interest", {
+      const response = await requestPublicForm("/api/expansion-interest", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -592,13 +556,15 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           email: formData.get("expansion-email"),
         }),
       });
-      const result = (await response.json()) as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Please try again.");
+      if (!response.ok || !hasPublicFormReceipt(response.payload)) {
+        setExpansionError(publicFormProblem("expansion", response.status, response.payload));
+        return;
+      }
       form.reset();
       setExpansionAudience("");
       setExpansionSent(true);
-    } catch (error) {
-      setExpansionError(error instanceof Error ? error.message : "Please try again.");
+    } catch {
+      setExpansionError("unconfirmed");
     } finally {
       setExpansionBusy(false);
     }
@@ -685,7 +651,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             <>
               <div className="eyebrow">
                 <span className="pulse" />
-                Customer launch is in preparation · Montgomery County, MD
+                Vehicle services in Montgomery County, MD
               </div>
               <h1>
                 Car care should feel less stressful.
@@ -741,19 +707,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </>
             )}
             {view !== "provider" && (
-              <Link className="button ai" href="/ai">
-                Get answers <span>✦</span>
+              <Link className="text-link hero-text-link" href="/ai">
+                Get answers <span>→</span>
               </Link>
             )}
           </div>
-          <div className="hero-launch-note">
-            <strong>
-              {CUSTOMER_JOB_POSTING_PAUSED
-                ? "We're onboarding providers for the services customers will need. Customer requests open once the marketplace is ready."
-                : "Now serving Montgomery County, Maryland. More areas coming soon."}
-            </strong>
-            <Link href="/about#expansion">Outside the county? Request your area →</Link>
-          </div>
+          <p className="hero-area-note">
+            <Link className="text-link" href="/about#expansion">Outside the county? Request your area →</Link>
+          </p>
         </div>
 
         <div className="hero-visual" aria-label="Preview of the planned Tuveloz service-request experience" role="img">
@@ -790,23 +751,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
       )}
 
+      {view === "provider" && (
       <section className="proof-strip" aria-label="What Tuveloz promises today">
-        {view === "provider" ? (
-          <>
-            <span><b>Keep 100%</b> of the price you quote</span>
-            <span><b>$0</b> to apply — no subscription, no lead fees</span>
-            <span><b>You set</b> your prices, hours, and area</span>
-            <span><b>Founding spots</b> open in Montgomery County, MD</span>
-          </>
-        ) : (
-          <>
-            <span><b>Free</b> to create your account</span>
-            <span><b>Independent</b> local businesses, no call center</span>
-            <span><b>Your choice</b> when customer requests open</span>
-            <span><b>No launch date yet</b> · we open when coverage is ready</span>
-          </>
-        )}
+        <span><b>Keep 100%</b> of the price you quote</span>
+        <span><b>$0</b> to apply — no subscription, no lead fees</span>
+        <span><b>You set</b> your prices, hours, and area</span>
+        <span><b>Founding spots</b> open in Montgomery County, MD</span>
       </section>
+      )}
 
       {view !== "about" && (
       <section className="trust-section" aria-labelledby="trust-heading">
@@ -891,22 +843,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         </section>
       )}
 
+      {view === "about" && (
       <section className="audience-section" aria-labelledby="audience-heading">
         <div className="audience-intro">
           <span className="kicker">For our neighbors and local pros</span>
-          {view === "about" ? (
-            <h1 id="audience-heading">
-              About Tuveloz
-            </h1>
-          ) : (
-            <h2 id="audience-heading">
-              Good car care starts with good connections.
-            </h2>
-          )}
+          <h1 id="audience-heading">About Tuveloz</h1>
           <p>
-            {view === "about"
-              ? "We're building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose their provider, and providers set their own prices and hours."
-              : "Tuveloz keeps customers in control of their vehicle-service decisions and independent providers in control of their business."}
+            We&apos;re building a way for Montgomery County car owners to find independent vehicle-service providers. Customers choose their provider, and providers set their own prices and hours.
           </p>
         </div>
 
@@ -942,6 +885,8 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </article>
         </div>
       </section>
+
+      )}
 
       {view === "home" && CUSTOMER_JOB_POSTING_PAUSED && (
         <LaunchHelpNotice updatesHref="/post-job#launch-updates" />
@@ -1682,38 +1627,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && view !== "about" && (
-      <section className="section difference-section" id="what-makes-us-different">
-        <div className="section-heading">
-          <div>
-            <span className="kicker">Why Tuveloz is different</span>
-            <h2>Tools to keep each job organized.</h2>
-          </div>
-          <p>
-            We&apos;re building tools to manage quotes, appointments and job records
-            in one place, while you stay in charge of your business.
-          </p>
-        </div>
-        <div className="difference-grid">
-          {providerDifferences.map((item) => (
-            <article key={item.title}>
-              <div className="difference-icon">
-                <TuvelozIcon name={item.icon} />
-              </div>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-        <p className="difference-note">
-          These tools will be available for real jobs after the required launch
-          reviews. You can apply now and complete your service checklist before
-          customer bookings open.
-        </p>
-      </section>
-      )}
 
-      {view !== "home" && (
+
+      {view === "about" && (
       <section className="section expansion-section" id="expansion">
         <div className="expansion-copy">
           <span className="kicker">Future expansion</span>
@@ -1730,7 +1646,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </div>
         </div>
 
-        <form className="expansion-form" onSubmit={handleExpansionSubmit}>
+        <form className="expansion-form" aria-busy={expansionBusy} onSubmit={handleExpansionSubmit}>
           {expansionSent ? (
             <div className="success-message expansion-success" role="status">
               <span>✓</span>
@@ -1752,7 +1668,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                       className={expansionAudience === option ? "selected" : ""}
                       key={option}
                     >
-                      <input
+                      <input disabled={expansionBusy}
                         checked={expansionAudience === option}
                         name="expansion-audience"
                         onChange={() => setExpansionAudience(option)}
@@ -1768,7 +1684,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               {(expansionAudience === "Provider" || expansionAudience === "Both") && (
                 <label>
                   Provider type
-                  <select required name="expansion-provider-type" defaultValue="">
+                  <select disabled={expansionBusy} required name="expansion-provider-type" defaultValue="">
                     <option value="" disabled>Select one</option>
                     <option>Mobile mechanic or service truck</option>
                     <option>Shop-based mechanic</option>
@@ -1781,7 +1697,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <div className="field-row">
                 <label>
                   State or district
-                  <select required name="expansion-state" defaultValue="">
+                  <select disabled={expansionBusy} required name="expansion-state" defaultValue="">
                     <option value="" disabled>Select one</option>
                     <option>Maryland</option>
                     <option>Washington, DC</option>
@@ -1789,7 +1705,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 </label>
                 <label>
                   County or independent city
-                  <input
+                  <input disabled={expansionBusy}
                     name="expansion-locality"
                     placeholder="Example: Prince George's County"
                     required
@@ -1798,7 +1714,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               </div>
               <label>
                 Email address
-                <input
+                <input disabled={expansionBusy}
                   name="expansion-email"
                   placeholder="you@example.com"
                   required
@@ -1808,7 +1724,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <button className="button primary form-button" disabled={expansionBusy} type="submit">
                 {expansionBusy ? "Saving…" : "Request my area"} <span>→</span>
               </button>
-              {expansionError && <p className="form-error" role="alert">{expansionError}</p>}
+              {expansionError && <p className="form-error" role="alert">{publicFormMessage("expansion", expansionError, language === "es")}</p>}
               <small>
                 An area request shows interest; it does not promise a launch date.
                 Don&apos;t include payment details or sensitive information.
@@ -1819,7 +1735,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && (
+      {view === "about" && (
       <section className="section feedback-section" id="feedback">
         <div className="feedback-copy">
           <span className="kicker">Your feedback matters</span>
@@ -1837,6 +1753,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
 
         <form
           className="feedback-form"
+          aria-busy={feedbackBusy}
           onChange={() => pendingSubmission === "feedback" && setPendingSubmission("")}
           onSubmit={handleFeedbackSubmit}
         >
@@ -1853,7 +1770,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
               <p>Required questions are marked below. Email is optional.</p>
               <label>
                 I&apos;m answering as
-                <select required name="audience" defaultValue="">
+                <select disabled={feedbackBusy} required name="audience" defaultValue="">
                   <option value="" disabled>Select one</option>
                   <option>Customer</option>
                   <option>Provider</option>
@@ -1866,14 +1783,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <div className="feedback-options">
                   {feedbackJobOptions.map((option) => (
                     <label key={option}>
-                      <input name="jobs-wanted" type="checkbox" value={option} />
+                      <input disabled={feedbackBusy} name="jobs-wanted" type="checkbox" value={option} />
                       <span>{option}</span>
                     </label>
                   ))}
                 </div>
                 <label className="feedback-other">
                   Other job or service <span className="optional-label">(optional)</span>
-                  <input name="jobs-wanted-other" placeholder="Tell us what should be added" />
+                  <input disabled={feedbackBusy} name="jobs-wanted-other" placeholder="Tell us what should be added" />
                 </label>
               </fieldset>
               <fieldset className="feedback-choice-group">
@@ -1882,14 +1799,14 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <div className="feedback-options">
                   {feedbackProviderOptions.map((option) => (
                     <label key={option}>
-                      <input name="provider-features" type="checkbox" value={option} />
+                      <input disabled={feedbackBusy} name="provider-features" type="checkbox" value={option} />
                       <span>{option}</span>
                     </label>
                   ))}
                 </div>
                 <label className="feedback-other">
                   Other provider tool <span className="optional-label">(optional)</span>
-                  <input name="provider-features-other" placeholder="Suggest another provider feature" />
+                  <input disabled={feedbackBusy} name="provider-features-other" placeholder="Suggest another provider feature" />
                 </label>
               </fieldset>
               <fieldset className="feedback-choice-group">
@@ -1898,19 +1815,19 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 <div className="feedback-options">
                   {feedbackCustomerOptions.map((option) => (
                     <label key={option}>
-                      <input name="customer-improvements" type="checkbox" value={option} />
+                      <input disabled={feedbackBusy} name="customer-improvements" type="checkbox" value={option} />
                       <span>{option}</span>
                     </label>
                   ))}
                 </div>
                 <label className="feedback-other">
                   Other customer improvement <span className="optional-label">(optional)</span>
-                  <input name="customer-improvements-other" placeholder="Suggest another improvement" />
+                  <input disabled={feedbackBusy} name="customer-improvements-other" placeholder="Suggest another improvement" />
                 </label>
               </fieldset>
               <label>
                 Email for follow-up <span className="optional-label">(optional)</span>
-                <input name="feedback-email" type="email" placeholder="you@example.com" />
+                <input disabled={feedbackBusy} name="feedback-email" type="email" placeholder="you@example.com" />
               </label>
               {pendingSubmission === "feedback" ? (
                 <ConfirmAction
@@ -1927,7 +1844,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                   {feedbackBusy ? "Saving…" : "Send feedback"} <span>→</span>
                 </button>
               )}
-              {feedbackError && <p className="form-error" role="alert">{feedbackError}</p>}
+              {feedbackError && <p className="form-error" role="alert">{publicFormMessage("feedback", feedbackError, language === "es")}</p>}
               <small>Don&apos;t include payment details, identification numbers, or sensitive documents.</small>
             </>
           )}

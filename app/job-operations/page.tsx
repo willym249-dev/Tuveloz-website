@@ -4,6 +4,7 @@ import { PolicyPage } from "../components/policy-page";
 import { JobOperationsConsole } from "./job-operations-console";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false },
   title: "Change, Cancellation, Incident, Invoice, and Payment Review",
   description:
     "The job-operations workflow Tuveloz is building for review before any real customer job or payment is enabled — changes, cancellations, incidents, invoices, and Maryland repair records.",

@@ -90,9 +90,16 @@ try {
           });
           const result = { browser: browserType.name(), role, name };
           try {
+            if (options.passkey) await page.addInitScript(() => {
+              Object.defineProperty(window, "PublicKeyCredential", { configurable: true, value: class {
+                static async isUserVerifyingPlatformAuthenticatorAvailable() { return true; }
+              } });
+            });
             if (options.clock) await page.clock.install();
+            const sessionStarted = options.sessionGate ? page.waitForRequest(request => new URL(request.url()).pathname === "/api/account") : null;
             await page.goto(origin + "/account?role=" + role + "&mode=" + (options.mode ?? "signin"));
             await page.locator('.account-role-tabs button[aria-pressed="true"]').filter({ hasText: role === "provider" ? "Provider" : "Customer" }).waitFor();
+            if (sessionStarted) await sessionStarted;
             await action(page, requests);
             assert.deepEqual(errors, [], "no account-page render crashes");
             assert.deepEqual(unexpected, [], "no external requests or unexpected mutations");
@@ -113,6 +120,19 @@ try {
           report.cases.push(result);
           console.log(result.status.toUpperCase() + " " + result.browser + " " + role + " " + name + (result.error ? ": " + result.error : ""));
         }
+
+        await run("passkey-options-retry", [json(503, { error: "Passkey sign-in is unavailable." }), json(200, { options: {} })], async (page, requests) => {
+          const button = page.getByRole("button", { name: "Use a passkey", exact: true });
+          await button.click();
+          await page.getByRole("alert").waitFor();
+          assert.equal(requests[0].path, "/api/auth/passkeys/authenticate/options");
+          assert.equal(await button.isEnabled(), true);
+          await button.click();
+          await page.getByText("Passkey sign-in was canceled or is unavailable on this device.", { exact: true }).waitFor();
+          assert.equal(await button.isEnabled(), true);
+          await fillPassword(page);
+          assert.equal(await submit(page).isEnabled(), true, "password fallback stays available");
+        }, { passkey: true });
 
         const sessionGate = gate();
         await run("stalled-session-check", [], async page => {
