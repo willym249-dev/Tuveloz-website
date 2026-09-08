@@ -47,11 +47,25 @@ for (const [engine, type] of Object.entries(browsers)) {
         }
         return route.continue();
       });
-      const page = await context.newPage();
+      let page = await context.newPage();
       page.setDefaultTimeout(7000);
       const errors = [];
-      page.on("pageerror", error => errors.push(error.message));
+      const watchPage = () => {
+        const observedPage = page;
+        page.setDefaultTimeout(7000);
+        page.on("pageerror", error => { if (page === observedPage) errors.push(error.message); });
+      };
+      watchPage();
       const go = async () => {
+        // Start each click on a fresh document. Reusing a page.goto while an
+        // old RSC stream is open produces WebKit teardown errors unrelated to
+        // the button being checked. Actual source/destination errors still fail.
+        if (page.url() !== "about:blank") {
+          const previous = page;
+          page = await context.newPage();
+          watchPage();
+          await previous.close();
+        }
         const ready = page.waitForResponse(response => new URL(response.url()).pathname === "/api/account");
         const response = await page.goto(origin + path, { waitUntil: "domcontentloaded" });
         assert.equal(response.status(), 200, `page status: ${path}`);
