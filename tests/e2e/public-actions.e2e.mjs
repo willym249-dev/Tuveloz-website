@@ -8,6 +8,7 @@ import { chromium, webkit } from "playwright";
 
 const origin = process.env.PUBLIC_AUDIT_ORIGIN ?? "http://localhost:3027";
 assert.ok(["localhost", "127.0.0.1"].includes(new URL(origin).hostname), "Use the isolated local site");
+const viewportWidth = Number(process.env.PUBLIC_AUDIT_WIDTH ?? 390);
 const output = resolve(process.env.PUBLIC_AUDIT_OUTPUT ?? "../public-actions-audit");
 mkdirSync(output, { recursive: true });
 const report = { at: new Date().toISOString(), pages: [], actions: [], issues: [], externalLinks: [] };
@@ -32,7 +33,7 @@ for (const [engine, type] of Object.entries(browsers)) {
   const browser = await type.launch();
   try {
     for (const path of [...routes].sort().filter(path => !requestedPaths || requestedPaths.includes(path))) {
-      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const context = await browser.newContext({ viewport: { width: viewportWidth, height: 844 }, isMobile: viewportWidth < 768, hasTouch: viewportWidth < 768 });
       await context.route("**/*", async route => {
         const request = route.request();
         if (!["GET", "HEAD"].includes(request.method())) return route.abort();
@@ -62,6 +63,7 @@ for (const [engine, type] of Object.entries(browsers)) {
         } else {
           await page.locator(".account-loading").waitFor({ state: "hidden" });
         }
+        if (path === "/system-status") await page.locator(".account-card .hero-actions button:enabled").waitFor();
         if (new URL(page.url()).pathname === "/account") {
           await page.waitForFunction(() => {
             const email = document.querySelector('input[name="email"]');
@@ -74,13 +76,36 @@ for (const [engine, type] of Object.entries(browsers)) {
       };
       try {
         await go();
+        if (await page.locator(".site-language-button").isVisible()) {
+          const startLanguage = await page.evaluate(() => document.documentElement.lang);
+          for (const language of [startLanguage === "es" ? "en" : "es", startLanguage]) {
+            await page.locator(".site-language-button").click();
+            await page.waitForFunction(value => document.documentElement.lang === value, language);
+            await page.locator(".site-language-button").waitFor();
+            assert.equal(new URL(page.url()).pathname.replace(/^\/es(?=\/|$)/, "") || "/", path.replace(/^\/es(?=\/|$)/, "") || "/", "language switch keeps the same page");
+            report.actions.push({ path, engine, kind: "language", language, result: "passed" });
+          }
+          await go();
+        }
         const inventory = await page.evaluate(() => {
-          const visible = element => Boolean(element.getClientRects().length && getComputedStyle(element).visibility !== "hidden");
+          const visible = element => {
+            for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+              if (parent.tagName === "DETAILS" && !parent.open && !parent.querySelector(":scope > summary")?.contains(element)) return false;
+            }
+            return Boolean(element.getClientRects().length && getComputedStyle(element).visibility !== "hidden");
+          };
+          const disclosureParents = element => {
+            const all = [...document.querySelectorAll("details")], parents = [];
+            for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+              if (parent.tagName === "DETAILS") parents.unshift(all.indexOf(parent));
+            }
+            return parents;
+          };
           const label = element => (element.getAttribute("aria-label") || element.textContent || "").replace(/\s+/g, " ").trim();
           return {
             title: document.title, url: location.href, h1: [...document.querySelectorAll("h1")].map(label),
             overflow: document.documentElement.scrollWidth > innerWidth + 2,
-            links: [...document.querySelectorAll("a")].map((element, index) => ({ index, label: label(element), href: element.getAttribute("href"), visible: visible(element), shared: Boolean(element.closest("header,footer")), menu: Boolean(element.closest("#main-navigation")) })),
+            links: [...document.querySelectorAll("a")].map((element, index) => ({ index, label: label(element), href: element.getAttribute("href"), visible: visible(element), shared: Boolean(element.closest("header,footer")), menu: Boolean(element.closest("#main-navigation")), disclosures: disclosureParents(element) })),
             controls: [...document.querySelectorAll('button,summary,input,select,textarea,[role="button"]')].map(element => ({
               tag: element.tagName, label: label(element), name: element.getAttribute("name"), type: element.getAttribute("type"),
               visible: visible(element), disabled: element.disabled, expanded: element.getAttribute("aria-expanded"),
@@ -99,7 +124,20 @@ for (const [engine, type] of Object.entries(browsers)) {
         for (let index = 0; index < details; index++) {
           const detail = page.locator("details").nth(index);
           const summary = detail.locator(":scope > summary");
-          if (!(await summary.isVisible())) continue;
+          // WebKit can report rectangles for children of closed details. Open
+          // ancestors through their actual controls before testing nested help.
+          const parents = await detail.evaluate(element => {
+            const all = [...document.querySelectorAll("details")], indexes = [];
+            for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+              if (parent.tagName === "DETAILS" && !parent.open) indexes.unshift(all.indexOf(parent));
+            }
+            return indexes;
+          });
+          for (const parent of parents) await page.locator("details").nth(parent).locator(":scope > summary").click();
+          if (!(await summary.isVisible())) {
+            for (const parent of parents.reverse()) await page.locator("details").nth(parent).locator(":scope > summary").click();
+            continue;
+          }
           const before = await detail.getAttribute("open");
           const label = await summary.innerText();
           await summary.click();
@@ -107,6 +145,7 @@ for (const [engine, type] of Object.entries(browsers)) {
           await summary.click();
           assert.equal(await detail.getAttribute("open"), before, label);
           report.actions.push({ path, engine, label, kind: "disclosure", result: "passed" });
+          for (const parent of parents.reverse()) await page.locator("details").nth(parent).locator(":scope > summary").click();
         }
         const toggles = page.locator('button[aria-controls][aria-expanded]').filter({ visible: true });
         for (let index = 0; index < await toggles.count(); index++) {
@@ -124,7 +163,7 @@ for (const [engine, type] of Object.entries(browsers)) {
         if (process.env.PUBLIC_AUDIT_LINKS === "1" && (!linkPaths || linkPaths.includes(path))) {
           const seen = new Set();
           for (const link of inventory.links) {
-            if ((!link.visible && !link.menu) || !link.href || link.href === "#") continue;
+            if ((!link.visible && !link.menu && !link.disclosures.length) || !link.href || link.href === "#") continue;
             const target = new URL(link.href, origin + path);
             if (target.origin !== origin || target.pathname.startsWith("/api/")) continue;
             // Shared header/footer implementations get a dedicated full check on
@@ -137,6 +176,10 @@ for (const [engine, type] of Object.entries(browsers)) {
             try {
               await go();
               if (link.menu) await page.locator('button[aria-controls="main-navigation"]').click();
+              for (const parent of link.disclosures) {
+                const detail = page.locator("details").nth(parent);
+                if (await detail.getAttribute("open") === null) await detail.locator(":scope > summary").click();
+              }
               const candidate = link.menu
                 ? page.locator(`#main-navigation a[href=${JSON.stringify(link.href)}]`).first()
                 : page.locator(`a[href=${JSON.stringify(link.href)}]`).filter({ visible: true }).first();
