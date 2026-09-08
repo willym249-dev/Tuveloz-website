@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { JobPostingPauseNotice } from "../../../app/components/job-posting-pause-notice";
 import ProviderOnboardingPage from "../../../app/provider-onboarding/page";
 import { SiteLanguageProvider } from "../../../app/components/site-language";
 import "../../../app/globals.css";
@@ -23,6 +24,7 @@ Object.assign(window, { onboardingTest: {
 
 createRoot(document.getElementById("root")!).render(
   <SiteLanguageProvider initialLanguage={window.location.search.includes("spanish") ? "es" : "en"}>
+    <JobPostingPauseNotice />
     <ProviderOnboardingPage />
   </SiteLanguageProvider>,
 );

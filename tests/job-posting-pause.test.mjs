@@ -76,7 +76,7 @@ test("the request API rejects every new submission before reading customer data"
   assert.match(requestRoute, /cache-control/);
 });
 
-test("the pause notice is visible sitewide and the homepage uses an explicit launch branch", () => {
+test("the public pause notice stays in the layout and the homepage uses an explicit launch branch", () => {
   assert.match(rootLayout, /className="antialiased"/);
   assert.match(rootLayout, /data-customer-job-posting-paused/);
   assert.match(rootLayout, /<JobPostingPauseNotice \/>/);
