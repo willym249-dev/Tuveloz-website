@@ -45,10 +45,10 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   ocp_vehicle_service_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
     authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
-    recommendedMethod: OFFICIAL_METHOD,
+    recommendedMethod: ISSUER_METHOD,
     steps: [
-      "Look up the certificate on the county's official government (.gov) system.",
-      "Confirm the exact legal business name and that the certificate is active and unexpired.",
+      "Run the county registration check to compare the number, exact legal business name and expiration date with official records.",
+      "Ask OCP to confirm current standing and the services covered. The public dataset does not report all suspensions or service authorizations; its record alone cannot approve this document.",
     ],
   },
   md_locksmith_business_license: {
@@ -87,8 +87,8 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   ocp_towing_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
     authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
-    recommendedMethod: OFFICIAL_METHOD,
-    steps: ["Verify the towing registration on the county's official government (.gov) system."],
+    recommendedMethod: ISSUER_METHOD,
+    steps: ["Run the county registration check, then confirm current standing and towing authorization directly with OCP. The dataset's registration type describes the business structure, not the services authorized."],
   },
   motor_fuel_registration: {
     authorityLabel: "Maryland motor-fuel registration authority",

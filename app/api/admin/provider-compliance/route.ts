@@ -4,6 +4,7 @@ import {
   agreementAcceptances,
   evidenceFileScans,
   providerApplications,
+  providerAuditEvents,
   providerEvidenceSubmissions,
   providerPathwayProfiles,
   providerPersonnel,
@@ -12,6 +13,13 @@ import {
   serviceActivationDecisions,
 } from "../../../../db/schema";
 import { verifyOwnerRequest } from "../../../../lib/owner-auth";
+import {
+  countyDatasetIsReference, countyRegistrationInput, countyRegistrationRequirement,
+  lookupCountyRegistration,
+} from "../../../../lib/county-registration";
+import {
+  insuranceConfirmationError, insuranceRequirement, parseInsuranceConfirmation,
+} from "../../../../lib/insurance-confirmation";
 import { MARKETPLACE_MODE } from "../../../../lib/launch-status";
 import {
   annualComplianceReviewWindowIsValid,
@@ -1150,6 +1158,25 @@ export async function GET(request: Request) {
     });
   }
   try {
+    const registrationEvidenceId = clean(new URL(request.url).searchParams.get("registrationEvidenceId"), 120);
+    if (registrationEvidenceId) {
+      const db = getDb();
+      const [evidence] = await db.select().from(providerEvidenceSubmissions)
+        .where(eq(providerEvidenceSubmissions.id, registrationEvidenceId)).limit(1);
+      if (!evidence) return Response.json({ error: "Evidence submission not found." }, { status: 404 });
+      const [audit] = await db.select().from(providerAuditEvents).where(and(
+        eq(providerAuditEvents.providerId, evidence.providerId),
+        eq(providerAuditEvents.entityId, evidence.id),
+        eq(providerAuditEvents.eventType, "county_registration_checked"),
+      )).orderBy(desc(providerAuditEvents.occurredAt)).limit(1);
+      const metadata = parseJsonObject(audit?.metadata ?? "{}");
+      const matches = audit && metadata.documentHash === evidence.documentHash
+        && audit.serviceCode === evidence.serviceCode && audit.personId === evidence.personId
+        && audit.jurisdiction === evidence.jurisdiction && metadata.requirementKey === evidence.requirementKey;
+      return Response.json({ check: matches ? { ...parseJsonObject(JSON.stringify(metadata.result)), receiptId: audit.id } : null }, {
+        headers: { "cache-control": "no-store" },
+      });
+    }
     const evidenceId = clean(new URL(request.url).searchParams.get("evidenceId"), 120);
     if (evidenceId) {
       if (!isSameOriginRequest(request)) {
@@ -1186,6 +1213,47 @@ export async function POST(request: Request) {
     const action = clean(body.action, 80);
     const providerId = clean(body.providerId, 120);
     const db = getDb();
+
+    if (action === "check-county-registration") {
+      const evidenceId = clean(body.evidenceId, 120);
+      const input = countyRegistrationInput(body.registrationNumber, body.expectedLegalName);
+      if (!providerId || !evidenceId || !input) return Response.json({
+        error: "Choose the application and document, then enter its registration number and complete legal business name.",
+      }, { status: 400 });
+      const [evidence] = await db.select().from(providerEvidenceSubmissions)
+        .where(and(eq(providerEvidenceSubmissions.id, evidenceId), eq(providerEvidenceSubmissions.providerId, providerId))).limit(1);
+      if (!evidence) return Response.json({ error: "Evidence submission not found." }, { status: 404 });
+      if (!countyRegistrationRequirement(evidence.requirementKey)) return Response.json({
+        error: "This lookup applies only to Montgomery County repair or towing registration. It does not check insurance or other licenses.",
+      }, { status: 400 });
+      const [[provider], [profile], [scan]] = await Promise.all([
+        db.select().from(providerApplications).where(eq(providerApplications.id, providerId)).limit(1),
+        db.select().from(providerPathwayProfiles).where(eq(providerPathwayProfiles.providerId, providerId))
+          .orderBy(desc(providerPathwayProfiles.pathwayVersion)).limit(1),
+        db.select().from(evidenceFileScans).where(eq(evidenceFileScans.evidenceSubmissionId, evidenceId))
+          .orderBy(desc(evidenceFileScans.requestedAt)).limit(1),
+      ]);
+      if (!provider || !evidenceMatchesCurrentApplication(evidence, provider, profile)) return Response.json({
+        error: "This document does not match the current application and service. Review the current submission first.",
+      }, { status: 409 });
+      if (evidence.storageKey && (scan?.status !== "clean" || scan.fileHash !== evidence.documentHash)) return Response.json({
+        error: "Wait for a clean file safety scan before comparing this document with official records.",
+      }, { status: 423 });
+      const result = await lookupCountyRegistration(input);
+      const audit = await recordProviderAuditEvent({
+        providerId, personId: evidence.personId, serviceCode: evidence.serviceCode,
+        jurisdiction: evidence.jurisdiction, eventType: "county_registration_checked",
+        entityType: "provider_evidence_submission", entityId: evidence.id,
+        actorType: "verified_owner", actorId, outcome: result.status,
+        metadata: { documentHash: evidence.documentHash, requirementKey: evidence.requirementKey,
+          pathwayVersion: profile?.pathwayVersion, result },
+      });
+      // Store the source receipt only. No evidence acceptance, legal-name binding,
+      // service activation, provider notification, or payment state is changed.
+      return Response.json({ check: { ...result, receiptId: audit.id } }, {
+        headers: { "cache-control": "no-store" },
+      });
+    }
 
     if (action === "prescreen-dispatch") {
       // Bulk pre-screen of the pending queue. This deliberately applies only
@@ -1662,6 +1730,7 @@ export async function POST(request: Request) {
       const authenticityValidThrough = clean(body.authenticityValidThrough, 10);
       const verifiedLegalBusinessName = clean(body.verifiedLegalBusinessName, 180);
       const legalBusinessNameConfirmed = body.legalBusinessNameConfirmed === true;
+      const insuranceConfirmation = parseInsuranceConfirmation(body.insuranceConfirmation);
       if (!evidenceId || !EVIDENCE_REVIEW_STATUSES.includes(status as EvidenceReviewStatus)) {
         return Response.json({ error: "Choose an evidence item and controlled review status." }, { status: 400 });
       }
@@ -1751,6 +1820,15 @@ export async function POST(request: Request) {
         return Response.json({ error: "Evidence requiring expiration cannot be accepted unless it is current." }, { status: 409 });
       }
       if (status === "accepted") {
+        if (insuranceRequirement(requirementKey)) {
+          const error = insuranceConfirmationError(authenticityVerificationMethod, insuranceConfirmation);
+          if (error) return Response.json({ error }, { status: 400 });
+        }
+        if (countyRegistrationRequirement(requirementKey) && countyDatasetIsReference(authenticitySourceUrl)) {
+          return Response.json({
+            error: "The county dataset confirms only the listed registration details. Record direct OCP confirmation of current standing and service scope before accepting this document; the dataset alone is not an acceptance source.",
+          }, { status: 400 });
+        }
         const authenticityRecord = {
           authenticityVerificationMethod,
           authenticityVerifiedBy,
@@ -1800,7 +1878,7 @@ export async function POST(request: Request) {
       await expireOpenCheckoutSessionsForLaunchShutdown();
       const now = new Date().toISOString();
       const reviewDecisionId = crypto.randomUUID();
-      const evidenceScope = status === "accepted" && businessIdentitySourceEligible
+      let evidenceScope = status === "accepted" && businessIdentitySourceEligible
         ? evidenceScopeWithLegalBusinessIdentity(evidence.evidenceScope, {
             legalBusinessName: verifiedLegalBusinessName,
             evidenceSubmissionId: evidence.id,
@@ -1809,6 +1887,12 @@ export async function POST(request: Request) {
             verifiedBy: actorId,
           })
         : evidenceScopeWithoutLegalBusinessIdentity(evidence.evidenceScope);
+      const scope = parseJsonObject(evidenceScope);
+      delete scope.insuranceConfirmation;
+      if (status === "accepted" && insuranceRequirement(requirementKey)) {
+        scope.insuranceConfirmation = { ...insuranceConfirmation, reviewDecisionId, recordedBy: actorId, recordedAt: now };
+      }
+      evidenceScope = JSON.stringify(scope);
       await db.update(providerEvidenceSubmissions).set({
         status,
         evidenceScope,
@@ -1844,6 +1928,8 @@ export async function POST(request: Request) {
         metadata: {
           reviewDecisionId,
           notes,
+          insuranceConfirmation: status === "accepted" && insuranceRequirement(requirementKey)
+            ? insuranceConfirmation : null,
           legalBusinessIdentityRecorded:
             status === "accepted" && businessIdentitySourceEligible,
           verifiedLegalBusinessName: status === "accepted" && businessIdentitySourceEligible
