@@ -32,6 +32,7 @@
     "test:e2e:public-forms": "node tests/e2e/public-forms.e2e.mjs",
     "test:e2e:help": "node tests/e2e/help-page.e2e.mjs",
     "test:e2e:support": "node tests/e2e/owner-support.e2e.mjs",
+    "test:e2e:credentials": "node tests/e2e/county-registration.e2e.mjs",
     "test:e2e:uploads": "node tests/e2e/provider-upload.e2e.mjs",
     "test:e2e:onboarding": "node tests/e2e/provider-onboarding.e2e.mjs",
     "test:e2e:provider-redirect": "node tests/e2e/provider-signin-redirect.e2e.mjs",

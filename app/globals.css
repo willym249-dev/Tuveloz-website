@@ -6209,6 +6209,31 @@ footer > p,
   padding: 14px;
 }
 
+.county-registration-check {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.county-registration-check fieldset {
+  border: 0;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.county-registration-check.credential-card p,
+.county-registration-check.credential-card label,
+.county-registration-check.credential-card .county-registration-links {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.county-registration-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
 .prescreen-panel {
   align-items: center;
   border-color: #4a6bd8;

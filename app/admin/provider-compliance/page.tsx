@@ -9,6 +9,9 @@ import {
   type FormEvent,
 } from "react";
 import { BrandMark } from "../../components/tuveloz-icons";
+import { CountyRegistrationCheck } from "./county-registration-check";
+import { countyRegistrationRequirement } from "../../../lib/county-registration";
+import { insuranceConfirmationError, insuranceRequirement, parseInsuranceConfirmation } from "../../../lib/insurance-confirmation";
 import {
   acceptanceGuideFor,
   validateAcceptanceDraft,
@@ -350,10 +353,21 @@ function EvidenceReviewForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+    const insuranceConfirmation = parseInsuranceConfirmation({
+      organization: values.insuranceOrganization, contact: values.insuranceContact,
+      independentlySourced: values.insuranceContactIndependent === "yes",
+      insuredAndPolicyConfirmed: values.insurancePolicyConfirmed === "yes",
+      datesAndLimitsConfirmed: values.insuranceDatesConfirmed === "yes",
+      serviceAndLocationConfirmed: values.insuranceScopeConfirmed === "yes",
+    });
     // Catch every acceptance mistake here, with plain-language guidance, before
     // it reaches the server. This mirrors the server rules; the server still
     // makes the real decision.
     if (status === "accepted") {
+      if (insuranceRequirement(evidence.requirementKey)) {
+        const error = insuranceConfirmationError(String(values.authenticityVerificationMethod ?? ""), insuranceConfirmation);
+        if (error) { setCheckError([error]); return; }
+      }
       const check = validateAcceptanceDraft({
         method: String(values.authenticityVerificationMethod ?? ""),
         verifiedBy: String(values.authenticityVerifiedBy ?? ""),
@@ -388,6 +402,7 @@ function EvidenceReviewForm({
       authenticityValidThrough: values.authenticityValidThrough,
       verifiedLegalBusinessName: values.verifiedLegalBusinessName,
       legalBusinessNameConfirmed: values.legalBusinessNameConfirmed === "yes",
+      insuranceConfirmation,
     });
   }
 
@@ -544,6 +559,9 @@ function EvidenceReviewForm({
           )}
         </div>
       )}
+      {countyRegistrationRequirement(evidence.requirementKey) && (
+        <CountyRegistrationCheck providerId={applicationId} evidenceId={evidence.id} disabled={!fileIsClean || busy} />
+      )}
             <details className="credential-card acceptance-guide">
               <summary>How to verify this document</summary>
               <small>Verify with: {guide.authorityLabel}</small>
@@ -605,12 +623,27 @@ function EvidenceReviewForm({
                 required
               >
                 <option disabled value="">Choose the external method</option>
-                <option value="official_online_lookup">Official online lookup</option>
-                <option value="issuer_direct_confirmation">Issuer direct confirmation</option>
+                {!insuranceRequirement(evidence.requirementKey) && <option value="official_online_lookup">Official online lookup</option>}
+                {!insuranceRequirement(evidence.requirementKey) && <option value="issuer_direct_confirmation">Issuer direct confirmation</option>}
                 <option value="insurer_or_broker_confirmation">Insurer or broker confirmation</option>
-                <option value="approved_verification_vendor">Approved verification vendor</option>
+                {!insuranceRequirement(evidence.requirementKey) && <option value="approved_verification_vendor">Approved verification vendor</option>}
               </select>
             </label>
+            {insuranceRequirement(evidence.requirementKey) && <fieldset className="credential-card">
+              <legend>Insurer or broker confirmation</legend>
+              <p>Use contact details from the insurer’s or broker’s own website. Record their response here after they confirm coverage. An upload or a company listing is not a response.</p>
+              <label>Insurer or licensed broker
+                <input name="insuranceOrganization" required minLength={2} maxLength={180} />
+              </label>
+              <label>Verified business contact or official portal
+                <input name="insuranceContact" required minLength={5} maxLength={180} placeholder="Business phone, email or portal used for confirmation" />
+              </label>
+              <label className="policy-check"><input name="insuranceContactIndependent" required type="checkbox" value="yes" /><span>I found this contact independently of the uploaded document.</span></label>
+              <label className="policy-check"><input name="insurancePolicyConfirmed" required type="checkbox" value="yes" /><span>The insurer or broker confirmed the policy and exact named insured.</span></label>
+              <label className="policy-check"><input name="insuranceDatesConfirmed" required type="checkbox" value="yes" /><span>They confirmed current policy status, dates and required limits.</span></label>
+              <label className="policy-check"><input name="insuranceScopeConfirmed" required type="checkbox" value="yes" /><span>They confirmed coverage for {prettify(evidence.serviceCode)}, the operating locations and relevant exclusions.</span></label>
+              <p>Use the case reference and source fields below to identify their actual confirmation. Keep the document pending if they have not responded.</p>
+            </fieldset>}
             <label>
               Verified by
               <input
