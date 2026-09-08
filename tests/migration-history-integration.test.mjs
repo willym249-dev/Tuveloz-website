@@ -45,6 +45,7 @@ test("migration journal preserves upstream order before renumbered provider and 
     "0064_phone_contact_consents",
     "0065_customer_request_contact_phone",
     "0066_self_hosted_scan_jobs",
+    "0067_spanish_identity_consent",
   ];
   const tail = journal.entries.slice(31);
 

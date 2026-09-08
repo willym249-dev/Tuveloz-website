@@ -470,6 +470,13 @@
       "when": 1788696000000,
       "tag": "0066_self_hosted_scan_jobs",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "6",
+      "when": 1788879600000,
+      "tag": "0067_spanish_identity_consent",
+      "breakpoints": true
     }
   ]
 }

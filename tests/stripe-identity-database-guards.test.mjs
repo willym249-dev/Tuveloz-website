@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import { IDENTITY_VERIFICATION_CONSENT_VERSION, IDENTITY_VERIFICATION_CONSENT_VERSION_ES } from "../lib/identity-verification-policy.ts";
 
 const migrationUrl = new URL("../drizzle/0047_perfect_orphan.sql", import.meta.url);
 
@@ -14,7 +15,7 @@ function applicationSnapshot(firstName = "Jane", lastName = "Smith") {
   });
 }
 
-async function guardedDatabase() {
+async function guardedDatabase(upgrade = true) {
   const db = new DatabaseSync(":memory:");
   db.exec(`
     CREATE TABLE provider_application_submission_evidence (
@@ -77,7 +78,15 @@ async function guardedDatabase() {
   for (const statement of migration.split("--> statement-breakpoint")) {
     if (statement.trim()) db.exec(statement);
   }
+  if (upgrade) await upgradeConsentGuard(db);
   return db;
+}
+
+async function upgradeConsentGuard(db) {
+  const migration = await readFile(new URL("../drizzle/0067_spanish_identity_consent.sql", import.meta.url), "utf8");
+  for (const statement of migration.split("--> statement-breakpoint")) {
+    if (statement.trim()) db.exec(statement);
+  }
 }
 
 function seedOwner(db, evidenceId = "evidence-1", createdAt = "2026-08-01T10:00:00.000Z") {
@@ -102,15 +111,15 @@ function seedOwner(db, evidenceId = "evidence-1", createdAt = "2026-08-01T10:00:
   `);
 }
 
-function insertAttempt(db, id = "attempt-1", evidenceId = "evidence-1", attemptNumber = 1) {
+function insertAttempt(db, id = "attempt-1", evidenceId = "evidence-1", attemptNumber = 1, version = IDENTITY_VERIFICATION_CONSENT_VERSION) {
   db.prepare(`
     INSERT INTO provider_identity_verification_sessions (
       id, provider_id, person_id, application_submission_evidence_id,
       person_name_source_type, person_name_source_id, account_session_hash,
       certification_version, attempt_number, consented_at
     ) VALUES (?, 'provider-1', 'person-1', ?, 'application_evidence', ?, ?,
-      'stripe-identity-owner-operator-consent-2026-08-01-v1', ?, '2026-08-01T10:01:00.000Z')
-  `).run(id, evidenceId, evidenceId, "a".repeat(64), attemptNumber);
+      ?, ?, '2026-08-01T10:01:00.000Z')
+  `).run(id, evidenceId, evidenceId, "a".repeat(64), version, attemptNumber);
 }
 
 function bindStripeSession(db, id = "attempt-1", sessionId = "vs_verified_1") {
@@ -155,10 +164,11 @@ test("0047 keeps trigger guards compatible with the remote D1 statement parser",
   );
 });
 
-test("0047 atomically binds an approved Stripe Identity result to the latest owner", async () => {
+for (const consentVersion of [IDENTITY_VERIFICATION_CONSENT_VERSION, IDENTITY_VERIFICATION_CONSENT_VERSION_ES]) {
+test(`identity approval and later revocation preserve bindings for ${consentVersion}`, async () => {
   const db = await guardedDatabase();
   seedOwner(db);
-  insertAttempt(db);
+  insertAttempt(db, "attempt-1", "evidence-1", 1, consentVersion);
   bindStripeSession(db);
   db.exec(`
     UPDATE provider_identity_verification_sessions
@@ -222,7 +232,9 @@ test("0047 atomically binds an approved Stripe Identity result to the latest own
     db.prepare("SELECT decision_status AS decision FROM provider_identity_verification_sessions WHERE id='attempt-1'").get().decision,
     "approved",
   );
+  db.close();
 });
+}
 
 test("0047 rejects stale applications, duplicate active attempts, and direct Stripe-label spoofing", async () => {
   const db = await guardedDatabase();
@@ -482,4 +494,23 @@ test("0047 permits only an expired same-evidence Stripe binding to renew atomica
     `).all().map((row) => row.decision),
     ["approved", "approved"],
   );
+});
+
+
+test("0067 fixes Spanish consent inserts while preserving the exact English and Spanish bindings", async () => {
+  const db = await guardedDatabase(false);
+  seedOwner(db);
+  assert.throws(() => insertAttempt(db, "spanish", "evidence-1", 1, IDENTITY_VERIFICATION_CONSENT_VERSION_ES), /latest independent owner-operator binding/);
+  insertAttempt(db);
+  const original = db.prepare("SELECT * FROM provider_identity_verification_sessions").get();
+  await upgradeConsentGuard(db);
+  assert.deepEqual(db.prepare("SELECT * FROM provider_identity_verification_sessions").get(), original, "migration preserves existing consent records");
+  db.exec("UPDATE provider_identity_verification_sessions SET decision_status = 'closed', stripe_status = 'canceled' WHERE id = 'attempt-1'");
+  insertAttempt(db, "spanish", "evidence-1", 2, IDENTITY_VERIFICATION_CONSENT_VERSION_ES);
+  assert.equal(db.prepare("SELECT certification_version FROM provider_identity_verification_sessions WHERE id = 'spanish'").get().certification_version, IDENTITY_VERIFICATION_CONSENT_VERSION_ES);
+  assert.throws(() => db.prepare("UPDATE provider_identity_verification_sessions SET certification_version = ? WHERE id = 'spanish'").run(IDENTITY_VERIFICATION_CONSENT_VERSION), /binding is immutable/);
+  for (const version of ["", "es", IDENTITY_VERIFICATION_CONSENT_VERSION_ES + "-changed"]) {
+    assert.throws(() => insertAttempt(db, "invalid", "evidence-1", 3, version), /latest independent owner-operator binding/);
+  }
+  db.close();
 });

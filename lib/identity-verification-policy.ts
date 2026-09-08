@@ -7,6 +7,14 @@ type VerifiedDob = {
 export const IDENTITY_VERIFICATION_CONSENT_VERSION =
   "stripe-identity-owner-operator-consent-2026-08-01-v1";
 
+export const IDENTITY_VERIFICATION_CONSENT_VERSION_ES =
+  "stripe-identity-owner-operator-consent-2026-09-08-es-v1";
+
+export const IDENTITY_VERIFICATION_CONSENT_VERSIONS = [
+  IDENTITY_VERIFICATION_CONSENT_VERSION,
+  IDENTITY_VERIFICATION_CONSENT_VERSION_ES,
+] as const;
+
 export const IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT =
   "I choose Stripe's government-ID, selfie, and biometric-comparison flow after reviewing the linked privacy information and manual alternative.";
 
@@ -21,7 +29,7 @@ export const IDENTITY_EXPIRED_REPLACEMENT_CONSENT_TEXT =
 
 export function identityConsentCopy(language: "en" | "es") {
   return language === "es" ? {
-    version: "stripe-identity-owner-operator-consent-2026-09-08-es-v1",
+    version: IDENTITY_VERIFICATION_CONSENT_VERSION_ES,
     document: "Elijo el proceso de Stripe de identificación oficial, selfie y comparación biométrica después de revisar la información de privacidad enlazada y la alternativa manual.",
     adult: "Entiendo que la fecha de nacimiento verificada por Stripe se usará solo en memoria para confirmar que tengo al menos 18 años, y que TUVELOZ guarda la decisión y las fechas.",
     samePerson: "Certifico que soy la persona propietaria que trabaja por cuenta propia, que ha iniciado sesión y que figura como la persona que realizará el trabajo en esta solicitud, y que estoy verificando mi propia identidad.",

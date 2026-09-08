@@ -1,3 +1,4 @@
+import { IDENTITY_VERIFICATION_CONSENT_VERSIONS } from "../../../lib/identity-verification-policy";
 import { env } from "cloudflare:workers";
 import {
   DEPLOYMENT_BUILT_AT,
@@ -157,6 +158,8 @@ export async function GET() {
       );
       const guardedTriggers = new Set(
         (triggerResult.results ?? [])
+          .filter(row => row.name !== "provider_identity_verification_insert_guard"
+            || IDENTITY_VERIFICATION_CONSENT_VERSIONS.every(version => row.sql?.includes(version)))
           .filter((row) => (
             row.name.startsWith("repair_")
             || row.name.startsWith("provider_invoice_")
