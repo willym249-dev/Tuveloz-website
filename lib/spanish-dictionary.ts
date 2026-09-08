@@ -17,6 +17,7 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "The application agreements have changed. Refresh this page, review the agreements, and request a new code. Your saved details will stay on this device.": "Los acuerdos de la solicitud cambiaron. Actualice esta página, revise los acuerdos y solicite un código nuevo. Sus datos guardados seguirán en este dispositivo.",
   "Terms of Use | Tuveloz": "Términos de uso | Tuveloz",
   "Provider Agreement | Tuveloz": "Acuerdo del proveedor | Tuveloz",
   "Payment, Cancellation, and Refund Policy | Tuveloz": "Política de pagos, cancelaciones y reembolsos | Tuveloz",

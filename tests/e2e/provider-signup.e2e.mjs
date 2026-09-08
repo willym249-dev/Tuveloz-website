@@ -94,12 +94,14 @@ const customerEmail = `e2e-customer+${Date.now()}@tuveloz.invalid`;
 // character. Local fixture only; it never leaves the throwaway worktree. Both
 // the customer and the provider account below are created with it.
 const fixturePassword = "E2e-Local-Fixture!7";
+const presentations = JSON.parse(readFileSync(join(repoRoot, "tests/fixtures/provider-policy-presentations.json"), "utf8"));
 
 const buildPayload = (policy) => ({
   name: "E2E Mobile Mechanic",
   email: applicantEmail,
   phone: "",
   preferredLanguage: "English",
+  policyPresentation: presentations.en,
   services: ["provisional_12v_jump_start"],
   serviceCodes: ["provisional_12v_jump_start"],
   applicationPathway: "independent_startup",
@@ -351,6 +353,16 @@ async function main() {
   assert.ok(policy.version, "provider eligibility matrix has no schema_version");
 
   const payload = buildPayload(policy);
+  for (const policyPresentation of [undefined, presentations.es.replace('"schemaVersion":"1"', '"schemaVersion":"old"')]) for (const endpoint of ["/api/providers/challenge", "/api/providers"]) {
+    const stale = await fixtureFetch(`${origin}${endpoint}`, {
+      method: "POST", headers: sameOriginHeaders(origin),
+      body: JSON.stringify({ ...payload, preferredLanguage: "Spanish", policyPresentation }),
+    });
+    assert.equal(stale.status, 403, "stale or unversioned forms must refresh before any code is issued");
+    assert.ok((await stale.json()).error.includes("agreements have changed"));
+  }
+  assert.equal(Number(d1(workdir, "SELECT COUNT(*) AS n FROM provider_application_challenges;")[0].n), 0);
+  log("stale and unversioned policy presentations rejected before email or challenge creation");
   const challengeRes = await fixtureFetch(`${origin}/api/providers/challenge`, {
     method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(payload),
   });
@@ -565,7 +577,7 @@ async function main() {
 
   // A Spanish applicant gets matching email, immutable policy text and a
   // password-free path into onboarding. These are real local D1/API writes.
-  const spanishPayload = { ...payload, email: `es-${applicantEmail}`, preferredLanguage: "Spanish" };
+  const spanishPayload = { ...payload, email: `es-${applicantEmail}`, preferredLanguage: "Spanish", policyPresentation: presentations.es };
   const esChallengeRes = await fixtureFetch(`${origin}/api/providers/challenge`, {
     method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(spanishPayload),
   });

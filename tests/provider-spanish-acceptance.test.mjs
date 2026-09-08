@@ -82,12 +82,31 @@ test("Spanish evidence contains the displayed text and exact translation, while 
   }
 });
 
-test("challenge binding and final writes use the submitted language consistently", () => {
+test("challenge binding and final writes use the verified presentation language consistently", () => {
   const verify = read("lib/provider-application-verification.ts");
   const route = read("app/api/providers/route.ts");
-  assert.match(verify, /providerApplicationDocumentBaseManifest\(application.preferredLanguage\)/);
-  assert.match(route, /providerApplicationFinalDocumentManifest\(\s*verified.challenge.id,\s*application.preferredLanguage/);
-  assert.match(route, /providerAgreementEvidenceText\(document, \{\s*acceptanceEvidenceId: verified.challenge.id,\s*language: application.preferredLanguage/);
+  assert.match(verify, /providerPolicyPresentationLanguage\(body.policyPresentation\)/);
+  assert.match(verify, /providerApplicationDocumentBaseManifest\(application.agreementLanguage\)/);
+  assert.match(route, /providerApplicationFinalDocumentManifest\(\s*verified.challenge.id,\s*application.agreementLanguage/);
+  assert.match(route, /providerAgreementEvidenceText\(document, \{\s*acceptanceEvidenceId: verified.challenge.id,\s*language: application.agreementLanguage/);
+});
+
+test("a stale or unversioned browser cannot claim the current policy presentation", () => {
+  const { providerPolicyPresentation: presentation, providerPolicyPresentationLanguage: language } = acceptance;
+  const fixtures = JSON.parse(read("tests/fixtures/provider-policy-presentations.json"));
+  for (const locale of ["en", "es"]) {
+    const current = presentation(locale);
+    assert.equal(fixtures[locale], current, "fixture pins the exact browser presentation");
+    assert.equal(language(current), locale);
+    const parsed = JSON.parse(current);
+    for (const changed of [
+      { ...parsed, termsText: "An old agreement" },
+      { ...parsed, language: locale === "en" ? "es" : "en" },
+      { ...parsed, documents: parsed.documents.slice(1) },
+      { ...parsed, documents: parsed.documents.map((doc, index) => index ? doc : { ...doc, canonicalBodyHash: "a".repeat(64) }) },
+    ]) assert.equal(language(JSON.stringify(changed)), null);
+  }
+  for (const missing of [undefined, null, "", "Spanish", {}, []]) assert.equal(language(missing), null);
 });
 
 test("partial certificate drafts survive without admitting incomplete server submissions", () => {

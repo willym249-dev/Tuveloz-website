@@ -92,6 +92,32 @@ export const PROVIDER_ACCEPTANCE_DOCUMENTS = [
 
 export type ProviderAgreementKey = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number]["key"];
 
+/** A browser sends the policy presentation bundled with the form it rendered. */
+export function providerPolicyPresentation(language: "en" | "es") {
+  return JSON.stringify({
+    schemaVersion: "1",
+    language,
+    termsText: language === "es" ? PROVIDER_TERMS_ACCEPTANCE_TEXT_ES : PROVIDER_TERMS_ACCEPTANCE_TEXT,
+    privacyText: language === "es" ? PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES : PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
+    documents: PROVIDER_ACCEPTANCE_DOCUMENTS.map(document => ({
+      key: document.key,
+      version: document.version,
+      releaseId: document.releaseId,
+      canonicalBodyHash: document.canonicalBodyHash,
+      ...(language === "es" ? { translation: spanishReleases[document.key] } : {}),
+    })),
+  });
+}
+
+/** Never infer what was displayed from a notification-language preference. */
+export function providerPolicyPresentationLanguage(value: unknown): "en" | "es" | null {
+  if (typeof value !== "string") return null;
+  for (const language of ["en", "es"] as const) {
+    if (value === providerPolicyPresentation(language)) return language;
+  }
+  return null;
+}
+
 type ProviderAcceptanceDocument = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number];
 
 type ProviderAgreementEvidenceOptions = {
