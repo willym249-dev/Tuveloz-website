@@ -9295,6 +9295,29 @@ footer > p,
   grid-column: 1 / -1;
 }
 
+/* Expanded help and its receipt must size the card, including in mobile Safari. */
+.provider-application-recovery {
+  display: block;
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+.provider-application-recovery > p + p,
+.provider-application-recovery > button {
+  margin-top: 16px;
+}
+
+/* Safari can retain stale grid row heights after a form becomes a receipt.
+   The phone checklist is a single column, so use normal document flow. */
+@media (max-width: 640px) {
+  .provider-onboarding-shell .account-grid {
+    display: block;
+  }
+  .provider-onboarding-shell .account-grid > .account-card + .account-card {
+    margin-top: 18px;
+  }
+}
+
 .provider-onboarding-guide {
   color: #c6d3dd;
   display: grid;

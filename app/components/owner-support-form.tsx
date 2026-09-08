@@ -4,12 +4,13 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { OwnerSupportError, ownerSupportProblemMessage, requestOwnerSupport, type OwnerSupportProblem } from "../../lib/owner-support-response";
 
-export function OwnerSupportForm({ language, audience, initialMessage }: {
+export function OwnerSupportForm({ language, audience, initialMessage, initialEmail = "", context = "chat" }: {
   language: "en" | "es"; audience: "customer" | "provider"; initialMessage: string;
+  initialEmail?: string; context?: "chat" | "provider-onboarding";
 }) {
   const spanish = language === "es";
   const t = (en: string, es: string) => spanish ? es : en;
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [message, setMessage] = useState(initialMessage.slice(0, 3000));
   const [consent, setConsent] = useState(false);
   const [pending, setPending] = useState(false);
@@ -58,14 +59,16 @@ export function OwnerSupportForm({ language, audience, initialMessage }: {
 
   return <form className="ai-support" onSubmit={submit} aria-busy={pending} aria-label={t("Contact the owner", "Contactar al dueño")}>
     <h2>{t("Ask the owner for help", "Pida ayuda al dueño")}</h2>
-    <p>{t("Review the message below. Only this message, your email, your selected role, and language go to the owner. The chat history is not sent.", "Revise el mensaje. Solo se envían al dueño este mensaje, su correo, su rol elegido y su idioma. No se envía el historial del chat.")}</p>
+    <p>{context === "provider-onboarding"
+      ? t("Tell us what you need help updating. Your message, reply email, provider role, and language are sent to Tuveloz's owner. Sending a message does not change your application.", "Cuéntenos qué datos necesita actualizar. Su mensaje, correo de respuesta, rol de proveedor e idioma se envían al dueño de Tuveloz. Enviar un mensaje no modifica su solicitud.")
+      : t("Review the message below. Only this message, your email, your selected role, and language go to the owner. The chat history is not sent.", "Revise el mensaje. Solo se envían al dueño este mensaje, su correo, su rol elegido y su idioma. No se envía el historial del chat.")}</p>
     <label htmlFor="support-email">{t("Your email for a reply", "Su correo para recibir respuesta")}</label>
     <input id="support-email" type="email" autoComplete="email" maxLength={180} required disabled={pending}
       value={email} onChange={event => setEmail(event.target.value)} />
     <label htmlFor="support-message">{t("Message to the owner", "Mensaje para el dueño")}</label>
     <textarea id="support-message" rows={5} maxLength={3000} required disabled={pending}
       value={message} onChange={event => setMessage(event.target.value)} />
-    <p>{t("Please leave out passwords, payment details, identity documents, and exact addresses.", "No incluya contraseñas, datos de pago, documentos de identidad ni direcciones exactas.")} <Link href="/privacy">{t("Privacy policy", "Política de privacidad")}</Link></p>
+    <p>{t("Please leave out passwords, payment details, identity documents, and exact addresses.", "No incluya contraseñas, datos de pago, documentos de identidad ni direcciones exactas.")} <Link href={spanish ? "/es/privacy" : "/privacy"}>{t("Privacy policy", "Política de privacidad")}</Link></p>
     <label className="ai-support-consent">
       <input type="checkbox" required checked={consent} disabled={pending} onChange={event => setConsent(event.target.checked)} />
       {t("Send this information to the Tuveloz owner so they can help me.", "Enviar esta información al dueño de Tuveloz para que pueda ayudarme.")}
