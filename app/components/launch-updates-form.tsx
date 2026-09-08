@@ -3,7 +3,7 @@
 import { InterfaceCopy } from "./interface-copy";
 import { useState } from "react";
 import { useSiteLanguage } from "./site-language";
-import { hasPublicFormReceipt, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../../lib/public-form-feedback";
+import { hasPublicFormReceipt, requestPublicForm, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../../lib/public-form-feedback";
 import {
   LAUNCH_UPDATE_CONSENT_TEXT_EN,
   LAUNCH_UPDATE_CONSENT_TEXT_ES,
@@ -49,7 +49,7 @@ export function LaunchUpdatesForm({
         setError(null);
         setBusy(true);
         try {
-          const response = await fetch("/api/launch-updates/subscribe", {
+          const response = await requestPublicForm("/api/launch-updates/subscribe", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -59,7 +59,7 @@ export function LaunchUpdatesForm({
               language: spanish ? "es" : "en",
             }),
           });
-          const payload: unknown = await response.json().catch(() => null);
+          const { payload } = response;
           if (!response.ok || !hasPublicFormReceipt(payload)) {
             setError(publicFormProblem("updates", response.status, payload));
             return;

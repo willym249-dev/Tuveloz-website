@@ -104,7 +104,6 @@ export function PublicSiteFooter() {
         <Link href="/marketplace-conduct">Marketplace conduct</Link>
         <Link href="/provisional-provider-policy">Provider pathways</Link>
         <Link href="/payments">Payments</Link>
-        <Link href="/job-operations">Job controls</Link>
         <Link href="/privacy">Privacy</Link>
         <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>
       </div>

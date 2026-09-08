@@ -95,7 +95,7 @@ try {
   for (const browserType of [chromium, webkit]) {
     const browser = await browserType.launch({ headless: true });
     try {
-      async function run(spec, name, responses, action) {
+      async function run(spec, name, responses, action, options = {}) {
         const context = await browser.newContext({ viewport: { width: browserType === webkit ? 320 : 390, height: 844 } });
         const page = await context.newPage();
         page.setDefaultTimeout(5000);
@@ -118,12 +118,13 @@ try {
             const response = responses[Math.min(index, responses.length - 1)];
             if (response === null) return route.abort("failed");
             if (response.waitFor) await response.waitFor;
-            return route.fulfill({ status: response.status, contentType: response.contentType, body: response.body });
+            return route.fulfill({ status: response.status, contentType: response.contentType, body: response.body }).catch(() => {});
           }
           return route.continue();
         });
         const result = { browser: browserType.name(), name: spec.name + "-" + name };
         try {
+          if (options.clock) await page.clock.install();
           await page.goto(origin + spec.path);
           await fillForm(page, spec);
           await action(page, submissions);
@@ -176,6 +177,26 @@ try {
             }
           });
         }
+
+        let resumeStalled;
+        const stalled = new Promise(done => { resumeStalled = done; });
+        await run(spec, "stalled-request-recovery", [{ ...success, waitFor: stalled }, success], async (page, submissions) => {
+          try {
+            await submit(page, spec);
+            await page.getByRole("button", { name: busyName(spec), exact: true }).waitFor();
+            await page.clock.fastForward(46000);
+            await page.getByRole("alert").waitFor();
+            assert.equal(await page.getByRole("alert").textContent(), failureMessage(spec));
+            assert.equal(await emailField(page, spec).inputValue(), email);
+            assert.equal(await page.getByRole("button", { name: submitName(spec), exact: true }).isEnabled(), true);
+            assert.equal(await page.locator(doneSelector(spec)).count(), 0);
+            resumeStalled();
+            await page.clock.resume();
+            await submit(page, spec);
+            await page.locator(doneSelector(spec)).waitFor();
+            assert.deepEqual(submissions[1], submissions[0]);
+          } finally { resumeStalled(); }
+        }, { clock: true });
 
         let release;
         const waitFor = new Promise(done => { release = done; });

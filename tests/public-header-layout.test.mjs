@@ -14,7 +14,8 @@ test("the public header keeps the logo clear while help remains easy to find", a
   const helpButtons = page.match(/<Link className="button ai" href="\/ai">/g) ?? [];
 
   assert.match(page, /<Link className="brand"[\s\S]*?<BrandMark \/>[\s\S]*?<span>Tuveloz<\/span>/);
-  // The two standalone help buttons remain separate from the compact navigation.
+  // Help stays available without competing with the primary signup buttons.
   assert.doesNotMatch(navigation, /href="\/ai"/);
-  assert.equal(helpButtons.length, 2);
+  assert.equal(helpButtons.length, 1);
+  assert.match(page, /<Link className="text-link hero-text-link" href="\/ai">/);
 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FLEET_SIZE_OPTIONS } from "../../lib/fleet-options";
-import { hasPublicFormReceipt, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../../lib/public-form-feedback";
+import { hasPublicFormReceipt, requestPublicForm, publicFormMessage, publicFormProblem, type PublicFormProblem } from "../../lib/public-form-feedback";
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   SMS_MARKETING_CONSENT_TEXT_EN,
@@ -50,7 +50,7 @@ export function FleetInquiryForm() {
         setError(null);
         setBusy(true);
         try {
-          const response = await fetch("/api/fleet-inquiry", {
+          const response = await requestPublicForm("/api/fleet-inquiry", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
@@ -65,7 +65,7 @@ export function FleetInquiryForm() {
               servicesNeeded,
             }),
           });
-          const payload: unknown = await response.json().catch(() => null);
+          const { payload } = response;
           if (!response.ok || !hasPublicFormReceipt(payload)) {
             setError(publicFormProblem("fleet", response.status, payload));
             return;

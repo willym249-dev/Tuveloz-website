@@ -40,7 +40,7 @@ test("customer signups stay open while new job requests and payments are paused"
     launchStatus,
     /not accepting customer service requests or payments yet/,
   );
-  assert.match(postJobPage, /Customer requests and quotes open at launch/);
+  assert.match(postJobPage, /Customer requests and quotes are not open yet/);
   assert.match(
     postJobPage,
     /We haven't announced a launch date\. Provider applications are open while we complete the required reviews/,

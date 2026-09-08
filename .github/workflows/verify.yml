@@ -107,6 +107,9 @@ jobs:
       - name: Verify public form receipts, retries, and consent
         run: npm run test:e2e:public-forms
 
+      - name: Verify area-request and feedback receipts and retry controls
+        run: npm run test:e2e:about-forms
+
       - name: Verify bilingual help-page replies, retries, and mobile layout
         run: npm run test:e2e:help
 

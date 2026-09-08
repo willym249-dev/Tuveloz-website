@@ -33,7 +33,9 @@
     "test:e2e:help": "node tests/e2e/help-page.e2e.mjs",
     "test:e2e:support": "node tests/e2e/owner-support.e2e.mjs",
     "test:e2e:uploads": "node tests/e2e/provider-upload.e2e.mjs",
-    "test:e2e:incident": "node tests/e2e/incident-payment-hold.e2e.mjs"
+    "test:e2e:incident": "node tests/e2e/incident-payment-hold.e2e.mjs",
+    "test:e2e:about-forms": "node tests/e2e/about-forms.e2e.mjs",
+    "test:e2e:public-actions": "node tests/e2e/public-actions.e2e.mjs"
   },
   "dependencies": {
     "@simplewebauthn/browser": "13.3.0",

@@ -342,11 +342,10 @@ test("homepage uses clear launch language and keeps its service icons visible", 
   ]);
 
   assert.ok(homeSource.includes('aria-label="What Tuveloz promises today"'));
-  // The strip leads with what a visitor gets, and still says plainly that
-  // requests are not live yet rather than implying they are.
-  assert.ok(homeSource.includes("<b>Free</b> to create your account"));
-  assert.ok(homeSource.includes("<b>Independent</b> local businesses, no call center"));
-  assert.ok(homeSource.includes("we open when coverage is ready"));
+  // Benefits appear once in the hero instead of a duplicate strip below it.
+  assert.ok(homeSource.includes("Free to create your account"));
+  assert.ok(homeSource.includes("Independent local businesses, no call center"));
+  assert.ok(homeSource.includes("Customer bookings are not open yet."));
   assert.ok(homeSource.includes("<b>Keep 100%</b> of the price you quote"));
   assert.ok(!styles.includes(".public-view-home > .services,"));
   assert.match(
@@ -798,7 +797,7 @@ test("focused public pages and private workspaces expose only accurate UI", asyn
   const accountSource = await readFile(new URL("../app/api/account/route.ts", import.meta.url), "utf8");
   const adminSource = await readFile(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
 
-  assert.ok(publicSource.includes('view === "about" ? ('));
+  assert.ok(publicSource.includes('view === "about" && ('));
   assert.ok(publicSource.includes('view === "request" ? ('));
   assert.ok(publicSource.includes('view === "provider" ? ('));
   assert.ok(!customerSource.includes("<summary>More tools</summary>"));
