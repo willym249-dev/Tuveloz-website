@@ -175,7 +175,7 @@ for (const [engine, type] of Object.entries(browsers)) {
             const action = { path, engine, label: link.label, href: link.href, kind: "link" };
             try {
               await go();
-              if (link.menu) await page.locator('button[aria-controls="main-navigation"]').click();
+              if (link.menu && await page.locator('button[aria-controls="main-navigation"]').isVisible()) await page.locator('button[aria-controls="main-navigation"]').click();
               for (const parent of link.disclosures) {
                 const detail = page.locator("details").nth(parent);
                 if (await detail.getAttribute("open") === null) await detail.locator(":scope > summary").click();
