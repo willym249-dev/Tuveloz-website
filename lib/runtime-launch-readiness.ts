@@ -1,3 +1,4 @@
+import { IDENTITY_VERIFICATION_CONSENT_VERSIONS } from "./identity-verification-policy";
 import { env } from "cloudflare:workers";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../db";
@@ -261,8 +262,7 @@ async function runtimeIdentityCanaries(now: number): Promise<RuntimeIdentityCana
         && /^vs_[A-Za-z0-9]+$/.test(row.sessionId)
         && /^vr_[A-Za-z0-9]+$/.test(row.reportId)
         && /^evt_[A-Za-z0-9]+$/.test(row.eventId)
-        && row.certificationVersion
-          === "stripe-identity-owner-operator-consent-2026-08-01-v1"
+        && IDENTITY_VERIFICATION_CONSENT_VERSIONS.some(version => version === row.certificationVersion)
         && row.personnelStatus === "active"
         && row.identityProvider === "stripe_identity"
         && row.ageProvider === "stripe_identity"

@@ -26,6 +26,8 @@ import {
   providerAcceptanceDocumentIsReleasedForEligibility,
   providerAgreementEvidenceText,
   providerAgreementEvidenceCandidates,
+  providerPolicyPresentation,
+  providerPolicyPresentationLanguage,
   sha256Text,
 } from "../../../lib/provider-policy-acceptance";
 import {
@@ -807,6 +809,12 @@ export async function POST(request: Request) {
     if (action !== "accept-current-agreements") {
       return Response.json({ error: "Choose a supported onboarding action." }, { status: 400 });
     }
+    const presentationLanguage = providerPolicyPresentationLanguage(
+      body.policyPresentation === undefined ? providerPolicyPresentation("en") : body.policyPresentation,
+    );
+    if (!presentationLanguage) {
+      return Response.json({ error: "The displayed policies have changed. Refresh the page and review them again before accepting." }, { status: 409 });
+    }
     const signerName = clean(body.signerName, 120);
     const signerTitle = clean(body.signerTitle, 100);
     if (
@@ -828,6 +836,7 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     const acceptanceSessionId = crypto.randomUUID();
     const deviceContext = JSON.stringify({
+      presentationLanguage,
       userAgent: clean(request.headers.get("user-agent"), 600),
       language: clean(request.headers.get("accept-language"), 200),
       policyStatus: POLICY_STATUS,
@@ -840,6 +849,7 @@ export async function POST(request: Request) {
         && item.agreementVersion === document.version
       ))) continue;
       const agreementText = providerAgreementEvidenceText(document, {
+        language: presentationLanguage,
         purpose: "provider_eligibility",
         acceptanceEvidenceId: acceptanceSessionId,
         asOf: new Date(now),
@@ -876,7 +886,7 @@ export async function POST(request: Request) {
       actorType: "provider_signer",
       actorId: account.session.email,
       outcome: inserted.length ? "accepted" : "already_current",
-      metadata: { inserted, signerName, signerTitle },
+      metadata: { inserted, signerName, signerTitle, presentationLanguage },
     });
     return Response.json({ ok: true, ...(await responseData(account)) });
   } catch (error) {

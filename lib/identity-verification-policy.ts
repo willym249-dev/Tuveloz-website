@@ -7,6 +7,14 @@ type VerifiedDob = {
 export const IDENTITY_VERIFICATION_CONSENT_VERSION =
   "stripe-identity-owner-operator-consent-2026-08-01-v1";
 
+export const IDENTITY_VERIFICATION_CONSENT_VERSION_ES =
+  "stripe-identity-owner-operator-consent-2026-09-08-es-v1";
+
+export const IDENTITY_VERIFICATION_CONSENT_VERSIONS = [
+  IDENTITY_VERIFICATION_CONSENT_VERSION,
+  IDENTITY_VERIFICATION_CONSENT_VERSION_ES,
+] as const;
+
 export const IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT =
   "I choose Stripe's government-ID, selfie, and biometric-comparison flow after reviewing the linked privacy information and manual alternative.";
 
@@ -15,6 +23,38 @@ export const IDENTITY_ADULT_STATUS_CONSENT_TEXT =
 
 export const IDENTITY_SAME_PERSON_CERTIFICATION_TEXT =
   "I certify that I am the signed-in independent owner-operator named as the performing person in this application and that I am verifying myself.";
+
+export const IDENTITY_EXPIRED_REPLACEMENT_CONSENT_TEXT =
+  "I understand my prior external identity and adult-status verification has expired. I authorize TUVELOZ to revoke that expired record and start a new Stripe government-ID, selfie, and biometric-comparison review.";
+
+export function identityConsentCopy(language: "en" | "es") {
+  return language === "es" ? {
+    version: IDENTITY_VERIFICATION_CONSENT_VERSION_ES,
+    document: "Elijo el proceso de Stripe de identificación oficial, selfie y comparación biométrica después de revisar la información de privacidad enlazada y la alternativa manual.",
+    adult: "Entiendo que la fecha de nacimiento verificada por Stripe se usará solo en memoria para confirmar que tengo al menos 18 años, y que TUVELOZ guarda la decisión y las fechas.",
+    samePerson: "Certifico que soy la persona propietaria que trabaja por cuenta propia, que ha iniciado sesión y que figura como la persona que realizará el trabajo en esta solicitud, y que estoy verificando mi propia identidad.",
+    replacement: "Entiendo que mi verificación externa anterior de identidad y mayoría de edad ha vencido. Autorizo a TUVELOZ a revocar ese registro vencido e iniciar una nueva revisión de identificación oficial, selfie y comparación biométrica con Stripe.",
+  } : {
+    version: IDENTITY_VERIFICATION_CONSENT_VERSION,
+    document: IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT,
+    adult: IDENTITY_ADULT_STATUS_CONSENT_TEXT,
+    samePerson: IDENTITY_SAME_PERSON_CERTIFICATION_TEXT,
+    replacement: IDENTITY_EXPIRED_REPLACEMENT_CONSENT_TEXT,
+  };
+}
+
+export function identityConsentPresentation(language: "en" | "es") {
+  return JSON.stringify({ language, ...identityConsentCopy(language) });
+}
+
+/** Missing presentation is only for the previously deployed English form. */
+export function identityConsentPresentationLanguage(value: unknown): "en" | "es" | null {
+  if (value === undefined) return "en";
+  for (const language of ["en", "es"] as const) {
+    if (value === identityConsentPresentation(language)) return language;
+  }
+  return null;
+}
 
 function text(value: unknown, maximum = 300) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";

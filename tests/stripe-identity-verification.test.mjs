@@ -37,7 +37,7 @@ test("provider session creation is signed-in, same-origin, consented, bound, and
   assert.match(route, /body\.adultVerificationAcknowledged !== true/);
   assert.match(route, /body\.samePersonCertificationAcknowledged !== true/);
   assert.match(route, /replaceExpiredManualVerificationAcknowledged !== true/);
-  assert.match(route, /IDENTITY_VERIFICATION_CONSENT_VERSION/);
+  assert.match(route, /certificationVersion: identityConsentCopy\(presentationLanguage\)\.version/);
   assert.match(route, /immutablePerformingPersonName\(evidence\.normalizedSnapshot\)/);
   assert.match(route, /relationshipPath !== "independent_startup"/);
   assert.match(route, /MAX_ATTEMPTS_PER_DAY = 3/);
@@ -171,9 +171,9 @@ test("provider UI uses three fresh consents, a strict Stripe redirect, bounded r
   assert.match(page, /name="adultVerificationAcknowledged"/);
   assert.match(page, /name="samePersonCertificationAcknowledged"/);
   assert.match(page, /name="replaceExpiredManualVerificationAcknowledged"/);
-  assert.match(page, /IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT/);
-  assert.match(page, /IDENTITY_ADULT_STATUS_CONSENT_TEXT/);
-  assert.match(page, /IDENTITY_SAME_PERSON_CERTIFICATION_TEXT/);
+  assert.match(page, /identityCopy\.document/);
+  assert.match(page, /identityCopy\.adult/);
+  assert.match(page, /identityCopy\.samePerson/);
   assert.match(page, /destination\.hostname !== "verify\.stripe\.com"/);
   assert.match(page, /identityPollCount\.current >= 8/);
   assert.match(page, /manual\/non-biometric alternative/);

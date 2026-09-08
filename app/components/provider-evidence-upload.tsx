@@ -10,12 +10,14 @@ export function EvidenceUpload({
   serviceCode,
   supersedesEvidenceId = "",
   preferredLanguage = "English",
+  interfaceLanguage,
   onUploaded,
 }: {
   requirement: { code: string; requiresExpiration: boolean };
   serviceCode: string;
   supersedesEvidenceId?: string;
   preferredLanguage?: string;
+  interfaceLanguage?: EvidenceLanguage;
   onUploaded: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
@@ -25,7 +27,8 @@ export function EvidenceUpload({
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [language, setLanguage] = useState<EvidenceLanguage>(preferredLanguage === "Spanish" ? "es" : "en");
+  const [localLanguage, setLanguage] = useState<EvidenceLanguage>(preferredLanguage === "Spanish" ? "es" : "en");
+  const language = interfaceLanguage ?? localLanguage;
   const t = (value: string) => evidenceText(value, language);
   const selection = useRef(0);
 
@@ -95,10 +98,10 @@ export function EvidenceUpload({
 
   return (
     <form className="provider-evidence-form" lang={language} onSubmit={submit}>
-      <div className="provider-document-language" role="group" aria-label="Document language / Idioma del documento">
+      {!interfaceLanguage && <div className="provider-document-language" role="group" aria-label="Document language / Idioma del documento">
         <button aria-pressed={language === "en"} disabled={busy} lang="en" onClick={() => setLanguage("en")} type="button">English</button>
         <button aria-pressed={language === "es"} disabled={busy} lang="es" onClick={() => setLanguage("es")} type="button">Español</button>
-      </div>
+      </div>}
       <label>
         {t("Document")}
         <span className="provider-document-picker">

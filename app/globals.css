@@ -13195,3 +13195,15 @@ footer > p,
   font-size: 12px;
   margin-top: 4px;
 }
+
+/* The private language control must fit beside navigation on small phones. */
+.provider-onboarding-shell .account-header {
+  flex-wrap: wrap;
+  gap: 10px;
+  height: auto;
+  min-height: 68px;
+  padding-block: 12px;
+}
+.provider-onboarding-shell .account-header .account-home-link {
+  margin-left: auto;
+}

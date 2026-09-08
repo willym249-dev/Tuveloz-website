@@ -28,9 +28,8 @@ export type AcceptanceGuide = {
    * It is deliberately NOT used to pre-fill the acceptance form's source URL:
    * that field records where a specific document was actually confirmed, and
    * filling it with a program landing page would put a false record in a
-   * compliance file. Only requirements with a URL already carried elsewhere in
-   * this repo have one here — an unverified link in this position is worse
-   * than no link.
+   * compliance file. Authority links are checked against the issuer's own
+   * published pages; a directory listing never proves an individual record.
    */
   authorityUrl?: string;
 };
@@ -54,7 +53,7 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   md_locksmith_business_license: {
     authorityLabel: "Maryland locksmith licensing authority",
-    authorityUrl: "https://www.labor.maryland.gov/license/locksmiths/lockadvisory.shtml",
+    authorityUrl: "https://labor.maryland.gov/license/locksmiths/",
     recommendedMethod: OFFICIAL_METHOD,
     steps: [
       "Verify the license on the state's official government (.gov) lookup.",
@@ -63,11 +62,11 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   md_locksmith_technician_registration: {
     authorityLabel: "Maryland locksmith licensing authority",
-    authorityUrl: "https://www.labor.maryland.gov/license/locksmiths/lockadvisory.shtml",
-    recommendedMethod: OFFICIAL_METHOD,
+    authorityUrl: "https://labor.maryland.gov/license/locksmiths/",
+    recommendedMethod: ISSUER_METHOD,
     steps: [
-      "Verify the technician/employee registration on the official government (.gov) lookup.",
-      "Confirm the registration is tied to this exact person and is current.",
+      "Ask the Maryland licensing program which employee records apply to this person's role and confirm them through the appropriate source.",
+      "Do not treat a business license as this person's verification or assume each employee needs a separate business license.",
     ],
   },
   mva_inspection_station_license: {
@@ -79,8 +78,11 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   mva_inspection_mechanic_license: {
     authorityLabel: "Maryland State Police / MVA inspection program",
     authorityUrl: "https://mdsp.maryland.gov/safety-prevention/vehicle-safety-inspections/inspection-stations-and-mechanics",
-    recommendedMethod: OFFICIAL_METHOD,
-    steps: ["Verify the inspection mechanic license on the official government (.gov) source for this exact person."],
+    recommendedMethod: ISSUER_METHOD,
+    steps: [
+      "Confirm this person's inspection mechanic authorization with ASED, including active status and authorized vehicle classes.",
+      "If an official public record confirms the individual, record that lookup. A station license alone does not verify the mechanic.",
+    ],
   },
   ocp_towing_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
@@ -98,7 +100,8 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
     recommendedMethod: INSURER_METHOD,
     steps: [
       "Confirm the certificate directly with the insurer or broker, not from the PDF alone.",
-      "Check the named insured, coverage, limits, and that the policy is in force for the dates.",
+      "Check the named insured, policy dates, limits, and coverage for the exact services and operating locations, including relevant exclusions.",
+      "A certificate does not change the policy or guarantee a claim will be paid. Record the insurer or broker's actual confirmation.",
     ],
   },
   business_auto_coverage: {
@@ -123,9 +126,12 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   epa_section_609_certificate: {
     authorityLabel: "The EPA-approved Section 609 certifying program",
-    authorityUrl: "https://www.epa.gov/mvac/regulatory-requirements-mvac-system-servicing",
+    authorityUrl: "https://www.epa.gov/mvac/section-609-technician-training-and-certification-programs",
     recommendedMethod: ISSUER_METHOD,
-    steps: ["Confirm the certificate directly with the approved certifying program for this exact person."],
+    steps: [
+      "Use EPA's directory to identify the certifying program or records custodian, including former programs.",
+      "Confirm the certificate with that program for this exact person. A program's EPA listing alone does not verify an individual's certificate.",
+    ],
   },
   provisional_service_competency: {
     authorityLabel: "The approved competency verification vendor or issuing program",

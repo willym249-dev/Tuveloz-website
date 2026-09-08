@@ -544,6 +544,24 @@ function EvidenceReviewForm({
           )}
         </div>
       )}
+            <details className="credential-card acceptance-guide">
+              <summary>How to verify this document</summary>
+              <small>Verify with: {guide.authorityLabel}</small>
+              {guide.authorityUrl && (
+                <small>
+                  <a href={guide.authorityUrl} rel="noreferrer noopener" target="_blank">
+                    Open the authority&apos;s page ↗
+                  </a>{" "}
+                  — a shortcut to the issuer, not a result. Record the actual lookup result or issuer confirmation in the acceptance fields.
+                </small>
+              )}
+              {guide.steps.map((step) => <small key={step}>· {step}</small>)}
+              <small className="admin-note">
+                Use contact details from the issuer’s own website, not just the uploaded document.
+                If a record cannot be confirmed, keep it pending or request a correction.
+                A scan or automated reading does not establish authenticity.
+              </small>
+            </details>
       <form className="credential-card" onSubmit={submit}>
         <label>
           Evidence decision
@@ -578,24 +596,7 @@ function EvidenceReviewForm({
               vendor. Official online lookups require an HTTPS .gov source; every other method
               requires a secure HTTPS source.
             </p>
-            <div className="credential-card acceptance-guide">
-              <strong>How to verify this document</strong>
-              <small>Verify with: {guide.authorityLabel}</small>
-              {guide.authorityUrl && (
-                <small>
-                  <a href={guide.authorityUrl} rel="noreferrer noopener" target="_blank">
-                    Open the authority&apos;s page ↗
-                  </a>{" "}
-                  — a shortcut to the issuer, not a result. Paste the URL of the page that
-                  actually shows this document below.
-                </small>
-              )}
-              {guide.steps.map((step) => <small key={step}>· {step}</small>)}
-              <small className="admin-note">
-                The recommended method below is pre-selected as a starting point. Enter what you
-                actually did — TUVELOZ records your check, it does not perform it for you.
-              </small>
-            </div>
+
             <label>
               Verification method
               <select
