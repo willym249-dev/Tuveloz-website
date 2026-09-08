@@ -160,14 +160,16 @@ test("build keeps OEM and aftermarket as communication-only preferences", async 
   assert.ok(!contents.includes("Parts price ($)"));
 });
 
-test("build protects every important submission with a second confirmation", async () => {
+test("build includes explicit review and confirmation before important submissions", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Confirm and post"));
-  assert.ok(contents.includes("Yes, send my code"));
+  assert.ok(contents.includes("Review my application"));
+  assert.ok(contents.includes("Email me a code"));
+  assert.ok(contents.includes("Submit my application"));
   assert.ok(contents.includes("Last step: enter the code we emailed you"));
   assert.ok(contents.includes("Confirm and send"));
   assert.ok(contents.includes("Confirm quote"));

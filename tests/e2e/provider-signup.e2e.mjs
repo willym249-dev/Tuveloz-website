@@ -563,6 +563,54 @@ async function main() {
   );
   log("provider sign-in verified");
 
+  // A Spanish applicant gets matching email, immutable policy text and a
+  // password-free path into onboarding. These are real local D1/API writes.
+  const spanishPayload = { ...payload, email: `es-${applicantEmail}`, preferredLanguage: "Spanish" };
+  const esChallengeRes = await fixtureFetch(`${origin}/api/providers/challenge`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify(spanishPayload),
+  });
+  assert.equal(esChallengeRes.status, 202);
+  const esChallenge = await esChallengeRes.json();
+  const esMail = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(esMail.to[0], spanishPayload.email);
+  assert.ok(esMail.text.includes("El código vence en 10 minutos"));
+  const esSubmit = await fixtureFetch(`${origin}/api/providers`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({
+      ...spanishPayload, challengeId: esChallenge.challengeId, verificationCode: esMail.code,
+    }),
+  });
+  assert.equal(esSubmit.status, 202);
+  const esApp = d1(workdir, `SELECT id FROM provider_applications WHERE email='${spanishPayload.email}';`);
+  assert.equal(esApp.length, 1);
+  const esAcceptances = d1(workdir, `SELECT agreement_text, agreement_hash FROM agreement_acceptances WHERE provider_id='${esApp[0].id}';`);
+  assert.equal(esAcceptances.length, 6);
+  for (const row of esAcceptances) {
+    const evidence = JSON.parse(row.agreement_text);
+    assert.equal(evidence.presentation.language, "es");
+    assert.ok(evidence.presentedText.startsWith("Tengo al menos") || evidence.presentedText.startsWith("Por separado"));
+    assert.equal(createHash("sha256").update(row.agreement_text).digest("hex"), row.agreement_hash);
+  }
+  const codeRequest = await fixtureFetch(`${origin}/api/auth/request-code`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({ email: spanishPayload.email, role: "provider" }),
+  });
+  assert.ok(codeRequest.ok);
+  const signInMail = await (await fixtureFetch(`http://127.0.0.1:${mailPort}/messages/latest`)).json();
+  assert.equal(signInMail.to[0], spanishPayload.email);
+  const signIn = await fixtureFetch(`${origin}/api/auth/verify-code`, {
+    method: "POST", headers: sameOriginHeaders(origin), body: JSON.stringify({ email: spanishPayload.email, role: "provider", code: signInMail.code }),
+  });
+  assert.ok(signIn.ok);
+  assert.equal((await signIn.json()).destination, "/provider-onboarding");
+  const esCookie = (signIn.headers.get("set-cookie") ?? "").split(";")[0];
+  assert.ok(esCookie);
+  const esOnboarding = await fixtureFetch(`${origin}/api/provider-onboarding`, {
+    headers: { ...sameOriginHeaders(origin), cookie: esCookie },
+  });
+  assert.ok(esOnboarding.ok);
+  const esStatus = await esOnboarding.json();
+  assert.equal(esStatus.allAgreementsEligibilityCurrent, true, "known Spanish evidence must be recognized without re-accepting English");
+  log("Spanish email, six stored acceptances and password-free provider onboarding verified");
+
   log("PASS — provider application, provider sign-in, customer signup, and notifications all verified");
 }
 

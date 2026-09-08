@@ -422,24 +422,26 @@ function constantTimeEqual(left: string, right: string) {
   return difference === 0;
 }
 
-export async function providerApplicationDocumentBaseManifest() {
+export async function providerApplicationDocumentBaseManifest(language = "en") {
   return Promise.all(PROVIDER_ACCEPTANCE_DOCUMENTS.map(async (document) => ({
     key: document.key,
     version: document.version,
     control: document.control,
     baseAcceptanceEvidenceId: PROVIDER_APPLICATION_PAYLOAD_HASH_ACCEPTANCE_MARKER,
     baseAgreementHash: await sha256Text(providerAgreementEvidenceText(document, {
+      language,
       purpose: "application_review_only",
       acceptanceEvidenceId: PROVIDER_APPLICATION_PAYLOAD_HASH_ACCEPTANCE_MARKER,
     })),
   })));
 }
 
-export async function providerApplicationFinalDocumentManifest(challengeId: string) {
-  const baseManifest = await providerApplicationDocumentBaseManifest();
+export async function providerApplicationFinalDocumentManifest(challengeId: string, language = "en") {
+  const baseManifest = await providerApplicationDocumentBaseManifest(language);
   return Promise.all(PROVIDER_ACCEPTANCE_DOCUMENTS.map(async (document, index) => {
     const agreementText = providerAgreementEvidenceText(document, {
       acceptanceEvidenceId: challengeId,
+      language,
     });
     return {
       ...baseManifest[index],
@@ -452,7 +454,7 @@ export async function providerApplicationFinalDocumentManifest(challengeId: stri
 export async function providerApplicationPayloadHash(
   application: NormalizedProviderApplication,
 ) {
-  const documents = await providerApplicationDocumentBaseManifest();
+  const documents = await providerApplicationDocumentBaseManifest(application.preferredLanguage);
   return providerApplicationPayloadHashWithSecret(
     application,
     documents,
@@ -466,7 +468,8 @@ function randomDigits() {
   return String(value[0] % 1_000_000).padStart(6, "0");
 }
 
-async function sendProviderApplicationCode(email: string, code: string) {
+async function sendProviderApplicationCode(email: string, code: string, language: string) {
+  const spanish = language === "es" || language === "Spanish";
   const apiKey = runtimeEnv().RESEND_API_KEY;
   const from = runtimeEnv().RESEND_FROM_EMAIL;
   if (!apiKey || !from) {
@@ -481,8 +484,14 @@ async function sendProviderApplicationCode(email: string, code: string) {
     body: JSON.stringify({
       from,
       to: [email],
-      subject: "Verify your TUVELOZ provider application",
-      text: [
+      subject: spanish ? "Confirme su solicitud de proveedor de TUVELOZ" : "Verify your TUVELOZ provider application",
+      text: (spanish ? [
+        "Use este código para confirmar que tiene acceso al correo de su solicitud de proveedor de TUVELOZ:",
+        "", code, "",
+        "El código vence en 10 minutos y solo se puede usar una vez.",
+        "Este paso solo confirma el acceso al correo. No verifica identidad, edad, autoridad, registro del negocio, licencias, seguro, cualificaciones ni habilitación para realizar trabajos.",
+        "Si no solicitó este código, no lo comparta e ignore este correo.",
+      ] : [
         "Use this code to confirm control of the email address on your TUVELOZ provider application:",
         "",
         code,
@@ -490,7 +499,7 @@ async function sendProviderApplicationCode(email: string, code: string) {
         "The code expires in 10 minutes and can be used once.",
         "This verifies email control only. It does not verify identity, age, authority, business registration, licensing, insurance, qualifications, or eligibility for jobs.",
         "If you did not request this, do not share the code and ignore this email.",
-      ].join("\n"),
+      ]).join("\n"),
     }),
   });
   if (!response.ok) {
@@ -557,7 +566,7 @@ export async function issueProviderApplicationChallenge(
     createdAt: now.toISOString(),
   });
   try {
-    await sendProviderApplicationCode(application.email, code);
+    await sendProviderApplicationCode(application.email, code, application.preferredLanguage);
   } catch (error) {
     await getDb().delete(providerApplicationChallenges)
       .where(eq(providerApplicationChallenges.id, id));

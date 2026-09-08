@@ -42,8 +42,7 @@ import {
 } from "./policies";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
-  providerAgreementEvidenceText,
-  sha256Text,
+  providerAgreementEvidenceCandidates,
 } from "./provider-policy-acceptance";
 import {
   evidenceAuthenticityIsCurrent,
@@ -482,14 +481,12 @@ async function evaluateOneService(options: {
     .where(eq(agreementAcceptances.providerId, options.providerId));
   for (const [key, version] of Object.entries(REQUIRED_PROVIDER_AGREEMENTS)) {
     const requiredDocument = PROVIDER_ACCEPTANCE_DOCUMENTS.find((document) => document.key === key);
-    const expectedText = requiredDocument ? providerAgreementEvidenceText(requiredDocument) : "";
-    const expectedHash = expectedText ? await sha256Text(expectedText) : "";
+    const presentations = requiredDocument ? await providerAgreementEvidenceCandidates(requiredDocument) : [];
     const acceptance = acceptances.find((item) => (
       item.agreementKey === key
       && item.agreementVersion === version
       && Boolean(item.acceptedAt)
-      && item.agreementText === expectedText
-      && item.agreementHash === expectedHash
+      && presentations.some(({ text, hash }) => item.agreementText === text && item.agreementHash === hash)
     ));
     if (!acceptance) {
       reasons.push({ code: "agreement_not_current", detail: `Current ${key.replaceAll("_", " ")} acceptance is required.` });

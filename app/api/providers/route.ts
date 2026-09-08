@@ -184,6 +184,7 @@ export async function POST(request: Request) {
     const submissionEvidenceId = crypto.randomUUID();
     const acceptedDocumentManifest = await providerApplicationFinalDocumentManifest(
       verified.challenge.id,
+      application.preferredLanguage,
     );
     const applicationMetadata = {
       ...application.providerSelfAssessment,
@@ -304,6 +305,7 @@ export async function POST(request: Request) {
     for (const document of PROVIDER_ACCEPTANCE_DOCUMENTS) {
       const agreementText = providerAgreementEvidenceText(document, {
         acceptanceEvidenceId: verified.challenge.id,
+        language: application.preferredLanguage,
       });
       const documentBinding = acceptedDocumentManifest.find(
         (entry) => entry.key === document.key,
@@ -496,7 +498,7 @@ export async function POST(request: Request) {
       phone: application.phone,
       smsMarketingConsent: body.smsMarketingConsent,
       source: "provider-application",
-      spanish: application.preferredLanguage === "es",
+      spanish: application.preferredLanguage === "es" || application.preferredLanguage === "Spanish",
     });
 
     await recordReferralSignup({

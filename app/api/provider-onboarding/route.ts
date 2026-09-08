@@ -25,6 +25,7 @@ import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAcceptanceDocumentIsReleasedForEligibility,
   providerAgreementEvidenceText,
+  providerAgreementEvidenceCandidates,
   sha256Text,
 } from "../../../lib/provider-policy-acceptance";
 import {
@@ -482,17 +483,11 @@ async function responseData(
       && item.agreementVersion === document.version
     ));
     const releasedForEligibility = providerAcceptanceDocumentIsReleasedForEligibility(document);
-    const expectedEligibilityText = releasedForEligibility
-      ? providerAgreementEvidenceText(document, { purpose: "provider_eligibility" })
-      : "";
-    const expectedEligibilityHash = expectedEligibilityText
-      ? await sha256Text(expectedEligibilityText)
-      : "";
+    const presentations = await providerAgreementEvidenceCandidates(document);
     const eligibilityCurrent = Boolean(
       acceptance
       && releasedForEligibility
-      && acceptance.agreementText === expectedEligibilityText
-      && acceptance.agreementHash === expectedEligibilityHash,
+      && presentations.some(({ text, hash }) => acceptance.agreementText === text && acceptance.agreementHash === hash),
     );
     return {
       key: document.key,

@@ -62,6 +62,15 @@ function cleanText(value: unknown, maxLength: number) {
 export function cleanOptionalCertificates(
   raw: unknown,
 ): DeclaredOptionalCertificate[] {
+  return normalizeOptionalCertificates(raw, false);
+}
+
+/** Keep partial rows in a device draft, but never trust its size or shape. */
+export function cleanOptionalCertificateDraft(raw: unknown): DeclaredOptionalCertificate[] {
+  return normalizeOptionalCertificates(raw, true);
+}
+
+function normalizeOptionalCertificates(raw: unknown, keepPartial: boolean): DeclaredOptionalCertificate[] {
   if (!Array.isArray(raw)) return [];
   const cleaned: DeclaredOptionalCertificate[] = [];
   for (const item of raw) {
@@ -69,7 +78,7 @@ export function cleanOptionalCertificates(
     const record = item as Record<string, unknown>;
     if (!isOptionalCertificateCategory(record.category)) continue;
     const title = cleanText(record.title, MAX_TITLE_LENGTH);
-    if (!title) continue;
+    if (!keepPartial && !title) continue;
     cleaned.push({
       category: record.category,
       title,

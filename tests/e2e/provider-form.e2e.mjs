@@ -122,6 +122,11 @@ async function fitsPhone(page) {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "form must fit a phone without horizontal scrolling");
 }
 async function checkFinalAcknowledgments(page) {
+  if (await currentStep(page) === "3") {
+    await page.getByRole("button", { name: /^(Review my application|Revisar mi solicitud)\s*→$/ }).click();
+    await page.locator('[data-signup-step="4"]').waitFor();
+    await settleViewport(page);
+  }
   for (const input of await page.locator('input[type="checkbox"][required]').all()) {
     assert.equal(await input.isChecked(), false, "legal acceptances must not be restored from a draft");
     await input.check();
@@ -142,6 +147,7 @@ try {
     try {
       for (const language of ["en", "es"]) {
         async function run(name, draft, action) {
+          if (process.env.PROVIDER_FORM_CASE && name !== process.env.PROVIDER_FORM_CASE) return;
           const context = await browser.newContext({ viewport: { width: language === "es" ? 320 : 390, height: 844 } });
           const page = await context.newPage();
           page.setDefaultTimeout(5000);
@@ -188,6 +194,50 @@ try {
           console.log(`${result.status.toUpperCase()} ${result.browser} ${language} ${name}${result.error ? `: ${result.error}` : ""}`);
           assert.deepEqual(errors, [], "fixture must render without browser errors");
         }
+        await run("certificate-draft-and-label", { ...baseDraft, selectedProviderServices: ["photo_documentation_only"] }, async page => {
+          const certificateDetails = page.locator(".optional-cert-details > summary");
+          if (await certificateDetails.count()) await certificateDetails.click();
+          // Activate by its visible state first so the pre-fix failure proves
+          // the missing save, rather than failing only on the new label.
+          await page.getByRole("switch").click();
+          await page.locator(".optional-cert-row input").first().fill("Synthetic ASE certificate");
+          await page.locator(".optional-cert-row input").nth(1).fill("AUDIT-123");
+          await page.reload();
+          await page.locator('[data-signup-step="3"]').waitFor();
+          if (await certificateDetails.count() && !await page.getByRole("switch").isVisible()) await certificateDetails.click();
+          assert.equal(await page.getByRole("switch").getAttribute("aria-checked"), "true", "optional certificate draft survives a reload");
+          assert.equal(await page.locator(".optional-cert-row input").first().inputValue(), "Synthetic ASE certificate");
+          assert.equal(await page.locator(".optional-cert-row input").nth(1).inputValue(), "AUDIT-123");
+          assert.equal(await page.getByRole("switch", { name: language === "es" ? "Agregar certificados opcionales" : "Add optional certificates", exact: true }).count(), 1);
+          for (const input of await page.locator('input[type="checkbox"][required]').all()) assert.equal(await input.isChecked(), false);
+        });
+        await run("review-language-and-edit", null, async page => {
+          await freshDetails(page);
+          await checkFinalAcknowledgments(page);
+          await fitsPhone(page);
+          const terms = page.locator('[name="terms-bundle-accepted"]');
+          const consent = terms.locator('..');
+          assert.ok((await consent.textContent()).includes(language === "es" ? "Tengo al menos 18 años" : "I am at least 18 years old"));
+          await page.getByRole('button', { name: language === "es" ? "Change the whole page to English" : "Cambiar toda la página a español", exact: true }).click();
+          // Spanish URLs navigate to English, while English URLs change in place.
+          if (language === "es") {
+            await page.waitForURL(url => url.pathname === "/join");
+            await page.locator('[data-signup-step="2"]').waitFor();
+            await confirmChecklist(page);
+            await next(page).click();
+          } else {
+            await page.waitForFunction(() => document.querySelector('[name="terms-bundle-accepted"]')?.checked === false);
+            await back(page).click();
+          }
+          await page.locator('[data-signup-step="3"]').waitFor();
+          assert.equal(await page.locator('[name="performing-person-first-name"]').inputValue(), "Example");
+          await page.locator('[name="performing-person-first-name"]').fill("Edited");
+          await page.getByRole("button", { name: /^(Review my application|Revisar mi solicitud)\s*→$/ }).click();
+          await page.locator('[data-signup-step="4"]').waitFor();
+          assert.ok((await page.locator('.provider-review-summary').textContent()).includes("Edited"));
+          assert.equal(await terms.isChecked(), false, "changed language needs fresh acceptance");
+          await fitsPhone(page);
+        });
         await run("resume", null, async (page, result) => {
           await freshDetails(page);
           await recordDraft(page, result, "details-entered");
@@ -210,13 +260,13 @@ try {
           await recordDraft(page, result, "resumed-details");
           for (const [name, value] of Object.entries(baseDraft.fields)) assert.equal(await page.locator(`[name="${name}"]`).inputValue(), value, `${name} survives resume`);
           assert.equal(await page.locator('[name="provider-work-location"]').first().isChecked(), true);
-          await page.getByRole("button", { name: /^(Send my application|Enviar mi solicitud)\s*→$/ }).click();
-          assert.equal(await page.locator(".action-confirm").count(), 0, "fresh final acceptances are still required");
+          await page.getByRole("button", { name: /^(Review my application|Revisar mi solicitud)\s*→$/ }).click();
+          assert.equal(await currentStep(page), "4");
+          await page.getByRole("button", { name: /^(Email me a code|Enviarme un código)\s*→$/ }).click();
           assert.equal(challenges.length, prior);
           await checkFinalAcknowledgments(page);
-          await page.getByRole("button", { name: /^(Send my application|Enviar mi solicitud)\s*→$/ }).click();
           assert.equal(challenges.length, prior, "review confirmation comes before the email request");
-          await page.getByRole("button", { name: language === "es" ? "Sí, envíenme el código" : "Yes, send my code", exact: true }).click();
+          await page.getByRole("button", { name: /^(Email me a code|Enviarme un código)\s*→$/ }).click();
           await page.locator('[name="provider-verification-code"]').waitFor();
           assert.equal(challenges.length, prior + 1);
           const sent = challenges.at(-1);
@@ -257,7 +307,7 @@ try {
           ["missing-email", { ...baseDraft, fields: { "performing-person-first-name": "Example" } }],
           ["removed-services", { ...baseDraft, selectedProviderServices: ["obsolete_service"] }],
           ["empty-checklist", { ...baseDraft, step: 2, selectedProviderServices: [] }],
-          ["obsolete-step", { ...baseDraft, step: 4 }],
+          ["obsolete-step", { ...baseDraft, step: 99 }],
         ]) await run(name, draft, async page => {
           assert.equal(await currentStep(page), "1", "incomplete or stale drafts resume at an actionable step");
           assert.equal(await page.locator('[name="provider-email"]').isVisible(), true);

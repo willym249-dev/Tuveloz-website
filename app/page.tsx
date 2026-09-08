@@ -1533,7 +1533,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       </section>
       )}
 
-      {view !== "home" && view !== "about" && (
+      {view !== "home" && view !== "about" && view !== "provider" && (
       <section className="section provider-pitch" id="why-join">
         <div className="section-heading">
           <div>
@@ -1568,11 +1568,9 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </p>
             <Link className="text-link" href="/founding-providers">Read founding provider details →</Link>
           </div>
-          {view !== "provider" && (
             <Link className="button lime" href="/join#provider-apply">
               {foundingCtaVariant === "B" ? "Start my application" : "Apply free"} <span>→</span>
             </Link>
-          )}
         </div>
       </section>
       )}
@@ -1581,6 +1579,13 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
       <section className="section providers" id="providers">
         <div className="provider-panel">
           <div className="provider-copy">
+            {view === "provider" ? (
+              <>
+                <h2>Apply as a provider</h2>
+                <p>Start with the services you offer. You can save your application and add documents later.</p>
+                <Link className="text-link" href="/founding-providers">Founding provider program →</Link>
+              </>
+            ) : <>
             <span className="kicker light">For providers</span>
             <h2>Your business. Your price. Your schedule.</h2>
             <p>
@@ -1618,6 +1623,7 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
                 prices, hours, and work.
               </small>
             </section>
+            </>}
           </div>
 
           <div id="provider-apply" data-manual-language>

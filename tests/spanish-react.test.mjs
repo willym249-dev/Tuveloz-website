@@ -77,7 +77,8 @@ test("manual language, entered content, code and styles remain untouched", () =>
 test("Spanish navigation uses only reviewed routes and preserves attribution and anchors", () => {
   assert.equal(spanishInterfaceHref("/join?ref=local#provider-apply"), "/es/join?ref=local#provider-apply");
   assert.equal(spanishInterfaceHref("/"), "/es");
-  for (const href of ["/account?role=provider", "/terms", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
+  assert.equal(spanishInterfaceHref("/terms"), "/es/terms");
+  for (const href of ["/account?role=provider", "/customer-agreement", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
     assert.equal(spanishInterfaceHref(href), href);
   }
 });
