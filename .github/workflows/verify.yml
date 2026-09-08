@@ -98,6 +98,9 @@ jobs:
       - name: Verify document resizing and bilingual upload forms in Chromium and WebKit
         run: npm run test:e2e:uploads
 
+      - name: Verify provider onboarding receipts and retry behavior in both languages
+        run: npm run test:e2e:onboarding
+
       - name: Verify saved provider applications and checklist changes in both languages
         run: npm run test:e2e:provider-form
 

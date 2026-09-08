@@ -13,6 +13,7 @@ import {
 } from "../../lib/provider-policy-acceptance";
 import { BrandMark } from "../components/tuveloz-icons";
 import { EvidenceUpload } from "../components/provider-evidence-upload";
+import { spanishInterfaceTree, translateInterfaceValue } from "../../lib/spanish-react";
 
 type EvidenceSubmission = {
   id: string;
@@ -77,6 +78,7 @@ type ServiceStatus = {
 };
 
 type OnboardingResponse = {
+  ok?: boolean;
   policy: {
     version: string;
     status: string;
@@ -164,22 +166,23 @@ function readableStatus(value: string) {
 
 function EvidenceAppealForm({
   evidenceId,
+  preferredLanguage,
   onSubmitted,
 }: {
   evidenceId: string;
-  onSubmitted: () => Promise<void>;
+  preferredLanguage: string;
+  onSubmitted: (message: string) => Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setBusy(true);
     setError("");
-    setNotice("");
     try {
-      const formData = new FormData(event.currentTarget);
+      const formData = new FormData(form);
       const response = await fetch("/api/provider-onboarding", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -190,13 +193,13 @@ function EvidenceAppealForm({
         }),
       });
       const result = await response.json().catch(() => ({})) as {
+        ok?: boolean;
         error?: string;
         message?: string;
       };
-      if (!response.ok) throw new Error(result.error || "Unable to submit this appeal.");
-      event.currentTarget.reset();
-      setNotice(result.message || "Appeal submitted for review.");
-      await onSubmitted();
+      if (!response.ok || result.ok !== true) throw new Error(result.error || "Unable to submit this appeal.");
+      form.reset();
+      await onSubmitted(result.message || "Appeal submitted for review.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to submit this appeal.");
     } finally {
@@ -204,7 +207,7 @@ function EvidenceAppealForm({
     }
   }
 
-  return (
+  const content = (
     <form className="provider-evidence-form" onSubmit={submit}>
       <label style={{ gridColumn: "1 / -1" }}>
         Explain what should be reconsidered
@@ -225,23 +228,25 @@ function EvidenceAppealForm({
         remains blocked while the appeal is pending.
       </small>
       {error && <small className="form-error" role="alert">{error}</small>}
-      {notice && <small className="portal-success" role="status">{notice}</small>}
     </form>
   );
+  return preferredLanguage === "Spanish" ? spanishInterfaceTree(content) : content;
 }
 
-function DataRightsRequestForm({ onSubmitted }: { onSubmitted: () => Promise<void> }) {
+function DataRightsRequestForm({ onSubmitted, preferredLanguage }: {
+  onSubmitted: (message: string) => Promise<void>;
+  preferredLanguage: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setBusy(true);
     setError("");
-    setNotice("");
     try {
-      const formData = new FormData(event.currentTarget);
+      const formData = new FormData(form);
       const response = await fetch("/api/provider-onboarding", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -254,15 +259,15 @@ function DataRightsRequestForm({ onSubmitted }: { onSubmitted: () => Promise<voi
         }),
       });
       const result = await response.json().catch(() => ({})) as {
+        ok?: boolean;
         error?: string;
         message?: string;
       };
-      if (!response.ok) {
+      if (!response.ok || result.ok !== true) {
         throw new Error(result.error || "Unable to submit this privacy request.");
       }
-      event.currentTarget.reset();
-      setNotice(result.message || "Privacy request submitted.");
-      await onSubmitted();
+      form.reset();
+      await onSubmitted(result.message || "Privacy request submitted.");
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Unable to submit this privacy request.",
@@ -272,10 +277,10 @@ function DataRightsRequestForm({ onSubmitted }: { onSubmitted: () => Promise<voi
     }
   }
 
-  return (
+  const content = (
     <form className="provider-evidence-form" onSubmit={submit}>
       <label>
-        Request
+        Request type
         <select defaultValue="" name="requestType" required>
           <option disabled value="">Choose one</option>
           <option value="access">Access my provider data</option>
@@ -305,9 +310,9 @@ function DataRightsRequestForm({ onSubmitted }: { onSubmitted: () => Promise<voi
         {busy ? "Submitting…" : "Submit privacy request"}
       </button>
       {error && <small className="form-error" role="alert">{error}</small>}
-      {notice && <small className="portal-success" role="status">{notice}</small>}
     </form>
   );
+  return preferredLanguage === "Spanish" ? spanishInterfaceTree(content) : content;
 }
 
 export default function ProviderOnboardingPage() {
@@ -327,7 +332,19 @@ export default function ProviderOnboardingPage() {
     }
     if (!response.ok) throw new Error(result.error || "Unable to load provider onboarding.");
     setData(result);
+    setError("");
   }, []);
+
+  async function refreshAfterSubmission(message: string) {
+    setError("");
+    setNotice(message);
+    try {
+      await load();
+    } catch {
+      // The write is confirmed. A failed read must not invite a duplicate request.
+      setNotice("Your request was received. Refresh the page to see its status.");
+    }
+  }
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -407,11 +424,12 @@ export default function ProviderOnboardingPage() {
 
   async function acceptAgreements(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setAgreementBusy(true);
     setError("");
     setNotice("");
     try {
-      const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+      const values = Object.fromEntries(new FormData(form).entries());
       const response = await fetch("/api/provider-onboarding", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -424,10 +442,10 @@ export default function ProviderOnboardingPage() {
         }),
       });
       const result = await response.json().catch(() => ({})) as OnboardingResponse;
-      if (!response.ok) throw new Error(result.error || "Unable to save the agreement acceptance.");
+      if (!response.ok || result.ok !== true) throw new Error(result.error || "Unable to save the agreement acceptance.");
+      form.reset();
       setData(result);
       setNotice("Current agreement versions accepted and recorded.");
-      event.currentTarget.reset();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save the agreement acceptance.");
     } finally {
@@ -456,26 +474,32 @@ export default function ProviderOnboardingPage() {
       </header>
       <section className="account-main">
         <div className="account-welcome">
-          <span className="account-kicker">Provider onboarding and service verification</span>
-          <h1>Know exactly what is ready—and what is blocked.</h1>
-          <p>
-            TUVELOZ reviews evidence for each exact service. An upload, account approval, or status badge
-            is not a promise of safety, quality, or outcome and does not waive TUVELOZ&apos;s own legal duties.
-          </p>
-          <p>
-            <strong>TUVELOZ does not employ or train anybody.</strong> Applying, uploading a
-            document, completing onboarding, or receiving a review result does not create employment,
-            training, a job offer, wages, placement, customer jobs, or any promise of future work.
-          </p>
+          <span className="account-kicker">Provider application</span>
+          <h1>Your next steps</h1>
+          <p>Choose a service below to see which documents to send and what still needs review.</p>
+          <details>
+            <summary>How your application is reviewed</summary>
+            <p>
+              TUVELOZ reviews evidence for each exact service. An upload, account approval, or status badge
+              is not a promise of safety, quality, or outcome and does not waive TUVELOZ&apos;s own legal duties.
+            </p>
+            <p>
+              <strong>TUVELOZ does not employ or train anybody.</strong> Applying, uploading a
+              document, completing onboarding, or receiving a review result does not create employment,
+              training, a job offer, wages, placement, customer jobs, or any promise of future work.
+            </p>
+          </details>
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
-        {notice && <p className="portal-success" role="status">{notice}</p>}
+        {notice && <p className="portal-success" role="status">
+          {data?.provider.preferredLanguage === "Spanish" ? translateInterfaceValue(notice) : notice}
+        </p>}
         {!data && !error && <p className="admin-note">Loading your onboarding checklist…</p>}
         {data && (
           <div className="account-grid">
             <section className="account-card">
               <div className="account-card-heading">
-                <div><span className="account-role">Policy v{data.policy.version}</span><h2>Launch protection is active</h2></div>
+                <div><span className="account-role">Policy v{data.policy.version}</span><h2>Your application</h2></div>
                 <span className="account-count">✕</span>
               </div>
               <p className="form-error">{data.policy.notice}</p>
@@ -508,6 +532,9 @@ export default function ProviderOnboardingPage() {
                   ? ` ${data.identityVerification.attemptsRemaining} of 3 attempts remain today.`
                   : " No Stripe Identity attempt has started."}
               </p>
+              {data.identityVerification.status === "requires_input" && data.identityVerification.failureCode && (
+                <p>Stripe could not complete your ID check. Resume the check to see what needs to be corrected.</p>
+              )}
               {!data.identityVerification.ownerOperatorEligible && (
                 <p className="form-error">
                   Automated Stripe Identity is not available for an employee or trainee pathway.
@@ -643,110 +670,12 @@ export default function ProviderOnboardingPage() {
                 ) : null}
             </section>
 
-            <section className="account-card">
-              <div className="account-card-heading">
-                <div><span className="account-role">Renewal controls</span><h2>Expiration and reminders</h2></div>
-                <span className="account-count">{trackedExpirations.length}</span>
-              </div>
-              <p>
-                Renewal reminders do not extend eligibility. A replacement remains blocked until
-                its malware scan is clean and TUVELOZ separately accepts the evidence.
-              </p>
-              <div className="account-request-list">
-                {trackedExpirations.length === 0 && (
-                  <p>No submitted evidence with an expiration date is currently tracked.</p>
-                )}
-                {trackedExpirations.map((item) => (
-                  <article
-                    className="account-request"
-                    key={`${item.key}:${item.serviceLabel}:${item.requirementLabel}`}
-                  >
-                    <span>
-                      <strong>{item.requirementLabel}</strong>
-                      <small>{item.serviceLabel}</small>
-                      <small>{item.submission.expirationLabel}</small>
-                      <small>{item.submission.reminderLabel}</small>
-                      <small>Malware scan: {item.submission.scanLabel}</small>
-                    </span>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="account-card">
-              <div className="account-card-heading">
-                <div><span className="account-role">Corrections and appeals</span><h2>Decision status</h2></div>
-                <span className="account-count">{data.appeals.length}</span>
-              </div>
-              <p>
-                Upload a corrected replacement from the affected checklist item, or submit an appeal
-                when a review is marked “Needs correction” or “Rejected.” An appeal is not approval,
-                is not a background-report dispute process, and never restores access while a gate is unmet.
-              </p>
-              <div className="account-request-list">
-                {data.appeals.length === 0 && <p>No evidence appeals have been submitted.</p>}
-                {data.appeals.map((appeal) => (
-                  <article className="account-request" key={appeal.id}>
-                    <span>
-                      <strong>{readableStatus(appeal.status)}</strong>
-                      <small>Submitted {appeal.submittedAt}</small>
-                      {appeal.dueAt && <small>Target response by {appeal.dueAt}</small>}
-                      <small>{appeal.statement}</small>
-                      {appeal.resolutionNotes && <small>Response: {appeal.resolutionNotes}</small>}
-                    </span>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className="account-card">
-              <div className="account-card-heading">
-                <div><span className="account-role">Restricted documents</span><h2>Privacy, retention, and deletion</h2></div>
-                <span className="account-count">Private</span>
-              </div>
-              <p>{data.privacy.storage}</p>
-              <p>{data.privacy.access}</p>
-              <p>{data.privacy.retention}</p>
-              <p>{data.privacy.deletion}</p>
-              <p className="form-error">{data.privacy.prohibitedUploads}</p>
-              <div className="account-request-list">
-                {data.dataRightsRequests.map((item) => (
-                  <article className="account-request" key={item.id}>
-                    <span>
-                      <strong>{readableStatus(item.requestType)} · {readableStatus(item.status)}</strong>
-                      <small>Submitted {item.submittedAt}</small>
-                      {item.dueAt && <small>Target response by {item.dueAt}</small>}
-                      {item.legalHold === "yes" && (
-                        <small>A legal hold currently limits deletion; eligible data remains under review.</small>
-                      )}
-                      {item.completedAt && <small>Completed {item.completedAt}</small>}
-                      {item.responseNotes && <small>Response: {item.responseNotes}</small>}
-                    </span>
-                  </article>
-                ))}
-              </div>
-              <DataRightsRequestForm onSubmitted={load} />
-            </section>
-
-            <section className="account-card">
-              <div className="account-card-heading">
-                <div><span className="account-role">Easy provider guide</span><h2>Seven steps</h2></div>
-                <span className="account-count">7</span>
-              </div>
-              <ol className="provider-onboarding-guide">
-                {data.guide.map((step, index) => <li key={step}><strong>{index + 1}.</strong> {step}</li>)}
-              </ol>
-              <p>
-                Never upload an SSN, Social Security card, passport, I-9, or other work-authorization
-                document here. The employer keeps those records and uses the separate employer attestation workflow.
-              </p>
-            </section>
-
             <section className="account-card provider-service-status-card">
               <div className="account-card-heading">
-                <div><span className="account-role">Exact service checklist</span><h2>Selected services</h2></div>
+                <div><span className="account-role">Your checklist</span><h2>Documents for your services</h2></div>
                 <span className="account-count">{data.services.length}</span>
               </div>
+              <p>We review your documents separately from your ID check. Only the requirements for your selected services appear here.</p>
               {data.services.length === 0 && <p>No exact services are on this application.</p>}
               <div className="account-request-list">
                 {data.services.map((service) => (
@@ -803,7 +732,8 @@ export default function ProviderOnboardingPage() {
                                   )) && (
                                     <EvidenceAppealForm
                                       evidenceId={requirement.submission.id}
-                                      onSubmitted={load}
+                                      preferredLanguage={data.provider.preferredLanguage}
+                                      onSubmitted={refreshAfterSubmission}
                                     />
                                   )}
                               </div>
@@ -845,6 +775,109 @@ export default function ProviderOnboardingPage() {
                 ))}
               </div>
             </section>
+
+            {trackedExpirations.length > 0 && <section className="account-card">
+              <div className="account-card-heading">
+                <div><span className="account-role">Renewal controls</span><h2>Expiration and reminders</h2></div>
+                <span className="account-count">{trackedExpirations.length}</span>
+              </div>
+              <p>
+                Renewal reminders do not extend eligibility. A replacement remains blocked until
+                its malware scan is clean and TUVELOZ separately accepts the evidence.
+              </p>
+              <div className="account-request-list">
+                {trackedExpirations.length === 0 && (
+                  <p>No submitted evidence with an expiration date is currently tracked.</p>
+                )}
+                {trackedExpirations.map((item) => (
+                  <article
+                    className="account-request"
+                    key={`${item.key}:${item.serviceLabel}:${item.requirementLabel}`}
+                  >
+                    <span>
+                      <strong>{item.requirementLabel}</strong>
+                      <small>{item.serviceLabel}</small>
+                      <small>{item.submission.expirationLabel}</small>
+                      <small>{item.submission.reminderLabel}</small>
+                      <small>Malware scan: {item.submission.scanLabel}</small>
+                    </span>
+                  </article>
+                ))}
+              </div>
+            </section>}
+
+            {data.appeals.length > 0 && <section className="account-card">
+              <div className="account-card-heading">
+                <div><span className="account-role">Corrections and appeals</span><h2>Decision status</h2></div>
+                <span className="account-count">{data.appeals.length}</span>
+              </div>
+              <p>
+                Upload a corrected replacement from the affected checklist item, or submit an appeal
+                when a review is marked “Needs correction” or “Rejected.” An appeal is not approval,
+                is not a background-report dispute process, and never restores access while a gate is unmet.
+              </p>
+              <div className="account-request-list">
+                {data.appeals.length === 0 && <p>No evidence appeals have been submitted.</p>}
+                {data.appeals.map((appeal) => (
+                  <article className="account-request" key={appeal.id}>
+                    <span>
+                      <strong>{readableStatus(appeal.status)}</strong>
+                      <small>Submitted {appeal.submittedAt}</small>
+                      {appeal.dueAt && <small>Target response by {appeal.dueAt}</small>}
+                      <small>{appeal.statement}</small>
+                      {appeal.resolutionNotes && <small>Response: {appeal.resolutionNotes}</small>}
+                    </span>
+                  </article>
+                ))}
+              </div>
+            </section>}
+
+            <section className="account-card">
+              <div className="account-card-heading">
+                <div><span className="account-role">Restricted documents</span><h2>Privacy, retention, and deletion</h2></div>
+                <span className="account-count">Private</span>
+              </div>
+              <p>{data.privacy.storage}</p>
+              <p>{data.privacy.access}</p>
+              <p>{data.privacy.retention}</p>
+              <p>{data.privacy.deletion}</p>
+              <p className="form-error">{data.privacy.prohibitedUploads}</p>
+              <div className="account-request-list">
+                {data.dataRightsRequests.map((item) => (
+                  <article className="account-request" key={item.id}>
+                    <span>
+                      <strong>{readableStatus(item.requestType)} · {readableStatus(item.status)}</strong>
+                      <small>Submitted {item.submittedAt}</small>
+                      {item.dueAt && <small>Target response by {item.dueAt}</small>}
+                      {item.legalHold === "yes" && (
+                        <small>A legal hold currently limits deletion; eligible data remains under review.</small>
+                      )}
+                      {item.completedAt && <small>Completed {item.completedAt}</small>}
+                      {item.responseNotes && <small>Response: {item.responseNotes}</small>}
+                    </span>
+                  </article>
+                ))}
+              </div>
+              <DataRightsRequestForm
+                preferredLanguage={data.provider.preferredLanguage}
+                onSubmitted={refreshAfterSubmission}
+              />
+            </section>
+
+            <section className="account-card">
+              <div className="account-card-heading">
+                <div><span className="account-role">Easy provider guide</span><h2>Seven steps</h2></div>
+                <span className="account-count">7</span>
+              </div>
+              <ol className="provider-onboarding-guide">
+                {data.guide.map((step, index) => <li key={step}><strong>{index + 1}.</strong> {step}</li>)}
+              </ol>
+              <p>
+                Never upload an SSN, Social Security card, passport, I-9, or other work-authorization
+                document here. The employer keeps those records and uses the separate employer attestation workflow.
+              </p>
+            </section>
+
 
             <section className="account-card">
               <div className="account-card-heading">
