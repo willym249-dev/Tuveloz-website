@@ -20,7 +20,8 @@ export type ProviderAuditInput = {
   metadata?: Record<string, unknown>;
 };
 
-export async function recordProviderAuditEvent(input: ProviderAuditInput) {
+// Allows an audit row to commit in the same D1 batch as the records it describes.
+export async function prepareProviderAuditEvent(input: ProviderAuditInput) {
   const db = getDb();
   const previous = await db.select({ eventHash: providerAuditEvents.eventHash })
     .from(providerAuditEvents)
@@ -50,7 +51,7 @@ export async function recordProviderAuditEvent(input: ProviderAuditInput) {
     occurredAt,
   };
   const eventHash = await sha256Text(JSON.stringify(normalized));
-  await db.insert(providerAuditEvents).values({
+  const statement = db.insert(providerAuditEvents).values({
     id: eventId,
     providerId: normalized.providerId,
     personId: normalized.personId,
@@ -72,5 +73,11 @@ export async function recordProviderAuditEvent(input: ProviderAuditInput) {
     occurredAt,
     createdAt: occurredAt,
   });
-  return { id: eventId, eventHash, occurredAt };
+  return { statement, receipt: { id: eventId, eventHash, occurredAt } };
+}
+
+export async function recordProviderAuditEvent(input: ProviderAuditInput) {
+  const prepared = await prepareProviderAuditEvent(input);
+  await prepared.statement;
+  return prepared.receipt;
 }

@@ -107,7 +107,7 @@ async function raiseDeliveryExhaustedIncident(eventKey: string, error: unknown) 
         `Attempts: ${MAX_DELIVERY_ATTEMPTS}`,
         `Last error: ${errorSummary(error)}`,
         "",
-        "The recipient never received this message. Recipient details stay in the",
+        "Delivery could not be confirmed. Recipient details stay in the",
         "protected owner dashboard rather than in this alert:",
         `${siteUrl()}/admin`,
       ].join("\n"),

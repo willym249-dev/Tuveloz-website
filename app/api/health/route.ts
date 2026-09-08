@@ -70,6 +70,7 @@ const REQUIRED_GUARDED_TRIGGERS = [
   "provider_personnel_stripe_identity_guard_insert",
   "provider_personnel_stripe_identity_binding_immutable",
   "provider_personnel_stripe_identity_guard_update",
+  "provider_document_pending_guard",
 ] as const;
 
 // Table existence verifies the CREATE migrations. These zero-row probes also
@@ -169,6 +170,9 @@ export async function GET() {
             || row.name.startsWith("provider_personnel_identity_revocation_")
             || row.name.startsWith("provider_personnel_stripe_identity_")
             || row.name.startsWith("stripe_payment_release_")
+            || (row.name === "provider_document_pending_guard"
+              && row.sql?.includes("provider_document_pending_conflict")
+              && row.sql.includes("RAISE(ABORT"))
             || (row.sql?.includes("is_test_job") && row.sql.includes("= 'no'"))
           ))
           .map((row) => row.name),

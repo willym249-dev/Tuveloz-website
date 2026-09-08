@@ -116,7 +116,7 @@ test("private evidence stays scoped and work authorization documents are rejecte
   assert.ok(evidenceRoute.includes("STRUCTURED_ONLY_REQUIREMENTS"));
   assert.ok(evidenceRoute.includes("Do not upload work-authorization documents, SSNs, or I-9 records"));
   assert.ok(evidenceRoute.includes("getEvidenceRequirements(serviceCodeValue, profile.relationshipPath)"));
-  assert.ok(evidenceRoute.includes("const documentHash = await sha256Buffer(document.bytes)"));
+  assert.ok(evidenceRoute.includes("documentHash = await sha256Buffer(document.bytes)"));
   assert.ok(evidenceRoute.includes("documentHash,"));
   assert.ok(evidenceRoute.includes('status: "pending"'));
   assert.ok(evidenceRoute.includes('"cache-control": "private, no-store, max-age=0"'));
