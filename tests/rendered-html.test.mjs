@@ -160,14 +160,16 @@ test("build keeps OEM and aftermarket as communication-only preferences", async 
   assert.ok(!contents.includes("Parts price ($)"));
 });
 
-test("build protects every important submission with a second confirmation", async () => {
+test("build includes explicit review and confirmation before important submissions", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
   const files = (await builtFiles(distDirectory))
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
   assert.ok(contents.includes("Confirm and post"));
-  assert.ok(contents.includes("Yes, send my code"));
+  assert.ok(contents.includes("Review my application"));
+  assert.ok(contents.includes("Email me a code"));
+  assert.ok(contents.includes("Submit my application"));
   assert.ok(contents.includes("Last step: enter the code we emailed you"));
   assert.ok(contents.includes("Confirm and send"));
   assert.ok(contents.includes("Confirm quote"));
@@ -232,8 +234,8 @@ test("provider approval requires applicable state and local proof without reques
     .filter((path) => [".js", ".html"].includes(extname(path)));
   const contents = (await Promise.all(files.map((path) => readFile(path, "utf8")))).join("\n");
 
-  assert.ok(contents.includes("Tuveloz must receive and verify proof before approval"));
-  assert.ok(contents.includes("If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."));
+  assert.ok(contents.includes("Tuveloz must verify the current certificate before approving the provider"));
+  assert.ok(contents.includes("We only show the paperwork and Tuveloz safety and experience checks for your chosen services. Shared documents are listed once."));
   assert.ok(contents.includes("repair-registration proof received and verified"));
   assert.ok(contents.includes("cannot be verified until the state and local requirements"));
 });

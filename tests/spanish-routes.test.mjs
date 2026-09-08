@@ -49,8 +49,8 @@ test("an unreviewed /es path is a 404, never an untranslated page", () => {
   assert.match(PAGE, /new Response\("Not found", \{ status: 404 \}\)/);
 });
 
-test("the legal pages have no Spanish twin", () => {
-  for (const legal of ["/terms", "/privacy", "/provider-agreement", "/customer-agreement"]) {
+test("untranslated legal pages have no Spanish twin", () => {
+  for (const legal of ["/customer-agreement", "/copyright", "/sms-terms"]) {
     assert.ok(!readyPaths.includes(legal), `${legal} must not have a Spanish URL`);
   }
 });

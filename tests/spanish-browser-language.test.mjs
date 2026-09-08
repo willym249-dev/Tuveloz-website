@@ -32,7 +32,7 @@ test("explicit Spanish URLs stay Spanish with an English saved preference", () =
 });
 
 test("legal and unknown pages stay English regardless of saved preference", () => {
-  for (const path of ["/terms", "/es/terms", "/account", "/unknown"]) {
+  for (const path of ["/customer-agreement", "/es/customer-agreement", "/account", "/unknown"]) {
     assert.equal(languageClient(path, "es").getLanguageSnapshot(), "en", path);
   }
 });

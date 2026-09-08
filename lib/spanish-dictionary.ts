@@ -17,6 +17,21 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "Terms of Use | Tuveloz": "Términos de uso | Tuveloz",
+  "Provider Agreement | Tuveloz": "Acuerdo del proveedor | Tuveloz",
+  "Payment, Cancellation, and Refund Policy | Tuveloz": "Política de pagos, cancelaciones y reembolsos | Tuveloz",
+  "Marketplace Conduct Policy | Tuveloz": "Política de conducta en el mercado | Tuveloz",
+  "Privacy Policy | Tuveloz": "Política de privacidad | Tuveloz",
+  "Provisional Provider and Trainee Policy | Tuveloz": "Política para proveedores provisionales y aprendices | Tuveloz",
+  "The Tuveloz Terms of Use for customers and providers.": "Los Términos de uso de Tuveloz para clientes y proveedores.",
+  "How Tuveloz collects, uses, and protects personal information.": "Cómo Tuveloz recopila, utiliza y protege la información personal.",
+  "Plain-language terms for provider businesses working through Tuveloz, covering independent-contractor status, quoting, required coverage, and payouts.": "Condiciones en lenguaje claro para los negocios proveedores que trabajan a través de Tuveloz: independencia, cotizaciones, cobertura requerida y pagos.",
+  "An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections. Live payments are not yet enabled.": "Borrador para revisión operativa sobre precios, pagos, transferencias, cancelaciones y protección al cliente. Los pagos reales todavía no están habilitados.",
+  "Draft conduct rules for provider businesses, owner-operators, sponsored trainee employees, and regular provider-business employees on Tuveloz.": "Borrador de normas de conducta para negocios proveedores, propietarios que realizan el trabajo, aprendices empleados con patrocinio y empleados habituales en Tuveloz.",
+  "A deny-by-default draft covering independent startup owner-operators, sponsored trainee employees, and regular provider-business employees.": "Borrador que mantiene el acceso bloqueado hasta cumplir los requisitos para propietarios independientes, aprendices empleados con patrocinio y empleados habituales de negocios proveedores.",
+
+  "Start with the services you offer. You can save your application and add documents later.": "Empiece con los servicios que ofrece. Puede guardar su solicitud y agregar documentos después.",
+  "Founding provider program →": "Programa de proveedores fundadores →",
   "Vehicle services in Montgomery County, MD": "Servicios para vehículos en el condado de Montgomery, MD",
   "For car owners in Montgomery County, MD": "Para dueños de carros en el condado de Montgomery, MD",
   "Find local help for your car.": "Encuentre ayuda local para su carro.",

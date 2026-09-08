@@ -25,6 +25,8 @@ const baseUrl = (process.argv[2] || process.env.BASE_URL || "http://localhost:30
 const dictionary = readFileSync(new URL("../lib/spanish-dictionary.ts", import.meta.url), "utf8");
 
 const routes = readFileSync(new URL("../lib/spanish-routes.ts", import.meta.url), "utf8");
+const policyTranslations = JSON.parse(readFileSync(new URL("../config/policy-spanish-releases.json", import.meta.url), "utf8"));
+const policyReleases = JSON.parse(readFileSync(new URL("../config/policy-releases.json", import.meta.url), "utf8"));
 
 const readyPaths = [...routes.slice(
   routes.indexOf("export const SPANISH_READY_PATHS"),
@@ -101,7 +103,7 @@ for (const path of readyPaths) {
     // The signup form translates itself, so the dictionary walk above skips
     // it. Exercise the actual language switch to cover that boundary too.
     await page.getByRole("button", { name: "Cambiar toda la página a español", exact: true }).click();
-    await page.getByRole("heading", { name: "Su negocio. Su precio. Su horario.", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Solicitar ingreso como proveedor", exact: true }).waitFor();
     const scopes = await page.locator(".provider-service-groups .service-scope > small").allTextContents();
     assert.ok(scopes.length > 0, "provider scope check must inspect real services");
     for (const scope of scopes) {
@@ -113,11 +115,27 @@ for (const path of readyPaths) {
     await page.locator(".provider-service-groups .service-scope > summary").first().click();
     await firstScope.waitFor({ state: "visible" });
     await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
-    await page.getByRole("heading", { name: "Your business. Your price. Your schedule.", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Apply as a provider", exact: true }).waitFor();
     const englishScope = (await firstScope.textContent()).trim();
     assert.notEqual(englishScope, spanishScope, "scope must switch back to English");
     assert.ok(known.has(englishScope), "scope must return to its catalog wording");
     console.log(`✓ /join — Spanish provider panel and ${scopes.length} service descriptions switch both ways`);
+  }
+  const policyKey = Object.keys(policyTranslations).find(key => policyReleases[key].sourceFile === `app${path}/page.tsx`);
+  if (policyKey) {
+    const source = readFileSync(new URL(`../${policyTranslations[policyKey].sourceFile}`, import.meta.url), "utf8");
+    const expectedHtml = source.match(/html: `([\s\S]+)`/)[1];
+    await page.getByRole("button", { name: "Cambiar toda la página a español", exact: true }).click();
+    await page.locator('[data-spanish-policy]').waitFor();
+    assert.equal(await page.locator('.policy-shell').getAttribute('lang'), 'es');
+    const matches = await page.evaluate(expected => {
+      const parsed = document.createElement('div');
+      parsed.innerHTML = expected;
+      const normalize = text => text.replace(/\s+/g, ' ').trim();
+      return normalize(parsed.innerHTML) === normalize(document.querySelector('[data-spanish-policy]').innerHTML);
+    }, expectedHtml);
+    assert.ok(matches, `${path}: full Spanish policy must match its released source`);
+    console.log(`✓ ${path} — complete Spanish policy matches its release`);
   }
   await page.close();
 }

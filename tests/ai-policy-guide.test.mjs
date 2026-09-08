@@ -107,7 +107,7 @@ test("people can reach the assistant from where they get stuck", async () => {
     read("app/provider-jobs/page.tsx"),
   ]);
 
-  assert.match(policy, /href="\/ai"/);
+  assert.match(policy, /href=\{spanish \? "\/es\/ai" : "\/ai"\}/);
   assert.match(customer, /href="\/ai"/);
   assert.match(providerJobs, /href="\/ai\?for=provider"/);
 });

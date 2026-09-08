@@ -213,10 +213,9 @@ test("every phone entry point records consent centrally and offers a way out", a
   // Consent is recorded after the application's atomic batch, so it can never
   // fail or alter a legal application record.
   assert.match(providerRoute, /await db\.batch\(\[[\s\S]*\] as const\);[\s\S]*recordPhoneContactConsent/);
-  assert.ok(providerForm.includes('name="provider-sms-marketing-consent"'));
-  assert.ok(providerForm.includes('type="checkbox"'));
-  // Bilingual site: the applicant is shown the wording in their own language.
-  assert.ok(providerForm.includes("SMS_MARKETING_CONSENT_TEXT_ES"));
+  assert.ok(!providerForm.includes('name="provider-sms-marketing-consent"'));
+  assert.ok(providerForm.includes("smsMarketingConsent: false"));
+  // Removing promotional preferences from signup must never opt anyone in.
   assert.ok(providerForm.includes("PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES"));
 
   assert.ok(fleetRoute.includes('role: "fleet"'));

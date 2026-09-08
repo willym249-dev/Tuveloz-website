@@ -68,14 +68,14 @@ test("dictionary keys never target the manually translated provider signup subtr
   // This is a known historical failure. Keeping it explicit proves the
   // extractor sees the provider verification copy instead of passing after a
   // JSX apostrophe desynchronizes a generic quote matcher.
-  const sentinel = "Verify email and continue";
+  const sentinel = "Submit my application";
   assert.ok(providerLiterals.has(sentinel));
   assert.ok(!nonManualLiterals.has(sentinel));
   assert.ok(!dictionaryKeys.has(sentinel));
   assert.deepEqual(manualOnlyKeys, []);
 });
 
-test("provider clickwrap remains English even if it moves outside the provider panel", () => {
+test("provider clickwrap uses explicit evidence-bound language outside the page translator", () => {
   assert.match(
     siteLanguage,
     /\[data-no-interface-translation\], \[data-manual-language\]/,
@@ -83,8 +83,8 @@ test("provider clickwrap remains English even if it moves outside the provider p
   );
   assert.match(
     providerSignup,
-    /<div data-no-interface-translation lang="en">[\s\S]*?employment-work-authorization-acknowledged[\s\S]*?PROVIDER_TERMS_ACCEPTANCE_TEXT[\s\S]*?PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT[\s\S]*?<\/div>/,
-    "every English legal acknowledgment needs its own translation barrier",
+    /<div data-no-interface-translation lang=\{providerFormIsSpanish \? "es" : "en"\}>[\s\S]*?employment-work-authorization-acknowledged[\s\S]*?PROVIDER_TERMS_ACCEPTANCE_TEXT[\s\S]*?PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT[\s\S]*?<\/div>/,
+    "legal acknowledgments must use shared evidence text rather than dictionary substitutions",
   );
 });
 

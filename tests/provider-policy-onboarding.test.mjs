@@ -82,16 +82,14 @@ test("draft policy acknowledgments are bound for review but fail closed for job 
   assert.ok(onboarding.includes("current: eligibilityCurrent"));
   assert.ok(onboarding.includes("allAgreementsAcknowledgedForApplicationReview"));
   assert.ok(onboarding.includes("allAgreementsEligibilityCurrent"));
-  assert.ok(onboarding.includes("acceptance.agreementHash === expectedEligibilityHash"));
+  assert.ok(onboarding.includes("acceptance.agreementHash === hash"));
   assert.ok(onboarding.includes("They cannot qualify a provider for jobs."));
 
   // The eligibility engine asks for the default provider-eligibility envelope.
   // While documents are drafts, every stored acknowledgment has its own review
   // evidence ID, so this later exact-text comparison cannot match it.
-  assert.match(eligibility, /providerAgreementEvidenceText\(requiredDocument\)/);
-  assert.match(eligibility, /item\.agreementText === expectedText/);
-  assert.match(eligibility, /const expectedHash = expectedText \? await sha256Text\(expectedText\) : ""/);
-  assert.match(eligibility, /item\.agreementHash === expectedHash/);
+  assert.match(eligibility, /providerAgreementEvidenceCandidates\(requiredDocument\)/);
+  assert.match(eligibility, /item\.agreementText === text && item\.agreementHash === hash/);
   assert.match(onboardingPage, /allAgreementsAcknowledgedForApplicationReview/);
   assert.match(onboardingPage, /Acknowledging a draft lets TUVELOZ review the application/);
   assert.match(onboardingPage, /Not current for job eligibility/);

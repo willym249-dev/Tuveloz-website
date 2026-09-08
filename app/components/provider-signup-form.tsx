@@ -30,6 +30,7 @@ import {
 import { groupProviderSignupDocuments, hasProviderSignupQuestions } from "../../lib/provider-signup-checklist";
 import {
   MAX_OPTIONAL_CERTIFICATES,
+  cleanOptionalCertificateDraft,
   OPTIONAL_CERTIFICATE_CATEGORIES,
   type DeclaredOptionalCertificate,
   type OptionalCertificateCategory,
@@ -38,13 +39,13 @@ import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
 } from "../../lib/provider-policy-acceptance";
+import { PROVIDER_TERMS_ACCEPTANCE_TEXT_ES, PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES, PROVIDER_WORK_AUTHORIZATION_TEXT_ES } from "../../lib/provider-policy-spanish-text";
 import { campaignAttribution, track } from "../../lib/analytics";
 import { activeVariants } from "../../lib/experiments";
 import { AddressAutocompleteInput } from "./address-autocomplete-input";
 import { MUNICIPALITY_DATALIST_ID } from "./location-datalists";
 import { useSiteLanguage } from "./site-language";
 import { spanishText } from "../../lib/spanish-dictionary";
-import { ConfirmAction } from "./confirm-action";
 import { LegalHelp } from "./legal-help";
 import { FollowAlong } from "./social-links";
 import { normalizeReferralCode } from "../../lib/referral-code";
@@ -53,8 +54,6 @@ import { providerFormFailure, requestProviderForm, type ProviderFormRequest } fr
 import {
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN,
   PHONE_TRANSACTIONAL_PURPOSE_TEXT_ES,
-  SMS_MARKETING_CONSENT_TEXT_EN,
-  SMS_MARKETING_CONSENT_TEXT_ES,
 } from "../../lib/phone-consent-text";
 
 /**
@@ -134,10 +133,10 @@ const PROVIDER_REVIEW_SERVICE_GROUPS = [
   },
   {
     id: "standard",
-    label: "Everyday repair jobs",
-    labelEs: "Trabajos de reparación comunes",
-    description: "Bigger jobs like new tires, a battery, or a car wash.",
-    descriptionEs: "Trabajos más grandes como llantas nuevas, batería o lavado de carro.",
+    label: "Repairs and car washing",
+    labelEs: "Reparaciones y lavado de carros",
+    description: "Tires, battery replacement, diagnostics, and exterior washing.",
+    descriptionEs: "Llantas, cambio de batería, diagnóstico y lavado exterior.",
     services: PROVIDER_REVIEW_SERVICES.filter((service) => (
       service.allowedProviderLevels.includes("standard_provider")
     )),
@@ -191,8 +190,8 @@ const PROVIDER_SERVICE_PLAIN_LABELS: Partial<
     es: "Dar corriente a una batería descargada",
   },
   provisional_12v_battery_replacement: {
-    en: "Change a car battery (simple starter job)",
-    es: "Cambiar la batería del carro (trabajo sencillo para empezar)",
+    en: "Replace a 12-volt battery — limited roadside service",
+    es: "Cambiar una batería de 12 voltios — servicio limitado en carretera",
   },
   provisional_temporary_spare_install: {
     en: "Put on the spare tire",
@@ -203,8 +202,8 @@ const PROVIDER_SERVICE_PLAIN_LABELS: Partial<
     es: "Limpiar el interior de un carro",
   },
   battery_replacement: {
-    en: "Change a car battery (full repair service)",
-    es: "Cambiar la batería del carro (servicio completo de reparación)",
+    en: "Replace a car battery — standard repair service",
+    es: "Cambiar una batería de carro — servicio de reparación",
   },
   tire_repair_or_installation: {
     en: "Fix or put on tires",
@@ -361,7 +360,7 @@ const SIGNUP_STEP_LABELS: Record<SignupStep, { en: string; es: string }> = {
   1: { en: "Your services", es: "Sus servicios" },
   2: { en: "Your checklist", es: "Su lista" },
   3: { en: "Your details", es: "Sus datos" },
-  4: { en: "Sign and submit", es: "Firmar y enviar" },
+  4: { en: "Review and send", es: "Revisar y enviar" },
 };
 
 const SELECTED_PROVIDER_AREAS = [CURRENT_LAUNCH_AREA];
@@ -396,6 +395,8 @@ type ProviderSignupDraft = {
   selectedProviderWorkLocations?: string[];
   providerAssessment?: ProviderSelfAssessment;
   fields?: Record<string, string>;
+  showOptionalCertificates?: boolean;
+  optionalCertificates?: DeclaredOptionalCertificate[];
 };
 
 function readSignupDraft(): ProviderSignupDraft | null {
@@ -442,13 +443,27 @@ export function ProviderSignupForm() {
   const [applicationChallengeId, setApplicationChallengeId] = useState("");
   const [applicationVerificationCode, setApplicationVerificationCode] = useState("");
   const [pendingApplicationPayload, setPendingApplicationPayload] = useState<Record<string, unknown> | null>(null);
-  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const [showOptionalCertificates, setShowOptionalCertificates] = useState(false);
   const [optionalCertificates, setOptionalCertificates] = useState<DeclaredOptionalCertificate[]>([]);
   const [businessDetailsOpen, setBusinessDetailsOpen] = useState(false);
   const [draftFields, setDraftFields] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
   const applicationRequest = useRef<AbortController | null>(null);
+  const previousLanguage = useRef(language);
+
+  useEffect(() => {
+    if (previousLanguage.current === language) return;
+    previousLanguage.current = language;
+    applicationRequest.current?.abort();
+    applicationRequest.current = null;
+    setApplicationBusy(false);
+    setApplicationChallengeId("");
+    setApplicationVerificationCode("");
+    setPendingApplicationPayload(null);
+    setApplicationError("");
+    stepContentRef.current?.querySelectorAll<HTMLInputElement>('input[type="checkbox"][required]')
+      .forEach((input) => { input.checked = false; });
+  }, [language]);
 
   useEffect(() => () => {
     applicationRequest.current?.abort();
@@ -506,6 +521,8 @@ export function ProviderSignupForm() {
         : [];
       setSelectedProviderServices(restoredServices);
       if (typeof draft.soloBusiness === "boolean") setSoloBusiness(draft.soloBusiness);
+      setOptionalCertificates(cleanOptionalCertificateDraft(draft.optionalCertificates));
+      setShowOptionalCertificates(draft.showOptionalCertificates === true);
       if (Array.isArray(draft.selectedProviderWorkLocations)) {
         setSelectedProviderWorkLocations(draft.selectedProviderWorkLocations.filter((option) => (
           (PROVIDER_WORK_LOCATION_OPTIONS as readonly string[]).includes(option)
@@ -528,7 +545,7 @@ export function ProviderSignupForm() {
       // Incomplete / obsolete drafts return to services without losing text.
       const firstStepComplete = restoredServices.length > 0
         && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((fields["provider-email"] ?? "").trim());
-      if (firstStepComplete && (draft.step === 2 || draft.step === 3)) {
+      if (firstStepComplete && (draft.step === 2 || draft.step === 3 || draft.step === 4)) {
         const hasQuestions = hasProviderSignupQuestions(getProviderLegalRequirementFlags(
           restoredServices, SELECTED_PROVIDER_AREAS,
         ));
@@ -559,6 +576,8 @@ export function ProviderSignupForm() {
         selectedProviderWorkLocations,
         providerAssessment,
         fields: draftFields,
+        showOptionalCertificates,
+        optionalCertificates,
       } satisfies ProviderSignupDraft));
     } catch {
       // Storage being unavailable only disables autosave.
@@ -571,6 +590,8 @@ export function ProviderSignupForm() {
     selectedProviderWorkLocations,
     providerAssessment,
     draftFields,
+    showOptionalCertificates,
+    optionalCertificates,
   ]);
 
   // A provider level belongs to the exact service, not to the applicant, so one
@@ -616,18 +637,14 @@ export function ProviderSignupForm() {
     requiredDocumentsBySelection.flatMap((entry) => entry.documents.map((doc) => doc.code)),
   ).size;
   const showStep2 = showProofStep || hasVisibleLegalRequirements;
-  // Step 4 ("Sign and submit") is defined but not yet reachable: splitting it
-  // off unmounts step 3, which would drop every required field there from
-  // FormData and skip its native validation. Each one needs a hidden carrier
-  // and an explicit check first, the same way provider-email does.
-  const visibleSteps: SignupStep[] = showStep2 ? [1, 2, 3] : [1, 3];
+  // Details stay mounted during review, preserving FormData and validation.
+  const visibleSteps: SignupStep[] = showStep2 ? [1, 2, 3, 4] : [1, 3, 4];
   const stepPosition = Math.max(visibleSteps.indexOf(step), 0) + 1;
 
   function resetChallenge() {
     setApplicationChallengeId("");
     setApplicationVerificationCode("");
     setPendingApplicationPayload(null);
-    setConfirmingSubmit(false);
   }
 
   function toggleOptionalCertificates() {
@@ -727,6 +744,8 @@ export function ProviderSignupForm() {
   async function handleFinalSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (applicationRequest.current) return;
+    if (step === 1) { goToStep2(); return; }
+    if (step === 2) { goToStep3(); return; }
     if (hasVisibleLegalRequirements && !legalConfirmed) {
       resetChallenge();
       setApplicationError("");
@@ -823,7 +842,7 @@ export function ProviderSignupForm() {
         analyticsAttribution: { ...campaignAttribution(), variants: activeVariants() },
         // Promotional texts only. Reaching an applicant about their own
         // application is transactional and never depends on this.
-        smsMarketingConsent: values["provider-sms-marketing-consent"] === "yes",
+        smsMarketingConsent: false,
       });
       if (!result) return;
       // The applicant proved control of this email seconds ago; prefill the
@@ -837,7 +856,6 @@ export function ProviderSignupForm() {
       setApplicationChallengeId("");
       setApplicationVerificationCode("");
       setPendingApplicationPayload(null);
-      setConfirmingSubmit(false);
       setSelectedProviderServices([]);
       setSelectedProviderWorkLocations([]);
       setProviderAssessment(emptyProviderSelfAssessment);
@@ -847,14 +865,13 @@ export function ProviderSignupForm() {
       return;
     }
 
-    if (!confirmingSubmit) {
+    if (step === 3) {
+      setStep(4);
       setApplicationError("");
-      setConfirmingSubmit(true);
       return;
     }
 
     const result = await requestApplication("challenge", payload);
-    setConfirmingSubmit(false);
     if (result?.challengeId) {
       setPendingApplicationPayload(payload);
       setApplicationChallengeId(result.challengeId);
@@ -879,13 +896,13 @@ export function ProviderSignupForm() {
         <span>✓</span>
         <h3>{providerFormIsSpanish ? "¡Gracias! Recibimos su solicitud." : "Thanks — we've received your application."}</h3>
         <p>{providerFormIsSpanish
-          ? "Inicie sesión con el mismo correo para completar la lista de sus servicios y seguir la revisión en su panel. Le escribiremos cuando haya una actualización. Enviar la solicitud no activa servicios ni reservas."
-          : "Sign in with the same email to complete your service checklist and follow the review in your dashboard. We'll email you when there's an update. Submitting an application does not activate services or bookings."}</p>
+          ? "Su solicitud está guardada. Abra su panel para agregar documentos y seguir la revisión. Le enviaremos un código para iniciar sesión; no necesita crear una contraseña. Sus servicios estarán disponibles cuando se aprueben y abran las reservas."
+          : "Your application is saved. Open your dashboard to add documents and follow the review. We'll send a sign-in code; you don't need to create a password. Services become available after approval and when bookings open."}</p>
         <p><small>{providerFormIsSpanish
           ? "Si ya existía una solicitud para este correo, se conservó esa solicitud; los cambios se hacen después de iniciar sesión."
           : "If an application already existed for this email, that one was kept — changes happen after you sign in."}</small></p>
-        <Link className="button primary" href="/account?role=provider">
-          {providerFormIsSpanish ? "Continuar con la verificación" : "Continue provider verification"}
+        <Link className="button primary" href="/account?role=provider&mode=code">
+          {providerFormIsSpanish ? "Abrir mi panel" : "Open my dashboard"}
         </Link>
         <button type="button" onClick={() => setApplicationSent(false)}>
           {providerFormIsSpanish ? "Iniciar otra verificación" : "Start another verification"}
@@ -921,13 +938,20 @@ export function ProviderSignupForm() {
         // edits anything after requesting a code — the payload above is
         // recomputed from current field values, so a stale challenge would
         // otherwise verify code against an outdated application.
-        if ((event.target as HTMLElement).closest("[data-signup-step='3']")) {
+        if ((event.target as HTMLElement).closest("[data-signup-step='3'], [data-signup-step='4']")) {
           if (applicationChallengeId) {
             setChallengeResetNotice(providerFormIsSpanish
               ? "Cambió su solicitud, así que el código anterior ya no es válido. Envíe de nuevo para recibir un código nuevo."
               : "You changed your application, so the earlier code is no longer valid. Submit again to get a fresh code.");
           }
           resetChallenge();
+        }
+      }}
+      onInvalidCapture={(event) => {
+        if (step === 4 && (event.target as HTMLElement).closest("[data-provider-details]")) {
+          setStep(3);
+          resetChallenge();
+          requestAnimationFrame(() => (event.target as HTMLElement).focus());
         }
       }}
       onSubmit={handleFinalSubmit}
@@ -1080,10 +1104,10 @@ export function ProviderSignupForm() {
               <strong>
                 {providerFormIsSpanish
                   ? `Para los trabajos que eligió, necesitará ${requiredDocumentCount} ${
-                      requiredDocumentCount === 1 ? "documento" : "documentos únicos"
+                      requiredDocumentCount === 1 ? "documento" : "documentos"
                     }.`
                   : `For the jobs you picked, you'll need ${requiredDocumentCount} ${
-                      requiredDocumentCount === 1 ? "document" : "unique documents"
+                      requiredDocumentCount === 1 ? "document" : "documents"
                     }.`}
               </strong>
               <small>
@@ -1156,10 +1180,10 @@ export function ProviderSignupForm() {
                                 : ""}
                             </span>
                             {plain && (
-                              <small className="requirement-official-name">
-                                {providerFormIsSpanish ? "Nombre oficial: " : "Official name: "}
-                                {doc.label}
-                              </small>
+                              <details className="requirement-official-name">
+                                <summary>{providerFormIsSpanish ? "Nombre oficial del documento" : "Official document name"}</summary>
+                                <small lang="en">{doc.label}</small>
+                              </details>
                             )}
                           </span>
                         </li>
@@ -1429,9 +1453,10 @@ export function ProviderSignupForm() {
         </div>
       )}
 
-      {step === 3 && (
-        <div data-signup-step="3" ref={stepContentRef} tabIndex={-1}>
+      {(step === 3 || step === 4) && (
+        <div data-signup-step={step} ref={stepContentRef} tabIndex={-1}>
           <fieldset className="provider-submit-fields" disabled={applicationBusy} aria-label={providerFormIsSpanish ? "Datos de su solicitud" : "Application details"}>
+          <div hidden={step !== 3} data-provider-details>
           <h3>
             {providerFormIsSpanish ? "Usted y su negocio" : "You and your business"}
           </h3>
@@ -1545,14 +1570,6 @@ export function ProviderSignupForm() {
                 : PHONE_TRANSACTIONAL_PURPOSE_TEXT_EN}
             </small>
           </label>
-          <label className="provider-sms-consent">
-            <input name="provider-sms-marketing-consent" type="checkbox" value="yes" />
-            <span>
-              {providerFormIsSpanish
-                ? SMS_MARKETING_CONSENT_TEXT_ES
-                : SMS_MARKETING_CONSENT_TEXT_EN}
-            </span>
-          </label>
           {/*
             Everything above is about the person; everything below is about the
             business. Marking the seam is what makes this step read as two
@@ -1580,18 +1597,25 @@ export function ProviderSignupForm() {
               </small>
             )}
           </label>
+          {soloBusiness && <p className="hint">
+            {providerFormIsSpanish ? "Tipo: " : "Type: "}
+            {draftFields["business-entity-type"] && draftFields["business-entity-type"] !== "sole_proprietorship"
+              ? ({ limited_liability_company: "LLC", corporation: providerFormIsSpanish ? "Corporación" : "Corporation", partnership: providerFormIsSpanish ? "Sociedad" : "Partnership", other: providerFormIsSpanish ? "Otro" : "Other" }[draftFields["business-entity-type"]] ?? draftFields["business-entity-type"])
+              : (providerFormIsSpanish ? "Propietario único" : "Sole proprietor")}
+            {" · "}{draftFields["business-formation-state"] || "Maryland"}
+          </p>}
           <details
             className="business-details-disclosure"
             open={businessDetailsOpen || !soloBusiness}
             onToggle={(event) => setBusinessDetailsOpen(event.currentTarget.open)}
           >
             <summary>
-              <strong>{providerFormIsSpanish ? "Detalles del negocio" : "Business details"}</strong>
+              <strong>{providerFormIsSpanish ? "Tipo de negocio y estado" : "Business type and state"}</strong>
               {soloBusiness && (
                 <small>
                   {providerFormIsSpanish
-                    ? " — lo configuramos como negocio de una sola persona en Maryland. Ábralo solo si registró una LLC o corporación."
-                    : " — we've set this up as a one-person Maryland business. Only open this if you registered an LLC or corporation."}
+                    ? " — revise el tipo de negocio y el estado; cámbielos si hace falta."
+                    : " — check your business type and state; change them if needed."}
                 </small>
               )}
             </summary>
@@ -1625,8 +1649,8 @@ export function ProviderSignupForm() {
                 {soloBusiness && (
                   <small>
                     {providerFormIsSpanish
-                      ? "Si no registró nada, casi siempre es “Solo yo”. Cámbielo solo si creó una LLC o corporación."
-                      : "If you haven't registered anything, it's almost always “Just me.” Change it only if you set up an LLC or corporation."}
+                      ? "Elija el tipo que corresponda a su negocio, aunque trabaje por su cuenta."
+                      : "Choose the type that matches your business, even if you work alone."}
                   </small>
                 )}
               </label>
@@ -1696,7 +1720,9 @@ export function ProviderSignupForm() {
                   {providerFormIsSpanish ? "La insignia del perfil será" : "Profile badge"}
                 </span>
                 <strong className="provider-mode-badge">
-                  {providerModeForWorkLocations(selectedProviderWorkLocations)}
+                  {providerFormIsSpanish
+                    ? selectedProviderWorkLocations.length === 2 ? "A domicilio y en el negocio" : providerAcceptsCustomersAtBusiness ? "En el negocio" : "A domicilio"
+                    : providerModeForWorkLocations(selectedProviderWorkLocations)}
                 </strong>
               </div>
             )}
@@ -1728,6 +1754,8 @@ export function ProviderSignupForm() {
                 : "Outside the county? Request your area"}
             </Link>
           </div>
+          <details className="optional-cert-details">
+            <summary>{providerFormIsSpanish ? "Agregar certificados (opcional)" : "Add certificates (optional)"}</summary>
           <section className="optional-cert-section">
             <div className="optional-cert-optin">
               <div className="optional-cert-optin-copy">
@@ -1745,6 +1773,7 @@ export function ProviderSignupForm() {
               <button
                 type="button"
                 role="switch"
+                aria-label={providerFormIsSpanish ? "Agregar certificados opcionales" : "Add optional certificates"}
                 aria-checked={showOptionalCertificates}
                 className={`brand-switch${showOptionalCertificates ? " on" : ""}`}
                 onClick={toggleOptionalCertificates}
@@ -1828,7 +1857,33 @@ export function ProviderSignupForm() {
               </div>
             )}
           </section>
-          <fieldset className="area-fieldset">
+          </details>
+          <div className="form-nav">
+            <button type="button" className="button secondary" onClick={showStep2 ? () => setStep(2) : goToStep1}>
+              ← {providerFormIsSpanish ? "Regresar" : "Back"}
+            </button>
+            <button type="submit" className="button lime form-button">
+              {providerFormIsSpanish ? "Revisar mi solicitud" : "Review my application"} <span>→</span>
+            </button>
+          </div>
+          </div>
+          <div hidden={step !== 4}>
+          <div hidden={Boolean(applicationChallengeId)}>
+          <h3>{providerFormIsSpanish ? "Revise su solicitud" : "Review your application"}</h3>
+          <dl className="provider-review-summary">
+            <dt>{providerFormIsSpanish ? "Nombre" : "Name"}</dt>
+            <dd>{[draftFields["performing-person-first-name"], draftFields["performing-person-last-name"]].filter(Boolean).join(" ")}</dd>
+            <dt>{providerFormIsSpanish ? "Correo electrónico" : "Email"}</dt>
+            <dd>{draftFields["provider-email"]}</dd>
+            <dt>{providerFormIsSpanish ? "Servicios" : "Services"}</dt>
+            <dd>{joinServiceNames(selectedProviderServices.map(code => providerServicePlainLabel(code, SERVICES.find(service => service.code === code)?.label ?? code, providerFormIsSpanish)), providerFormIsSpanish)}</dd>
+            <dt>{providerFormIsSpanish ? "Ubicación" : "Location"}</dt>
+            <dd>{draftFields["business-municipality"]}</dd>
+          </dl>
+          <p className="hint">{providerFormIsSpanish
+            ? "Revise sus datos y los acuerdos. Después le enviaremos un código para confirmar su correo y enviar la solicitud."
+            : "Check your details and the agreements. Then we'll email you a code to confirm your email and submit the application."}</p>
+          <fieldset className="area-fieldset" disabled={step !== 4}>
             <legend>
               {providerFormIsSpanish
                 ? "Revise y confirme"
@@ -1873,23 +1928,7 @@ export function ProviderSignupForm() {
                   : "I confirm that I am at least 18 years old and authorized to submit this application."}
               </span>
             </label>
-            {/*
-              Stays English until its Spanish legal copy is reviewed. Unlike
-              the two acceptances below, this one is not hash-recorded, so
-              translating it would not corrupt any evidence record — that is
-              exactly why it looks safe to translate, and it is not. It is
-              still a legal acknowledgment, and what it means in Spanish is a
-              reviewed-copy decision rather than a string swap.
-            */}
-            {providerFormIsSpanish && (
-              <p className="hint">
-                Los acuerdos de abajo están en inglés. Abra los enlaces y léalos
-                antes de aceptar. Si necesita ayuda, escríbanos a{" "}
-                <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
-                Puede guardar su solicitud y volver después.
-              </p>
-            )}
-            <div data-no-interface-translation lang="en">
+            <div data-no-interface-translation lang={providerFormIsSpanish ? "es" : "en"}>
               <label className="policy-consent">
               <input
                 required
@@ -1898,51 +1937,33 @@ export function ProviderSignupForm() {
                 value="yes"
               />
               <span>
-                I understand that the provider business—not Tuveloz—is responsible for lawful
+                {providerFormIsSpanish ? PROVIDER_WORK_AUTHORIZATION_TEXT_ES : <>I understand that the provider business—not Tuveloz—is responsible for lawful
                 employment classification, work authorization, wages, payroll taxes, workers&apos;
                 compensation, supervision, and personnel records. An independent owner-operator
-                remains responsible for their own business and work authorization obligations.
+                remains responsible for their own business and work authorization obligations.</>}
               </span>
               </label>
-          {/*
-            DO NOT translate the two acceptance texts below, and do not add
-            them to the spanishText dictionary. The enclosing form wrapper is marked
-            data-manual-language, and this local wrapper is a second barrier
-            in case a future refactor moves the legal text outside that panel.
-
-            On submit, app/api/providers/route.ts records
-            providerAgreementEvidenceText() for every acceptance document, and
-            that evidence embeds `presentedText` — these exact English
-            constants — alongside a canonical body hash and release id.
-            Rendering Spanish here while recording the English would make the
-            immutable record assert the applicant saw text they never saw.
-
-            Translating them needs a reviewed Spanish policy release and a
-            presentedText that follows the displayed language, not a string
-            swap. Spanish drafts already exist in site-language.tsx if that
-            work gets picked up.
-          */}
               <label className="policy-consent">
                 <input required name="terms-bundle-accepted" type="checkbox" value="yes" />
                 <span>
-                  {PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
-                  Review the <a href="/terms">Terms</a>,{" "}
+                  {providerFormIsSpanish ? PROVIDER_TERMS_ACCEPTANCE_TEXT_ES : PROVIDER_TERMS_ACCEPTANCE_TEXT}{" "}
+                  {providerFormIsSpanish ? <>Consulte los <a href="/es/terms">Términos</a>, el <a href="/es/provider-agreement">Acuerdo del proveedor</a>, la <a href="/es/payments">Política de pagos</a>, la <a href="/es/marketplace-conduct">Política de conducta</a> y la <a href="/es/provisional-provider-policy">Política para proveedores provisionales</a>.</> : <>Review the <a href="/terms">Terms</a>,{" "}
                   <a href="/provider-agreement">Provider Agreement</a>,{" "}
                   <a href="/payments">Payment Policy</a>,{" "}
                   <a href="/marketplace-conduct">Conduct Policy</a>,{" "}
-                  <a href="/provisional-provider-policy">Provider Pathway Policy</a>, and{" "}
-                  <a href="/provider-safety-policy">Safety and Safe-Work Policy</a>.
+                  and <a href="/provisional-provider-policy">Provider Pathway Policy</a>.</>}
                 </span>
               </label>
               <label className="policy-consent">
                 <input required name="privacy-acknowledged" type="checkbox" value="yes" />
                 <span>
-                  {PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
-                  Review the <a href="/privacy">Privacy Policy</a>.
+                  {providerFormIsSpanish ? PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES : PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}{" "}
+                  {providerFormIsSpanish ? <>Consulte la <a href="/es/privacy">Política de privacidad</a>.</> : <>Review the <a href="/privacy">Privacy Policy</a>.</>}
                 </span>
               </label>
             </div>
           </fieldset>
+          </div>
           {applicationChallengeId ? (
             <section
               className="legal-requirement-note"
@@ -1990,8 +2011,8 @@ export function ProviderSignupForm() {
                 {applicationBusy
                   ? (providerFormIsSpanish ? "Verificando..." : "Verifying...")
                   : (providerFormIsSpanish
-                    ? "Verificar correo y continuar"
-                    : "Verify email and continue")}
+                    ? "Enviar mi solicitud"
+                    : "Submit my application")}
               </button>
               {/* One button to press. The two ways out stay available as plain
                   links so they cannot be mistaken for the thing to do next. */}
@@ -1999,48 +2020,28 @@ export function ProviderSignupForm() {
                 <button disabled={applicationBusy} onClick={resendProviderApplicationCode} type="button">
                   {providerFormIsSpanish ? "Enviar el código de nuevo" : "Send the code again"}
                 </button>
-                <button disabled={applicationBusy} onClick={resetChallenge} type="button">
-                  {/* TODO(es): "Regresar y editar" is a literal rendering of main's
-                      newer label; confirm against reviewed Spanish copy. */}
+                <button disabled={applicationBusy} onClick={() => { resetChallenge(); setStep(3); }} type="button">
                   {providerFormIsSpanish ? "Regresar y editar" : "Go back and edit"}
                 </button>
               </div>
             </section>
-          ) : confirmingSubmit ? (
-            <ConfirmAction
-              backLabel={providerFormIsSpanish ? "Regresar" : "Go back"}
-              busy={applicationBusy}
-              busyLabel={providerFormIsSpanish ? "Enviando…" : "Sending…"}
-              confirmLabel={providerFormIsSpanish ? "Sí, envíenme el código" : "Yes, send my code"}
-              confirmStyle="lime"
-              confirmType="submit"
-              message={providerFormIsSpanish
-                ? "Écheles un vistazo a los datos de arriba — ¿todo bien? Le enviaremos un código de un solo uso para confirmar que es usted. Esto inicia una solicitud nueva solo si aún no tiene una para este correo; si ya la tiene, puede actualizarla después de iniciar sesión."
-                : "Take a quick look above — all set? We'll email you a one-time code to confirm it's you. This starts a new application only if you don't already have one for this email; if you do, you can update it after signing in."}
-              onBack={() => setConfirmingSubmit(false)}
-              title={providerFormIsSpanish ? "¿Listo para enviarla?" : "Ready to send it in?"}
-            />
           ) : (
             <div className="form-nav">
-              <button type="button" className="button secondary" onClick={showStep2 ? () => setStep(2) : goToStep1}>
+              <button type="button" className="button secondary" onClick={() => { resetChallenge(); setStep(3); }}>
                 ← {providerFormIsSpanish ? "Regresar" : "Back"}
               </button>
               <button className="button lime form-button" type="submit" disabled={applicationBusy}>
                 {applicationBusy
                   ? (providerFormIsSpanish ? "Preparando…" : "Preparing…")
-                  : (providerFormIsSpanish ? "Enviar mi solicitud" : "Send my application")} <span>→</span>
+                  : (providerFormIsSpanish ? "Enviarme un código" : "Email me a code")} <span>→</span>
               </button>
             </div>
           )}
           {challengeResetNotice && !applicationChallengeId && (
             <p className="hint" role="status">{challengeResetNotice}</p>
           )}
+          </div>
           {applicationError && <p className="form-error" role="alert">{applicationError}</p>}
-          <small>
-            {providerFormIsSpanish
-              ? "Si la ley exige una licencia o un registro para el servicio y la ubicación seleccionados, Tuveloz debe recibir y verificar la prueba antes de aprobarlos. Si no corresponde una licencia gubernamental, Tuveloz no la solicitará por ese motivo; aún pueden exigirse seguros, competencia, documentos comerciales u otras pruebas del servicio."
-              : "If the selected service and location legally require a license or registration, Tuveloz must receive and verify proof before approval. If no government license applies, Tuveloz will not request one for that reason; insurance, competency, business, or other service evidence may still be required."}
-          </small>
           </fieldset>
         </div>
       )}

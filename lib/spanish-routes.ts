@@ -23,6 +23,12 @@ export const SPANISH_READY_PATHS = [
   "/ai",
   "/faq",
   "/safety",
+  "/terms",
+  "/provider-agreement",
+  "/payments",
+  "/marketplace-conduct",
+  "/privacy",
+  "/provisional-provider-policy",
 ];
 
 /** The Spanish prefix. One place, so the Worker and the sitemap agree. */

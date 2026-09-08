@@ -51,8 +51,7 @@ import { ELIGIBILITY_RULES_VERSION } from "../../../../lib/provider-eligibility-
 import { PLATFORM_SERVICE_ACTIVATION_RULES_VERSION } from "../../../../lib/platform-service-activation";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
-  providerAgreementEvidenceText,
-  sha256Text,
+  providerAgreementEvidenceCandidates,
 } from "../../../../lib/provider-policy-acceptance";
 import {
   EVIDENCE_AUTHENTICITY_METHODS,
@@ -288,14 +287,12 @@ function activationIsLive(row: ActivationRow | undefined, through = Date.now()) 
 
 async function currentAgreements(rows: readonly AgreementRow[]) {
   return Promise.all(PROVIDER_ACCEPTANCE_DOCUMENTS.map(async (document) => {
-    const expectedText = providerAgreementEvidenceText(document);
-    const expectedHash = expectedText ? await sha256Text(expectedText) : "";
+    const presentations = await providerAgreementEvidenceCandidates(document);
     const acceptance = rows.find((row) => (
       row.agreementKey === document.key
       && row.agreementVersion === document.version
       && Boolean(row.acceptedAt)
-      && row.agreementText === expectedText
-      && row.agreementHash === expectedHash
+      && presentations.some(({ text, hash }) => row.agreementText === text && row.agreementHash === hash)
     ));
     return {
       key: document.key,

@@ -1,6 +1,7 @@
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "Payment, Cancellation, and Refund Policy",
   description:
     "An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections. Live payments are not yet enabled.",
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
  * add metadata, would invalidate the release. Same arrangement as
  * app/privacy and app/terms.
  */
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
+
 export default function PaymentsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

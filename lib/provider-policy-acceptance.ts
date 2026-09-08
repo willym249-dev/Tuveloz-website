@@ -1,3 +1,6 @@
+import spanishReleases from "../config/policy-spanish-releases.json";
+import { PROVIDER_TERMS_ACCEPTANCE_TEXT_ES, PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES } from "./provider-policy-spanish-text";
+
 import {
   MARKETPLACE_CONDUCT_VERSION,
   PAYMENT_POLICY_VERSION,
@@ -92,6 +95,7 @@ export type ProviderAgreementKey = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number
 type ProviderAcceptanceDocument = (typeof PROVIDER_ACCEPTANCE_DOCUMENTS)[number];
 
 type ProviderAgreementEvidenceOptions = {
+  language?: string;
   purpose?: ProviderAcceptancePurpose;
   acceptanceEvidenceId?: string;
   asOf?: Date;
@@ -138,6 +142,15 @@ export function providerAgreementEvidenceText(
     ? options.acceptanceEvidenceId?.trim() || crypto.randomUUID()
     : "";
 
+  const spanish = options.language === "es" || options.language === "Spanish";
+  const translation = spanishReleases[document.key];
+  if (spanish && (translation.englishBodyHash !== document.canonicalBodyHash
+    || !SHA256_HEX.test(translation.translationBodyHash)
+    || !SHA256_HEX.test(translation.acceptanceTextHash)
+    || !translation.releaseId || Date.parse(translation.effectiveAt) > (options.asOf ?? new Date()).getTime()
+    || !Number.isFinite(Date.parse(translation.effectiveAt)))) {
+    throw new Error("Spanish policy presentation is not current.");
+  }
   return JSON.stringify({
     schemaVersion: PROVIDER_ACCEPTANCE_EVIDENCE_SCHEMA_VERSION,
     title: document.title,
@@ -145,7 +158,9 @@ export function providerAgreementEvidenceText(
     href: document.href,
     providerPolicyVersion: POLICY_VERSION,
     acceptanceControl: document.control,
-    presentedText: document.presentedText,
+    presentedText: spanish
+      ? (document.control === "terms-bundle" ? PROVIDER_TERMS_ACCEPTANCE_TEXT_ES : PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES)
+      : document.presentedText,
     acceptancePurpose,
     acceptanceEvidenceId,
     release: {
@@ -155,6 +170,12 @@ export function providerAgreementEvidenceText(
       reviewBodyHash: document.reviewBodyHash,
       canonicalBodyHash: document.canonicalBodyHash,
     },
+    // Omit for English to preserve existing immutable evidence byte for byte.
+    ...(spanish ? { presentation: {
+      language: "es", href: `/es${document.href}`, releaseId: translation.releaseId,
+      effectiveAt: translation.effectiveAt, englishBodyHash: translation.englishBodyHash,
+      translationBodyHash: translation.translationBodyHash, acceptanceTextHash: translation.acceptanceTextHash,
+    } } : {}),
   });
 }
 
@@ -163,4 +184,18 @@ export async function sha256Text(value: string) {
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+/** Only exact released presentations can satisfy an acceptance check. */
+export async function providerAgreementEvidenceCandidates(document: ProviderAcceptanceDocument) {
+  if (!providerAcceptanceDocumentIsReleasedForEligibility(document)) return [];
+  const languages = ["en"];
+  const release = spanishReleases[document.key];
+  if (release.englishBodyHash === document.canonicalBodyHash
+    && Number.isFinite(Date.parse(release.effectiveAt))
+    && Date.parse(release.effectiveAt) <= Date.now()) languages.push("es");
+  return Promise.all(languages.map(async (language) => {
+    const text = providerAgreementEvidenceText(document, { language });
+    return { text, hash: await sha256Text(text) };
+  }));
 }

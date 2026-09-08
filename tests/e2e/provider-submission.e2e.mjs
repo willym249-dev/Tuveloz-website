@@ -52,10 +52,12 @@ const sendAgain = page => page.getByRole("button", { name: /^(Send the code agai
 const address = page => page.locator('[name="business-service-address"]');
 const options = page => page.locator("datalist option").evaluateAll(nodes => nodes.map(node => node.value));
 async function confirm(page) {
-  // Native Enter submits the form without depending on smooth scroll timing.
-  await page.locator('input[name="performing-person-first-name"]').press("Enter");
-  await page.locator(".action-confirm").waitFor();
-  await page.locator(".action-confirm button[type=submit]").press("Enter");
+  if (await page.locator('[data-signup-step="3"]').count()) {
+    await page.getByRole("button", { name: /^(Review my application|Revisar mi solicitud)\s*→$/ }).press("Enter");
+  }
+  await page.locator('[data-signup-step="4"]').waitFor();
+  for (const input of await page.locator('input[type="checkbox"][required]').all()) await input.check();
+  await page.getByRole("button", { name: /^(Email me a code|Enviarme un código)\s*→$/ }).press("Enter");
 }
 async function savedDetails(page) {
   assert.equal(await page.locator('input[name="performing-person-first-name"]').inputValue(), "Example");
@@ -102,7 +104,6 @@ try {
             await page.goto(origin + (language === "es" ? "/es" : "") + "/join");
             await page.locator('[data-signup-step="3"]').waitFor();
             await page.waitForFunction(() => document.activeElement?.matches('[data-signup-step="3"]'));
-            for (const input of await page.locator('input[type="checkbox"][required]').all()) await input.check();
             await action(page, queues, requests);
             assert.deepEqual(errors, [], "no browser or React crashes");
             assert.deepEqual(outside, [], "no external or unexpected requests");
@@ -167,7 +168,7 @@ try {
             queues[stage].push(pending);
             if (stage === "challenge") await confirm(page);
             else await code(page).press("Enter");
-            await submit(page).filter({ hasText: /Sending|Enviando|Verifying|Verificando/ }).waitFor();
+            await submit(page).filter({ hasText: /Sending|Enviando|Verifying|Verificando|Preparing|Preparando/ }).waitFor();
             const detailsLocked = await page.locator('[name="performing-person-first-name"]').isDisabled();
             await page.clock.fastForward(46000);
             await errorShown(page, language);

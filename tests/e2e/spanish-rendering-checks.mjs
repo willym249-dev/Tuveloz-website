@@ -83,11 +83,12 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.getByRole("link", { name: "Vea cómo funciona →", exact: true }).click();
     await page.waitForURL((url) => url.pathname === "/es/how-it-works");
     await waitForLanguage("es");
-    await page.locator('a[href="/terms"]').click();
-    await page.waitForURL((url) => url.pathname === "/terms");
-    await page.waitForFunction(() => document.documentElement.lang === "en"
-      && document.querySelector(".tuveloz-launch-pause-heading strong")?.textContent?.startsWith("Preparing to launch"));
-    assert.equal(await page.locator("h1").textContent(), "Terms of Use");
+    await page.locator('a[href="/es/terms"]').click();
+    await page.waitForURL((url) => url.pathname === "/es/terms");
+    await waitForLanguage("es");
+    assert.equal(await page.locator("h1").textContent(), "Términos de uso");
+    await page.goto(`${origin}/customer-agreement`, { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => document.documentElement.lang === "en");
     assert.equal(await page.locator("[data-language-control]").count(), 0);
 
     // Changing language must keep the same checked service and entered email.
@@ -129,7 +130,7 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.waitForFunction(() => document.querySelector('input[name="provider-email"]')?.value === "e2e-language@tuveloz.invalid");
     assert.equal(await service.isChecked(), true);
     assert.deepEqual(errors, [], "Spanish and English navigation must not produce browser errors");
-    log("PASS — language navigation, English legal layout, form forward/back steps and saved draft survive switching");
+    log("PASS — language navigation, language-specific policy layout, form forward/back steps and saved draft survive switching");
 
     // Changing to photo-only work removes unrelated questions and paperwork.
     // Keep all writes inside the account fixture; this form is never submitted.
@@ -146,7 +147,7 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.getByRole("button", { name: "Continue →", exact: true }).click();
     await page.locator('[data-signup-step="3"]').waitFor();
     assert.equal(await page.locator('.provider-email-readback strong').textContent(), "e2e-language@tuveloz.invalid");
-    await page.getByRole("button", { name: "Send my application →", exact: true }).click();
+    await page.getByRole("button", { name: "Review my application →", exact: true }).click();
     assert.equal(await page.locator('[data-signup-step="3"]').count(), 1);
     assert.equal(await page.locator('input[name="performing-person-first-name"]')
       .evaluate((input) => input.validity.valueMissing), true);
@@ -156,7 +157,7 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.locator('[data-signup-step="1"]').waitFor();
     await photo.uncheck();
     await page.locator('.provider-service-groups .service-group > summary')
-      .filter({ hasText: "Everyday repair jobs" }).click();
+      .filter({ hasText: "Repairs and car washing" }).click();
     await page.locator('input[name="provider-service"][value="battery_replacement"]').check();
     await page.locator('.provider-service-groups .service-group > summary')
       .filter({ hasText: "Special jobs" }).click();

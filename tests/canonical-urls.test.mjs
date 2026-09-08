@@ -82,7 +82,7 @@ test("released policy pages keep metadata out of the hashed page file", async ()
     );
     assert.match(
       await read(release.sourceFile.replace(/page\.tsx$/, "layout.tsx")),
-      /export const metadata: Metadata = \{/,
+      /export const metadata: Metadata = \{|return requestPageMetadata\(englishMetadata\)/,
       `${key} has no metadata layout beside its pinned page`,
     );
   }

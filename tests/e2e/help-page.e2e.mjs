@@ -207,7 +207,7 @@ try {
           await submit(page, question);
           await answers(page).waitFor();
           assert.equal(await page.locator('.ai-sources a').count(), 1);
-          assert.equal(await page.locator('.ai-sources a').getAttribute('href'), '/provider-agreement');
+          assert.equal(await page.locator('.ai-sources a').getAttribute('href'), spanish ? '/es/provider-agreement' : '/provider-agreement');
           assert.equal(await page.locator('.ai-sources a').textContent(), spanish ? 'el Acuerdo del proveedor' : 'Provider Agreement');
         });
         await run("unexpected-source-shape", [json(200, { reply, mode: "policy-guide", sources: { length: 1 } })], async page => {

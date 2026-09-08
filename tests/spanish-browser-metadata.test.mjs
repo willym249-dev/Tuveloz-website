@@ -51,8 +51,8 @@ test("the root metadata preserves its title template and follows the requested S
 });
 
 test("metadata without a reviewed Spanish route is returned unchanged", () => {
-  const source = { title: "Terms of Use", alternates: { canonical: "/terms" } };
-  for (const path of ["", "/terms", "/es/terms", "/missing"]) {
+  const source = { title: "Terms of Use", alternates: { canonical: "/customer-agreement" } };
+  for (const path of ["", "/customer-agreement", "/es/customer-agreement", "/missing"]) {
     assert.equal(spanishPageMetadata(source, path), source);
   }
 });
@@ -84,7 +84,7 @@ test("rendered Spanish provider metadata recovers from English hydration values"
 });
 
 test("English, legal and unreviewed URLs do not acquire Spanish metadata", () => {
-  for (const path of ["/join", "/terms", "/es/terms", "/es/missing"]) {
+  for (const path of ["/join", "/customer-agreement", "/es/customer-agreement", "/es/missing"]) {
     const page = fixture();
     synchronizeSpanishMetadata(page.document, path);
     assert.equal(page.writes(), 0, path);

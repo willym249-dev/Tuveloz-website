@@ -1,0 +1,50 @@
+{
+  "terms": {
+    "releaseId": "terms-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/terms.ts",
+    "englishBodyHash": "33a963eb532c7d2bb92f4adb6eb31fa41dcf6de4a2a32df5416428cbc89fd81b",
+    "translationBodyHash": "3fb044783cd03f9e02ebeade2576e03e8496672ab02e642db8eab062053bdffe",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  },
+  "provider_agreement": {
+    "releaseId": "provider-agreement-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/provider-agreement.ts",
+    "englishBodyHash": "210925bba9be151a251f7f08f66e188ae2e5262f08b0c39830cd9be7d902553f",
+    "translationBodyHash": "dee4490bf903d8fd51cb2bbda33e484fc2a59f97b69a95317db3f06af6da88e7",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  },
+  "payment_policy": {
+    "releaseId": "payments-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/payments.ts",
+    "englishBodyHash": "75b70b949b8517897d5e2e23091d6fa2f41128a49a31b436210bd36a4c42b627",
+    "translationBodyHash": "8467cc2f832d0b7cae47b617ba5700ff23aa8299563a1fe8e9e2c23428618260",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  },
+  "marketplace_conduct": {
+    "releaseId": "marketplace-conduct-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/marketplace-conduct.ts",
+    "englishBodyHash": "d088668c6110689594a81951eeeaf60f9716fc6719d870a7cea1e5ca8cbd7c7e",
+    "translationBodyHash": "59af332ba38f99bc3139f0f400bd68544f520dcdbd529e6a983671fa7a9d3d5f",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  },
+  "privacy": {
+    "releaseId": "privacy-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/privacy.ts",
+    "englishBodyHash": "17d10664958ca8666a8285e3b05c26a31209ad87fbf7a3b29011ab60b03ad6e7",
+    "translationBodyHash": "6bdce795c0733adce09edd2211bfeeb8c609fd8c47400feac479bbbde6b5134b",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  },
+  "provisional_provider_policy": {
+    "releaseId": "provisional-provider-policy-es-2026-09-07",
+    "effectiveAt": "2026-09-07T00:00:00.000Z",
+    "sourceFile": "lib/policy-spanish/provisional-provider-policy.ts",
+    "englishBodyHash": "cd02b35f5370e54745bb9d51ad9169f359dbb6c4ae8a1cd9ad6bbd3953ff695b",
+    "translationBodyHash": "867fdd5ff04872792decd2f66c7363dca99381b05d985569e51d659009f5ff21",
+    "acceptanceTextHash": "88dd3e5cdc1c61c98861e132e5b11e3cf8ebbd3e4d563acda455dd368c405a42"
+  }
+}
