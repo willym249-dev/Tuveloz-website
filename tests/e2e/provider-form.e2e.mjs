@@ -272,6 +272,10 @@ try {
           const sent = challenges.at(-1);
           for (const key of ["rulesReviewed", "providerAttestation", "legalResponsibility", "adultAcknowledged", "termsBundleAccepted", "privacyAcknowledged"]) assert.equal(sent[key], true, `fresh ${key} reaches the receiver`);
           assert.equal(sent.preferredLanguage, language === "es" ? "Spanish" : "English");
+          const presented = JSON.parse(sent.policyPresentation);
+          assert.equal(presented.language, language);
+          assert.equal(presented.documents.length, 6);
+          assert.ok(presented.termsText.startsWith(language === "es" ? "Tengo al menos" : "I am at least"));
           const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), draftKey);
           assert.equal(Object.hasOwn(saved, "legalConfirmed"), false);
           assert.equal(Object.hasOwn(saved, "applicationVerificationCode"), false);

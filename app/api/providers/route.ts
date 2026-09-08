@@ -184,7 +184,7 @@ export async function POST(request: Request) {
     const submissionEvidenceId = crypto.randomUUID();
     const acceptedDocumentManifest = await providerApplicationFinalDocumentManifest(
       verified.challenge.id,
-      application.preferredLanguage,
+      application.agreementLanguage,
     );
     const applicationMetadata = {
       ...application.providerSelfAssessment,
@@ -305,7 +305,7 @@ export async function POST(request: Request) {
     for (const document of PROVIDER_ACCEPTANCE_DOCUMENTS) {
       const agreementText = providerAgreementEvidenceText(document, {
         acceptanceEvidenceId: verified.challenge.id,
-        language: application.preferredLanguage,
+        language: application.agreementLanguage,
       });
       const documentBinding = acceptedDocumentManifest.find(
         (entry) => entry.key === document.key,

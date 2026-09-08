@@ -38,6 +38,7 @@ import {
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
+  providerPolicyPresentation,
 } from "../../lib/provider-policy-acceptance";
 import { PROVIDER_TERMS_ACCEPTANCE_TEXT_ES, PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES, PROVIDER_WORK_AUTHORIZATION_TEXT_ES } from "../../lib/provider-policy-spanish-text";
 import { campaignAttribution, track } from "../../lib/analytics";
@@ -790,6 +791,7 @@ export function ProviderSignupForm() {
       email: values["provider-email"],
       phone: values["provider-phone"],
       preferredLanguage: providerFormIsSpanish ? "Spanish" : "English",
+      policyPresentation: providerPolicyPresentation(providerFormIsSpanish ? "es" : "en"),
       services: selectedProviderServices,
       serviceCodes: selectedProviderServices,
       applicationPathway: PROVIDER_PATHWAY,

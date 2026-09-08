@@ -13,6 +13,7 @@ import { cleanOptionalCertificates } from "./optional-certificates";
 import {
   PROVIDER_ACCEPTANCE_DOCUMENTS,
   providerAgreementEvidenceText,
+  providerPolicyPresentationLanguage,
   sha256Text,
 } from "./provider-policy-acceptance";
 import {
@@ -173,6 +174,13 @@ export function providerApplicationRequestIp(request: Request) {
 }
 
 export function normalizeProviderApplicationPayload(body: Record<string, unknown>) {
+  const agreementLanguage = providerPolicyPresentationLanguage(body.policyPresentation);
+  if (!agreementLanguage) {
+    throw new ProviderApplicationValidationError(
+      "The application agreements have changed. Refresh this page, review the agreements, and request a new code. Your saved details will stay on this device.",
+      403,
+    );
+  }
   const name = clean(body.name, 120);
   const email = clean(body.email, 180).toLowerCase();
   // Phone is always optional: providers are independent contractors, and only
@@ -340,6 +348,8 @@ export function normalizeProviderApplicationPayload(body: Record<string, unknown
     email,
     phone,
     preferredLanguage,
+    agreementLanguage,
+    policyPresentation: body.policyPresentation as string,
     applicationPathway,
     providerLevel,
     serviceLevels,
@@ -454,7 +464,7 @@ export async function providerApplicationFinalDocumentManifest(challengeId: stri
 export async function providerApplicationPayloadHash(
   application: NormalizedProviderApplication,
 ) {
-  const documents = await providerApplicationDocumentBaseManifest(application.preferredLanguage);
+  const documents = await providerApplicationDocumentBaseManifest(application.agreementLanguage);
   return providerApplicationPayloadHashWithSecret(
     application,
     documents,
