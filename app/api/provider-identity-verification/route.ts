@@ -10,7 +10,8 @@ import {
 import { getAccountSession, providerApplicationFor } from "../../../lib/account-auth";
 import { identityClaimSessionHash } from "../../../lib/identity-claim-hash";
 import {
-  IDENTITY_VERIFICATION_CONSENT_VERSION,
+  identityConsentCopy,
+  identityConsentPresentationLanguage,
   immutablePerformingPersonName,
 } from "../../../lib/identity-verification-policy";
 import {
@@ -288,6 +289,7 @@ async function createAttempt(
   personId: string,
   evidenceId: string,
   attempts: Array<typeof providerIdentityVerificationSessions.$inferSelect>,
+  presentationLanguage: "en" | "es",
 ) {
   const db = getDb();
   const recentAttempts = attempts.filter((attempt) => {
@@ -317,7 +319,7 @@ async function createAttempt(
     personNameSourceType: "application_evidence",
     personNameSourceId: evidenceId,
     accountSessionHash,
-    certificationVersion: IDENTITY_VERIFICATION_CONSENT_VERSION,
+    certificationVersion: identityConsentCopy(presentationLanguage).version,
     attemptNumber,
     stripeStatus: "creating",
     decisionStatus: "pending",
@@ -411,6 +413,10 @@ export async function POST(request: Request) {
   }
   try {
     const body = await readLimitedJsonObject(request, REQUEST_LIMIT_BYTES);
+    const presentationLanguage = identityConsentPresentationLanguage(body.consentPresentation);
+    if (!presentationLanguage) {
+      return json({ error: "The identity consent has changed. Refresh the page and review it again before continuing." }, { status: 409 });
+    }
     if (
       body.identityConsentAcknowledged !== true
       || body.adultVerificationAcknowledged !== true
@@ -555,7 +561,8 @@ export async function POST(request: Request) {
           metadata: {
             priorIdentityProvider: identityProvider,
             priorAgeProvider: ageProvider,
-            consentVersion: IDENTITY_VERIFICATION_CONSENT_VERSION,
+            consentVersion: identityConsentCopy(presentationLanguage).version,
+            presentationLanguage,
           },
         });
       } catch {
@@ -623,7 +630,7 @@ export async function POST(request: Request) {
         eq(providerIdentityVerificationSessions.personId, personId),
       )).orderBy(desc(providerIdentityVerificationSessions.attemptNumber));
     }
-    return createAttempt(request, account, personId, evidence.id, attempts);
+    return createAttempt(request, account, personId, evidence.id, attempts, presentationLanguage);
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) return json({ error: error.message }, { status: 413 });
     if (error instanceof InvalidJsonBodyError) return json({ error: error.message }, { status: 400 });

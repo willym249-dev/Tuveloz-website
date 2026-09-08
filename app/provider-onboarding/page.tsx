@@ -3,17 +3,18 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  IDENTITY_ADULT_STATUS_CONSENT_TEXT,
-  IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT,
-  IDENTITY_SAME_PERSON_CERTIFICATION_TEXT,
+  identityConsentCopy,
+  identityConsentPresentation,
 } from "../../lib/identity-verification-policy";
 import {
   PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT,
   PROVIDER_TERMS_ACCEPTANCE_TEXT,
+  providerPolicyPresentation,
 } from "../../lib/provider-policy-acceptance";
+import { PROVIDER_TERMS_ACCEPTANCE_TEXT_ES, PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES } from "../../lib/provider-policy-spanish-text";
 import { BrandMark } from "../components/tuveloz-icons";
 import { EvidenceUpload } from "../components/provider-evidence-upload";
-import { spanishInterfaceTree, translateInterfaceValue } from "../../lib/spanish-react";
+import { spanishInterfaceTree } from "../../lib/spanish-react";
 
 type EvidenceSubmission = {
   id: string;
@@ -322,6 +323,19 @@ export default function ProviderOnboardingPage() {
   const [agreementBusy, setAgreementBusy] = useState(false);
   const [identityBusy, setIdentityBusy] = useState(false);
   const identityPollCount = useRef(0);
+  const [languageOverride, setLanguageOverride] = useState<"en" | "es" | null>(null);
+  const language = languageOverride ?? (data?.provider.preferredLanguage === "Spanish" ? "es" : "en");
+  const preferredLanguage = language === "es" ? "Spanish" : "English";
+  const identityCopy = identityConsentCopy(language);
+  const identityForm = useRef<HTMLFormElement>(null);
+  const agreementForm = useRef<HTMLFormElement>(null);
+  function switchLanguage() {
+    setLanguageOverride(language === "es" ? "en" : "es");
+    // Keep typed names and documents; require consent to the newly displayed text.
+    for (const form of [identityForm.current, agreementForm.current]) {
+      form?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(input => { input.checked = false; });
+    }
+  }
 
   const load = useCallback(async () => {
     const response = await fetch("/api/provider-onboarding", { cache: "no-store" });
@@ -386,6 +400,7 @@ export default function ProviderOnboardingPage() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          consentPresentation: identityConsentPresentation(language),
           identityConsentAcknowledged: values.get("identityConsentAcknowledged") === "yes",
           adultVerificationAcknowledged: values.get("adultVerificationAcknowledged") === "yes",
           samePersonCertificationAcknowledged:
@@ -435,6 +450,7 @@ export default function ProviderOnboardingPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "accept-current-agreements",
+          policyPresentation: providerPolicyPresentation(language),
           signerName: values.signerName,
           signerTitle: values.signerTitle,
           termsBundleAccepted: values.termsBundleAccepted === "yes",
@@ -466,11 +482,17 @@ export default function ProviderOnboardingPage() {
     )))
     : [];
 
-  return (
-    <main className="account-shell">
+  const content = (
+    <main className="account-shell provider-onboarding-shell" lang={language}>
       <header className="account-header">
         <Link className="brand" href="/" prefetch={false}><BrandMark /><span>Tuveloz</span></Link>
-        <Link className="account-home-link" href="/account?role=provider" prefetch={false}>Provider account</Link>
+        <button className="site-language-button" data-language-control="true" type="button"
+          lang={language === "es" ? "en" : "es"}
+          aria-label={language === "es" ? "Read in English" : "Leer en español"}
+          disabled={agreementBusy || identityBusy}
+          onClick={switchLanguage}
+        >{language === "es" ? "English" : "Español"}</button>
+        <Link className="account-home-link" href="/account?role=provider" prefetch={false} aria-label="Provider account">My account</Link>
       </header>
       <section className="account-main">
         <div className="account-welcome">
@@ -492,7 +514,7 @@ export default function ProviderOnboardingPage() {
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
         {notice && <p className="portal-success" role="status">
-          {data?.provider.preferredLanguage === "Spanish" ? translateInterfaceValue(notice) : notice}
+          {notice}
         </p>}
         {!data && !error && <p className="admin-note">Loading your onboarding checklist…</p>}
         {data && (
@@ -504,11 +526,11 @@ export default function ProviderOnboardingPage() {
               </div>
               <p className="form-error">{data.policy.notice}</p>
               <dl>
-                <div><dt>Applicant</dt><dd>{data.provider.name} · {data.provider.email}</dd></div>
+                <div><dt>Applicant</dt><dd data-no-interface-translation>{data.provider.name} · {data.provider.email}</dd></div>
                 <div><dt>Pathway</dt><dd>{data.pathway?.label || "Not recorded"}</dd></div>
                 <div><dt>Level</dt><dd>{data.pathway?.providerLevelLabel || "Not recorded"}</dd></div>
-                <div><dt>Application</dt><dd>{data.provider.applicationStatus}</dd></div>
-                <div><dt>Evidence review</dt><dd>{data.provider.verificationStatus}</dd></div>
+                <div><dt>Application</dt><dd>{readableStatus(data.provider.applicationStatus)}</dd></div>
+                <div><dt>Evidence review</dt><dd>{readableStatus(data.provider.verificationStatus)}</dd></div>
               </dl>
               <p>
                 ✓ means a listed requirement was accepted. ✕ means the service cannot be used for a
@@ -557,10 +579,7 @@ export default function ProviderOnboardingPage() {
               )}
               {data.identityVerification.status === "blocked" && (
                 <p className="form-error">
-                  Automated verification is blocked for manual review
-                  {data.identityVerification.failureCode
-                    ? ` (${readableStatus(data.identityVerification.failureCode)})`
-                    : ""}. No service or job access was granted.
+                  Automated verification is blocked for manual review. No service or job access was granted.
                 </p>
               )}
               {data.identityVerification.status === "expired" && (
@@ -572,9 +591,10 @@ export default function ProviderOnboardingPage() {
               )}
               {data.identityVerification.complete ? (
                 <p className="portal-success" role="status">
-                  {data.identityVerification.method === "manual" ? "External manual" : "Stripe"} identity
-                  and adult-status verification is current. Every business,
-                  credential, insurance, exact-service, agreement, and launch gate still applies.
+                  {data.identityVerification.method === "manual"
+                    ? "Your external manual identity and adult-status verification is current."
+                    : "Your Stripe identity and adult-status verification is current."}{" "}
+                  Every business, credential, insurance, exact-service, agreement, and launch requirement still applies.
                 </p>
               ) : data.identityVerification.ownerOperatorEligible
                 && !data.identityVerification.manualReattestationRequired ? (
@@ -594,7 +614,7 @@ export default function ProviderOnboardingPage() {
                       <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>. The alternative may
                       take longer, and service/job access stays blocked while it is reviewed.
                     </p>
-                    <form onSubmit={startIdentityVerification}>
+                    <form ref={identityForm} onSubmit={startIdentityVerification}>
                       <label className="policy-consent">
                         <input
                           name="identityConsentAcknowledged"
@@ -602,7 +622,7 @@ export default function ProviderOnboardingPage() {
                           type="checkbox"
                           value="yes"
                         />
-                        <span>{IDENTITY_DOCUMENT_SELFIE_CONSENT_TEXT}</span>
+                        <span data-manual-language>{identityCopy.document}</span>
                       </label>
                       {data.identityVerification.expiredManualVerificationRequiresReplacement && (
                         <label className="policy-consent">
@@ -612,11 +632,7 @@ export default function ProviderOnboardingPage() {
                             type="checkbox"
                             value="yes"
                           />
-                          <span>
-                            I understand my prior external identity and adult-status verification
-                            has expired. I authorize TUVELOZ to revoke that expired record and start
-                            a new Stripe government-ID, selfie, and biometric-comparison review.
-                          </span>
+                          <span data-manual-language>{identityCopy.replacement}</span>
                         </label>
                       )}
                       <label className="policy-consent">
@@ -626,7 +642,7 @@ export default function ProviderOnboardingPage() {
                           type="checkbox"
                           value="yes"
                         />
-                        <span>{IDENTITY_ADULT_STATUS_CONSENT_TEXT}</span>
+                        <span data-manual-language>{identityCopy.adult}</span>
                       </label>
                       <label className="policy-consent">
                         <input
@@ -635,7 +651,7 @@ export default function ProviderOnboardingPage() {
                           type="checkbox"
                           value="yes"
                         />
-                        <span>{IDENTITY_SAME_PERSON_CERTIFICATION_TEXT}</span>
+                        <span data-manual-language>{identityCopy.samePerson}</span>
                       </label>
                       <button
                         className="button primary"
@@ -703,7 +719,7 @@ export default function ProviderOnboardingPage() {
                                   {requirement.submission.reminderLabel}.
                                 </p>
                                 {requirement.submission.reviewNotes && (
-                                  <p>Review note: {requirement.submission.reviewNotes}</p>
+                                  <p>Review note: <span data-no-interface-translation>{requirement.submission.reviewNotes}</span></p>
                                 )}
                                 {requirement.submission.downloadAllowed ? (
                                   <p>
@@ -722,7 +738,7 @@ export default function ProviderOnboardingPage() {
                                   .map((appeal) => (
                                     <p key={appeal.id}>
                                       Appeal {readableStatus(appeal.status)} · submitted {appeal.submittedAt}.
-                                      {appeal.resolutionNotes ? ` Response: ${appeal.resolutionNotes}` : ""}
+                                      {appeal.resolutionNotes && <> Response: <span data-no-interface-translation>{appeal.resolutionNotes}</span></>}
                                     </p>
                                   ))}
                                 {["needs_correction", "rejected"].includes(requirement.submission.status)
@@ -732,7 +748,7 @@ export default function ProviderOnboardingPage() {
                                   )) && (
                                     <EvidenceAppealForm
                                       evidenceId={requirement.submission.id}
-                                      preferredLanguage={data.provider.preferredLanguage}
+                                      preferredLanguage={preferredLanguage}
                                       onSubmitted={refreshAfterSubmission}
                                     />
                                   )}
@@ -740,7 +756,8 @@ export default function ProviderOnboardingPage() {
                             )}
                             {requirement.uploadAllowed ? (
                               <EvidenceUpload
-                                preferredLanguage={data.provider.preferredLanguage}
+                                interfaceLanguage={language}
+                                preferredLanguage={preferredLanguage}
                                 requirement={requirement}
                                 serviceCode={service.code}
                                 supersedesEvidenceId={
@@ -824,8 +841,8 @@ export default function ProviderOnboardingPage() {
                       <strong>{readableStatus(appeal.status)}</strong>
                       <small>Submitted {appeal.submittedAt}</small>
                       {appeal.dueAt && <small>Target response by {appeal.dueAt}</small>}
-                      <small>{appeal.statement}</small>
-                      {appeal.resolutionNotes && <small>Response: {appeal.resolutionNotes}</small>}
+                      <small data-no-interface-translation>{appeal.statement}</small>
+                      {appeal.resolutionNotes && <small>Response: <span data-no-interface-translation>{appeal.resolutionNotes}</span></small>}
                     </span>
                   </article>
                 ))}
@@ -853,13 +870,13 @@ export default function ProviderOnboardingPage() {
                         <small>A legal hold currently limits deletion; eligible data remains under review.</small>
                       )}
                       {item.completedAt && <small>Completed {item.completedAt}</small>}
-                      {item.responseNotes && <small>Response: {item.responseNotes}</small>}
+                      {item.responseNotes && <small>Response: <span data-no-interface-translation>{item.responseNotes}</span></small>}
                     </span>
                   </article>
                 ))}
               </div>
               <DataRightsRequestForm
-                preferredLanguage={data.provider.preferredLanguage}
+                preferredLanguage={preferredLanguage}
                 onSubmitted={refreshAfterSubmission}
               />
             </section>
@@ -899,7 +916,7 @@ export default function ProviderOnboardingPage() {
                         {agreement.acceptedForApplicationReview ? "✓" : "✕"}{" "}
                         <a href={agreement.href}>{agreement.title}</a>
                       </strong>
-                      <small>Version {agreement.requiredVersion} · release status {agreement.releaseStatus}</small>
+                      <small>Version {agreement.requiredVersion} · release status {readableStatus(agreement.releaseStatus)}</small>
                       <small>
                         {agreement.acceptedForApplicationReview
                           ? `Acknowledged for application review ${agreement.acceptedAt}`
@@ -915,16 +932,16 @@ export default function ProviderOnboardingPage() {
                 ))}
               </div>
               {!data.allAgreementsAcknowledgedForApplicationReview && (
-                <form onSubmit={acceptAgreements}>
+                <form ref={agreementForm} onSubmit={acceptAgreements}>
                   <label>Authorized signer name<input maxLength={120} name="signerName" required /></label>
                   <label>Signer title or capacity<input maxLength={100} name="signerTitle" required /></label>
                   <label className="policy-consent">
                     <input name="termsBundleAccepted" required type="checkbox" value="yes" />
-                    <span>{PROVIDER_TERMS_ACCEPTANCE_TEXT}</span>
+                    <span data-manual-language>{language === "es" ? PROVIDER_TERMS_ACCEPTANCE_TEXT_ES : PROVIDER_TERMS_ACCEPTANCE_TEXT}</span>
                   </label>
                   <label className="policy-consent">
                     <input name="privacyAcknowledged" required type="checkbox" value="yes" />
-                    <span>{PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}</span>
+                    <span data-manual-language>{language === "es" ? PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT_ES : PROVIDER_PRIVACY_ACKNOWLEDGMENT_TEXT}</span>
                   </label>
                   <button className="button primary" disabled={agreementBusy} type="submit">
                     {agreementBusy ? "Recording…" : "Acknowledge displayed versions"}
@@ -937,4 +954,5 @@ export default function ProviderOnboardingPage() {
       </section>
     </main>
   );
+  return language === "es" ? spanishInterfaceTree(content) : content;
 }
