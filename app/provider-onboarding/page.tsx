@@ -469,8 +469,8 @@ export default function ProviderOnboardingPage() {
   return (
     <main className="account-shell">
       <header className="account-header">
-        <Link className="brand" href="/"><BrandMark /><span>Tuveloz</span></Link>
-        <Link className="account-home-link" href="/account?role=provider">Provider account</Link>
+        <Link className="brand" href="/" prefetch={false}><BrandMark /><span>Tuveloz</span></Link>
+        <Link className="account-home-link" href="/account?role=provider" prefetch={false}>Provider account</Link>
       </header>
       <section className="account-main">
         <div className="account-welcome">

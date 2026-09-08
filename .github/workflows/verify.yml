@@ -136,6 +136,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Verify signed-out provider navigation in Chromium and WebKit
+        run: |
+          node node_modules/wrangler/bin/wrangler.js dev --local --port 3041 --ip 127.0.0.1 --local-upstream 127.0.0.1 > /tmp/tuveloz-provider-redirect.log 2>&1 &
+          REDIRECT_SERVER_PID=$!
+          trap 'kill "$REDIRECT_SERVER_PID" 2>/dev/null || true' EXIT
+          npm run test:e2e:provider-redirect
+
       - name: Verify rendered Spanish coverage
         env:
           BASE_URL: http://localhost:3000

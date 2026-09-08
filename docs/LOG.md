@@ -11,6 +11,24 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-08 - Provider sign-in redirect preloading
+
+The live follow-up to the review-form release found two unhandled WebKit
+prefetch errors while `/provider-onboarding` redirected a signed-out visitor
+to `/account?role=provider`. The email sign-in form still opened. The errors
+reproduced with and without test request interception; this was not a blocked
+form submission or a failed identity check.
+
+The two onboarding header links now disable automatic prefetching so their
+background requests do not race with the session check and redirect. Link
+destinations and access rules are unchanged. A browser regression against the
+actual built Worker preserves its real 401 response, delays that local response
+briefly to expose the race, and checks the visible provider sign-in form,
+premature route requests, page errors and mobile layout. The old build failed;
+the fixed build passed in Chromium and WebKit. CI runs this check before release.
+Local build, lint, typecheck and 626 unit checks also passed. No production
+provider record was created or changed during this verification.
+
 ## 2026-09-08 - Provider review receipts and a clearer next step
 
 The actual browser appeal form reproduced a false failure after a successful
