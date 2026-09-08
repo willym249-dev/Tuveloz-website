@@ -41,6 +41,9 @@ export function JobPostingPauseNotice() {
   const [expanded, setExpanded] = useState(false);
   const pathname = usePathname();
   const { accountHref, signedIn, state } = useAccountHeaderState();
+  // The private checklist already shows its own translated launch and eligibility
+  // notice. A second global banner adds repetition and ignores that page's language.
+  if (pathname === "/provider-onboarding") return null;
   const pageHasItsOwnCta = PAGES_WITH_THEIR_OWN_CTA.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );

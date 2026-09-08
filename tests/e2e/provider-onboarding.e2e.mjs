@@ -93,6 +93,7 @@ async function checkFullPage(browser) {
   try {
     await page.goto(origin + "/provider-onboarding");
     await page.locator('.provider-service-status-card').waitFor();
+    assert.equal(await page.locator('.tuveloz-launch-pause').count(), 0, 'private checklist already has the launch status and should not repeat a global English banner');
     const catalog = await page.evaluate(() => window.onboardingTest);
     const allowedUnchanged = new Set(["Tuveloz", "Stripe", "hello@tuveloz.com"]);
     for (const scenario of ["documents", "initial", "requires_input", "processing", "blocked", "expired", "manual", "conflict", "employee", "old-application"]) {
