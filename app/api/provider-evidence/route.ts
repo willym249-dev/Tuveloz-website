@@ -10,7 +10,7 @@ import {
   getAccountSession,
   providerApplicationFor,
 } from "../../../lib/account-auth";
-import { recordProviderAuditEvent } from "../../../lib/provider-audit";
+import { prepareProviderAuditEvent, recordProviderAuditEvent } from "../../../lib/provider-audit";
 import { notifyProviderEvidenceReceived } from "../../../lib/provider-compliance-notifications";
 import {
   deleteProviderEvidence,
@@ -215,6 +215,38 @@ export async function GET(request: Request) {
   });
 }
 
+function uploadReceipt(id: string, scanStatus = "pending", duplicate = false) {
+  return Response.json({
+    ok: true, id, status: "pending", scanStatus,
+    ...(duplicate ? { duplicate: true } : {}),
+    message: "Evidence uploaded to private quarantine. It cannot be opened, reviewed as acceptable, or create job eligibility until the malware scan reports clean and the evidence is separately accepted.",
+  }, { status: duplicate ? 200 : 201 });
+}
+
+async function matchingUploadReceipt(
+  evidence: typeof providerEvidenceSubmissions.$inferSelect,
+  formData: FormData,
+  issuer: string,
+  effectiveAt: string,
+  expiresAt: string,
+  supersedesEvidenceId: string,
+) {
+  if (evidence.status !== "pending" || !evidence.storageKey
+    || evidence.issuer !== issuer || evidence.effectiveAt !== effectiveAt
+    || evidence.expiresAt !== expiresAt || evidence.supersedesEvidenceId !== supersedesEvidenceId) return null;
+  const document = await validateProviderEvidence(formData.get("document"));
+  if (document.contentType !== evidence.contentType
+    || await sha256Buffer(document.bytes) !== evidence.documentHash) return null;
+  const [scan] = await getDb().select().from(evidenceFileScans).where(and(
+    eq(evidenceFileScans.evidenceSubmissionId, evidence.id),
+    eq(evidenceFileScans.providerId, evidence.providerId),
+    eq(evidenceFileScans.fileHash, evidence.documentHash),
+  )).orderBy(desc(evidenceFileScans.requestedAt)).limit(1);
+  if (!scan || !["pending", "clean"].includes(scan.status)
+    || !await getProviderEvidence(evidence.storageKey)) return null;
+  return uploadReceipt(evidence.id, scan.status, true);
+}
+
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "This upload must come from TUVELOZ." }, { status: 403 });
@@ -224,6 +256,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Sign in with your provider account." }, { status: 401 });
   }
   let storageKey = "";
+  let evidenceId = "";
+  let documentHash = "";
+  let committed = false;
   try {
     const formData = await request.formData();
     const serviceCodeValue = clean(formData.get("serviceCode"), 100);
@@ -258,10 +293,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
     const db = getDb();
-    const priorEvidence = await db.select({
-      id: providerEvidenceSubmissions.id,
-      status: providerEvidenceSubmissions.status,
-    }).from(providerEvidenceSubmissions).where(and(
+    const priorEvidence = await db.select().from(providerEvidenceSubmissions).where(and(
       eq(providerEvidenceSubmissions.providerId, account.provider.id),
       eq(providerEvidenceSubmissions.personId, profile.providerPersonId),
       eq(providerEvidenceSubmissions.requirementKey, requirementKey),
@@ -269,6 +301,8 @@ export async function POST(request: Request) {
       eq(providerEvidenceSubmissions.jurisdiction, POLICY_JURISDICTION),
     )).orderBy(desc(providerEvidenceSubmissions.submittedAt)).limit(1);
     if (!supersedesEvidenceId && priorEvidence[0]) {
+      const receipt = await matchingUploadReceipt(priorEvidence[0], formData, issuer, effectiveAt, expiresAt, "");
+      if (receipt) return receipt;
       return Response.json({
         error: priorEvidence[0].status === "pending"
           ? "This evidence already has a submission under review."
@@ -304,12 +338,17 @@ export async function POST(request: Request) {
           error: "Wait for the current submission review before uploading another replacement.",
         }, { status: 409 });
       }
-      const existingReplacements = await db.select({
-        id: providerEvidenceSubmissions.id,
-        status: providerEvidenceSubmissions.status,
-      }).from(providerEvidenceSubmissions)
+      const existingReplacements = await db.select().from(providerEvidenceSubmissions)
         .where(eq(providerEvidenceSubmissions.supersedesEvidenceId, target.id));
       if (existingReplacements.some((item) => item.status === "pending")) {
+        const replacement = existingReplacements.find((item) => item.status === "pending"
+          && item.providerId === account.provider.id && item.personId === profile.providerPersonId
+          && item.requirementKey === requirementKey && item.serviceCode === serviceCodeValue
+          && item.jurisdiction === POLICY_JURISDICTION);
+        if (replacement) {
+          const receipt = await matchingUploadReceipt(replacement, formData, issuer, effectiveAt, expiresAt, supersedesEvidenceId);
+          if (receipt) return receipt;
+        }
         return Response.json({
           error: "A replacement for this evidence is already under review.",
         }, { status: 409 });
@@ -329,12 +368,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "Upload current evidence that has not already expired." }, { status: 400 });
     }
     const document = await validateProviderEvidence(formData.get("document"));
-    const documentHash = await sha256Buffer(document.bytes);
+    documentHash = await sha256Buffer(document.bytes);
     storageKey = await storeProviderEvidence(account.provider.id, requirementKey, document);
-    const evidenceId = crypto.randomUUID();
+    evidenceId = crypto.randomUUID();
     const nowValue = new Date();
     const now = nowValue.toISOString();
-    await db.insert(providerEvidenceSubmissions).values({
+    const evidenceInsert = db.insert(providerEvidenceSubmissions).values({
       id: evidenceId,
       providerId: account.provider.id,
       personId: profile.providerPersonId,
@@ -362,7 +401,7 @@ export async function POST(request: Request) {
       updatedAt: now,
     });
     const scanId = crypto.randomUUID();
-    await db.insert(evidenceFileScans).values({
+    const scanInsert = db.insert(evidenceFileScans).values({
       id: scanId,
       evidenceSubmissionId: evidenceId,
       providerId: account.provider.id,
@@ -378,8 +417,8 @@ export async function POST(request: Request) {
       createdAt: now,
       updatedAt: now,
     });
-    for (const reminder of expirationReminderSchedule(expiresAt, nowValue)) {
-      await db.insert(complianceReminders).values({
+    const reminderInserts = expirationReminderSchedule(expiresAt, nowValue).map((reminder) => (
+      db.insert(complianceReminders).values({
         id: crypto.randomUUID(),
         providerId: account.provider.id,
         evidenceSubmissionId: evidenceId,
@@ -401,9 +440,9 @@ export async function POST(request: Request) {
         }),
         createdAt: now,
         updatedAt: now,
-      }).onConflictDoNothing({ target: complianceReminders.eventKey });
-    }
-    await recordProviderAuditEvent({
+      }).onConflictDoNothing({ target: complianceReminders.eventKey })
+    ));
+    const audit = await prepareProviderAuditEvent({
       providerId: account.provider.id,
       personId: profile.providerPersonId,
       serviceCode: serviceCodeValue,
@@ -423,20 +462,35 @@ export async function POST(request: Request) {
         expirationRemindersScheduled: expirationReminderSchedule(expiresAt, nowValue).length,
       },
     });
+    // D1 batches are atomic. A scan/reminder/audit failure must not leave a
+    // document record whose file cleanup would prevent another upload.
+    await db.batch([evidenceInsert, scanInsert, ...reminderInserts, audit.statement]);
+    committed = true;
     await notifyProviderEvidenceReceived({
       providerId: account.provider.id,
       evidenceId,
       email: account.provider.email,
-    });
-    return Response.json({
-      ok: true,
-      id: evidenceId,
-      status: "pending",
-      scanStatus: "pending",
-      message: "Evidence uploaded to private quarantine. It cannot be opened, reviewed as acceptable, or create job eligibility until the malware scan reports clean and the evidence is separately accepted.",
-    }, { status: 201 });
+    }).catch(() => console.error("Unable to send provider evidence receipt notification", { evidenceId }));
+    return uploadReceipt(evidenceId);
   } catch (error) {
-    if (storageKey) await deleteProviderEvidence(storageKey).catch(() => undefined);
+    if (storageKey && evidenceId && !committed) {
+      // A failed response can follow a successful commit. Resolve that state
+      // before deleting a file; if D1 is unavailable, keep it private for retry.
+      try {
+        const [saved] = await getDb().select().from(providerEvidenceSubmissions).where(and(
+          eq(providerEvidenceSubmissions.id, evidenceId),
+          eq(providerEvidenceSubmissions.providerId, account.provider.id),
+        )).limit(1);
+        if (saved?.storageKey === storageKey && saved.documentHash === documentHash) {
+          await notifyProviderEvidenceReceived({ providerId: account.provider.id, evidenceId, email: account.provider.email })
+            .catch(() => console.error("Unable to send recovered provider evidence receipt", { evidenceId }));
+          return uploadReceipt(evidenceId);
+        }
+        if (!saved) await deleteProviderEvidence(storageKey);
+      } catch {
+        console.error("Provider evidence persistence needs reconciliation; private file retained", { evidenceId });
+      }
+    }
     if (error instanceof ProviderEvidenceValidationError) {
       return Response.json({ error: error.message }, { status: 400 });
     }
