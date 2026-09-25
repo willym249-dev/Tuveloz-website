@@ -37,6 +37,7 @@ import { LegalHelp } from "./components/legal-help";
 import { ProviderSignupForm, SIGNUP_DRAFT_KEY } from "./components/provider-signup-form";
 import { SocialLinks } from "./components/social-links";
 import { LaunchHelpNotice } from "./components/launch-help-notice";
+import { HeroMarketplacePreview } from "./components/hero-marketplace-preview";
 
 
 // What the platform is built to carry so a provider can, as much as possible,
@@ -649,10 +650,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
             </>
           ) : CUSTOMER_JOB_POSTING_PAUSED ? (
             <>
-              <div className="eyebrow">
-                <span className="pulse" />
-                Vehicle services in Montgomery County, MD
-              </div>
               <h1>
                 Car care should feel less stressful.
                 <br />
@@ -717,36 +714,10 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
           </p>
         </div>
 
-        <div className="hero-visual" aria-label="Preview of the planned Tuveloz service-request experience" role="img">
-          <div className="quote-board">
-            <article className="quote-ticket qt-1">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$118</span>
-              <small>Example mobile provider · preview</small>
-            </article>
-            <article className="quote-ticket qt-2">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Example local provider · preview</small>
-            </article>
-            <article className="quote-ticket qt-3 qt-selected">
-              <div className="qt-head"><span>JOB #4471</span><b>Planned pick</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Example local provider · preview</small>
-              <span className="qt-stamp">YOU CHOOSE</span>
-            </article>
-          </div>
-          <p className="hero-visual-caption">
-            {!CUSTOMER_JOB_POSTING_PAUSED
-              ? "Example preview of a real quote comparison."
-              : view === "provider"
-                ? "Concept preview — this is what a customer sees when your quote lands. Requests and quotes open at launch."
-                : "Concept preview — not a live job. Customer requests and quotes open after launch."}
-          </p>
-        </div>
+        <HeroMarketplacePreview
+          audience={view === "provider" ? "provider" : "customer"}
+          customerRequestsOpen={!CUSTOMER_JOB_POSTING_PAUSED}
+        />
       </section>
 
       )}
@@ -757,74 +728,6 @@ export function TuvelozPublic({ view = "home" }: { view?: PublicView }) {
         <span><b>$0</b> to apply — no subscription, no lead fees</span>
         <span><b>You set</b> your prices, hours, and area</span>
         <span><b>Founding spots</b> open in Montgomery County, MD</span>
-      </section>
-      )}
-
-      {view !== "about" && (
-      <section className="trust-section" aria-labelledby="trust-heading">
-        <div className="trust-intro">
-          <span className="kicker light">What you can expect</span>
-          <h2 id="trust-heading">{view === "provider" ? "Your application, at your pace." : "Feel informed before you decide."}</h2>
-          <p className="trust-intro-text">
-            {view === "provider"
-              ? "Choose the work you offer, see what's needed, and finish when you're ready. You don't need your documents in hand to get started."
-              : "Choosing a service provider for your car is a big decision. You deserve to understand the work, the price, and the business you'll be hiring."}
-          </p>
-          {view === "home" && (
-            <p className="trust-origin">
-              <strong>Why Tuveloz exists.</strong> Car owners deserve a clear choice,
-              and independent pros deserve a fair shot to grow. A certificate can
-              matter, and where a service legally requires a license, registration, or
-              coverage, we check it. But paperwork alone does not decide who earns a
-              customer&apos;s trust — the customer does.
-            </p>
-          )}
-        </div>
-        <div className="trust-grid">
-          <article className="trust-card">
-            <span className="trust-card-label">{view === "provider" ? "Start with your services" : "A connection to local help"}</span>
-            <p>
-              {view === "provider"
-                ? "Select only the work you'd like to offer. We'll show you the next steps for those choices, so you can decide whether Tuveloz fits your business."
-                : "When bookings open, Tuveloz will help you compare local providers and keep the agreed work and price in one place. The provider you choose will do the work."}
-            </p>
-          </article>
-          <article className="trust-card">
-            <span className="trust-card-label">{view === "provider" ? "Add documents when you're ready" : "Real local businesses"}</span>
-            <p>
-              {view === "provider"
-                ? "Your checklist explains what we'll need for review. Start the application now, then add your documents through your private dashboard."
-                : "Providers set their own prices and hours. They work independently of Tuveloz, and you choose whose services fit your needs."}
-            </p>
-          </article>
-          <article className="trust-card">
-            <span className="trust-card-label">Checks matched to the service</span>
-            <p>
-              We check the documents required for the service and work location,
-              along with Tuveloz safety and competency requirements, before that
-              service can be activated.
-            </p>
-          </article>
-          {view === "provider" ? (
-            <article className="trust-card">
-              <span className="trust-card-label">Your price stays your price</span>
-              <p>
-                You set the quote. Tuveloz does not take a cut from it, set your
-                prices, or require exclusivity.
-              </p>
-            </article>
-          ) : (
-            <article className="trust-card">
-              <span className="trust-card-label">Planned customer fee, shown clearly</span>
-              <p>
-                Example at the planned 5% rate: a $200 labor quote would show a $10
-                Tuveloz customer service fee, for a $210 total. Final launch pricing
-                and tax treatment remain under review; you&apos;ll see the full total
-                before accepting.
-              </p>
-            </article>
-          )}
-        </div>
       </section>
       )}
 

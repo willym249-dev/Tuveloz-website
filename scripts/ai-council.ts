@@ -2,7 +2,7 @@
 // spending as few credits as possible. Wraps lib/ai/council.ts and adds:
 //   - an on-disk cache (.ai-council-cache.json, gitignored) so re-running
 //     the same question never re-spends credits;
-//   - a git-tracked decision log (ai-council-log.jsonl) that the three
+//   - a private, gitignored decision log (.ai-council-log.jsonl) that the three
 //     models are shown before answering, so whichever one you ask stays
 //     consistent with what the "team" already decided about this site;
 //   - a short, fixed project brief plus the current branch/recent
@@ -15,23 +15,28 @@
 //
 // Usage:
 //   node --experimental-strip-types scripts/ai-council.ts "should we cache quotes for 5 minutes or 30?"
-//   node --experimental-strip-types scripts/ai-council.ts --mode deep "pick a name for the invoices tab"
-//   node --experimental-strip-types scripts/ai-council.ts --mode frontier "hardest question, ask Claude Fable 5 directly"
-//   node --experimental-strip-types scripts/ai-council.ts --mode consensus --system "You are a senior TypeScript reviewer." "..."
-//   node --experimental-strip-types scripts/ai-council.ts --files lib/service-matching.ts,app/page.tsx "does this matching logic look right?"
+//   node --experimental-strip-types scripts/ai-council.ts --run --mode deep "pick a name for the invoices tab"
+//   node --experimental-strip-types scripts/ai-council.ts --run --mode frontier "review the hardest question"
+//   node --experimental-strip-types scripts/ai-council.ts --run --mode consensus --max-calls 2 "..."
+//   node --experimental-strip-types scripts/ai-council.ts --run --files lib/service-matching.ts "review this"
 //   node --experimental-strip-types scripts/ai-council.ts --no-git --no-log "quick one-off question, don't log or add project context"
 //
 // Reads keys from the environment, falling back to .env.local in the repo
 // root: OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY.
 
-import { readFile, writeFile, appendFile } from "node:fs/promises";
+import { readFile, writeFile, appendFile, realpath } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import process from "node:process";
 import {
+  councilModelsFromEnvironment,
   consult,
+  DEFAULT_MAX_TOKENS,
+  defaultMaxProviderCalls,
+  FRONTIER_MAX_TOKENS,
+  MAX_OUTPUT_TOKENS_PER_CALL,
   type CouncilCache,
   type CouncilKeys,
   type CouncilMode,
@@ -55,7 +60,7 @@ const execFileAsync = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL_PATH = path.join(REPO_ROOT, ".env.local");
 const CACHE_PATH = path.join(REPO_ROOT, ".ai-council-cache.json");
-const LOG_PATH = path.join(REPO_ROOT, "ai-council-log.jsonl");
+const LOG_PATH = path.join(REPO_ROOT, ".ai-council-log.jsonl");
 const MAX_CACHE_ENTRIES = 200;
 const LOG_CONTEXT_ENTRIES = 8;
 const MAX_FILE_CHARS = 6000;
@@ -120,12 +125,19 @@ async function readFileExcerpts(relativePaths: string[]): Promise<FileExcerpt[]>
   const excerpts: FileExcerpt[] = [];
   for (const relativePath of relativePaths) {
     const resolved = path.resolve(REPO_ROOT, relativePath);
-    if (!resolved.startsWith(REPO_ROOT)) {
+    const relative = path.relative(REPO_ROOT, resolved);
+    if (relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
       console.error(`Skipping --files entry outside the repo: ${relativePath}`);
       continue;
     }
     try {
-      const raw = await readFile(resolved, "utf8");
+      const canonical = await realpath(resolved);
+      const canonicalRelative = path.relative(await realpath(REPO_ROOT), canonical);
+      if (canonicalRelative.startsWith(`..${path.sep}`) || path.isAbsolute(canonicalRelative)) {
+        console.error(`Skipping --files entry that resolves outside the repo: ${relativePath}`);
+        continue;
+      }
+      const raw = await readFile(canonical, "utf8");
       const truncated = raw.length > MAX_FILE_CHARS;
       excerpts.push({
         path: relativePath,
@@ -157,25 +169,57 @@ function parseArgs(argv: string[]) {
     mode: "quick" as CouncilMode,
     system: undefined as string | undefined,
     maxTokens: undefined as number | undefined,
+    maxCalls: undefined as number | undefined,
+    run: false,
     noCache: false,
     noLog: false,
     noGit: false,
     files: [] as string[],
   };
+  const optionValue = (name: string, index: number) => {
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${name} requires a value.`);
+    }
+    return value;
+  };
   const rest: string[] = [];
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "--mode") parsed.mode = argv[(index += 1)] as CouncilMode;
-    else if (arg === "--system") parsed.system = argv[(index += 1)];
-    else if (arg === "--max-tokens") parsed.maxTokens = Number(argv[(index += 1)]);
+    if (arg === "--mode") parsed.mode = optionValue(arg, index++) as CouncilMode;
+    else if (arg === "--system") parsed.system = optionValue(arg, index++);
+    else if (arg === "--max-tokens") parsed.maxTokens = Number(optionValue(arg, index++));
+    else if (arg === "--max-calls") parsed.maxCalls = Number(optionValue(arg, index++));
+    else if (arg === "--run") parsed.run = true;
     else if (arg === "--no-cache") parsed.noCache = true;
     else if (arg === "--no-log") parsed.noLog = true;
     else if (arg === "--no-git") parsed.noGit = true;
     else if (arg === "--files") {
-      parsed.files = argv[(index += 1)].split(",").map((entry) => entry.trim()).filter(Boolean);
+      parsed.files = optionValue(arg, index++).split(",").map((entry) => entry.trim()).filter(Boolean);
+    } else if (arg.startsWith("--")) {
+      throw new Error(`Unknown option: ${arg}`);
     } else rest.push(arg);
   }
   return { ...parsed, question: rest.join(" ") };
+}
+
+function validateArgs(args: ReturnType<typeof parseArgs>) {
+  const modes: CouncilMode[] = ["quick", "consensus", "deep", "frontier"];
+  if (!modes.includes(args.mode)) throw new Error(`Unknown mode: ${args.mode}`);
+  if (
+    args.maxTokens !== undefined &&
+    (!Number.isSafeInteger(args.maxTokens) ||
+      args.maxTokens < 1 ||
+      args.maxTokens > MAX_OUTPUT_TOKENS_PER_CALL)
+  ) {
+    throw new Error(`--max-tokens must be an integer from 1 to ${MAX_OUTPUT_TOKENS_PER_CALL}.`);
+  }
+  if (args.maxCalls !== undefined && (!Number.isSafeInteger(args.maxCalls) || args.maxCalls < 1 || args.maxCalls > 3)) {
+    throw new Error("--max-calls must be an integer from 1 to 3.");
+  }
+  if (args.mode === "consensus" && args.maxCalls !== undefined && args.maxCalls < 2) {
+    throw new Error("Consensus mode needs --max-calls of at least 2.");
+  }
 }
 
 function readKeys(): CouncilKeys {
@@ -195,19 +239,53 @@ function printResult(result: CouncilResult) {
   console.log(`\n${result.answer}\n`);
 }
 
+function printPreview(
+  args: ReturnType<typeof parseArgs>,
+  keys: CouncilKeys,
+  models: ReturnType<typeof councilModelsFromEnvironment>,
+) {
+  const providers = (["openai", "gemini", "anthropic"] as const)
+    .filter((provider) => Boolean(keys[provider]));
+  const maxCalls = args.maxCalls ?? defaultMaxProviderCalls(args.mode);
+  const maxTokens = args.maxTokens ?? (args.mode === "frontier" ? FRONTIER_MAX_TOKENS : DEFAULT_MAX_TOKENS);
+  console.log("PREVIEW ONLY — no provider API call was made.");
+  console.log(`mode: ${args.mode}`);
+  console.log(`configured providers: ${providers.length ? providers.join(", ") : "none"}`);
+  console.log(`maximum provider calls: ${maxCalls}`);
+  console.log(`maximum output tokens per call: ${maxTokens}`);
+  console.log(`maximum possible output tokens: ${maxCalls * maxTokens}`);
+  console.log("models:");
+  for (const provider of ["openai", "gemini", "anthropic"] as const) {
+    const configured = models[provider];
+    console.log(
+      `  ${provider}: cheap=${configured.cheap}, capable=${configured.capable}, frontier=${configured.frontier ?? "none"}`,
+    );
+  }
+  console.log(`project context: ${args.noGit ? "brief only" : "brief plus compact Git status"}`);
+  console.log(`private decision log: ${args.noLog ? "excluded" : "included"}`);
+  console.log(`file contents: ${args.files.length ? args.files.join(", ") : "none"}`);
+  console.log("Add --run only when you want to make the listed API calls.");
+}
+
 async function main() {
   await loadEnvFile(ENV_LOCAL_PATH);
   const args = parseArgs(process.argv.slice(2));
+  validateArgs(args);
   if (!args.question) {
     console.error(
       'Usage: ai-council.ts [--mode quick|consensus|deep|frontier] [--system "..."] [--files a.ts,b.ts] ' +
-        '[--no-cache] [--no-log] [--no-git] "question"',
+        '[--max-calls 1|2|3] [--max-tokens N] [--run] [--no-cache] [--no-log] [--no-git] "question"',
     );
     process.exitCode = 1;
     return;
   }
 
   const keys = readKeys();
+  const models = councilModelsFromEnvironment(process.env as Record<string, string | undefined>);
+  if (!args.run) {
+    printPreview(args, keys, models);
+    return;
+  }
   if (!keys.openai && !keys.gemini && !keys.anthropic) {
     console.error(
       "No API keys found. Set OPENAI_API_KEY, GEMINI_API_KEY, and/or ANTHROPIC_API_KEY " +
@@ -231,8 +309,14 @@ async function main() {
   const store = args.noCache ? {} : await loadDiskCache();
   const result = await consult(
     keys,
-    { question: args.question, system, mode: args.mode, maxTokens: args.maxTokens },
-    { cache: args.noCache ? undefined : diskCache(store) },
+    {
+      question: args.question,
+      system,
+      mode: args.mode,
+      maxTokens: args.maxTokens,
+      maxProviderCalls: args.maxCalls,
+    },
+    { cache: args.noCache ? undefined : diskCache(store), models },
   );
   printResult(result);
 

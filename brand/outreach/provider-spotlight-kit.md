@@ -138,8 +138,9 @@ Gets called most for: [answer to Q2].
 What [he/she/they] wish more car owners knew: "[answer to Q3]"
 
 [First name] is one of the first providers signed up on Tuveloz for
-Montgomery County. Customer requests aren't open yet — when they are,
-[he/she/they]'ll be there on day one.
+Montgomery County. Customer requests aren't open yet. When they open,
+[First name]'s public page will show only the services Tuveloz has approved
+that provider to offer.
 
 Independent providers: joining is free and you keep 100% of what you quote →
 tuveloz.com/join
@@ -165,8 +166,9 @@ Lo que más le piden: [respuesta 2].
 Lo que quisiera que más conductores supieran: "[respuesta 3]"
 
 [Nombre] es uno de los primeros proveedores inscritos en Tuveloz para el
-Condado de Montgomery. Las solicitudes de clientes todavía no están abiertas —
-cuando lo estén, estará listo desde el primer día.
+Condado de Montgomery. Las solicitudes de clientes todavía no están abiertas.
+Cuando abran, su página pública mostrará solo los servicios que Tuveloz haya
+aprobado para ese proveedor.
 
 Proveedores independientes: inscribirse es gratis y usted se queda con el 100%
 de lo que cotiza → tuveloz.com/join

@@ -10,6 +10,8 @@ The rehearsal applies the full migration history to an isolated SQLite database,
 
 This proves the local recovery procedure with synthetic data. It does not prove that a production export exists, that automatic R2 backups are configured, or that a cloud disaster recovery has succeeded. No production binding, secret, real applicant or outbound delivery is used.
 
+The separate [production backup activation runbook](./production-backup-activation.md) describes the reviewed daily D1 export and content-addressed R2 copy. Its source and local tests do not prove that the private bucket, secret, schedule, first production backup, or isolated cloud restore exists. Record each of those facts only after checking the live Cloudflare account and the stored results.
+
 ## Production database recovery
 
 [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) is always enabled on production-storage databases. The documented window is seven days on Workers Free and thirty days on Workers Paid. Inspect the actual database's Time Travel screen and record a current bookmark before a risky maintenance operation. A bookmark identifies a recovery point; it is not an independent copy and expires with the recovery window.
@@ -37,3 +39,5 @@ The upload route commits the evidence row, scan request, reminders and audit eve
 The actual outbox rehearsal also verifies that five failed email attempts record one owner incident, that incident failures do not create an infinite loop, and that a retry after an ambiguous delivery uses the same idempotency key. This verifies persisted state and attempted delivery, not arrival in an owner's inbox. The protected control center displays failed/exhausted email records; delivery through an unavailable owner mailbox is not a reliable independent alert channel.
 
 The self-hosted scanner's offline retry/lease checks are covered by `tests/self-hosted-scans.test.mjs`. An offline runner leaves documents quarantined. Successful retries do not establish continuous scanner uptime or an independent owner alert for every outage. Review operational logs and overdue quarantined documents separately.
+
+The [production health monitor](./production-health-monitor.md) provides an independent, read-only check from GitHub Actions. It verifies the public site, D1 schema, required database guards, and closed customer transaction gates once an hour without using Tuveloz credentials or customer data. It detects service and launch-state failures; it does not prove that a current D1 export or separate R2 document backup exists.

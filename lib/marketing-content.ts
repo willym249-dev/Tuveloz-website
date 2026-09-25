@@ -2,7 +2,7 @@ import type { TuvelozIconName } from "../app/components/tuveloz-icons";
 import { SERVICE_CODES } from "./provider-policy";
 
 /** One introduction for both customer entry pages; name the provider explicitly. */
-export const CUSTOMER_INTRO = "We're building Tuveloz to help neighbors in Montgomery County find local vehicle services, compare quotes, and ask questions before choosing an independent service provider. You can create a free account today. Customer bookings are not open yet.";
+export const CUSTOMER_INTRO = "We're building Tuveloz so Montgomery County car owners can compare local providers, their work, and their prices in one place. Create your free account today. Customer requests open after launch.";
 
 /**
  * Marketing copy shared by the homepage and the customer lander so the two

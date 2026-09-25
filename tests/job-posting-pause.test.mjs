@@ -12,6 +12,9 @@ const postJobPage = (await readFile(
 )) + (await readFile(
   new URL("../app/components/customer-lander.tsx", import.meta.url),
   "utf8",
+)) + (await readFile(
+  new URL("../app/components/hero-marketplace-preview.tsx", import.meta.url),
+  "utf8",
 ));
 const homepage = await readFile(
   new URL("../app/page.tsx", import.meta.url),

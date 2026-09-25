@@ -9,25 +9,7 @@ import { SaveMySpotButton } from "./save-my-spot-button";
 import { SignedInReturnNote } from "./signed-in-return-note";
 import { TuvelozIcon } from "./tuveloz-icons";
 import { LaunchHelpNotice } from "./launch-help-notice";
-
-const trustPoints = [
-  {
-    title: "You're never stuck",
-    text: "Asking is free, comparing is free, and you can walk away from every single price you get. It costs you nothing to say no thanks.",
-  },
-  {
-    title: "Real local businesses",
-    text: "Providers set their own prices and hours. They work independently of Tuveloz, and you choose whose services fit your needs.",
-  },
-  {
-    title: "Your address stays yours",
-    text: "Eligible providers see the request details needed to quote. Your contact details are shared with your selected provider for the job, as described in our privacy policy.",
-  },
-  {
-    title: "Planned customer fee, shown clearly",
-    text: "Example at the planned 5% rate: a $200 labor quote would show a $10 Tuveloz customer service fee, for a $210 total. Final launch pricing and tax treatment remain under review; you'll see the full total before accepting.",
-  },
-];
+import { HeroMarketplacePreview } from "./hero-marketplace-preview";
 
 const faqs = [
   {
@@ -71,10 +53,6 @@ export function CustomerLander() {
         <div className="hero-glow" />
         <div className="hero-copy">
           <SignedInReturnNote />
-          <div className="eyebrow">
-            <span className="pulse" />
-            For car owners in Montgomery County, MD
-          </div>
           <h1>
             Find local help for your car.
             <br />
@@ -102,36 +80,7 @@ export function CustomerLander() {
           </p>
         </div>
 
-        <div
-          className="hero-visual"
-          aria-label="Preview of the planned Tuveloz quote comparison"
-          role="img"
-        >
-          <div className="quote-board">
-            <article className="quote-ticket qt-1">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$118</span>
-              <small>Example mobile provider · preview</small>
-            </article>
-            <article className="quote-ticket qt-2">
-              <div className="qt-head"><span>JOB #4471</span><b>Preview</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Example local provider · preview</small>
-            </article>
-            <article className="quote-ticket qt-3 qt-selected">
-              <div className="qt-head"><span>JOB #4471</span><b>Planned pick</b></div>
-              <strong>Battery replacement</strong>
-              <span className="qt-price">$96</span>
-              <small>Example local provider · preview</small>
-              <span className="qt-stamp">YOU CHOOSE</span>
-            </article>
-          </div>
-          <p className="hero-visual-caption">
-            Example quote comparison. Customer requests and quotes are not open yet.
-          </p>
-        </div>
+        <HeroMarketplacePreview audience="customer" />
       </section>
 
       <section className="section how" id="how-it-works">
@@ -174,24 +123,6 @@ export function CustomerLander() {
               </div>
               <h3>{service.title}</h3>
               <p>{service.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="trust-section" aria-labelledby="lander-trust-heading">
-        <div className="trust-intro">
-          <span className="kicker light">Straight answers</span>
-          <h2 id="lander-trust-heading">Know what to expect before you join.</h2>
-          <p className="trust-intro-text">
-            A few things we want you to feel comfortable with: how you choose, how your information is shared, and what a service would cost.
-          </p>
-        </div>
-        <div className="trust-grid lander-trust-grid">
-          {trustPoints.map((point) => (
-            <article className="trust-card" key={point.title}>
-              <span className="trust-card-label">{point.title}</span>
-              <p>{point.text}</p>
             </article>
           ))}
         </div>

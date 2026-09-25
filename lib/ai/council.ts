@@ -5,9 +5,9 @@
 //   - "consensus" two cheap-tier models in parallel; a third (capable-tier)
 //                 tiebreaker is only called if the first two disagree.
 //   - "deep"      all three cheap-tier models, for decisions worth the spend.
-//   - "frontier"  one frontier-tier model (Claude Fable 5), for the hardest
+//   - "frontier"  one configured frontier-tier model, for the hardest
 //                 questions where a single top-tier answer beats a vote.
-// Results are cache-keyed on (mode, tokens, models, system, question) so a
+// Results are cache-keyed on (mode, call cap, tokens, models, system, question) so a
 // repeated question never re-spends credits.
 
 import {
@@ -29,14 +29,48 @@ export type CouncilModels = Record<
 >;
 
 export const DEFAULT_COUNCIL_MODELS: CouncilModels = {
-  openai: { cheap: "gpt-4o-mini", capable: "gpt-4o" },
-  gemini: { cheap: "gemini-2.0-flash", capable: "gemini-2.0-pro" },
+  openai: {
+    cheap: "gpt-6-luna",
+    capable: "gpt-6-sol",
+    frontier: "gpt-6-astra",
+  },
+  gemini: {
+    cheap: "gemini-3.5-flash-lite",
+    capable: "gemini-3.8-flash",
+    frontier: "gemini-3.1-pro-preview",
+  },
   anthropic: {
     cheap: "claude-haiku-4-5-20251001",
     capable: "claude-sonnet-5",
     frontier: "claude-fable-5",
   },
 };
+
+export function councilModelsFromEnvironment(
+  environment: Record<string, string | undefined>,
+): CouncilModels {
+  const configured = (name: string, fallback: string) => {
+    const value = environment[name]?.trim();
+    return value || fallback;
+  };
+  return {
+    openai: {
+      cheap: configured("AI_COUNCIL_OPENAI_CHEAP_MODEL", DEFAULT_COUNCIL_MODELS.openai.cheap),
+      capable: configured("AI_COUNCIL_OPENAI_CAPABLE_MODEL", DEFAULT_COUNCIL_MODELS.openai.capable),
+      frontier: configured("AI_COUNCIL_OPENAI_FRONTIER_MODEL", DEFAULT_COUNCIL_MODELS.openai.frontier!),
+    },
+    gemini: {
+      cheap: configured("AI_COUNCIL_GEMINI_CHEAP_MODEL", DEFAULT_COUNCIL_MODELS.gemini.cheap),
+      capable: configured("AI_COUNCIL_GEMINI_CAPABLE_MODEL", DEFAULT_COUNCIL_MODELS.gemini.capable),
+      frontier: configured("AI_COUNCIL_GEMINI_FRONTIER_MODEL", DEFAULT_COUNCIL_MODELS.gemini.frontier!),
+    },
+    anthropic: {
+      cheap: configured("AI_COUNCIL_ANTHROPIC_CHEAP_MODEL", DEFAULT_COUNCIL_MODELS.anthropic.cheap),
+      capable: configured("AI_COUNCIL_ANTHROPIC_CAPABLE_MODEL", DEFAULT_COUNCIL_MODELS.anthropic.capable),
+      frontier: configured("AI_COUNCIL_ANTHROPIC_FRONTIER_MODEL", DEFAULT_COUNCIL_MODELS.anthropic.frontier!),
+    },
+  };
+}
 
 export type CouncilMode = "quick" | "consensus" | "deep" | "frontier";
 
@@ -45,6 +79,8 @@ export type CouncilTask = {
   system?: string;
   mode?: CouncilMode;
   maxTokens?: number;
+  /** Maximum provider requests this one consultation may make. */
+  maxProviderCalls?: number;
   /**
    * Documents for the model to read alongside the question.
    *
@@ -70,14 +106,39 @@ export type CouncilCache = {
   set(key: string, value: CouncilResult): void | Promise<void>;
 };
 
-const DEFAULT_MAX_TOKENS = 400;
+export const DEFAULT_MAX_TOKENS = 400;
 // Fable 5 always thinks before answering, and thinking tokens count against
 // max_tokens — a tight cap risks truncating the visible reply after thinking
 // spend. Billing is per token actually generated, so the high cap only costs
 // what a given answer uses.
-const FRONTIER_MAX_TOKENS = 16000;
+export const FRONTIER_MAX_TOKENS = 2400;
+export const MAX_OUTPUT_TOKENS_PER_CALL = 16000;
 const AGREEMENT_THRESHOLD = 0.28;
 const PROVIDER_ORDER: CouncilProvider[] = ["anthropic", "openai", "gemini"];
+
+export function defaultMaxProviderCalls(mode: CouncilMode) {
+  if (mode === "quick" || mode === "frontier") return 1;
+  return 3;
+}
+
+function normalizeCallLimit(task: CouncilTask, mode: CouncilMode) {
+  const value = task.maxProviderCalls ?? defaultMaxProviderCalls(mode);
+  if (!Number.isSafeInteger(value) || value < 1 || value > PROVIDER_ORDER.length) {
+    throw new Error(`maxProviderCalls must be an integer from 1 to ${PROVIDER_ORDER.length}.`);
+  }
+  return value;
+}
+
+function normalizeMaxTokens(task: CouncilTask, mode: CouncilMode) {
+  const fallback = mode === "frontier" ? FRONTIER_MAX_TOKENS : DEFAULT_MAX_TOKENS;
+  const value = task.maxTokens ?? fallback;
+  if (!Number.isSafeInteger(value) || value < 1 || value > MAX_OUTPUT_TOKENS_PER_CALL) {
+    throw new Error(
+      `maxTokens must be an integer from 1 to ${MAX_OUTPUT_TOKENS_PER_CALL}.`,
+    );
+  }
+  return value;
+}
 
 function jaccardSimilarity(a: string, b: string) {
   const tokenize = (value: string) => new Set(value.toLowerCase().match(/[a-z0-9]+/g) ?? []);
@@ -95,9 +156,14 @@ async function sha256Hex(value: string) {
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function cacheKeyFor(task: CouncilTask, models: CouncilModels) {
+export async function cacheKeyFor(
+  task: CouncilTask,
+  models: CouncilModels,
+  providers: readonly CouncilProvider[] = PROVIDER_ORDER,
+) {
   const mode = task.mode ?? "quick";
-  const maxTokens = task.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const maxTokens = normalizeMaxTokens(task, mode);
+  const maxProviderCalls = normalizeCallLimit(task, mode);
   // Attachment bytes are hashed into the key. Leaving them out would let two
   // different documents asked the same question collide and return each
   // other's answer.
@@ -107,7 +173,7 @@ export async function cacheKeyFor(task: CouncilTask, models: CouncilModels) {
       .join("|"))
     : "";
   return sha256Hex(
-    `${mode}::${maxTokens}::${JSON.stringify(models)}::${task.system ?? ""}::${attachmentKey}::${task.question}`,
+    `${mode}::${maxTokens}::${maxProviderCalls}::${providers.join(",")}::${JSON.stringify(models)}::${task.system ?? ""}::${attachmentKey}::${task.question}`,
   );
 }
 
@@ -163,6 +229,8 @@ async function runMode(
 ): Promise<CouncilResult> {
   const providers = availableProviders(keys);
   if (providers.length === 0) throw new Error("No AI provider API keys are configured.");
+  const maxProviderCalls = normalizeCallLimit(task, mode);
+  const preparedTask = { ...task, maxTokens: normalizeMaxTokens(task, mode) };
 
   if (mode === "frontier") {
     const provider = providers.find((candidate) => models[candidate].frontier);
@@ -171,34 +239,37 @@ async function runMode(
         "Frontier mode needs a provider with a frontier-tier model and an API key (Anthropic by default).",
       );
     }
-    const answer = await callTier(provider, "frontier", keys, models, {
-      ...task,
-      maxTokens: task.maxTokens ?? FRONTIER_MAX_TOKENS,
-    });
+    const answer = await callTier(provider, "frontier", keys, models, preparedTask);
     return { mode, answer: answer.text, agreed: null, consulted: [answer], cached: false };
   }
 
   if (mode === "quick" || providers.length < 2) {
     const provider = pickPrimary(providers, task.question);
-    const answer = await callTier(provider, "cheap", keys, models, task);
+    const answer = await callTier(provider, "cheap", keys, models, preparedTask);
     return { mode, answer: answer.text, agreed: null, consulted: [answer], cached: false };
   }
 
   if (mode === "deep") {
-    const answers = await Promise.all(providers.map((provider) => callTier(provider, "cheap", keys, models, task)));
+    const selectedProviders = providers.slice(0, maxProviderCalls);
+    const answers = await Promise.all(
+      selectedProviders.map((provider) => callTier(provider, "cheap", keys, models, preparedTask)),
+    );
     const agreed = answers.every((answer) => jaccardSimilarity(answer.text, answers[0].text) >= AGREEMENT_THRESHOLD);
     return { mode, answer: pickLongest(answers).text, agreed, consulted: answers, cached: false };
   }
 
   // consensus: two cheap-tier opinions; only pay for a third, stronger model
   // when they actually disagree.
+  if (maxProviderCalls < 2) {
+    throw new Error("Consensus mode needs maxProviderCalls of at least 2.");
+  }
   const [first, second, ...rest] = providers;
   const [answerA, answerB] = await Promise.all([
-    callTier(first, "cheap", keys, models, task),
-    callTier(second, "cheap", keys, models, task),
+    callTier(first, "cheap", keys, models, preparedTask),
+    callTier(second, "cheap", keys, models, preparedTask),
   ]);
   const similarity = jaccardSimilarity(answerA.text, answerB.text);
-  if (similarity >= AGREEMENT_THRESHOLD || rest.length === 0) {
+  if (similarity >= AGREEMENT_THRESHOLD || rest.length === 0 || maxProviderCalls < 3) {
     return {
       mode,
       answer: pickLongest([answerA, answerB]).text,
@@ -208,7 +279,7 @@ async function runMode(
     };
   }
 
-  const tiebreaker = await callTier(rest[0], "capable", keys, models, task);
+  const tiebreaker = await callTier(rest[0], "capable", keys, models, preparedTask);
   return {
     mode,
     answer: tiebreaker.text,
@@ -225,7 +296,9 @@ export async function consult(
 ): Promise<CouncilResult> {
   const models = options.models ?? DEFAULT_COUNCIL_MODELS;
   const mode = task.mode ?? "quick";
-  const cacheKey = options.cache ? await cacheKeyFor(task, models) : null;
+  const cacheKey = options.cache
+    ? await cacheKeyFor(task, models, availableProviders(keys))
+    : null;
 
   if (options.cache && cacheKey) {
     const cached = await options.cache.get(cacheKey);

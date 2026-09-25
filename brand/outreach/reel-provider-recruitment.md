@@ -58,8 +58,9 @@ up providers before launch:
 site's small fee, not you)
 ✅ No exclusivity — keep working every platform you already use
 
-Straight up: customer requests aren't live yet. Applying now means your
-review is done and you're first in line on day one.
+Customer requests aren't live yet. Apply now to choose your services, see
+exactly what we'll need, and prepare your profile before customer launch.
+Applying does not guarantee approval or work.
 
 Apply in minutes (English o español): link in bio → tuveloz.com/join
 
@@ -72,8 +73,9 @@ Tuveloz es un nuevo mercado local de servicios vehiculares — y estamos
 inscribiendo proveedores antes del lanzamiento: unirse es gratis, usted pone
 sus precios y se queda con el 100% de lo que cotiza, sin exclusividad.
 
-Para ser claros: las solicitudes de clientes todavía no están activas.
-Aplicar ahora deja su revisión lista para el primer día.
+Las solicitudes de clientes todavía no están activas. Solicite ahora para
+elegir sus servicios, ver exactamente qué necesitaremos y preparar su perfil
+antes del lanzamiento. Solicitar no garantiza aprobación ni trabajo.
 
 Solicite en minutos: enlace en bio → tuveloz.com/join
 
@@ -181,7 +183,8 @@ Caption (EN): That click-click-click sound is a whole horror movie 😩🔑
 If you're the neighbor who shows up with jumper cables — Montgomery County
 has a marketplace coming for you. Free to join, keep 100% of what you
 quote. Customer requests aren't live yet — pre-launch signup means you're
-ready day one. Link in bio → tuveloz.com/join
+able to set up your provider account before customer launch. Link in bio →
+tuveloz.com/join
 
 Hashtags: use the same full-reach sets above, and add meme-genre tags on
 this one: #CarMemes #DeadBattery #CheckEngineLight #POV #CarTok

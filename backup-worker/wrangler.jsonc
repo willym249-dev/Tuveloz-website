@@ -1,0 +1,37 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "tuveloz-production-backup",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "BACKUP_ACCOUNT_ID": "a275234035620ab61d84e96fa9e20567",
+    "BACKUP_DATABASE_ID": "76a19869-f771-42ce-9bc9-f88605ea6f29",
+    "BACKUP_RETENTION_DAYS": "35"
+  },
+  "workflows": [
+    {
+      "name": "tuveloz-production-backup",
+      "binding": "BACKUP_WORKFLOW",
+      "class_name": "TuvelozBackupWorkflow",
+      "schedules": ["7 9 * * *"],
+      "concurrency": {
+        "limit": 1
+      },
+      "default_retention": {
+        "success_retention": "1 day",
+        "error_retention": "3 days"
+      }
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SOURCE_BUCKET",
+      "bucket_name": "tuveloz-uploads"
+    },
+    {
+      "binding": "BACKUP_BUCKET",
+      "bucket_name": "tuveloz-backups"
+    }
+  ]
+}

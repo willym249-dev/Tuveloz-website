@@ -1,143 +1,104 @@
-# MoCo provider outreach — worklist
+# Montgomery County provider recruitment workflow
 
-A copy-paste target list so sending the DMs is friction-free. The messages
-themselves live in [provider-outreach-kit.md](provider-outreach-kit.md) (EN + ES).
-This file is just **who to send them to, in what order, and how to not get burned.**
+This is the working method for finding current provider candidates without buying a list, scraping personal details, repeating old messages, or making Tuveloz look automated. The approved wording lives in [provider-outreach-kit.md](provider-outreach-kit.md).
 
-Goal: provider applications at https://tuveloz.com/join
-Audience: independent mobile mechanics, detailers, and jump-start/roadside
-operators already advertising in Montgomery County, MD.
+## Who fits
 
-> **Best fit = the one-person operator.** A guy who does mobile oil changes out
-> of his truck on weekends is a *better* target than an established shop —
-> he has nothing to lose (free, keep 100%, no exclusivity) and no overhead to
-> protect. Prioritize solo/self-employed folks (Tier 1b) over business pages.
+Look for an active independent business that publicly says it serves Montgomery County and already offers at least one service available in the Tuveloz application. Good early fits include:
 
----
+- mobile mechanics and roadside operators;
+- mobile and fixed-location detailers;
+- independent repair shops;
+- battery, tire, glass, tint, towing, lockout, A/C, body, and inspection businesses; and
+- a self-employed technician operating through a real business contact channel.
 
-## The one rule that prevents the only real problem later
+The application may display a service that cannot yet be activated for customer work. Invite the business to select only work it already performs. Never suggest that application availability is a license, insurance decision, or promise that the service will launch.
 
-The single thing that can kill this channel is getting your account **flagged as
-spam** (Facebook/Nextdoor will limit or ban it). Everything below is built to
-avoid that. Follow these and you never have a mess to clean up:
+## Current sourcing order
 
-1. **Personalize the first line every time.** Never paste the same message twice
-   in a row — reference their actual post/service/area. The templates leave a
-   `[bracket]` for exactly this.
-2. **Pace it.** Max ~5–8 new messages per day from one account. Slow looks human;
-   a burst looks like a bot.
-3. **One follow-up, ever. None after a "no."** (Already the kit's rule.)
-4. **Track every send below** so the same person never gets hit twice — a double
-   message is what makes you look like a spammer.
+1. **Public business websites and Google Search results.** Confirm the service, service area, and a business contact channel from the business's own current page.
+2. **Active business profiles on Instagram and Facebook.** Use a Tuveloz business account. Reference a recent service post or the business's stated specialty.
+3. **Current service advertisements.** Use only the reply method the advertiser publicly provided. Confirm that the advertisement is current and covers Montgomery County.
+4. **Local associations and physical businesses.** Ask independent parts stores, car washes, gas stations with repair bays, and trade groups whether they accept a bilingual flyer or introduction. Do not leave material without permission.
+5. **Community groups.** Post only when current rules clearly allow business or provider opportunities. Skip groups that prohibit promotion or direct solicitation.
 
-If you only remember one thing: **slow + personalized + tracked = never banned.**
+Do not reuse the old named-candidate list without checking every business again. A stale page, closed business, moved service area, prior message, or opt-out disqualifies the contact until resolved.
 
----
+## Ten-minute review for each candidate
 
-## Daily plan (about 15 minutes)
+- Is this a business or a person openly advertising a vehicle service?
+- Is the page or advertisement recent enough to show the business is active?
+- Does it explicitly serve Montgomery County or a city in the county?
+- Which exact Tuveloz service matches the public work?
+- Is there a public business contact channel intended for inquiries?
+- Has Tuveloz already contacted the business, received a decline, or recorded an opt-out?
+- Which specific public detail can make the opening sentence personal and accurate?
 
-- Pick **5 targets** — lead with **solo operators (Tier 1b)**, then Tier 1.
-- For each: open their post → copy the matching template → **rewrite the first
-  line** to mention their actual work → send.
-- Mark the row `Sent — <date>`.
-- Next day, check for replies first, then send 5 more.
+If any answer is unclear, do not message yet.
 
-5 a day = ~25 real providers reached in a week, with zero spam risk.
+## Small daily batch
 
----
+1. Review up to five candidates.
+2. Add qualified candidates to the private contact log before sending anything.
+3. Draft each opening line separately.
+4. Read the complete message once as the recipient. Remove anything that sounds copied, urgent, exaggerated, or overly familiar.
+5. Send only from the signed-in Tuveloz business account after the final recipient and message are reviewed.
+6. Record the result immediately.
+7. Answer replies before starting another batch.
 
-## Tier 1b — Solo operators working for themselves (start here)
+The batch size is an operating limit, not a claim that any platform permits unsolicited messages. Platform rules and a recipient's preference always control.
 
-These are the pools where **one-person, self-employed** mechanics/detailers
-advertise directly. You're DMing an individual, not a company — the kit's
-first-contact template fits perfectly ("saw your post…").
+## Private contact log fields
 
-| Pool | Where | Why it's gold | Status |
-|------|-------|---------------|--------|
-| Nextdoor — Mobile Mechanics, Gaithersburg MD | [page](https://nextdoor.com/pages/mobile-mechanics-gaithersburg-md/) | ~7 neighbor-recommended solo mechanics, all MoCo | |
-| Nextdoor — Mobile Mechanic MD | [page](https://nextdoor.com/pages/mobile-mechanic-md/) | Individual operators, neighbor reviews | |
-| Craigslist — DC/MD suburbs auto services | [washingtondc.craigslist.org](https://washingtondc.craigslist.org/search/mld/aos) | Where solo guys post "I come to you." Filter to MoCo towns | |
-| Facebook Marketplace → **Services** | FB app, location = Silver Spring/Rockville | Individuals list mobile repair/detailing/jump-start | |
+| Field | What to record |
+| --- | --- |
+| Business | Public business name |
+| Service | Exact public service that matches Tuveloz |
+| Area | Montgomery County city or stated county coverage |
+| Source | Public page URL |
+| Channel | Public business profile, form, email, or phone |
+| Language | English, Spanish, or unknown |
+| Prior contact | None, sent, replied, declined, or opted out |
+| First message | Date and Tuveloz sender account only |
+| Follow-up | Eligible date, sent date, or not allowed |
+| Application | Unknown, started, submitted, or owner-confirmed; never infer from a reply |
+| Notes | One short factual note; no identity documents or private message transcript |
 
-**How to work a pool:** open it → find posts from an individual (not a shop) →
-check they serve MoCo → DM the first-contact template, first line personalized
-to their exact post. Mark it here so you don't repeat.
+Keep this log in a private business workspace, not GitHub or a public spreadsheet.
 
-> ⚠️ **Do NOT use `montgomery.craigslist.org`** — that's Montgomery, *Alabama*.
-> Montgomery County MD lives under **washingtondc.craigslist.org** (the `mld`
-> = Maryland-suburbs filter).
+## Reply handling
 
----
+- **Interested:** send the exact English or Spanish application link and answer the question asked.
+- **Asks whether jobs are live:** say customer requests, bookings, and payments are closed.
+- **Asks what documents are needed:** explain that the private checklist is based on the exact services selected and documents can be added later.
+- **Asks about fees:** applying is free; there is no provider listing fee, lead fee, or subscription today; providers keep the price they quote; the planned 5% Customer Service Fee is added to the customer's total.
+- **Not interested or stop:** acknowledge once if appropriate, mark the opt-out, and do not contact again.
+- **No reply:** one follow-up after seven days, then stop.
 
-## Tier 1 — Businesses/pages to DM (verified via search)
+## Weekly review
 
-Small mobile businesses (often still just 1–2 people). Message from the Tuveloz
-page/Messenger so it reads as a business reaching out.
+Count only facts:
 
-| # | Who | Where | Type | Note | Status |
-|---|-----|-------|------|------|--------|
-| 1 | Montgomery County Mobile Mechanics LLC | [FB page](https://www.facebook.com/p/Montgomery-county-Mobile-mechanics-LLC-100089925245133/) | Mobile mechanic | Explicitly MoCo — strongest fit | |
-| 2 | Extensive Detailing | [FB page](https://www.facebook.com/extensivedetailing/) · [site](https://www.extensivedetailing.com/montgomery-county-auto-detailing) | Detailing | Established MoCo detailer | |
-| 3 | Mobile Mechanic LLC ("makes house calls") | [FB page](https://www.facebook.com/mechanicthatmakeshousecalls/) | Mobile mechanic | ⚠️ Confirm they serve MoCo | |
-| 4 | M&M Mobile Detailing | [FB page](https://www.facebook.com/MandMmobiledetail/) | Detailing | ⚠️ Confirm service area | |
-| 5 | Monte's Mobile Detailing | [FB page](https://www.facebook.com/MontesMobileDetailing/) | Detailing | ⚠️ Confirm service area | |
+- qualified businesses reviewed;
+- individual invitations actually sent;
+- replies;
+- explicit declines or opt-outs;
+- application starts attributed to the campaign; and
+- completed applications.
 
-⚠️ = check their "About"/recent posts for a MoCo service area first. Outside the
-county → skip.
+Do not call a page view, reply, account, draft, or incomplete application an approved provider. Do not report customers, jobs, revenue, or conversion rates until real records support them.
 
----
+## Sources for new candidates
 
-## Tier 2 — Search recipes to refill the list
+Use current searches, not saved result counts:
 
-Run each, then DM the independent operators you find. Copy-paste queries:
-
-**Facebook** (search → People/Pages/Marketplace):
 - `mobile mechanic Montgomery County MD`
-- `mobile mechanic Silver Spring` / `Rockville` / `Gaithersburg` / `Germantown`
-- `mobile car detailing Montgomery County`
-- `jump start service` (location set to a MoCo town)
-- Marketplace → **Services**, location Silver Spring/Rockville
+- `mobile car detailing Montgomery County MD`
+- `roadside assistance Montgomery County MD`
+- `independent auto repair Rockville MD`
+- `independent auto repair Silver Spring MD`
+- `mobile mechanic Gaithersburg MD`
+- the Washington, DC / Maryland-suburbs section on Craigslist, never `montgomery.craigslist.org`, which is for Montgomery, Alabama;
+- public business profiles using a Montgomery County city together with the business's actual service.
 
-**Nextdoor** (post as a Business in Services; browse "Recommendations" → auto/car):
-- one MoCo neighborhood at a time — DM the individuals people recommend
-
-**Craigslist** ([washingtondc.craigslist.org](https://washingtondc.craigslist.org/search/mld/aos) → services → automotive, and **gigs**):
-- `mobile mechanic`, `mobile detailing`, `jump start` — filter to MoCo towns
-
-**Instagram** (search hashtags, DM local independents):
-- `#montgomerycountymd` `#silverspringmd` `#rockvillemd` `#gaithersburgmd`
-  paired with `#mobilemechanic` / `#mobiledetailing`
-
-**MoCo towns to anchor searches:** Silver Spring, Rockville, Gaithersburg,
-Germantown, Bethesda, Wheaton, Takoma Park, Montgomery Village, Aspen Hill,
-Olney, Kensington, Damascus.
-
----
-
-## Tier 3 — Group posts (higher reach, higher spam-risk — sparingly)
-
-One short, non-salesy value post, only where group rules allow it. One group/day max.
-- Search FB Groups: `Montgomery County MD buy sell`, `Silver Spring community`,
-  `Rockville / Gaithersburg community`, local `mobile mechanic` / `car help` groups.
-- Read pinned rules first. Self-promo banned? Don't post — DM active
-  service-posters individually instead (Tier 1b behavior).
-
----
-
-## Reply handling (so a "yes" doesn't stall)
-
-- **Interested?** → `tuveloz.com/join`. Free, applying now = reviewed and ready at launch.
-- **"Is it live / are there jobs now?"** → honest: not yet; applying now gets their
-  review done so they're ready day one. Never imply jobs are waiting.
-- **"No" / no reply after one follow-up** → stop, mark it, move on.
-
----
-
-## What NOT to do (traps that create work later)
-
-- ❌ Don't blast identical copy — instant spam flag.
-- ❌ Don't buy lists or scrape emails — burns the domain's sender reputation.
-- ❌ Don't promise income, job volume, or perks not on the site.
-- ❌ Don't follow up more than once.
-- ❌ Don't contact anyone already marked `Sent`.
-- ❌ Don't use `montgomery.craigslist.org` (that's Alabama).
+When a platform result identifies an individual rather than a business, use only the contact method that person openly provided for service inquiries and keep the invitation respectful and singular.

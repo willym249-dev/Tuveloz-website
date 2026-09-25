@@ -1,145 +1,108 @@
-# Provider Outreach Kit (pre-launch)
+# Provider outreach kit
 
-Phase: provider onboarding open, customer requests not yet live.
-Goal: provider applications at https://tuveloz.com/join
-Audience: mobile mechanics, detailers, and roadside/jump-start operators who
-already advertise themselves on Facebook Marketplace, Craigslist, Nextdoor,
-and Montgomery County community groups.
+**Current phase:** Provider applications are open in Montgomery County, Maryland. Customer requests, bookings, and payments are closed.
 
-Shared facts (same as profile-copy.md — do not improvise beyond these):
-- Free to join. No listing fee, no subscription, no provider fees.
-- Providers keep 100% of their quoted price (customers pay a small 5% Customer
-  Service Fee to the site; never express that fee as a provider deduction).
-- No exclusivity — work other platforms too.
-- Pre-launch: applying gets you reviewed now; real customer jobs open only
-  after launch review. Say this plainly in every message.
-- Launch services only: battery/jump start, wiper blades & bulbs, fluid
-  top-off, detailing, basic diagnostics. No towing, tires, or A/C.
-- Area: Montgomery County, Maryland.
+**One goal:** Invite an independent vehicle-service business to review the provider application at <https://tuveloz.com/join>.
 
-Honesty rules:
-- Never imply customers can book today or that jobs are waiting.
-- Never promise income, job volume, or "founding provider" perks that
-  aren't published on the site.
-- One follow-up maximum. No follow-up after a "no."
+## Facts every invitation must preserve
 
----
+- Applying is free. Tuveloz does not charge providers a listing fee, lead fee, or subscription today.
+- Providers choose the services they offer, set their own prices and hours, and decide whether to quote.
+- Providers keep 100% of the price they quote. Tuveloz's planned 5% Customer Service Fee is added to the customer's total.
+- Providers may keep their existing customers and use other platforms.
+- The application shows requirements for the exact services selected. Applicants can start now and add documents later through their private account.
+- Applying does not guarantee approval, customer requests, income, or a launch date.
+- Tuveloz is the marketplace. The independent provider the customer chooses performs the vehicle service.
 
-## 1. Direct message — first contact (EN)
+Do not describe customer jobs as available. Do not imply that Tuveloz has hired, certified, endorsed, or selected the recipient. Do not describe a mailbox as a shop, and do not claim Tuveloz performs repairs or meets customers.
 
-For a mechanic/detailer advertising their services in a group or marketplace.
-Personalize the first line; never send it as-is in bulk.
+Never promise income, job volume, or "founding provider" perks beyond the terms
+already published at <https://tuveloz.com/founding-providers>.
 
-> Hey [name] — saw your [detailing / jump-start / mobile mechanic] post in
-> [group/area]. I'm with Tuveloz, a new vehicle-services marketplace for
-> Montgomery County. We're signing up independent providers before launch:
-> free to join, you set your prices and keep 100% of what you quote
-> (customers pay the site's small fee, not you), and there's no exclusivity —
-> keep doing everything you're doing now.
+## Before contacting anyone
+
+1. Use a Tuveloz business profile or `hello@tuveloz.com`, never a personal account.
+2. Confirm from a recent public business page that the recipient offers vehicle services in Montgomery County.
+3. Check the private contact log for an earlier message, decline, or opt-out.
+4. Mention one real detail from the recipient's public work. Never invent familiarity or praise.
+5. Send one invitation. One brief follow-up is allowed after seven days unless the person declines or opts out.
+
+Do not scrape private information, buy lists, post generic comments under unrelated work, or send the same wording in bursts. Read each group's rules before posting. Skip any group that does not allow business invitations.
+
+## Direct message — English
+
+> Hi [name] — I came across your [specific service or recent public post] in [area]. I'm building Tuveloz, a Montgomery County marketplace that will connect car owners with independent vehicle-service businesses.
 >
-> Straight up: customer requests aren't live yet. Applying now means your
-> review is done and you're ready on day one. Takes a few minutes:
-> tuveloz.com/join
+> We're opening provider applications before customer bookings. Applying is free. You choose the services you offer, your prices, your schedule, and whether to quote. There is no provider subscription or lead fee today, and you can keep your current customers and use other platforms.
 >
-> Happy to answer anything — or if it's not for you, no worries at all.
-
-## 2. Direct message — first contact (ES)
-
-> Hola [nombre] — vi su anuncio de [detallado / arranque de batería /
-> mecánica móvil] en [grupo/área]. Soy de Tuveloz, un nuevo mercado de
-> servicios vehiculares para el Condado de Montgomery. Estamos inscribiendo
-> proveedores independientes antes del lanzamiento: unirse es gratis, usted
-> pone sus precios y se queda con el 100% de lo que cotiza (el cliente paga
-> la pequeña tarifa del sitio, no usted), y no hay exclusividad — siga
-> haciendo todo lo que hace hoy.
+> I want to be clear that customer requests are not open yet, so I can't promise jobs or income. If you'd like to look it over, the application explains each step and lets you add documents later: <https://tuveloz.com/join>
 >
-> Para ser claros: las solicitudes de clientes todavía no están activas.
-> Aplicar ahora significa que su revisión queda lista para el primer día.
-> Toma unos minutos: tuveloz.com/join
+> If you have a question, you're welcome to reply here or email `hello@tuveloz.com`. If it isn't a fit, no problem.
+
+## Mensaje directo — español
+
+> Hola [nombre]. Vi su [servicio específico o publicación reciente] en [zona]. Estoy creando Tuveloz, un mercado del Condado de Montgomery que conectará a dueños de vehículos con negocios independientes de servicios para autos.
 >
-> El formulario está disponible en español. Con gusto respondo cualquier
-> pregunta — y si no le interesa, no hay problema.
+> Las solicitudes para proveedores están abiertas antes del lanzamiento para clientes. Solicitar es gratis. Usted elige los servicios que ofrece, sus precios, su horario y si desea enviar una cotización. Hoy no hay suscripción ni cobro por contacto para proveedores, y puede conservar sus clientes actuales y usar otras plataformas.
+>
+> Quiero ser claro: las solicitudes de clientes todavía no están abiertas, así que no puedo prometer trabajos ni ingresos. Si desea revisarlo, la solicitud explica cada paso y permite agregar los documentos después: <https://tuveloz.com/es/join>
+>
+> Si tiene una pregunta, puede responder aquí o escribir a `hello@tuveloz.com`. Si no le interesa, no hay problema.
 
-## 3. Follow-up (one only, 5–7 days later)
+## One follow-up — English
 
-EN:
-> Hey [name], just closing the loop — provider spots in [service] are under
-> review now for the Montgomery County launch. If you want in before day one,
-> the application's still open: tuveloz.com/join. Either way, good luck out
-> there!
+> Hi [name] — just following up once in case the Tuveloz provider application would be useful for your business. Customer requests are still closed, and applying is free: <https://tuveloz.com/join>. No need to reply if it isn't a fit. Take care.
 
-ES:
-> Hola [nombre], solo para cerrar el tema — las solicitudes de proveedores de
-> [servicio] ya están en revisión para el lanzamiento en el Condado de
-> Montgomery. Si quiere estar antes del primer día, la solicitud sigue
-> abierta: tuveloz.com/join. ¡De cualquier forma, mucho éxito!
+## Un solo seguimiento — español
 
-## 4. Community group post (Nextdoor / local FB groups)
+> Hola [nombre]. Le escribo una sola vez más por si la solicitud para proveedores de Tuveloz puede servirle a su negocio. Las solicitudes de clientes todavía están cerradas y solicitar es gratis: <https://tuveloz.com/es/join>. No necesita responder si no le interesa. Que esté bien.
 
-Post from the Tuveloz account where group rules allow business posts;
-otherwise skip the group — never astroturf from a personal account.
+## Community post — English
 
-EN:
-> **Montgomery County mechanics & detailers — run your own book of business.**
-> Tuveloz is a new local marketplace for vehicle services (battery & jump
-> starts, detailing, wipers & bulbs, basic diagnostics). We're onboarding
-> independent providers now, ahead of customer launch: join free, set your own
-> prices, keep 100% of what you quote — the customer pays the site's small
-> fee, not you. No exclusivity, no subscription. Customer requests open after
-> launch review, so applying now puts you at the front of the line.
-> Apply (English/Español): tuveloz.com/join
+> **Do you run a vehicle-service business in Montgomery County?**
+>
+> Tuveloz is preparing a local marketplace where customers will be able to compare quotes from independent vehicle-service providers. Provider applications are open now; customer requests and payments are not open yet.
+>
+> Applying is free. Choose the services you already offer, set your own prices and schedule, and add required documents later through your private account. Tuveloz has no provider subscription or lead fee today, and there is no exclusivity.
+>
+> Review the application: <https://tuveloz.com/join>
 
-ES:
-> **Mecánicos y detalladores del Condado de Montgomery — maneje su propio
-> negocio.** Tuveloz es un nuevo mercado local de servicios vehiculares
-> (batería y arranques, detallado, limpiaparabrisas y bombillas, diagnóstico
-> básico). Estamos inscribiendo proveedores independientes ahora, antes del
-> lanzamiento para clientes: únase gratis, ponga sus propios precios y
-> quédese con el 100% de lo que cotiza — el cliente paga la pequeña tarifa
-> del sitio, no usted. Sin exclusividad, sin suscripción. Las solicitudes de
-> clientes abren después de la revisión de lanzamiento, así que aplicar ahora
-> lo pone al frente de la fila. Aplique (English/Español): tuveloz.com/join
+## Publicación comunitaria — español
 
-## 5. Flyer copy (print — parts stores, gas stations, laundromats, car washes)
+> **¿Tiene un negocio de servicios para vehículos en el Condado de Montgomery?**
+>
+> Tuveloz está preparando un mercado local donde los clientes podrán comparar cotizaciones de proveedores independientes. Las solicitudes para proveedores están abiertas; las solicitudes y los pagos de clientes todavía no están disponibles.
+>
+> Solicitar es gratis. Elija los servicios que ya ofrece, establezca sus propios precios y horario, y agregue los documentos requeridos después desde su cuenta privada. Hoy Tuveloz no cobra suscripción ni contactos a los proveedores, y no exige exclusividad.
+>
+> Revise la solicitud: <https://tuveloz.com/es/join>
 
-One page, both languages on the same sheet. Big QR code to
-https://tuveloz.com/join centered at the bottom.
+## Short answers to common questions
 
-EN (top half):
-> **MECHANICS · DETAILERS · ROADSIDE PROS**
-> **Your business. Your price. Your schedule.**
-> Tuveloz is a new vehicle-services marketplace for Montgomery County.
-> ✓ Join free — no listing fee, no subscription
-> ✓ Keep 100% of your quoted price
-> ✓ No exclusivity — keep your other work
-> Customer requests open after launch review. Apply now and be ready on
-> day one.
+**Are customer jobs available now?**
 
-ES (bottom half):
-> **MECÁNICOS · DETALLADORES · ASISTENCIA VIAL**
-> **Su negocio. Su precio. Su horario.**
-> Tuveloz es un nuevo mercado de servicios vehiculares para el Condado de
-> Montgomery.
-> ✓ Únase gratis — sin tarifa de publicación, sin suscripción
-> ✓ Quédese con el 100% de su precio cotizado
-> ✓ Sin exclusividad — conserve sus otros trabajos
-> Las solicitudes de clientes abren después de la revisión de lanzamiento.
-> Aplique ahora y esté listo el primer día.
+No. Provider applications are open while Tuveloz completes its launch reviews. Customer requests, bookings, and payments remain closed.
 
-QR caption / Leyenda del QR: **tuveloz.com/join** · Customer choice.
-Provider freedom.
+**What does it cost a provider?**
 
-## 6. Where to find providers (MoCo)
+Applying is free. There is no provider listing fee, lead fee, or subscription today. Providers keep the price they quote. The planned 5% Customer Service Fee is added to the customer's total.
 
-- Facebook: Marketplace "services" listings; groups — search "Silver Spring",
-  "Gaithersburg", "Germantown", "Wheaton", "Rockville" + buy/sell/community,
-  and Spanish-language MoCo groups.
-- Craigslist DC → Maryland → automotive services (filter Montgomery County
-  towns).
-- Nextdoor business pages and recommendation threads asking for mobile
-  mechanics/detailers.
-- In person: independent parts counters (used-parts yards, non-chain stores),
-  car washes that host independent detailers, gas stations with repair bays.
+**What documents do I need?**
 
-Track every contact (name, service, platform, date, language, response) in a
-simple sheet so the one-follow-up rule is enforceable.
+That depends on the exact service and where it will be performed. Choose only the services you already offer; the application and private checklist show what is needed for each selection. Documents can be added later.
+
+**Does applying mean I am approved?**
+
+No. Each selected service stays pending until the identity, business, competency, license, registration, and insurance evidence required for that service is reviewed.
+
+**Does Tuveloz send or supervise mechanics?**
+
+No. Tuveloz connects customers with independent provider businesses. The provider chosen by the customer performs and controls the work.
+
+**What is a founding provider?**
+
+The published program records that a provider joined before customer launch; it is not an endorsement and does not change customer ranking or job access. Share <https://tuveloz.com/founding-providers> only when someone asks about it.
+
+## Contact record
+
+Keep the outreach log private. Record only the business name, public business contact channel, service area, public source URL, date, language, sender account, response, opt-out status, and one allowed follow-up date. Do not put personal phone numbers, private email addresses, or message transcripts in the repository.

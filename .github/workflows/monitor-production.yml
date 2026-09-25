@@ -1,0 +1,41 @@
+name: Monitor Tuveloz production
+
+on:
+  schedule:
+    # Avoid the top of the hour, when scheduled GitHub Actions can be delayed.
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tuveloz-production-health-monitor
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: Check site, database, and launch locks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.13.0
+
+      - name: Verify production health
+        run: node scripts/check-production-health.mjs
+
+      - name: Record failure guidance
+        if: failure()
+        run: |
+          {
+            echo "## Tuveloz production needs attention"
+            echo "The independent health check could not confirm the site, database schema, and closed customer transaction gates."
+            echo "Review the failed step before changing production or accepting customer jobs."
+          } >> "$GITHUB_STEP_SUMMARY"
