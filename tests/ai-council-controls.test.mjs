@@ -118,6 +118,7 @@ test("CLI is preview-only unless --run is explicit", async () => {
         OPENAI_API_KEY: "",
         GEMINI_API_KEY: "",
         ANTHROPIC_API_KEY: "",
+        NODE_NO_WARNINGS: "1",
       },
     },
   );
@@ -136,6 +137,7 @@ test("CLI rejects unknown options and missing values before any provider call", 
       OPENAI_API_KEY: "",
       GEMINI_API_KEY: "",
       ANTHROPIC_API_KEY: "",
+      NODE_NO_WARNINGS: "1",
     },
   };
   await assert.rejects(
