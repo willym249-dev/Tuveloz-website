@@ -6,6 +6,7 @@
 
 import { env } from "cloudflare:workers";
 import {
+  councilModelsFromEnvironment,
   consult,
   type CouncilCache,
   type CouncilKeys,
@@ -37,6 +38,10 @@ function optionalEnvText(key: string) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function runtimeEnvironment() {
+  return env as unknown as Record<string, string | undefined>;
+}
+
 function runtimeKeys(): CouncilKeys {
   return {
     openai: optionalEnvText("OPENAI_API_KEY"),
@@ -51,5 +56,8 @@ export function councilConfigured() {
 }
 
 export async function askCouncil(task: CouncilTask): Promise<CouncilResult> {
-  return consult(runtimeKeys(), task, { cache: runtimeCache });
+  return consult(runtimeKeys(), task, {
+    cache: runtimeCache,
+    models: councilModelsFromEnvironment(runtimeEnvironment()),
+  });
 }

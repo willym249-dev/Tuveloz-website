@@ -2,10 +2,17 @@
 
 - **Status:** active; operational proof and launch reviews incomplete
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-06
+- **Last reviewed:** 2026-09-25
 
 Internal operations doc. How to take the provider side from "applications open"
 to "qualifying providers go active for real." Not public copy.
+
+**Current scanner note:** production now selects the owner-operated ClamAV
+runner at the 3,500,000-byte evidence limit. The September 4–5 Cloudmersive
+sections below are preserved as dated history and fallback setup, not current
+activation instructions. Use the current
+[scanner activation procedure](operations/evidence-scanner-activation.md) and
+[prelaunch reconciliation](business/2026-09-25-prelaunch-reconciliation.md).
 
 **September 6 upload update:** At the owner's request, new provider evidence
 uploads are capped at 3,500,000 bytes. Larger document photos can be resized
@@ -13,7 +20,7 @@ locally with a readability preview; PDFs retain all pages and must fit the cap.
 The upload form supports English and Spanish. The earlier 10 MB capacity
 mismatch below is historical. Production-use terms, shared scanner capacity
 and a guarded live scan remain unresolved; no payment retry or scanner
-activation is authorized by this size change. See the current
+activation was authorized by that size change. See the current
 [scanner activation procedure](operations/evidence-scanner-activation.md).
 
 ## What is already true (code-side, shipped)
@@ -49,7 +56,7 @@ and at least one needs counsel review. That is by design.
 
 ---
 
-## September 4 configuration audit
+## Historical September 4 configuration audit
 
 The deployed secret-name inventory includes the dedicated Stripe Identity key,
 webhook secret, and reusable flow ID; their presence does not prove valid values
@@ -71,7 +78,7 @@ PR #187 deployed as `3a7c28c` on September 5, with both deployment jobs and
 19 independent live release checks passing. The test-mode proof above does not
 change the outstanding live configuration, genuine canary or launch reviews.
 
-## September 5 scanner account and vendor contract check
+## Historical September 5 Cloudmersive account and vendor contract check
 
 The owner approved Google sign-in and a free Cloudmersive account. The account
 is email-verified and its free API key is stored as an encrypted Worker secret;
@@ -212,7 +219,7 @@ No document number or image expansion is requested. Verify these permissions
 with a fresh test result; a credential-shaped string is insufficient.
 See [Stripe's sensitive result access guide](https://docs.stripe.com/identity/access-verification-results).
 
-**Evidence malware scanner (Cloudmersive):**
+**Optional evidence malware scanner fallback (Cloudmersive):**
 Both encrypted secrets are already present as of September 5. Preserve them
 unless rotation is required; these are the initial setup commands:
 
@@ -222,10 +229,9 @@ node node_modules/wrangler/bin/wrangler.js secret put EVIDENCE_SCAN_WEBHOOK_SECR
 ```
 
 `EVIDENCE_SCAN_PROVIDER` is an existing plain-text setting in `wrangler.jsonc`,
-not a secret. Leave it `unconfigured` until the account plan and the full upload
-limit are verified, then change it to `cloudmersive` through the reviewed
-GitHub deployment. The account still shows Free Tier; the approved Basic
-purchase has not succeeded. Follow the
+not a secret. It is currently `clamav`. Do not change it to `cloudmersive`
+unless the owner separately chooses that fallback after the account plan and
+full upload limit are verified. Follow the
 [scanner activation procedure](operations/evidence-scanner-activation.md).
 
 Recheck the deployed secret names and settings. (`owner_access`, `account_auth`,
@@ -246,9 +252,9 @@ recorded through its guarded pipeline.
    the applicant's guard-stamped active personnel record. Confirm that actual
    result rather than treating return from Stripe as success. Identity and
    selfie documents stay in Stripe's hosted flow, not chat or this repository.
-2. **Scanner canary** — upload **one real evidence file** so Cloudmersive
-   returns a terminal result that lands in D1 with its consumed pending request
-   and authenticated-scanner audit event.
+2. **Scanner canary** — upload **one real permitted evidence file** so the
+   selected ClamAV runner returns a terminal result that lands in D1 with its
+   consumed pending request and authenticated-scanner audit event.
 
 Both are visible as "passed" on `/admin/launch-readiness` once done.
 

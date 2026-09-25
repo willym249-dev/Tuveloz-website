@@ -45,8 +45,10 @@ next-env.d.ts
 /work/
 *.tsbuildinfo
 
-# ai council dev CLI cache (may contain question/answer text, not secrets)
+# private AI council state (may contain questions, answers, and local context)
 /.ai-council-cache.json
+/.ai-council-log.jsonl
+/.ai-council-workspace/
 
 # local Claude Code settings (machine-specific)
 .claude/settings.local.json

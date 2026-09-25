@@ -1,8 +1,10 @@
 # Founding Provider Program
 
-Scarcity is real leverage pre-launch. The founding providers are taking a bet
-on something with no customers, no reviews, and no track record — that's worth
-paying for. This defines what they get.
+Founding providers are the first independent businesses willing to complete
+review while Tuveloz is still preparing for customer launch. This document
+defines the limited benefits Tuveloz has publicly committed to giving them. It
+does not turn early participation into an endorsement, ranking advantage, or
+promise of customer work.
 
 **Two tiers, one number.** A provider's founding rank is assigned once, at
 first verification, and never recomputed:
@@ -60,12 +62,10 @@ customer sees.
    Scoped deliberately to the provider membership fee — it does not touch the
    Customer Service Fee, and the public page says so explicitly.
 
-   Be clear-eyed about what this costs. It is permanent, and in year five it
-   means 20 free accounts sitting alongside paying ones, at whatever the
-   membership price turns out to be. That is the deal being offered for
-   signing up when there was nothing to sign up to, and it is worth it if
-   those 20 are the ones who make the marketplace exist. It is not
-   retractable, so it should never be extended past 20 casually.
+   The commitment is permanent. If Tuveloz later introduces a provider
+   membership, these 20 accounts remain exempt while they stay in good standing.
+   It is not retractable and must not be extended past 20 without a separate,
+   documented business decision.
 
 1. **The spotlight post — ranks 1–10.** Capped at 10 — that cap is what makes
    it worth having. See `provider-spotlight-kit.md`.
@@ -104,8 +104,8 @@ first 40. `FOUNDING_COHORT_SIZE` in `lib/founding-cohort.ts` is the single
 place that number lives; changing it is a business decision, not a config
 tweak.
 
-**Guaranteed jobs, volume, or income.** Can't be delivered, already banned by
-your own honesty rules, and the first cohort is precisely who'd notice.
+**Promises of jobs, volume, or income.** Tuveloz cannot honestly promise these,
+especially before customer requests open.
 
 **Exclusive category or territory locks.** "You're our only detailer in
 Rockville" starves supply in exactly the categories you most need to fill, and

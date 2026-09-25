@@ -1,7 +1,8 @@
-// A shared, git-tracked record of what the GPT/Gemini/Claude council has
-// already decided about this site, so the three stay in sync across
-// sessions instead of contradicting each other. Pure formatting/parsing
-// only — reading and writing the file lives in scripts/ai-council.ts.
+// A private local record of what the GPT/Gemini/Claude council has already
+// decided about this site, so the three stay in sync across sessions instead
+// of contradicting each other. The file is gitignored because questions and
+// answers may contain business context. Pure formatting/parsing only — reading
+// and writing the file lives in scripts/ai-council.ts.
 
 import type { CouncilMode } from "./council.ts";
 

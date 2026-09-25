@@ -369,8 +369,9 @@ you keep 100% of what you quote (customers pay the site's 5% fee), no exclusivit
 > Tuveloz is a new Montgomery County marketplace for mobile vehicle services — and we're
 > signing up providers before launch.
 > ✅ Free to join ✅ You set your prices and keep 100% of what you quote ✅ No exclusivity
-> Straight up: customer requests aren't live yet. Applying now means your review is done and
-> you're first in line on day one.
+> Customer requests aren't live yet. Apply now to choose your services, see exactly what we'll
+> need, and prepare your profile before customer launch. Applying does not guarantee approval
+> or work.
 > Link in bio → tuveloz.com/join
 
 **Ep 2 — Check engine**

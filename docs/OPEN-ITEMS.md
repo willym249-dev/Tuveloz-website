@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-25
 
 The things that must not be forgotten. An expired insurance certificate, a
 lapsed registration, or a legal review gone stale can block provider activation
@@ -36,7 +36,7 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
-| 2026-09-07 | Complete the owner-only Google Workspace service-continuity check and record the outcome privately. September 5 recheck: Gmail still shows the September 7 warning; Admin requires an additional password check. [Google Admin](https://admin.google.com/) can be opened from a phone | hello@tuveloz.com | blocked |
+| 2026-09-07 | Complete the owner-only Google Workspace service-continuity check and record the outcome privately. Completed September 25: the business inbox loads and activation and payment receipts are present. Exact Admin subscription details still require fresh account verification before they can be used as launch-gate evidence | hello@tuveloz.com | done |
 | 2026-08-24 | Name a person to monitor `dmarc@tuveloz.com`. Receipt is no longer in question — checked 2026-08-16, Google's aggregate reports do arrive (three on file, 08-08 through 08-12), and most are unread. Only the reader is missing, and until someone reads them the `rua` address is decorative and DMARC stays at `p=none` | hello@tuveloz.com | open |
 | 2026-09-14 | Rotate the DKIM key for `updates.tuveloz.com` to 2048-bit; Resend issued the current 1024-bit default | hello@tuveloz.com | open |
 | 2026-09-21 | Review a full month of DMARC aggregate reports and inventory every legitimate sender before any enforcement change | hello@tuveloz.com | open |
@@ -50,7 +50,7 @@ When you close something significant, write a matching entry in
 | 2026-08-25 | When PR #97 lands, add its competitive landscape and provider classification documents to `README.md`, and its jurisdiction-scoped compliance rules to `CLAUDE.md`. Done 2026-08-11 in #97. The pitch row is satisfied by `brand/SALES_PITCH.md` from #104, which landed first and supersedes #97's own pitch draft | hello@tuveloz.com | done |
 | 2026-09-08 | Take stock of which business documents already exist — insurance, LLC formation, EIN, Maryland registrations, licenses — and file a record card for each in `records/` | hello@tuveloz.com | open |
 | 2026-09-15 | Add renewal dates to this table once the record cards exist, so expirations are actually tracked | hello@tuveloz.com | open |
-| 2026-08-25 | Complete the [launch review packet](business/launch-gate-briefing.md) and record supported decisions in `/admin/launch-readiness`. September 5 live refresh: all 18 review controls remain Pending (17 required gates and one optional lane); scanner capacity, a genuine provider Identity result, and required business/reviewer evidence remain incomplete | hello@tuveloz.com | blocked |
+| 2026-08-25 | Complete the [launch review packet](business/launch-gate-briefing.md) and record supported decisions in `/admin/launch-readiness`. September 5 live refresh found all 18 review controls Pending (17 required gates and one optional lane). September 25 reconciliation confirmed the ClamAV task and signed connection with an empty queue; a real file result, a genuine provider Identity result, and required business/reviewer evidence remain incomplete | hello@tuveloz.com | blocked |
 | 2026-09-15 | Recheck the Search Console indexing report after Google recrawls `robots.txt` — the `/q/` short links should drop out of "Page with redirect". If they persist, the deploy did not carry the robots change | hello@tuveloz.com | open |
 | 2026-09-15 | Add provider storefronts to `app/sitemap.ts` once they are public and worth finding; it currently lists 19 static pages and no `/providers/<slug>` at all. Date is a review checkpoint, not a commitment — the work is contingent on discovery opening | hello@tuveloz.com | open |
 

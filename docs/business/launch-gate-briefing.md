@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-05
+- **Last reviewed:** 2026-09-25
 - **Applies to:** the 18 launch gates in `lib/launch-readiness.ts`
 
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
@@ -11,7 +11,10 @@ references, so a reviewer confirms findings instead of interviewing someone from
 scratch. The authenticated production review page was refreshed on September 5,
 2026: all eighteen review controls showed Pending, with no approved gate visible.
 There are **seventeen required gates and one optional employee/trainee lane**.
-Recheck the live page before recording a decision; this is a dated snapshot.
+Recheck the live page before recording a decision; the September 5 control
+count is a dated snapshot. Start with the current
+[`2026-09-25-prelaunch-reconciliation.md`](./2026-09-25-prelaunch-reconciliation.md)
+before using the older evidence below.
 
 This document records evidence. It decides nothing. Gates are answered in
 `/admin/launch-readiness`, each decision stores who made it and an evidence
@@ -30,17 +33,17 @@ is incomplete.** Do not repeat account creation or describe these as unbuilt:
 
 | Gate | Blocker |
 | --- | --- |
-| `evidence_file_security_and_scanner` | Cloudmersive account and both encrypted scanner secrets exist. The account still shows Free Tier; processing remains `unconfigured`. Confirm paid capacity, test the full upload limit, then prove the guarded production scan and complete security review. |
+| `evidence_file_security_and_scanner` | The owner-operated ClamAV path is selected. Its scheduled task, signed production claim connection, and current definitions were observed on September 25, but the queue was empty. A real permitted file still needs a terminal result and retained readiness receipt; file safety does not establish document authenticity. |
 | `provider_identity_and_business_verification` | Live Stripe Identity is configured with its dedicated key, signed webhook, and `stripe_identity` provider setting. The live review page still lacks a current approved session bound to a genuine provider's active personnel record. |
 
 Reviewers can examine the implementation now. Final approval still needs the
 missing operational results. Stripe business-account verification is separate
 from a provider applicant's ID and selfie check.
 
-The other immediate account issue is Google Workspace continuity. On September
-5, Gmail still warned of suspension on September 7, and Google Admin required
-another password check. See the dated item in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md).
-Mailbox access does not establish that billing is current.
+Google Workspace mail loads again, and the business inbox contains activation
+and payment receipts. Google Admin still requires a fresh account verification
+before its exact subscription details can be recorded as gate evidence. See
+the dated item in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md).
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
@@ -116,10 +119,10 @@ Restricted storage, access logs, download controls, backups, deletion, and a
 real external scanner; a pending scan must keep evidence quarantined.
 *Existing:* quarantine-until-clean is enforced — the compliance route refuses to
 open a file unless the latest scan row reports `clean`, and a missing row blocks
-too. The scheduled Cloudmersive adapter, authenticated recorder, and retry and
-timeout checks are implemented. *Missing:* active plan capacity, a full-size
-vendor test, and a guarded production scan. Both secrets were confirmed present
-on September 5; `EVIDENCE_SCAN_PROVIDER` remains `unconfigured`. Follow the
+too. The owner-operated ClamAV path is selected, and the scheduled task, signed
+claim connection, and current definitions were observed on September 25.
+*Missing:* a real permitted file reaching a terminal production result, retained
+readiness evidence, capacity review, and security review. Follow the
 [scanner activation runbook](../operations/evidence-scanner-activation.md).
 
 **`privacy_retention_and_data_rights`** — *privacy, required*
@@ -237,12 +240,12 @@ before treating it as ordinary product work.
 
 ## Suggested order
 
-1. **Protect business mail continuity.** Resolve the Google Workspace billing
-   notice by September 7. Google Admin can be opened from a phone; no password
-   belongs in chat or this repository.
-2. **Resolve Cloudmersive billing, then verify capacity.** The approved Basic
-   purchase has not succeeded. Do not retry an unchanged declined method.
-   Preserve quarantine until the actual file-size and scan checks pass.
+1. **Finish the scanner canary.** Use one real, permitted provider file through
+   the selected ClamAV path. Preserve quarantine until the terminal result,
+   audit binding, and retained readiness receipt agree.
+2. **Record business-mail evidence.** Mail currently loads and payment evidence
+   exists; use a fresh Google Admin verification only when exact subscription
+   detail is needed for a gate. No password belongs in chat or this repository.
 3. **Complete a genuine provider Identity check.** The applicant uses
    [provider onboarding](https://tuveloz.com/provider-onboarding) in their own
    account. Their ID/selfie goes directly to Stripe's hosted flow. A successful

@@ -6,11 +6,12 @@
 // cheap-to-send blocks.
 
 export const PROJECT_BRIEF =
-  "Tuveloz (tuveloz.com) is a Maryland home-services marketplace: Next.js on " +
+  "Tuveloz (tuveloz.com) is a Maryland vehicle-services marketplace: Next.js on " +
   "Cloudflare Workers, D1 (Drizzle ORM) for data, R2 for uploads, Stripe for " +
-  "payments and Identity verification. Core flows: customers post job " +
-  "requests, providers apply and get vetted (compliance/evidence review), " +
-  "providers send quotes, an owner dashboard oversees launch readiness.";
+  "payments and Identity verification. Provider applications are open, while " +
+  "customer job requests, bookings, and live payments remain closed until the " +
+  "owner completes the launch gates. Tuveloz connects customers with independent " +
+  "providers; it does not perform vehicle work or meet customers.";
 
 export type GitState = {
   branch: string;

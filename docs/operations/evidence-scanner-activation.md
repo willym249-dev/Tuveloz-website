@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-06
+- **Last reviewed:** 2026-09-25
 - **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the supported document scanners,
   and the `evidence_file_security_and_scanner` launch gate
 
@@ -11,9 +11,11 @@ callback secret are stored as encrypted Worker secrets; both names were verified
 in the active deployment on September 5. No secret value was printed or saved
 locally during callback-secret setup. The current deployment configuration selects
 the owner-PC ClamAV runner. Its separate `SELF_HOSTED_SCAN_SECRET` is encrypted
-in Cloudflare and protected locally with the owner's Windows account. A selected
-provider and installed task do not prove a successful or continuously available
-connection; verify the task, exact scan receipt and operational check below.
+in Cloudflare and protected locally with the owner's Windows account. On
+September 25 the scheduled task, signed production claim, and current antivirus
+definitions were observed. The queue was empty, so no file reached a terminal
+scan result. This proves the connection and current runner state, not continuous
+availability or the missing end-to-end file canary.
 The last account check showed Free Tier. On September 5 the first recorded
 Basic payment attempt failed; no paid subscription was confirmed. The owner
 has since asked to reduce document uploads to 3.5 MB and add photo resizing.
@@ -28,7 +30,8 @@ A free, owner-PC alternative is implemented in
 [`../../scanner/README.md`](../../scanner/README.md). It combines ClamAV with
 strict PDF/image checks and a signed outbound connection. It has its own
 credential, installation, verification and rollback procedure. Local tests do
-not establish a live connection or launch readiness.
+not establish launch readiness; the observed live connection still needs a
+real permitted file result.
 The Cloudmersive instructions below remain a reference for a separately chosen
 vendor integration.
 
@@ -74,7 +77,11 @@ Evidence is already quarantined until a scan reports `clean`, and that holds
 whether or not a scanner is configured. Turning the scanner on does not create
 the quarantine; it creates the only way out of it.
 
-## Order of operations
+## Cloudmersive fallback — order of operations
+
+The active selection is ClamAV. Do not switch to Cloudmersive merely to run the
+steps below. They are retained only if the owner later chooses the vendor
+fallback after reviewing cost and capacity.
 
 **Do not set `EVIDENCE_SCAN_PROVIDER` first.** All three settings are checked
 together by `cloudmersiveScannerConfigured()`, so setting the provider name
