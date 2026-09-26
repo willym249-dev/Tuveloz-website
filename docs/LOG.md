@@ -11,6 +11,28 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Inspect Resend settings and correct enforcement guidance
+
+Preserved the completed checks and clean local handoff branch; no open PRs,
+remote main still `2bdab8b`. Automatic approval review initially blocked the
+Resend Google sign-in. The owner then explicitly approved that account/settings
+inspection, and sign-in succeeded without an account change. The existing
+Tuveloz domain has sending enabled and verified DKIM, SPF TXT, and sending MX.
+No key-size or rotation option was exposed by its Records, Configuration, or
+domain menus, or by the reviewed public domain-update documentation. No keys,
+DNS records, TLS/tracking settings, subscription, or delivery configuration
+changed; no message or support inquiry was sent.
+
+Google's current sender guidance requires at least 1024-bit DKIM and recommends
+2048 where supported. Recorded that the current website key is not itself a
+delivery failure or a reason to buy a plan. Prepared an unsent provider question
+about a supported migration, cost, overlap, and rollback. Rotation stays open.
+Also corrected the future DMARC rollout instructions: RFC 9989 removed `pct`,
+so fractional enforcement is not a reliable way to limit affected messages.
+The owner sender-inventory answer and recurring reader remain pending; retain
+`p=none`. These are maintenance-document corrections only. No application tests,
+deployment, previous report parsing, or delivery tests were repeated.
+
 ## 2026-09-26 - Complete the approved eight-report authentication review
 
 The owner's continuation approved the pending scoped attachment review. Used

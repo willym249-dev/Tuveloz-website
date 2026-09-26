@@ -74,8 +74,8 @@ unknown, not automatic passes. No historical Gmail message was resent.
 forwarder sends with a Tuveloz From address. That owner question is pending.
 Do not authorize the unknown source IPs in SPF or classify them as legitimate
 merely to remove failures. Keep the existing policy while that inventory and
-the next representative post-repair reports are reviewed. A future small
-quarantine rollout needs a named reader, checked legitimate senders, a saved
+the next representative post-repair reports are reviewed. A future reviewed
+quarantine policy change needs a named reader, checked legitimate senders, a saved
 previous DNS value for rollback, and an explicit record of the applied change.
 No DNS or sending-service change was made in this review.
 
@@ -95,6 +95,47 @@ This project's full-month review checkpoint is an internal target, not a
 universal Google requirement. No additional paid reporting service is needed
 to read this small set locally. No recurring reader has been assigned: the
 owner's incident-response availability does not assign DMARC monitoring.
+
+### Resend settings and stronger-key review, September 26
+
+After the owner's explicit approval to sign in with the business Google
+account, the existing Resend team showed `updates.tuveloz.com` as **verified**,
+sending enabled, and its DKIM, SPF TXT, and sending MX records all verified.
+The Records and Configuration tabs and both domain menus exposed no DKIM
+key-length or rotation control. Configuration showed tracking setup and
+opportunistic TLS; those settings were left unchanged. The dashboard's registrar
+label is not evidence of the authoritative DNS host; Cloudflare remains the
+previously verified DNS host. No auto-configuration, restart, deletion, key
+creation, or sending action was performed.
+
+The published 1024-bit Resend key meets Google's stated minimum DKIM key length
+for personal Gmail recipients. Google recommends 2048 bits where supported;
+the key size alone does not establish an email outage or justify a paid upgrade.
+This does not prove compliance with every sender requirement or inbox placement.
+See [Google's sender guidelines](https://support.google.com/mail/answer/81126?hl=en).
+
+Resend's [domain management guide](https://resend.com/docs/dashboard/domains/manage-domains)
+and [update-domain API](https://resend.com/docs/api-reference/domains/update-domain)
+also expose no documented key-size option in the reviewed controls. This is
+not proof that support cannot offer a migration. Rotation remains open pending
+a supported procedure; never substitute a locally generated public key or
+delete/recreate the working domain to try to force a stronger key.
+
+**Prepared question for Resend support, not sent:** Can the existing signing
+key for `updates.tuveloz.com` migrate to 2048 bits on the current plan without
+recreating the domain or interrupting sending? Please confirm any charge, the
+provider-managed procedure, old/new selector overlap, and rollback requirements.
+Contacting support and any resulting change are separate actions.
+
+### Enforcement guidance: do not rely on a percentage limit
+
+[RFC 9989, Appendix A.6](https://datatracker.ietf.org/doc/rfc9989/)
+removes the old `pct` tag because fractional enforcement was unreliable.
+Do not treat `pct=5` or `pct=10` as a reliable limit on affected mail, even if an
+older rollout guide suggests it. Do not assume the replacement testing tag is
+supported by every receiver either. Retain `p=none` until the sender inventory,
+representative reports, named reader, and rollback plan support an explicitly
+reviewed policy change. No DMARC record changed during this review.
 
 ## Current configuration
 
@@ -238,8 +279,12 @@ enforcement before that inventory is complete silently sends real mail to spam.
    checking aggregate reports before enforcement.
 4. Only then move to `p=quarantine`, deliberately, once every legitimate sender
    is known to align.
-5. Rotate DKIM to a 2048-bit key. The current key is Resend's 1024-bit default —
-   acceptable, but below current practice.
+5. Confirm a supported 2048-bit DKIM migration with Resend before planning a
+   rotation. The existing 1024-bit key meets Google's stated key-length minimum;
+   the September 26 account review found no rotation control. This is a
+   provider-coordinated security improvement, not evidence of broken delivery
+   or a reason to purchase an upgrade. Preserve the working key until a safe
+   procedure and any cost are known.
 
 Deadlines for each step are tracked in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md);
 the automated weekly check reads that table, not this page.
