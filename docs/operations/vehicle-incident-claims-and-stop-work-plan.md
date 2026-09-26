@@ -199,9 +199,33 @@ deleting potentially committed evidence.
 `test:e2e:job-evidence` verifies the real page in Chromium and WebKit against a
 synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
 draft, and refreshing after a saved upload never resubmits it. Neither test uses
-hosted R2 or attaches the photo to `job_incidents`; the incident-link control and
-hosted participant upload remain unfinished. Owner and insurer review remain
-required independently of these tests.
+hosted R2 or attaches the photo to `job_incidents`. The additional incident-link
+test below covers that separate route; a hosted participant upload remains
+unverified. Owner and insurer review remain required independently of these tests.
+
+### Linking saved evidence to an incident
+
+The isolated job console now offers **Link a saved photo or note** on open,
+under-review, and insurer-review incidents. It lists only saved records from
+the same job and current customer/provider assignment. A participant can first
+save a photo or note in the existing private job-evidence workspace. The owner
+can link an existing record but cannot impersonate a participant upload.
+
+Links are appended without replacing earlier references. The link and verified
+actor audit are saved in one D1 transaction; changed assignments, incident
+status, existing references, or test isolation reject a stale request. Duplicate
+links are idempotent. Closed incidents and malformed legacy references require
+support review. Linking does not change the payment hold, resolution, work-stop
+record, or insurer notice, and never creates a transfer. Photos use authenticated,
+job-scoped URLs and private, no-store responses. Storage keys are not exposed.
+
+`tests/incident-evidence.test.mjs` executes actual account/owner authentication,
+multipart upload, incident creation, link, and image-read routes with migrated
+SQLite and in-memory R2. It covers wrong-job/party records, unauthorized access,
+atomic rollback, concurrent changes, lost acknowledgements, and unchanged holds.
+The actual console passes owner/customer/provider selection, rejected-attempt
+retention, retry, and photo-opening checks in Chromium and WebKit. These are
+synthetic technical tests; hosted linking is still pending at this entry.
 
 ### Owner decisions and later hold release
 

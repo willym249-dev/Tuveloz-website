@@ -20,6 +20,14 @@ import { isServiceCode } from "../../lib/provider-policy";
 
 type ActorRole = "customer" | "provider" | "owner";
 type JobRecord = Record<string, unknown> & { id?: string };
+type SavedEvidence = {
+  id: string;
+  note: string;
+  evidenceType: string;
+  createdAt: string;
+  uploadedByRole: string;
+  imageUrl: string;
+};
 
 type JobOperationsData = {
   testOnly: true;
@@ -38,6 +46,7 @@ type JobOperationsData = {
   invoices: JobRecord[];
   paymentAdjustments: JobRecord[];
   lifecycle: JobRecord[];
+  evidence?: SavedEvidence[];
 };
 
 type Field = {
@@ -168,7 +177,7 @@ function OperationForm({
       } else values[field.name] = raw;
     }
     const saved = await onSubmit(action, values, key);
-    if (saved && (action.startsWith("report-") || action === "request-refund" || action === "record-payment-hold")) {
+    if (saved && (action.startsWith("report-") || action === "request-refund" || action === "record-payment-hold" || action === "link-incident-evidence")) {
       form.reset();
     }
   }
@@ -597,7 +606,44 @@ export function JobOperationsConsole() {
           </RecordSection>
 
           <RecordSection title="Incidents, claims, and stop-work" records={data.incidents} empty="No incident or claim record exists.">
-            {(item) => <><h3>{words(item.incidentType)} / {words(item.severity)}</h3><p><strong>Status:</strong> {words(item.status)} / <strong>payment hold:</strong> {words(item.holdPayments)} / <strong>occurred:</strong> {when(item.occurredAt)}</p><p>{words(item.summary)}</p><p>Injury: {words(item.injuryReported)} / property damage: {words(item.propertyDamageReported)} / emergency services: {words(item.emergencyServicesContacted)}</p>{item.resolution && <p><strong>Resolution:</strong> {words(item.resolution)}</p>}</>}
+            {(item) => {
+              const ids = Array.isArray(item.evidenceIds) ? item.evidenceIds as string[] : [];
+              const available = (data.evidence || []).filter(record => !ids.includes(record.id));
+              const canLink = ["open", "under_review", "insurer_review"].includes(String(item.status)) && item.evidenceIds !== null;
+              return <>
+                <h3>{words(item.incidentType)} / {words(item.severity)}</h3>
+                <p><strong>Status:</strong> {words(item.status)} / <strong>payment hold:</strong> {words(item.holdPayments)} / <strong>occurred:</strong> {when(item.occurredAt)}</p>
+                <p>{words(item.summary)}</p>
+                <p>Injury: {words(item.injuryReported)} / property damage: {words(item.propertyDamageReported)} / emergency services: {words(item.emergencyServicesContacted)}</p>
+                {item.resolution && <p><strong>Resolution:</strong> {words(item.resolution)}</p>}
+                <h4>Linked photos and notes</h4>
+                {item.evidenceIds === null ? <p>The saved evidence links need support review.</p> : ids.length === 0 ? <p>No photos or notes linked yet.</p> : (
+                  <ul>{ids.map(id => {
+                    const record = (data.evidence || []).find(candidate => candidate.id === id);
+                    return <li key={id}>{record ? <>
+                      <p>{record.note || "Saved job photo"}</p>
+                      <small>{words(record.uploadedByRole)} · {when(record.createdAt)}</small>
+                      {record.imageUrl && <p><a href={record.imageUrl} target="_blank" rel="noopener noreferrer">Open saved photo</a></p>}
+                    </> : "A linked record is currently unavailable. Contact Tuveloz support."}</li>;
+                  })}</ul>
+                )}
+                {canLink && available.length > 0 && <OperationForm
+                  title="Link a saved photo or note"
+                  role="From this job only"
+                  action="link-incident-evidence"
+                  fixed={{ incidentId: item.id }}
+                  busy={isBusy("link-incident-evidence", String(item.id))}
+                  onSubmit={submit}
+                  fields={[{ name: "evidenceId", label: "Saved photo or note", type: "select", required: true,
+                    defaultValue: "", options: available.map(record => ({
+                      value: record.id, label: `${record.imageUrl ? "Photo" : "Note"} · ${when(record.createdAt)} · ${record.note.slice(0, 100) || "Saved job photo"}`,
+                    })) }]}
+                  warning="Earlier links are kept. Linking a record does not release a payment hold or change the incident's resolution."
+                />}
+                {canLink && role !== "owner" && <p><a href="/job-evidence">Save a job photo or note</a>, then reload this job to link it here.</p>}
+                {canLink && (data.evidence || []).length === 0 && <p>No photos or notes have been saved for this job.</p>}
+              </>;
+            }}
           </RecordSection>
 
           <RecordSection title="Change orders" records={data.changeOrders} empty="No scope or price change has been proposed.">

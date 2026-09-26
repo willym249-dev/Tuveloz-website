@@ -36,22 +36,33 @@ try {
         const page = await context.newPage();
         const errors = []; page.on("pageerror", error => errors.push(error.message));
         const requests = [];
-        let role = "owner", held = true, denyNext = true;
+        let role = "owner", held = true, denyNext = true, linked = false, denyLink = true, photoReads = 0;
+        const photoUrl = "/api/job-operations?requestId=synthetic-job&evidenceId=saved-photo";
         const snapshot = () => ({ testOnly: true, transferExecutionEnabled: false, actorRole: role,
           job: { requestId: "synthetic-job", status: "assigned", scopeVersion: 1, serviceCodes: [], scheduledFor: "" },
           cancellations: [], changeOrders: [], invoices: [], paymentAdjustments: [], lifecycle: [],
           incidents: [
             { id: "retained", status: "resolved", holdPayments: held ? "yes" : "no", summary: "Synthetic resolved incident" },
-            { id: "open", status: "open", holdPayments: "yes", summary: "Synthetic open incident" },
+            { id: "open", status: "open", holdPayments: "yes", summary: "Synthetic open incident", evidenceIds: linked ? ["saved-photo"] : [] },
             { id: "released", status: "resolved", holdPayments: "no", summary: "Synthetic released incident" },
           ],
+          evidence: [{ id: "saved-photo", note: "Synthetic saved vehicle photo", evidenceType: "customer-condition", uploadedByRole: "customer", createdAt: "2026-09-26T12:00:00Z", imageUrl: photoUrl }],
         });
-        await page.route("**/*", async route => {
+        await context.route("**/*", async route => {
           const request = route.request(); const url = new URL(request.url());
           assert.equal(url.origin, origin, "fixture must never contact a real service");
           if (url.pathname !== "/api/job-operations") return route.continue();
+          if (url.searchParams.has("evidenceId")) {
+            photoReads++;
+            return route.fulfill({ contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1cAAAAASUVORK5CYII=", "base64") });
+          }
           if (request.method() === "GET") return route.fulfill({ json: snapshot() });
           requests.push(request.postDataJSON());
+          if (request.postDataJSON().action === "link-incident-evidence") {
+            if (denyLink) { denyLink = false; return route.fulfill({ status: 409, json: { error: "The job changed. Refresh the incident before linking this record." } }); }
+            linked = true;
+            return route.fulfill({ json: { ok: true, notice: "Photo or note linked. The incident's payment hold is unchanged." } });
+          }
           if (denyNext) { denyNext = false; return route.fulfill({ status: 409, json: { error: "This incident changed. Refresh the job before trying again." } }); }
           held = false;
           return route.fulfill({ json: { ok: true, status: "resolved", paymentHoldReleased: true, transferCreated: false } });
@@ -80,6 +91,35 @@ try {
           role = "customer"; held = true; await page.reload();
           await page.getByRole("heading", { name: "Controlled test actions", exact: true }).waitFor();
           assert.equal(await page.getByText(title, { exact: true }).count(), 0, "customer must not see owner release controls");
+          for (const actorRole of ["owner", "customer", "provider"]) {
+            role = actorRole; linked = false; denyLink = true;
+            await page.reload();
+            const incident = page.locator(".job-record-card").filter({ has: page.getByText("Synthetic open incident", { exact: true }) });
+            const linker = incident.locator("details");
+            await linker.locator("summary").click();
+            const select = linker.getByRole("combobox", { name: "Saved photo or note", exact: true });
+            const before = requests.length;
+            await linker.getByRole("button").click();
+            assert.equal(requests.length, before, "an empty selection must not submit");
+            await select.selectOption("saved-photo");
+            await linker.getByRole("button").click();
+            await page.getByRole("alert").waitFor();
+            assert.equal(await select.inputValue(), "saved-photo", "a rejected link preserves the choice");
+            await linker.getByRole("button").click();
+            await incident.getByText("Synthetic saved vehicle photo", { exact: true }).waitFor();
+            assert.equal(await incident.locator("details").count(), 0, "already linked records cannot be selected again");
+            assert.deepEqual(requests.at(-1), { action: "link-incident-evidence", requestId: "synthetic-job", incidentId: "open", evidenceId: "saved-photo" });
+            assert.equal(requests.length, before + 2);
+            assert.match(await incident.textContent(), /payment hold: yes/);
+            const popupPromise = context.waitForEvent("page");
+            await incident.getByRole("link", { name: "Open saved photo", exact: true }).click();
+            const popup = await popupPromise;
+            await popup.waitForLoadState("load");
+            assert.equal(popup.url(), origin + photoUrl);
+            await popup.close();
+            console.log(`PASS ${browserType.name()}: ${actorRole} evidence selection, retry, linked photo and retained hold`);
+          }
+          assert.equal(photoReads, 3);
           assert.deepEqual(errors, []);
           console.log(`PASS ${browserType.name()}: confirmation, retained draft, saved release, owner-only control`);
         } finally { await context.close(); }
