@@ -47,8 +47,13 @@ non-email way into an account.
 
 The authoritative [Verisign RDAP record](https://rdap.verisign.com/com/v1/domain/TUVELOZ.COM)
 was read September 26. Domain status includes client-transfer and client-delete
-locks. Private contact details, auto-renew configuration, and the saved billing
-method were not inspected; registry expiry is not proof of a future successful
-renewal. The June 22, 2027 checkpoint in `OPEN-ITEMS.md` gives a month's lead
-time to confirm renewal and a valid payment method. No purchase or billing
-change was made.
+locks. A signed-in Porkbun review later that day confirmed the July 22, 2027
+expiry, **auto-renew on**, and **Use Privacy Service** selected for tuveloz.com.
+The account's Credit card section reports a saved payment method using Link via
+Stripe. No card expiry is shown in that summary, and no charge was attempted;
+saved billing is not proof that a future renewal payment will succeed.
+
+Private registrant-contact address accuracy remains unreviewed. The June 22,
+2027 checkpoint in `OPEN-ITEMS.md` remains in place to reconfirm renewal and the
+payment method before expiry. No purchase, renewal, billing change, DNS change,
+or privacy-setting change was made.

@@ -73,6 +73,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check dependencies for high and critical security advisories
+        run: npm run security:check
+
       - name: Install browsers for Spanish coverage and document uploads
         run: npx playwright install --with-deps chromium webkit
 

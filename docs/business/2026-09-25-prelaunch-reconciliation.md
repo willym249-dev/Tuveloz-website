@@ -13,11 +13,12 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-- Release `8ae3dd1ffd83cc711c41c21a2a2756a85f60aeb6` (PR #228) deployed
-  successfully through GitHub Actions on September 25 at 12:58 UTC. The three
-  latest production-monitor runs reviewed passed, including September 26 at
-  00:41 UTC. The monitor checks the application, D1, required schema, and closed
-  customer-launch gates. No pull requests were open at this check.
+- Last confirmed release at this record update:
+  `921bccd54eded70aaffeaced1815595eee457e52` (PR #234), built September 26 at
+  10:01:36 UTC. Its release workflow passed and public health at 10:08:37 UTC
+  confirmed the exact commit, ready application/database/schema, and closed
+  customer-launch gates. Consult the current pull-request/release result for
+  subsequent changes; a source update alone does not establish deployment.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
 - The business Gmail inbox loads. Activation and payment receipts are present.
@@ -37,6 +38,10 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   record is complete; ownership authority, private originals, insurance, and
   service licensing remain separate evidence. The first annual-report deadline
   is tracked for April 15, 2027 using Maryland's published next-year rule.
+- September 26 signed-in Porkbun review confirms auto-renew and contact privacy
+  enabled for tuveloz.com, with July 22, 2027 expiry and a saved Link via Stripe
+  payment method. No charge was attempted; the June 22 renewal checkpoint remains.
+  Private registrant-contact address accuracy is still a separate unchecked item.
 
 ## Published code and its activation limits
 

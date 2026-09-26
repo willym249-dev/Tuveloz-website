@@ -1,6 +1,6 @@
 import { disableTypes } from "image-size";
 
-// vinext 0.0.50 reads local image metadata during builds. image-size 2.0.2
-// has no published fix for GHSA-w3rx-r6r6-pgpr / GHSA-5p2g-fcmc-qvqq.
-// These formats are not used for site assets; reject them before parsing.
+// vinext 0.0.50 reads local image metadata during builds. Keep its image-size
+// dependency patched through package.json's shared override. These formats
+// are not used for site assets; retain the restriction as defense in depth.
 disableTypes(["icns", "heif", "jxl", "jxl-stream"]);

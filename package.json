@@ -13,6 +13,7 @@
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "wrangler types --strict-vars=false && tsc --noEmit --incremental false",
+    "security:check": "npm audit --audit-level=high",
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "ai:run": "node --experimental-strip-types scripts/ai-council.ts --run",
     "ai:check": "node scripts/ai-selfcheck.mjs",
@@ -48,7 +49,7 @@
     "@simplewebauthn/server": "13.3.2",
     "drizzle-orm": "0.45.2",
     "jose": "6.2.4",
-    "next": "16.2.12",
+    "next": "16.3.6",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -65,8 +66,8 @@
     "@vitejs/plugin-rsc": "0.5.26",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.12",
-    "image-size": "2.0.2",
+    "eslint-config-next": "16.3.6",
+    "image-size": "2.0.4",
     "playwright": "^1.62.1",
     "react-server-dom-webpack": "19.2.8",
     "tailwindcss": "4.2.1",
@@ -79,7 +80,8 @@
   "displayName": "Tuveloz",
   "overrides": {
     "postcss": "8.5.25",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
+    "image-size": "$image-size",
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
     }

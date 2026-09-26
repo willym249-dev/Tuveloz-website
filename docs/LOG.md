@@ -11,6 +11,61 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Dependency advisories patched and incident guidance corrected
+
+An npm audit found seven affected package entries: one critical and six high,
+including transitive entries caused by shared image dependencies. Updated Next.js
+and eslint-config-next to 16.3.6, image-size to 2.0.4, and the existing sharp
+override to 0.35.4. A shared image-size override also patches vinext's otherwise
+pinned 2.0.2 dependency. The vinext, Cloudflare plugin, and Wrangler versions
+were retained. The unused-format image parser restrictions remain enabled.
+
+The patched lockfile reports zero known vulnerabilities across both application
+and development dependencies. Added `npm run security:check` to the reusable
+verification workflow; high/critical findings or an unsuccessful audit now stop
+that verification before release. The Next.js Windows-server advisory does not
+describe Tuveloz's Cloudflare hosting; an audit finding is not evidence of a
+compromise. Upstream details:
+[Next.js Windows advisory](https://github.com/vercel/next.js/security/advisories/GHSA-p293-qw3h-jr36),
+[Next.js image advisory](https://github.com/vercel/next.js/security/advisories/GHSA-2xp9-vwfh-vxw4),
+[sharp advisory](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c),
+and [image-size parser advisory](https://github.com/advisories/GHSA-5p2g-fcmc-qvqq).
+
+Local build and all 693 tests passed, as did TypeScript/Worker checking. Lint
+passed with one new non-blocking framework warning about the existing full-page
+Spanish-to-English navigation; its behavior was preserved. The first restricted
+test attempt failed on esbuild filesystem access; rerunning with normal checkout
+access passed. CI browser verification and deployment must be checked against
+this change's pull request and release; local results alone do not prove release.
+
+Corrected the draft security incident plan to include the active owner-PC
+scanner, private backups/recovery copies, Stripe-held Identity documents, and
+private contact/evidence custody. It no longer claims that a password throttle
+revokes existing sessions or disables other sign-in methods. Exposed credentials
+should be contained promptly while recording identifiers and context, not kept
+active until evidence collection is complete. Linked the existing vehicle
+incident plan. These technical corrections do not approve any launch-review gate
+or substitute for owner/security/insurer sign-off. No production account,
+credential, customer-payment switch, or private record was modified.
+
+## 2026-09-26 - Signed-in domain renewal review and release confirmed
+
+After the owner completed Porkbun sign-in, reviewed tuveloz.com's own renewal
+and WHOIS controls. Auto-renew is on, Use Privacy Service is selected, and the
+registrar shows expiry July 22, 2027. Account billing reports a saved payment
+method using Link via Stripe. No card expiry is displayed in that summary and
+no charge was attempted, so this does not guarantee a future renewal payment.
+The June 22, 2027 renewal checkpoint remains. Private registrant-contact address
+accuracy remains unreviewed. No purchase, subscription, DNS, privacy, or billing
+setting was changed; no private addresses, card identifiers, or unrelated domain
+names are retained in this record.
+
+PR #234's release `36233899430` completed successfully, including verification,
+browser account signup, migration, and deployment. At 10:08:37 UTC public health
+confirmed exact commit `921bccd54eded70aaffeaced1815595eee457e52`, built at
+10:01:36 UTC, with application, database, and schema ready. Customer accounts and
+provider applications remain open; customer requests and payments remain closed.
+
 ## 2026-09-26 - Existing scanner proof reconciled and company standing refreshed
 
 Corrected an operational handoff error: an empty September 25 scan queue was
