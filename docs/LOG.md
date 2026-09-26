@@ -40,7 +40,13 @@ claims that every provider already has insurance, that every incident stops work
 or that incident details can never reach anyone beyond the chosen provider.
 The owner reports no platform insurance; owner/insurer review, hosted participant
 upload, and real notification delivery remain unfinished. No launch gate changed.
-Publication of this repair is pending the normal required workflows.
+PR #241 passed verification `36260481075` and PR build `36260481377`, then
+merged as `a0d3920ac9762d8adf00a5a0841c04bd2136372d`. All production jobs in
+`36261358204` succeeded. Public health at 18:22:15 UTC confirmed that exact
+release, built 18:20:29 UTC, with application/database/schema ready and customer
+requests/payments closed. The updated incident page returned 200 and signed-out
+incident API access returned 401. Proof: `incident-safety-release-20260926.json`.
+No production incident was created to repeat the isolated regression test.
 
 ## 2026-09-26 - Correct account notices and recover from notification errors
 
