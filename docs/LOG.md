@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Existing staging reused for actual owner incident decisions
+
+Found that staging was already deployed and configured in August despite older
+notes describing it as planned. Reused the existing private Worker, staging
+D1/R2, Access policy, and GitHub environment. No new account, credential, paid
+service, or security permission was needed. Staging run `36247963177` succeeded
+at main commit `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65`, applying the current
+migrations and passing its build/tests. Production was not redeployed.
+
+Validated a synthetic fixture locally, confirmed empty staging fixture tables
+and unused IDs, then inserted one test job, one unapproved test provider, one
+synthetic quote, and two clearly labeled test incidents in one transaction.
+The provider stays new/not reviewed with alerts disabled; no person, insurer,
+identity proof, service approval, or real payment is represented. The reports
+and initial stop time were seeded, so this hosted check is not a report-creation
+or evidence-upload test.
+
+Through the real signed owner session on staging, resolved incident A while
+retaining its hold, checked the required release confirmation, then released
+only A's hold. The UI and an independent D1 query confirmed that B stayed open
+and held, A's original resolution/timestamp stayed intact, and both lifecycle
+events recorded the verified owner. No payment, notification, email-outbox, or
+Identity-session records were added. The test provider was not approved.
+Retain `rehearsal-owner-job-20260926` and incidents `rehearsal-a-20260926` and
+`rehearsal-b-20260926` as synthetic staging evidence; do not recreate them.
+
+Unauthenticated staging access still redirects to Cloudflare Access. Production
+health at 14:26:26 UTC remained on the previous exact commit, all health checks
+ready, customer requests/payments closed. Updated the existing staging and
+incident runbooks and readiness packet. Owner/insurer review, real evidence
+attachment, notification delivery, and any actual payout remain outside this
+technical result; no launch decision changed.
+
 ## 2026-09-26 - Deployed owner access verified without changing review decisions
 
 PR #236 merged as `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65` and

@@ -189,10 +189,13 @@ payment holds, stop-work recording, and rejection of customer/provider release
 attempts through the real routes and local D1. A subsequent local simulation
 also exercises real signed-token verification and owner resolution/hold release,
 using temporary keys and synthetic key transport. Browser tests cover the owner
-control. Deployed owner sign-in and read-only access passed September 26; the
-incident rehearsal on a deployed test job, evidence attachment, insurer/notification
-handling, and final plan review remain separate. The plan records the tested
-scope; do not count local simulations as a completed gate or live payout proof.
+control. Deployed owner sign-in and read-only access passed September 26. The
+actual owner resolution and later hold release subsequently passed on private
+staging with a seeded test job, persisted D1 state, verified owner audit, and
+zero payment/notification records. The reports were seeded; real evidence
+attachment, insurer/notification handling, and final plan review remain
+separate. The plan records the tested scope; neither local simulations nor the
+hosted owner check establishes a completed gate or live payout proof.
 
 ### Payment processor
 

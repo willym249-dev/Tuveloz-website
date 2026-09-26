@@ -217,10 +217,43 @@ was available; no incident was created or modified. This closes only the live
 owner sign-in/access check. PR #236's release and exact public health commit
 were separately verified; see the September 26 log entry.
 
-Still outstanding: an owner-authenticated rehearsal against a persisted
-deployed test job, owner review of the complete process, real evidence
-attachment, notification delivery, insurer/source review, and any separately
-authorized Stripe test. No launch gate is approved by these checks.
+### Hosted staging owner rehearsal
+
+The existing private staging environment was refreshed September 26 by workflow
+`36247963177` to main commit `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65`.
+It uses its own D1 and upload storage; production and recovery data were untouched.
+The staged fixture was validated against the current migrations in local SQLite
+first. A read-only staging preflight confirmed no conflicting IDs or existing
+job/provider/incident rows before the five inserts ran in one transaction.
+
+Fixture: `rehearsal-owner-job-20260926`, a test-only provider left **new / not
+reviewed** with alerts off, a synthetic one-dollar quote, and incidents
+`rehearsal-a-20260926` and `rehearsal-b-20260926`. No identity approval,
+insurance proof, actual service, or real person is represented. The incident
+reports and initial stop time were **seeded fixtures**, not created through a
+customer-report form in this hosted check.
+
+Verified using the real owner session and deployed controls:
+
+- At 14:22:03 UTC, the owner resolved incident A with release unchecked. Its
+  hold remained active and the separate release control appeared.
+- Submitting the release form without its required confirmation was blocked.
+- At 14:22:53 UTC, explicit confirmation released only A's hold. A's original
+  resolution and resolution timestamp were preserved; B stayed open and held.
+- Staging D1 contained exactly the two expected lifecycle events, both tied to
+  the verified owner. The release event recorded `transferCreated=false`.
+- Staging payment, notification, email-outbox, and Identity-session counts
+  remained zero. No provider was approved and no insurer notice was asserted.
+- An unauthenticated request still redirected to Cloudflare Access. Production
+  health at 14:26:26 UTC remained on `3eb2871`, with application/database/schema
+  ready and customer requests/payments closed.
+
+This closes the deployed **owner resolution and hold-release** technical check.
+Do not rerun it by recreating the fixtures. Still outstanding: owner review of
+the complete process, real evidence attachment, notification delivery,
+insurer/source review, and any separately authorized Stripe test. The earlier
+local rehearsal covers incident creation and customer/provider denial. Neither
+result establishes a complete claims exercise or approves a launch gate.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.
