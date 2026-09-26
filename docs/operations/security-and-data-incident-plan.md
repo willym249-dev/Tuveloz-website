@@ -2,7 +2,7 @@
 
 - **Status:** draft — needs owner sign-off and security-reviewer review
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-26 (technical accuracy only; reviewer sign-off pending)
 - **Applies to:** the `security_and_data_incident_plan` launch gate
 
 What to do when Tuveloz data is exposed, an account is taken over, or a vendor
@@ -24,9 +24,11 @@ an incident over. Today that is the owner by default, because there is nobody
 else. Name a second person before launch — a plan with a single point of failure
 fails when that point is asleep or unreachable.
 
-**[OWNER] Escalation contacts**, with a real phone number each, not only email:
+**[OWNER] Escalation contacts:** maintain reachable phone numbers and names in
+an access-controlled contact register outside this repository. Record only the
+private register reference here, not personal contact details.
 
-| Role | Who | Reachable at |
+| Role | Private contact-register reference | Reachability last checked |
 | --- | --- | --- |
 | Incident lead | | |
 | Deputy | | |
@@ -42,31 +44,43 @@ Knowing this before an incident is most of the response.
 
 | Store | Contains |
 | --- | --- |
-| D1 `tuveloz-db` | accounts and password credentials, customer requests and addresses, provider applications, identity-verification sessions, evidence submission records, privacy requests, audit and lifecycle events |
+| D1 `tuveloz-db` | accounts, password hashes/salts, session token hashes, customer requests and addresses, provider applications, Stripe Identity references and outcomes, evidence submission records, privacy requests, audit and lifecycle events |
 | R2 `tuveloz-uploads` | provider evidence files and job images — private bucket, never public |
+| Private backup bucket and isolated recovery resources | database exports, document copies and integrity manifests; treat them as sensitive as the originals |
+| Owner-PC scanner | temporary files while ClamAV checks queued documents, operational logs, and a Windows-account-protected scanner credential |
 | R2 `tuveloz-brand-video` | brand and ad assets. No personal data |
 
 The most sensitive tables are `accountCredentials`,
 `providerIdentityVerificationSessions`, `providerEvidenceSubmissions`, and
-`customerRequests` — identity documents, credentials, and home addresses.
+`customerRequests`, plus `authSessions`. Stripe-hosted identity documents and
+selfies are deliberately not stored in the Identity session table; it holds
+references, status, consent, and decision metadata. Provider-uploaded supporting
+documents remain sensitive in private R2. Hashes and metadata also need protection.
 
 **Vendors that hold or process Tuveloz data:** Cloudflare (hosting, D1, R2),
-Stripe (payments and identity verification), Resend (email delivery), and — once
-configured — Cloudmersive (evidence scanning). Any of them can be the source of
-an incident, and each has its own notification obligation to you.
+Stripe (payments and identity verification), Resend (email delivery), and Google
+Workspace (business email). Porkbun controls domain registration. The active
+malware scanner is the owner-operated ClamAV runner; Cloudmersive is a retained
+fallback, not the current processing path. Include the owner's device and its
+scanner access in containment. Check the actual configured vendors and contracts
+when an incident occurs; do not assume a particular notification obligation.
 
 ## First hour
 
 Do these in order. Speed matters less than not destroying the evidence.
 
-**1. Write down the time and what you saw.** Start a plain file with a timestamp.
+**1. Write down the time and what you saw.** Start a protected incident record
+outside the repository with a timestamp. Do not copy credentials or raw personal
+data into chat, GitHub issues, or this log.
 Every later step appends to it. This becomes the record of what was known when,
 which is the thing you will be asked for and the thing nobody remembers.
 
 **2. Preserve before you fix.** The instinct is to delete the bad thing. Do not.
 
 - Do not delete D1 rows, R2 objects, or log lines until the lead says so.
-- Do not rotate a secret before capturing which one leaked and where it appeared.
+- Record the affected secret's name/version, scope, and exposure location without
+  copying its value. Promptly revoke or rotate exposed access; do not leave a
+  usable leaked credential active while collecting a complete evidence package.
 - Cloudflare Workers logs are not retained indefinitely — capture the relevant
   window to a file early.
 - The audit tables (`providerAuditEvents`, `jobLifecycleEvents`,
@@ -80,10 +94,19 @@ prove something is gone.
 
 **3. Contain, narrowly.** Prefer the smallest action that stops the bleeding.
 
-- A single compromised account: set `lockedUntil` on its `accountCredentials`
-  row. Locking is reversible; deleting is not.
-- A leaked secret: rotate it with `wrangler secret put` **after** recording where
-  it was exposed. Rotation destroys the evidence of which value leaked.
+- A single compromised account: preserve relevant audit evidence, revoke its
+  persisted sessions, and secure the affected sign-in methods with the owner
+  and security reviewer. `accountCredentials.lockedUntil` is a password-login
+  throttle, not a complete account suspension: it does not revoke existing
+  sessions or disable email-code/passkey sign-in. A completed password reset
+  invalidates prior stored sessions, but an attacker with access to the mailbox
+  may sign in again. Verify containment across every enabled authentication
+  method before declaring the account secure. Do not delete the account or its
+  audit history as a substitute for containment.
+- A leaked secret: record its identifier and exposure context, then revoke or
+  rotate through the affected vendor's supported controls. Verify that old
+  access fails and required services work with the replacement. Do not retain
+  or publish the leaked value as part of the incident report.
 - A vendor compromise: assume every credential shared with that vendor is
   exposed, not only the one named in their notice.
 - Marketplace-wide exposure: the locks in `lib/launch-status.ts`,
@@ -127,9 +150,10 @@ here. A contractual deadline can be shorter than a statutory one.
 
 The incident is over when the lead says so, not when it goes quiet.
 
-1. **Write what happened** in [`../LOG.md`](../LOG.md) — what happened, what was
+1. **Write a sanitized summary** in [`../LOG.md`](../LOG.md) — what happened, what was
    known when, what was decided, and what was wrong about the first assessment.
-   The last one is the useful part.
+   The last one is the useful part. Keep the detailed incident record and any
+   affected-person information outside the repository under restricted access.
 2. **Fix the cause, not the symptom.** If a guard should have caught it, add the
    guard and verify it fails without the fix. A test that cannot fail proves
    nothing.
@@ -142,8 +166,9 @@ The incident is over when the lead says so, not when it goes quiet.
 ## What this plan does not cover
 
 - **Vehicle incidents, injury, and stop-work** — that is a separate required
-  gate, `vehicle_incident_claims_and_stop_work`, and a separate plan that does
-  not exist yet.
+  gate, `vehicle_incident_claims_and_stop_work`, covered by the existing
+  [vehicle incident plan](./vehicle-incident-claims-and-stop-work-plan.md).
+  That plan still needs its own owner and insurer review.
 - **Whether Tuveloz carries cyber cover.** **[OWNER]** — the insurance gate
   (`platform_and_service_insurance_bound`) is unanswered, so assume there is no
   cyber policy to call until that changes.
