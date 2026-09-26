@@ -1,14 +1,17 @@
 # Provider Activation Runbook (owner)
 
-- **Status:** active; operational proof and launch reviews incomplete
+- **Status:** active; scanner proof verified, genuine provider Identity and launch reviews incomplete
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-25
+- **Last reviewed:** 2026-09-26
 
 Internal operations doc. How to take the provider side from "applications open"
 to "qualifying providers go active for real." Not public copy.
 
 **Current scanner note:** production now selects the owner-operated ClamAV
-runner at the 3,500,000-byte evidence limit. The September 4–5 Cloudmersive
+runner at the 3,500,000-byte evidence limit. September 6 manual and automatic
+synthetic-file scans were confirmed in live records September 26, with current
+application proof validation passing. The latest proof reaches its 30-day age
+limit October 6; the refresh checkpoint is October 4. The September 4–5 Cloudmersive
 sections below are preserved as dated history and fallback setup, not current
 activation instructions. Use the current
 [scanner activation procedure](operations/evidence-scanner-activation.md) and
@@ -252,9 +255,11 @@ recorded through its guarded pipeline.
    the applicant's guard-stamped active personnel record. Confirm that actual
    result rather than treating return from Stripe as success. Identity and
    selfie documents stay in Stripe's hosted flow, not chat or this repository.
-2. **Scanner canary** — upload **one real permitted evidence file** so the
-   selected ClamAV runner returns a terminal result that lands in D1 with its
-   consumed pending request and authenticated-scanner audit event.
+2. **Scanner canary — complete, freshness required.** The existing synthetic
+   test's terminal results, consumed requests, receipts, and authenticated audit
+   records were revalidated September 26. Refresh before October 6 with a
+   permitted file through the selected ClamAV runner. Do not redo installation,
+   substitute a forged applicant document, or change old result timestamps.
 
 Both are visible as "passed" on `/admin/launch-readiness` once done.
 

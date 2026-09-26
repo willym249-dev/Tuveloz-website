@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Existing scanner proof reconciled and company standing refreshed
+
+Corrected an operational handoff error: an empty September 25 scan queue was
+incorrectly described as a missing first complete file test. Retained September 6
+evidence already proved a clean manual production scan and an independently
+scheduled Windows-task scan. September 26 a read-only production D1 query
+confirmed the synthetic fixture's four request/result rows, two receipts, and
+two authenticated audit records. No new fixture or production write was needed.
+
+At 09:38:34 UTC those live rows exactly matched the recovered production snapshot.
+The current application `runtimeLaunchReadiness()` accepted their retained proof
+with read-only SQLite, placeholder configuration, no live credentials, and all
+outbound calls blocked. The latest accepted scan remains September 6 at 15:49:24
+UTC; this is a proof recheck, not a new scan. Evidence remains pending and the
+synthetic provider is unapproved. The October 4 checkpoint precedes the existing
+30-day proof limit on October 6. The owner-PC task's 09:29 UTC run and latest
+signature refresh succeeded, with an empty queue and no retry/unavailable errors.
+
+Updated all current scanner handoffs, the activation runbook, vendor card, launch
+briefing, and deadlines so completed tests are not requested again. Genuine
+provider Identity, document authenticity, security review, and other launch
+decisions remain separate; no launch gate or customer payment lock was changed.
+
+PR #233's release `36232450529` completed successfully. Public health confirms
+`4e4184f`, built at 09:33:54 UTC, with application/database/schema ready and
+customer requests/payments closed.
+
+The official Maryland Business Express lookup now confirms TUVELOZ LLC,
+W27472109, domestic LLC, formed July 24, 2026, Active and in Good Standing.
+Filled the previously blank formation record with public facts only. Ownership
+authority and private originals are not inferred from registration. The first
+annual-report deadline is tracked for April 15, 2027 under Maryland's published
+next-year rule. Chapter 247's October 1 effective date was rechecked and the
+principal-office review checkpoint recorded; no filing, fee, or address change
+was submitted. Exact addresses and resident-agent details are not retained here.
+Porkbun's remaining private renewal/contact review reached its sign-in page;
+owner sign-in was requested. No registrar setting, renewal, or plan changed.
+
 ## 2026-09-26 - Automatic backup, file recovery, and Stripe support address verified
 
 The first scheduled backup `scheduled-backup-1790413652000` completed all
