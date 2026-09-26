@@ -24,6 +24,12 @@ credential in GitHub's production environment. Bootstrap removes schedules;
 activation requires the separately installed D1 secret. Public Worker and preview
 URLs are disabled. No credential value is stored in source or CI.
 
+PR #229 merged as `a016c1c`. Initial bootstrap run `36223470918` stopped
+before upload because Wrangler rejects an empty Workflow schedules array.
+Bootstrap now omits that optional field entirely and validates the generated
+configuration with a dry run before deployment. No export or scheduled run
+occurred during that failed setup attempt.
+
 Activation, first backup, and restore results must still be recorded separately.
 The owner's application remains last and customer-launch locks are unchanged.
 
