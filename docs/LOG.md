@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Check sender configuration and locate aggregate reports
+
+Continued from the completed incident-alert release and production follow-up;
+neither was repeated. No open PRs were present and remote main remained
+`2bdab8b`. Existing local handoff commits were preserved.
+
+Public DNS and key inspection confirmed Google's 2048-bit Workspace key,
+the website sender's existing 1024-bit Resend key and SES SPF, and monitoring-only
+DMARC. Source inspection identified the shared Resend sending configuration and
+confirmed staging remains intentionally unable to send. Closed the staging
+email decision checkpoint by retaining that configuration. No key, DNS, account,
+credential, launch, or payment setting changed; no email was sent or new service
+purchased.
+
+The business inbox has eight matching DMARC report messages in the prior-month
+search: seven Google and one Microsoft. This establishes report receipt only.
+Their aggregate contents were not parsed. One download was requested, but no
+file was successfully located; Gmail's archive preview exposed a filename only.
+Browser policy blocked Chrome's download manager and automatic approval review
+blocked the alternate download-interface check. Asked for scoped owner permission
+to download/read those eight attachments locally and stopped that work pending
+the answer. No workaround or external analysis upload was used.
+
+Updated the existing email-authentication runbook with current evidence,
+configuration-based sender inventory, and explicit limits. Corrected old wording
+that every sign-in needs an email code, that p=none means receivers cannot filter,
+and that no support-message authentication header had been checked. The aggregate
+review, recurring reader, provider-coordinated DKIM rotation, and later staged
+DMARC enforcement remain open. Supporting summary is private local output
+`email-authentication-review-20260926.json`; code tests/deployment were not
+repeated for documentation-only changes.
+
+Keep this handoff local with the preceding doc commits; do not trigger another
+production release solely to publish status notes. Include it with the next
+substantive authorized release.
+
 ## 2026-09-26 - Verify production mail queue and the post-release schedule
 
 Read-only production D1 queries found zero incident reports and zero incident

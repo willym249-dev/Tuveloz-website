@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-04
+- **Last reviewed:** 2026-09-26
 
 What authenticates Tuveloz email, how the sending domain is configured today,
 and the deliberate sequence for tightening DMARC. Every account on the platform
@@ -11,10 +11,63 @@ email, and SMS is switched off.
 
 ## Why this matters more than it looks
 
-There is no way into Tuveloz that does not require an email arriving within ten
-minutes. `PHONE_SMS_LIVE_MODE_ENABLED` is `false`, so phone sign-in is not a
-fallback. A delivery failure is not a degraded experience — it locks out every
-customer and every provider at the same time, with no workaround.
+Email is required for account verification, emailed sign-in codes, and password
+recovery. Existing sessions and supported password/passkey flows are separate;
+do not describe every sign-in as an emailed-code flow. SMS remains switched off,
+so it is not an email-recovery fallback. Preserve working email settings while
+reviewing delivery and spoofing protection.
+
+## September 26 review — configuration checked, report contents pending
+
+Direct public DNS reads through resolver `1.1.1.1` confirmed the following at
+23:10–23:14 UTC. RSA key sizes were checked by importing the published public
+keys; no private key or account credential was read.
+
+| Surface | Current evidence | Remaining limitation |
+| --- | --- | --- |
+| Business correspondence | Root SPF includes Google and Porkbun; `google._domainkey.tuveloz.com` is 2048-bit | DNS alone does not establish delivery or inventory every sender |
+| Website email | `wrangler.jsonc` configures `Tuveloz <alerts@updates.tuveloz.com>`; the inspected authentication, provider-application, provider-alert, and outbox paths use Resend | Source configuration is not proof of a new send |
+| Website sender authentication | `send.updates.tuveloz.com` publishes the Amazon SES SPF include; `resend._domainkey.updates.tuveloz.com` remains 1024-bit | Stronger DKIM remains a provider-coordinated task; do not replace the public key independently of the signing service |
+| DMARC | Root policy is `p=none`, reporting to `dmarc@tuveloz.com`; the updates subdomain has no separate DMARC record | Monitoring is not an enforcement policy; no policy change was made |
+| Registrar forwarding | Porkbun remains authorized in root SPF | Actual forwarding/sending use has not been inventoried; do not remove the include merely because the website uses Resend |
+| Private staging | Generator still supplies an empty sender; staging has no production Resend credential | Outbound email remains intentionally disabled; synthetic local tests do not establish hosted delivery |
+
+The signed-in business Gmail search for `subject:"Report domain: tuveloz.com"`
+from August 25 through September 26 returned **eight reports: seven from Google
+and one from Microsoft**. These are report-message counts, not sending counts or
+authentication results. The eight listed report periods cover seven distinct
+dates, not continuous daily traffic. The Microsoft message describes August 27
+UTC; the Google archive filenames describe August 27, August 31, September 4,
+September 5, September 22, September 23, and September 24. A preview exposes an
+XML filename but not its contents.
+
+**The aggregate-content review is not complete.** One attachment download was
+requested, but no downloaded report was successfully located or parsed. Browser
+policy blocked the download-manager page; automatic approval review also blocked
+checking an alternate download interface. A scoped owner question is pending to
+download/read only these eight attachments locally. Do not work around those
+blocks, claim a pass/fail rate, or label an unknown sender fraudulent. No report
+was uploaded to a third-party analysis service. Once permitted, preserve raw
+reports privately, deduplicate by reporter/report ID, compare aligned SPF/DKIM
+results with known senders, and resolve unexplained failures before considering
+enforcement. Unreported days are unknown, not automatic passes.
+
+The September 4 Workspace delivery test and automatic support message, and the
+September 26 manual mailbox round trip, already have receipt evidence. Do not
+send them again for this review. A received **support** message's full
+SPF/DKIM/DMARC pass was rechecked in the September 26 production follow-up; it
+does not establish a sign-in-code header or incident-triggered delivery. See
+the [support record](2026-09-04-support-reliability.md) and
+[incident runbook](vehicle-incident-claims-and-stop-work-plan.md).
+
+Google's [report documentation](https://knowledge.workspace.google.com/admin/security/about-dmarc-reports)
+explains that the XML identifies sending sources and authentication results.
+Its [rollout guidance](https://support.google.com/a/answer/10032473?hl=en)
+calls for reviewing representative mail streams before gradual enforcement.
+This project's full-month review checkpoint is an internal target, not a
+universal Google requirement. No additional paid reporting service is needed
+to read this small set locally. No recurring reader has been assigned: the
+owner's incident-response availability does not assign DMARC monitoring.
 
 ## Current configuration
 
@@ -35,9 +88,10 @@ separate sender-inventory and report review below.
 
 The deployed support form's labeled test reached the owner inbox. Gmail shows
 mailed-by `send.updates.tuveloz.com`, signed-by `updates.tuveloz.com`, and TLS.
-This confirms receipt and those displayed properties for one application
-message. It does not establish Workspace reply authentication, universal inbox
-placement, or a captured full `Authentication-Results` header.
+This confirms receipt for one application message. The September 26 follow-up
+also read its original authentication summary and found SPF, DKIM, and DMARC
+passing. It does not establish universal inbox placement or a sign-in-code
+message's authentication header.
 
 The sending identity is `alerts@updates.tuveloz.com` (`wrangler.jsonc`), sent
 through Resend, which delivers via Amazon SES.
@@ -123,18 +177,17 @@ a defect — nothing sends with that as the envelope domain.
 domain record at `_dmarc.tuveloz.com`. That record carries no `sp=` tag, so
 subdomains inherit `p=`, which is `none`.
 
-**Effective policy for the sending domain is therefore `p=none`** — monitoring
-only. Nothing is quarantined or rejected on failure, and nothing protects the
-domain from being spoofed. This meets the Gmail and Yahoo bulk-sender floor, but
-it is the floor.
+**The published DMARC policy remains `p=none`: monitoring only.** It does not
+ask receivers to quarantine or reject a DMARC failure. Receivers can still
+apply their own filtering; this record alone does not prove sender compliance
+with all mailbox-provider requirements.
 
 ### What this analysis does not prove
 
-All of the above is inferred from DNS. The signing domain is inferred from where
-the selector record sits, and the envelope sender from the bounce configuration.
-Only an actual received message settles it: the `Authentication-Results` header
-of a real sign-in code is the evidence, and it has not been captured yet. Treat
-this page as well-founded until that header is on file.
+DNS establishes the published configuration, not every message's result. The
+dated Workspace and support-message receipts above prove those samples only.
+A captured real sign-in-code authentication header, a reviewed aggregate sender
+inventory, and incident-specific inbox delivery remain separate evidence.
 
 ## The tightening sequence, and why it is a sequence
 
