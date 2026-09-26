@@ -11,6 +11,27 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Close the old redirect check and verify search coverage
+
+No open PRs; remote main remains `2bdab8b`. Preserved the existing local handoff
+commits. Search Console's three redirect examples are expected HTTP/www homepage
+variants, not QR links; public GETs confirm single 308 redirects to the HTTPS
+apex. The public robots response disallows `/q/`. Closed only that overdue
+checkpoint and corrected its old assumption that a report entry proves a failed
+deployment. The homepage and both signup languages remain individually indexed
+with successful Google fetches and matching canonicals. Sitemap status is
+Success with 51 discovered pages. All 51 public URLs passed the scoped HTTP,
+title, canonical, and noindex check at 23:49:14 UTC; this is not a repeated
+interactive signup test.
+
+The founding-provider page's stored Google record still reports an August 8
+404, while current HTTP returns 200 and Google's September 26 live test passes.
+Validation started September 5 remains pending; no request was restarted.
+Updated the existing profile audit and October 2 follow-up. Saved the two
+scoped evidence JSON files outside the repo. No site/account/Maps settings,
+messages, costs, or launch controls changed; no application deployment or
+full test suite was needed for this read-only review.
+
 ## 2026-09-26 - Inspect Resend settings and correct enforcement guidance
 
 Preserved the completed checks and clean local handoff branch; no open PRs,
