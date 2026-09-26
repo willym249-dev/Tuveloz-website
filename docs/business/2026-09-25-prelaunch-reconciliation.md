@@ -50,6 +50,13 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   inquiry. No coverage or launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
+- September 26 local review of all eight approved authentication-report
+  attachments is complete: fifteen message observations, three aligned passes,
+  nine historical Google-related failures, and three recent unsigned failures.
+  The newer failures are possible spoofing, not confirmed fraud or compromise.
+  Files and hashes remain private. Sender completeness, new-report monitoring,
+  and any DMARC enforcement change remain pending; no DNS was changed. See the
+  [email-authentication runbook](../operations/email-authentication.md).
 - The business Gmail inbox loads. Activation and payment receipts are present.
   Exact Google Admin subscription details still require a fresh account
   verification; an old suspension warning is not current proof of a problem.

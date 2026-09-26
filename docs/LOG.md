@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Complete the approved eight-report authentication review
+
+The owner's continuation approved the pending scoped attachment review. Used
+Gmail's normal download buttons and the supported browser download event/path
+API to retrieve exactly the eight selected files. The previously blocked Chrome
+download-manager page was not used. Parsed seven ZIP reports and one GZIP report
+locally with external XML resolution/DTDs disabled and bounded content size;
+raw reports, hashes, and analysis remain outside the repository. No third-party
+analysis upload, mail send, subscription, DNS change, or production deployment.
+
+The eight reporter/report-ID pairs are unique: eleven rows describe fifteen
+message observations, with three aligned passes and twelve failures. Nine
+failures on August 27, August 31, and September 4 have Google's historical
+unaligned default signature, consistent with the earlier configuration issue.
+Two of those observations involve a different envelope domain and may reflect
+forwarding/rewriting. The passing samples are two Tuveloz-signed Google messages
+and one website/Resend message. Three newer rows (September 22, 23, and 24)
+each show one unsigned message from a different unrecognized source with SPF
+softfail. These are possible spoofing; neither fraud nor account compromise nor
+inbox delivery is established. The sparse report set is not an overall delivery
+rate. Its mixed September 4 UTC report cannot place a message before/after the
+exact repair time.
+
+Updated the existing runbook and closed only the eight-file review checkpoint.
+Asked whether the owner uses any Tuveloz sender beyond business Gmail and the
+website; confirmation, new-report review, and recurring monitoring ownership
+remain pending. Added a September 28 checkpoint and kept p=none. Preserve the
+previous DNS value for any later reviewed enforcement rollout, and do not add
+unknown source IPs to SPF just to eliminate failures. No code tests/release were
+rerun for this documentation-only update. Save this local handoff with the
+existing unpublished doc commits for the next substantive authorized release.
+
 ## 2026-09-26 - Check sender configuration and locate aggregate reports
 
 Continued from the completed incident-alert release and production follow-up;

@@ -17,7 +17,7 @@ do not describe every sign-in as an emailed-code flow. SMS remains switched off,
 so it is not an email-recovery fallback. Preserve working email settings while
 reviewing delivery and spoofing protection.
 
-## September 26 review — configuration checked, report contents pending
+## September 26 review — eight reports read; sender confirmation pending
 
 Direct public DNS reads through resolver `1.1.1.1` confirmed the following at
 23:10–23:14 UTC. RSA key sizes were checked by importing the published public
@@ -34,23 +34,50 @@ keys; no private key or account credential was read.
 
 The signed-in business Gmail search for `subject:"Report domain: tuveloz.com"`
 from August 25 through September 26 returned **eight reports: seven from Google
-and one from Microsoft**. These are report-message counts, not sending counts or
-authentication results. The eight listed report periods cover seven distinct
-dates, not continuous daily traffic. The Microsoft message describes August 27
-UTC; the Google archive filenames describe August 27, August 31, September 4,
-September 5, September 22, September 23, and September 24. A preview exposes an
-XML filename but not its contents.
+and one from Microsoft**. After the owner approved continuing the scoped local
+review, all eight attachments downloaded through Gmail's normal controls using
+the supported browser download API. The blocked Chrome download-manager page was
+not used. The seven ZIP files and one GZIP file were parsed locally with DTDs and
+external XML resolution disabled and a size limit; no report was uploaded to an
+analysis service. Raw files, SHA-256 hashes, report IDs, and row-level results are
+retained outside the repository in `outputs/dmarc-reports-20260926.private/`.
 
-**The aggregate-content review is not complete.** One attachment download was
-requested, but no downloaded report was successfully located or parsed. Browser
-policy blocked the download-manager page; automatic approval review also blocked
-checking an alternate download interface. A scoped owner question is pending to
-download/read only these eight attachments locally. Do not work around those
-blocks, claim a pass/fail rate, or label an unknown sender fraudulent. No report
-was uploaded to a third-party analysis service. Once permitted, preserve raw
-reports privately, deduplicate by reporter/report ID, compare aligned SPF/DKIM
-results with known senders, and resolve unexplained failures before considering
-enforcement. Unreported days are unknown, not automatic passes.
+At 23:23:45 UTC, parsing found eight unique reporter/report-ID pairs, eleven
+record rows, and **15 reported message observations: 3 DMARC passes and 12
+failures**. Those are observations in this limited report set, not the site's
+overall delivery rate or unique delivered inbox messages. The results use
+`policy_evaluated` alignment, not a bare DKIM authentication result.
+
+| Report day (UTC) | Message observations | DMARC pass | DMARC fail | Interpretation |
+| --- | ---: | ---: | ---: | --- |
+| August 27 | 6 | 0 | 6 | Default Google signature authenticates but does not align; two observations involve another envelope domain, consistent with forwarding or rewriting |
+| August 31 | 2 | 0 | 2 | Same historical unaligned Google signature |
+| September 4 | 3 | 2 | 1 | Resend website sender and one Tuveloz-signed Google message pass; one old-style Google signature fails alignment |
+| September 5 | 1 | 1 | 0 | Tuveloz-signed Google message passes |
+| September 22 | 1 | 0 | 1 | Unrecognized source, no DKIM result, SPF softfail |
+| September 23 | 1 | 0 | 1 | A different unrecognized source, no DKIM result, SPF softfail |
+| September 24 | 1 | 0 | 1 | A third unrecognized source, no DKIM result, SPF softfail |
+
+The nine historical Google-related failures are consistent with the previously
+recorded Workspace configuration problem. The mixed September 4 daily report
+does not locate an individual message relative to the repair time. The three
+passing observations support the repaired Workspace sender and existing website
+sender for those samples; they do not prove every subsequent email passes.
+
+The three recent unsigned failures are **possible spoofing, not confirmed
+fraud or account compromise**. All reports show DMARC disposition `none`; this
+does not establish inbox placement or override the receiver's own filtering.
+The reporting periods cover only seven distinct dates. Unreported days are
+unknown, not automatic passes. No historical Gmail message was resent.
+
+**Next decision:** confirm whether any other mail app, marketing service, or
+forwarder sends with a Tuveloz From address. That owner question is pending.
+Do not authorize the unknown source IPs in SPF or classify them as legitimate
+merely to remove failures. Keep the existing policy while that inventory and
+the next representative post-repair reports are reviewed. A future small
+quarantine rollout needs a named reader, checked legitimate senders, a saved
+previous DNS value for rollback, and an explicit record of the applied change.
+No DNS or sending-service change was made in this review.
 
 The September 4 Workspace delivery test and automatic support message, and the
 September 26 manual mailbox round trip, already have receipt evidence. Do not
@@ -62,7 +89,7 @@ the [support record](2026-09-04-support-reliability.md) and
 
 Google's [report documentation](https://knowledge.workspace.google.com/admin/security/about-dmarc-reports)
 explains that the XML identifies sending sources and authentication results.
-Its [rollout guidance](https://support.google.com/a/answer/10032473?hl=en)
+Its [rollout guidance](https://knowledge.workspace.google.com/admin/security/recommended-dmarc-rollout)
 calls for reviewing representative mail streams before gradual enforcement.
 This project's full-month review checkpoint is an internal target, not a
 universal Google requirement. No additional paid reporting service is needed
@@ -82,7 +109,7 @@ private. This is one controlled delivery, not a guarantee of future placement.
 
 Cloudflare remains the authoritative DNS host. Registrar forwarding and the
 Resend subdomain records were preserved. DMARC remains `p=none` pending the
-separate sender-inventory and report review below.
+remaining sender confirmation and follow-up reporting below.
 [Google SPF setup](https://knowledge.workspace.google.com/admin/security/set-up-spf),
 [Google DKIM setup](https://knowledge.workspace.google.com/admin/security/set-up-dkim).
 
@@ -123,8 +150,10 @@ The root domain receives at Google Workspace, and `hello@tuveloz.com` is the
 address used throughout this repository. Nothing here covers mail **sent** from
 that mailbox: the root SPF authorises the registrar's forwarders and not Google,
 and no Workspace DKIM selector is published. So any message sent from
-`hello@tuveloz.com` through Workspace fails SPF and has no DKIM signature to fall
-back on, and therefore fails DMARC alignment.
+`hello@tuveloz.com` through Workspace can fail SPF and lack a Tuveloz-aligned
+DKIM signature, so it fails DMARC. The September 26 aggregate review found the
+historical Google default signature could pass cryptographic verification while
+still failing alignment with Tuveloz; raw DKIM pass alone is not DMARC pass.
 
 This costs nothing today — `p=none` observes and never quarantines. It is
 precisely what the `rua` address exists to reveal, and it is the first thing to
@@ -199,7 +228,11 @@ enforcement before that inventory is complete silently sends real mail to spam.
 1. Put a person on `dmarc@tuveloz.com` and confirm the mailbox actually receives.
    An unread `rua` address makes the record decorative. **Receipt is confirmed
    (2026-08-16); naming the reader is not.**
-2. Stay at `p=none` for a full reporting month. Read the reports.
+2. Review the reporting window while at `p=none`. The eight available reports
+   in the August 25–September 26 search were read September 26; sparse coverage,
+   recent unsigned failures, and owner sender confirmation still limit the
+   enforcement decision. Continue reviewing new reports rather than repeating
+   this completed eight-file review.
 3. Workspace sender repaired September 4: Google SPF and 2048-bit DKIM are
    configured, with one received message passing SPF, DKIM, and DMARC. Continue
    checking aggregate reports before enforcement.
