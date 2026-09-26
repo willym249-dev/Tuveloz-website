@@ -14,8 +14,8 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `36e93760215ae051a6da8282c0a2920eda1091c6` (PR #239), built September 26 at
-  16:26:40 UTC. Its release workflow passed and public health at 16:28:35 UTC
+  `61c4c071b7fc1a1ee28a27016fa2cde50c81a169` (PR #240), built September 26 at
+  17:13:54 UTC. Its release workflow passed and public health at 17:15:29 UTC
   confirmed the exact commit, ready application/database/schema, and closed
   customer-launch gates. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
@@ -47,6 +47,15 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   does not make an owner contact invalid. See the domain record for scope.
 
 ## Published code and its activation limits
+
+- PR #240 corrects misleading account welcome notices and their workspace
+  destinations without resetting saved notice history. Notification reads and
+  writes now recover from failures and stalls; a saved read-state update remains
+  successful when its follow-up refresh fails. All 723 tests and twenty focused
+  mobile browser scenarios passed, followed by the full PR and production
+  verification. Release `36257408571` and the live notifications page are
+  confirmed. Private interactions were checked with synthetic fixtures, not real
+  customer records; this does not complete incident-notification delivery.
 
 - PR #235 patched seven affected dependency entries; the resulting npm audit
   reported zero vulnerabilities. High/critical dependency findings now block

@@ -34,7 +34,17 @@ in Chromium and WebKit, covering recovery, timeout, write receipts, both account
 destinations, and sign-in redirect. The SQLite route fixture verifies welcome
 history preservation, idempotence, account/role isolation, and invalid input.
 It stubs session verification and mail delivery; no real account or email was
-used. This entry records local validation; publication is still pending.
+used. PR #240 passed verification `36256544587` and the pull-request build
+`36256544804`, then merged as `61c4c071b7fc1a1ee28a27016fa2cde50c81a169`.
+All three jobs in production release `36257408571` passed. At 17:15:29 UTC,
+public health confirmed that exact release, built 17:13:54 UTC, with application,
+database, and schema ready. The live notifications shell returned 200 with the
+corrected wording; signed-out notification access returned 401/no-store.
+Accounts/applications remain open; customer requests/payments remain closed.
+Private account changes and error scenarios were tested in synthetic fixtures,
+not against real customer records. Proof: `notification-release-20260926.json`;
+mobile fixture screenshots: `notifications-20260926/`. Do not repeat completed
+incident or account-notification repairs to satisfy the remaining business reviews.
 
 The incident runbook no longer calls completed evidence linking missing. It
 now states explicitly that the test-only incident route sends no notifications;
