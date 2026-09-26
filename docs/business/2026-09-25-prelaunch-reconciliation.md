@@ -14,8 +14,8 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `921bccd54eded70aaffeaced1815595eee457e52` (PR #234), built September 26 at
-  10:01:36 UTC. Its release workflow passed and public health at 10:08:37 UTC
+  `312b63bb43211ae6d88b0adaae6020dc76be90d5` (PR #235), built September 26 at
+  10:53:14 UTC. Its release workflow passed and public health at 10:55:08 UTC
   confirmed the exact commit, ready application/database/schema, and closed
   customer-launch gates. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
@@ -41,10 +41,18 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 - September 26 signed-in Porkbun review confirms auto-renew and contact privacy
   enabled for tuveloz.com, with July 22, 2027 expiry and a saved Link via Stripe
   payment method. No charge was attempted; the June 22 renewal checkpoint remains.
-  Private registrant-contact address accuracy is still a separate unchecked item.
+  The Tuveloz-specific contact form was subsequently inspected without changes:
+  its populated address/email differ from the verified business mailbox/support
+  record. Owner confirmation of accuracy/reachability remains; a difference alone
+  does not make an owner contact invalid. See the domain record for scope.
 
 ## Published code and its activation limits
 
+- PR #235 patched seven affected dependency entries; the resulting npm audit
+  reported zero vulnerabilities. High/critical dependency findings now block
+  verification. Its production workflow passed, including all 693 tests and
+  browser checks. The English/Spanish home and provider pages and eight referenced
+  assets returned 200 in the September 26 10:55 UTC release smoke check.
 - The hourly production health workflow is published and its recent scheduled
   runs passed. Owner notification delivery still depends on GitHub notification
   settings; a passing run does not prove that a failure alert reached the owner.
@@ -88,6 +96,14 @@ workspace still has no new paid provider activation. No paid upgrade was made.
 Backup activation, the first automatic run, isolated cloud data restoration,
 and local application recovery checks are complete. Do not restart them; use
 the [activation record](../operations/production-backup-activation.md).
+
+The September 26 local incident rehearsal also passed automatic payment holds,
+stop-work recording, and rejection of customer/provider hold-release attempts.
+It used synthetic local records and a local mail catcher against `312b63b`.
+Owner-authenticated release, real evidence attachment, insurer/notification
+handling, and a real payout were not exercised. See the
+[incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
+for exact scope; its launch review remains pending.
 
 ## Owner application — last step
 

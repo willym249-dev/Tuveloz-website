@@ -2,7 +2,7 @@
 
 - **Status:** draft — needs owner sign-off, insurer review, and an official-source check
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-26 (partial technical rehearsal and record custody; approval remains pending)
 - **Applies to:** the `vehicle_incident_claims_and_stop_work` launch gate
 
 What to do when someone is hurt, a vehicle or property is damaged, or work must
@@ -139,8 +139,11 @@ determined it.
 Release the payment hold as a separate, deliberate step with a recorded reason.
 If a claim is open, the hold stays.
 
-Then write it up in [`../LOG.md`](../LOG.md): what happened, what was known
-when, what was decided, and what the first assessment got wrong.
+Keep the incident chronology, evidence, personal details, and insurer or legal
+correspondence in a protected record outside this repository. Put only a
+sanitized reference and any general operational lesson in
+[`../LOG.md`](../LOG.md). Do not copy customer/provider details, private location
+information, medical information, or claims documents into a public source log.
 
 ## Testing it, which the gate actually requires
 
@@ -150,6 +153,30 @@ confirm the payment hold appears without anyone setting it, attach evidence,
 record a stop time, then resolve and release. Test records are isolated from real
 providers, customers, alerts, payments, and public profiles, so this is safe to
 do now.
+
+### September 26 technical rehearsal
+
+`npm run test:e2e:incident` passed against application commit `312b63b` in a
+separate local checkout and disposable D1 database. Only synthetic accounts and
+a test-flagged assignment were created, with email sent to a local catcher.
+The helper's migration timeout was raised from 30 to 180 seconds after a healthy
+Windows setup run exceeded the old limit. No production data or payment changed.
+
+Verified through the real route and stored D1 records:
+
+- A serious damage report created an open incident and set `hold_payments=yes`,
+  even when the caller requested no hold and immediate release.
+- Severity recorded a stop time; explicit provider stop-work also recorded an
+  incident and held payment.
+- Both customer and provider were denied incident resolution and hold release.
+  The incident stayed open, its resolution stayed empty, and the hold survived.
+
+This is partial technical evidence, not completion of the whole claims plan.
+The test does not perform an owner-authenticated resolution/release, attach a
+real evidence file, contact an insurer, send real incident notifications, or
+attempt a Stripe payout. Its payout-helper check is a source assertion, not a
+payment transaction. The remaining owner/insurer rehearsal and source review
+must stay pending; do not bypass Cloudflare Access to manufacture a pass.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.

@@ -31,9 +31,9 @@ than recollection:
 ## What it covers
 
 Control of the name itself, and by extension the ability to publish DNS. Losing
-the registration does not degrade the service — it ends it, along with every
-sign-in email, since `PHONE_SMS_LIVE_MODE_ENABLED` is false and there is no
-non-email way into an account.
+the registration can interrupt the website, business mail, and sign-in and
+recovery email delivery. Passwords and passkeys are also supported, but they do
+not restore access to a website whose domain no longer resolves correctly.
 
 ## What depends on it
 
@@ -53,7 +53,16 @@ The account's Credit card section reports a saved payment method using Link via
 Stripe. No card expiry is shown in that summary, and no charge was attempted;
 saved billing is not proof that a future renewal payment will succeed.
 
-Private registrant-contact address accuracy remains unreviewed. The June 22,
-2027 checkpoint in `OPEN-ITEMS.md` remains in place to reconfirm renewal and the
-payment method before expiry. No purchase, renewal, billing change, DNS change,
-or privacy-setting change was made.
+The domain-specific contact editor was read September 26 without submitting
+changes. Required address and email fields are populated. The street, city,
+postal code, and email differ from the verified business mailbox/support record;
+the optional company and unit fields are empty. A separate owner contact can be
+valid: these differences do not establish incorrect registration or public
+exposure. The owner still needs to confirm that this contact remains accurate
+and reachable, or authorize a specific replacement. Do not copy a support address
+into ownership records automatically or apply changes to all domains.
+
+The June 22, 2027 checkpoint in `OPEN-ITEMS.md` remains in place to reconfirm
+renewal and the payment method before expiry. No purchase, renewal, contact,
+billing, DNS, or privacy-setting change was made. Exact contact values were not
+retained in this record.

@@ -65,11 +65,14 @@ owner's formation, authority, contract, and contribution records.
 | --- | --- |
 | Domain control | The [domain record card](../records/domain-registration-tuveloz-com.md) and [email authentication runbook](../operations/email-authentication.md) hold the evidence. The September 4 Google SPF/DKIM repair supersedes this briefing's old registrar-only SPF observation. |
 | Code ownership | The [contribution record](../records/code-ownership-and-contributors.md) identifies the scope and limits of Git metadata. Author labels do not establish ownership, licenses, or absence of outside contributions. |
-| Essential vendors | Cloudflare, Porkbun, Google Workspace, Resend, Stripe payments/Identity, and Cloudmersive are recorded in the [vendor card](../records/essential-vendor-accounts.md). Account access, an active subscription, and approval of the business model are separate evidence. |
+| Essential vendors | Cloudflare, Porkbun, Google Workspace, Resend, and Stripe payments/Identity are recorded in the [vendor card](../records/essential-vendor-accounts.md). The active scanner is owner-operated ClamAV; Cloudmersive is a retained fallback. Account access, an active subscription, and approval of the business model are separate evidence. |
 
-That leaves LLC records, ownership authority, and contractor assignments — all
-documents held outside this repository, each of which wants a card in
-[`../records/`](../records/). Ask the owner to confirm contributions and any
+The [formation record](../records/llc-formation-maryland.md) now records the
+September 26 official lookup: TUVELOZ LLC is Active and in Good Standing, formed
+July 24, 2026. That completes the public registration check. Private formation
+originals, ownership authority, and any contractor assignments remain separate;
+keep originals outside the repository and references in the existing record
+cards. Ask the owner to confirm contributions and any
 required assignments from actual records; do not infer that answer from names
 in commit history. A limited business-mail search on September 5 did not locate
 formation or insurance documents, which does not establish that they are absent.
@@ -115,15 +118,22 @@ must match the current application/personnel record. Then review business
 registration matching, corrections, retention, and public verification claims.
 Do not create a fake provider or reuse the owner's Stripe business verification.
 
-**`evidence_file_security_and_scanner`** — *security, required* — **BLOCKED**
+**`evidence_file_security_and_scanner`** — *security, required; review pending*
 Restricted storage, access logs, download controls, backups, deletion, and a
 real external scanner; a pending scan must keep evidence quarantined.
 *Existing:* quarantine-until-clean is enforced — the compliance route refuses to
 open a file unless the latest scan row reports `clean`, and a missing row blocks
-too. The owner-operated ClamAV path is selected, and the scheduled task, signed
-claim connection, and current definitions were observed on September 25.
-*Missing:* a real permitted file reaching a terminal production result, retained
-readiness evidence, capacity review, and security review. Follow the
+too. Owner-operated ClamAV is selected. Manual and scheduled synthetic-file
+scans completed September 6; their production records, receipts, and audit
+binding were rechecked September 26 and accepted by the current application.
+The September 26 task run and definition refresh also succeeded. Private
+backup and isolated recovery checks are complete in the
+[backup activation record](../operations/production-backup-activation.md).
+*Still needed:* capacity and security review of the actual storage, access,
+deletion, scanner, and recovery controls, plus current operational proof when
+the decision is recorded. The existing file proof expires October 6; its refresh
+checkpoint is October 4. Do not repeat first activation or treat a clean scan as
+document-authenticity approval. Follow the
 [scanner activation runbook](../operations/evidence-scanner-activation.md).
 
 **`privacy_retention_and_data_rights`** — *privacy, required*
@@ -134,11 +144,12 @@ export route; the Privacy Policy is one of the seven pinned pages.
 Assign the responsible person, escalation contacts, evidence-preservation steps,
 account containment, legal notices, and vendor notification.
 *Existing:* [`../operations/security-and-data-incident-plan.md`](../operations/security-and-data-incident-plan.md),
-drafted 2026-08-11. It carries the data inventory, the first-hour sequence, the
-preservation rules, and the vendor list. **Three items are marked [OWNER] and
-must be filled in before this gate can be answered:** the named incident lead and
-a deputy, escalation contacts with real phone numbers, and whether any vendor
-contract imposes a notification deadline. The gate's official source
+technically corrected September 26. It carries the data inventory, first-hour
+sequence, private evidence custody, vendor list, and limits of account-containment
+controls. **Owner inputs still needed:** the incident lead and deputy, a private
+contact-register reference with checked reachability, and any contractual vendor
+notification deadlines. Keep personal contact details outside this repository.
+Owner and security-reviewer sign-off remain pending. The gate's official source
 (Md. Code, Com. Law § 14-3504) is recorded in `lib/launch-readiness.ts`; whether
 it applies to a given incident is a legal determination the plan routes to
 counsel rather than answering.
@@ -171,8 +182,12 @@ and holds payment by default (`holdPayments` defaults to `"yes"`). **[OWNER]
 items blocking the gate:** the carrier, broker, and out-of-hours claims number;
 the policy's notification deadline; which incidents must be tendered; and
 whether provider coverage tenders first. **The gate also requires the plan to be
-tested, not only written** — a rehearsal against test records, which is safe to
-run now.
+tested, not only written.** The September 26 local rehearsal passed automatic
+payment holds, stop-work recording, and rejection of customer/provider release
+attempts through the real routes and local D1. Owner-authenticated resolution,
+evidence attachment, insurer/notification handling, and final plan review remain
+separate. The plan records the tested scope; do not count the partial rehearsal
+as a completed gate or live payout verification.
 
 ### Payment processor
 

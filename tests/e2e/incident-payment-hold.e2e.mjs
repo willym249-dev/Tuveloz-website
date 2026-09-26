@@ -256,6 +256,9 @@ async function main() {
   log("applying migrations to the worktree's local D1");
   sh("node", [wrangler, "d1", "migrations", "apply", "tuveloz-db", "--local"], {
     cwd: workdir, input: "y\n", stdio: ["pipe", "pipe", "pipe"],
+    // A fresh database now applies 69 migrations; the ordinary 30-second
+    // command limit can stop a healthy Windows run before setup completes.
+    timeout: 180_000,
   });
 
   // 4. Mail catcher ----------------------------------------------------------

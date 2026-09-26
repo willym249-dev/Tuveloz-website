@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Domain contact inspected and incident hold simulation passed
+
+Read the Tuveloz-specific Porkbun contact editor without submitting changes.
+Address and email fields are populated but differ from the verified business
+mailbox/Stripe support record; company/unit fields are empty. A separate owner
+contact can be valid. Confirmation of its accuracy and reachability remains an
+owner fact, not a technical error or evidence of public exposure. Closed the
+form without saving; no exact address, private email, or contact values were
+retained. Updated the existing contact record and deadline rather than asking
+for the completed renewal/privacy inspection again.
+
+The existing `test:e2e:incident` simulation initially hit its 30-second command
+timeout while applying the fresh local database migrations. Raised only that
+setup timeout to 180 seconds and reran successfully against application commit
+`312b63b`. Real routes and local D1 confirmed automatic incident payment holds,
+stop-work recording, refusal of both customer/provider resolution and release,
+and unchanged hold state after those attempts. All accounts and jobs were
+synthetic local fixtures; email used the local catcher. Owner-authenticated
+release, real evidence attachment, insurer handling, and a real payout remain
+outside this result. The claims plan now records these limits and requires
+private incident evidence custody instead of copying case details into Git.
+
+Corrected a remaining stale paragraph in the launch briefing that still called
+the scanner's first file test missing, despite its completed September 6 proof
+and September 26 recheck. Updated the active scanner, public formation check,
+private incident-contact requirements, and latest confirmed release reference.
+PR #235's release `36236454444` passed; health at 10:55:08 UTC confirmed
+`312b63bb43211ae6d88b0adaae6020dc76be90d5`, with application/database/schema ready
+and customer requests/payments closed. No account, billing, domain setting,
+production data, or launch decision changed in this follow-up.
+
 ## 2026-09-26 - Dependency advisories patched and incident guidance corrected
 
 An npm audit found seven affected package entries: one critical and six high,
