@@ -1,6 +1,6 @@
 # Production backup activation
 
-Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` closes that gap without giving the public website access to the backup bucket. The first real backup and isolated local recovery passed on September 26. A standard Worker Cron Trigger is now enabled daily at 09:07 UTC, with no paid upgrade. The first automatic run has not yet been observed.
+Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` closes that gap without giving the public website access to the backup bucket. The first real backup, isolated cloud data restore, and local application recovery checks passed on September 26. A standard Worker Cron Trigger runs daily at 09:07 UTC, with no paid upgrade. Its first automatic run completed all seven steps at 09:07:38 UTC.
 
 ## Account check — September 25, 2026
 
@@ -90,14 +90,34 @@ match. Cloud quick check returned `ok` and foreign-key check returned no rows.
 The [recovery runbook](./backup-and-recovery.md) records the tested offline SQL
 preparation and D1 Studio's required Run all in transaction control.
 
-The private Standard R2 bucket `tuveloz-recovery-20260926` remains empty, with
-public access disabled. Restoring its two objects is blocked by the Chrome
-extension's file-URL permission. The owner approved this switch, but browser
-security policy prevents the assistant from opening extension settings. The
-owner must enable it directly in the business Chrome profile. File path/hash/
-metadata verification and isolated application smoke tests remain outstanding.
-No live store was overwritten or rebound. The first automatic 09:07 UTC run
-also remains unobserved. No paid plan was added.
+The owner enabled the Chrome extension's file-URL permission. Both expected
+objects now exist in private Standard R2 bucket `tuveloz-recovery-20260926` at
+their original keys, with matching sizes, content types, and empty custom
+metadata. Both were downloaded and verified against their manifest SHA-256s.
+An extra unreferenced 605-byte fixture from the first upload remains only in
+this isolated bucket; it is not an additional source/backup object. Public
+access remains disabled.
+
+At 08:54:53 UTC the actual application health, evidence-read, and anonymous
+document-access routes passed smoke checks against local recovered SQLite and
+the cloud-downloaded files. Health/schema were ready, both objects were read
+through the storage adapter, anonymous evidence access returned 401, and no
+outbound call occurred. Writes and live credentials were absent. These checks
+do not claim a hosted application cutover or production binding change.
+No paid plan was added.
+
+### First automatic backup and final application release
+
+Scheduled instance `scheduled-backup-1790413652000` completed all seven steps
+on September 26 from 09:07:35 to 09:07:38 UTC. Cloudflare's output confirms
+the D1 export, two copied objects, a dated manifest, and successful retention
+processing (zero deletions; two manifests and two object versions retained).
+This verifies the actual first automatic firing, not just a configured schedule.
+
+PR #232 merged as `273e1aa`; application release `36231162715` passed every
+required check and completed at 09:07:36 UTC. Public health at 09:13:13 UTC
+confirmed that exact commit with application, database, and schema ready.
+Accounts/applications remain open; customer requests and payments remain closed.
 
 ### Daily operation
 
@@ -130,7 +150,7 @@ These live actions remain intentionally separate from source code:
 3. Review the exact D1 permission and resource scope Cloudflare offers before creating a credential. Prefer read-only export access if supported; do not claim a token is limited to one database unless Cloudflare enforces that restriction. Obtain approval for the actual scope and lifetime, then store the approved token as the `D1_BACKUP_API_TOKEN` secret on `tuveloz-production-backup`. Never paste the token into chat, a command transcript, a repository file, or a GitHub issue.
 4. Deploy with `wrangler deploy --config backup-worker/wrangler.jsonc` only after the bucket and secret exist and the activation is approved. If an initial Worker deployment is needed to provision its secret, omit the schedule until the secret is installed; the scheduled configuration is not the bootstrap step.
 5. Agree the first export's timing and brief service-impact risk: Cloudflare warns that D1 cannot serve queries during export. Trigger one approved backup and confirm a non-empty `d1/` export, a current `manifests/` record, the expected `objects/` copies, matching sizes and SHA-256 values, and a successful Workflow instance.
-6. Restore that export and its referenced files into an isolated local SQLite/file destination to prove basic recoverability. Verify schema, record counts, document hashes, and that no application integration runs there. A full Cloudflare recovery exercise additionally requires isolated non-production D1/R2 destinations, access-control checks, and application smoke tests; that exercise is still outstanding.
+6. Restore that export and its referenced files into isolated non-production destinations. Verify schema, record counts, document hashes, and access controls while preventing live integrations. The September 26 rehearsal verified separate Cloudflare D1/R2 data restoration and local application routes against recovered data. A hosted application cutover was not performed.
 
 The first successful Workflow run proves a stored production copy. The isolated restore rehearsal proves recoverability. Neither should be described as complete before its own evidence exists.
 

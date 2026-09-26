@@ -4,6 +4,7 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
+- **Last reconciled:** 2026-09-26
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
@@ -34,10 +35,17 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 - The hourly production health workflow is published and its recent scheduled
   runs passed. Owner notification delivery still depends on GitHub notification
   settings; a passing run does not prove that a failure alert reached the owner.
-- The private daily D1-and-R2 backup Worker, retention policy, integrity checks,
-  and isolated-restore procedure are in main. The separate backup Workflow is
-  **not deployed**: the signed-in Cloudflare CLI returned no deployed Workflows.
-  A real production backup and isolated restore have not been proved.
+- The private daily D1-and-R2 backup Worker is deployed, with a standard free
+  Cron Trigger at 09:07 UTC and 35-day retention. A real manual backup passed.
+  Its database restored into separate Cloudflare D1 with all 78 table counts
+  matching, 355 records, 383 schema objects, quick check OK, and no foreign-key
+  violations. Both expected R2 objects restored at their original paths;
+  downloaded bytes and metadata match the backup. Actual application routes
+  passed local smoke checks using recovered data with writes/outbound calls
+  disabled. The first automatic instance completed all seven steps September 26
+  at 09:07:38 UTC. This was not a hosted application cutover. PR #232's application
+  release also passed; public health at 09:13 UTC confirms `273e1aa` ready with
+  customer requests/payments closed. See the activation runbook for evidence.
 - A private multi-AI workspace with preview-only defaults, file-boundary checks,
   provider-call caps, output caps, and current model overrides. No API key,
   provider account, paid credit, or live AI API call was created.
@@ -47,21 +55,26 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 - The public-profile audit records completed Facebook and TikTok corrections,
   accepted Search Console requests, and the pending Google Maps correction.
 
-Publishing the backup source or the private AI workspace does not activate those
-services. No new AI subscription, API spend, or backup deployment was performed
-during this follow-up.
+The backup deployment and restore are verified operational work. The private AI
+workspace still has no new paid provider activation. No paid upgrade was made.
 
 ## Still required before the owner application
 
-1. Complete the backup activation prerequisites in
-   [`production-backup-activation.md`](../operations/production-backup-activation.md):
-   verify usage and permissions, prepare the private bucket and narrowly scoped
-   credential, and review production-export impact before deployment.
-2. Prove the first backup and a restore into isolated nonproduction resources.
-   A source-code test is not a production recovery test.
-3. Keep the remaining address and real-world evidence items separate from the
-   completed public-profile corrections. Google Maps review and refreshed search
-   snippets remain outside Tuveloz's direct control.
+1. Finish the remaining private address checks listed in
+   [`business-address-review.md`](../operations/business-address-review.md).
+   The mailbox activation, Google Payments address update, and public-profile
+   corrections already have dated evidence. The Stripe support-address mismatch
+   was corrected to the verified mailbox September 26 with specific owner
+   approval; private business and owner fields stayed unchanged. Do not infer
+   changes to legal, tax, or bank records. Other unverified fields are not proof
+   of wrong addresses.
+2. Keep real-world launch evidence separate from website repairs and provider
+   applications. Google Maps processing and refreshed snippets are external
+   follow-ups, not reasons to repeat the accepted submissions.
+
+Backup activation, the first automatic run, isolated cloud data restoration,
+and local application recovery checks are complete. Do not restart them; use
+the [activation record](../operations/production-backup-activation.md).
 
 ## Owner application — last step
 
