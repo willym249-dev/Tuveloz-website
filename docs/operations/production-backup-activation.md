@@ -1,6 +1,6 @@
 # Production backup activation
 
-Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` is intended to close that gap without giving the public website access to the backup bucket. Its source is published; it is not activated yet.
+Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` is intended to close that gap without giving the public website access to the backup bucket. Its source and unscheduled Worker are deployed; the first export was rejected and nightly backups are not activated.
 
 ## Account check — September 25, 2026
 
@@ -41,7 +41,24 @@ all schedules. Install `D1_BACKUP_API_TOKEN` directly in that Worker's Cloudflar
 secret settings, then run `activate`. Activation checks the secret's name and
 type without exposing its value. Both public Worker and preview URLs are off.
 The backup key itself must never enter GitHub Actions or a command transcript.
-PR #229 and the first export/restore still need completion evidence.
+PRs #229/#230 are merged. Bootstrap run `36223729484` succeeded and the
+dashboard confirms no public Worker URLs. `D1_BACKUP_API_TOKEN` is saved as an
+encrypted production secret. No schedule is enabled.
+
+The first instance, `owner-approved-recovery-20260926`, returned HTTP 401
+Authentication error at export initiation on September 26 at 06:31 UTC. It was
+terminated after two retries. No SQL export, object copy, or manifest was
+produced, so recovery is not proved. The token editor confirms D1 Read for the
+Tuveloz account, a September 25 start, October 25 expiry, and no IP filter.
+Separate owner approval is pending before trying D1 Edit: that is a wider
+permission allowing database writes and deletion across the account. It has
+not been applied, and success with Edit must not be assumed before a new test.
+
+After access is resolved, trigger one manual run before `activate`. Confirm its
+manifest, SQL, object hashes, and isolated recovery first. Keep all downloaded
+production data outside the source repository and never print record contents.
+An isolated local SQLite/file rehearsal may establish local recoverability;
+report it separately from an actual restore into Cloudflare D1/R2.
 
 ## What the backup does
 

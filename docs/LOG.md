@@ -30,8 +30,29 @@ Bootstrap now omits that optional field entirely and validates the generated
 configuration with a dry run before deployment. No export or scheduled run
 occurred during that failed setup attempt.
 
-Activation, first backup, and restore results must still be recorded separately.
-The owner's application remains last and customer-launch locks are unchanged.
+PR #230 merged as `093822e`; bootstrap run `36223729484` successfully
+deployed the private Worker/Workflow (initial version `f10eaf06`) without a
+schedule. The approved D1 Read key was saved as the encrypted
+`D1_BACKUP_API_TOKEN` Worker secret. The token display page was closed and no
+credential value was written to source, shell commands, logs, or CI.
+
+The first approved instance `owner-approved-recovery-20260926` at 06:31 UTC
+failed at export initiation with HTTP 401 Authentication error. It was
+terminated after two retries, before any database export, object copy, or
+manifest. The nightly schedule remains off. The token editor confirms D1 Read,
+the Tuveloz account only, September 25 start, October 25 expiry, and no IP
+filter. A separate approval request is pending before trying D1 Edit, which
+would allow account-level database writes/deletion as well as reads. No
+permission expansion was applied. Do not claim that the error proves Edit will
+resolve it; a successful export still needs verification.
+
+The main application release from PR #229 passed all release gates and is live:
+`a016c1c16f398643a19adacb19ec973cb4bade59`. At 06:36 UTC, public health reports
+application/database/schema ready with onboarding-only launch boundaries.
+The follow-up `093822e` application release is still running its independent
+verification; its separate backup bootstrap has already succeeded.
+First backup, scheduling, and isolated recovery are unfinished. The owner's
+application remains last. No paid upgrade or launch switch was applied.
 
 ## 2026-09-25 - Public-profile completion and backup activation review
 
