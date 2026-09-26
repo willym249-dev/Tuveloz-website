@@ -81,11 +81,12 @@ facts, not reconstructed later by whoever is available.
 
 **3. Preserve evidence.** The job workspace already holds before/after condition
 evidence, messages, the appointment record, arrival tracking, and the
-authorization chain. The intended incident link is `evidenceReferences`, but
-the September 26 code review confirmed that incident creation still writes an
-empty list and the console has no linking control. This remains implementation
-work; do not describe the private job-photo workspace as a completed incident
-attachment flow. Do not delete a message, image, or job record after an incident
+authorization chain. The incident console can now link saved photos and notes
+from the same job through `evidenceReferences`. PRs #238 and #239 are published;
+the September 26 hosted owner rehearsal verified linking and opening a seeded
+private image without changing earlier references or payment holds. A hosted
+participant upload and the full process review remain separate unfinished
+checks; see the dated evidence below. Do not delete a message, image, or job record after an incident
 — the same rule as the security plan, for the same reason.
 
 **4. Payment stays held.** It holds itself. Do not release it to settle a
@@ -117,6 +118,14 @@ still unanswered, so today the honest assumption is that there is no platform
 policy to tender to. Record `insurerNotifiedAt` when a tender is actually made.
 
 ## What each side is told
+
+**Delivery status, checked September 26:** the incident route is a test-only
+workflow and does not send customer, provider, owner, or insurer notifications.
+The owner can review incidents in the compliance console. The messages below
+describe the required response procedure, not a verified automatic delivery
+feature. A production communication process and its delivery rehearsal remain
+unfinished; do not remove test isolation or send real notices from synthetic
+incidents to claim completion.
 
 **Both sides, promptly and factually:** that an incident is recorded, that work
 is stopped, that payment is held, and what happens next. Nothing about fault,
@@ -331,6 +340,13 @@ Local proof: `incident-evidence-staging-20260926.json` and the two screenshots
 named in that artifact. Preserve the existing test fixtures for later review.
 This proves deployed owner linking and private R2 retrieval only; it does not
 approve any insurance, participant evidence, live job, or launch gate.
+
+The screenshot exposed a SQLite UTC/local-time display error. Both evidence
+screens now normalize stored SQLite timestamps before localization; browser
+regressions use SQLite-shaped values under America/New_York. Staging run
+`36253800061` passed at `f5e1556`, and a read-only page reload confirmed the
+correct 11:44:54 AM display with the existing link and hold preserved. Final
+screenshot: `incident-evidence-staging-final-20260926.png`.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.

@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Correct account notices and recover from notification errors
+
+Follow-up review found that welcome notifications still invited customers to
+request work and providers to request appointments during onboarding-only mode.
+They now link directly to the appropriate workspace with truthful account and
+application wording. Existing welcome rows are corrected in place, preserving
+their ID, date, and read state; no duplicate welcome or email is created. Other
+accounts, roles, and event types stay untouched.
+
+The notifications page now recovers from failed, malformed, or stalled reads
+with a refresh button. A confirmed read-state update stays successful if the
+follow-up list refresh fails. Rejected or unconfirmed updates do not claim
+success. Opening a notice still navigates if read tracking fails, with a named
+accessible link and best-effort keepalive request. Expired sessions return to
+sign-in. The existing account page does not support an arbitrary return-path
+parameter, so this change does not introduce or promise one.
+
+All 723 tests and the production build passed locally, along with typecheck and
+lint (one existing unrelated warning). Twenty mobile browser scenarios passed
+in Chromium and WebKit, covering recovery, timeout, write receipts, both account
+destinations, and sign-in redirect. The SQLite route fixture verifies welcome
+history preservation, idempotence, account/role isolation, and invalid input.
+It stubs session verification and mail delivery; no real account or email was
+used. This entry records local validation; publication is still pending.
+
+The incident runbook no longer calls completed evidence linking missing. It
+now states explicitly that the test-only incident route sends no notifications;
+the full communication process and insurer review are still pending. This
+account-notification repair does not complete those separate launch requirements.
+
 ## 2026-09-26 - Correct evidence timestamp display before publication
 
 The hosted link/read screenshot exposed a four-hour display error: SQLite
@@ -24,12 +54,22 @@ with noon instead of 8 AM, then passed with the correction.
 
 The production build, all 716 tests, lint (one existing warning), typecheck,
 and fourteen incident/upload browser scenarios passed locally after the fix.
+Staging run `36253800061` passed at `f5e1556`; reloading the existing owner
+page confirmed the correct 11:44:54 AM Maryland display with the link and hold
+intact. No fixture was rewritten. The proof artifact records both deployments.
 
 PR #238 merged as `d4ae855`, but production run `36253516796` was cancelled
-before deployment while correcting this finding. The last confirmed public
-release is still PR #237 (`df23b2e`). The next normal release will include the
-incident-link feature and this display correction together. Hosted owner linking
-already passed; its record below remains valid and must not be recreated.
+before deployment while correcting this finding. PR #239 merged as
+`36e93760215ae051a6da8282c0a2920eda1091c6`; required verification run
+`36253795576` and all three jobs in production release `36254642943` succeeded.
+Public health at 16:28:35 UTC matched that exact commit with application,
+database, and schema ready. Both fixes are now published together. The English
+and Spanish home/provider pages and both evidence/incident pages returned 200;
+unauthenticated private-evidence access returned 401. Customer accounts and
+provider applications stay open; customer requests and payments stay closed.
+Proof: `incident-evidence-release-20260926.json`. Hosted owner linking already
+passed; its record below remains valid and must not be recreated. A hosted
+participant upload, insurer/source review, and launch decisions remain separate.
 
 ## 2026-09-26 - Link saved private job evidence to incidents
 
@@ -65,8 +105,9 @@ hold stayed unchanged. Payments, notifications, outbox, and Identity sessions
 remained zero; the provider remains new/not reviewed. A signed-out image request
 redirected to Access. This is a hosted owner link/read check, not a participant
 upload or real claim. The original fixtures were preserved. Local evidence:
-`incident-evidence-staging-20260926.json` plus screenshots. Publication is pending
-at this entry.
+`incident-evidence-staging-20260926.json` plus screenshots. Published together
+with the timestamp correction in PR #239; exact live verification is recorded
+above.
 
 ## 2026-09-26 - Saved job photos survive a failed follow-up read
 
