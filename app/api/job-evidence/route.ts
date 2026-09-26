@@ -250,6 +250,7 @@ export async function POST(request: Request) {
   if (!account) return Response.json({ error: "Sign in to add a job record." }, { status: 401 });
 
   let storedImageKey = "";
+  let savedEvidenceId = "";
   try {
     const contentType = request.headers.get("content-type") ?? "";
     let body: Record<string, unknown>;
@@ -340,6 +341,9 @@ export async function POST(request: Request) {
       odometerMiles,
       technicianName,
     ).run();
+    // Once SQL references the image, later notification/list failures must
+    // never run the orphan-file cleanup or invite a duplicate submission.
+    savedEvidenceId = id;
 
     const recipientRole: AccountRole = account.role === "customer" ? "provider" : "customer";
     const recipientEmail = account.role === "customer" ? job.providerEmail : job.customerEmail;
@@ -360,6 +364,14 @@ export async function POST(request: Request) {
       ...(await responseData(account.email, account.role)),
     }, { status: 201 });
   } catch (error) {
+    if (savedEvidenceId) {
+      console.error("Private job evidence saved; follow-up failed", error);
+      return Response.json({
+        ok: true,
+        evidenceId: savedEvidenceId,
+        refreshRequired: true,
+      }, { status: 201, headers: { "cache-control": "private, no-store" } });
+    }
     if (storedImageKey) {
       await deleteJobEvidenceImage(storedImageKey).catch(() => undefined);
     }

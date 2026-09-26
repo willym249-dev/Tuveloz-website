@@ -81,9 +81,12 @@ facts, not reconstructed later by whoever is available.
 
 **3. Preserve evidence.** The job workspace already holds before/after condition
 evidence, messages, the appointment record, arrival tracking, and the
-authorization chain. Reference it in `evidenceReferences`. Do not delete a
-message, image, or job record after an incident — the same rule as the security
-plan, for the same reason.
+authorization chain. The intended incident link is `evidenceReferences`, but
+the September 26 code review confirmed that incident creation still writes an
+empty list and the console has no linking control. This remains implementation
+work; do not describe the private job-photo workspace as a completed incident
+attachment flow. Do not delete a message, image, or job record after an incident
+— the same rule as the security plan, for the same reason.
 
 **4. Payment stays held.** It holds itself. Do not release it to settle a
 complaint quickly; releasing payment before the facts are known is a decision
@@ -176,6 +179,24 @@ attach a real evidence file, contact an insurer, send real incident notification
 or attempt a Stripe payout. Its payout-helper check is a source assertion, not a
 payment transaction. The separate owner simulation below adds technical coverage
 without turning these local results into a completed claims-plan review.
+
+### September 26 private job-photo storage check
+
+The separate `job-evidence-storage` test runs actual multipart upload/read
+routes, account authentication, and migrated SQL with synthetic in-memory
+Cloudflare bindings. It verified byte-for-byte photo retrieval, denied unrelated
+and unauthenticated readers, rejected malformed/oversized files, preserved the
+real-job launch gate, and cleaned up files after failed database inserts. It
+reproduced and fixed a defect that deleted a committed photo when a later list
+refresh failed. A saved record now survives that failure and returns a success
+receipt with a refresh instruction.
+
+`test:e2e:job-evidence` verifies the real page in Chromium and WebKit against a
+synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
+draft, and refreshing after a saved upload never resubmits it. Neither test uses
+hosted R2 or attaches the photo to `job_incidents`; the incident-link control and
+hosted participant upload remain unfinished. Owner and insurer review remain
+required independently of these tests.
 
 ### Owner decisions and later hold release
 

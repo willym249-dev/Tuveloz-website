@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Saved job photos survive a failed follow-up read
+
+The unfinished evidence rehearsal reproduced a real data-loss defect: after
+`job_evidence_items` was inserted, a failed notification or list refresh entered
+the same cleanup path as a failed insert and deleted the stored image. The route
+now tracks the committed record and returns a saved receipt requiring refresh
+instead of deleting its file or reporting that the upload failed. Pre-insert
+failures still clean up orphan files. The page preserves its existing list,
+clears only the successfully submitted form, and offers a read-only refresh
+when the saved record cannot yet be displayed. A rejected upload retains the
+photo and note; refreshing a saved record never submits it again.
+
+`tests/job-evidence-storage.test.mjs` first failed on the deleted-image
+assertion, then passed with the fix. It executes real account authentication,
+multipart validation, route code, and migrated SQL with local in-memory D1/R2
+bindings. A synthetic PNG survives save/readback byte-for-byte; unrelated and
+unauthenticated accounts cannot read it; invalid/oversized uploads, foreign
+origins, and role spoofing cannot write. Real jobs remain locked despite a
+caller-supplied test flag. No notifications or payments are created.
+
+The actual page passed six browser scenarios across Chromium and WebKit, with
+file bytes verified by a loopback HTTP server: normal save, a failed refresh
+after save, and retry after a rejected upload. Added this check to pull-request
+verification. The production build, all 706 tests, lint (one existing warning),
+and application/Worker typecheck passed locally. These are isolated technical
+tests, not a hosted customer/provider upload, insurer review, or launch approval.
+
+Code inspection also confirmed a separate unfinished step: incident creation
+still writes an empty `evidenceReferences` list and the incident console has no
+attachment/link control. The existing private job-photo workspace is not proof
+of linking evidence to an incident. Preserve that distinction in readiness
+claims. Existing staging incident fixtures and production records were untouched.
+
 ## 2026-09-26 - Existing staging reused for actual owner incident decisions
 
 Found that staging was already deployed and configured in August despite older
