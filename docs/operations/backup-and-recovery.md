@@ -40,9 +40,12 @@ Do not repeat a full import into a database that already contains restored data.
 
 The September 26 rehearsal restored 78 tables, 355 records, and 383 schema
 objects into a separate D1 database. Every table count matched, quick check
-returned `ok`, and foreign-key check returned no violations. R2 file recovery
-and application smoke tests are separate requirements, still outstanding for
-that cloud rehearsal. See the [activation record](./production-backup-activation.md).
+returned `ok`, and foreign-key check returned no violations. Both expected R2
+objects were restored at their original paths and downloaded with matching
+hashes and metadata. Actual application routes passed local smoke checks using
+recovered data with no live credentials, writes, or outbound calls. A hosted
+application cutover was not performed. See the
+[activation record](./production-backup-activation.md).
 
 Cloudflare documents the need to create referenced tables before importing
 their data in its [D1 import guidance](https://developers.cloudflare.com/d1/best-practices/import-export-data/).

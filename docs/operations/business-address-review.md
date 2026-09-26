@@ -1,0 +1,32 @@
+# Business address review
+
+- **Status:** public-profile and Stripe support corrections complete; remaining private records explicitly listed
+- **Owner:** hello@tuveloz.com
+- **Last reviewed:** 2026-09-26
+
+Keep completed work separate from records that have not been verified. Do not
+restart the entire address migration or claim every account was updated. Exact
+addresses and private account screenshots stay outside this repository.
+
+| Surface | Recorded result | Remaining action |
+| --- | --- | --- |
+| Anytime Mailbox | Active mailbox verified September 12; owner signed in September 26 and the assigned business mailbox address was read directly for private comparison | Complete; no new activation or purchase needed |
+| Google Payments organization/invoice address | Saved and rechecked September 12; this is a private billing record | Do not repeat the completed update or treat it as a legal/tax filing |
+| Facebook public Page | September 25 removed the street/map presentation, preserving all ten service areas and the signup link | Complete; do not restore the older public mailbox address |
+| Website, Instagram, TikTok, X | Public-profile and logo review completed September 25; county/service-area wording is appropriate for the marketplace | No blanket rebranding or address rewrite is pending |
+| Google Maps/search | Not open to the public correction submitted; homepage and signup indexing requests accepted | Check Google's processing result; submission is complete |
+| Stripe customer-facing support address | September 26 direct comparison found a mismatch with the assigned mailbox. The owner specifically approved a support-only correction. Saved the verified mailbox street, unit, city, state, and postal code, then confirmed every component in the displayed result | Complete. Private business and owner address values were verified unchanged; tax and bank records were not edited |
+| Porkbun domain contact and renewal billing | Registrar and domain expiry verified through the official registry September 26; private contact fields and auto-renew billing not inspected | Review the signed-in registrar settings; do not infer an address error from an unverified field |
+| Maryland business, resident-agent, tax and bank records | The completed public-profile and Google Payments updates do not establish changes to these records | Verify record-specific requirements before any filing or modification; retain owner review for consequential changes |
+
+Prior address observations above come from the September 12 account review and
+September 25 public-profile audit. Stripe and the signed-in mailbox were compared
+directly September 26; domain registration was also refreshed. Exact addresses
+were not copied into this record. The confirmed Stripe support mismatch was
+corrected with specific owner approval and verified in the saved result. Other
+unverified private records are not proof that those records are wrong or that
+the public website is broken.
+
+The [domain record](../records/domain-registration-tuveloz-com.md) holds the
+verified expiry and reminder date. The remaining launch evidence is tracked
+separately in [prelaunch reconciliation](../business/2026-09-25-prelaunch-reconciliation.md).

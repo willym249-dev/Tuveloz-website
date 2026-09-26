@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Automatic backup, file recovery, and Stripe support address verified
+
+The first scheduled backup `scheduled-backup-1790413652000` completed all
+seven Cloudflare Workflow steps at 09:07:38 UTC: D1 export, both object copies,
+manifest, and retention processing (zero deletions). Daily 09:07 UTC operation
+is now observed, not merely configured. No paid upgrade was added.
+
+The owner enabled Chrome's required file permission. Both expected files now
+exist at their exact keys in the separate private R2 recovery bucket. Their
+downloaded SHA-256s, sizes, content types, and empty custom metadata match the
+backup. The cloud database checks below already passed. One extra unreferenced
+605-byte synthetic fixture remains only in the recovery bucket, with cleanup
+tracked separately; production and backup objects were not changed.
+
+At 08:54:53 UTC actual application health and document routes passed local
+recovered-data checks: schema ready, both files readable through the storage
+adapter, anonymous document access denied with 401, and zero outbound calls.
+Recovered SQLite was read-only with no live credentials. This proves local
+application recovery behavior, not a hosted application cutover.
+
+PR #232 merged as `273e1aa`; release `36231162715` passed all required checks
+and finished at 09:07:36 UTC. Public health at 09:13:13 UTC confirmed that
+exact commit with application/database/schema ready. Customer accounts and
+provider applications remain open; requests and payments remain closed.
+
+Reconciled earlier address work instead of reopening it: September 12 mailbox
+activation and Google Payments update, and September 25 public-profile
+corrections retain their dated evidence. The owner signed into Stripe and
+Anytime Mailbox. Direct private comparison found a Stripe support-address
+mismatch. After specific owner approval, saved only the customer-facing
+support address with the verified mailbox and unit. Every address component
+was present in the saved result; private business and owner address fields
+were unchanged. No exact address or private account screenshot is retained
+here. Remaining registrar and legal/tax/bank records are listed separately in
+the new indexed business-address review.
+
+Official registry RDAP confirms Porkbun as registrar and July 22, 2027 expiry.
+The June 22, 2027 renewal checkpoint is recorded. Private registrar auto-renew,
+contact, and billing settings have not been inspected. The current handoff and
+checklist now distinguish these remaining checks from the completed backups,
+recovery, support correction, and published website work.
+
 ## 2026-09-26 - Isolated Cloudflare database recovery verified
 
 PR #231's application release `36227791081` and PR verification `36227430360`
