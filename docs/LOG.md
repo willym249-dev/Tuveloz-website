@@ -33,8 +33,28 @@ was sent; the actual mailbox round trip remains unverified. The existing
 incident runbook now gives the exact bilingual test, receipt/reply checks,
 private evidence requirements, and manual-response handoff. It does not imply
 automatic incident alerts, insurer notice, staffing coverage, or a launch
-approval. Existing completed releases and rehearsals were preserved. Release
-publication is recorded separately after verification.
+approval. Existing completed releases and rehearsals were preserved.
+
+PR #242 passed verification `36263773859` and PR build `36263773996`, then
+merged as `39431aa1e1a599de9dad9157ee640fd0a9066700`. All three production jobs
+in `36264460936` passed. Public verification at 19:16:20 UTC confirmed that
+exact release, built 19:14:18 UTC, with application/database/schema ready,
+both `/ai` and `/es/ai` returning 200, and signed-out notifications returning
+401. Accounts/applications remain open; customer requests/payments remain
+closed. The initial verification script mistakenly requested nonexistent
+`/help`; corrected it to the actual linked routes, without changing the site.
+Proof: `email-receipt-release-20260926.json`.
+
+The next independent item now has a prepared, unsent broker inquiry in the
+existing launch briefing. It separates platform/provider coverage and asks
+for comparable full costs, exclusions, claims duties, and requirements now
+versus before bookings. Maryland's official commercial-insurance FAQ and
+licensing-search instructions were checked. No broker was contacted, private
+application submitted, or coverage purchased. The owner still needs to choose
+a broker and confirm the intended first services. The existing September 30
+review checkpoint was clarified; September 28 tracks the pending mailbox
+round trip and named incident responder. These are review checkpoints, not
+launch promises. Both drafts and all earlier completed work are preserved.
 
 ## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
 

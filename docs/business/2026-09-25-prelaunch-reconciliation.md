@@ -14,11 +14,19 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `a0d3920ac9762d8adf00a5a0841c04bd2136372d` (PR #241), built September 26 at
-  18:20:29 UTC. Its release workflow passed and public health at 18:22:15 UTC
+  `39431aa1e1a599de9dad9157ee640fd0a9066700` (PR #242), built September 26 at
+  19:14:18 UTC. Its release workflow passed and public health at 19:16:20 UTC
   confirmed the exact commit, ready application/database/schema, and closed
   customer-launch gates. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
+- PR #242 requires an email-service receipt before the outbox records a send
+  as accepted. Six malformed-success response cases now remain retryable with
+  the same key; later acceptance stops repeat sends. All 726 tests, build,
+  lint/typecheck, PR gates, and production release passed. This does not prove
+  inbox delivery. Business Gmail needs fresh Google verification; no manual
+  incident sample has been sent. The runbook gives the exact bilingual receipt
+  and reply rehearsal, and the existing launch briefing contains an unsent
+  cost-conscious broker inquiry. No coverage or launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
 - The business Gmail inbox loads. Activation and payment receipts are present.
