@@ -32,7 +32,7 @@ try {
   for (const browserType of [chromium, webkit]) {
     const browser = await browserType.launch({ headless: true });
     try {
-        const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York", locale: "en-US" });
         const page = await context.newPage();
         const errors = []; page.on("pageerror", error => errors.push(error.message));
         const requests = [];
@@ -46,7 +46,7 @@ try {
             { id: "open", status: "open", holdPayments: "yes", summary: "Synthetic open incident", evidenceIds: linked ? ["saved-photo"] : [] },
             { id: "released", status: "resolved", holdPayments: "no", summary: "Synthetic released incident" },
           ],
-          evidence: [{ id: "saved-photo", note: "Synthetic saved vehicle photo", evidenceType: "customer-condition", uploadedByRole: "customer", createdAt: "2026-09-26T12:00:00Z", imageUrl: photoUrl }],
+          evidence: [{ id: "saved-photo", note: "Synthetic saved vehicle photo", evidenceType: "customer-condition", uploadedByRole: "customer", createdAt: "2026-09-26 12:00:00", imageUrl: photoUrl }],
         });
         await context.route("**/*", async route => {
           const request = route.request(); const url = new URL(request.url());
@@ -98,6 +98,7 @@ try {
             const linker = incident.locator("details");
             await linker.locator("summary").click();
             const select = linker.getByRole("combobox", { name: "Saved photo or note", exact: true });
+            assert.match(await select.textContent(), /9\/26\/2026, 8:00:00 AM/, "stored UTC time must display in the viewer's timezone");
             const before = requests.length;
             await linker.getByRole("button").click();
             assert.equal(requests.length, before, "an empty selection must not submit");

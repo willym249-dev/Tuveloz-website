@@ -121,9 +121,13 @@ The next incident-evidence increment adds an authenticated control to link saved
 job photos/notes without altering a hold or resolution. All 716 tests, production
 build, lint, typecheck, and owner/customer/provider browser checks passed locally.
 The new tests execute actual upload, incident, link, and private-image routes
-with synthetic bindings, including rollback and wrong-account rejection. Hosted
-link verification and publication remain pending at this entry; do not count
-local tests as either a real participant exercise or a launch approval.
+with synthetic bindings, including rollback and wrong-account rejection. The
+existing private staging deployment `36252778621` also passed actual owner
+linking and opening of a seeded synthetic image from R2. Independent D1 checks
+confirmed preserved references/resolution/holds and one new owner audit, with
+no payment, notification, or provider approval. The hosted participant upload,
+insurer/source review, and launch approval remain separate. Publication remains
+pending at this entry.
 
 ## Owner application — last step
 

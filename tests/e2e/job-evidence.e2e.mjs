@@ -47,7 +47,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const photo = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aS1cAAAAASUVORK5CYII=", "base64");
 const savedNote = "SYNTHETIC: vehicle condition before work.";
 const savedItem = { id: "synthetic-evidence", requestId: "synthetic-job", uploadedByRole: "customer", evidenceType: "customer-condition",
-  imageAvailable: true, imageUrl: "/api/job-evidence/image?id=synthetic-evidence", note: savedNote, odometerMiles: 0, technicianName: "", createdAt: "2026-09-26T14:00:00Z" };
+  imageAvailable: true, imageUrl: "/api/job-evidence/image?id=synthetic-evidence", note: savedNote, odometerMiles: 0, technicianName: "", createdAt: "2026-09-26 14:00:00" };
 const snapshot = saved => ({ role: "customer", email: "customer@example.invalid", principles: [], jobs: [{
   requestId: "synthetic-job", vehicle: "Synthetic vehicle", service: "Synthetic service", requestStatus: "quote accepted",
   customerName: "Synthetic customer", customerEmail: "customer@example.invalid", providerName: "Synthetic provider", providerEmail: "provider@example.invalid",
@@ -58,7 +58,7 @@ try {
     const browser = await browserType.launch({ headless: true });
     try {
       for (const mode of ["normal", "refresh-fails", "retry-rejected-upload"]) {
-        const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York", locale: "en-US" });
         const page = await context.newPage();
         const errors = []; page.on("pageerror", error => errors.push(error.message));
         let saved = false, posts = 0, refreshFailures = mode === "refresh-fails" ? 1 : 0;
@@ -109,6 +109,7 @@ try {
             await refresh.waitFor({ state: "detached" });
           }
           await page.getByText(savedNote, { exact: true }).waitFor();
+          assert.equal(await page.getByText("9/26/2026, 10:00:00 AM", { exact: true }).count(), 1, "stored UTC time must display in the viewer's timezone");
           await page.getByRole("status").filter({ hasText: "Private job record added" }).waitFor();
           assert.equal(await submit.isEnabled(), true);
           assert.equal(await note.inputValue(), "");
