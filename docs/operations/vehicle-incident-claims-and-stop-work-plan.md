@@ -205,10 +205,22 @@ WebKit: confirmation is required, a rejected attempt retains the draft, success
 removes the completed control, and customers cannot see it. This internal test
 console currently remains English-only; public bilingual routes are unchanged.
 
-Still outstanding: a deployed Cloudflare Access session and owner review of the
-complete process, real evidence attachment, notification delivery, insurer/source
-review, and any separately authorized Stripe test. No launch gate is approved
-by these simulations and no production identity credential is used.
+### Deployed owner access check
+
+On September 26, the existing business-browser Cloudflare sign-in opened the
+live owner dashboard. Its integrated review at 14:06 UTC reported successful
+signed-token verification, available review tables, and the existing passing
+scanner proof. The compliance workspace loaded. A read-only job-console lookup
+of a nonexistent synthetic request reached the missing-assignment response,
+confirming authenticated access to that route. No production test assignment
+was available; no incident was created or modified. This closes only the live
+owner sign-in/access check. PR #236's release and exact public health commit
+were separately verified; see the September 26 log entry.
+
+Still outstanding: an owner-authenticated rehearsal against a persisted
+deployed test job, owner review of the complete process, real evidence
+attachment, notification delivery, insurer/source review, and any separately
+authorized Stripe test. No launch gate is approved by these checks.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.

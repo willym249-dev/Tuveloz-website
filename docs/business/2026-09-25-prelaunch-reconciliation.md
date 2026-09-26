@@ -103,9 +103,13 @@ It used synthetic local records and a local mail catcher against `312b63b`.
 The subsequent owner simulation exercises real token verification, SQL, and
 auditing with temporary keys and synthetic public-key transport. It covers
 owner decisions and later release of retained incident holds, with separate
-Chromium/WebKit control checks. A deployed Access session, real evidence
-attachment, insurer/notification handling, and an actual payout remain outside
-these local results. See the
+Chromium/WebKit control checks. PR #236 is confirmed live as `3eb2871` after
+700 tests and release run `36246209425` passed. The real deployed Cloudflare
+owner sign-in and read-only dashboard, compliance, and job-lookup access were
+separately verified September 26. No production test assignment was available.
+The incident rehearsal against a deployed test job, real evidence attachment,
+insurer/notification handling, and an actual payout remain outside these
+results. All eighteen live review controls still showed Pending. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
 

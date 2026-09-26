@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Deployed owner access verified without changing review decisions
+
+PR #236 merged as `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65` and
+production run `36246209425` completed successfully. Public health at
+14:00:26 UTC matched that commit with application, database, and schema ready.
+The 700 tests and required browser/release checks passed. The final comparison
+preserved signup, scanner, backup, policy, migration, and launch-lock code.
+
+Used the existing Tuveloz business-browser Cloudflare sign-in to open the live
+owner dashboard. The integrated review at 14:06 UTC explicitly reported that
+this request passed signed-token verification; owner data and review tables
+loaded. The compliance-operations workspace also loaded. A read-only lookup
+from the job-operations console with an explicitly nonexistent synthetic ID
+reached "Accepted job assignment not found" instead of the unauthenticated
+sign-in error. This verifies the live owner-session access path, not an incident
+write, resolution, or payout. No persisted production test job was available,
+and none was created. A separate direct navigation to the diagnostic JSON route
+was blocked by the browser client and is not counted as a passing check.
+
+All eighteen evidence review controls remain Pending: seventeen required and
+one optional lane. The scanner's existing operational proof passes; live
+provider Identity evidence, named reviewer decisions, launch-update postal
+address, exact-service activation, and customer/payment release remain separate
+unfinished items. No review decision, approval, provider record, mailing
+configuration, live payment, or launch setting changed. Do not repeat completed
+owner-access setup or treat this read-only pass as the full incident rehearsal.
+
 ## 2026-09-26 - Owner incident simulation found and repaired two workflow defects
 
 Added local behavioral coverage that executes the real owner-token verifier,
