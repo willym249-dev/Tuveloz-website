@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Verify the manual support email round trip
+
+After the owner restored business Google sign-in, sent one owner-authorized
+TEST ONLY bilingual sample from the business mailbox to the established
+owner-controlled test inbox. Independent receipt inspection confirmed the
+expected sender, recipient, subject, and complete English/Spanish text. The
+received message was in Inbox, not Spam, at 21:49:08 UTC; its authentication
+headers reported SPF, DKIM, and DMARC pass. A same-thread test acknowledgement
+was sent at 21:50:17 UTC, then opened and checked in the business Inbox.
+
+Private message identifiers, headers, receipt details, and a screenshot stay
+outside Git in `incident-mailbox-roundtrip-20260926.private.json` and the matching
+PNG. Only the sample and its reply were sent. No customer, provider, insurer,
+real incident, attachment, payment, or launch action was involved. Existing
+drafts were preserved. This completes the manual mailbox test; it does not
+implement automatic incident notifications, guarantee delivery to all mail
+providers, or establish incident staffing or insurance coverage.
+
+Updated the existing runbook, reconciliation, deadline row, and local checklist
+to prevent repeating the completed test. Responder/coverage/fallback decisions
+remain open. GitHub showed no open PRs and main remains the verified PR #242
+release. This handoff changes documentation only; no deploy or full code-test
+rerun is needed. Earlier local handoff commits were preserved.
+
 ## 2026-09-26 - Require an email-service receipt before recording a send
 
 The incident-message delivery follow-up found that the shared email outbox

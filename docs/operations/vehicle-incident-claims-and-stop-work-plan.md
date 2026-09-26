@@ -196,10 +196,19 @@ sent simply to clear the review screen.
 ### Manual delivery rehearsal and operating handoff
 
 Use the existing business mailbox for the manual response process. A Google
-sign-in prompt does not mean the paid subscription is suspended. On September
-26 the business mailbox required fresh sign-in, so no new send or receipt was
-claimed. The owner authorized continuing the delivery rehearsal; only the
-owner's established test inbox and business inbox are intended recipients.
+sign-in prompt does not mean the paid subscription is suspended. The owner
+restored sign-in and the authorized manual round trip passed September 26,
+2026: the bilingual sample reached the owner's established test inbox at
+21:49:08 UTC with an Inbox label, not Spam. Sender, destination, subject, and
+both language samples matched; received headers reported SPF, DKIM, and DMARC
+pass. The same-thread test reply was sent at 21:50:17 UTC and independently
+opened in the business Inbox, with the sender, destination, and reply body
+verified. One sample and one reply were sent, with no attachments or real
+incident. Exact identifiers and the thread screenshot are retained privately
+outside the repository. Do not repeat this completed test merely because an
+earlier log entry records an expired session.
+
+The completed procedure, retained for an explicitly needed future rehearsal:
 
 1. Confirm access to both inboxes. Send a clearly labeled **TEST ONLY — no real
    incident** message from the business inbox to the owner-controlled test

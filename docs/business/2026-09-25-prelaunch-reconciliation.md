@@ -23,10 +23,13 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   as accepted. Six malformed-success response cases now remain retryable with
   the same key; later acceptance stops repeat sends. All 726 tests, build,
   lint/typecheck, PR gates, and production release passed. This does not prove
-  inbox delivery. Business Gmail needs fresh Google verification; no manual
-  incident sample has been sent. The runbook gives the exact bilingual receipt
-  and reply rehearsal, and the existing launch briefing contains an unsent
-  cost-conscious broker inquiry. No coverage or launch approval was recorded.
+  inbox delivery. A separate owner-authorized manual mailbox test passed
+  September 26 at 21:49–21:50 UTC: the English/Spanish sample reached the
+  owner's test Inbox, passed SPF/DKIM/DMARC, and its reply was opened in the
+  business Inbox. Private receipt evidence is retained outside the repository.
+  This does not implement automatic incident alerts or establish staffing.
+  The existing launch briefing contains an unsent cost-conscious broker
+  inquiry. No coverage or launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
 - The business Gmail inbox loads. Activation and payment receipts are present.
