@@ -11,6 +11,29 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Free nightly backup schedule activated
+
+PR #231 merged as `0b61ccd`. The reviewed backup tests, lint, TypeScript check,
+and both deployment configuration dry runs passed. Manual activation run
+`36227836343` succeeded at 07:47 UTC and deployed backup Worker version
+`5a4621b4-9aa3-4f2d-b470-2ee9ddb5f8ae`. Cloudflare's settings screen confirms
+the daily Cron Trigger and its next firing at September 26, 09:07 UTC. No paid
+plan, billing change, public route, or launch switch was added. This confirms
+the installed schedule; it does not yet prove the first automatic firing.
+
+The real manual backup and separate local recovery are already proved below:
+78 database tables, integrity OK, zero foreign-key violations, and both stored
+objects restored with matching hashes. A full Cloudflare D1/R2 restore remains
+a separate open item. All four original downloads were moved out of Downloads
+into the private recovery folder outside the source repository.
+
+At 07:49 UTC, the public website still reports application/database/schema ready
+on `093822e`, with onboarding open and customer requests/payments closed. The
+independent application release run `36227791081` is still running its gated
+checks; do not describe that application release as deployed yet. The backup
+deployment above is separate and complete. Credential renewal is tracked for
+October 18, before the October 25 expiration.
+
 ## 2026-09-26 - First real backup and local recovery passed
 
 The owner explicitly approved expanding the existing Tuveloz backup token to

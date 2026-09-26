@@ -1,6 +1,6 @@
 # Production backup activation
 
-Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` closes that gap without giving the public website access to the backup bucket. The first real backup and isolated local recovery passed on September 26. The native Workflow schedule required a paid plan; the replacement uses a standard Worker Cron Trigger and still needs activation after publication.
+Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` closes that gap without giving the public website access to the backup bucket. The first real backup and isolated local recovery passed on September 26. A standard Worker Cron Trigger is now enabled daily at 09:07 UTC, with no paid upgrade. The first automatic run has not yet been observed.
 
 ## Account check — September 25, 2026
 
@@ -69,8 +69,12 @@ Use the replacement top-level `triggers.crons` with a short `scheduled` handler
 that creates the durable Workflow through its binding. It retains the 09:07 UTC
 daily time and all existing backup behavior. Bootstrap deploys an empty Cron
 list; activate installs the reviewed Cron only after checking the secret.
-Confirm the successful activation run and remote trigger before calling nightly
-backups enabled. The first automatic run remains a separate verification.
+PR #231 merged as `0b61ccd`. Activation run `36227836343` succeeded at 07:47 UTC,
+installing Worker version `5a4621b4-9aa3-4f2d-b470-2ee9ddb5f8ae` and the daily
+Cron Trigger. The Cloudflare settings page confirms the next run is September
+26 at 09:07 UTC (05:07 EDT). The first automatic run remains a separate
+verification. Public website health at 07:49 UTC was ready on `093822e` while
+the separate application release from #231 continued its gated checks.
 
 ## What the backup does
 
