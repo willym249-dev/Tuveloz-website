@@ -216,6 +216,15 @@ async function deliverEvent(eventKey: string) {
       const detail = (await response.text()).slice(0, 300);
       throw new Error(`Resend returned ${response.status}: ${detail}`);
     }
+    const receipt: unknown = await response.json();
+    if (
+      !receipt || typeof receipt !== "object" || Array.isArray(receipt)
+      || !("id" in receipt) || typeof receipt.id !== "string" || !receipt.id.trim()
+    ) {
+      throw new Error("Email service did not confirm acceptance with a message receipt.");
+    }
+    // "sent" records the service's acceptance, not delivery to an inbox. An
+    // absent/malformed receipt keeps the row retryable with its original key.
     const now = new Date().toISOString();
     await db.update(emailNotificationOutbox).set({
       status: "sent",

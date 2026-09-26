@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Require an email-service receipt before recording a send
+
+The incident-message delivery follow-up found that the shared email outbox
+marked any HTTP-success response sent, even an empty or malformed body without
+a message ID. The new real-SQLite regression reproduced that false success.
+The sender now requires a nonempty string receipt ID. An uncertain response
+leaves the record failed/retryable with no sent timestamp; the retry keeps the
+same idempotency key. A later valid receipt records acceptance once. This is
+service acceptance, not proof of delivery to an inbox.
+
+All 726 tests and the production build passed, plus lint (one existing unrelated
+warning) and typecheck. The focused checks cover six malformed-success response
+shapes, recovery, unchanged keys, and no resend after confirmation, alongside
+the existing test-mail quarantine and exhausted-delivery controls. No real mail
+was sent by these tests and no database schema or launch lock changed.
+
+The business Gmail session requires fresh Google password verification. The
+sign-in tab was retained and the owner was asked to complete it. No new message
+was sent; the actual mailbox round trip remains unverified. The existing
+incident runbook now gives the exact bilingual test, receipt/reply checks,
+private evidence requirements, and manual-response handoff. It does not imply
+automatic incident alerts, insurer notice, staffing coverage, or a launch
+approval. Existing completed releases and rehearsals were preserved. Release
+publication is recorded separately after verification.
+
 ## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
 
 The unfinished incident-process review found that checking emergency services
@@ -40,7 +65,13 @@ claims that every provider already has insurance, that every incident stops work
 or that incident details can never reach anyone beyond the chosen provider.
 The owner reports no platform insurance; owner/insurer review, hosted participant
 upload, and real notification delivery remain unfinished. No launch gate changed.
-Publication of this repair is pending the normal required workflows.
+PR #241 passed verification `36260481075` and PR build `36260481377`, then
+merged as `a0d3920ac9762d8adf00a5a0841c04bd2136372d`. All production jobs in
+`36261358204` succeeded. Public health at 18:22:15 UTC confirmed that exact
+release, built 18:20:29 UTC, with application/database/schema ready and customer
+requests/payments closed. The updated incident page returned 200 and signed-out
+incident API access returned 401. Proof: `incident-safety-release-20260926.json`.
+No production incident was created to repeat the isolated regression test.
 
 ## 2026-09-26 - Correct account notices and recover from notification errors
 

@@ -14,8 +14,8 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `61c4c071b7fc1a1ee28a27016fa2cde50c81a169` (PR #240), built September 26 at
-  17:13:54 UTC. Its release workflow passed and public health at 17:15:29 UTC
+  `a0d3920ac9762d8adf00a5a0841c04bd2136372d` (PR #241), built September 26 at
+  18:20:29 UTC. Its release workflow passed and public health at 18:22:15 UTC
   confirmed the exact commit, ready application/database/schema, and closed
   customer-launch gates. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
@@ -47,6 +47,15 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   does not make an owner contact invalid. See the domain record for scope.
 
 ## Published code and its activation limits
+
+- PR #241 makes emergency-contact and safety-stop incident reports stop the job
+  timer regardless of a low/moderate severity selection, preserving the payment
+  hold. Ordinary low-severity claims do not claim a work stoppage. The actual-route
+  regression failed before the fix, then all 725 tests and twelve incident browser
+  scenarios passed. Production release `36261358204` and exact live health are
+  verified. The incident runbook has a scoped official-source check and unsent
+  bilingual response drafts. Insurer review, hosted participant upload, actual
+  notification delivery, and launch approvals remain separate.
 
 - PR #240 corrects misleading account welcome notices and their workspace
   destinations without resetting saved notice history. Notification reads and
