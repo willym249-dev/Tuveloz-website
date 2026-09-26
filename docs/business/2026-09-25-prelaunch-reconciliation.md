@@ -100,8 +100,12 @@ the [activation record](../operations/production-backup-activation.md).
 The September 26 local incident rehearsal also passed automatic payment holds,
 stop-work recording, and rejection of customer/provider hold-release attempts.
 It used synthetic local records and a local mail catcher against `312b63b`.
-Owner-authenticated release, real evidence attachment, insurer/notification
-handling, and a real payout were not exercised. See the
+The subsequent owner simulation exercises real token verification, SQL, and
+auditing with temporary keys and synthetic public-key transport. It covers
+owner decisions and later release of retained incident holds, with separate
+Chromium/WebKit control checks. A deployed Access session, real evidence
+attachment, insurer/notification handling, and an actual payout remain outside
+these local results. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
 

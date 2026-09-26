@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Owner incident simulation found and repaired two workflow defects
+
+Added local behavioral coverage that executes the real owner-token verifier,
+incident route, SQL, and audit writes with temporary in-memory RSA keys, a
+synthetic public-key response, and an isolated migrated database. External
+requests are intercepted; no Cloudflare credential, identity document, insurer,
+or live payment is used. Invalid owner tokens and forged headers are rejected.
+Valid header/cookie simulations exercise resolution, retained holds, explicit
+release, reserve release, job isolation, recorded notice requirements, and
+duplicate-action rejection.
+
+The tests reproduced a missing audit identity: a valid token without the separate
+email header recorded `verified-owner` instead of the signed token's email.
+The operations route now uses the verifier's canonical email directly. Access
+requirements were not relaxed.
+
+The review also found a dead end: resolving an incident with its hold retained
+removed the only release control. Added an owner-only `release-incident-hold`
+action for resolved, still-held incidents, with a reason and affirmative
+confirmation. It requires any insurer-notice record, checks the incident's job,
+guards the update against changed state, preserves the original resolution,
+and audits the verified owner/reason. It clears no other hold and creates no
+transfer. The whole operations route remains limited to persisted test records.
+
+The owner console control passed local Chromium and WebKit checks, including
+required confirmation, retained drafts after denial, successful removal, and
+absence from customer controls. Added that check to release verification. The
+existing internal console remains English-only; no public language behavior was
+changed. The claims plan distinguishes these simulations from deployed Access,
+real evidence/notification handling, and insurer or legal approval. Consult the
+pull request and exact release result before calling this change deployed.
+
 ## 2026-09-26 - Domain contact inspected and incident hold simulation passed
 
 Read the Tuveloz-specific Porkbun contact editor without submitting changes.

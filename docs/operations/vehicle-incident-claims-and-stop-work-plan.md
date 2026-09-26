@@ -171,12 +171,44 @@ Verified through the real route and stored D1 records:
 - Both customer and provider were denied incident resolution and hold release.
   The incident stayed open, its resolution stayed empty, and the hold survived.
 
-This is partial technical evidence, not completion of the whole claims plan.
-The test does not perform an owner-authenticated resolution/release, attach a
-real evidence file, contact an insurer, send real incident notifications, or
-attempt a Stripe payout. Its payout-helper check is a source assertion, not a
-payment transaction. The remaining owner/insurer rehearsal and source review
-must stay pending; do not bypass Cloudflare Access to manufacture a pass.
+This original end-to-end test does not perform an owner-authenticated release,
+attach a real evidence file, contact an insurer, send real incident notifications,
+or attempt a Stripe payout. Its payout-helper check is a source assertion, not a
+payment transaction. The separate owner simulation below adds technical coverage
+without turning these local results into a completed claims-plan review.
+
+### Owner decisions and later hold release
+
+`tests/incident-owner-review.test.mjs` runs the real owner-token verification,
+incident route, SQL, and audit logic using an isolated migrated SQLite database.
+Its RSA keys exist only in memory; the public-key response and Cloudflare
+bindings are synthetic fixtures, and every external fetch is intercepted. It
+rejects forged headers, invalid signatures, expired tokens, wrong owners,
+issuers/audiences, conflicting email headers, and cross-origin requests.
+
+Valid signed-header and cookie simulations cover resolution with a retained hold,
+explicit release at resolution, and reserve release. Decisions are tied to the
+correct job and record the email from the verified token. Repeated resolutions
+are rejected. Injury/property-damage resolution requires the owner's recorded
+insurer-notice confirmation; this does not contact an insurer or verify delivery.
+
+A resolved incident with a retained hold now has a separate **Release incident
+hold** owner control. It requires a release reason, explicit confirmation, and
+any required insurer-notice record. It preserves the original resolution, clears
+only that incident's hold, records the verified owner and reason, and rejects
+open incidents, other-job records, and repeat releases. Other incidents and
+reserves remain held. No transfer is created and all payout checks still apply.
+This route remains restricted to persisted test jobs/providers.
+
+`test:e2e:incident-owner` exercises the actual owner console in Chromium and
+WebKit: confirmation is required, a rejected attempt retains the draft, success
+removes the completed control, and customers cannot see it. This internal test
+console currently remains English-only; public bilingual routes are unchanged.
+
+Still outstanding: a deployed Cloudflare Access session and owner review of the
+complete process, real evidence attachment, notification delivery, insurer/source
+review, and any separately authorized Stripe test. No launch gate is approved
+by these simulations and no production identity credential is used.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.

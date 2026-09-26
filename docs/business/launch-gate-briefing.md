@@ -184,10 +184,12 @@ the policy's notification deadline; which incidents must be tendered; and
 whether provider coverage tenders first. **The gate also requires the plan to be
 tested, not only written.** The September 26 local rehearsal passed automatic
 payment holds, stop-work recording, and rejection of customer/provider release
-attempts through the real routes and local D1. Owner-authenticated resolution,
-evidence attachment, insurer/notification handling, and final plan review remain
-separate. The plan records the tested scope; do not count the partial rehearsal
-as a completed gate or live payout verification.
+attempts through the real routes and local D1. A subsequent local simulation
+also exercises real signed-token verification and owner resolution/hold release,
+using temporary keys and synthetic key transport. Browser tests cover the owner
+control. A deployed Access session, evidence attachment, insurer/notification
+handling, and final plan review remain separate. The plan records the tested
+scope; do not count local simulations as a completed gate or live payout proof.
 
 ### Payment processor
 

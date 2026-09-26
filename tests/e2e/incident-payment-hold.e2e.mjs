@@ -399,6 +399,16 @@ async function main() {
       releaseRes.status === 401 || releaseRes.status === 403,
       `${who} must not be able to release a payment hold (got ${releaseRes.status})`,
     );
+    const incidentReleaseRes = await call(cookie, {
+      action: "release-incident-hold",
+      incidentId: afterReport.id,
+      releaseReason: "Synthetic attempt to release another party's hold.",
+      confirmHoldRelease: true,
+    });
+    assert.ok(
+      incidentReleaseRes.status === 401 || incidentReleaseRes.status === 403,
+      `${who} must not be able to release an incident hold (got ${incidentReleaseRes.status})`,
+    );
   }
   log("customer and provider are both refused resolution and hold release");
 
