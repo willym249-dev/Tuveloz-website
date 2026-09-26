@@ -11,6 +11,24 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Signed-in domain renewal review and release confirmed
+
+After the owner completed Porkbun sign-in, reviewed tuveloz.com's own renewal
+and WHOIS controls. Auto-renew is on, Use Privacy Service is selected, and the
+registrar shows expiry July 22, 2027. Account billing reports a saved payment
+method using Link via Stripe. No card expiry is displayed in that summary and
+no charge was attempted, so this does not guarantee a future renewal payment.
+The June 22, 2027 renewal checkpoint remains. Private registrant-contact address
+accuracy remains unreviewed. No purchase, subscription, DNS, privacy, or billing
+setting was changed; no private addresses, card identifiers, or unrelated domain
+names are retained in this record.
+
+PR #234's release `36233899430` completed successfully, including verification,
+browser account signup, migration, and deployment. At 10:08:37 UTC public health
+confirmed exact commit `921bccd54eded70aaffeaced1815595eee457e52`, built at
+10:01:36 UTC, with application, database, and schema ready. Customer accounts and
+provider applications remain open; customer requests and payments remain closed.
+
 ## 2026-09-26 - Existing scanner proof reconciled and company standing refreshed
 
 Corrected an operational handoff error: an empty September 25 scan queue was
