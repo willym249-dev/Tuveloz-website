@@ -11,6 +11,26 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Correct evidence timestamp display before publication
+
+The hosted link/read screenshot exposed a four-hour display error: SQLite
+CURRENT_TIMESTAMP is UTC without a timezone suffix, but both job-evidence and
+job-operations pages parsed it as browser-local time. A shared, client-safe
+parser now adds the UTC marker only to SQLite timestamp strings, leaving
+explicit ISO timestamps and offsets intact. No stored record or authentication
+timestamp parser changed. Both browser fixtures now use real SQLite-shaped
+timestamps and a fixed America/New_York timezone; the incident test first failed
+with noon instead of 8 AM, then passed with the correction.
+
+The production build, all 716 tests, lint (one existing warning), typecheck,
+and fourteen incident/upload browser scenarios passed locally after the fix.
+
+PR #238 merged as `d4ae855`, but production run `36253516796` was cancelled
+before deployment while correcting this finding. The last confirmed public
+release is still PR #237 (`df23b2e`). The next normal release will include the
+incident-link feature and this display correction together. Hosted owner linking
+already passed; its record below remains valid and must not be recreated.
+
 ## 2026-09-26 - Link saved private job evidence to incidents
 
 Added the missing incident control for linking existing job photos and notes.
@@ -36,8 +56,17 @@ warning), typecheck, and eight browser scenarios across Chromium and WebKit.
 
 This is still a persisted-test-job/provider console. No provider approval,
 customer launch, live payment, insurer notice, or paid service is enabled.
-Hosted verification and publication are pending at this entry. The earlier
-staging incident decisions and production work were preserved.
+Private staging run `36252778621` succeeded at branch head `262bfae`. One labeled
+synthetic PNG and one fixture evidence row were added to the existing test job.
+At 15:45:31 UTC the actual owner UI linked it to open incident B and opened the
+private R2 image. Independent D1 queries confirmed the appended reference and
+one verified-owner audit, while B's hold and A's earlier resolution/timestamp/
+hold stayed unchanged. Payments, notifications, outbox, and Identity sessions
+remained zero; the provider remains new/not reviewed. A signed-out image request
+redirected to Access. This is a hosted owner link/read check, not a participant
+upload or real claim. The original fixtures were preserved. Local evidence:
+`incident-evidence-staging-20260926.json` plus screenshots. Publication is pending
+at this entry.
 
 ## 2026-09-26 - Saved job photos survive a failed follow-up read
 

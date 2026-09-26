@@ -28,6 +28,15 @@ incident records as test evidence. They are not real provider approval,
 insurance, Identity, service, or payment records. Do not recreate them or reset
 staging merely to repeat this completed check.
 
+The September 26 incident-evidence increment was deployed by successful run
+`36252778621` at branch commit `262bfae1d55fcd0bd2a6b10d6d2656a562c00442`.
+An additional synthetic image/row, `rehearsal-photo-20260926`, was linked to the
+existing open incident through the owner UI and opened from private R2. The
+earlier incident decisions and all holds were preserved, and D1 recorded one
+new verified-owner audit with no payment or notifications. This was a seeded
+fixture link/read test, not a hosted participant upload. See the incident plan
+for scope and retain the fixtures; do not recreate them.
+
 ## Safety boundaries
 
 - Staging uses the separate Worker name `tuveloz-staging`.

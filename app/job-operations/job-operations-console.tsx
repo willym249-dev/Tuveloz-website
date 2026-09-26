@@ -17,6 +17,7 @@ import {
   jobScopeRequirementsForService,
 } from "../../lib/job-scope-facts";
 import { isServiceCode } from "../../lib/provider-policy";
+import { storedTimestamp } from "../../lib/stored-timestamp";
 
 type ActorRole = "customer" | "provider" | "owner";
 type JobRecord = Record<string, unknown> & { id?: string };
@@ -75,7 +76,7 @@ function money(value: unknown) {
 }
 
 function when(value: unknown) {
-  const date = new Date(String(value || ""));
+  const date = storedTimestamp(String(value || ""));
   return Number.isFinite(date.getTime()) ? date.toLocaleString() : "not recorded";
 }
 

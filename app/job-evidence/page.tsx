@@ -3,6 +3,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import { storedTimestamp } from "../../lib/stored-timestamp";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
 
@@ -55,7 +56,7 @@ const EVIDENCE_LABELS: Record<EvidenceType, string> = {
 };
 
 function readableDate(value: string) {
-  const date = new Date(value);
+  const date = storedTimestamp(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 

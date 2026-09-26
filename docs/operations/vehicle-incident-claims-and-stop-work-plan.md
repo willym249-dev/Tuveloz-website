@@ -225,7 +225,8 @@ SQLite and in-memory R2. It covers wrong-job/party records, unauthorized access,
 atomic rollback, concurrent changes, lost acknowledgements, and unchanged holds.
 The actual console passes owner/customer/provider selection, rejected-attempt
 retention, retry, and photo-opening checks in Chromium and WebKit. These are
-synthetic technical tests; hosted linking is still pending at this entry.
+synthetic technical tests. The hosted owner link/read check is recorded below;
+a hosted participant upload and real insurer workflow remain separate.
 
 ### Owner decisions and later hold release
 
@@ -300,10 +301,36 @@ Verified using the real owner session and deployed controls:
 
 This closes the deployed **owner resolution and hold-release** technical check.
 Do not rerun it by recreating the fixtures. Still outstanding: owner review of
-the complete process, real evidence attachment, notification delivery,
+the complete process, a hosted participant upload, notification delivery,
 insurer/source review, and any separately authorized Stripe test. The earlier
 local rehearsal covers incident creation and customer/provider denial. Neither
 result establishes a complete claims exercise or approves a launch gate.
+
+### Hosted staging evidence link/read rehearsal
+
+Workflow `36252778621` successfully deployed branch commit
+`262bfae1d55fcd0bd2a6b10d6d2656a562c00442` to the existing private staging
+environment. One 600-by-260 PNG labeled **SYNTHETIC TEST IMAGE / No vehicle or
+personal information** was uploaded to the existing private staging R2 bucket.
+One clearly labeled fixture row, `rehearsal-photo-20260926`, was inserted only
+for the existing persisted test assignment. No previous record was overwritten.
+This direct fixture setup was not a hosted participant upload.
+
+Through the actual owner form, linked that record to `rehearsal-b-20260926` at
+15:45:31 UTC and opened its private image in a new tab. Independent D1 reads
+confirmed the original reference remained, B stayed open and held, A's earlier
+resolution/timestamp/hold stayed unchanged, and exactly one verified-owner
+`incident_evidence_linked` event was appended with `transferCreated=false`.
+Payment, notification, outbox, and Identity-session counts stayed zero. The
+test provider remains new/not reviewed. An unauthenticated image request
+redirected to Cloudflare Access instead of returning the file. R2 public access
+remains disabled. The successful staging workflow identifies the deployed head;
+direct navigation to staging health was blocked by the browser.
+
+Local proof: `incident-evidence-staging-20260926.json` and the two screenshots
+named in that artifact. Preserve the existing test fixtures for later review.
+This proves deployed owner linking and private R2 retrieval only; it does not
+approve any insurance, participant evidence, live job, or launch gate.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.
