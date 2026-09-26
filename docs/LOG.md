@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-06
+- **Last reviewed:** 2026-09-26
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,54 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-26 - Approved private backup setup
+
+The owner approved publication, a D1 Read credential scoped to the Tuveloz
+account through October 25, 35-day private backup retention, and an isolated
+recovery rehearsal including the first export's brief signup interruption risk.
+Created that token and the Standard-storage `tuveloz-backups` bucket; the
+dashboard confirms public access is disabled. No plan or billing setting changed.
+PR #229 contains the retention fix. The local OAuth login cannot operate
+Workflows, so a main-only manual deployment workflow uses the existing release
+credential in GitHub's production environment. Bootstrap removes schedules;
+activation requires the separately installed D1 secret. Public Worker and preview
+URLs are disabled. No credential value is stored in source or CI.
+
+Activation, first backup, and restore results must still be recorded separately.
+The owner's application remains last and customer-launch locks are unchanged.
+
+## 2026-09-25 - Public-profile completion and backup activation review
+
+Reconciled the handoff with owner-approved browser work: Facebook's public
+street address and map link were removed while all ten service areas and the
+provider signup link remained; the two misleading August TikTok videos are
+Only me, and the accurate September video remains public. Search Console
+accepted recrawl requests for the homepage and both signup languages. The
+Google Maps Not open to the public correction is submitted and still pending
+review. See the existing dated public-profile audit for the evidence limits.
+
+GitHub reports PR #228's release `8ae3dd1` deployed successfully and the latest
+three reviewed health-monitor runs passed; no PRs were open. Published backup
+source is not an activated backup. The signed-in Cloudflare dashboard shows
+production D1 at 2.02 MB with seven days of Time Travel, total R2 storage at
+51.64 MB with $0 current billable usage, and no backup bucket. The existing CLI
+reports no deployed Workflows and lacks D1/R2 permissions. No export, restore,
+credential, paid upgrade, bucket, or deployment was created in this review.
+
+Before activation, a new regression reproduced cleanup failure with 1,005
+obsolete file versions because R2 accepts only 1,000 keys per delete call.
+`enforceBackupRetention` now batches those calls and preserves referenced files.
+Validation: the regression failed before the fix and passed afterward; all
+seven backup tests, lint, the production build, and all 691 repository tests
+passed. The backup Worker also passed a local deployment dry run. These checks
+do not prove a production backup or isolated restore. The fix and these notes
+remain local pending publication; the live customer-launch locks are unchanged.
+
+Next: obtain approval for the precise backup credential scope/lifetime and
+activation, publish the reviewed fix, then prove a stored backup and an isolated
+restore. The owner's truthful provider application remains last. Credential,
+insurance, legal, and provider-evidence review gaps cannot be cleared by tests.
 
 ## 2026-09-08 - Provider sign-in redirect preloading
 

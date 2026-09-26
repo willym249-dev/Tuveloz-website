@@ -1,4 +1,5 @@
 const MAX_SOURCE_OBJECTS = 250;
+const MAX_DELETE_KEYS = 1000;
 const MAX_ERROR_TEXT = 600;
 
 export type BackupHttpMetadata = {
@@ -408,7 +409,11 @@ export async function enforceBackupRetention(
       .filter((object) => !referencedObjects.has(object.key))
       .map((object) => object.key),
   ];
-  if (obsolete.length > 0) await bucket.delete(obsolete);
+  // R2 accepts at most 1,000 keys per delete call. A backlog can exceed that
+  // even with the source-object cap because each file can have many versions.
+  for (let index = 0; index < obsolete.length; index += MAX_DELETE_KEYS) {
+    await bucket.delete(obsolete.slice(index, index + MAX_DELETE_KEYS));
+  }
   return {
     deleted: obsolete.length,
     retainedManifests: retainedManifests.length,

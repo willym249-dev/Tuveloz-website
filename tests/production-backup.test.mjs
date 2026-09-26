@@ -189,3 +189,27 @@ test("backup deployment is isolated, private, scheduled, and secret-free in sour
   assert.match(worker, /D1_BACKUP_API_TOKEN/);
   assert.match(worker, /return new Response\("Not found", \{ status: 404 \}\)/);
 });
+
+test("retention handles more than 1000 expired files without exceeding R2's delete limit", async () => {
+  const bucket = new MemoryBucket();
+  const retainedObject = "objects/current/hash";
+  bucket.seed(retainedObject, "kept");
+  bucket.seed("manifests/2026-09-25/current.json", JSON.stringify({
+    version: 1,
+    objects: [{ backupKey: retainedObject }],
+  }));
+  for (let index = 0; index < 1005; index += 1) {
+    bucket.seed(`objects/obsolete-${index}/hash`, "expired version");
+  }
+  const deleteBatch = bucket.delete.bind(bucket);
+  bucket.delete = async (keys) => {
+    assert.ok(Array.isArray(keys) && keys.length <= 1000, "R2 accepts at most 1000 keys per call");
+    await deleteBatch(keys);
+  };
+
+  const result = await enforceBackupRetention(bucket, new Date("2026-09-25T10:00:00.000Z"), 35);
+  assert.equal(result.deleted, 1005);
+  assert.equal(bucket.deleted.length, 1005);
+  assert.ok(bucket.objects.has(retainedObject));
+  assert.ok(bucket.objects.has("manifests/2026-09-25/current.json"));
+});

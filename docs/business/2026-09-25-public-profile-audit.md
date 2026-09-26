@@ -1,6 +1,6 @@
 # Tuveloz public profile audit — September 25, 2026
 
-- **Status:** reviewed; public corrections prepared but not submitted
+- **Status:** public corrections submitted and checked; Google Maps review and search-snippet refresh remain pending
 - **Scope:** website search result, Google Business Profile, Facebook, Instagram, TikTok, and X
 
 This review records only public business information. It does not preserve the
@@ -19,7 +19,7 @@ details.
 - The main organic Google result accurately says that provider applications are
   open and free while customer bookings remain closed.
 
-## Public corrections still needed
+## Public corrections and observed results
 
 ### 1. Google Business Profile
 
@@ -37,21 +37,29 @@ Official references:
 - [Request removal from Google Maps](https://support.google.com/business/answer/16043467)
 - [Remove a profile from the account](https://support.google.com/business/answer/4669092)
 
-Do not mark the business permanently closed: Tuveloz still exists. Submit the
-ineligible-profile removal request only after the owner reviews the exact public
-action.
+With the owner's approval, the Maps correction was submitted as **Not open to
+the public**. Google displayed its submission confirmation. This is a pending
+review, not proof that the listing has been removed. Tuveloz was not marked
+permanently closed.
 
 ### 2. Facebook
 
-The public Page exposes a mailing location in a way that can look like a shop a
-customer can visit. Remove the public street/location presentation and keep the
-service area at county level. The Page logo is consistent with the website.
-This edit requires the Tuveloz business account to be signed in.
+The public Page exposed a mailing location in a way that could look like a shop
+a customer can visit. With the owner's approval, the street address was removed
+through the signed-in Tuveloz Page editor. The resulting public Details section
+no longer displayed the street address or map link. All ten Montgomery County
+service areas and the provider signup link remained present. The Page logo is
+consistent with the website. This public-profile edit did not change legal,
+tax, banking, mailing, or other account records.
 
 ### 3. TikTok
 
-Two older recruitment videos use a queue-position promise about being first at
-launch. Replace only those captions; do not repost or duplicate the videos.
+Two August recruitment videos used a queue-position promise about being first
+at launch. TikTok did not allow their captions to be edited. With the owner's
+approval, both videos were instead changed to **Only me** and that setting was
+verified in Studio. The accurate September 8 recruitment video remained
+**Everyone**. Nothing was reposted, deleted, or promoted. The copy below remains
+an unused draft for a future separately authorized post.
 
 **English replacement**
 
@@ -72,15 +80,17 @@ launch. Replace only those captions; do not repost or duplicate the videos.
 
 ### 4. Stale search snippets
 
-Google still shows an older snippet for the copyright page and an older
-Facebook post description. The current website source no longer contains the
-old website phrase. After the public-profile corrections and the next website
-release, request a recrawl through Search Console and then recheck the result.
-A recrawl request is not proof that Google has refreshed the snippet.
+The review found an older copyright-page snippet and an older Facebook post
+description. The current website source no longer contains the old website
+phrase. After the website release, Search Console accepted indexing requests for
+the homepage, `/join`, and `/es/join`; each showed **Indexing requested** and
+addition to the priority crawl queue. All three pages were already indexed.
+The sitemap showed **Success**, 51 discovered pages, and a September 21 last-read
+date. These results do not prove a refreshed snippet or ranking. Search Console
+requests for Tuveloz cannot refresh Facebook's own URL.
 
 ## Owner action boundary
 
-The audit is read-only. Removing a Google listing and changing Facebook or
-TikTok content are public actions. They must be reviewed at the time they are
-submitted, and no post, message, advertisement, or spend is authorized by this
-document.
+The completed actions above were specifically approved in the owner conversation.
+This record grants no additional authority to publish posts, send messages,
+promote content, spend money, or change other account records.
