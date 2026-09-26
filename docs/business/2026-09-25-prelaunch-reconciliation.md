@@ -117,6 +117,14 @@ results. All eighteen live review controls still showed Pending. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
 
+The next incident-evidence increment adds an authenticated control to link saved
+job photos/notes without altering a hold or resolution. All 716 tests, production
+build, lint, typecheck, and owner/customer/provider browser checks passed locally.
+The new tests execute actual upload, incident, link, and private-image routes
+with synthetic bindings, including rollback and wrong-account rejection. Hosted
+link verification and publication remain pending at this entry; do not count
+local tests as either a real participant exercise or a launch approval.
+
 ## Owner application — last step
 
 A live provider application must name a real provider business, real personnel,

@@ -5,6 +5,7 @@ import {
   customerRequests,
   jobCancellations,
   jobChangeOrders,
+  jobEvidenceItems,
   jobIncidents,
   jobLifecycleEvents,
   jobScopeVersions,
@@ -37,6 +38,8 @@ import {
   type AssignedJobOperationContext,
 } from "../../../lib/job-operations";
 import { verifyOwnerRequest } from "../../../lib/owner-auth";
+import { incidentEvidenceIds, linkIncidentEvidence } from "../../../lib/incident-evidence";
+import { getJobEvidenceImage } from "../../../lib/job-evidence-images";
 import {
   evaluateJobScopeFacts,
   jobScopeFactsFromScopeDetails,
@@ -560,7 +563,25 @@ export async function GET(request: Request) {
   if (access.error || !access.context) return access.error;
 
   const db = getDb();
-  const [cancellations, incidents, changes, invoices, adjustments, lifecycle] = await Promise.all([
+  const evidenceScope = and(
+    eq(jobEvidenceItems.requestId, requestId),
+    sql`lower(${jobEvidenceItems.customerEmail}) = lower(${access.context.customerEmail})`,
+    sql`lower(${jobEvidenceItems.providerEmail}) = lower(${access.context.providerEmail})`,
+  );
+  const imageId = new URL(request.url).searchParams.get("evidenceId");
+  if (imageId !== null) {
+    const [record] = await db.select().from(jobEvidenceItems)
+      .where(and(evidenceScope, eq(jobEvidenceItems.id, imageId))).limit(1);
+    if (!record?.imageKey) return response({ error: "Saved photo not found for this job." }, 404);
+    const image = await getJobEvidenceImage(record.imageKey);
+    if (!image) return response({ error: "This saved photo is currently unavailable." }, 404);
+    return new Response(image.body, { headers: {
+      "content-type": image.httpMetadata?.contentType || record.imageType || "application/octet-stream",
+      "content-disposition": "inline", "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; sandbox",
+    } });
+  }
+  const [cancellations, incidents, changes, invoices, adjustments, lifecycle, evidence] = await Promise.all([
     db.select().from(jobCancellations)
       .where(eq(jobCancellations.requestId, requestId))
       .orderBy(desc(jobCancellations.createdAt)),
@@ -588,6 +609,7 @@ export async function GET(request: Request) {
     }).from(jobLifecycleEvents)
       .where(eq(jobLifecycleEvents.requestId, requestId))
       .orderBy(desc(jobLifecycleEvents.occurredAt)),
+    db.select().from(jobEvidenceItems).where(evidenceScope).orderBy(desc(jobEvidenceItems.createdAt)).limit(30),
   ]);
 
   return response({
@@ -634,6 +656,13 @@ export async function GET(request: Request) {
       holdPayments: item.holdPayments,
       resolution: item.resolution,
       resolvedAt: item.resolvedAt,
+      evidenceIds: incidentEvidenceIds(item.evidenceReferences),
+    })),
+    evidence: evidence.map(item => ({
+      id: item.id, note: item.note, evidenceType: item.evidenceType, createdAt: item.createdAt,
+      uploadedByRole: item.uploadedByRole,
+      imageUrl: item.imageKey
+        ? `/api/job-operations?requestId=${encodeURIComponent(requestId)}&evidenceId=${encodeURIComponent(item.id)}` : "",
     })),
     changeOrders: changes.map((item) => ({
       id: item.id,
@@ -704,6 +733,39 @@ export async function POST(request: Request) {
   const context = access.context;
   const db = getDb();
   const now = new Date().toISOString();
+
+  if (action === "link-incident-evidence") {
+    const incidentId = clean(body.incidentId, 100);
+    const evidenceId = clean(body.evidenceId, 100);
+    if (!incidentId || !evidenceId) return response({ error: "Choose an incident and a saved photo or note." }, 400);
+    const [incident] = await db.select().from(jobIncidents).where(and(
+      eq(jobIncidents.id, incidentId), eq(jobIncidents.requestId, requestId),
+      eq(jobIncidents.quoteId, context.quoteId), eq(jobIncidents.providerId, context.providerId),
+    )).limit(1);
+    if (!incident) return response({ error: "Incident not found for this job assignment." }, 404);
+    if (!OPEN_INCIDENT_STATUSES.includes(incident.status)) {
+      return response({ error: "This incident is closed. Contact Tuveloz support about additional evidence." }, 409);
+    }
+    const [evidence] = await db.select({ id: jobEvidenceItems.id }).from(jobEvidenceItems).where(and(
+      eq(jobEvidenceItems.id, evidenceId), eq(jobEvidenceItems.requestId, requestId),
+      sql`lower(${jobEvidenceItems.customerEmail}) = lower(${context.customerEmail})`,
+      sql`lower(${jobEvidenceItems.providerEmail}) = lower(${context.providerEmail})`,
+    )).limit(1);
+    if (!evidence) return response({ error: "Choose a saved photo or note from this job." }, 404);
+    const ids = incidentEvidenceIds(incident.evidenceReferences);
+    if (!ids) return response({ error: "The saved evidence links need support review before another can be added." }, 409);
+    if (ids.includes(evidenceId)) return response({ ok: true, alreadyLinked: true, notice: "This photo or note is already linked to the incident." });
+    if (ids.length >= 30) return response({ error: "This incident has reached its saved-evidence limit. Contact Tuveloz support." }, 409);
+    try {
+      const linked = await linkIncidentEvidence({ context, actor, incidentId, evidenceId,
+        previousReferences: incident.evidenceReferences, nextReferences: JSON.stringify([...ids, evidenceId]) });
+      if (!linked) return response({ error: "The job changed. Refresh the incident before linking this record." }, 409);
+      return response({ ok: true, notice: "Photo or note linked. The incident's payment hold is unchanged." });
+    } catch {
+      console.error("Unable to confirm incident evidence link", { incidentId, evidenceId });
+      return response({ error: "Could not confirm the link. Refresh the incident before trying again." }, 503);
+    }
+  }
 
   if (action === "propose-change-order") {
     const roleError = requireRole(actor, "provider");

@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Link saved private job evidence to incidents
+
+Added the missing incident control for linking existing job photos and notes.
+The customer, assigned provider, or verified owner can append records only from
+that same job and current party pair. Earlier references remain intact. The
+server rechecks the current assignment and test flags when it atomically writes
+the link and actor audit, rejecting races without partial writes. Duplicate
+retries are idempotent; closed incidents and malformed legacy references are
+blocked. The incident's hold, resolution, stop-work record, and insurer notice
+are never changed. Authenticated image reads use private no-store responses.
+
+The UI shows linked notes and a private photo-opening control. Rejected links
+retain the selection. Browser inspection found the selector's accessible name
+correct; the initial test used an incompatible exact label-text selector. The
+test now uses the actual named combobox, and a duplicate empty option was removed.
+
+The new test executes real account and signed-owner authentication, upload,
+incident creation, linking, and image-read routes with migrated SQLite/in-memory
+R2. It covers cross-account/job/assignment rejection, transaction rollback,
+concurrent changes, lost acknowledgements, byte-for-byte images, and unchanged
+holds. All 716 tests and production build passed, along with lint (one existing
+warning), typecheck, and eight browser scenarios across Chromium and WebKit.
+
+This is still a persisted-test-job/provider console. No provider approval,
+customer launch, live payment, insurer notice, or paid service is enabled.
+Hosted verification and publication are pending at this entry. The earlier
+staging incident decisions and production work were preserved.
+
 ## 2026-09-26 - Saved job photos survive a failed follow-up read
 
 The unfinished evidence rehearsal reproduced a real data-loss defect: after
