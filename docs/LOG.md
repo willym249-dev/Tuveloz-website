@@ -48,6 +48,15 @@ attachment/link control. The existing private job-photo workspace is not proof
 of linking evidence to an incident. Preserve that distinction in readiness
 claims. Existing staging incident fixtures and production records were untouched.
 
+Published as PR #237, merged `df23b2ea025748794c01e08c95092f8f56337484`.
+Final PR verification `36249862087` and production run `36250759910` succeeded,
+including the full verification workflow on the merged release. Public health
+at 15:21:22 UTC matched that exact commit with application/database/schema ready.
+Customer accounts and provider applications remain open; customer requests and
+payments remain closed. No real participant upload was submitted. Staging was
+not redeployed during this change and still needs a current release before a
+future hosted attachment rehearsal. Local artifact: `job-evidence-release-20260926.json`.
+
 ## 2026-09-26 - Existing staging reused for actual owner incident decisions
 
 Found that staging was already deployed and configured in August despite older
