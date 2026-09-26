@@ -126,8 +126,12 @@ existing private staging deployment `36252778621` also passed actual owner
 linking and opening of a seeded synthetic image from R2. Independent D1 checks
 confirmed preserved references/resolution/holds and one new owner audit, with
 no payment, notification, or provider approval. The hosted participant upload,
-insurer/source review, and launch approval remain separate. Publication remains
-pending at this entry.
+insurer/source review, and launch approval remain separate. PRs #238 and #239
+are published together as `36e9376`; production run `36254642943` passed and
+public health at 16:28:35 UTC confirmed that exact release with all health checks
+ready and customer requests/payments closed. A staging screenshot also exposed
+and verified the correction of SQLite UTC/local-time display on both evidence
+screens. No stored evidence or prior incident decision was overwritten.
 
 ## Owner application — last step
 

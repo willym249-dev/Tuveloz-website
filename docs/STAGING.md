@@ -37,6 +37,11 @@ new verified-owner audit with no payment or notifications. This was a seeded
 fixture link/read test, not a hosted participant upload. See the incident plan
 for scope and retain the fixtures; do not recreate them.
 
+Run `36253800061` then successfully deployed the timestamp correction at
+`f5e1556da0e4b2c5291b39ed386b33bed89bdd8f`. Reloading the existing owner page
+confirmed the saved UTC evidence time displays as 11:44:54 AM in Maryland,
+with its link and hold intact. This follow-up was read-only.
+
 ## Safety boundaries
 
 - Staging uses the separate Worker name `tuveloz-staging`.

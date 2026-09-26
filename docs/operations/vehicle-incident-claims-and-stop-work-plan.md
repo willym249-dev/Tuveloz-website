@@ -332,6 +332,13 @@ named in that artifact. Preserve the existing test fixtures for later review.
 This proves deployed owner linking and private R2 retrieval only; it does not
 approve any insurance, participant evidence, live job, or launch gate.
 
+The screenshot exposed a SQLite UTC/local-time display error. Both evidence
+screens now normalize stored SQLite timestamps before localization; browser
+regressions use SQLite-shaped values under America/New_York. Staging run
+`36253800061` passed at `f5e1556`, and a read-only page reload confirmed the
+correct 11:44:54 AM display with the existing link and hold preserved. Final
+screenshot: `incident-evidence-staging-final-20260926.png`.
+
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.
 

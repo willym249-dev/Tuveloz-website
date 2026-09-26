@@ -24,12 +24,22 @@ with noon instead of 8 AM, then passed with the correction.
 
 The production build, all 716 tests, lint (one existing warning), typecheck,
 and fourteen incident/upload browser scenarios passed locally after the fix.
+Staging run `36253800061` passed at `f5e1556`; reloading the existing owner
+page confirmed the correct 11:44:54 AM Maryland display with the link and hold
+intact. No fixture was rewritten. The proof artifact records both deployments.
 
 PR #238 merged as `d4ae855`, but production run `36253516796` was cancelled
-before deployment while correcting this finding. The last confirmed public
-release is still PR #237 (`df23b2e`). The next normal release will include the
-incident-link feature and this display correction together. Hosted owner linking
-already passed; its record below remains valid and must not be recreated.
+before deployment while correcting this finding. PR #239 merged as
+`36e93760215ae051a6da8282c0a2920eda1091c6`; required verification run
+`36253795576` and all three jobs in production release `36254642943` succeeded.
+Public health at 16:28:35 UTC matched that exact commit with application,
+database, and schema ready. Both fixes are now published together. The English
+and Spanish home/provider pages and both evidence/incident pages returned 200;
+unauthenticated private-evidence access returned 401. Customer accounts and
+provider applications stay open; customer requests and payments stay closed.
+Proof: `incident-evidence-release-20260926.json`. Hosted owner linking already
+passed; its record below remains valid and must not be recreated. A hosted
+participant upload, insurer/source review, and launch decisions remain separate.
 
 ## 2026-09-26 - Link saved private job evidence to incidents
 
@@ -65,8 +75,9 @@ hold stayed unchanged. Payments, notifications, outbox, and Identity sessions
 remained zero; the provider remains new/not reviewed. A signed-out image request
 redirected to Access. This is a hosted owner link/read check, not a participant
 upload or real claim. The original fixtures were preserved. Local evidence:
-`incident-evidence-staging-20260926.json` plus screenshots. Publication is pending
-at this entry.
+`incident-evidence-staging-20260926.json` plus screenshots. Published together
+with the timestamp correction in PR #239; exact live verification is recorded
+above.
 
 ## 2026-09-26 - Saved job photos survive a failed follow-up read
 
