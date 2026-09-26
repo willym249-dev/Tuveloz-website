@@ -21,6 +21,41 @@ type NotificationResponse = {
   error?: string;
 };
 
+async function notificationRequest(init?: RequestInit) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch("/api/notifications", {
+      ...init, cache: "no-store", signal: controller.signal,
+    });
+    if (response.status === 401) {
+      window.location.replace("/account");
+      throw new Error("Please sign in again to view your notifications.");
+    }
+    const result: unknown = await response.json().catch(() => null);
+    if (!response.ok || !result || typeof result !== "object") {
+      throw new Error(init?.method === "POST"
+        ? "We couldn’t confirm the update. Refresh your notifications to check their status."
+        : "We couldn’t load your notifications. Please try again.");
+    }
+    return result;
+  } catch (reason) {
+    if (controller.signal.aborted) throw new Error("This is taking longer than expected. Please try again.");
+    if (reason instanceof TypeError) throw new Error("We couldn’t connect. Check your connection and try again.");
+    throw reason;
+  } finally { window.clearTimeout(timeout); }
+}
+
+function isNotificationResponse(value: unknown): value is NotificationResponse {
+  if (!value || typeof value !== "object") return false;
+  const result = value as NotificationResponse;
+  return (result.role === "customer" || result.role === "provider")
+    && typeof result.email === "string" && Number.isInteger(result.unreadCount) && result.unreadCount >= 0
+    && Array.isArray(result.notifications) && result.notifications.every(item => item && (
+      [item.id, item.title, item.body, item.href, item.readAt, item.createdAt].every(field => typeof field === "string")
+    ));
+}
+
 function dateLabel(value: string) {
   const date = new Date(value.includes("T") ? value : `${value.replace(" ", "T")}Z`);
   return Number.isNaN(date.getTime()) ? "Recently" : date.toLocaleString();
@@ -29,16 +64,12 @@ function dateLabel(value: string) {
 export default function NotificationsPage() {
   const [data, setData] = useState<NotificationResponse | null>(null);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState<"refresh" | "mark" | null>("refresh");
 
   const load = useCallback(async () => {
-    const response = await fetch("/api/notifications", { cache: "no-store" });
-    const result = await response.json().catch(() => ({})) as NotificationResponse;
-    if (response.status === 401) {
-      window.location.replace("/account");
-      return;
-    }
-    if (!response.ok) throw new Error(result.error || "Unable to load notifications.");
+    const result = await notificationRequest();
+    if (!isNotificationResponse(result)) throw new Error("We couldn’t load your notifications. Please try again.");
     setData(result);
   }, []);
 
@@ -46,36 +77,58 @@ export default function NotificationsPage() {
     const timer = window.setTimeout(() => {
       void load().catch((reason) => setError(
         reason instanceof Error ? reason.message : "Unable to load notifications.",
-      ));
+      )).finally(() => setBusy(null));
     }, 0);
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  async function markAllRead() {
-    setBusy(true);
+  async function refresh() {
+    if (busy) return;
+    setBusy("refresh");
     setError("");
+    try { await load(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "We couldn’t refresh your notifications. Please try again."); }
+    finally { setBusy(null); }
+  }
+
+  async function markAllRead() {
+    if (busy) return;
+    setBusy("mark");
+    setError("");
+    setStatus("");
     try {
-      const response = await fetch("/api/notifications", {
+      const result = await notificationRequest({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "mark-all-read" }),
       });
-      const result = await response.json().catch(() => ({})) as { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to update notifications.");
-      await load();
+      if (!("ok" in result) || result.ok !== true || ("error" in result && result.error)) {
+        throw new Error("We couldn’t confirm the update. Refresh your notifications to check their status.");
+      }
+      // The write has succeeded even if the subsequent list request fails.
+      const readAt = new Date().toISOString();
+      setData(current => current ? { ...current, unreadCount: 0,
+        notifications: current.notifications.map(item => ({ ...item, readAt: item.readAt || readAt })),
+      } : current);
+      setStatus("Notifications marked as read.");
+      try { await load(); }
+      catch { setError("Your notifications are marked as read, but we couldn’t refresh the list. Please refresh to check for new updates."); }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to update notifications.");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  async function markRead(id: string) {
-    await fetch("/api/notifications", {
+  function markRead(id: string) {
+    // Opening the destination must not wait for a bookkeeping request. Keep it
+    // alive during navigation; on failure the notice remains unread on return.
+    void fetch("/api/notifications", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ action: "mark-read", id }),
-    });
+      keepalive: true,
+    }).catch(() => {});
   }
 
   return (
@@ -89,11 +142,15 @@ export default function NotificationsPage() {
       <section className="account-main">
         <div className="account-welcome">
           <span className="account-kicker">Account notifications</span>
-          <h1>Updates that matter.</h1>
-          <p>Appointments, trip sharing, job progress, completion, and account notices appear here.</p>
+          <h1>Your account updates.</h1>
+          <p>Find account notices and updates about your activity here.</p>
         </div>
+        {status && <p className="form-success" role="status">{status}</p>}
         {error && <p className="form-error" role="alert">{error}</p>}
-        {!data && !error && <p className="admin-note">Loading notifications…</p>}
+        {!data && busy && <p className="admin-note">Loading notifications…</p>}
+        <button className="button secondary" disabled={!!busy} onClick={refresh} type="button">
+          {busy === "refresh" ? "Refreshing…" : "Refresh notifications"}
+        </button>
         {data && (
           <section className="account-card">
             <div className="account-card-heading">
@@ -110,15 +167,15 @@ export default function NotificationsPage() {
                       <small>{dateLabel(item.createdAt)}</small>
                     </span>
                     {item.href ? (
-                      <Link href={item.href} onClick={() => void markRead(item.id)}>Open</Link>
+                      <Link href={item.href} aria-label={`Open: ${item.title}`} onClick={() => markRead(item.id)}>Open</Link>
                     ) : null}
                   </article>
                 ))}
               </div>
             ) : <p className="admin-note">No notifications yet.</p>}
             {data.unreadCount > 0 && (
-              <button className="button secondary" disabled={busy} onClick={markAllRead} type="button">
-                {busy ? "Updating…" : "Mark all as read"}
+              <button className="button secondary" disabled={!!busy} onClick={markAllRead} type="button">
+                {busy === "mark" ? "Updating…" : "Mark all as read"}
               </button>
             )}
           </section>

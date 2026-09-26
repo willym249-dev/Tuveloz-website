@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Correct account notices and recover from notification errors
+
+Follow-up review found that welcome notifications still invited customers to
+request work and providers to request appointments during onboarding-only mode.
+They now link directly to the appropriate workspace with truthful account and
+application wording. Existing welcome rows are corrected in place, preserving
+their ID, date, and read state; no duplicate welcome or email is created. Other
+accounts, roles, and event types stay untouched.
+
+The notifications page now recovers from failed, malformed, or stalled reads
+with a refresh button. A confirmed read-state update stays successful if the
+follow-up list refresh fails. Rejected or unconfirmed updates do not claim
+success. Opening a notice still navigates if read tracking fails, with a named
+accessible link and best-effort keepalive request. Expired sessions return to
+sign-in. The existing account page does not support an arbitrary return-path
+parameter, so this change does not introduce or promise one.
+
+All 723 tests and the production build passed locally, along with typecheck and
+lint (one existing unrelated warning). Twenty mobile browser scenarios passed
+in Chromium and WebKit, covering recovery, timeout, write receipts, both account
+destinations, and sign-in redirect. The SQLite route fixture verifies welcome
+history preservation, idempotence, account/role isolation, and invalid input.
+It stubs session verification and mail delivery; no real account or email was
+used. This entry records local validation; publication is still pending.
+
+The incident runbook no longer calls completed evidence linking missing. It
+now states explicitly that the test-only incident route sends no notifications;
+the full communication process and insurer review are still pending. This
+account-notification repair does not complete those separate launch requirements.
+
 ## 2026-09-26 - Correct evidence timestamp display before publication
 
 The hosted link/read screenshot exposed a four-hour display error: SQLite

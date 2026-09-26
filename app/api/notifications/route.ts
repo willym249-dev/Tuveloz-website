@@ -4,7 +4,7 @@ import {
   isSameOriginRequest,
 } from "../../../lib/account-auth";
 import { flushPendingEmailNotifications } from "../../../lib/email-notifications";
-import { notifyMarketplaceAccount } from "../../../lib/marketplace-notifications";
+import { ensureMarketplaceWelcome } from "../../../lib/marketplace-notifications";
 
 type NotificationRow = {
   id: string;
@@ -20,23 +20,6 @@ async function accountSession(request: Request) {
   return session?.role === "customer" || session?.role === "provider" ? session : null;
 }
 
-async function ensureWelcomeNotification(
-  email: string,
-  role: "customer" | "provider",
-) {
-  const isCustomer = role === "customer";
-  await notifyMarketplaceAccount({
-    eventKey: `welcome:${role}:${email.toLowerCase()}`,
-    email,
-    role,
-    title: isCustomer ? "Thank you for joining Tuveloz" : "Welcome to your Tuveloz provider workspace",
-    body: isCustomer
-      ? "Request vehicle work, compare independent providers and quotes, choose appointments, and follow job updates in one account."
-      : "Add your approved services and provider-set prices, request appointments, manage availability, and share trip location only when you choose.",
-    href: isCustomer ? "/post-job" : "/provider-services",
-  });
-}
-
 export async function GET(request: Request) {
   const session = await accountSession(request);
   if (!session) {
@@ -46,7 +29,7 @@ export async function GET(request: Request) {
     );
   }
 
-  await ensureWelcomeNotification(session.email, session.role);
+  await ensureMarketplaceWelcome(session.email, session.role);
   await flushPendingEmailNotifications(5);
 
   const notificationResult = await env.DB.prepare(
@@ -81,7 +64,10 @@ export async function POST(request: Request) {
   if (!session) {
     return Response.json({ error: "Sign in to update notifications." }, { status: 401 });
   }
-  const body = await request.json() as { action?: unknown; id?: unknown };
+  const body = await request.json().catch(() => null) as { action?: unknown; id?: unknown } | null;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return Response.json({ error: "Choose a notification action." }, { status: 400 });
+  }
   const action = typeof body.action === "string" ? body.action : "";
   const now = new Date().toISOString();
 

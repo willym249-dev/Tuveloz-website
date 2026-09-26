@@ -113,6 +113,9 @@ jobs:
       - name: Verify saved evidence receipts and safe refresh in Chromium and WebKit
         run: npm run test:e2e:job-evidence
 
+      - name: Verify account notifications and recovery in Chromium and WebKit
+        run: npm run test:e2e:notifications
+
       - name: Verify provider onboarding receipts and retry behavior in both languages
         run: npm run test:e2e:onboarding
 

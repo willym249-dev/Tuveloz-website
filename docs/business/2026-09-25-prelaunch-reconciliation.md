@@ -14,8 +14,8 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `312b63bb43211ae6d88b0adaae6020dc76be90d5` (PR #235), built September 26 at
-  10:53:14 UTC. Its release workflow passed and public health at 10:55:08 UTC
+  `36e93760215ae051a6da8282c0a2920eda1091c6` (PR #239), built September 26 at
+  16:26:40 UTC. Its release workflow passed and public health at 16:28:35 UTC
   confirmed the exact commit, ready application/database/schema, and closed
   customer-launch gates. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
@@ -111,13 +111,13 @@ then refreshed to the same main commit through successful run `36247963177`.
 Actual owner UI/API resolution and later hold release passed against synthetic
 staging D1 records; the original resolution and other incident's hold were
 preserved, with verified owner audit and no payment or notification records.
-The reports were seeded fixtures. Real evidence attachment, insurer/notification
-handling, an actual payout, and complete process review remain outside these
+The reports were seeded fixtures. The later link/read check is recorded below;
+hosted participant upload, insurer/notification handling, an actual payout, and complete process review remain outside these
 results. All eighteen live review controls still showed Pending. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
 
-The next incident-evidence increment adds an authenticated control to link saved
+The published incident-evidence increment adds an authenticated control to link saved
 job photos/notes without altering a hold or resolution. All 716 tests, production
 build, lint, typecheck, and owner/customer/provider browser checks passed locally.
 The new tests execute actual upload, incident, link, and private-image routes

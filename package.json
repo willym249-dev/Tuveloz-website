@@ -43,6 +43,7 @@
     "test:e2e:incident": "node tests/e2e/incident-payment-hold.e2e.mjs",
     "test:e2e:incident-owner": "node tests/e2e/incident-owner-ui.e2e.mjs",
     "test:e2e:job-evidence": "node tests/e2e/job-evidence.e2e.mjs",
+    "test:e2e:notifications": "node tests/e2e/notifications.e2e.mjs",
     "test:e2e:about-forms": "node tests/e2e/about-forms.e2e.mjs",
     "test:e2e:public-actions": "node tests/e2e/public-actions.e2e.mjs"
   },
