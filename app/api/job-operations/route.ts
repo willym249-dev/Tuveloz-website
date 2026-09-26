@@ -36,10 +36,7 @@ import {
   sha256JobOperationText,
   type AssignedJobOperationContext,
 } from "../../../lib/job-operations";
-import {
-  getAuthenticatedEmail,
-  isVerifiedOwnerRequest,
-} from "../../../lib/owner-auth";
+import { verifyOwnerRequest } from "../../../lib/owner-auth";
 import {
   evaluateJobScopeFacts,
   jobScopeFactsFromScopeDetails,
@@ -129,10 +126,11 @@ function parseJsonRecord(value: string) {
 }
 
 async function actorFor(request: Request): Promise<Actor | null> {
-  if (await isVerifiedOwnerRequest(request)) {
+  const owner = await verifyOwnerRequest(request);
+  if (owner.ok) {
     return {
       role: "owner",
-      email: getAuthenticatedEmail(request) || "verified-owner",
+      email: owner.email,
       sessionId: "",
     };
   }
@@ -1797,6 +1795,51 @@ export async function POST(request: Request) {
       details: { incidentId, paymentHoldReleased: affirmative(body.releasePaymentHold) },
     });
     return response({ ok: true, status: "resolved", paymentHoldReleased: affirmative(body.releasePaymentHold) });
+  }
+
+  if (action === "release-incident-hold") {
+    const roleError = requireRole(actor, "owner");
+    if (roleError) return roleError;
+    const incidentId = clean(body.incidentId, 80);
+    const releaseReason = clean(body.releaseReason, 1200);
+    const [incident] = await db.select().from(jobIncidents)
+      .where(and(eq(jobIncidents.id, incidentId), eq(jobIncidents.requestId, requestId))).limit(1);
+    if (!incident) return response({ error: "Incident not found." }, 404);
+    if (incident.status !== "resolved" || incident.holdPayments !== "yes") {
+      return response({ error: "Only a resolved incident with an active payment hold can be released." }, 409);
+    }
+    const requiresInsurerNotice = incident.injuryReported === "yes"
+      || incident.propertyDamageReported === "yes";
+    if (
+      releaseReason.length < 10
+      || !affirmative(body.confirmHoldRelease)
+      || (requiresInsurerNotice && !incident.insurerNotifiedAt)
+    ) {
+      return response({ error: "Record a release reason, confirm the release, and complete any required insurer notice first." }, 400);
+    }
+    const released = await db.update(jobIncidents).set({ holdPayments: "no", updatedAt: now })
+      .where(and(
+        eq(jobIncidents.id, incident.id),
+        eq(jobIncidents.requestId, requestId),
+        eq(jobIncidents.status, "resolved"),
+        eq(jobIncidents.holdPayments, "yes"),
+        eq(jobIncidents.insurerNotifiedAt, incident.insurerNotifiedAt),
+      )).returning({ id: jobIncidents.id });
+    if (!released.length) return response({ error: "This incident changed. Refresh the job before trying again." }, 409);
+    await appendJobLifecycleEvent({
+      requestId,
+      quoteId: context.quoteId,
+      providerId: context.providerId,
+      actorRole: "owner",
+      actorId: actor.email,
+      eventType: "incident_payment_hold_released",
+      fromStatus: "resolved",
+      toStatus: "resolved",
+      scopeVersion: context.scopeVersion,
+      reasonCode: incident.incidentType,
+      details: { incidentId, releaseReason, transferCreated: false },
+    });
+    return response({ ok: true, status: "resolved", paymentHoldReleased: true, transferCreated: false });
   }
 
   if (action === "record-payment-hold") {

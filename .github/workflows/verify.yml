@@ -107,6 +107,9 @@ jobs:
       - name: Verify owner credential lookup controls in Chromium and WebKit
         run: npm run test:e2e:credentials
 
+      - name: Verify owner incident hold controls in Chromium and WebKit
+        run: npm run test:e2e:incident-owner
+
       - name: Verify provider onboarding receipts and retry behavior in both languages
         run: npm run test:e2e:onboarding
 

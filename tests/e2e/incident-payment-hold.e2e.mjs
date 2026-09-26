@@ -256,6 +256,9 @@ async function main() {
   log("applying migrations to the worktree's local D1");
   sh("node", [wrangler, "d1", "migrations", "apply", "tuveloz-db", "--local"], {
     cwd: workdir, input: "y\n", stdio: ["pipe", "pipe", "pipe"],
+    // A fresh database now applies 69 migrations; the ordinary 30-second
+    // command limit can stop a healthy Windows run before setup completes.
+    timeout: 180_000,
   });
 
   // 4. Mail catcher ----------------------------------------------------------
@@ -395,6 +398,16 @@ async function main() {
     assert.ok(
       releaseRes.status === 401 || releaseRes.status === 403,
       `${who} must not be able to release a payment hold (got ${releaseRes.status})`,
+    );
+    const incidentReleaseRes = await call(cookie, {
+      action: "release-incident-hold",
+      incidentId: afterReport.id,
+      releaseReason: "Synthetic attempt to release another party's hold.",
+      confirmHoldRelease: true,
+    });
+    assert.ok(
+      incidentReleaseRes.status === 401 || incidentReleaseRes.status === 403,
+      `${who} must not be able to release an incident hold (got ${incidentReleaseRes.status})`,
     );
   }
   log("customer and provider are both refused resolution and hold release");

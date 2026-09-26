@@ -529,6 +529,20 @@ export function JobOperationsConsole() {
                   ]}
                   warning="Injury and property-damage incidents cannot close without insurer notice. Leaving release unchecked keeps the payment hold."
                 />)}
+                {data.incidents.filter((item) => item.status === "resolved" && item.holdPayments === "yes").map((item) => <OperationForm
+                  key={`incident-hold-${item.id}`}
+                  title={`Release incident hold ${String(item.id).slice(0, 8)}`}
+                  role="Verified owner only"
+                  action="release-incident-hold"
+                  fixed={{ incidentId: item.id }}
+                  busy={isBusy("release-incident-hold", String(item.id))}
+                  onSubmit={submit}
+                  fields={[
+                    { name: "releaseReason", label: "Reason for releasing the hold", type: "textarea", required: true },
+                    { name: "confirmHoldRelease", label: "I confirm this incident payment hold can be released", type: "checkbox", required: true },
+                  ]}
+                  warning="This releases only this incident's hold. Other holds and payout checks still apply. No payment is sent."
+                />)}
                 {data.paymentAdjustments.filter((item) => item.adjustmentType === "refund_request" && item.status === "requested").map((item) => <OperationForm
                   key={`refund-decision-${item.id}`}
                   title={`Decide refund ${String(item.id).slice(0, 8)}`}

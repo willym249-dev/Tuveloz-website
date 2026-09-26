@@ -2,7 +2,7 @@
 
 - **Status:** draft — needs owner sign-off, insurer review, and an official-source check
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-11
+- **Last reviewed:** 2026-09-26 (partial technical rehearsal and record custody; approval remains pending)
 - **Applies to:** the `vehicle_incident_claims_and_stop_work` launch gate
 
 What to do when someone is hurt, a vehicle or property is damaged, or work must
@@ -139,8 +139,11 @@ determined it.
 Release the payment hold as a separate, deliberate step with a recorded reason.
 If a claim is open, the hold stays.
 
-Then write it up in [`../LOG.md`](../LOG.md): what happened, what was known
-when, what was decided, and what the first assessment got wrong.
+Keep the incident chronology, evidence, personal details, and insurer or legal
+correspondence in a protected record outside this repository. Put only a
+sanitized reference and any general operational lesson in
+[`../LOG.md`](../LOG.md). Do not copy customer/provider details, private location
+information, medical information, or claims documents into a public source log.
 
 ## Testing it, which the gate actually requires
 
@@ -150,6 +153,62 @@ confirm the payment hold appears without anyone setting it, attach evidence,
 record a stop time, then resolve and release. Test records are isolated from real
 providers, customers, alerts, payments, and public profiles, so this is safe to
 do now.
+
+### September 26 technical rehearsal
+
+`npm run test:e2e:incident` passed against application commit `312b63b` in a
+separate local checkout and disposable D1 database. Only synthetic accounts and
+a test-flagged assignment were created, with email sent to a local catcher.
+The helper's migration timeout was raised from 30 to 180 seconds after a healthy
+Windows setup run exceeded the old limit. No production data or payment changed.
+
+Verified through the real route and stored D1 records:
+
+- A serious damage report created an open incident and set `hold_payments=yes`,
+  even when the caller requested no hold and immediate release.
+- Severity recorded a stop time; explicit provider stop-work also recorded an
+  incident and held payment.
+- Both customer and provider were denied incident resolution and hold release.
+  The incident stayed open, its resolution stayed empty, and the hold survived.
+
+This original end-to-end test does not perform an owner-authenticated release,
+attach a real evidence file, contact an insurer, send real incident notifications,
+or attempt a Stripe payout. Its payout-helper check is a source assertion, not a
+payment transaction. The separate owner simulation below adds technical coverage
+without turning these local results into a completed claims-plan review.
+
+### Owner decisions and later hold release
+
+`tests/incident-owner-review.test.mjs` runs the real owner-token verification,
+incident route, SQL, and audit logic using an isolated migrated SQLite database.
+Its RSA keys exist only in memory; the public-key response and Cloudflare
+bindings are synthetic fixtures, and every external fetch is intercepted. It
+rejects forged headers, invalid signatures, expired tokens, wrong owners,
+issuers/audiences, conflicting email headers, and cross-origin requests.
+
+Valid signed-header and cookie simulations cover resolution with a retained hold,
+explicit release at resolution, and reserve release. Decisions are tied to the
+correct job and record the email from the verified token. Repeated resolutions
+are rejected. Injury/property-damage resolution requires the owner's recorded
+insurer-notice confirmation; this does not contact an insurer or verify delivery.
+
+A resolved incident with a retained hold now has a separate **Release incident
+hold** owner control. It requires a release reason, explicit confirmation, and
+any required insurer-notice record. It preserves the original resolution, clears
+only that incident's hold, records the verified owner and reason, and rejects
+open incidents, other-job records, and repeat releases. Other incidents and
+reserves remain held. No transfer is created and all payout checks still apply.
+This route remains restricted to persisted test jobs/providers.
+
+`test:e2e:incident-owner` exercises the actual owner console in Chromium and
+WebKit: confirmation is required, a rejected attempt retains the draft, success
+removes the completed control, and customers cannot see it. This internal test
+console currently remains English-only; public bilingual routes are unchanged.
+
+Still outstanding: a deployed Cloudflare Access session and owner review of the
+complete process, real evidence attachment, notification delivery, insurer/source
+review, and any separately authorized Stripe test. No launch gate is approved
+by these simulations and no production identity credential is used.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.
