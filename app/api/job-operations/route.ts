@@ -1402,10 +1402,13 @@ export async function POST(request: Request) {
     const injuryReported = incidentType === "injury" || affirmative(body.injuryReported);
     const propertyDamageReported = incidentType === "property_damage"
       || affirmative(body.propertyDamageReported);
+    const emergencyServicesContacted = affirmative(body.emergencyServicesContacted);
     const mustStop = action === "stop-work"
+      || incidentType === "safety_stop"
       || ["serious", "emergency"].includes(severity)
       || injuryReported
-      || propertyDamageReported;
+      || propertyDamageReported
+      || emergencyServicesContacted;
     const incidentId = crypto.randomUUID();
     await db.insert(jobIncidents).values({
       id: incidentId,
@@ -1421,7 +1424,7 @@ export async function POST(request: Request) {
       locationSummary: clean(body.locationSummary, 500),
       injuryReported: injuryReported ? "yes" : "no",
       propertyDamageReported: propertyDamageReported ? "yes" : "no",
-      emergencyServicesContacted: affirmative(body.emergencyServicesContacted) ? "yes" : "no",
+      emergencyServicesContacted: emergencyServicesContacted ? "yes" : "no",
       workStoppedAt: mustStop ? now : "",
       evidenceReferences: "[]",
       status: "open",

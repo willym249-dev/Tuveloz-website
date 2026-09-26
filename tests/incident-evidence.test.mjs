@@ -239,6 +239,67 @@ test("incident evidence is private, append-only, job-bound and atomically audite
     assert.equal(final.work_stopped_at, initial.work_stopped_at);
     assert.equal(final.insurer_notified_at, initial.insurer_notified_at);
     assert.equal(final.status, initial.status);
+    // Labeled local authorization fixtures satisfy the existing database gate;
+    // do not remove triggers just to seed a running timer for this regression.
+    for (const requestId of ["synthetic-job", "other-job"]) {
+      const authorization = { id: `${requestId}-authorization`, request_id: requestId, quote_id: `${requestId}-quote`,
+        provider_id: "synthetic-provider", provider_email: "provider@example.invalid", status: "signed",
+        customer_email: requestId === "synthetic-job" ? "customer@example.invalid" : "other@example.invalid",
+        scope_version: database.prepare("SELECT scope_version FROM provider_quotes WHERE id=?").get(`${requestId}-quote`).scope_version,
+        customer_signature_at: now, document_hash: "synthetic-local-authorization-only" };
+      for (const column of database.prepare("PRAGMA table_info(repair_authorization_records)").all()) {
+        if (column.notnull && column.dflt_value === null && !(column.name in authorization)) {
+          authorization[column.name] = column.type.toLowerCase() === "integer" ? 0 : "SYNTHETIC LOCAL FIXTURE";
+        }
+      }
+      seed("repair_authorization_records", authorization);
+    }
+    seed("provider_job_records", { id: "synthetic-work", request_id: "synthetic-job", provider_email: "provider@example.invalid",
+      work_status: "in progress", timer_started_at: now, tracked_seconds: 120, billable_minutes: 2 });
+    seed("provider_job_records", { id: "other-work", request_id: "other-job", provider_email: "provider@example.invalid",
+      work_status: "in progress", timer_started_at: now });
+    const work = () => database.prepare("SELECT * FROM provider_job_records WHERE id='synthetic-work'").get();
+    const otherWork = database.prepare("SELECT * FROM provider_job_records WHERE id='other-work'").get();
+    await t.test("emergency contact and safety-stop reports stop work regardless of a low severity selection", async () => {
+      for (const headers of [customer, provider]) {
+        for (const values of [
+          { incidentType: "other", severity: "low", emergencyServicesContacted: true },
+          { incidentType: "other", severity: "moderate", emergencyServicesContacted: "yes" },
+          { incidentType: "safety_stop", severity: "low" },
+        ]) {
+          database.prepare("UPDATE provider_job_records SET work_status='in progress',timer_started_at=? WHERE id='synthetic-work'").run(now);
+          const reported = await post({ action: "report-incident", summary: "SYNTHETIC: safety signal regression only", ...values }, headers);
+          assert.equal(reported.status, 201);
+          assert.equal(reported.body.workStopped, true, JSON.stringify(values));
+          assert.equal(reported.body.paymentHold, true);
+          const incident = row(reported.body.incidentId);
+          assert.notEqual(incident.work_stopped_at, "");
+          assert.equal(incident.hold_payments, "yes");
+          assert.equal(incident.emergency_services_contacted, values.emergencyServicesContacted ? "yes" : "no");
+          assert.equal(work().work_status, "stop work");
+          assert.equal(work().timer_started_at, "");
+          assert.equal(work().tracked_seconds, 120);
+          assert.equal(work().billable_minutes, 2);
+          const audit = database.prepare("SELECT * FROM job_lifecycle_events WHERE request_id='synthetic-job' ORDER BY rowid DESC LIMIT 1").get();
+          assert.equal(audit.event_type, "incident_stop_work");
+          assert.equal(JSON.parse(audit.details).incidentId, reported.body.incidentId);
+          assert.deepEqual(database.prepare("SELECT * FROM provider_job_records WHERE id='other-work'").get(), otherWork);
+        }
+      }
+    });
+    await t.test("a routine claim holds payment without claiming work has stopped", async () => {
+      for (const emergencyServicesContacted of [false, "no", undefined]) {
+        database.prepare("UPDATE provider_job_records SET work_status='in progress',timer_started_at=? WHERE id='synthetic-work'").run(now);
+        const before = work();
+        const reported = await post({ action: "report-incident", incidentType: "service_quality_claim", severity: "low",
+          emergencyServicesContacted, summary: "SYNTHETIC: routine claim with no safety signal" });
+        assert.equal(reported.status, 201);
+        assert.equal(reported.body.workStopped, false);
+        assert.equal(reported.body.paymentHold, true);
+        assert.equal(row(reported.body.incidentId).work_stopped_at, "");
+        assert.deepEqual(work(), before);
+      }
+    });
     assert.equal(database.prepare("SELECT count(*) AS n FROM stripe_payments").get().n, 0);
     assert.equal(database.prepare("SELECT count(*) AS n FROM account_notifications").get().n, 0);
   } finally {

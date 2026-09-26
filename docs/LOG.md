@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
+
+The unfinished incident-process review found that checking emergency services
+contacted on an otherwise low/moderate report left work running. An incident
+typed `safety_stop` through the report API had the same gap unless severity or
+another flag independently stopped it. The route now treats either as a stop
+signal, keeping the automatic payment hold. Ordinary low-severity claims still
+hold payment without claiming a work stoppage. Both form guidance and the
+incident page describe the actual triggers.
+
+The added actual-route/SQLite regression failed before the code change with
+`workStopped:false` for an emergency-contact report, then passed. Six positive
+customer/provider cases and three negative controls verify persisted stop time,
+timer clearing, preserved tracked/billable time, correct audit, payment hold,
+and isolation of another job. Synthetic signed-authorization fixtures satisfy
+the existing database guards; no trigger was disabled. All 725 tests and build,
+lint (one existing warning), and typecheck passed. Twelve Chromium/WebKit
+scenarios passed, including the real report form sending its emergency checkbox
+with low severity for each participant role. These are isolated local tests;
+no real incident, message, insurance notice, or payment was created.
+
+The existing runbook now includes a scoped check of official Maryland repair
+authorization, county registration, insurer/agent lookup, and emergency guidance,
+with links and limits. English/Spanish response drafts remain unsent and require
+confirmed status and a realistic owner follow-up time. Removed unsupported
+claims that every provider already has insurance, that every incident stops work,
+or that incident details can never reach anyone beyond the chosen provider.
+The owner reports no platform insurance; owner/insurer review, hosted participant
+upload, and real notification delivery remain unfinished. No launch gate changed.
+Publication of this repair is pending the normal required workflows.
+
 ## 2026-09-26 - Correct account notices and recover from notification errors
 
 Follow-up review found that welcome notifications still invited customers to

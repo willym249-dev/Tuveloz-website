@@ -166,9 +166,10 @@ document.
 ### Insurance carrier or broker
 
 **`platform_and_service_insurance_bound`** — *insurance, required*
-*Existing:* none in code. Every provider holds their own county registration,
-general liability certificate, and business auto coverage where the service
-requires it — that is provider-side, and does not answer platform coverage.
+*Existing:* the owner reports no platform policy. The service-specific provider
+requirements are not proof that any applicant has active coverage. Provider
+insurance and registration must be checked individually; neither establishes
+platform coverage.
 
 **`provider_evidence_and_insurance_matrix`** — *provider compliance, required*
 Also needs an official legal source.
@@ -192,9 +193,13 @@ using temporary keys and synthetic key transport. Browser tests cover the owner
 control. Deployed owner sign-in and read-only access passed September 26. The
 actual owner resolution and later hold release subsequently passed on private
 staging with a seeded test job, persisted D1 state, verified owner audit, and
-zero payment/notification records. The reports were seeded; real evidence
-attachment, insurer/notification handling, and final plan review remain
-separate. The plan records the tested scope; neither local simulations nor the
+zero payment/notification records. Hosted owner linking and opening a seeded
+private photo also passed in PRs #238/#239; participant upload and actual
+insurer/notification handling remain separate. The September 26 follow-up added
+a scoped official-source review and unsent English/Spanish response drafts to
+the same plan. These do not establish policy coverage or message delivery.
+Final owner/insurer review remains pending. The plan records the tested scope;
+neither local simulations nor the
 hosted owner check establishes a completed gate or live payout proof.
 
 ### Payment processor

@@ -36,12 +36,14 @@ try {
         const page = await context.newPage();
         const errors = []; page.on("pageerror", error => errors.push(error.message));
         const requests = [];
-        let role = "owner", held = true, denyNext = true, linked = false, denyLink = true, photoReads = 0;
+        let role = "owner", held = true, denyNext = true, linked = false, denyLink = true, photoReads = 0, reported = false;
         const photoUrl = "/api/job-operations?requestId=synthetic-job&evidenceId=saved-photo";
         const snapshot = () => ({ testOnly: true, transferExecutionEnabled: false, actorRole: role,
           job: { requestId: "synthetic-job", status: "assigned", scopeVersion: 1, serviceCodes: [], scheduledFor: "" },
           cancellations: [], changeOrders: [], invoices: [], paymentAdjustments: [], lifecycle: [],
           incidents: [
+            ...(reported ? [{ id: "emergency-report", status: "open", holdPayments: "yes", summary: "Synthetic emergency-contact report",
+              emergencyServicesContacted: "yes", workStoppedAt: "2026-09-26T12:00:00Z" }] : []),
             { id: "retained", status: "resolved", holdPayments: held ? "yes" : "no", summary: "Synthetic resolved incident" },
             { id: "open", status: "open", holdPayments: "yes", summary: "Synthetic open incident", evidenceIds: linked ? ["saved-photo"] : [] },
             { id: "released", status: "resolved", holdPayments: "no", summary: "Synthetic released incident" },
@@ -58,6 +60,10 @@ try {
           }
           if (request.method() === "GET") return route.fulfill({ json: snapshot() });
           requests.push(request.postDataJSON());
+          if (request.postDataJSON().action === "report-incident") {
+            reported = true;
+            return route.fulfill({ status: 201, json: { ok: true, incidentId: "emergency-report", workStopped: true, paymentHold: true } });
+          }
           if (request.postDataJSON().action === "link-incident-evidence") {
             if (denyLink) { denyLink = false; return route.fulfill({ status: 409, json: { error: "The job changed. Refresh the incident before linking this record." } }); }
             linked = true;
@@ -121,6 +127,28 @@ try {
             console.log(`PASS ${browserType.name()}: ${actorRole} evidence selection, retry, linked photo and retained hold`);
           }
           assert.equal(photoReads, 3);
+          for (const actorRole of ["customer", "provider"]) {
+            role = actorRole; reported = false;
+            await page.reload();
+            const reportForm = page.locator("details").filter({ has: page.locator("summary").filter({ hasText: "Report incident or claim" }) });
+            await reportForm.locator("summary").click();
+            await reportForm.getByRole("combobox", { name: "Incident type", exact: true }).selectOption("other");
+            await reportForm.getByRole("combobox", { name: "Severity", exact: true }).selectOption("low");
+            await reportForm.getByLabel("What happened", { exact: true }).fill("Synthetic emergency-contact report");
+            await reportForm.getByRole("checkbox", { name: "Emergency services were contacted", exact: true }).check();
+            const before = requests.length;
+            await reportForm.getByRole("button").click();
+            const incident = page.locator(".job-record-card").filter({ has: page.getByText("Synthetic emergency-contact report", { exact: true }) });
+            await incident.waitFor();
+            assert.equal(requests.length, before + 1);
+            assert.equal(requests.at(-1).emergencyServicesContacted, true);
+            assert.equal(requests.at(-1).severity, "low");
+            assert.equal(requests.at(-1).injuryReported, false);
+            assert.equal(requests.at(-1).propertyDamageReported, false);
+            assert.match(await incident.textContent(), /payment hold: yes/);
+            assert.match(await incident.textContent(), /emergency services: yes/);
+            console.log(`PASS ${browserType.name()}: ${actorRole} emergency checkbox is sent with low severity and displays the saved hold`);
+          }
           assert.deepEqual(errors, []);
           console.log(`PASS ${browserType.name()}: confirmation, retained draft, saved release, owner-only control`);
         } finally { await context.close(); }
