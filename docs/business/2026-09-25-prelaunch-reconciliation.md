@@ -13,19 +13,22 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-Prepared after the release below: automatic **owner** incident alerts, with
-quarantined test previews and scheduled recovery. Local build, all 733 tests,
-typecheck, lint, and Chromium/WebKit incident checks passed. This preparation
-is not a production-release claim. The incident route remains test-only;
-participant/insurer messages, actual responder coverage, and launch approval
-remain separate. See the incident runbook for behavior and evidence.
-
 - Last confirmed release at this record update:
-  `39431aa1e1a599de9dad9157ee640fd0a9066700` (PR #242), built September 26 at
-  19:14:18 UTC. Its release workflow passed and public health at 19:16:20 UTC
+  `2bdab8b940748f137b495c7c131f9044bf57b3b8` (PR #243), built September 26 at
+  22:40:23 UTC. All jobs in release workflow `36276226206` passed. Public
+  verification at 22:42:41 UTC
   confirmed the exact commit, ready application/database/schema, and closed
-  customer-launch gates. Consult the current pull-request/release result for
+  customer-launch gates. English/Spanish signup pages returned 200; signed-out
+  job operations returned 401. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
+- PR #243 adds automatic **owner** incident alerts, quarantined test previews,
+  and scheduled recovery. All 733 local tests, production build, typecheck,
+  lint, twelve Chromium/WebKit incident scenarios, and required release gates
+  passed. The incident route remains test-only. No real incident alert was
+  sent, so production incident-triggered inbox delivery remains unproven.
+  The owner reports availability "anytime" to check the business inbox; a
+  fallback contact is still unspecified, and no guaranteed response deadline
+  was promised. Participant/insurer notices and launch approval remain separate.
 - PR #242 requires an email-service receipt before the outbox records a send
   as accepted. Six malformed-success response cases now remain retryable with
   the same key; later acceptance stops repeat sends. All 726 tests, build,
@@ -34,7 +37,7 @@ remain separate. See the incident runbook for behavior and evidence.
   September 26 at 21:49–21:50 UTC: the English/Spanish sample reached the
   owner's test Inbox, passed SPF/DKIM/DMARC, and its reply was opened in the
   business Inbox. Private receipt evidence is retained outside the repository.
-  This does not implement automatic incident alerts or establish staffing.
+  That manual test does not prove automatic incident delivery or staffing.
   The existing launch briefing contains an unsent cost-conscious broker
   inquiry. No coverage or launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,

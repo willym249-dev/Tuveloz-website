@@ -150,11 +150,13 @@ Local verification passed 733 tests, production build, typecheck, lint (one
 existing warning), and the Chromium/WebKit incident checks. The real SQL tests
 cover privacy, wrong assignment links, interrupted enqueueing, concurrency,
 receipt failure, retries, no duplicate send, and test quarantine. External
-email transport is intercepted. This is implementation/test evidence; check
-the release record before claiming deployment. The separate manual mailbox
-round trip below passed, but no real incident alert was sent. Owner coverage,
-fallback contact, insurer review, hosted participant upload, and launch
-approval remain outstanding.
+email transport is intercepted. PR #243 is confirmed deployed as `2bdab8b`:
+all production jobs in `36276226206` passed, and public verification at
+22:42:41 UTC confirmed the exact release and retained launch locks. The separate
+manual mailbox round trip below passed, but production incident-triggered
+inbox delivery remains unproven; no real incident alert was sent. The owner's
+availability is recorded below; fallback contact, insurer review, hosted
+participant upload, and launch approval remain outstanding.
 
 **Both sides, promptly and factually:** that an incident is recorded, the
 confirmed work status, whether payment is held, and what happens next. A routine
@@ -208,9 +210,10 @@ Spanish: “La retención del pago es parte de la revisión y no determina quié
 es responsable. Puedes rechazar trabajo adicional sin una penalización por
 rechazarlo.”
 
-Before use, the owner must choose a reachable responder and a realistic update
-deadline. After sending, record the channel, recipient role, actual timestamp,
-delivery receipt or failure, next follow-up, and a private evidence reference.
+Before use, the owner must confirm who can respond to that incident and set a
+realistic update deadline. After sending, record the channel, recipient role,
+actual timestamp, delivery receipt or failure, next follow-up, and a private
+evidence reference.
 A draft, queue entry, or copied message is not proof of delivery. If delivery
 fails, record it and use an authorized alternative channel; never mark a notice
 sent simply to clear the review screen.
@@ -257,10 +260,12 @@ falta hacer nada más.”
 
 This checks the **manual mailbox round trip**, not incident-triggered website
 mail, delivery to every email provider, a staffing commitment, or emergency
-dispatch. Before launch, the owner still needs to name the person who checks
-the incident console and inbox, set actual coverage hours and a fallback
-contact, and obtain the required process review. Those cannot be inferred from
-a successful test message.
+dispatch. On September 26, the owner answered "anytime" when asked about
+availability to check hello@tuveloz.com. Record the owner as the primary
+responder with that self-reported availability. No backup contact was named.
+This is not evidence of continuously staffed support, a guaranteed response
+deadline, or a launch approval. Before launch, confirm a practical fallback
+for times the owner cannot respond and obtain the required process review.
 
 For a real incident, the responder records a next-update deadline after checking
 availability, sends each participant a separate factual message, and logs the

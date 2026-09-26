@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Verify published owner incident alerts and record responder availability
+
+PR #243 merged as `2bdab8b940748f137b495c7c131f9044bf57b3b8` after both
+required PR workflows passed (`36275390201` and `36275390430`). All three jobs
+in the normal production workflow `36276226206` passed. Public verification
+at 22:42:41 UTC confirmed that exact release, built at 22:40:23 UTC, with ready
+application/database/schema, English and Spanish signup pages returning 200,
+and signed-out job operations returning 401. Accounts and applications remain
+open; customer requests and payments remain closed. Local validation includes
+733 passing tests plus twelve Chromium/WebKit incident scenarios, lint,
+typecheck, and the production build.
+The test-only incident route, test-alert quarantine, and customer-launch and
+payment locks remain unchanged. No real incident email was sent; production
+incident-triggered inbox delivery remains unproven. The separately completed
+manual mailbox round trip is not that proof.
+
+Sanitized release evidence is retained outside the repo as
+`incident-alert-release-20260926.json`,
+`incident-alert-production-run-20260926.json`, and
+`incident-alert-validation-20260926.json`.
+
+The owner answered "anytime" to the question about checking hello@tuveloz.com.
+The existing incident runbook now names the owner as primary responder with
+that self-reported availability. No backup contact was supplied. The remaining
+checkpoint is a practical fallback and process review, not another request
+for the already-answered primary-responder question. No public promise of
+24/7 staffing or a guaranteed response deadline was added.
+
+Keep this factual handoff local until the next authorized code release rather
+than redeploying solely to publish a release receipt. The earlier manual
+mailbox proof, scanner results, backups, and staged incident evidence are
+preserved; do not rerun them without a specific new verification need.
+
 ## 2026-09-26 - Prepare durable automatic owner incident alerts
 
 Saved incident reports now queue a bilingual owner alert with a protected
