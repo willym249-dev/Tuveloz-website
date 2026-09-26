@@ -91,10 +91,4 @@ export class TuvelozBackupWorkflow extends WorkflowEntrypoint<BackupEnv> {
   }
 }
 
-const privateBackupWorker = {
-  fetch() {
-    return new Response("Not found", { status: 404 });
-  },
-};
-
-export default privateBackupWorker;
+export { default } from "./trigger";

@@ -48,7 +48,7 @@ jobs:
           if (!['bootstrap', 'activate'].includes(mode)) throw new Error('Invalid backup mode.');
           const config = JSON.parse(fs.readFileSync('backup-worker/wrangler.jsonc', 'utf8'));
           config.main = path.resolve('backup-worker/src/index.ts');
-          if (mode === 'bootstrap') delete config.workflows[0].schedules;
+          if (mode === 'bootstrap') config.triggers = { crons: [] };
           fs.mkdirSync('.wrangler', { recursive: true });
           fs.writeFileSync('.wrangler/backup-deploy.json', JSON.stringify(config));
           NODE

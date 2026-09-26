@@ -11,7 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-26 - Approved private backup setup
+## 2026-09-26 - First real backup and local recovery passed
+
+The owner explicitly approved expanding the existing Tuveloz backup token to
+D1 Edit. The saved scope remains the Tuveloz account through October 25. The
+existing encrypted Worker secret worked without generating or exposing a key.
+Instance `owner-approved-recovery-20260926-edit` completed all seven steps at
+07:26:06 UTC. The 251,632-byte database export restored into separate local
+SQLite with integrity OK and zero foreign-key violations. Both stored objects
+(one empty folder marker and one 605-byte scanner fixture) matched their
+manifest sizes and SHA-256 values after recovery. Downloads and the restored
+database remain outside all source checkouts; no private records are in this
+log. No production data, integration, or launch setting was changed.
+
+Activation run `36227181038` rejected native Workflow schedules because that
+feature requires Workers Paid. No upgrade was purchased. The replacement uses
+a standard Worker Cron Trigger at the same 09:07 UTC time to create the same
+durable backup through its binding. A stable per-firing instance ID prevents
+duplicate exports from retried deliveries, and launch failures propagate to
+scheduled invocation status. Bootstrap removes all Worker Cron triggers.
+Publication, activation, and observation of the first automatic run remain to
+be verified; actual Cloudflare D1/R2 recovery is separate from the passed local
+rehearsal. The application release `093822e` succeeded and public health was
+ready at 07:24 UTC with customer requests/payments still closed.
+
+## 2026-09-26 - Approved private backup setup (earlier state)
 
 The owner approved publication, a D1 Read credential scoped to the Tuveloz
 account through October 25, 35-day private backup retention, and an isolated

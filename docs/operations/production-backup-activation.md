@@ -1,6 +1,6 @@
 # Production backup activation
 
-Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` is intended to close that gap without giving the public website access to the backup bucket. Its source and unscheduled Worker are deployed; the first export was rejected and nightly backups are not activated.
+Tuveloz production uses two separate stores: D1 for records and a private R2 bucket for uploaded documents and images. D1 Time Travel is always on, but it is a short recovery window and does not copy R2 files. The separate `backup-worker` closes that gap without giving the public website access to the backup bucket. The first real backup and isolated local recovery passed on September 26. The native Workflow schedule required a paid plan; the replacement uses a standard Worker Cron Trigger and still needs activation after publication.
 
 ## Account check — September 25, 2026
 
@@ -43,26 +43,39 @@ type without exposing its value. Both public Worker and preview URLs are off.
 The backup key itself must never enter GitHub Actions or a command transcript.
 PRs #229/#230 are merged. Bootstrap run `36223729484` succeeded and the
 dashboard confirms no public Worker URLs. `D1_BACKUP_API_TOKEN` is saved as an
-encrypted production secret. No schedule is enabled.
+encrypted production secret. Bootstrap did not enable a schedule.
 
 The first instance, `owner-approved-recovery-20260926`, returned HTTP 401
 Authentication error at export initiation on September 26 at 06:31 UTC. It was
 terminated after two retries. No SQL export, object copy, or manifest was
-produced, so recovery is not proved. The token editor confirms D1 Read for the
-Tuveloz account, a September 25 start, October 25 expiry, and no IP filter.
-Separate owner approval is pending before trying D1 Edit: that is a wider
-permission allowing database writes and deletion across the account. It has
-not been applied, and success with Edit must not be assumed before a new test.
+produced. The owner subsequently approved D1 Edit, including its broader
+account-level database write/delete capability. The saved permission is now
+D1 Edit for the Tuveloz account, with the same October 25 expiry and existing
+encrypted Worker secret. No new credential value was generated or exposed.
 
-After access is resolved, trigger one manual run before `activate`. Confirm its
-manifest, SQL, object hashes, and isolated recovery first. Keep all downloaded
-production data outside the source repository and never print record contents.
-An isolated local SQLite/file rehearsal may establish local recoverability;
-report it separately from an actual restore into Cloudflare D1/R2.
+Instance `owner-approved-recovery-20260926-edit` completed all seven steps at
+07:26:06 UTC. It stored a 251,632-byte SQL export, a manifest, and both source
+objects (a zero-byte folder marker and a 605-byte existing synthetic scanner
+fixture). The exported SQL restored to a separate local SQLite database at
+07:33:53 UTC: integrity check passed, foreign-key violations were zero, and
+both restored objects matched their manifest sizes and SHA-256 values.
+Production data stayed outside every source checkout; no application, mail,
+Stripe, or scanner integration was connected to the recovery copy. This proves
+local recovery, not a restore into Cloudflare D1/R2 or a production cutover.
+
+Activation run `36227181038` uploaded the Worker but rejected native Workflow
+`schedules` because they require Workers Paid. No paid plan was selected.
+Use the replacement top-level `triggers.crons` with a short `scheduled` handler
+that creates the durable Workflow through its binding. It retains the 09:07 UTC
+daily time and all existing backup behavior. Bootstrap deploys an empty Cron
+list; activate installs the reviewed Cron only after checking the secret.
+Confirm the successful activation run and remote trigger before calling nightly
+backups enabled. The first automatic run remains a separate verification.
 
 ## What the backup does
 
-Once activated, every day at 09:07 UTC, the private Cloudflare Workflow:
+Once activated, every day at 09:07 UTC, a standard Worker Cron Trigger starts
+the private Cloudflare Workflow, which:
 
 1. exports the production D1 database through Cloudflare's authenticated export API;
 2. saves the SQL export in the private `tuveloz-backups` R2 bucket;
@@ -79,7 +92,7 @@ The backup bucket has no public route. The backup Worker returns only `404` to w
 
 ## Cost boundary
 
-Cloudflare Workflows are available on both Workers Free and Workers Paid. The current design runs once per day and stays far below the Free plan's daily Workflow step allowance at its reviewed capacity. R2 Standard includes 10 GB-month of storage and one million Class A operations per month at no charge. Cloudflare counts the primary and backup buckets together for the account, so the actual account usage must be checked before activation and monitored as files grow. No paid plan or billing change is required merely to prepare this code.
+Cloudflare Workflows and standard Worker Cron Triggers are available on Workers Free. Native Workflow schedules are a separate Paid-only feature and must not be used here. The current design runs once per day and stays below the Free plan's Workflow step allowance at its reviewed capacity. R2 Standard includes 10 GB-month of storage and one million Class A operations per month at no charge. Cloudflare counts the primary and backup buckets together for the account, so account usage must be monitored as files grow. No paid plan or billing change was made.
 
 ## One-time account setup
 
@@ -90,11 +103,12 @@ These live actions remain intentionally separate from source code:
 3. Review the exact D1 permission and resource scope Cloudflare offers before creating a credential. Prefer read-only export access if supported; do not claim a token is limited to one database unless Cloudflare enforces that restriction. Obtain approval for the actual scope and lifetime, then store the approved token as the `D1_BACKUP_API_TOKEN` secret on `tuveloz-production-backup`. Never paste the token into chat, a command transcript, a repository file, or a GitHub issue.
 4. Deploy with `wrangler deploy --config backup-worker/wrangler.jsonc` only after the bucket and secret exist and the activation is approved. If an initial Worker deployment is needed to provision its secret, omit the schedule until the secret is installed; the scheduled configuration is not the bootstrap step.
 5. Agree the first export's timing and brief service-impact risk: Cloudflare warns that D1 cannot serve queries during export. Trigger one approved backup and confirm a non-empty `d1/` export, a current `manifests/` record, the expected `objects/` copies, matching sizes and SHA-256 values, and a successful Workflow instance.
-6. Restore that export and its referenced files into isolated non-production D1/R2 destinations. Verify schema, record counts, document hashes, access controls, and that no email, Stripe, scanner, or scheduled production action can run there.
+6. Restore that export and its referenced files into an isolated local SQLite/file destination to prove basic recoverability. Verify schema, record counts, document hashes, and that no application integration runs there. A full Cloudflare recovery exercise additionally requires isolated non-production D1/R2 destinations, access-control checks, and application smoke tests; that exercise is still outstanding.
 
 The first successful Workflow run proves a stored production copy. The isolated restore rehearsal proves recoverability. Neither should be described as complete before its own evidence exists.
 
 Official references: [R2 pricing](https://developers.cloudflare.com/r2/pricing/),
 [Workflows pricing](https://developers.cloudflare.com/workflows/reference/pricing/),
 [D1 export behavior](https://developers.cloudflare.com/api/resources/d1/subresources/database/methods/export/),
-and [R2 binding limits](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/).
+[R2 binding limits](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/),
+and [Worker Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/).

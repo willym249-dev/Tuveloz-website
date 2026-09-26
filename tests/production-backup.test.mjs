@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import privateBackupWorker from "../backup-worker/src/trigger.ts";
 
 import {
   beginD1Export,
@@ -180,14 +181,38 @@ test("backup deployment is isolated, private, scheduled, and secret-free in sour
     readFile(new URL("../backup-worker/src/index.ts", import.meta.url), "utf8"),
   ]);
   assert.match(config, /"name": "tuveloz-production-backup"/);
-  assert.match(config, /"schedules": \["7 9 \* \* \*"\]/);
+  const parsed = JSON.parse(config);
+  assert.deepEqual(parsed.triggers.crons, ["7 9 * * *"]);
+  assert.ok(parsed.workflows.every((workflow) => !("schedules" in workflow)), "native Workflow schedules require a paid plan");
   assert.match(config, /"concurrency": \{\s*"limit": 1\s*\}/);
   assert.match(config, /"success_retention": "1 day"/);
   assert.match(config, /"error_retention": "3 days"/);
   assert.match(config, /"bucket_name": "tuveloz-backups"/);
   assert.doesNotMatch(config, /api[_-]?token/i);
   assert.match(worker, /D1_BACKUP_API_TOKEN/);
-  assert.match(worker, /return new Response\("Not found", \{ status: 404 \}\)/);
+  const response = privateBackupWorker.fetch();
+  assert.equal(response.status, 404);
+  assert.equal(await response.text(), "Not found");
+});
+
+test("the free Cron Trigger launches a durable backup with a stable firing ID", async () => {
+  const attempts = [];
+  const env = { BACKUP_WORKFLOW: { async create(options) { attempts.push(options); } } };
+  const event = { scheduledTime: Date.parse("2026-09-26T09:07:00Z") };
+  await privateBackupWorker.scheduled(event, env);
+  await privateBackupWorker.scheduled(event, env);
+  assert.equal(attempts.length, 2);
+  assert.deepEqual(attempts[0], { id: `scheduled-backup-${event.scheduledTime}` });
+  assert.deepEqual(attempts[1], attempts[0], "duplicate deliveries reuse the Workflow ID");
+  await privateBackupWorker.scheduled({ scheduledTime: event.scheduledTime + 86400000 }, env);
+  assert.notEqual(attempts[2].id, attempts[0].id);
+});
+
+test("a failed Workflow launch is reported as a failed scheduled invocation", async () => {
+  const failure = new Error("Workflow unavailable");
+  await assert.rejects(privateBackupWorker.scheduled({ scheduledTime: 1 }, {
+    BACKUP_WORKFLOW: { async create() { throw failure; } },
+  }), (error) => error === failure);
 });
 
 test("retention handles more than 1000 expired files without exceeding R2's delete limit", async () => {
