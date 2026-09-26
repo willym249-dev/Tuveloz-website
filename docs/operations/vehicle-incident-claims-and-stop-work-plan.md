@@ -81,9 +81,12 @@ facts, not reconstructed later by whoever is available.
 
 **3. Preserve evidence.** The job workspace already holds before/after condition
 evidence, messages, the appointment record, arrival tracking, and the
-authorization chain. Reference it in `evidenceReferences`. Do not delete a
-message, image, or job record after an incident — the same rule as the security
-plan, for the same reason.
+authorization chain. The intended incident link is `evidenceReferences`, but
+the September 26 code review confirmed that incident creation still writes an
+empty list and the console has no linking control. This remains implementation
+work; do not describe the private job-photo workspace as a completed incident
+attachment flow. Do not delete a message, image, or job record after an incident
+— the same rule as the security plan, for the same reason.
 
 **4. Payment stays held.** It holds itself. Do not release it to settle a
 complaint quickly; releasing payment before the facts are known is a decision
@@ -177,6 +180,29 @@ or attempt a Stripe payout. Its payout-helper check is a source assertion, not a
 payment transaction. The separate owner simulation below adds technical coverage
 without turning these local results into a completed claims-plan review.
 
+### September 26 private job-photo storage check
+
+The separate `job-evidence-storage` test runs actual multipart upload/read
+routes, account authentication, and migrated SQL with synthetic in-memory
+Cloudflare bindings. It verified byte-for-byte photo retrieval, denied unrelated
+and unauthenticated readers, rejected malformed/oversized files, preserved the
+real-job launch gate, and cleaned up files after failed database inserts. It
+reproduced and fixed a defect that deleted a committed photo when a later list
+refresh failed. A saved record now survives that failure and returns a success
+receipt with a refresh instruction.
+
+A lost database acknowledgement is checked against the saved record before
+file cleanup. If that read is also unavailable, the private file remains and
+the response reports an unconfirmed save instead of claiming success or
+deleting potentially committed evidence.
+
+`test:e2e:job-evidence` verifies the real page in Chromium and WebKit against a
+synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
+draft, and refreshing after a saved upload never resubmits it. Neither test uses
+hosted R2 or attaches the photo to `job_incidents`; the incident-link control and
+hosted participant upload remain unfinished. Owner and insurer review remain
+required independently of these tests.
+
 ### Owner decisions and later hold release
 
 `tests/incident-owner-review.test.mjs` runs the real owner-token verification,
@@ -205,10 +231,55 @@ WebKit: confirmation is required, a rejected attempt retains the draft, success
 removes the completed control, and customers cannot see it. This internal test
 console currently remains English-only; public bilingual routes are unchanged.
 
-Still outstanding: a deployed Cloudflare Access session and owner review of the
-complete process, real evidence attachment, notification delivery, insurer/source
-review, and any separately authorized Stripe test. No launch gate is approved
-by these simulations and no production identity credential is used.
+### Deployed owner access check
+
+On September 26, the existing business-browser Cloudflare sign-in opened the
+live owner dashboard. Its integrated review at 14:06 UTC reported successful
+signed-token verification, available review tables, and the existing passing
+scanner proof. The compliance workspace loaded. A read-only job-console lookup
+of a nonexistent synthetic request reached the missing-assignment response,
+confirming authenticated access to that route. No production test assignment
+was available; no incident was created or modified. This closes only the live
+owner sign-in/access check. PR #236's release and exact public health commit
+were separately verified; see the September 26 log entry.
+
+### Hosted staging owner rehearsal
+
+The existing private staging environment was refreshed September 26 by workflow
+`36247963177` to main commit `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65`.
+It uses its own D1 and upload storage; production and recovery data were untouched.
+The staged fixture was validated against the current migrations in local SQLite
+first. A read-only staging preflight confirmed no conflicting IDs or existing
+job/provider/incident rows before the five inserts ran in one transaction.
+
+Fixture: `rehearsal-owner-job-20260926`, a test-only provider left **new / not
+reviewed** with alerts off, a synthetic one-dollar quote, and incidents
+`rehearsal-a-20260926` and `rehearsal-b-20260926`. No identity approval,
+insurance proof, actual service, or real person is represented. The incident
+reports and initial stop time were **seeded fixtures**, not created through a
+customer-report form in this hosted check.
+
+Verified using the real owner session and deployed controls:
+
+- At 14:22:03 UTC, the owner resolved incident A with release unchecked. Its
+  hold remained active and the separate release control appeared.
+- Submitting the release form without its required confirmation was blocked.
+- At 14:22:53 UTC, explicit confirmation released only A's hold. A's original
+  resolution and resolution timestamp were preserved; B stayed open and held.
+- Staging D1 contained exactly the two expected lifecycle events, both tied to
+  the verified owner. The release event recorded `transferCreated=false`.
+- Staging payment, notification, email-outbox, and Identity-session counts
+  remained zero. No provider was approved and no insurer notice was asserted.
+- An unauthenticated request still redirected to Cloudflare Access. Production
+  health at 14:26:26 UTC remained on `3eb2871`, with application/database/schema
+  ready and customer requests/payments closed.
+
+This closes the deployed **owner resolution and hold-release** technical check.
+Do not rerun it by recreating the fixtures. Still outstanding: owner review of
+the complete process, real evidence attachment, notification delivery,
+insurer/source review, and any separately authorized Stripe test. The earlier
+local rehearsal covers incident creation and customer/provider denial. Neither
+result establishes a complete claims exercise or approves a launch gate.
 
 **[OWNER]** Whether the insurer wants to see the rehearsal record. Several
 carriers do, and it is easier to produce during the rehearsal than to reconstruct.

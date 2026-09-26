@@ -8,10 +8,12 @@
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
 who is allowed to answer it, and what the code already implements — with file
 references, so a reviewer confirms findings instead of interviewing someone from
-scratch. The authenticated production review page was refreshed on September 5,
-2026: all eighteen review controls showed Pending, with no approved gate visible.
+scratch. The authenticated production review page was refreshed on September 26,
+2026 at 14:06 UTC: all eighteen review controls showed Pending, with no approved
+gate visible. The request passed real owner signed-token verification and the
+existing scanner operational proof passed; neither approves a reviewer gate.
 There are **seventeen required gates and one optional employee/trainee lane**.
-Recheck the live page before recording a decision; the September 5 control
+Recheck the live page before recording a decision; the September 26 control
 count is a dated snapshot. Start with the current
 [`2026-09-25-prelaunch-reconciliation.md`](./2026-09-25-prelaunch-reconciliation.md)
 before using the older evidence below.
@@ -187,9 +189,13 @@ payment holds, stop-work recording, and rejection of customer/provider release
 attempts through the real routes and local D1. A subsequent local simulation
 also exercises real signed-token verification and owner resolution/hold release,
 using temporary keys and synthetic key transport. Browser tests cover the owner
-control. A deployed Access session, evidence attachment, insurer/notification
-handling, and final plan review remain separate. The plan records the tested
-scope; do not count local simulations as a completed gate or live payout proof.
+control. Deployed owner sign-in and read-only access passed September 26. The
+actual owner resolution and later hold release subsequently passed on private
+staging with a seeded test job, persisted D1 state, verified owner audit, and
+zero payment/notification records. The reports were seeded; real evidence
+attachment, insurer/notification handling, and final plan review remain
+separate. The plan records the tested scope; neither local simulations nor the
+hosted owner check establishes a completed gate or live payout proof.
 
 ### Payment processor
 

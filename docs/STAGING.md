@@ -3,7 +3,30 @@
 Tuveloz has two separate testing layers:
 
 1. `/admin/test-lab` is an owner-only browser simulation. It uses fake records stored only in the owner's browser and never writes to D1, Stripe, Resend, customer records, provider records, or notification systems.
-2. `staging.tuveloz.com` is the planned full application staging Worker. It is generated and deployed only through the manual **Deploy Tuveloz Staging** GitHub Actions workflow.
+2. `staging.tuveloz.com` is the existing private application staging Worker, originally deployed August 9 and refreshed September 26, 2026. It is generated and deployed only through the manual **Deploy Tuveloz Staging** GitHub Actions workflow.
+
+## September 26 verified state — reuse this setup
+
+The separate `tuveloz-staging-db`, private upload bucket, owner Access policy,
+and GitHub staging environment already existed. Do not recreate them because
+older notes called staging planned. Workflow
+[`36247963177`](https://github.com/willym249-dev/Tuveloz-website/actions/runs/36247963177)
+successfully tested, migrated, and deployed main commit
+`3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65`. The database includes migration
+`0068_provider_document_pending_guard.sql`. An unauthenticated request redirects
+to Cloudflare Access; the signed owner session loaded the actual test console.
+
+The owner incident controls were exercised through the deployed UI/API and
+checked independently in staging D1. See the
+[incident rehearsal record](operations/vehicle-incident-claims-and-stop-work-plan.md#hosted-staging-owner-rehearsal).
+Only synthetic fixtures were added. Production records, recovery copies,
+customer-launch controls, and payment settings were not changed. No new paid
+service or expanded credential was required.
+
+Retain the clearly labeled `rehearsal-owner-job-20260926` fixture and its two
+incident records as test evidence. They are not real provider approval,
+insurance, Identity, service, or payment records. Do not recreate them or reset
+staging merely to repeat this completed check.
 
 ## Safety boundaries
 

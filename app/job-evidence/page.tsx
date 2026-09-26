@@ -82,6 +82,8 @@ export default function JobEvidencePage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busyJobId, setBusyJobId] = useState("");
+  const [refreshRequired, setRefreshRequired] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   async function load() {
     const response = await fetch("/api/job-evidence", { cache: "no-store" });
@@ -92,6 +94,19 @@ export default function JobEvidencePage() {
     }
     if (!response.ok) throw new Error(result.error || "Unable to load private job records.");
     setData(result);
+  }
+
+  async function refreshSavedRecord() {
+    setRefreshing(true);
+    try {
+      await load();
+      setRefreshRequired(false);
+      setNotice("Private job record added. The earlier record remains unchanged.");
+    } catch {
+      setNotice("Your photo or note is saved. Refresh the records to see it. You do not need to submit it again.");
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   useEffect(() => {
@@ -117,11 +132,16 @@ export default function JobEvidencePage() {
         method: "POST",
         body: formData,
       });
-      const result = await response.json() as EvidenceData & { error?: string };
+      const result = await response.json() as EvidenceData & { error?: string; refreshRequired?: boolean };
       if (!response.ok) throw new Error(result.error || "Unable to add the private job record.");
-      setData(result);
       form.reset();
       setNotice("Private job record added. The earlier record remains unchanged.");
+      if (result.refreshRequired) {
+        setRefreshRequired(true);
+        await refreshSavedRecord();
+      } else {
+        setData(result);
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to add the private job record.");
     } finally {
@@ -154,6 +174,11 @@ export default function JobEvidencePage() {
 
         {error && <p className="form-error account-login-message" role="alert">{error}</p>}
         {notice && <p className="portal-success account-login-message" role="status">{notice}</p>}
+        {refreshRequired && (
+          <button className="button secondary" disabled={refreshing} onClick={() => void refreshSavedRecord()} type="button">
+            {refreshing ? "Refreshing records…" : "Refresh saved records"}
+          </button>
+        )}
         {!data && !error && <p className="admin-note account-loading">Loading private job records…</p>}
 
         {data && (
@@ -271,7 +296,7 @@ export default function JobEvidencePage() {
                           A record does not approve extra work, increase the price, or replace the provider&apos;s itemized invoice.
                         </p>
                       </div>
-                      <button className="button primary" disabled={busyJobId === job.requestId} type="submit">
+                      <button className="button primary" disabled={busyJobId === job.requestId || refreshRequired} type="submit">
                         {busyJobId === job.requestId ? "Adding…" : "Add private job record"}
                       </button>
                     </form>

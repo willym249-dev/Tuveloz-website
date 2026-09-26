@@ -11,6 +11,103 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Saved job photos survive a failed follow-up read
+
+The unfinished evidence rehearsal reproduced a real data-loss defect: after
+`job_evidence_items` was inserted, a failed notification or list refresh entered
+the same cleanup path as a failed insert and deleted the stored image. The route
+now tracks the committed record and returns a saved receipt requiring refresh
+instead of deleting its file or reporting that the upload failed. Pre-insert
+failures still clean up orphan files. The page preserves its existing list,
+clears only the successfully submitted form, and offers a read-only refresh
+when the saved record cannot yet be displayed. A rejected upload retains the
+photo and note; refreshing a saved record never submits it again. A lost database
+acknowledgement is reconciled against the new record before cleanup; if the
+database cannot answer, the private file is retained and the response states
+that the save could not yet be confirmed. The existing provider-document flow
+already handles this case and was left unchanged.
+
+`tests/job-evidence-storage.test.mjs` first failed on the deleted-image
+assertion, then passed with the fix. It executes real account authentication,
+multipart validation, route code, and migrated SQL with local in-memory D1/R2
+bindings. A synthetic PNG survives save/readback byte-for-byte; unrelated and
+unauthenticated accounts cannot read it; invalid/oversized uploads, foreign
+origins, and role spoofing cannot write. Real jobs remain locked despite a
+caller-supplied test flag. No notifications or payments are created.
+
+The actual page passed six browser scenarios across Chromium and WebKit, with
+file bytes verified by a loopback HTTP server: normal save, a failed refresh
+after save, and retry after a rejected upload. Added this check to pull-request
+verification. The production build, all 708 tests, lint (one existing warning),
+and application/Worker typecheck passed locally. These are isolated technical
+tests, not a hosted customer/provider upload, insurer review, or launch approval.
+
+Code inspection also confirmed a separate unfinished step: incident creation
+still writes an empty `evidenceReferences` list and the incident console has no
+attachment/link control. The existing private job-photo workspace is not proof
+of linking evidence to an incident. Preserve that distinction in readiness
+claims. Existing staging incident fixtures and production records were untouched.
+
+## 2026-09-26 - Existing staging reused for actual owner incident decisions
+
+Found that staging was already deployed and configured in August despite older
+notes describing it as planned. Reused the existing private Worker, staging
+D1/R2, Access policy, and GitHub environment. No new account, credential, paid
+service, or security permission was needed. Staging run `36247963177` succeeded
+at main commit `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65`, applying the current
+migrations and passing its build/tests. Production was not redeployed.
+
+Validated a synthetic fixture locally, confirmed empty staging fixture tables
+and unused IDs, then inserted one test job, one unapproved test provider, one
+synthetic quote, and two clearly labeled test incidents in one transaction.
+The provider stays new/not reviewed with alerts disabled; no person, insurer,
+identity proof, service approval, or real payment is represented. The reports
+and initial stop time were seeded, so this hosted check is not a report-creation
+or evidence-upload test.
+
+Through the real signed owner session on staging, resolved incident A while
+retaining its hold, checked the required release confirmation, then released
+only A's hold. The UI and an independent D1 query confirmed that B stayed open
+and held, A's original resolution/timestamp stayed intact, and both lifecycle
+events recorded the verified owner. No payment, notification, email-outbox, or
+Identity-session records were added. The test provider was not approved.
+Retain `rehearsal-owner-job-20260926` and incidents `rehearsal-a-20260926` and
+`rehearsal-b-20260926` as synthetic staging evidence; do not recreate them.
+
+Unauthenticated staging access still redirects to Cloudflare Access. Production
+health at 14:26:26 UTC remained on the previous exact commit, all health checks
+ready, customer requests/payments closed. Updated the existing staging and
+incident runbooks and readiness packet. Owner/insurer review, real evidence
+attachment, notification delivery, and any actual payout remain outside this
+technical result; no launch decision changed.
+
+## 2026-09-26 - Deployed owner access verified without changing review decisions
+
+PR #236 merged as `3eb287197f5d854d3dc1ab1c7036a0aa5c85fc65` and
+production run `36246209425` completed successfully. Public health at
+14:00:26 UTC matched that commit with application, database, and schema ready.
+The 700 tests and required browser/release checks passed. The final comparison
+preserved signup, scanner, backup, policy, migration, and launch-lock code.
+
+Used the existing Tuveloz business-browser Cloudflare sign-in to open the live
+owner dashboard. The integrated review at 14:06 UTC explicitly reported that
+this request passed signed-token verification; owner data and review tables
+loaded. The compliance-operations workspace also loaded. A read-only lookup
+from the job-operations console with an explicitly nonexistent synthetic ID
+reached "Accepted job assignment not found" instead of the unauthenticated
+sign-in error. This verifies the live owner-session access path, not an incident
+write, resolution, or payout. No persisted production test job was available,
+and none was created. A separate direct navigation to the diagnostic JSON route
+was blocked by the browser client and is not counted as a passing check.
+
+All eighteen evidence review controls remain Pending: seventeen required and
+one optional lane. The scanner's existing operational proof passes; live
+provider Identity evidence, named reviewer decisions, launch-update postal
+address, exact-service activation, and customer/payment release remain separate
+unfinished items. No review decision, approval, provider record, mailing
+configuration, live payment, or launch setting changed. Do not repeat completed
+owner-access setup or treat this read-only pass as the full incident rehearsal.
+
 ## 2026-09-26 - Owner incident simulation found and repaired two workflow defects
 
 Added local behavioral coverage that executes the real owner-token verifier,
