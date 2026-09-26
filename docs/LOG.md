@@ -21,7 +21,11 @@ instead of deleting its file or reporting that the upload failed. Pre-insert
 failures still clean up orphan files. The page preserves its existing list,
 clears only the successfully submitted form, and offers a read-only refresh
 when the saved record cannot yet be displayed. A rejected upload retains the
-photo and note; refreshing a saved record never submits it again.
+photo and note; refreshing a saved record never submits it again. A lost database
+acknowledgement is reconciled against the new record before cleanup; if the
+database cannot answer, the private file is retained and the response states
+that the save could not yet be confirmed. The existing provider-document flow
+already handles this case and was left unchanged.
 
 `tests/job-evidence-storage.test.mjs` first failed on the deleted-image
 assertion, then passed with the fix. It executes real account authentication,
@@ -34,7 +38,7 @@ caller-supplied test flag. No notifications or payments are created.
 The actual page passed six browser scenarios across Chromium and WebKit, with
 file bytes verified by a loopback HTTP server: normal save, a failed refresh
 after save, and retry after a rejected upload. Added this check to pull-request
-verification. The production build, all 706 tests, lint (one existing warning),
+verification. The production build, all 708 tests, lint (one existing warning),
 and application/Worker typecheck passed locally. These are isolated technical
 tests, not a hosted customer/provider upload, insurer review, or launch approval.
 

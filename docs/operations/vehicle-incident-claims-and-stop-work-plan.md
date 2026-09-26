@@ -191,6 +191,11 @@ reproduced and fixed a defect that deleted a committed photo when a later list
 refresh failed. A saved record now survives that failure and returns a success
 receipt with a refresh instruction.
 
+A lost database acknowledgement is checked against the saved record before
+file cleanup. If that read is also unavailable, the private file remains and
+the response reports an unconfirmed save instead of claiming success or
+deleting potentially committed evidence.
+
 `test:e2e:job-evidence` verifies the real page in Chromium and WebKit against a
 synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
 draft, and refreshing after a saved upload never resubmits it. Neither test uses

@@ -26,7 +26,12 @@ test("private evidence uploads preserve saved files and enforce account access",
       let values = [];
       return {
         bind(...params) { values = params; return this; },
-        async first() { return database.prepare(query).get(...values) ?? null; },
+        async first() {
+          if (state.failure === "commit-unreadable" && query.includes("SELECT id FROM job_evidence_items")) {
+            throw new Error("SYNTHETIC: reconciliation unavailable");
+          }
+          return database.prepare(query).get(...values) ?? null;
+        },
         async all() {
           if (state.failure === "refresh" && query.includes("FROM job_evidence_items")) {
             throw new Error("SYNTHETIC: evidence list temporarily unavailable");
@@ -38,6 +43,9 @@ test("private evidence uploads preserve saved files and enforce account access",
             throw new Error("SYNTHETIC: evidence insert rejected");
           }
           const result = database.prepare(query).run(...values);
+          if (["commit", "commit-unreadable"].includes(state.failure) && query.includes("INSERT INTO job_evidence_items")) {
+            throw new Error("SYNTHETIC: commit acknowledgement lost");
+          }
           return { success: true, meta: { changes: Number(result.changes) } };
         },
       };
@@ -185,9 +193,32 @@ test("private evidence uploads preserve saved files and enforce account access",
       const listing = await (await api.GET(new Request(origin + "/api/job-evidence", { headers: { cookie } }))).json();
       assert.equal(listing.jobs[0].evidence.length, 2);
     });
+    await t.test("a lost database acknowledgement is recovered without deleting or duplicating the photo", async () => {
+      const before = count();
+      state.failure = "commit";
+      let result;
+      try { result = await upload(); } finally { state.failure = ""; }
+      assert.equal(result.status, 201);
+      const body = await result.json();
+      assert.equal(body.refreshRequired, true);
+      assert.equal(count(), before + 1); assert.equal(objects.size, count());
+      assert.deepEqual(Buffer.from(await (await image(body.evidenceId)).arrayBuffer()), png);
+    });
+    await t.test("an unavailable reconciliation retains the private file and reports uncertainty", async () => {
+      const before = count();
+      state.failure = "commit-unreadable";
+      let result;
+      try { result = await upload(); } finally { state.failure = ""; }
+      assert.equal(result.status, 503);
+      assert.match((await result.json()).error, /could not confirm.*Refresh your records/);
+      assert.equal(count(), before + 1); assert.equal(objects.size, count());
+      for (const row of database.prepare("SELECT id FROM job_evidence_items").all()) {
+        assert.equal((await image(row.id)).status, 200);
+      }
+    });
     assert.equal(database.prepare("SELECT count(*) AS n FROM account_notifications").get().n, 0);
     assert.equal(database.prepare("SELECT count(*) AS n FROM stripe_payments").get().n, 0);
-    assert.ok(loggedErrors.every(message => message.includes("SYNTHETIC:")));
+    assert.ok(loggedErrors.every(message => message.includes("SYNTHETIC:") || message.includes("needs reconciliation; file retained")));
   } finally {
     globalThis.fetch = originalFetch; console.error = originalError;
     database.close(); delete globalThis.__jobEvidenceStorage;

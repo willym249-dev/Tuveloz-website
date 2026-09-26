@@ -250,6 +250,7 @@ export async function POST(request: Request) {
   if (!account) return Response.json({ error: "Sign in to add a job record." }, { status: 401 });
 
   let storedImageKey = "";
+  let attemptedEvidenceId = "";
   let savedEvidenceId = "";
   try {
     const contentType = request.headers.get("content-type") ?? "";
@@ -319,6 +320,7 @@ export async function POST(request: Request) {
       storedImageKey = await storeJobEvidenceImage(requestId, id, image);
     }
 
+    attemptedEvidenceId = id;
     await env.DB.prepare(
       `INSERT INTO job_evidence_items
          (id, request_id, provider_email, customer_email,
@@ -364,6 +366,23 @@ export async function POST(request: Request) {
       ...(await responseData(account.email, account.role)),
     }, { status: 201 });
   } catch (error) {
+    if (!savedEvidenceId && attemptedEvidenceId) {
+      // A lost D1 acknowledgement can follow a committed insert. Only delete
+      // the new file after proving that its record was not saved.
+      try {
+        const saved = await env.DB.prepare(
+          `SELECT id FROM job_evidence_items
+            WHERE id = ? AND image_key = ?
+              AND uploaded_by_email = ? AND uploaded_by_role = ? LIMIT 1`,
+        ).bind(attemptedEvidenceId, storedImageKey, account.email, account.role).first<{ id: string }>();
+        if (saved) savedEvidenceId = saved.id;
+      } catch {
+        console.error("Private job evidence persistence needs reconciliation; file retained", { evidenceId: attemptedEvidenceId });
+        return Response.json({
+          error: "We could not confirm whether your record was saved. Refresh your records before trying again.",
+        }, { status: 503, headers: { "cache-control": "private, no-store" } });
+      }
+    }
     if (savedEvidenceId) {
       console.error("Private job evidence saved; follow-up failed", error);
       return Response.json({
