@@ -36,6 +36,7 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-09-28 | Resume the owner-authorized incident-message mailbox rehearsal after fresh Google sign-in to the business inbox. Follow operations/vehicle-incident-claims-and-stop-work-plan.md: labeled bilingual sample to the existing owner-controlled test inbox, independently verify receipt, reply, then verify the business inbox receives it. No sample has been sent yet. Separately name the incident responder, actual coverage hours, and authorized fallback contact. Internal review checkpoint, not a promise of launch or automated incident notices | hello@tuveloz.com | open |
 | 2027-04-15 | File Tuveloz's first Maryland annual report, or obtain a valid extension. September 26 official registry check confirmed July 24, 2026 formation, Active and Good Standing; the date applies Maryland's published first-filing-next-year rule. Check current form, fee, and personal-property-return requirements before owner submission. No filing or payment has been made | hello@tuveloz.com | open |
 | 2026-10-01 | Review the planned Maryland principal-office mailbox change after Chapter 247 takes effect. Reconfirm the provider is a qualifying USPS-authorized CMRA and inspect the filing before owner approval/submission; resident-agent and tax/bank records are separate. Official effective date rechecked September 26; no filing or fee submitted | hello@tuveloz.com | open |
 | 2026-10-04 | Refresh the ClamAV operational file proof through a permitted real upload or explicitly synthetic scanner check before the latest September 6 result reaches its 30-day limit on October 6 at 15:49 UTC. September 26 read-only production comparison and current application validation passed; first activation and manual/automatic file tests are complete. Do not replace old timestamps or approve provider evidence automatically | hello@tuveloz.com | open |
@@ -91,7 +92,7 @@ update the date to the next occurrence rather than marking it done.
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
 | 2026-09-30 | Annual legal review of the seven published policies — launch gates fail when a legal review is more than a year old, and no review is on record yet, so this is the first one rather than a renewal | hello@tuveloz.com | open |
-| 2026-09-30 | Review insurance coverage against the services actually being offered. Replace this date with the carrier's real renewal date once the record card exists | hello@tuveloz.com | open |
+| 2026-09-30 | Review platform and provider coverage for the exact intended services. The owner reports no platform policy. An unsent cost-comparison request is prepared in business/launch-gate-briefing.md; choose a licensed broker and confirm the initial service scope before any quote submission. No purchase or broker contact has occurred. Replace this review checkpoint with real policy dates only after coverage is bound and privately recorded | hello@tuveloz.com | open |
 
 ## What belongs here versus elsewhere
 
