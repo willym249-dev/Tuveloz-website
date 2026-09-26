@@ -1,11 +1,12 @@
 # LLC formation — Maryland
 
-- **Status:** blank — awaiting the owner
+- **Status:** public registration and standing verified; private originals and authority records remain owner-held
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-16
+- **Last reviewed:** 2026-09-26
 
-The filing that makes TUVELOZ a legal entity rather than a person trading under a
-name. Everything else in this folder assumes it exists.
+Records Tuveloz's public Maryland registration and the separate private formation
+and authority documents. A registry observation does not prove insurance,
+service-specific licensing, ownership authority, or launch readiness.
 
 ## Details
 
@@ -13,16 +14,36 @@ name. Everything else in this folder assumes it exists.
 | --- | --- |
 | **Type** | Formation |
 | **Issued by** | Maryland State Department of Assessments and Taxation (SDAT) |
-| **Issued on** | — |
-| **Expires** | Articles do not expire, but the **annual report and personal property return** do. Record that date, not the formation date |
-| **Identifier** | SDAT department ID — record it only if you are comfortable it is public. It is searchable on Business Express, so it is not a secret, but leave it blank rather than think about it twice |
-| **Where the original is kept** | — |
+| **Issued on** | Formation/registration date shown by SDAT: 2026-07-24 |
+| **Registered name and type** | TUVELOZ LLC; DOMESTIC LLC |
+| **Standing checked** | ACTIVE; THIS BUSINESS IS IN GOOD STANDING, observed 2026-09-26 |
+| **Annual report** | First report due April 15, 2027 under Maryland's published next-year rule, applied to the July 2026 formation date; confirm the current form and any extension before filing |
+| **Identifier** | Public SDAT department ID W27472109 |
+| **Where the original is kept** | Public record: Maryland Business Express. Owner still needs to identify the private original formation and authority records; no certified copy was ordered |
+
+## Verification scope
+
+The official [Maryland Business Express entity search](https://egov.maryland.gov/businessexpress/entitysearch)
+returned one TUVELOZ LLC match. Its General Information tab confirmed the name,
+department ID, domestic-LLC type, formation date, active status, and good standing.
+The Annual Report/Personal Property tab had blank filing dates and penalty
+amounts in the displayed historical rows. Those blank rows are not evidence of
+an overdue first report for a company formed during 2026.
+
+Maryland's [good-standing guidance](https://businessexpress.maryland.gov/manage/maintain-good-standing-status)
+says the first annual report is due the year after formation and gives April 15
+as the date. The April 15, 2027 reminder applies that rule to the observed
+formation date. Whether a separate personal-property return is required depends
+on the company's circumstances and the filing year's instructions.
+
+No filing, document order, payment, principal-office change, or resident-agent
+change was submitted. Exact address and resident-agent details are omitted.
 
 ## What it covers
 
-Legal existence, the liability shield, and the authority to contract as a
-business. Also the name itself: the entity name is what appears on the Provider
-Agreement and every customer-facing legal page.
+The displayed legal name, registration, formation date, and standing at the
+time checked. Formation alone does not establish who may bind the LLC or settle
+questions about liability protection in particular circumstances.
 
 Related but **separate documents**, each wanting its own card once it exists:
 
@@ -43,6 +64,6 @@ Related but **separate documents**, each wanting its own card once it exists:
 
 ## Reminder
 
-The annual report deadline is the one that bites — it is easy to miss and
-forfeiture is the consequence. Set a reminder when you fill this in, and note it
-here.
+The April 15, 2027 annual-report deadline is recorded in `OPEN-ITEMS.md` for the
+existing deadline workflow. Keep private originals and ownership authority
+separate from this completed public-registry check.

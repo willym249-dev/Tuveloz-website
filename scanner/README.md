@@ -9,6 +9,14 @@ credential and the owner's running background task. The site quarantines uploads
 until an authenticated, complete scan result arrives. Identity, insurance,
 licensing, provider acceptance and launch approval remain separate checks.
 
+**Verified operational state (September 26, 2026):** manual and automatically
+scheduled production scans of the marked synthetic PDF completed September 6.
+Read-only live records and current application proof validation were reconciled
+September 26; the later empty queue did not mean those tests were missing.
+The proof's 30-day limit is October 6. See the
+[activation record](../docs/operations/evidence-scanner-activation.md) before
+repeating setup or claiming a fresh file scan.
+
 ## What it checks
 
 - Evidence: PDF, JPG, PNG or WebP, at most 3,500,000 bytes. Message images retain

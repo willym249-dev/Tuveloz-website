@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-25
+- **Last reviewed:** 2026-09-26
 - **Applies to:** `EVIDENCE_SCAN_PROVIDER`, the supported document scanners,
   and the `evidence_file_security_and_scanner` launch gate
 
@@ -12,10 +12,11 @@ in the active deployment on September 5. No secret value was printed or saved
 locally during callback-secret setup. The current deployment configuration selects
 the owner-PC ClamAV runner. Its separate `SELF_HOSTED_SCAN_SECRET` is encrypted
 in Cloudflare and protected locally with the owner's Windows account. On
-September 25 the scheduled task, signed production claim, and current antivirus
-definitions were observed. The queue was empty, so no file reached a terminal
-scan result. This proves the connection and current runner state, not continuous
-availability or the missing end-to-end file canary.
+September 26 the scheduled task and latest signature-refresh status were checked
+again. The 09:29 UTC run completed without errors and found an empty queue.
+That does not invalidate the completed September 6 manual and automatic file
+tests, whose production records and current application validation were rechecked
+September 26. See the dated verification below; do not repeat first activation.
 The last account check showed Free Tier. On September 5 the first recorded
 Basic payment attempt failed; no paid subscription was confirmed. The owner
 has since asked to reduce document uploads to 3.5 MB and add photo resizing.
@@ -29,11 +30,37 @@ Do not purchase a plan, retry payment or send that email as part of scanner work
 A free, owner-PC alternative is implemented in
 [`../../scanner/README.md`](../../scanner/README.md). It combines ClamAV with
 strict PDF/image checks and a signed outbound connection. It has its own
-credential, installation, verification and rollback procedure. Local tests do
-not establish launch readiness; the observed live connection still needs a
-real permitted file result.
+credential, installation, verification and rollback procedure. Its live synthetic
+file results are verified below. Local tests alone do not establish operational
+proof, and a scanner result does not approve the separate launch review.
 The Cloudmersive instructions below remain a reference for a separately chosen
 vendor integration.
+
+## Verified ClamAV production evidence
+
+The September 25 handoff incorrectly described the first complete file test as
+missing. An empty queue observation cannot establish that no earlier file was
+processed. September 26 read-only production queries confirmed four request/result
+rows, two retained scanner receipts, and two authenticated audit records for the
+existing explicitly synthetic PDF and test provider.
+
+- Manual production scan completed September 6 at 15:10:45 UTC, clean.
+- The scheduled Windows task independently claimed, downloaded, scanned, and
+  recorded the same synthetic PDF at 15:49:24 UTC, clean.
+- September 26 at 09:38:34 UTC, those live rows matched the recovered production
+  snapshot. The current `runtimeLaunchReadiness()` implementation accepted their
+  receipt, request, result, audit hash, timing, and binding checks in a read-only
+  local evaluation with outbound calls blocked. No live credentials were loaded.
+- The evidence remains pending owner review and the synthetic provider is not
+  approved. No real applicant document was used or falsely accepted.
+- This recheck did not run a new scan, create another provider, alter production
+  data, or approve a launch gate. The last complete scan remains September 6.
+
+The latest proof reaches the existing 30-day limit on **October 6, 2026 at
+15:49:24 UTC**. `OPEN-ITEMS.md` records an October 4 freshness checkpoint. A
+truthful permitted upload or explicitly synthetic operational check can refresh
+it through the actual scanner; do not update result timestamps or approval rows
+to make old evidence appear new. Current task health does not extend this limit.
 
 ## Provider upload sizing
 
@@ -143,20 +170,23 @@ skips release stamping and health verification and is emergency-only.
 
 ## How to verify — this is the part that matters
 
-**A green config is not a working scanner.** The launch gate is satisfied by a
+**A green config is not a working scanner.** The operational proof is checked by a
 canary in `lib/runtime-launch-readiness.ts` that queries D1 for a real terminal
 scan row, and it cannot be satisfied by configuration at all. The row must be:
 
-- `scanProvider = "cloudmersive"` and the expected engine version
+- From the selected scanner: `clamav` with a retained validated policy/antivirus
+  receipt and matching original lease, or `cloudmersive` with its expected engine
 - status `clean`, `infected`, or `failed` — a real outcome, not `pending`
-- `reviewedBy = "authenticated_scanner:cloudmersive"` — written by the scanner
+- `reviewedBy = "authenticated_scanner:<selected provider>"` — written by the scanner
   itself, so a dashboard action cannot forge it
 - completed **within the last 30 days**, with its audit record written within
   **5 minutes** of completion
 
-So verification is: upload a real evidence file, wait for a cron pass, and
-confirm a terminal row appears. Until one does, the gate stays unanswerable no
-matter what the config says.
+Initial verification uses a permitted file and the selected scanner's real
+processing path, then verifies its terminal result and retained proof. The
+ClamAV canary above is already complete; refresh it when the age limit requires
+it. A real applicant's evidence must still undergo its separate authenticity
+review. Cloudmersive's cron instructions do not describe the active ClamAV task.
 
 ```bash
 npm run readiness

@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-25
+- **Last reviewed:** 2026-09-26
 - **Applies to:** the 18 launch gates in `lib/launch-readiness.ts`
 
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
@@ -28,16 +28,17 @@ adviser. An official-source requirement is not a requirement to hire counsel;
 that remains an owner choice. A source link also cannot substitute for an
 actual insurance decision, vendor result, or review of the implemented workflow.
 
-**The scanner and identity integrations are built, but their operational proof
-is incomplete.** Do not repeat account creation or describe these as unbuilt:
+**The scanner's operational proof is verified; a genuine provider Identity
+result remains incomplete.** Do not repeat completed setup or file tests:
 
 | Gate | Blocker |
 | --- | --- |
-| `evidence_file_security_and_scanner` | The owner-operated ClamAV path is selected. Its scheduled task, signed production claim connection, and current definitions were observed on September 25, but the queue was empty. A real permitted file still needs a terminal result and retained readiness receipt; file safety does not establish document authenticity. |
+| `evidence_file_security_and_scanner` | September 6 manual and automatic synthetic-file results were confirmed in live production records September 26, and the current application accepted their retained receipts and audit binding. The owner task's latest run succeeded. Proof freshness expires October 6; security/capacity review remains separate. File safety does not establish document authenticity. |
 | `provider_identity_and_business_verification` | Live Stripe Identity is configured with its dedicated key, signed webhook, and `stripe_identity` provider setting. The live review page still lacks a current approved session bound to a genuine provider's active personnel record. |
 
-Reviewers can examine the implementation now. Final approval still needs the
-missing operational results. Stripe business-account verification is separate
+Reviewers can examine the implementation and scanner proof now. Final approval
+still needs the genuine provider Identity result and each gate's review evidence.
+Stripe business-account verification is separate
 from a provider applicant's ID and selfie check.
 
 Google Workspace mail loads again, and the business inbox contains activation
@@ -240,9 +241,11 @@ before treating it as ordinary product work.
 
 ## Suggested order
 
-1. **Finish the scanner canary.** Use one real, permitted provider file through
-   the selected ClamAV path. Preserve quarantine until the terminal result,
-   audit binding, and retained readiness receipt agree.
+1. **Keep the verified scanner proof current.** The manual and automatic file
+   tests are complete; see the activation record. The October 4 checkpoint
+   precedes its October 6 freshness limit. A permitted upload refreshes proof
+   only through the actual scanner and retained receipt; it never approves
+   provider evidence automatically.
 2. **Record business-mail evidence.** Mail currently loads and payment evidence
    exists; use a fresh Google Admin verification only when exact subscription
    detail is needed for a gate. No password belongs in chat or this repository.

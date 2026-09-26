@@ -23,12 +23,20 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 - The business Gmail inbox loads. Activation and payment receipts are present.
   Exact Google Admin subscription details still require a fresh account
   verification; an old suspension warning is not current proof of a problem.
-- The owner-operated ClamAV task is scheduled, its production claim connection
-  is authenticated, and antivirus definitions were current during this review.
-  The queue was empty, so this proves the runner connection and schedule, not a
-  complete file scan.
+- The owner-operated ClamAV task is scheduled and its September 26 09:29 UTC
+  run completed without errors after a successful signature refresh. The earlier
+  "missing complete file scan" statement was incorrect: September 6 manual and
+  automatic synthetic-file scans both passed. September 26 live rows matched
+  the recovered snapshot and current application proof validation passed.
+  Evidence/provider approval remained pending; no new scan was run. The proof
+  needs refreshing before October 6 under the existing 30-day rule.
 - The website and the reviewed Instagram, TikTok, Facebook, and X profiles use
   the same Tuveloz mark.
+- September 26 official Maryland Business Express lookup confirms TUVELOZ LLC
+  is Active and in Good Standing, formed July 24, 2026. The public formation
+  record is complete; ownership authority, private originals, insurance, and
+  service licensing remain separate evidence. The first annual-report deadline
+  is tracked for April 15, 2027 using Maryland's published next-year rule.
 
 ## Published code and its activation limits
 
@@ -84,8 +92,9 @@ and selfie check; no identity document belongs in this repository or chat. A
 test-only owner who does not plan to offer vehicle services must use test mode
 rather than creating a misleading live provider application.
 
-The first truthful uploaded provider document can also serve as the missing
-end-to-end scanner canary. A clean malware scan does not prove that a license,
+The scanner's synthetic operational test is complete. The first truthful
+provider upload still needs its own scan and review, and can refresh the dated
+operational proof. A clean malware scan does not prove that a license,
 registration, certificate, or insurance policy is authentic. Authenticity
 requires matching the applicant and service to the issuer, insurer, or official
 registry and recording the source and date of that check.
@@ -104,5 +113,5 @@ requests and payments must stay closed until they are resolved:
   response, refunds, taxes, and evidence-review procedures need final recorded
   decisions.
 
-Cloudmersive is a retained fallback. A paid upgrade is not needed while the
-owner-operated scanner remains reliable and completes the real-file canary.
+Cloudmersive is a retained fallback. No paid upgrade was needed for the verified
+owner-operated scanner. Keep its task health and dated proof current.
