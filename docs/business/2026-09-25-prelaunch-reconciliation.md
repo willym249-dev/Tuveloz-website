@@ -13,6 +13,13 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
+Prepared after the release below: automatic **owner** incident alerts, with
+quarantined test previews and scheduled recovery. Local build, all 733 tests,
+typecheck, lint, and Chromium/WebKit incident checks passed. This preparation
+is not a production-release claim. The incident route remains test-only;
+participant/insurer messages, actual responder coverage, and launch approval
+remain separate. See the incident runbook for behavior and evidence.
+
 - Last confirmed release at this record update:
   `39431aa1e1a599de9dad9157ee640fd0a9066700` (PR #242), built September 26 at
   19:14:18 UTC. Its release workflow passed and public health at 19:16:20 UTC

@@ -11,6 +11,41 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Prepare durable automatic owner incident alerts
+
+Saved incident reports now queue a bilingual owner alert with a protected
+review link and report reference. Recipients come only from owner configuration;
+private narratives, locations, photos, and participant contacts stay out of
+the email. No participant, insurer, or emergency-service message is automatic.
+The existing test-only route remains locked to persisted test assignments.
+Test/mixed/unknown-flag records and staging alerts are quarantined, with zero
+delivery attempts. A deterministic primary key and event key preserve the first
+classification and prevent duplicate queueing under concurrency or retries.
+
+An interrupted enqueue leaves the saved incident/hold intact and returns a
+truthful pending notice. The existing fifteen-minute Worker schedule recovers
+missing alerts from open reports before flushing email. Closed historical
+reports are not backfilled. Delivery uses the existing receipt requirement,
+bounded retries, and exhaustion reporting. The report response and Spanish
+dictionary distinguish saved, queued, and quarantined states.
+
+All 733 tests and production build passed. Typecheck and lint passed (the
+existing language-navigation warning remains). Twelve Chromium/WebKit incident
+scenarios passed, including saved form clearing and retained success when an
+alert is pending. New tests use actual migrated SQLite, notification code,
+event policy, and intercepted transport; no real email was sent. The route
+test also proves a missing owner address cannot erase a saved report and that
+recovery queues its alert without resubmission. Two existing evidence checks
+now locate their incident by ID rather than assuming it is first in the list.
+
+Proof logs: `incident-alert-focused-20260926.log`,
+`incident-alert-suite-20260926.log`, `incident-alert-browser-20260926.log`,
+`incident-alert-lint-20260926.log`, and `incident-alert-typecheck-20260926.log`.
+No migration, launch flag, live payment, provider approval, policy release,
+paid service, or production change was made during local implementation.
+The completed mailbox rehearsal and earlier local handoff commits are preserved.
+Release review is next; automatic owner-alert inbox delivery is not yet proven.
+
 ## 2026-09-26 - Verify the manual support email round trip
 
 After the owner restored business Google sign-in, sent one owner-authorized

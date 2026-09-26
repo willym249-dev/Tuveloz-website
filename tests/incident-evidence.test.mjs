@@ -75,7 +75,7 @@ test("incident evidence is private, append-only, job-bound and atomically audite
       assert.equal(String(url), issuer + "/cdn-cgi/access/certs", "external request forbidden");
       return Response.json({ keys: [publicKey] });
     };
-    console.error = (...args) => assert.match(String(args[0]), /Unable to confirm incident evidence link/);
+    console.error = (...args) => assert.match(String(args[0]), /Unable to confirm incident evidence link|Unable to queue incident owner alert/);
     for (const entry of JSON.parse(readFileSync(join(repo, "drizzle/meta/_journal.json"), "utf8")).entries) {
       for (const statement of readFileSync(join(repo, "drizzle", entry.tag + ".sql"), "utf8").split("--> statement-breakpoint")) {
         if (statement.trim()) database.exec(statement);
@@ -95,6 +95,7 @@ test("incident evidence is private, append-only, job-bound and atomically audite
       export { GET, POST } from "./app/api/job-operations/route";
       export { POST as upload } from "./app/api/job-evidence/route";
       export { createAccountSession, sessionCookie } from "./lib/account-auth";
+      export { recoverIncidentOwnerAlerts } from "./lib/incident-notifications";
     `, resolveDir: repo, loader: "ts" }, bundle: true, platform: "node", format: "cjs", outfile: bundle, target: "node22", logLevel: "silent",
       plugins: [{ name: "local-bindings", setup(builder) {
         builder.onResolve({ filter: /^cloudflare:workers$/ }, () => ({ path: "env", namespace: "fixture" }));
@@ -134,6 +135,27 @@ test("incident evidence is private, append-only, job-bound and atomically audite
     const get = (headers = customer, query = "") => api.GET(new Request(origin + "/api/job-operations?requestId=synthetic-job" + query, { headers }));
     const report = await post({ action: "report-incident", incidentType: "property_damage", severity: "serious", summary: "SYNTHETIC: mark noticed on vehicle during rehearsal" });
     assert.equal(report.status, 201); const incidentId = report.body.incidentId;
+    assert.equal(report.body.notificationStatus, "test_only");
+    assert.match(report.body.notice, /no email will be sent/);
+    const ownerAlert = database.prepare("SELECT * FROM email_notification_outbox WHERE event_key=?")
+      .get(`test:incident:job-report:${incidentId}`);
+    assert.equal(ownerAlert.recipient_email, owner);
+    assert.equal(ownerAlert.attempts, 0); assert.equal(ownerAlert.sent_at, "");
+    await t.test("an alert configuration failure preserves the saved report and recovers without resubmission", async () => {
+      state.env.OWNER_EMAIL = "";
+      let reported;
+      try {
+        reported = await post({ action: "report-incident", incidentType: "other", severity: "low",
+          summary: "SYNTHETIC: saved report must survive notification failure" });
+      } finally { state.env.OWNER_EMAIL = owner; }
+      assert.equal(reported.status, 201); assert.equal(reported.body.notificationStatus, "pending");
+      assert.match(reported.body.notice, /Do not submit the report again/);
+      const saved = row(reported.body.incidentId); assert.equal(saved.hold_payments, "yes");
+      assert.deepEqual(await api.recoverIncidentOwnerAlerts(), { queued: 1, failed: 0 });
+      assert.deepEqual(row(saved.id), saved);
+      assert.equal(database.prepare("SELECT count(*) n FROM email_notification_outbox WHERE event_key=?")
+        .get(`test:incident:job-report:${saved.id}`).n, 1);
+    });
     const initial = row(incidentId);
     const upload = async (note, image = false) => {
       const form = new FormData();
@@ -174,7 +196,7 @@ test("incident evidence is private, append-only, job-bound and atomically audite
         assert.equal(result.headers.get("x-content-type-options"), "nosniff");
         assert.deepEqual(Buffer.from(await result.arrayBuffer()), png);
         const listing = await (await get(headers)).json();
-        assert.deepEqual(listing.incidents[0].evidenceIds, [photoId]);
+        assert.deepEqual(listing.incidents.find(item => item.id === incidentId).evidenceIds, [photoId]);
         assert.equal(listing.evidence.length, 2); assert.ok(listing.evidence.every(item => !("imageKey" in item)));
       }
       assert.equal((await get(ownerHeaders, `&evidenceId=${noteId}`)).status, 404);
@@ -225,7 +247,7 @@ test("incident evidence is private, append-only, job-bound and atomically audite
       assert.equal((await link(photoId)).status, 409);
       database.prepare("UPDATE job_incidents SET status='open',evidence_references='not-json' WHERE id=?").run(incidentId);
       assert.equal((await link(photoId)).status, 409);
-      assert.equal((await (await get()).json()).incidents[0].evidenceIds, null);
+      assert.equal((await (await get()).json()).incidents.find(item => item.id === incidentId).evidenceIds, null);
       database.prepare("UPDATE job_incidents SET evidence_references=? WHERE id=?").run(before.evidence_references, incidentId);
       database.exec("UPDATE customer_requests SET is_test_job='no' WHERE id='synthetic-job'");
       try {

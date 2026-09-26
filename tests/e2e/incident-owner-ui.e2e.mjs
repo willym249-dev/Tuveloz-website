@@ -62,7 +62,11 @@ try {
           requests.push(request.postDataJSON());
           if (request.postDataJSON().action === "report-incident") {
             reported = true;
-            return route.fulfill({ status: 201, json: { ok: true, incidentId: "emergency-report", workStopped: true, paymentHold: true } });
+            return route.fulfill({ status: 201, json: { ok: true, incidentId: "emergency-report", workStopped: true, paymentHold: true,
+              notificationStatus: role === "customer" ? "test_only" : "pending",
+              notice: role === "customer" ? "Test report saved. The owner alert is quarantined; no email will be sent."
+                : "Report saved. The owner alert is still pending. Do not submit the report again.",
+            } });
           }
           if (request.postDataJSON().action === "link-incident-evidence") {
             if (denyLink) { denyLink = false; return route.fulfill({ status: 409, json: { error: "The job changed. Refresh the incident before linking this record." } }); }
@@ -140,6 +144,10 @@ try {
             await reportForm.getByRole("button").click();
             const incident = page.locator(".job-record-card").filter({ has: page.getByText("Synthetic emergency-contact report", { exact: true }) });
             await incident.waitFor();
+            await page.getByText(actorRole === "customer"
+              ? "Test report saved. The owner alert is quarantined; no email will be sent."
+              : "Report saved. The owner alert is still pending. Do not submit the report again.", { exact: true }).waitFor();
+            assert.equal(await reportForm.getByLabel("What happened", { exact: true }).inputValue(), "", "a saved report clears the form even if its alert is pending");
             assert.equal(requests.length, before + 1);
             assert.equal(requests.at(-1).emergencyServicesContacted, true);
             assert.equal(requests.at(-1).severity, "low");
