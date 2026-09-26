@@ -36,6 +36,8 @@ When you close something significant, write a matching entry in
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-09-30 | Finish the private production backup activation and isolated restore rehearsal. September 25 account check: D1 Time Travel covers seven days, but no backup bucket or Workflow is deployed. Review the scoped export credential, first-export timing, and local retention fix before activation. This is an internal review target, not an external deadline | hello@tuveloz.com | open |
+| 2026-10-02 | Check Google's pending Not open to the public Maps correction and refreshed search snippets. Homepage and both signup indexing requests were accepted; Facebook location removal and TikTok visibility corrections are complete. Review checkpoint only; Google controls processing time | hello@tuveloz.com | open |
 | 2026-09-07 | Complete the owner-only Google Workspace service-continuity check and record the outcome privately. Completed September 25: the business inbox loads and activation and payment receipts are present. Exact Admin subscription details still require fresh account verification before they can be used as launch-gate evidence | hello@tuveloz.com | done |
 | 2026-08-24 | Name a person to monitor `dmarc@tuveloz.com`. Receipt is no longer in question — checked 2026-08-16, Google's aggregate reports do arrive (three on file, 08-08 through 08-12), and most are unread. Only the reader is missing, and until someone reads them the `rua` address is decorative and DMARC stays at `p=none` | hello@tuveloz.com | open |
 | 2026-09-14 | Rotate the DKIM key for `updates.tuveloz.com` to 2048-bit; Resend issued the current 1024-bit default | hello@tuveloz.com | open |

@@ -5,14 +5,18 @@
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
 
-This is the current handoff. It separates observed production behavior from
-local work that has not been published and real-world evidence that code cannot
-create.
+This is the current handoff. It separates published code, observed production
+behavior, services awaiting activation, and real-world evidence that code cannot
+create. Follow-up verification used GitHub's deployment and monitor results;
+earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-- `https://tuveloz.com/api/health` reports the application, D1 database, and
-  required schema ready on release `cf9767874f085e7a5dac9270bdf07ce35ecacfe6`.
+- Release `8ae3dd1ffd83cc711c41c21a2a2756a85f60aeb6` (PR #228) deployed
+  successfully through GitHub Actions on September 25 at 12:58 UTC. The three
+  latest production-monitor runs reviewed passed, including September 26 at
+  00:41 UTC. The monitor checks the application, D1, required schema, and closed
+  customer-launch gates. No pull requests were open at this check.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
 - The business Gmail inbox loads. Activation and payment receipts are present.
@@ -25,33 +29,39 @@ create.
 - The website and the reviewed Instagram, TikTok, Facebook, and X profiles use
   the same Tuveloz mark.
 
-## Prepared and locally verified, but not published
+## Published code and its activation limits
 
-- An hourly production health workflow that checks the database, schema, and
-  closed launch gates without secrets or paid services.
-- A private daily D1-and-R2 backup Worker, retention policy, integrity checks,
-  and isolated-restore procedure.
+- The hourly production health workflow is published and its recent scheduled
+  runs passed. Owner notification delivery still depends on GitHub notification
+  settings; a passing run does not prove that a failure alert reached the owner.
+- The private daily D1-and-R2 backup Worker, retention policy, integrity checks,
+  and isolated-restore procedure are in main. The separate backup Workflow is
+  **not deployed**: the signed-in Cloudflare CLI returned no deployed Workflows.
+  A real production backup and isolated restore have not been proved.
 - A private multi-AI workspace with preview-only defaults, file-boundary checks,
   provider-call caps, output caps, and current model overrides. No API key,
   provider account, paid credit, or live AI API call was created.
 - Warm English and Spanish provider-recruitment copy that states the actual
   phase and does not promise approval, queue position, jobs, income, or a launch
   date.
-- A dated public-profile audit and truthful replacement captions.
+- The public-profile audit records completed Facebook and TikTok corrections,
+  accepted Search Console requests, and the pending Google Maps correction.
 
-These changes have no production effect until reviewed, published, and deployed
-through the normal release process.
+Publishing the backup source or the private AI workspace does not activate those
+services. No new AI subscription, API spend, or backup deployment was performed
+during this follow-up.
 
 ## Still required before the owner application
 
-1. Finish the repository-wide verification and review the final diff.
-2. Publish the reviewed change as a pull request and let the required checks
-   finish.
-3. Correct the three public-profile issues recorded in
-   [`2026-09-25-public-profile-audit.md`](./2026-09-25-public-profile-audit.md).
-4. Activate the private backup only after the Cloudflare account is signed in,
-   the private backup bucket and least-privilege token exist, and the first
-   isolated restore succeeds.
+1. Complete the backup activation prerequisites in
+   [`production-backup-activation.md`](../operations/production-backup-activation.md):
+   verify usage and permissions, prepare the private bucket and narrowly scoped
+   credential, and review production-export impact before deployment.
+2. Prove the first backup and a restore into isolated nonproduction resources.
+   A source-code test is not a production recovery test.
+3. Keep the remaining address and real-world evidence items separate from the
+   completed public-profile corrections. Google Maps review and refreshed search
+   snippets remain outside Tuveloz's direct control.
 
 ## Owner application — last step
 
