@@ -227,6 +227,41 @@ test("provider uploads recover from interrupted persistence without losing docum
       assert.equal(count("email_notification_outbox"), 2);
       assert.equal(raw.prepare("SELECT attempts FROM email_notification_outbox WHERE id=?").get(incident.id).attempts, 5);
     });
+    await t.test("an email response without a valid receipt never claims success", async () => {
+      for (const response of [
+        () => Response.json({}),
+        () => Response.json({ id: " " }),
+        () => Response.json({ id: 123 }),
+        () => Response.json(null),
+        () => new Response("not JSON", { status: 200 }),
+        () => new Response(null, { status: 204 }),
+      ]) {
+        reset(); seedEmail();
+        const deliveryKeys = []; let calls = 0;
+        globalThis.fetch = async (url, options) => {
+          assert.equal(String(url), "https://api.resend.com/emails");
+          deliveryKeys.push(options.headers["Idempotency-Key"]);
+          return ++calls === 1 ? response() : Response.json({ id: "synthetic-delivery-id" });
+        };
+        await api.flushPendingEmailNotifications();
+        const failed = raw.prepare("SELECT * FROM email_notification_outbox WHERE id='synthetic-mail'").get();
+        assert.equal(failed.status, "failed", "HTTP success alone must not mark a message sent");
+        assert.equal(failed.attempts, 1);
+        assert.equal(failed.sent_at, "");
+        assert.ok(failed.last_error);
+        await api.flushPendingEmailNotifications();
+        await api.flushPendingEmailNotifications();
+        assert.equal(calls, 2, "confirmed acceptance must not send again");
+        assert.ok(deliveryKeys[0]);
+        assert.equal(new Set(deliveryKeys).size, 1, "retry must preserve the idempotency key");
+        const sent = raw.prepare("SELECT * FROM email_notification_outbox WHERE id='synthetic-mail'").get();
+        assert.equal(sent.status, "sent");
+        assert.equal(sent.attempts, 2);
+        assert.ok(sent.sent_at);
+        assert.equal(sent.last_error, "");
+        assert.equal(count("email_notification_outbox"), 1);
+      }
+    });
     await t.test("an ambiguous email response retries the same delivery key", async () => {
       reset(); seedEmail();
       const deliveryKeys = new Set(); let calls = 0;

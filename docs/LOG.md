@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Require an email-service receipt before recording a send
+
+The incident-message delivery follow-up found that the shared email outbox
+marked any HTTP-success response sent, even an empty or malformed body without
+a message ID. The new real-SQLite regression reproduced that false success.
+The sender now requires a nonempty string receipt ID. An uncertain response
+leaves the record failed/retryable with no sent timestamp; the retry keeps the
+same idempotency key. A later valid receipt records acceptance once. This is
+service acceptance, not proof of delivery to an inbox.
+
+All 726 tests and the production build passed, plus lint (one existing unrelated
+warning) and typecheck. The focused checks cover six malformed-success response
+shapes, recovery, unchanged keys, and no resend after confirmation, alongside
+the existing test-mail quarantine and exhausted-delivery controls. No real mail
+was sent by these tests and no database schema or launch lock changed.
+
+The business Gmail session requires fresh Google password verification. The
+sign-in tab was retained and the owner was asked to complete it. No new message
+was sent; the actual mailbox round trip remains unverified. The existing
+incident runbook now gives the exact bilingual test, receipt/reply checks,
+private evidence requirements, and manual-response handoff. It does not imply
+automatic incident alerts, insurer notice, staffing coverage, or a launch
+approval. Existing completed releases and rehearsals were preserved. Release
+publication is recorded separately after verification.
+
 ## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
 
 The unfinished incident-process review found that checking emergency services

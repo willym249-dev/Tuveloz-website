@@ -193,6 +193,57 @@ A draft, queue entry, or copied message is not proof of delivery. If delivery
 fails, record it and use an authorized alternative channel; never mark a notice
 sent simply to clear the review screen.
 
+### Manual delivery rehearsal and operating handoff
+
+Use the existing business mailbox for the manual response process. A Google
+sign-in prompt does not mean the paid subscription is suspended. On September
+26 the business mailbox required fresh sign-in, so no new send or receipt was
+claimed. The owner authorized continuing the delivery rehearsal; only the
+owner's established test inbox and business inbox are intended recipients.
+
+1. Confirm access to both inboxes. Send a clearly labeled **TEST ONLY — no real
+   incident** message from the business inbox to the owner-controlled test
+   inbox. Include the English and Spanish samples below, with no attachments,
+   participant information, insurer notice, or real incident identifier.
+2. Read that exact message in the receiving inbox. Check the displayed sender,
+   destination, subject, both language samples, and whether it landed in Inbox
+   or Spam. A Sent-folder entry or an API success is not this check.
+3. Reply on the same thread with a short test acknowledgement. Read that exact
+   reply in the business inbox to verify the return channel. Stop after this
+   round trip; do not contact customers, providers, or insurers.
+4. Retain message identifiers, received timestamps, placement, and the reply
+   outcome privately. Record only sanitized pass/fail results here. A missing
+   receipt stays unconfirmed; inspect the existing thread before any retry.
+
+English sample: “TEST ONLY. We received this practice report. No real incident,
+work stoppage, or payment hold has been created. Please reply ‘Test received’
+so we can check that replies reach Tuveloz. No other action is needed.”
+
+Spanish sample: “SOLO UNA PRUEBA. Recibimos este reporte de práctica. No se ha
+creado ningún incidente real, pausa de trabajo ni retención de pago. Responde
+‘Prueba recibida’ para comprobar que las respuestas llegan a Tuveloz. No hace
+falta hacer nada más.”
+
+This checks the **manual mailbox round trip**, not incident-triggered website
+mail, delivery to every email provider, a staffing commitment, or emergency
+dispatch. Before launch, the owner still needs to name the person who checks
+the incident console and inbox, set actual coverage hours and a fallback
+contact, and obtain the required process review. Those cannot be inferred from
+a successful test message.
+
+For a real incident, the responder records a next-update deadline after checking
+availability, sends each participant a separate factual message, and logs the
+outcome against the incident privately. If the business mailbox is unavailable,
+keep delivery pending and use only a previously authorized, verified alternate
+channel. Never expose incident details through a public social-media reply.
+
+The website outbox's `sent` state records email-service acceptance, not an inbox
+receipt. Its sender now requires a valid message ID in the service response;
+empty or malformed acknowledgements stay retryable under the same idempotency
+key. The [Resend send API](https://resend.com/docs/api-reference/emails/send-email)
+documents that response. Isolated tests of this behavior do not complete the
+mailbox rehearsal or authorize notices from test-only incident records.
+
 ## Scoped official-source check — September 26, 2026
 
 This check supplies references for the existing review packet. It is not a
