@@ -39,6 +39,7 @@ import {
 } from "../../../lib/job-operations";
 import { verifyOwnerRequest } from "../../../lib/owner-auth";
 import { incidentEvidenceIds, linkIncidentEvidence } from "../../../lib/incident-evidence";
+import { queueIncidentOwnerAlert } from "../../../lib/incident-notifications";
 import { getJobEvidenceImage } from "../../../lib/job-evidence-images";
 import {
   evaluateJobScopeFacts,
@@ -1455,7 +1456,21 @@ export async function POST(request: Request) {
       reasonCode: incidentType,
       details: { incidentId, severity, holdPayments: true },
     });
-    return response({ ok: true, incidentId, workStopped: mustStop, paymentHold: true }, 201);
+    let notificationStatus: "queued" | "test_only" | "unavailable" | "pending" = "pending";
+    try {
+      notificationStatus = await queueIncidentOwnerAlert(incidentId);
+    } catch {
+      // The report and hold are already saved. Scheduled recovery retries the
+      // alert without asking the participant to submit another incident.
+      console.error("Unable to queue incident owner alert", { incidentId });
+    }
+    return response({ ok: true, incidentId, workStopped: mustStop, paymentHold: true, notificationStatus,
+      notice: notificationStatus === "test_only"
+        ? "Test report saved. The owner alert is quarantined; no email will be sent."
+        : notificationStatus === "queued"
+          ? "Report saved. An owner alert is queued; email delivery is not yet confirmed."
+          : "Report saved. The owner alert is still pending. Do not submit the report again.",
+    }, 201);
   }
 
   if (action === "submit-invoice") {

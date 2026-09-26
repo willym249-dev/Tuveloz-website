@@ -17,6 +17,9 @@
  */
 
 export const spanishText: Record<string, string> = {
+  "Test report saved. The owner alert is quarantined; no email will be sent.": "Reporte de prueba guardado. El aviso al administrador está bloqueado; no se enviará ningún correo.",
+  "Report saved. An owner alert is queued; email delivery is not yet confirmed.": "Reporte guardado. El aviso al administrador está pendiente de envío; aún no se ha confirmado la entrega del correo.",
+  "Report saved. The owner alert is still pending. Do not submit the report again.": "Reporte guardado. El aviso al administrador sigue pendiente. No vuelva a enviar el reporte.",
   "Your application needs updated details before you can finish the checklist.": "Necesitamos actualizar los datos de su solicitud para que pueda completar la lista de requisitos.",
   "Let's finish your application details": "Completemos los datos de su solicitud",
   "We need your current work arrangement and selected services before we can prepare your checklist.": "Necesitamos saber cómo trabaja actualmente y qué servicios desea ofrecer para preparar su lista de requisitos.",

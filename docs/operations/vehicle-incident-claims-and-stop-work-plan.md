@@ -126,13 +126,35 @@ insurer's verified channel and its delivery evidence is retained privately.
 
 ## What each side is told
 
-**Delivery status, checked September 26:** the incident route is a test-only
-workflow and does not send customer, provider, owner, or insurer notifications.
-The owner can review incidents in the compliance console. The messages below
-describe the required response procedure, not a verified automatic delivery
-feature. A production communication process and its delivery rehearsal remain
-unfinished; do not remove test isolation or send real notices from synthetic
-incidents to claim completion.
+**Delivery status, September 26 implementation:** saved reports now queue a
+bilingual owner alert using persisted assignment records and the configured
+owner mailbox. The alert contains a reference and a protected review link,
+not the report narrative, photos, location, or participant contact details.
+The incident route remains test-only: test, mixed, unknown-flag, and staging
+records create quarantined alerts that never send. No customer, provider, or
+insurer message is sent automatically. Participant contact still follows the
+review procedure below, including sensitive complaints.
+
+The existing Worker email flush attempts eligible owner alerts after an API
+request. Its fifteen-minute scheduled job also recovers missed enqueueing from
+open reports, then retries the outbox. A stable row ID and event key prevent
+duplicate queueing, and retries retain the same delivery key. Saved test alerts
+cannot become real notices by changing fixture flags. A delivery failure never
+reverses a saved incident or its hold, and the response distinguishes pending,
+queued, and quarantined status. Service acceptance is not inbox delivery.
+Existing open records with valid assignment links are eligible for recovery;
+closed records are not backfilled. This is ordinary support alerting, not
+emergency dispatch or a guaranteed response time.
+
+Local verification passed 733 tests, production build, typecheck, lint (one
+existing warning), and the Chromium/WebKit incident checks. The real SQL tests
+cover privacy, wrong assignment links, interrupted enqueueing, concurrency,
+receipt failure, retries, no duplicate send, and test quarantine. External
+email transport is intercepted. This is implementation/test evidence; check
+the release record before claiming deployment. The separate manual mailbox
+round trip below passed, but no real incident alert was sent. Owner coverage,
+fallback contact, insurer review, hosted participant upload, and launch
+approval remain outstanding.
 
 **Both sides, promptly and factually:** that an incident is recorded, the
 confirmed work status, whether payment is held, and what happens next. A routine
@@ -196,10 +218,19 @@ sent simply to clear the review screen.
 ### Manual delivery rehearsal and operating handoff
 
 Use the existing business mailbox for the manual response process. A Google
-sign-in prompt does not mean the paid subscription is suspended. On September
-26 the business mailbox required fresh sign-in, so no new send or receipt was
-claimed. The owner authorized continuing the delivery rehearsal; only the
-owner's established test inbox and business inbox are intended recipients.
+sign-in prompt does not mean the paid subscription is suspended. The owner
+restored sign-in and the authorized manual round trip passed September 26,
+2026: the bilingual sample reached the owner's established test inbox at
+21:49:08 UTC with an Inbox label, not Spam. Sender, destination, subject, and
+both language samples matched; received headers reported SPF, DKIM, and DMARC
+pass. The same-thread test reply was sent at 21:50:17 UTC and independently
+opened in the business Inbox, with the sender, destination, and reply body
+verified. One sample and one reply were sent, with no attachments or real
+incident. Exact identifiers and the thread screenshot are retained privately
+outside the repository. Do not repeat this completed test merely because an
+earlier log entry records an expired session.
+
+The completed procedure, retained for an explicitly needed future rehearsal:
 
 1. Confirm access to both inboxes. Send a clearly labeled **TEST ONLY — no real
    incident** message from the business inbox to the owner-controlled test

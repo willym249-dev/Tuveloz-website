@@ -202,6 +202,57 @@ Final owner/insurer review remains pending. The plan records the tested scope;
 neither local simulations nor the
 hosted owner check establishes a completed gate or live payout proof.
 
+#### Prepared broker request — not sent; no purchase authorized
+
+The following draft describes the existing marketplace for a coverage review.
+Before sending it, the owner must select a licensed broker and confirm the
+initial services, staffing, expected activity, and any requested private facts.
+Do not invent revenue, claims history, payroll, limits, or a launch date to
+complete a quote form.
+
+> TUVELOZ LLC operates an online marketplace connecting customers in Montgomery
+> County, Maryland, with independent vehicle-service businesses. Tuveloz does
+> not perform repairs or meet customers to provide services. Providers set their
+> own prices and availability, choose which work to accept, and decide lawful
+> repair methods. Customers choose the provider.
+>
+> We are accepting accounts and provider applications. Customer booking and
+> payment remain closed. The owner reports no current platform insurance.
+> Please review coverage for the platform separately from each provider's
+> coverage, including mobile work at customer locations. We can supply the
+> exact proposed service list and exclusions; a broad “auto repair” category is
+> not an approved service scope.
+>
+> Please identify which coverages are needed now and which would be needed
+> before bookings open. Assess liability arising from the marketplace, the
+> service work, credential-review representations, the online assistant, and
+> handling private account and provider documents. Explain any exclusions for
+> vehicle damage, injury, independent providers, mobile work, custody of a
+> vehicle, or technology services. Please identify any gap rather than assuming
+> a provider's policy protects Tuveloz.
+>
+> Please provide comparable written options with the full annual cost, fees,
+> deductible, limits, exclusions, cancellation terms, and any installment cost.
+> Explain the provider evidence you require and how active coverage should be
+> confirmed with the issuer. Include claims contacts, notice deadlines, and
+> review of the incident and stop-work plan. This is a request for information
+> and quotes only; please do not bind coverage or charge anything.
+
+For each quote, record those fields in the owner's private comparison. Treat
+missing answers as unresolved. Have the broker distinguish requirements from
+optional additions and explain why a cheaper option would or would not cover
+the intended scope. Obtain the actual policy/binder and endorsements before
+recording coverage as bound; a quote is not coverage.
+
+Research checked September 26: the [Maryland Insurance Administration's
+commercial insurance FAQ](https://insurance.maryland.gov/Consumer/Pages/Commercial-Insurance-FAQs.aspx)
+recommends assessing the particular business with an insurance professional
+and comparing quotes because premiums vary. Its [company and producer
+search](https://insurance.maryland.gov/consumer/pages/companysearchinstructions.aspx)
+checks licensing; it does not rank insurers or confirm that a specific policy
+covers this marketplace. No broker was contacted, quote submitted, policy
+selected, or fee incurred by preparing this draft.
+
 ### Payment processor
 
 **`stripe_connect_business_model`** — *payments, required*

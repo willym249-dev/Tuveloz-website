@@ -11,6 +11,65 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Prepare durable automatic owner incident alerts
+
+Saved incident reports now queue a bilingual owner alert with a protected
+review link and report reference. Recipients come only from owner configuration;
+private narratives, locations, photos, and participant contacts stay out of
+the email. No participant, insurer, or emergency-service message is automatic.
+The existing test-only route remains locked to persisted test assignments.
+Test/mixed/unknown-flag records and staging alerts are quarantined, with zero
+delivery attempts. A deterministic primary key and event key preserve the first
+classification and prevent duplicate queueing under concurrency or retries.
+
+An interrupted enqueue leaves the saved incident/hold intact and returns a
+truthful pending notice. The existing fifteen-minute Worker schedule recovers
+missing alerts from open reports before flushing email. Closed historical
+reports are not backfilled. Delivery uses the existing receipt requirement,
+bounded retries, and exhaustion reporting. The report response and Spanish
+dictionary distinguish saved, queued, and quarantined states.
+
+All 733 tests and production build passed. Typecheck and lint passed (the
+existing language-navigation warning remains). Twelve Chromium/WebKit incident
+scenarios passed, including saved form clearing and retained success when an
+alert is pending. New tests use actual migrated SQLite, notification code,
+event policy, and intercepted transport; no real email was sent. The route
+test also proves a missing owner address cannot erase a saved report and that
+recovery queues its alert without resubmission. Two existing evidence checks
+now locate their incident by ID rather than assuming it is first in the list.
+
+Proof logs: `incident-alert-focused-20260926.log`,
+`incident-alert-suite-20260926.log`, `incident-alert-browser-20260926.log`,
+`incident-alert-lint-20260926.log`, and `incident-alert-typecheck-20260926.log`.
+No migration, launch flag, live payment, provider approval, policy release,
+paid service, or production change was made during local implementation.
+The completed mailbox rehearsal and earlier local handoff commits are preserved.
+Release review is next; automatic owner-alert inbox delivery is not yet proven.
+
+## 2026-09-26 - Verify the manual support email round trip
+
+After the owner restored business Google sign-in, sent one owner-authorized
+TEST ONLY bilingual sample from the business mailbox to the established
+owner-controlled test inbox. Independent receipt inspection confirmed the
+expected sender, recipient, subject, and complete English/Spanish text. The
+received message was in Inbox, not Spam, at 21:49:08 UTC; its authentication
+headers reported SPF, DKIM, and DMARC pass. A same-thread test acknowledgement
+was sent at 21:50:17 UTC, then opened and checked in the business Inbox.
+
+Private message identifiers, headers, receipt details, and a screenshot stay
+outside Git in `incident-mailbox-roundtrip-20260926.private.json` and the matching
+PNG. Only the sample and its reply were sent. No customer, provider, insurer,
+real incident, attachment, payment, or launch action was involved. Existing
+drafts were preserved. This completes the manual mailbox test; it does not
+implement automatic incident notifications, guarantee delivery to all mail
+providers, or establish incident staffing or insurance coverage.
+
+Updated the existing runbook, reconciliation, deadline row, and local checklist
+to prevent repeating the completed test. Responder/coverage/fallback decisions
+remain open. GitHub showed no open PRs and main remains the verified PR #242
+release. This handoff changes documentation only; no deploy or full code-test
+rerun is needed. Earlier local handoff commits were preserved.
+
 ## 2026-09-26 - Require an email-service receipt before recording a send
 
 The incident-message delivery follow-up found that the shared email outbox
@@ -33,8 +92,28 @@ was sent; the actual mailbox round trip remains unverified. The existing
 incident runbook now gives the exact bilingual test, receipt/reply checks,
 private evidence requirements, and manual-response handoff. It does not imply
 automatic incident alerts, insurer notice, staffing coverage, or a launch
-approval. Existing completed releases and rehearsals were preserved. Release
-publication is recorded separately after verification.
+approval. Existing completed releases and rehearsals were preserved.
+
+PR #242 passed verification `36263773859` and PR build `36263773996`, then
+merged as `39431aa1e1a599de9dad9157ee640fd0a9066700`. All three production jobs
+in `36264460936` passed. Public verification at 19:16:20 UTC confirmed that
+exact release, built 19:14:18 UTC, with application/database/schema ready,
+both `/ai` and `/es/ai` returning 200, and signed-out notifications returning
+401. Accounts/applications remain open; customer requests/payments remain
+closed. The initial verification script mistakenly requested nonexistent
+`/help`; corrected it to the actual linked routes, without changing the site.
+Proof: `email-receipt-release-20260926.json`.
+
+The next independent item now has a prepared, unsent broker inquiry in the
+existing launch briefing. It separates platform/provider coverage and asks
+for comparable full costs, exclusions, claims duties, and requirements now
+versus before bookings. Maryland's official commercial-insurance FAQ and
+licensing-search instructions were checked. No broker was contacted, private
+application submitted, or coverage purchased. The owner still needs to choose
+a broker and confirm the intended first services. The existing September 30
+review checkpoint was clarified; September 28 tracks the pending mailbox
+round trip and named incident responder. These are review checkpoints, not
+launch promises. Both drafts and all earlier completed work are preserved.
 
 ## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
 
