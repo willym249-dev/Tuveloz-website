@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-25
+- **Last reviewed:** 2026-09-26
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,22 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-26 - Approved private backup setup
+
+The owner approved publication, a D1 Read credential scoped to the Tuveloz
+account through October 25, 35-day private backup retention, and an isolated
+recovery rehearsal including the first export's brief signup interruption risk.
+Created that token and the Standard-storage `tuveloz-backups` bucket; the
+dashboard confirms public access is disabled. No plan or billing setting changed.
+PR #229 contains the retention fix. The local OAuth login cannot operate
+Workflows, so a main-only manual deployment workflow uses the existing release
+credential in GitHub's production environment. Bootstrap removes schedules;
+activation requires the separately installed D1 secret. Public Worker and preview
+URLs are disabled. No credential value is stored in source or CI.
+
+Activation, first backup, and restore results must still be recorded separately.
+The owner's application remains last and customer-launch locks are unchanged.
 
 ## 2026-09-25 - Public-profile completion and backup activation review
 

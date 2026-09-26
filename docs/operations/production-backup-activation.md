@@ -28,6 +28,21 @@ Tuveloz production uses two separate stores: D1 for records and a private R2 buc
   nightly backups with an isolated recovery test. Read-only export compatibility
   still needs the first real API check; do not silently switch to Edit if denied.
 
+## September 26 approved setup
+
+The owner approved the exact read-only credential scope and October 25 expiry,
+publication, activation, 35-day retention, and the isolated restore test. The
+token and private `tuveloz-backups` bucket are created; public access is disabled.
+No paid plan was selected. The current local CLI cannot operate Workflows.
+
+Use **Deploy private backups** (`deploy-backups.yml`) from `main`, with the
+existing GitHub production deployment secret. Run `bootstrap` first: it omits
+all schedules. Install `D1_BACKUP_API_TOKEN` directly in that Worker's Cloudflare
+secret settings, then run `activate`. Activation checks the secret's name and
+type without exposing its value. Both public Worker and preview URLs are off.
+The backup key itself must never enter GitHub Actions or a command transcript.
+PR #229 and the first export/restore still need completion evidence.
+
 ## What the backup does
 
 Once activated, every day at 09:07 UTC, the private Cloudflare Workflow:
