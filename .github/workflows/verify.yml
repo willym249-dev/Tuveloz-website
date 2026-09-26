@@ -89,6 +89,9 @@ jobs:
           python -m pip install --require-hashes -r scanner/requirements.txt
           python -m unittest discover -s scanner -p 'test_*.py' -v
 
+      - name: Verify offline database recovery preparation
+        run: python -m unittest discover -s tests -p 'test_prepare_d1_restore.py' -v
+
       - name: Test
         run: npm test
 

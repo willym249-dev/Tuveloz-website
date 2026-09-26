@@ -14,6 +14,41 @@ The separate [production backup activation runbook](./production-backup-activati
 
 ## Production database recovery
 
+### Preparing a D1 export for an isolated restore
+
+Keep the downloaded dump and every prepared output outside all Git checkouts.
+Run the offline helper against the private copy:
+
+```text
+python scripts/prepare-d1-restore.py PRIVATE_BACKUP.sql PRIVATE_PREPARED.sql
+```
+
+The helper creates all tables before inserting records, retains deferred foreign
+keys, and verifies the original and prepared schema, every record, indexes,
+triggers, automatic ID sequences, integrity, and foreign keys in local SQLite.
+It refuses unsupported SQL, an existing output file, or paths inside a checkout.
+Only an aggregate verification report is printed. This does not upload anything.
+
+Use a new isolated D1 database with no application bindings. In Cloudflare D1
+Studio, paste the complete prepared script and choose **Run all in transaction**
+from the Run menu. The ordinary **Run** button executes only the statement at
+the cursor; it is not a full import. Do not add SQL `BEGIN` or `COMMIT` wrappers
+to D1 Studio. Confirm every statement succeeded, then compare every table's row
+count and the schema-object count against the backup. Run `PRAGMA quick_check`
+and `PRAGMA foreign_key_check` separately and retain their results privately.
+Do not repeat a full import into a database that already contains restored data.
+
+The September 26 rehearsal restored 78 tables, 355 records, and 383 schema
+objects into a separate D1 database. Every table count matched, quick check
+returned `ok`, and foreign-key check returned no violations. R2 file recovery
+and application smoke tests are separate requirements, still outstanding for
+that cloud rehearsal. See the [activation record](./production-backup-activation.md).
+
+Cloudflare documents the need to create referenced tables before importing
+their data in its [D1 import guidance](https://developers.cloudflare.com/d1/best-practices/import-export-data/).
+
+### Before changing a production destination
+
 [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) is always enabled on production-storage databases. The documented window is seven days on Workers Free and thirty days on Workers Paid. Inspect the actual database's Time Travel screen and record a current bookmark before a risky maintenance operation. A bookmark identifies a recovery point; it is not an independent copy and expires with the recovery window.
 
 Restoring Time Travel overwrites the database and cancels in-flight queries. Wrangler's remote export also warns that the database cannot serve queries during the export. Do not run either casually against the live site. A production recovery needs a planned maintenance window and explicit approval for its exact target and effect.

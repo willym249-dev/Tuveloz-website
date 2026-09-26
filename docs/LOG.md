@@ -11,6 +11,61 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Isolated Cloudflare database recovery verified
+
+PR #231's application release `36227791081` and PR verification `36227430360`
+both succeeded. Public health at 08:01 UTC reported `0b61ccd`, built at 08:00
+UTC, with application/database/schema ready, onboarding open, and customer
+requests/payments closed. This supersedes the earlier pending-release note.
+
+The approved recovery rehearsal created a separate unbound D1 database named
+`tuveloz-recovery-20260926` and a private Standard R2 bucket with the same name.
+Cloudflare D1 Studio's default Run executes only the current statement; a full
+import requires Run all in transaction. The offline helper
+`scripts/prepare-d1-restore.py` also puts every table definition before data,
+verifies schema/records/automatic IDs against the original dump in SQLite with
+foreign keys enforced, and refuses to place backup data in a Git checkout.
+Its two regression tests pass, and CI now runs them.
+
+The actual isolated cloud import completed: 78 tables, 355 records, and 383
+schema objects, with every table count matching the backup. D1 quick check
+returned `ok`; foreign-key check returned no rows. No live database or
+application binding was changed. The original dump, prepared SQL, and local
+recovery copies remain private and outside source control.
+
+R2 cloud restore is still incomplete: the bucket is empty with public access
+disabled. The ChatGPT Chrome extension requires Allow access to file URLs to
+upload the existing 605-byte fixture. The owner authorized enabling it, but
+browser security policy blocks access to chrome://extension settings; the
+owner must change this switch directly. Do not route around that restriction
+or call the file restore complete. The empty folder marker, exact object paths,
+hashes/metadata, and isolated application checks still need verification.
+The first automatic backup is due at 09:07 UTC and has not yet been observed.
+No plan, billing, launch, credential scope, or live integration was changed.
+
+## 2026-09-26 - Free nightly backup schedule activated
+
+PR #231 merged as `0b61ccd`. The reviewed backup tests, lint, TypeScript check,
+and both deployment configuration dry runs passed. Manual activation run
+`36227836343` succeeded at 07:47 UTC and deployed backup Worker version
+`5a4621b4-9aa3-4f2d-b470-2ee9ddb5f8ae`. Cloudflare's settings screen confirms
+the daily Cron Trigger and its next firing at September 26, 09:07 UTC. No paid
+plan, billing change, public route, or launch switch was added. This confirms
+the installed schedule; it does not yet prove the first automatic firing.
+
+The real manual backup and separate local recovery are already proved below:
+78 database tables, integrity OK, zero foreign-key violations, and both stored
+objects restored with matching hashes. A full Cloudflare D1/R2 restore remains
+a separate open item. All four original downloads were moved out of Downloads
+into the private recovery folder outside the source repository.
+
+At 07:49 UTC, the public website still reports application/database/schema ready
+on `093822e`, with onboarding open and customer requests/payments closed. The
+independent application release run `36227791081` is still running its gated
+checks; do not describe that application release as deployed yet. The backup
+deployment above is separate and complete. Credential renewal is tracked for
+October 18, before the October 25 expiration.
+
 ## 2026-09-26 - First real backup and local recovery passed
 
 The owner explicitly approved expanding the existing Tuveloz backup token to
