@@ -29,6 +29,14 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   The owner reports availability "anytime" to check the business inbox; a
   fallback contact is still unspecified, and no guaranteed response deadline
   was promised. Participant/insurer notices and launch approval remain separate.
+- September 26 production follow-up found no incident reports or incident
+  alerts, no pending/failed email rows, and seven existing service-accepted
+  emails. The 22:45:27 UTC scheduled invocation succeeded after PR #243.
+  The existing September 4 local-date automatic website support message was
+  re-read in the business Inbox with SPF/DKIM/DMARC pass. This preserves
+  completed support-delivery proof without a new send; it does not establish
+  current incident-triggered inbox delivery. No production data or settings
+  changed. Detailed results and limits are in the incident runbook.
 - PR #242 requires an email-service receipt before the outbox records a send
   as accepted. Six malformed-success response cases now remain retryable with
   the same key; later acceptance stops repeat sends. All 726 tests, build,

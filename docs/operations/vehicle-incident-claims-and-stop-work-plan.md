@@ -158,6 +158,18 @@ inbox delivery remains unproven; no real incident alert was sent. The owner's
 availability is recorded below; fallback contact, insurer review, hosted
 participant upload, and launch approval remain outstanding.
 
+Read-only production follow-up on September 26 found zero incident reports
+and alerts; there is no missed incident notice to resend. All seven existing
+outbox messages were recorded as accepted, with no pending or failed rows.
+Cloudflare recorded a successful fifteen-minute scheduled invocation at
+22:45:27 UTC after this release. That does not prove each caught subtask or
+incident-email delivery. The previously completed automatic website support
+test was re-read in the business Inbox: its September 5 00:59:21 UTC receipt
+passes SPF, DKIM, and DMARC. See
+[the original support record](2026-09-04-support-reliability.md). That historical
+support receipt, the manual mailbox round trip, and the isolated incident
+tests are separate evidence. No new email was sent in this follow-up.
+
 **Both sides, promptly and factually:** that an incident is recorded, the
 confirmed work status, whether payment is held, and what happens next. A routine
 low-severity claim can hold payment without stopping work; do not describe every

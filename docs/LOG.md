@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Verify production mail queue and the post-release schedule
+
+Read-only production D1 queries found zero incident reports and zero incident
+alerts. There is no missed incident email to replay. All seven existing outbox
+rows are recorded as sent, with one attempt each and no pending/failed rows:
+four account-security messages, one owner support alert, and two other messages.
+These database states record service acceptance, not universal inbox delivery.
+
+Cloudflare shows the existing fifteen-minute trigger and a successful run at
+22:45:27 UTC, after PR #243 deployed. Its preceding nine displayed runs were
+also successful. The last-24-hour Worker error metric was zero. Logs and traces
+are disabled; a successful cron invocation and aggregate error metric do not
+prove every caught subtask succeeded. No monitoring setting was changed.
+
+Re-read the existing automatic website support test in the business Inbox,
+matching its subject and September 5 00:59:20 UTC outbox timestamp. Gmail's
+original-message view confirms receipt at 00:59:21 UTC, the configured website
+sender, business recipient, and SPF/DKIM/DMARC pass. This preserves the already
+completed September 4 local-date proof in
+`operations/2026-09-04-support-reliability.md`; it was not a new test or send.
+The separate September 26 manual mailbox round trip also remains complete.
+
+Incident-specific production inbox delivery remains unproven. Do not create a
+fake live incident, reclassify a test record, or enable customer transactions
+to clear that item. The current route and test-mail quarantine remain intact.
+Sanitized observations are retained outside the repo in
+`incident-alert-production-followup-20260926.json`. No code, production data,
+credential, subscription, payment, deployment, or launch decision changed.
+This documentation handoff stays local for the next authorized code release.
+
 ## 2026-09-26 - Verify published owner incident alerts and record responder availability
 
 PR #243 merged as `2bdab8b940748f137b495c7c131f9044bf57b3b8` after both
