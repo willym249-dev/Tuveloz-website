@@ -84,8 +84,9 @@ export default function JobOperationsPage() {
         <h2>Incidents, injuries, property damage, and stop-work</h2>
         <p>
           An incident report creates a payment hold. Serious safety concerns,
-          reported injury, or property damage stop the provider timer and put the
-          job into stop-work status. Injury and property-damage records cannot be
+          reported injury, property damage, or contact with emergency services
+          stop the provider timer and put the job into stop-work status.
+          Injury and property-damage records cannot be
           closed without documenting insurer notice. Emergency situations should
           still be directed immediately to 911 or the appropriate emergency
           service; this form is not emergency dispatch.

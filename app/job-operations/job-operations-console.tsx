@@ -435,7 +435,7 @@ export function JobOperationsConsole() {
                     { name: "propertyDamageReported", label: "Property damage was reported", type: "checkbox" },
                     { name: "emergencyServicesContacted", label: "Emergency services were contacted", type: "checkbox" },
                   ]}
-                  warning="Every incident places a payment hold. Serious, emergency, injury, or property-damage reports also stop work. This is not emergency dispatch -- call 911 when needed."
+                  warning="Every report places a payment hold. Work also stops for a serious incident, injury, property damage, or when emergency services have been contacted. For an emergency, call 911 first."
                 />
                 <OperationForm
                   title="Stop work for safety"

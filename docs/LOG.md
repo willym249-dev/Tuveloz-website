@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Honor emergency-contact and safety-stop incident signals
+
+The unfinished incident-process review found that checking emergency services
+contacted on an otherwise low/moderate report left work running. An incident
+typed `safety_stop` through the report API had the same gap unless severity or
+another flag independently stopped it. The route now treats either as a stop
+signal, keeping the automatic payment hold. Ordinary low-severity claims still
+hold payment without claiming a work stoppage. Both form guidance and the
+incident page describe the actual triggers.
+
+The added actual-route/SQLite regression failed before the code change with
+`workStopped:false` for an emergency-contact report, then passed. Six positive
+customer/provider cases and three negative controls verify persisted stop time,
+timer clearing, preserved tracked/billable time, correct audit, payment hold,
+and isolation of another job. Synthetic signed-authorization fixtures satisfy
+the existing database guards; no trigger was disabled. All 725 tests and build,
+lint (one existing warning), and typecheck passed. Twelve Chromium/WebKit
+scenarios passed, including the real report form sending its emergency checkbox
+with low severity for each participant role. These are isolated local tests;
+no real incident, message, insurance notice, or payment was created.
+
+The existing runbook now includes a scoped check of official Maryland repair
+authorization, county registration, insurer/agent lookup, and emergency guidance,
+with links and limits. English/Spanish response drafts remain unsent and require
+confirmed status and a realistic owner follow-up time. Removed unsupported
+claims that every provider already has insurance, that every incident stops work,
+or that incident details can never reach anyone beyond the chosen provider.
+The owner reports no platform insurance; owner/insurer review, hosted participant
+upload, and real notification delivery remain unfinished. No launch gate changed.
+Publication of this repair is pending the normal required workflows.
+
 ## 2026-09-26 - Correct account notices and recover from notification errors
 
 Follow-up review found that welcome notifications still invited customers to
@@ -34,7 +65,17 @@ in Chromium and WebKit, covering recovery, timeout, write receipts, both account
 destinations, and sign-in redirect. The SQLite route fixture verifies welcome
 history preservation, idempotence, account/role isolation, and invalid input.
 It stubs session verification and mail delivery; no real account or email was
-used. This entry records local validation; publication is still pending.
+used. PR #240 passed verification `36256544587` and the pull-request build
+`36256544804`, then merged as `61c4c071b7fc1a1ee28a27016fa2cde50c81a169`.
+All three jobs in production release `36257408571` passed. At 17:15:29 UTC,
+public health confirmed that exact release, built 17:13:54 UTC, with application,
+database, and schema ready. The live notifications shell returned 200 with the
+corrected wording; signed-out notification access returned 401/no-store.
+Accounts/applications remain open; customer requests/payments remain closed.
+Private account changes and error scenarios were tested in synthetic fixtures,
+not against real customer records. Proof: `notification-release-20260926.json`;
+mobile fixture screenshots: `notifications-20260926/`. Do not repeat completed
+incident or account-notification repairs to satisfy the remaining business reviews.
 
 The incident runbook no longer calls completed evidence linking missing. It
 now states explicitly that the test-only incident route sends no notifications;

@@ -1,8 +1,8 @@
 # Vehicle incident, claims, and stop-work plan
 
-- **Status:** draft — needs owner sign-off, insurer review, and an official-source check
+- **Status:** draft — scoped official-source check completed; owner sign-off and insurer review pending
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26 (partial technical rehearsal and record custody; approval remains pending)
+- **Last reviewed:** 2026-09-26 (source check, response drafts, and stop-work regression; approval remains pending)
 - **Applies to:** the `vehicle_incident_claims_and_stop_work` launch gate
 
 What to do when someone is hurt, a vehicle or property is damaged, or work must
@@ -71,9 +71,14 @@ job cannot quietly reach payout.
 
 ## First response
 
-**1. Life safety, then stop the work.** Record `workStoppedAt` on the incident.
-Work stops for: injury, property damage beyond the vehicle, an emergency
-service being called, or work that has gone outside the authorized scope.
+**1. Life safety, then stop the work.** The system records stop-work for an
+explicit safety stop, serious/emergency severity, reported injury, property
+damage (including the vehicle), or contact with emergency services. A low or
+moderate severity selection must not override those signals. Work outside the
+authorized scope needs a safety stop and review before any new authorization.
+The record's `workStoppedAt` is the platform processing time; it does not prove
+the physical work stopped at that moment. Keep the reported event time separate
+and confirm the actual situation with the participants when safe.
 
 **2. Open the incident record before anything else administrative.** Severity,
 what happened, when, where, and who reported it. Written by whoever has the
@@ -111,11 +116,13 @@ needs the carrier anyway:
 | Which incidents must be tendered, and which are below the threshold? | |
 | Does the provider's own coverage tender first, and how is that established? | |
 
-Every provider carries their own general liability, and business auto where the
-service requires it. **That is provider-side coverage and it does not answer what
-Tuveloz's own policy does** — the `platform_and_service_insurance_bound` gate is
-still unanswered, so today the honest assumption is that there is no platform
-policy to tender to. Record `insurerNotifiedAt` when a tender is actually made.
+Tuveloz's provider requirements call for service-appropriate coverage; an
+application or uploaded certificate is not proof that coverage is active.
+**Provider coverage does not establish Tuveloz's own coverage.** The owner has
+reported no platform policy, and `platform_and_service_insurance_bound` remains
+unanswered. Do not invent a carrier, policy, notice date, or coverage decision.
+Record `insurerNotifiedAt` only when an actual notice has been sent through the
+insurer's verified channel and its delivery evidence is retained privately.
 
 ## What each side is told
 
@@ -127,12 +134,16 @@ feature. A production communication process and its delivery rehearsal remain
 unfinished; do not remove test isolation or send real notices from synthetic
 incidents to claim completion.
 
-**Both sides, promptly and factually:** that an incident is recorded, that work
-is stopped, that payment is held, and what happens next. Nothing about fault,
+**Both sides, promptly and factually:** that an incident is recorded, the
+confirmed work status, whether payment is held, and what happens next. A routine
+low-severity claim can hold payment without stopping work; do not describe every
+report as a work stoppage. Nothing about fault,
 nothing predicting an outcome, nothing that reads as an admission or a denial.
 
-**The customer** also needs to know their address and contact details are not
-shared beyond the provider they already chose.
+**The customer:** explain the private support channel and request only the
+information needed for this review. Do not promise that details can never be
+shared beyond the provider; applicable privacy terms, claims handling, and legal
+obligations must be assessed for the particular incident.
 
 **The provider** needs to know the hold is procedural rather than a finding
 against them, and that declining further work carries no penalty — no acceptance
@@ -141,6 +152,63 @@ platform depends on.
 
 **[OWNER]** Whether a template is reviewed by counsel before first use. An
 incident message is the one that gets read back later.
+
+### Prepared message drafts — not sent
+
+Complete the bracketed fields from the incident record. Include a stop-work or
+payment sentence only after confirming that status. Send separately through a
+verified private channel; do not expose both parties' contact details in a group
+message. These drafts do not authorize live sends or complete the delivery test.
+
+**English, to the customer or provider:**
+
+> We've recorded your report about [brief factual description] for request
+> [reference]. [If confirmed: Work is paused while the report is reviewed.]
+> [If confirmed: Payment is on hold.] Please keep any relevant photos, messages,
+> and receipts. We will contact you by [date, time, and time zone] with an update,
+> even if the review is still open. You can reply here with questions. If anyone
+> is in immediate danger, call 911 first.
+
+**Spanish, to the customer or provider:**
+
+> Registramos tu reporte sobre [descripción breve de los hechos] para la solicitud
+> [referencia]. [Si se confirmó: El trabajo está pausado mientras se revisa el
+> reporte.] [Si se confirmó: El pago está retenido.] Guarda las fotos, los mensajes
+> y los recibos relacionados. Te daremos una actualización a más tardar el
+> [fecha, hora y zona horaria], aunque la revisión siga abierta. Puedes responder
+> aquí si tienes preguntas. Si alguien está en peligro inmediato, llama primero
+> al 911.
+
+**Provider-only explanation when a hold is confirmed:**
+“The payment hold is part of the review and does not decide who is responsible.
+You can decline further work without a penalty for declining.”
+Spanish: “La retención del pago es parte de la revisión y no determina quién
+es responsable. Puedes rechazar trabajo adicional sin una penalización por
+rechazarlo.”
+
+Before use, the owner must choose a reachable responder and a realistic update
+deadline. After sending, record the channel, recipient role, actual timestamp,
+delivery receipt or failure, next follow-up, and a private evidence reference.
+A draft, queue entry, or copied message is not proof of delivery. If delivery
+fails, record it and use an authorized alternative channel; never mark a notice
+sent simply to clear the review screen.
+
+## Scoped official-source check — September 26, 2026
+
+This check supplies references for the existing review packet. It is not a
+coverage opinion, legal sign-off, or approval of the implemented marketplace.
+
+| Official source | What this supports and what still needs review |
+| --- | --- |
+| [Maryland Commercial Law § 14-1008](https://mgaleg.maryland.gov/mgawebsite/laws/StatuteText?article=gcl&section=14-1008) | Repair authorization must disclose customer rights, including consent for additional repairs. It also requires a responsibility/insurance disclosure for vehicles on repair-facility premises. It does not establish coverage for Tuveloz or decide liability for a mobile-service incident. Preserve the accepted scope and any separate authorization; review how the rule applies to the actual service. |
+| [Montgomery County motor vehicle repair guidance](https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing) | The county identifies registration requirements for repair/maintenance/towing and carrying registration for mobile repair/installations. County and state estimate thresholds differ; do not replace the county-specific controls with a state-only summary. No provider's registration was verified by reading this general page. |
+| [Maryland Insurance Administration company and producer lookup](https://insurance.maryland.gov/consumer/pages/companysearchinstructions.aspx) | Use the official lookup to identify a licensed insurer and agent/broker, then independently confirm the policy and claims channel with the issuer. The lookup describes licensing, not whether a particular provider's policy covers this incident. No carrier contact or policy verification was performed in this review. |
+| [Montgomery County emergency/nonemergency guidance](https://www.montgomerycountymd.gov/mc311) | Emergencies go to 911. Tuveloz's incident form and ordinary county information service are not emergency dispatch. |
+
+The owner/insurer still needs to establish coverage, notice deadlines, claims
+contacts, the communication process, and who may authorize resumption or hold
+release. The hosted participant upload and real notification delivery remain
+unverified. No launch gate has been marked approved.
 
 ## Resolution and records
 
