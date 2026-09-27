@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Publish PR 251 and preserve build-output notice evidence
+
+The owner explicitly approved merging PR #251 and deploying it. Fresh review
+confirmed the unchanged tested head `19e56e7`, the expected base `546e60a`,
+clean merge status and successful required checks. Merged through the normal
+workflow as `643a1437add35efbb579a95ec4a9f7e5fedd1d09`; the earlier automatic
+approval block is resolved. Production workflow `36322688451` passed all jobs,
+including 793 tests/build, both browser engines, Spanish coverage, the complete
+provider signup, fresh-database migration rehearsal and exact-release checks.
+The existing language-navigation lint warning remains unchanged.
+
+At 13:46:49 UTC an independent public check confirmed the exact release,
+ready application/database/schema and unchanged onboarding-only state.
+All nine live direct-dependency notices matched their recorded SHA-256 values;
+the previously served unused font returned 404. Four actual clicks from the
+bottom mobile homepage opened the customer creation form and provider
+application in English and Spanish. Both provider links scrolled to the form;
+all four pages fit the 390-pixel viewport and no page errors were captured.
+No account, application, email or payment was submitted. Language and viewport
+were restored after checking. Evidence: `outputs/pr251-live-release-20260927.json`,
+`outputs/pr251-live-mobile-navigation-20260927.json`,
+`outputs/pr251-live-spanish-provider-mobile-20260927.png` and the saved
+production-check log. This release is complete; do not repeat its approval
+or publication steps.
+
+Continued the existing ownership/notice review with a separate local build
+observer, without changing application files or dependencies. It identified
+36 installed package/version locations across 172 emitted chunks. Preserved
+39 exact-source notice files privately and recorded the missing official
+notice for the bundled `@hiogawa/utils@1.7.0` helper. The Vite plugin's own
+missing packaged notice was recovered from its pinned official release.
+See `records/code-ownership-and-contributors.md` for sources and limits.
+The additional collection and this follow-up record are local only; they are
+not part of PR #251's published nine-notice collection. No upstream inquiry,
+purchase or launch approval occurred. County and broker inquiries remain
+sent once, with their existing response checkpoints; the owner's application
+remains the final step.
+
 ## 2026-09-27 - Remove unused font cache and preserve dependency notices
 
 Fresh GitHub read found no open PR and main remained `546e60a`. Preserved all
