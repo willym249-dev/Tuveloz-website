@@ -67,7 +67,7 @@ import {
 } from "./provider-policy";
 import { parseProviderServices } from "./service-matching";
 
-export const ELIGIBILITY_RULES_VERSION = "0.14.1";
+export const ELIGIBILITY_RULES_VERSION = "0.14.2";
 export const PLATFORM_ACTIVATION_PROVIDER_ID = "__tuveloz_platform__";
 
 export const JOB_FACTS_SOURCES = [
@@ -351,6 +351,15 @@ async function evaluateOneService(options: {
   if (!profile || profile.status !== "active") {
     reasons.push({ code: "pathway_not_active", detail: "The provider pathway has not been activated." });
   }
+  if (profile && (
+    (profile.effectiveAt && !dateIsEffectiveBy(profile.effectiveAt, options.through))
+    || (profile.validThrough && !dateIsCurrentThrough(profile.validThrough, options.through))
+  )) {
+    reasons.push({
+      code: "pathway_not_current",
+      detail: "The provider pathway is not valid at the scheduled work or eligibility recheck time.",
+    });
+  }
   if (!profile || profile.policyVersion !== POLICY_VERSION) {
     reasons.push({ code: "pathway_policy_not_current", detail: "The provider pathway is not on the current policy version." });
   }
@@ -614,9 +623,10 @@ async function evaluateOneService(options: {
       .sort((a, b) => Date.parse(b.reviewedAt || b.createdAt) - Date.parse(a.reviewedAt || a.createdAt));
     const definition = PROVIDER_POLICY_MATRIX.evidence_types[requirement];
     const dateIsAcceptable = (item: typeof providerEvidenceSubmissions.$inferSelect) => (
-      definition.requires_expiration !== true
+      (!item.effectiveAt || dateIsEffectiveBy(item.effectiveAt, options.through))
+      && (definition.requires_expiration !== true
         ? (!item.expiresAt || dateIsCurrentThrough(item.expiresAt, options.through))
-        : dateIsCurrentThrough(item.expiresAt, options.through)
+        : dateIsCurrentThrough(item.expiresAt, options.through))
     );
     const passesDateAndScan = (item: typeof providerEvidenceSubmissions.$inferSelect) => (
       dateIsAcceptable(item)
@@ -649,7 +659,7 @@ async function evaluateOneService(options: {
           ? `${definition.label} does not have current external authenticity verification through the scheduled work time.`
           : scanBlocked
             ? `${definition.label} is quarantined because its latest malware scan is missing or not clean.`
-            : `${definition.label} is missing, unaccepted, or not valid through the scheduled work time.`,
+            : `${definition.label} is missing, unaccepted, or not valid at the scheduled work or eligibility recheck time.`,
         serviceCode: options.serviceCode,
         evidenceType: requirement,
       });

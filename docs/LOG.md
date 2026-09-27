@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Verify expiration blocking; repair ignored validity starts and pathway dates
+
+After PR #253, a fresh concurrent-work check found no open PR and main still
+`ed6c593`. Preserved its completed release notes (`b707d53`) and continued on
+`test/provider-evidence-validity-20260927`. This follow-up tests actual eligibility
+decisions rather than repeating the reminder release or sending another email.
+
+A new in-memory, fully migrated SQLite test executes the real stage engine,
+policy resolver, acceptance checks and external-authenticity validator. Only
+database/environment bindings are substituted; every outbound call throws.
+Synthetic provider, personnel, registration and acceptance records remain local.
+The unchanged service catalog stays closed even in the fixture; assertions
+isolate the document decisions and retain that denial rather than treating the
+simulation as authorization to work. The initial fixture incorrectly chose an
+insurance requirement absent from the selected service's resolver; correcting
+the fixture to its actual county-registration requirement reached the engine.
+
+Existing protections passed: inclusive expiration cutoff, all seven work-stage
+rechecks, the later of work/recheck time, pending/quarantined/rejected or
+wrong-scope replacements, valid replacement selection, external-authenticity
+expiry and real-mode launch denial. Three behavioral assertions then failed:
+future or invalid evidence start dates were ignored, and recorded pathway
+validity dates did not add a denial after expiry or before their start.
+
+The targeted repair checks supplied evidence start dates and recorded pathway
+start/end bounds against the work/recheck time, preserving unspecified optional
+dates and the existing end-of-date convention. Eligibility rules advance to
+`0.14.2` so cached results from the older rules cannot satisfy version checks.
+No policy matrix, reviewed legal text, launch/payment/SMS switch, schema or
+dependency changed. No real provider, credential, email or payment was written.
+
+All 809 tests and the production build pass; TypeScript passes; lint has zero
+errors and the same existing navigation warning. The focused run passes 26
+checks. Before/after and full validation logs are retained privately as
+`outputs/provider-evidence-validity-*-20260927.log`. This is local behavior
+proof; publication is tracked separately below and real-channel reminder
+delivery and the launch-review decision remain incomplete.
+
 ## 2026-09-27 - PR #253 published; expiration reminder repair verified live
 
 The owner explicitly approved publishing the tested reminder repair. That

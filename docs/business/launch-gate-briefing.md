@@ -198,8 +198,14 @@ TypeScript and lint passed (one existing warning). Production workflow
 release `ed6c593`, ready application/database/schema and preserved launch locks.
 Pre-release D1 counts found zero reminders and zero expiration-family outbox
 rows. No real email was sent as a test. Real-channel/inbox evidence and the
-separate automatic-expiration-blocking review still need completion before
-this gate can be approved. The owner evidence pre-screen in
+separate process review still need completion before this gate can be approved.
+September 27 isolated migrated-SQL tests confirm the expiration cutoff and
+rechecks at all seven work stages, plus replacement/scan/scope protections.
+They also reproduced ignored document start dates and recorded pathway bounds;
+the local repair passes all 809 tests/build with rules version `0.14.2`.
+Publication is tracked in `OPEN-ITEMS.md`; this simulation does not establish
+real-channel delivery or grant any provider or launch approval.
+The owner evidence pre-screen in
 `lib/evidence-review-assistant.ts` can never auto-accept; its only automatic
 action is a reversible bilingual correction request for a provably expired
 document.
