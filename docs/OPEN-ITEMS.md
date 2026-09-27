@@ -94,7 +94,7 @@ update the date to the next occurrence rather than marking it done.
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
 | 2026-09-30 | Annual legal review of the seven published policies — launch gates fail when a legal review is more than a year old, and no review is on record yet, so this is the first one rather than a renewal | hello@tuveloz.com | open |
-| 2026-09-30 | Review platform and provider coverage for the exact intended services. The owner reports no platform policy. An unsent cost-comparison request is prepared in business/launch-gate-briefing.md; choose a licensed broker and confirm the initial service scope before any quote submission. No purchase or broker contact has occurred. Replace this review checkpoint with real policy dates only after coverage is bound and privately recorded | hello@tuveloz.com | open |
+| 2026-09-30 | Review platform and provider coverage for the exact intended services. The owner reports no platform policy. An unsent cost-comparison request and September 26 research on Founder Shield and Marsh Sharing Economy are in business/launch-gate-briefing.md. These are inquiry candidates only: Maryland licenses, acceptance, fees and coverage remain unverified. Select the broker, verify its license, and confirm the initial service scope before any quote submission. No purchase or broker contact has occurred. Replace this review checkpoint with real policy dates only after coverage is bound and privately recorded | hello@tuveloz.com | open |
 
 ## What belongs here versus elsewhere
 

@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Prepare specific insurance inquiry options and clarify the TikTok draft
+
+Preserved the local handoff commits, with no open PR and remote main still
+`2bdab8b`. Added two official-source broker candidates to the existing launch
+briefing and insurance review checkpoint: Founder Shield and Marsh Sharing
+Economy. Both describe relevant marketplace work; eligibility, Maryland
+licenses, fees, and service-specific coverage are unverified. Included the
+published contact routes and the questions needed before a quote application.
+No broker message, application, private-document upload, policy selection,
+purchase, or launch approval occurred. Documentation only; checked the diff
+without rerunning application tests or deploying the site.
+
+The owner's TikTok question referred to a composer owned by the separate
+"Plan realistic Tuveloz ads" task. Its latest saved September 26 10:02 a.m.
+checkpoint records the three-image tire-pressure draft as unsubmitted, with
+no new publication, schedule, campaign, or spend. The browser refused a claim
+because that task already owns the tab; left it untouched and reported the
+dated checkpoint rather than asserting a fresh live composer inspection.
+
 ## 2026-09-26 - Verify free vendor plans and isolate the remaining billing check
 
 No open PRs and main still `2bdab8b`; preserved existing local handoff commits.
