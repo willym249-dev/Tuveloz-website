@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Complete account regression and verify Workspace billing
+
+The existing account browser regression passed on local commit `770008e` using
+its own temporary worktree, synthetic credentials, local D1 and mail catcher.
+Account creation/sign-in, throttling, Spanish routes and mobile widths, language
+switching, saved drafts, and provider form/document guidance checks passed. No
+message left the machine. This complements the 740-test/build, lint, and type
+checks; it does not complete the hosted upload. Prepared a Resend key form with
+Sending access restricted to updates.tuveloz.com, without submitting it, and
+asked for the specific one-hour owner-only rehearsal and cleanup approval.
+
+The existing Google Admin tab became accessible. Read-only inspection confirmed
+Business Plus Active, Flexible Plan, one assigned license, $19.80/user/month
+through the displayed November 5 discount period and $26.40 afterward. The
+estimated monthly bill is $19.80 and next billing date October 1. Closed the
+password-blocked billing inspection and added a November 1 cost-review
+checkpoint. No billing, subscription, payment method, or plan changed. Updated
+the private vendor-cost summary without retaining payment IDs or credentials.
+
 ## 2026-09-26 - Prepare restricted staging authentication for the remaining upload test
 
 No open PR and main remains `2bdab8b`; preserved earlier handoff commits and
