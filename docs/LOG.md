@@ -11,6 +11,27 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Verify free vendor plans and isolate the remaining billing check
+
+No open PRs and main still `2bdab8b`; preserved existing local handoff commits.
+Cloudmersive's already authorized business login required an emailed security
+verification. Completed that login through its vendor-domain link without
+recording the token, and observed Free Tier. The subscription-management link
+redirected to an upgrade offer, so no historical-charge conclusion is claimed.
+Resend's Billing tab lists Transactional and Marketing at $0/month each, with
+no payment method and no invoices. Free transactional limits display 3,000
+monthly / 100 daily emails; paid overage controls are disabled. No API scan,
+document upload, test send, purchase, payment retry, cancellation, or plan change.
+
+Google Admin requires the owner's fresh password check before showing billing.
+Asked for that specific step and left only its page ready for the owner. Mailbox
+availability is already established; subscription details remain unverified.
+Added the September 28 follow-up, corrected the vendor card's obsolete blanket
+payment-method reminder, and reconciled the document register with the already
+verified domain expiry and LLC annual-report checkpoint. No production code,
+launch decision, test suite, or deployment changed. Private summary retained as
+`outputs/vendor-cost-review-20260926.json`.
+
 ## 2026-09-26 - Close the old redirect check and verify search coverage
 
 No open PRs; remote main remains `2bdab8b`. Preserved the existing local handoff

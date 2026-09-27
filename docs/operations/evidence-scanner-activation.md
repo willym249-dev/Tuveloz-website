@@ -17,7 +17,10 @@ again. The 09:29 UTC run completed without errors and found an empty queue.
 That does not invalidate the completed September 6 manual and automatic file
 tests, whose production records and current application validation were rechecked
 September 26. See the dated verification below; do not repeat first activation.
-The last account check showed Free Tier. On September 5 the first recorded
+The September 26 signed-in account check showed Free Tier; the subscriptions
+link redirected to an upgrade offer without displaying an active paid plan or
+charge history. No API call, document upload, payment, or plan change was made.
+On September 5 the first recorded
 Basic payment attempt failed; no paid subscription was confirmed. The owner
 has since asked to reduce document uploads to 3.5 MB and add photo resizing.
 Do not retry payment as part of that change. The advertised Free Tier is an
