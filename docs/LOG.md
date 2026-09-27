@@ -34,9 +34,18 @@ Outbound calls are blocked and Stripe reads are synthetic. All 776 tests, the
 production build and TypeScript pass. Lint has no errors and its existing single
 navigation warning. Private before/after logs are retained outside the public
 repository. No schema, fee, UI, credential, provider approval or launch/payment
-switch changed. Release checks and exact production verification are pending;
-do not describe this repair as deployed yet. This is not proof of real money
-movement or Stripe-originated financial delivery.
+switch changed. PR #248 passed both PR workflows; tested head
+`e1c2b86d1a20be0759af8c70dc2e8ac30241418e` merged as
+`59b9e91f7f56b051888f6aab74732a4b5ec809fc`. Production workflow `36302540175`
+passed all three jobs, including the complete browser signup, rendered Spanish
+and fresh-database checks. Independent public health at 07:31:55 UTC confirmed
+that exact release (built 07:29:50 UTC), ready application/database/schema and
+no missing tables/triggers. Accounts/applications remain open; requests/payments
+remain closed. Private test and release proof is retained outside the repository.
+Do not repeat this completed repair. No real charge/refund/provider record was
+changed; this is not proof of real money movement or Stripe-originated financial
+delivery. The broker-response checkpoint and genuine-provider evidence remain
+separate launch work.
 
 ## 2026-09-27 - Prevent checkout notifications from overwriting newer payment states
 
