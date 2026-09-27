@@ -13,7 +13,15 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-- Last confirmed release at this record update:
+- Latest completed release: PR #252, `0d6fc3d08b46626e30a8cc70d96c69bd5976a813`.
+  Production workflow `36325931216` and independent live verification at
+  September 27 14:45:25 UTC passed. Provider service and credential forms retain
+  drafts after rejected saves; twelve isolated browser scenarios cover failure,
+  deliberate retry and successful clearing. All 793 tests and required release
+  checks passed. PR #251's unused-font removal and nine dependency notices are
+  also published. See the latest `LOG.md` entries for exact scope and artifacts;
+  do not repeat these completed releases.
+- Earlier confirmed release (superseded by PR #252 above):
   `546e60adeac216c4b99822d6e6af709ab74ea24c` (PR #250), built September 27 at
   10:23:50 UTC. Every job in production workflow `36311546784` passed, including
   793 tests/build, required Spanish navigation and end-to-end provider signup.
@@ -186,6 +194,22 @@ not change PR #249's dated evidence or approve the privacy/retention launch gate
 
 The backup deployment and restore are verified operational work. The private AI
 workspace still has no new paid provider activation. No paid upgrade was made.
+
+## What can proceed and what must wait
+
+| Work | Current boundary |
+| --- | --- |
+| Customer accounts and provider applications | Already open. Pending customer-launch reviews do not close these flows. Existing tests and dated production evidence above remain completed work. |
+| Provider activation | The genuine applicant still needs matching Identity, service-specific evidence and official/issuer checks. Keep the owner's application last as requested. A scanner result cannot approve credentials. |
+| Customer bookings and payments | Require the existing seventeen required launch gates, real-world evidence and supported recorded approvals. The optional employee/trainee lane is separate. No gate has been approved by these tests. |
+| Website repairs that remain reproducible | Finish each scoped repair and verify its release. The September 27 expiration-reminder mismatch is repaired locally with isolated transport/SQL proof; publication and real-channel review remain pending. |
+| Optional product ideas | The separate mobile repository, historical reminder/range features, and additional paid-AI integrations are not prerequisites for this website's current account/application flows. Scope them separately instead of restoring old branches. |
+| Dated maintenance and outside responses | Use the existing deadlines for the county and broker replies, search processing, scanner freshness, credentials, billing and annual filings. A future maintenance checkpoint is not unfinished setup. |
+
+The record-card renewal task is complete for known dates: domain renewal,
+annual report, scanner proof, credential expiry and Workspace cost review have
+dated rows. New insurance or license dates belong there only when those records
+exist; do not invent expirations or treat the missing policy as a missing reminder.
 
 ## Still required before the owner application
 

@@ -11,6 +11,50 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Repair blocked expiration reminders; reconcile remaining scope
+
+Fresh GitHub review found no open PR and main unchanged at `0d6fc3d`.
+Preserved the local PR #252 release record and continued on
+`fix/provider-expiration-reminder-delivery-20260927`. The launch packet still
+listed expiration-reminder delivery as unverified. Following the real scheduler
+and outbox found a mismatch: uploads persist `provider-evidence-expiration:`
+events, but neither the protective event classifier nor retry query recognized
+the resulting `marketplace:provider-evidence-expiration:` family.
+
+An isolated migrated-SQL test reproduced six due reminders being retried without
+any transport attempt and an already queued reminder remaining pending. It
+executes the real sweep, email queue, policy, SQL and provider audit; only runtime
+bindings and transport are fixtures. The initial sandbox bundler permission
+failure was environmental, not the reproduction; the subsequent run reached
+and failed three behavioral assertions before the repair.
+
+The local repair recognizes this exact event family. Before each send,
+including outbox-only retries, it requires a due, non-cancelled reminder bound
+to the same non-test provider, recipient, accepted evidence, service and
+original expiration. Missing/mismatched/revoked records and staging stay
+blocked; test-prefixed, unknown and transaction messages remain quarantined.
+Existing event keys are retained for idempotency. All six lead-time/window
+notices send once through the intercepted transport, failures recover with
+the same key, and already accepted mail is not resent. Eligibility/evidence
+records are unchanged by the tests.
+
+All 800 tests and the production build pass. TypeScript passes; lint has no
+errors and the same existing navigation warning. Evidence:
+`outputs/reminder-delivery-before-20260927.log`,
+`outputs/reminder-delivery-after-20260927.log` and the full test/type/lint logs.
+No real email, production record, paid call, approval or launch switch changed.
+The repair remains local pending scoped publication approval and normal release
+checks; production is still PR #252. This does not complete the real-channel
+reminder or automatic-expiration-blocking launch review.
+
+Reconciled the existing launch handoff instead of starting optional features.
+It now distinguishes open signup flows, provider activation, customer launch,
+reproducible repairs, optional product work and dated follow-ups. Closed the
+generic reminder-setup row using existing recorded deadlines and corrected
+the stale sitemap count. Outside replies, owner evidence and reviewer decisions
+remain open; the owner's application remains last. No old feature was restored,
+no outside inquiry resent, and the separate license inquiry remains unsent.
+
 ## 2026-09-27 - Publish and independently verify PR 252
 
 After the owner continued the scoped publication request, automatic approval

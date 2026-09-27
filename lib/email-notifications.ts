@@ -1,7 +1,13 @@
 import { env } from "cloudflare:workers";
-import { and, eq, like, lt, ne, or } from "drizzle-orm";
+import { and, eq, like, lt, lte, ne, or } from "drizzle-orm";
 import { getDb } from "../db";
-import { emailNotificationOutbox, launchUpdateSubscribers } from "../db/schema";
+import {
+  complianceReminders,
+  emailNotificationOutbox,
+  launchUpdateSubscribers,
+  providerApplications,
+  providerEvidenceSubmissions,
+} from "../db/schema";
 import {
   classifyEmailEvent,
   emailEventAllowedByReleaseState,
@@ -144,7 +150,43 @@ async function marketingDeliveryIsAllowed(recipientEmail: string) {
   return Boolean(subscriber) && !subscriber.unsubscribedAt;
 }
 
+// Recheck persisted scope on every attempt, including outbox-only retries.
+// Recognizing an expiration event must not release old test, cancelled or
+// superseded reminders merely because they were already queued.
+async function expirationReminderDeliveryIsAllowed(eventKey: string, recipientEmail: string) {
+  if (runtimeEnv().APP_ENVIRONMENT === "staging") return false;
+  const email = cleanEmail(recipientEmail);
+  const [record] = await getDb().select({
+    expiresAt: providerEvidenceSubmissions.expiresAt,
+    metadata: complianceReminders.metadata,
+  }).from(complianceReminders)
+    .innerJoin(providerApplications, eq(providerApplications.id, complianceReminders.providerId))
+    .innerJoin(providerEvidenceSubmissions, eq(providerEvidenceSubmissions.id, complianceReminders.evidenceSubmissionId))
+    .where(and(
+      eq(complianceReminders.eventKey, eventKey.slice("marketplace:".length)),
+      eq(complianceReminders.recipientEmail, email),
+      eq(providerApplications.email, email),
+      eq(providerApplications.isTestProvider, "no"),
+      eq(providerEvidenceSubmissions.providerId, complianceReminders.providerId),
+      eq(providerEvidenceSubmissions.serviceCode, complianceReminders.serviceCode),
+      eq(providerEvidenceSubmissions.status, "accepted"),
+      ne(complianceReminders.status, "cancelled"),
+      lte(complianceReminders.dueAt, new Date().toISOString()),
+    )).limit(1);
+  if (!record || !/^\d{4}-\d{2}-\d{2}$/.test(record.expiresAt)) return false;
+  try {
+    const metadata: unknown = JSON.parse(record.metadata);
+    return Boolean(metadata && typeof metadata === "object" && !Array.isArray(metadata)
+      && "expiresAt" in metadata && metadata.expiresAt === record.expiresAt);
+  } catch {
+    return false;
+  }
+}
+
 async function emailEventDeliveryIsAllowed(eventKey: string, recipientEmail: string) {
+  if (eventKey.startsWith("marketplace:provider-evidence-expiration:")) {
+    return expirationReminderDeliveryIsAllowed(eventKey, recipientEmail);
+  }
   const classification = classifyEmailEvent(eventKey);
   if (classification.kind === "marketing") {
     return marketingDeliveryIsAllowed(recipientEmail);
