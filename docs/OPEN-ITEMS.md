@@ -86,6 +86,7 @@ Merge order matters here and is not visible from the pull request list.
 
 | Due | Item | Owner | Status |
 | --- | --- | --- | --- |
+| 2026-09-28 | Finish the missing Stripe provider payout/bank-status connection after the specific owner confirmation, then verify signed synthetic delivery and failure/recovery behavior. September 27: live and original Test-mode lists lack the nine-event connected-account Snapshot destination; `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` is absent. Exact live-account form is prepared but unsubmitted. Existing Identity and thin Connect setup remains intact; all three source-contract checks passed, not delivery proof. Preserve every launch/payment lock and never count this as a real payout. See LOG and DEPLOYMENT.md. Internal checkpoint | hello@tuveloz.com | open |
 | 2026-08-25 | `LAUNCH_UPDATES_POSTAL_ADDRESS` is empty, which keeps the launch-update sequence inert. Needed before the first real send, not sooner: as of 2026-08-11 the only subscriber is an owner test signup, so nobody real is waiting. A PO box or registered agent address is enough, and setting it delivers that test signup's first email — a free end-to-end check of a send path that has never run | hello@tuveloz.com | open |
 | — | SMS sign-in is code-locked behind `PHONE_SMS_LIVE_MODE_ENABLED = false` in addition to its environment configuration. Undated on purpose: this describes a deliberate lock, not a commitment to unlock it | hello@tuveloz.com | open |
 

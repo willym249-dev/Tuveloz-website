@@ -11,6 +11,54 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Confirm the missing provider payout-status connection
+
+Continued after the insurance explanation without repeating completed releases.
+Remote main remains `f31f85c` with no open PRs. The approved broker inquiry has
+no reply in its business Gmail thread at this check; do not resend it.
+
+The read-only readiness report confirms the source onboarding/payment/SMS
+locks remain closed, `LAUNCH_UPDATES_POSTAL_ADDRESS` remains intentionally
+unset, and `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` is absent from the
+deployed secret-name list and checked configuration. Gate decisions were
+**unknown** in this CLI run: Cloudflare rejected the D1 read with API error
+7403. This is a credential/account authorization limitation, not evidence of
+missing tables or a changed gate decision. The September 26 authenticated
+owner-page review remains the most recent verified gate snapshot. No
+credential scope was expanded.
+
+Read the actual Stripe Workbench lists. Live mode has the existing six-event
+Identity destination and two two-event thin Connect destinations; the original
+account's Test mode has the existing six-event Identity destination. Neither
+list contains the standard connected-account snapshot destination. The
+separate named Tuveloz sandbox has no destinations; it is not the original
+Test mode and must not be mistaken for lost configuration.
+
+Prepared, but did not submit, one live-account destination named
+`Tuveloz provider payout safety`: Connected accounts scope, Snapshot payload,
+API version `2026-06-24.dahlia`, endpoint
+`https://tuveloz.com/api/stripe/webhooks/connected-accounts`, and exactly the
+nine bank-account/payout events already listed in `DEPLOYMENT.md`. It needs
+its own signing secret in `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET`; neither
+the Identity nor thin Connect secret can substitute. Existing code holds
+payouts without a signed snapshot and rejects snapshots from the wrong
+payment mode at the payout-safety check.
+
+The owner confirmation request covers enabling this ongoing financial-data
+feed, storing the dedicated secret in encrypted Cloudflare settings, and
+synthetic testing with launch/payment locks retained. Confirmation remains
+pending; no endpoint or credential was created, no production setting was
+changed, and no payment was attempted. The unsubmitted review is retained
+privately as `outputs/stripe-payout-connection-review-20260927.png`.
+
+Validation: all three existing `stripe-webhook-hardening.test.mjs` checks
+passed. These source-contract checks do not prove Stripe delivery or a
+successful provider payout. Stripe's current Connect documentation confirms
+separate event scopes and that live Connect destinations can also receive
+test events: <https://docs.stripe.com/connect/webhooks>. Delivery, duplicate
+handling and failure/recovery behavior still need a scoped synthetic test
+after setup. No paid upgrade, publication or launch approval occurred.
+
 ## 2026-09-27 - Check Maryland agency records and send the approved broker inquiry
 
 Reconciled the completed release before continuing: remote main remains

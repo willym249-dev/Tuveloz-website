@@ -49,6 +49,20 @@ displayed price and November cost-review checkpoint. The hosted customer image
 upload and temporary-email cleanup also passed; see [`../STAGING.md`](../STAGING.md).
 These completed technical checks do not approve the remaining launch gates.
 
+**September 27 payment-configuration review:** the dedicated connected-account
+snapshot secret is missing, and Stripe's live and original Test-mode lists
+have no `/api/stripe/webhooks/connected-accounts` destination. The existing
+Identity and V2 thin Connect destinations are separate and were preserved.
+A nine-event Connected accounts / Snapshot destination is prepared but
+unsubmitted, pending specific owner confirmation for the financial-data feed
+and encrypted signing-secret storage. It will not enable bookings or live
+payments. Payout safety remains closed without a valid snapshot; source checks
+pass, but delivery and failure/recovery testing are unfinished. See
+[`DEPLOYMENT.md`](../../DEPLOYMENT.md) for the existing event list and the
+September 27 log entry for exact observations. The CLI could not refresh D1
+gate decisions due to account/credential authorization error 7403; this does
+not supersede the dated September 26 owner-page evidence above.
+
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
 review older than one year — see the recurring reviews in
