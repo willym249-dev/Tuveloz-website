@@ -11,6 +11,45 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Publish PR #244 and verify the live release
+
+The owner explicitly approved publication after automatic approval review
+blocked the earlier attempt. PR #244 merged the exact tested head `5028f8d`
+as `40d92341b05dc1cbf19ae1835a9a8bdc26d4a663`. All required jobs in production
+workflow `36286456127` passed, including account creation/sign-in, the full
+provider signup, bilingual browser/recovery checks, migrations, and deployment.
+The build retains one pre-existing language-navigation lint warning.
+
+Public health at September 27 02:01:41 UTC (September 26 in Maryland) confirms
+that exact commit, built at 01:56:08 UTC, with application/database/schema ready.
+Accounts and provider applications remain open; customer requests and payments
+remain closed. Homepage, customer account creation, and both provider signup
+URLs return 200. The updated official county destination returns 200 with
+registration/towing content. No new paid service, applicant, email, payment,
+credential or launch decision was created during publication verification.
+
+Fresh Chrome checks at 390x844 clicked both bottom homepage signup buttons:
+customer creation and the provider application open correctly. Neither form
+had horizontal overflow; the provider language switch works both ways, and
+captured browser error logs were empty. Restored English, reset the temporary
+viewport and closed the verification tab.
+
+Found a separate pre-existing gap: the Spanish homepage's customer signup
+button opens the working English-only `/account` screen without a language
+switch. `lib/spanish-routes.ts` excludes `/account`; a directly probed
+`/es/account` returns 404, but that invented probe is not a link offered by the
+site. Record the actual language-continuity problem, not a broken signup CTA.
+The next website fix must cover account creation, sign-in, code/reset states,
+validation and consent text without changing reviewed legal content. It was
+not fixed or included in PR #244. The earlier provider-language checks do not
+establish complete customer-account translation.
+
+Private release evidence is in `outputs/pr244-live-release-20260926.json` and
+`outputs/pr244-production-workflow-20260926.log` under the task workspace.
+This release record is a local follow-up; do not deploy again solely to publish
+documentation. Existing real-provider, insurance, incident fallback and launch
+reviews remain outstanding; the owner's application stays last.
+
 ## 2026-09-26 - Correct moved county guidance and reconcile completed launch checks
 
 Read-only continuation found the old OCP registration URL now redirects to the
