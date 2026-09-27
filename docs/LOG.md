@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Prevent checkout notifications from overwriting newer payment states
+
+The next isolated payment/refund review reproduced three failure-path defects:
+an unrelated checkout Session could fail/expire the payment named in metadata;
+a completed payment could be overwritten between the failure handler's read
+and write; and a replacement Session could be expired by the older attempt.
+The reverse completion path also overwrote a concurrent refund/dispute/launch
+hold or rebound a replacement Session. These are local synthetic reproductions,
+not observations of a real customer payment. Live money movement remains locked.
+
+Failure/expiry now uses one conditional SQL update matching the stored Session
+and an allowed pending status. Completion also conditions its final write on
+the same Session and the status it originally read, preserving newer decisions.
+No payment operation, credential, schema, fee or launch switch changed.
+
+Ten added tests execute the actual payment route/helpers and migrated in-memory
+SQL, with signed synthetic requests, deterministic concurrent writes and blocked
+outbound calls. They demonstrate failures before the repairs and success after,
+including matching positive controls, duplicate handling, refund/dispute holds
+and preservation of launch holds. The obsolete assertion requiring a warning
+string was replaced by this behavior coverage. All 766 tests, the production
+build and TypeScript pass; lint has no errors and its one existing navigation
+warning. Release is pending. No live charges, refunds or provider records were
+created or changed. Founder Shield still has no reply in the focused business
+inbox search; no duplicate inquiry was sent.
+
 ## 2026-09-27 - Enable approved payout-status feed and fix its payment-client dependency
 
 The owner approved the prepared connection, encrypted signing-secret storage,
@@ -39,10 +65,30 @@ storage retries and abandoned processing claims. Synthetic tests create no
 payment, email or provider approval.
 
 Validation: all 756 tests and the production build pass; TypeScript passes;
-lint has no errors and one existing site-language navigation warning. The
-fix is awaiting normal PR/release checks and post-release signed endpoint
-verification. Setup alone is not proof of Stripe-originated delivery, bank
-settlement or launch readiness. Do not repeat the completed credential setup.
+lint has no errors and one existing site-language navigation warning. PR #246
+passed both PR workflows, including the browser and bilingual signup checks.
+Tested head `82a371f` merged as `31980998846d1f749fce7bcca539a39edb2e2711`.
+Production workflow `36297054968` passed all three jobs and verified the exact
+healthy Cloudflare release. No local deployment bypass was used.
+
+At 05:39:09 UTC, six checks against the deployed receiver passed: missing,
+wrong, expired and altered-body signatures returned 400; the correctly signed
+synthetic event returned 200, and repeating it returned the durable duplicate
+acknowledgment. The event names an unmapped synthetic account, so it cannot
+change a provider's snapshot, approval or payment. This is a direct synthetic
+endpoint check, not a Stripe-originated delivery or a bank settlement. Public
+health before/after confirms the exact commit, ready application/database/schema,
+accounts/applications open, and requests/payments closed. The expiring request
+file was removed; the signing secret was never written to disk and its temporary
+in-memory copy was cleared. Private results and masked setup screenshots are
+retained outside the repository. Do not repeat the completed setup or release.
+
+The authenticated owner launch-review page was also refreshed read-only on
+September 27: all eighteen controls Pending, transactions OFF and zero services
+activated. No review decision was made. The business inbox search for replies
+from the contacted broker returned no messages; the September 30 follow-up
+checkpoint remains, and no duplicate inquiry was sent. Genuine provider and
+external review evidence remain separate from these completed technical checks.
 
 ## 2026-09-27 - Confirm the missing provider payout-status connection
 
