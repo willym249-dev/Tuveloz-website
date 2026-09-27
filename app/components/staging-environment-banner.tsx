@@ -28,7 +28,8 @@ export async function StagingEnvironmentBanner() {
         textTransform: "uppercase",
       }}
     >
-      Test mode — admin staging site. No real payments, emails, customer jobs, or provider notifications.
+      Test mode — admin staging site. No real payments, customer jobs, or provider notifications.
+      Test sign-in emails go only to the owner when temporarily enabled.
     </aside>
   );
 }

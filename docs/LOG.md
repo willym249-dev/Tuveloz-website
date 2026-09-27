@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Prepare restricted staging authentication for the remaining upload test
+
+No open PR and main remains `2bdab8b`; preserved earlier handoff commits and
+completed rehearsal fixtures. The outstanding hosted participant upload needs
+an ordinary account session, but staging intentionally lacks email delivery.
+Prepared a disabled-by-default authentication sender using a separate key,
+the exact owner recipient, the canonical private staging origin, and an expiry
+no more than 24 hours away. Normal Resend settings must remain empty in staging;
+the separate key cannot turn on support/marketing/provider notification mail.
+No session bypass, password change, production secret, provider approval, or
+launch-setting change was introduced. The staging banner now describes the
+possible temporary owner-code exception accurately.
+
+Added executable tests for recipient denial, missing/expired configuration,
+single-use code verification, unchanged production settings, and support-mail
+isolation. All 740 tests and the production build pass; typecheck passes; lint
+has no errors and one existing site-language navigation warning. The first full
+run hit sandbox directory permissions in eight existing/new bundled tests;
+the permitted unsandboxed local rerun passed. Updated the existing staging
+runbook, email runbook, and September 28 checkpoint with activation and cleanup
+steps. No credential has been created, no real email sent, and no deployment
+or hosted participant upload has occurred. Scoped owner approval is needed to
+activate the prepared rehearsal.
+
 ## 2026-09-26 - Prepare specific insurance inquiry options and clarify the TikTok draft
 
 Preserved the local handoff commits, with no open PR and remote main still

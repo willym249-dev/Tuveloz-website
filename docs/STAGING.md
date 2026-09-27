@@ -53,6 +53,52 @@ with its link and hold intact. This follow-up was read-only.
 - Provider reminders and background email delivery do not run in staging.
 - Never copy the production D1 database ID, production R2 bucket, live Stripe key, production webhook secret, or Resend API key into the staging environment.
 
+## Prepared owner-only sign-in rehearsal — not activated
+
+The remaining hosted participant upload requires an ordinary customer session;
+the owner Access session alone cannot upload as a customer. Existing local
+authentication and upload tests do not prove this hosted path. Do not mint a
+session, copy a production cookie, disable Access, or turn a real record into
+a test record to get around this requirement.
+
+`lib/account-email-delivery.ts` provides a temporary authentication-only option.
+It stays off by default and after every generated staging deployment. It uses
+a separate credential which no support, marketing, or notification mailer reads.
+The helper requires every condition below before sending a code:
+
+- `APP_ENVIRONMENT=staging` and `SITE_URL=https://staging.tuveloz.com`.
+- The recipient exactly matches `OWNER_EMAIL` after case normalization.
+- `STAGING_AUTH_EMAIL_ENABLED=true` and a future
+  `STAGING_AUTH_EMAIL_EXPIRES_AT` no more than 24 hours away. Use an explicit
+  UTC ISO timestamp and a one-hour window for the planned rehearsal.
+- A dedicated `STAGING_AUTH_RESEND_API_KEY` and `STAGING_AUTH_FROM_EMAIL`.
+- The normal `RESEND_API_KEY` and `RESEND_FROM_EMAIL` remain empty.
+
+Request specific owner approval before creating the separate credential and
+enabling the rehearsal. Use Resend's Sending access restricted to the existing
+verified updates domain; confirm the scope in the dashboard. [Resend documents
+per-key permissions and domain restrictions](https://resend.com/docs/dashboard/api-keys/introduction).
+Store the value only as the staging Worker secret, never in a tracked file or
+chat. Do not upgrade the plan. The code restricts recipients; the vendor key's
+domain restriction is a sender restriction, not a recipient restriction.
+
+After approval, use a separate clearly labeled synthetic customer/job fixture
+with the business inbox as its customer address and the existing unapproved
+synthetic provider. Use `quote accepted`, the status required for customer-condition
+uploads, and `is_test_job=yes` / `is_test_provider=yes`. Preserve the earlier
+owner-resolution fixture and its evidence. Sign in through the normal page and
+one-time email code, then submit the existing synthetic image through the real
+job-evidence form. Verify the saved D1 record, private R2 image, refresh behavior,
+unchanged holds, and absence of payments or provider messages. These results
+must be recorded before calling the hosted upload complete.
+
+Finish by signing out, disabling the flag, clearing the expiry/from setting,
+and removing only the newly created test credential with owner approval.
+Expiry stops new sends; it does not revoke an already issued code/session or
+the vendor key. Normal code expiry, attempt limits, session expiry, and owner
+Access verification still apply. This preparation is not evidence of an
+actual delivered email or hosted upload.
+
 ## One-time Cloudflare setup
 
 Create these isolated resources in the same Cloudflare account:

@@ -298,7 +298,9 @@ a 503 rather than delivering. This is by design and documented in
 [`../STAGING.md`](../STAGING.md).
 
 The consequence is that no end-to-end email test is possible on staging as
-configured. Enabling one means changing the generator and giving the staging
-Worker its own Resend key — a **separate** key, never production's. `STAGING.md`
-forbids copying production credentials into staging, and a distinct staging
-sender address also keeps staging traffic separable in the `rua` reports.
+currently configured. A disabled-by-default authentication-only option is now
+prepared in `lib/account-email-delivery.ts`; see the owner-only rehearsal in
+[`../STAGING.md`](../STAGING.md). It requires a separate domain-scoped credential,
+the exact owner recipient, explicit activation, and a bounded expiry. Other
+mailers do not read its credential, and normal Resend settings stay empty.
+No credential, activation, or actual delivery is established by this preparation.
