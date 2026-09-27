@@ -1,6 +1,5 @@
 import Stripe from "stripe";
 import {
-  getStripeClient,
   getStripeWebhookSecret,
   stripeErrorResponse,
   stripeWebhookCryptoProvider,
@@ -29,12 +28,13 @@ export async function POST(request: Request) {
 
   let claimId = "";
   try {
-    const stripeClient = getStripeClient();
     const webhookSecret = getStripeWebhookSecret(
       "STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET",
     );
     const rawBody = await request.text();
-    const event = await stripeClient.webhooks.constructEventAsync(
+    // Signature verification only needs this endpoint's secret. Do not create
+    // a payment client: its live-mode lock must not block safety notifications.
+    const event = await Stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
       webhookSecret,

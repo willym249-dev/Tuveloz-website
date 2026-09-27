@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,156 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-27 - Enable approved payout-status feed and fix its payment-client dependency
+
+The owner approved the prepared connection, encrypted signing-secret storage,
+and synthetic testing. Stripe created `Tuveloz provider payout safety` as an
+Active, Connected accounts, Snapshot destination on API `2026-06-24.dahlia`
+with exactly the nine reviewed events. Cloudflare production now shows
+`STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` as Value encrypted. The existing
+Identity/thin Connect destinations and other credentials were preserved;
+`STRIPE_ALLOW_LIVE_MODE` remains false. No purchase or real payment occurred.
+Private masked setup screenshots are retained outside the repository.
+
+The deployed synthetic probe caught a real configuration-dependent defect:
+with a live payment key present but payments code-locked, this snapshot route
+constructed the payment client before verifying a webhook. It returned 503
+even for an invalid signature. No synthetic event reached a database write.
+Public health remained ready at release `f31f85c`, with bookings/payments closed.
+
+The targeted fix calls Stripe's existing static webhook verifier directly.
+It requires the dedicated signing secret and uses the same cryptographic
+provider; it creates no API client, makes no vendor request and changes no
+payment lock or payout decision. A real-route/migrated-SQL regression reproduced
+the 503 before the fix. Nine new local tests exercise locked/absent API keys,
+bad signatures, unmapped providers, duplicates, failed/canceled payouts,
+deleted/expired payout accounts, stale/equal-time events, wrong-mode snapshots,
+storage retries and abandoned processing claims. Synthetic tests create no
+payment, email or provider approval.
+
+Validation: all 756 tests and the production build pass; TypeScript passes;
+lint has no errors and one existing site-language navigation warning. The
+fix is awaiting normal PR/release checks and post-release signed endpoint
+verification. Setup alone is not proof of Stripe-originated delivery, bank
+settlement or launch readiness. Do not repeat the completed credential setup.
+
+## 2026-09-27 - Confirm the missing provider payout-status connection
+
+Continued after the insurance explanation without repeating completed releases.
+Remote main remains `f31f85c` with no open PRs. The approved broker inquiry has
+no reply in its business Gmail thread at this check; do not resend it.
+
+The read-only readiness report confirms the source onboarding/payment/SMS
+locks remain closed, `LAUNCH_UPDATES_POSTAL_ADDRESS` remains intentionally
+unset, and `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` is absent from the
+deployed secret-name list and checked configuration. Gate decisions were
+**unknown** in this CLI run: Cloudflare rejected the D1 read with API error
+7403. This is a credential/account authorization limitation, not evidence of
+missing tables or a changed gate decision. The September 26 authenticated
+owner-page review remains the most recent verified gate snapshot. No
+credential scope was expanded.
+
+Read the actual Stripe Workbench lists. Live mode has the existing six-event
+Identity destination and two two-event thin Connect destinations; the original
+account's Test mode has the existing six-event Identity destination. Neither
+list contains the standard connected-account snapshot destination. The
+separate named Tuveloz sandbox has no destinations; it is not the original
+Test mode and must not be mistaken for lost configuration.
+
+Prepared, but did not submit, one live-account destination named
+`Tuveloz provider payout safety`: Connected accounts scope, Snapshot payload,
+API version `2026-06-24.dahlia`, endpoint
+`https://tuveloz.com/api/stripe/webhooks/connected-accounts`, and exactly the
+nine bank-account/payout events already listed in `DEPLOYMENT.md`. It needs
+its own signing secret in `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET`; neither
+the Identity nor thin Connect secret can substitute. Existing code holds
+payouts without a signed snapshot and rejects snapshots from the wrong
+payment mode at the payout-safety check.
+
+The owner confirmation request covers enabling this ongoing financial-data
+feed, storing the dedicated secret in encrypted Cloudflare settings, and
+synthetic testing with launch/payment locks retained. Confirmation remains
+pending; no endpoint or credential was created, no production setting was
+changed, and no payment was attempted. The unsubmitted review is retained
+privately as `outputs/stripe-payout-connection-review-20260927.png`.
+
+Validation: all three existing `stripe-webhook-hardening.test.mjs` checks
+passed. These source-contract checks do not prove Stripe delivery or a
+successful provider payout. Stripe's current Connect documentation confirms
+separate event scopes and that live Connect destinations can also receive
+test events: <https://docs.stripe.com/connect/webhooks>. Delivery, duplicate
+handling and failure/recovery behavior still need a scoped synthetic test
+after setup. No paid upgrade, publication or launch approval occurred.
+
+## 2026-09-27 - Check Maryland agency records and send the approved broker inquiry
+
+Reconciled the completed release before continuing: remote main remains
+`f31f85c` and there are no open PRs. Extended the existing insurance section in
+`business/launch-gate-briefing.md`; did not repeat the website release or open
+another insurance application. Founder Shield's own terms name both The
+Baldwin Group Specialty Solutions, LLC and Foundershield LLC. After resolving
+the initial browser-panel interruption with the owner's instruction, the
+official Maryland agency search showed Foundershield LLC license 2192404
+Inactive, The Baldwin Group Specialty Solutions, LLC license 3002989862
+Active, and Marsh USA LLC license 1280 Active. Public result snapshots are
+saved as outputs/broker-{foundershield,baldwin,marsh}-mia-20260927.txt.
+
+These are preliminary agency listings, not proof of Tuveloz coverage or the
+assigned producer's authority. The older inactive name must not be confused
+with the active Baldwin entity. Maryland warns its status data can lag and
+links to SBS for current details; SBS terms were not accepted, and no SBS
+search was submitted. Exact contracting entity/individual, authorized lines,
+dates, orders, eligibility and pricing still need confirmation. No further
+owner action is needed to close the initial browser panel.
+
+Prepared the exact initial inquiry to Founder Shield's published
+`info@foundershield.com` address. The owner specifically approved this body,
+recipient and business sender. Sent from `hello@tuveloz.com` on September 27
+at 12:31 a.m. Maryland time; Gmail's Sent folder and expanded headers confirm
+the sender, recipient, subject and matching body. Screenshot evidence is
+`outputs/broker-inquiry-sent-20260927.png`; recipient delivery/read/response
+is not yet confirmed. Do not resend. The Gmail connector was linked to a
+personal account, so no send was made through it; the verified Tuveloz Chrome
+profile supplied the business mailbox.
+
+The inquiry asks about prelaunch marketplace fit, exact agency/license and
+fees, excludes private records, and authorizes no paid work, broker appointment
+or coverage. No quote form or insurance application was submitted, no costs
+incurred, and no application code or launch controls changed. Updated the
+existing September 30 insurance review to await a reply. Documentation diff
+checked; no code tests were needed for this record update.
+
+## 2026-09-27 - Publish PR #245 and verify live Spanish account controls
+
+The owner explicitly approved publishing the Spanish account fix. Confirmed
+the clean checkout, passing required checks and unchanged head `a186d1d`, then
+merged PR #245 as `f31f85c588b9745f6e2dc10cf18002185a53f9f8` at September 27
+03:49:01 UTC (September 26 in Maryland). Every production job in workflow
+`36292505581` passed, including browser account signup, 747 tests/build, all
+form recovery suites, Spanish rendering/navigation, provider signup,
+migrations and deployment. The release was built at 04:04:01 UTC on September
+27. Public health at 04:07:04 UTC confirmed the exact merge commit and ready
+application/database/schema. Accounts/applications remain open; customer
+requests/payments remain closed.
+
+Actual Chrome checks on tuveloz.com clicked the bottom Spanish homepage
+customer button and opened the Spanish create-account form. Reload retained
+Spanish; English/Spanish switching worked, and the entered synthetic email
+was visually retained after switching before being cleared. Sign-in and
+password-reset screens showed their Spanish controls. The form fits 390px and
+320px widths without horizontal overflow; the 320px screenshot was saved and
+visually reviewed. The bottom provider button opened the Spanish application
+at step 1, with the form settled about 100px below the viewport top. Browser
+error logs were empty. No account, verification email, provider application,
+password change, legal consent or payment was submitted. Restored English,
+reset the viewport and closed the verification tab.
+
+Evidence: outputs/pr245-health-20260927.json,
+outputs/pr245-live-release-20260927.json and
+outputs/pr245-live-spanish-mobile-20260927.png in the task workspace. This
+closes the Spanish account release item; it does not approve real-provider
+credentials, insurance or customer launch. No paid upgrade was added.
 
 ## 2026-09-26 - Prepare complete Spanish account controls
 

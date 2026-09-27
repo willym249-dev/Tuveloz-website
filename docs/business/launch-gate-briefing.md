@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 - **Applies to:** the 18 launch gates in `lib/launch-readiness.ts`
 
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
@@ -48,6 +48,20 @@ Active on a Flexible Plan with one license. The vendor record holds the current
 displayed price and November cost-review checkpoint. The hosted customer image
 upload and temporary-email cleanup also passed; see [`../STAGING.md`](../STAGING.md).
 These completed technical checks do not approve the remaining launch gates.
+
+**September 27 payment-configuration review:** after specific owner approval,
+the missing nine-event Connected accounts / Snapshot destination is now Active,
+and its dedicated secret is encrypted in Cloudflare production. The existing
+Identity and V2 thin Connect destinations were preserved. A deployed synthetic
+probe found that the snapshot route incorrectly constructs the payment client
+before signature verification; the current payment lock therefore produces
+503. A narrow static-signature-verifier fix and nine real-route/migrated-SQL
+tests pass locally, along with all 756 tests/build. Release and post-release
+verification are pending. No booking/payment lock changed. See
+[`DEPLOYMENT.md`](../../DEPLOYMENT.md) for the existing event list and the
+September 27 log entry for exact observations. The CLI could not refresh D1
+gate decisions due to account/credential authorization error 7403; this does
+not supersede the dated September 26 owner-page evidence above.
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
@@ -270,8 +284,9 @@ question practical; that is a contact-route observation, not a claim that its
 coverage is better or cheaper. Before sharing private application documents or
 appointing either broker, verify the exact agency and assigned producer in the
 [Maryland regulator's search](https://insurance.maryland.gov/consumer/pages/companysearchinstructions.aspx).
-Neither license was verified in this research. The regulator notes that its
-records update weekly and that it does not rank insurers.
+The September 26 research did not verify either license. The September 27
+lookup below supplies preliminary agency evidence. The regulator notes that
+its records update weekly and that it does not rank insurers.
 
 The first question should be whether they can assess this exact marketplace
 and whether an initial inquiry or quote carries a fee. A response must separate
@@ -280,6 +295,84 @@ the actual services. Do not choose generic repair-shop or personal-auto
 coverage merely because the marketplace involves cars. Obtain written answers
 and comparable costs before selecting any policy. Nothing was sent, scheduled,
 purchased, or recorded as an approved launch gate by this research.
+
+#### September 27 follow-up — Maryland agency listings checked
+
+The [Maryland Insurance Administration agency search](https://www.apps.insurance.maryland.gov/CompanyProducerInfo/ProducerFirmAgencySearch.aspx?NAV=HOME)
+returned these exact public records on September 27. An initial browser-panel
+interruption was resolved; do not repeat the request for the owner to close it.
+
+| Exact agency record | Maryland license | Displayed status |
+| --- | --- | --- |
+| FOUNDERSHIELD LLC | 2192404 | Inactive |
+| THE BALDWIN GROUP SPECIALTY SOLUTIONS, LLC, | 3002989862 | Active |
+| MARSH USA LLC | 1280 | Active |
+
+The inactive older-name record does not establish that the current Founder
+Shield brand is unlicensed. Its own terms identify Baldwin, whose agency
+record displays Active. Confirm which entity and licensed individual would
+actually serve Tuveloz before a private application or broker appointment.
+
+- [Founder Shield's terms](https://foundershield.com/terms-of-service/)
+  identify The Baldwin Group Specialty Solutions, LLC in the opening
+  definitions, while the license-status paragraph also names Foundershield
+  LLC. The agency names in the table were checked separately, rather than
+  assuming the brand name and contracting entity are interchangeable.
+- [Marsh's licensing disclosure](https://affinity.marsh.com/affinity/licensing.html)
+  identifies Marsh USA LLC and lists Maryland property/casualty license
+  **1280** on a list dated March 8, 2024. Searching that number in Maryland's
+  regulator produced the Active Marsh USA LLC record above.
+- The Maryland page warns that its demographic/status information may lag
+  and links to [SBS](https://external-lookup-web.prod.naic.org/solar-external-lookup/)
+  for the most current details. SBS requires explicit acceptance of its terms;
+  those were not accepted and no SBS search was submitted. Expiration dates,
+  authorized lines, individual producer status and a comprehensive orders
+  review remain unverified. Refresh the exact agency and assigned producer
+  before any appointment; this preliminary research is not coverage approval.
+
+Saved public result snapshots in the workspace's `outputs/` directory:
+`broker-foundershield-mia-20260927.txt`, `broker-baldwin-mia-20260927.txt`, and
+`broker-marsh-mia-20260927.txt`. No Tuveloz private information was entered.
+
+**Owner-approved first email — sent September 27, 12:31 a.m. Maryland time.**
+Gmail's Sent folder and expanded headers confirmed the sender, recipient,
+subject and approved body below. Recipient delivery/read/response is not yet
+confirmed. Do not send a duplicate. This is a short eligibility/licensing/fee
+question, not a second insurance application.
+Use the detailed request above only after a suitable contact is confirmed.
+The published inquiry address was rechecked on the
+[on-demand page](https://foundershield.com/industry/on-demand/).
+
+- From: `hello@tuveloz.com`
+- To: `info@foundershield.com`
+- Subject: `Tuveloz - Maryland marketplace insurance inquiry`
+
+> Hello,
+>
+> We're preparing Tuveloz, an online marketplace connecting customers in
+> Montgomery County, Maryland, with independent vehicle-service businesses.
+> Tuveloz does not perform repairs. Accounts and provider applications are
+> open; customer bookings and payments are not yet available.
+>
+> Do you work with businesses at this stage, including marketplaces for mobile
+> services? Before we proceed, please confirm the agency's exact legal name
+> and Maryland license, and whether an initial review or quote carries a fee.
+>
+> If this is a fit, please explain coverage for the platform separately from
+> each provider's insurance, including any minimum premiums or broker fees.
+> Please reply by email. This is an initial inquiry only; no paid work, broker
+> appointment, or coverage is authorized.
+>
+> Thank you,
+> Tuveloz
+
+No private documents, address, financial history or personal identifiers were
+included. Only this expressly approved email was sent; no quote form, account
+registration or insurance application was submitted. No insurer selection,
+payment, policy or launch approval resulted. The private workspace evidence
+is `outputs/broker-inquiry-sent-20260927.png`. Review the reply at the existing
+September 30 insurance checkpoint; further private disclosures, paid advice,
+broker appointment and policy purchase remain separate owner decisions.
 
 ### Payment processor
 

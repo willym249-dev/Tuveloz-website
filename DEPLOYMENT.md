@@ -160,6 +160,10 @@ secret in `STRIPE_IDENTITY_WEBHOOK_SECRET`, the connected-account
 snapshot secret in `STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET`, and the V2 thin
 destination secret in `STRIPE_CONNECT_WEBHOOK_SECRET`.
 
+The connected-account snapshot receiver verifies signatures without creating
+a payment API client. A present live payment key must not prevent safety
+notifications while the independent payment-release locks remain closed.
+
 The payment and connected-account endpoints keep durable event receipts. A
 failed processing attempt is retried; an already-completed event is safely
 acknowledged without applying it again. Failed/canceled refunds, payout
