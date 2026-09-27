@@ -1,0 +1,78 @@
+{
+  "reviewed": "2026-09-27",
+  "scope": "Direct dependencies only; not a complete deployed-bundle license inventory.",
+  "packages": [
+    {
+      "name": "@simplewebauthn/browser",
+      "version": "13.3.0",
+      "declaredLicense": "MIT",
+      "notice": "simplewebauthn-browser-LICENSE.txt",
+      "source": "node_modules/@simplewebauthn/browser/LICENSE.md",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "name": "@simplewebauthn/server",
+      "version": "13.3.2",
+      "declaredLicense": "MIT",
+      "notice": "simplewebauthn-server-LICENSE.txt",
+      "source": "node_modules/@simplewebauthn/server/LICENSE.md",
+      "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63"
+    },
+    {
+      "name": "drizzle-orm",
+      "version": "0.45.2",
+      "declaredLicense": "Apache-2.0",
+      "notice": "drizzle-orm-LICENSE.txt",
+      "source": "https://github.com/drizzle-team/drizzle-orm/blob/273c78071d4841b497f5144734b38294df7ec64b/LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    {
+      "name": "jose",
+      "version": "6.2.4",
+      "declaredLicense": "MIT",
+      "notice": "jose-LICENSE.txt",
+      "source": "node_modules/jose/LICENSE.md",
+      "sha256": "8078b0829d6c3e9ecde2f003e1966e4cad3efc6e7a640efbab0313cc166b1af1"
+    },
+    {
+      "name": "next",
+      "version": "16.3.6",
+      "declaredLicense": "MIT",
+      "notice": "next-LICENSE.txt",
+      "source": "node_modules/next/license.md",
+      "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224"
+    },
+    {
+      "name": "qrcode",
+      "version": "1.5.4",
+      "declaredLicense": "MIT",
+      "notice": "qrcode-LICENSE.txt",
+      "source": "node_modules/qrcode/license",
+      "sha256": "8df47c6ad9ac2c41eb9b2a72def9908959da0ede8dadd56c7b249c1bdb0c5ce6"
+    },
+    {
+      "name": "react",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "notice": "react-LICENSE.txt",
+      "source": "node_modules/react/LICENSE",
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "notice": "react-dom-LICENSE.txt",
+      "source": "node_modules/react-dom/LICENSE",
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+    },
+    {
+      "name": "stripe",
+      "version": "22.3.2",
+      "declaredLicense": "MIT",
+      "notice": "stripe-LICENSE.txt",
+      "source": "node_modules/stripe/LICENSE",
+      "sha256": "b36d54d51ac6f20b867c24264b9433f54372c3370d4984cf1c9884c5c6de1f7a"
+    }
+  ]
+}

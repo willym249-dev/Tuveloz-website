@@ -19,6 +19,9 @@ __pycache__/
 /.next/
 /out/
 
+# Generated vinext font cache; never ship stale downloaded font files.
+/.vinext/
+
 # misc
 .DS_Store
 *.pem

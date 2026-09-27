@@ -11,9 +11,160 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Remove unused font cache and preserve dependency notices
+
+Fresh GitHub read found no open PR and main remained `546e60a`. Preserved all
+four local documentation commits and continued on
+`fix/remove-unused-font-cache-20260927`. The prior asset review identified
+eleven old font files and two generated stylesheets; the existing build
+actually copied all eleven into client assets although the current layout/CSS
+uses system fonts and no page imports them. The installed vinext font plugin
+copies cached fonts without checking whether a page references them.
+
+Extended the existing rendered-asset regression to reject that stale cache.
+It failed against the previous build as expected. Removed only the thirteen
+tracked `.vinext/fonts` files, keeping them recoverable in Git history, and
+ignored generated `.vinext` output. No app component, page, style, dependency
+version, database, legal policy or launch/payment control changed.
+
+Preserved all nine direct dependency notices in `public/third-party-notices`
+with exact versions, source references and SHA-256 hashes. Eight came from the
+matching installed packages. Drizzle ORM's missing package notice was obtained
+from its official 0.45.2 tag, pinned to commit
+`273c78071d4841b497f5144734b38294df7ec64b`; upstream Git blob and saved bytes
+were checked. This scoped collection does not clear every transitive package,
+brand asset or owner contribution record. No paid service was used.
+
+The first full run exposed restricted-filesystem bundler failures and one
+real documentation issue: the saved county-email transcript used a retired
+fee name. Kept that sent transcript verbatim outside the repository and
+replaced the repeated body with a clearly labeled summary using the canonical
+Customer Service Fee name. The sent email was not edited or resent, and the
+fee-copy guard was not relaxed. Its fifteen checks pass. Re-ran the full suite
+with the filesystem access required by the existing bundler: production build
+and all 793 tests pass. TypeScript passes; lint reports zero errors and the
+same `site-language.tsx` warning as the unchanged source on main.
+
+Private evidence: `outputs/unused-font-cache-before-20260927.log`,
+`outputs/font-cleanup-tests-20260927.log`, `outputs/font-cleanup-lint-20260927.log`,
+`outputs/font-cleanup-types-20260927.log`, and
+`outputs/county-inquiry-sent-20260927.txt`. Publication remains pending owner
+approval and normal PR/production verification; no push or deploy occurred.
+
+## 2026-09-27 - Send the approved county inquiry and refresh asset records
+
+The owner's "Yes and continue" approved the prepared OCP inquiry. A refreshed
+business Gmail Sent search was empty before sending. Sent the exact approved
+message once from hello@tuveloz.com to OCP.Licensing@montgomerycountymd.gov at
+7:20 a.m. Maryland time. Gmail confirmed sending; a refreshed Sent search
+contained one matching message, whose complete body, sender, recipient and
+timestamp were verified. Do not resend. Private screenshot:
+`outputs/county-inquiry-sent-20260927.png`. No receipt, answer or agency
+determination is claimed. No attachment, application, fee or paid work was
+authorized. Updated the source review, launch briefing and October 2 answer
+checkpoint to distinguish the completed send from pending written guidance.
+
+Fresh GitHub checks found no open PR and main still at `546e60a`. Preserved
+the three local documentation commits and completed live release. Refreshed
+the company-authority contribution card: main has 503 commits (434 under the
+willym249-dev label and 69 under Claude), not evidence of legal authorship.
+All nine installed direct dependency versions match the lockfile. The private
+inventory contains 741 package entries and hashes of 28 tracked assets and
+available direct-dependency license files. `jose`'s missing lockfile license
+field is resolved by its installed MIT license. Drizzle's root notice absence,
+older tracked font provenance, distributed third-party notices, and master
+logo/contributor source records remain review items, not findings of unlawful
+use. Development/optional packages are not automatically deployed artifacts.
+
+Found contradictory historical ad instructions: the handoff recorded an
+expired music window but later told readers to reuse that track; another plan
+called surviving visuals already licensed. Corrected those statements and
+marked four ad plans as historical proposals requiring current rights/claims
+review. The old music and two Ad 01 renders remain absent locally; no media
+was restored, deleted, replaced or published. No subscription or billing
+setting was inspected or changed. Asked the owner who contributed material;
+the answer and private records are still pending.
+
+Private audit evidence: `outputs/ownership-asset-evidence-20260927.json`.
+This continuation changes documentation only; no dependency, application,
+eligibility rule, launch/payment control or live website changed. Validation
+uses the existing deadline parser, local evidence/relative-link checks and
+`git diff --check`; a production rebuild is not needed for these records.
+
+## 2026-09-27 - Compare provider requirements with official service definitions
+
+No open PR at start; main remains `546e60a`. Preserved the two local completion/
+email evidence commits. This pass addresses the previously unconfirmed legal-
+category mapping in the launch briefing rather than repeating the live release
+or inbox tests. Read the county registration guidance, current online 31A-1,
+municipal applicability table, DEP wash-water guidance, and Maryland 14-1001.
+
+Executed the existing policy, compliance, and signup-document modules for all
+25 codes. Sixteen eligible-pathway entries request county repair registration,
+towing has its own certificate, seven county-scope categories need an agency
+answer, and the broad repair category remains prohibited. All 25 stay disabled
+or prohibited. The seven existing document checks pass, including every
+independently selectable service pair and removal/deduplication behavior.
+
+Filed and indexed `legal/provider-service-requirements-review.md` with the
+all-code inventory, sourced conclusions and explicit inferences. Important
+remaining questions are photo-only versus vehicle examination, cleaning scope,
+overlapping specialty credentials, municipality boundaries, and the different
+state/county repair definitions. No unsupported exemption or new document
+requirement was put into the signup flow. Updated the launch briefing and added
+an October 2 follow-up checkpoint. The exact one-message OCP inquiry is prepared
+for owner review, not sent; no agency determination or paid service is claimed.
+
+Private inspection proof: `outputs/provider-requirements-snapshot-20260927.json`;
+existing checks: `outputs/provider-requirements-checks-20260927.log`.
+No application, payment, legal-release text, eligibility configuration, or live
+website change was made. The next action is owner approval of the prepared
+agency email; a county reply cannot itself approve a provider or launch gate.
+
+Validation confirms every matrix code appears exactly once in the review, the
+deadline parser includes the new October 2 checkpoint without malformed dates,
+and diff whitespace checks pass. Business Gmail's focused Sent search found no
+mail to the OCP licensing recipient. Documentation is saved locally; no PR,
+push, deployment, or message send occurred.
+
+## 2026-09-27 - Verify the received sign-in header and read one new mail report
+
+Preserved PR #250's completed release and its local evidence commit `d43188c`.
+No open PR was found at the start of this pass; main remained `546e60a`.
+Used the signed-in Tuveloz business inbox to inspect the original message from
+the completed hosted staging sign-in. Google's received summary reports SPF,
+Tuveloz-aligned DKIM, and DMARC PASS, with delivery after one second. Message
+time is September 27, 00:51:36 UTC. This closes the missing sign-in-header
+evidence without another send or staging credential. Full message content and
+sign-in codes are not retained in the repository.
+
+One new Google report arrived at 6:18 a.m. Maryland time. The supported Gmail
+download and private local XML parser produced three rows and five observations
+for September 26 UTC: three aligned passes (one website, two business Google)
+and two failures signed for another domain with a local-policy ARC override.
+The latter is consistent with relaying, not established legitimate mail or fraud.
+The reporting period predates the recorded staging message and broker inquiry;
+do not use it as delivery confirmation for either. The report identity was
+compared with the earlier analysis and is new. The previous eight files were
+not reread or reparsed.
+
+Updated the email runbook and open sender-inventory checkpoint, keeping the
+earlier three unexplained unsigned failures and recurring-reader assignment
+open. Asked the owner to confirm any additional sending apps. Private evidence
+is `outputs/email-delivery-evidence-20260927.json` and
+`outputs/dmarc-reports-20260927.private/analysis.json`; raw report and hash stay
+outside the repository. Documentation/evidence only: no code, DNS, account
+setting, external message, paid service, or launch/payment decision changed.
+The website remains at the already-verified PR #250 release.
+
+Validation: the existing deadline parser includes the updated open email item
+with no malformed dates; the reduced private proof matches the parsed report
+totals; `git diff --check` passes. Saved as a local documentation commit, with
+no PR, push, or deployment needed for this inbox-evidence pass.
+
 ## 2026-09-27 - Finish Spanish privacy controls and preserve form state
 
-The private privacy center now has local Spanish interface coverage for the
+The private privacy center now has published Spanish interface coverage for the
 request form, communication preferences, history/statuses, consent provenance,
 service/validation errors, notices and accessible labels. It uses the existing
 React translation boundary and translates in place, without a public
@@ -35,9 +186,27 @@ The dictionary/error and private-route checks bring the regression suite to
 793 passing tests. Build, TypeScript and lint pass with the existing navigation
 warning. No real account, privacy request, data export, email or payment changed.
 
-PR and production verification are pending. The latest confirmed live version
-remains PR #249 (`f78d76a`). No policy release or launch control changed. This
-interface translation is not a full privacy/retention launch review.
+Published as PR #250: tested head `ee79648` merged as
+`546e60adeac216c4b99822d6e6af709ab74ea24c`. Required PR verification
+`36310792569` and all three jobs in production workflow `36311546784` passed.
+The release was built at 10:23:50 UTC; independent public health at 10:29:18 UTC
+confirmed the exact version, ready application/database/schema, and no missing
+tables or guarded triggers. Accounts/applications remain open; customer
+requests/payments remain closed. Four unsigned/invalid-scope privacy API checks
+returned private, no-store rejections, and `/es/privacy-center` correctly
+remains a 404. Four live mobile Chromium/WebKit English/Spanish checks followed
+the private-page sign-in redirect, retained language and privacy context, fit
+320px/390px, and finished with no page errors. No account was submitted.
+
+The first live WebKit harness intercepted speculative RSC GET preloads while
+the document redirected and reported access-control warnings. Direct account
+loading was clean. Letting those same-origin GET preloads use the normal
+browser network path made the actual redirect checks pass with the zero-error
+assertion retained; no production workaround or access control was changed.
+Evidence is retained privately in `pr250-live-release-20260927.json` and its
+workflow/browser logs. Authenticated form proof remains synthetic. No policy
+release or launch control changed; translation is not a full privacy/retention
+launch review. Preserve PR #249 and do not repeat either completed repair.
 
 ## 2026-09-27 - Verify privacy isolation and recover from privacy-service failures
 

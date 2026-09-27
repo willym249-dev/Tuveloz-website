@@ -1,5 +1,10 @@
 # Morning Ads — provider recruitment, data-led
 
+**Historical campaign proposal; not a spending or posting authorization.**
+September 27 review: recheck each statistic, service claim and asset permission
+before reuse. Dates and budgets below describe the earlier plan. No paid
+campaign or subscription renewal is requested. See [the asset record](../../docs/records/code-ownership-and-contributors.md).
+
 Phase: pre-launch (provider onboarding open, customer requests **not** live).
 Goal: provider applications at https://tuveloz.com/join
 Audience: MoCo solo mobile mechanics, detailers, roadside/jump-start operators.
@@ -8,9 +13,9 @@ Companion to [provider-recruitment-ad-01.md](provider-recruitment-ad-01.md) (the
 
 **Narrative source of truth: `brand/SALES_PITCH.md` §5, §7, and §14.** Every
 claim below is drawn from it. Its §14 claim guardrails bind this document and
-win any disagreement. ⚠ That file currently lives only on the unmerged branch
-`claude/sales-pitch-document-test-k2cm9k` with **no PR open** — until it lands,
-the link above dangles.
+win any disagreement. That file is now present in this repository; the former
+unmerged-branch warning is obsolete. Its claims still need current review
+before a campaign runs.
 
 **What's different about these.** Ad 01 sells a feeling — *be your own boss*.
 Every operator in MoCo has been sold that feeling by four platforms already, and
@@ -291,13 +296,13 @@ ones that bite hardest in ad copy specifically:
   range. Don't round $15–$85 up to "$100." Don't restate 12.8 years as "13."
 - Label AI-generated creative wherever the platform asks.
 
-**Music licensing — why these are static cards.** Per
-[HANDOFF.md](HANDOFF.md), the Epidemic Sound track behind Ad 01 sits under a
-**canceled subscription whose window closes Aug 9, 2026** — two days out. Every
-unit in this doc is silent text-on-brand or reuses already-licensed
-`ad-01-assets/` frames, so the morning campaign can launch regardless of how the
-music question resolves. Don't add a stock track to these without checking that
-file first.
+**Music and visual rights.** [HANDOFF.md](HANDOFF.md) records that the old Ad 01
+music publication window closed August 9, 2026 and the music/renders were
+removed. Silent cards avoid that particular track; silence does not clear
+the rights to reused images, fonts or other material. The former blanket
+"already-licensed" claim for surviving frames is withdrawn pending their
+source records. Check the current asset record before reuse; no new track,
+subscription, download or publication is authorized by this historical plan.
 
 ---
 

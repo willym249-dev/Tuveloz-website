@@ -86,7 +86,7 @@ owner's formation, authority, contract, and contribution records.
 | Part | Evidence |
 | --- | --- |
 | Domain control | The [domain record card](../records/domain-registration-tuveloz-com.md) and [email authentication runbook](../operations/email-authentication.md) hold the evidence. The September 4 Google SPF/DKIM repair supersedes this briefing's old registrar-only SPF observation. |
-| Code ownership | The [contribution record](../records/code-ownership-and-contributors.md) identifies the scope and limits of Git metadata. Author labels do not establish ownership, licenses, or absence of outside contributions. |
+| Code ownership | The [contribution record](../records/code-ownership-and-contributors.md) was refreshed September 27 at main `546e60a`: 503 commits, nine direct dependency versions, package notice inventory and source/asset gaps. Historical ad plans are not publication or purchase authorization. Author labels, installed packages and consistent logos do not establish ownership or complete licensing. Owner contribution facts and private originals remain required. |
 | Essential vendors | Cloudflare, Porkbun, Google Workspace, Resend, and Stripe payments/Identity are recorded in the [vendor card](../records/essential-vendor-accounts.md). The active scanner is owner-operated ClamAV; Cloudmersive is a retained fallback. Account access, an active subscription, and approval of the business model are separate evidence. |
 
 The [formation record](../records/llc-formation-maryland.md) now records the
@@ -111,9 +111,16 @@ electronic acceptance, evidence requests, corrections, and appeals.
 services, jurisdiction `US-MD-MontgomeryCounty`. Requirements resolve per
 jurisdiction (`lib/provider-policy.ts`), and a jurisdiction must carry
 `local_requirements_reviewed: true` through its whole chain before a service
-opens there. **Caveat for the reviewer:** the service-code to legal-category map
-in `lib/provider-compliance.ts` is best-faith and has not been confirmed against
-sources.
+opens there. The September 27
+[service requirements review](../legal/provider-service-requirements-review.md)
+now compares all 25 codes and the executed signup-document resolver with
+official county/state sources. It supports retaining the broad repair and
+towing categories while identifying seven county-scope questions, municipal
+applicability limits, and the distinct state paperwork definition. These
+questions remain unresolved; the source review does not approve the mapping
+or the existing reviewed-jurisdiction flags. The owner-approved OCP inquiry was
+sent September 27 at 7:20 a.m. Maryland time and verified in Sent. Do not resend;
+written answers remain pending. No eligibility rule changed.
 
 **`customer_workflow_and_terms_requirements`** — *legal, required*
 *Existing:* seven policy pages under `app/`, each SHA-pinned to an active entry
