@@ -13,7 +13,7 @@ entries to catch up. Write one before you finish.
 
 ## 2026-09-27 - Finish Spanish privacy controls and preserve form state
 
-The private privacy center now has local Spanish interface coverage for the
+The private privacy center now has published Spanish interface coverage for the
 request form, communication preferences, history/statuses, consent provenance,
 service/validation errors, notices and accessible labels. It uses the existing
 React translation boundary and translates in place, without a public
@@ -35,9 +35,27 @@ The dictionary/error and private-route checks bring the regression suite to
 793 passing tests. Build, TypeScript and lint pass with the existing navigation
 warning. No real account, privacy request, data export, email or payment changed.
 
-PR and production verification are pending. The latest confirmed live version
-remains PR #249 (`f78d76a`). No policy release or launch control changed. This
-interface translation is not a full privacy/retention launch review.
+Published as PR #250: tested head `ee79648` merged as
+`546e60adeac216c4b99822d6e6af709ab74ea24c`. Required PR verification
+`36310792569` and all three jobs in production workflow `36311546784` passed.
+The release was built at 10:23:50 UTC; independent public health at 10:29:18 UTC
+confirmed the exact version, ready application/database/schema, and no missing
+tables or guarded triggers. Accounts/applications remain open; customer
+requests/payments remain closed. Four unsigned/invalid-scope privacy API checks
+returned private, no-store rejections, and `/es/privacy-center` correctly
+remains a 404. Four live mobile Chromium/WebKit English/Spanish checks followed
+the private-page sign-in redirect, retained language and privacy context, fit
+320px/390px, and finished with no page errors. No account was submitted.
+
+The first live WebKit harness intercepted speculative RSC GET preloads while
+the document redirected and reported access-control warnings. Direct account
+loading was clean. Letting those same-origin GET preloads use the normal
+browser network path made the actual redirect checks pass with the zero-error
+assertion retained; no production workaround or access control was changed.
+Evidence is retained privately in `pr250-live-release-20260927.json` and its
+workflow/browser logs. Authenticated form proof remains synthetic. No policy
+release or launch control changed; translation is not a full privacy/retention
+launch review. Preserve PR #249 and do not repeat either completed repair.
 
 ## 2026-09-27 - Verify privacy isolation and recover from privacy-service failures
 

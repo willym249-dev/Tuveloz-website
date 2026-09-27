@@ -14,10 +14,10 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `f78d76a45e33e1105d7c83d565047e217fd41a5d` (PR #249), built September 27 at
-  08:52:13 UTC. Every job in production workflow `36306743015` passed, including
-  789 tests/build, required Spanish navigation and end-to-end provider signup.
-  Public health at 08:54:23 UTC confirmed the exact commit, ready
+  `546e60adeac216c4b99822d6e6af709ab74ea24c` (PR #250), built September 27 at
+  10:23:50 UTC. Every job in production workflow `36311546784` passed, including
+  793 tests/build, required Spanish navigation and end-to-end provider signup.
+  Public health at 10:29:18 UTC confirmed the exact commit, ready
   application/database/schema, accounts/applications open, and customer
   requests/payments closed. The earlier county guidance and saved-reference
   fixes remain published. This does not approve provider credentials or launch.
@@ -125,14 +125,18 @@ browser cases pass, as do required PR and production checks. Four read-only live
 requests confirm unsigned/invalid-scope access is rejected with private,
 no-store responses; authenticated behavior remains synthetic proof. No real
 privacy request or export was submitted. This does not approve the
-privacy/retention gate or supply reviewed Spanish for the English-only private
-privacy center; that language follow-up has its own checkpoint in OPEN-ITEMS.
+privacy/retention gate. The page was English-only at PR #249; its separate
+language follow-up is completed below.
 
-That language follow-up is now implemented locally: Spanish privacy controls,
+That language follow-up is published and verified as PR #250: Spanish privacy controls,
 messages and status history, preserved original user content, language-aware
 sign-in/return links, and scoped mobile checkbox/select fixes. All 793 tests
-and sixty-four synthetic browser scenarios pass; publication and production
-verification are pending. This does not change PR #249's dated live evidence.
+and sixty-four synthetic browser scenarios pass, as do required PR/production
+checks. Four live mobile English/Spanish sign-in redirects preserve language
+and privacy context with no page errors/overflow. Unsigned API requests remain
+rejected and no public Spanish privacy alias exists. Authenticated form proof
+remains synthetic; no real privacy request or export was submitted. This does
+not change PR #249's dated evidence or approve the privacy/retention launch gate.
 
 - PR #241 makes emergency-contact and safety-stop incident reports stop the job
   timer regardless of a low/moderate severity selection, preserving the payment
