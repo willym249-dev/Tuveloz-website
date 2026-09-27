@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 
 What authenticates Tuveloz email, how the sending domain is configured today,
 and the deliberate sequence for tightening DMARC. Every account on the platform
@@ -16,6 +16,53 @@ recovery. Existing sessions and supported password/passkey flows are separate;
 do not describe every sign-in as an emailed-code flow. SMS remains switched off,
 so it is not an email-recovery fallback. Preserve working email settings while
 reviewing delivery and spoofing protection.
+
+## September 27 follow-up — sign-in header verified; one new report read
+
+Read the original received message from the already-completed private staging
+rehearsal. Google's authentication summary shows **SPF, DKIM, and DMARC PASS**,
+with the Tuveloz DKIM signature under `updates.tuveloz.com` and the envelope
+sender under `send.updates.tuveloz.com`. The message was sent September 27 at
+00:51:36 UTC (September 26, 8:51 p.m. Maryland time); Gmail reports delivery
+after one second. The original headers also record TLS. No new email, code,
+sign-in, credential, or staging activation was needed for this read-only check.
+This verifies the received sign-in sample, not universal delivery or an actual
+incident-triggered alert. No sign-in code or full message was retained in the
+repository.
+
+A focused business-inbox search found one new Google aggregate report received
+September 27 at 6:18 a.m. Maryland time. Downloaded its ZIP through Gmail's
+normal controls and parsed it locally with external XML resolution and DTDs
+disabled and a size limit. It covers **September 26, 00:00:00–23:59:59 UTC**:
+
+| Observations | Result | Evidence |
+| ---: | --- | --- |
+| 1 | DMARC pass | Website sender, with aligned Tuveloz DKIM and SPF |
+| 2 | DMARC pass | Google business mail, with aligned Tuveloz DKIM and SPF |
+| 2 | DMARC fail | Another domain passes raw SPF/DKIM but does not align with the Tuveloz From domain; the receiver records `local_policy`, `arc=pass`, and disposition `none` |
+
+The last row is consistent with forwarding or relaying; that is an inference,
+not proof of a legitimate sender, fraud, or a particular conversation. Google
+describes ARC handling for indirect mail in its
+[sender FAQ](https://support.google.com/mail/answer/14229414?hl=en).
+Do not add that domain to SPF to make the report pass. The report period ends
+before the staging sign-in message above and before the recorded broker inquiry;
+it cannot serve as receipt evidence for either. Aggregate reports do not identify
+the individual messages or prove inbox placement.
+
+The new reporter/report-ID pair is absent from the previous eight-report
+analysis. The old files were not downloaded or parsed again. Keep this five-
+observation daily sample separate from the historical fifteen-observation set;
+neither is an overall delivery rate. Raw report, SHA-256 hash, report identity,
+and row details remain private in `outputs/dmarc-reports-20260927.private/`.
+The reduced sign-in authentication record is
+`outputs/email-delivery-evidence-20260927.json`.
+
+The three earlier unsigned observations on September 22–24 remain unexplained.
+Owner confirmation of additional sending apps and a named recurring reader are
+still required before considering enforcement. No DNS, mail routing, sending
+service, subscription, or launch setting changed. Keep the September 28 sender
+inventory checkpoint; do not repeat this completed header or report review.
 
 ## September 26 review — eight reports read; sender confirmation pending
 
@@ -83,7 +130,9 @@ The September 4 Workspace delivery test and automatic support message, and the
 September 26 manual mailbox round trip, already have receipt evidence. Do not
 send them again for this review. A received **support** message's full
 SPF/DKIM/DMARC pass was rechecked in the September 26 production follow-up; it
-does not establish a sign-in-code header or incident-triggered delivery. See
+did not establish a sign-in-code header or incident-triggered delivery. The
+separate September 27 header check above now covers one staging sign-in message;
+incident-triggered delivery remains unproven. See
 the [support record](2026-09-04-support-reliability.md) and
 [incident runbook](vehicle-incident-claims-and-stop-work-plan.md).
 
@@ -158,8 +207,8 @@ The deployed support form's labeled test reached the owner inbox. Gmail shows
 mailed-by `send.updates.tuveloz.com`, signed-by `updates.tuveloz.com`, and TLS.
 This confirms receipt for one application message. The September 26 follow-up
 also read its original authentication summary and found SPF, DKIM, and DMARC
-passing. It does not establish universal inbox placement or a sign-in-code
-message's authentication header.
+passing. It does not establish universal inbox placement. The separate
+September 27 check above covers one received staging sign-in message's header.
 
 The sending identity is `alerts@updates.tuveloz.com` (`wrangler.jsonc`), sent
 through Resend, which delivers via Amazon SES.
@@ -255,9 +304,9 @@ with all mailbox-provider requirements.
 ### What this analysis does not prove
 
 DNS establishes the published configuration, not every message's result. The
-dated Workspace and support-message receipts above prove those samples only.
-A captured real sign-in-code authentication header, a reviewed aggregate sender
-inventory, and incident-specific inbox delivery remain separate evidence.
+dated Workspace, support-message, and staging sign-in receipts above prove those
+samples only. The aggregate sender inventory and incident-specific inbox
+delivery remain incomplete; these samples do not resolve either requirement.
 
 ## The tightening sequence, and why it is a sequence
 
@@ -306,5 +355,6 @@ The temporary key was then revoked, both temporary Worker secrets removed,
 the account signed out, the enable flag set false, and sender/expiry cleared.
 Normal Resend settings remained empty throughout. Staging is back to no-send.
 See [`../STAGING.md`](../STAGING.md) for evidence and cleanup details. This is
-delivery/sign-in proof for that test, not a fresh SPF/DKIM/DMARC header audit or
-proof of real incident-triggered delivery. No paid upgrade was added.
+delivery/sign-in proof for that test. The September 27 read-only follow-up above
+also verifies its received SPF/DKIM/DMARC header; real incident-triggered
+delivery remains unproven. No paid upgrade was added.

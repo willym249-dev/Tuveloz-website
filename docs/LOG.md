@@ -11,6 +11,41 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Verify the received sign-in header and read one new mail report
+
+Preserved PR #250's completed release and its local evidence commit `d43188c`.
+No open PR was found at the start of this pass; main remained `546e60a`.
+Used the signed-in Tuveloz business inbox to inspect the original message from
+the completed hosted staging sign-in. Google's received summary reports SPF,
+Tuveloz-aligned DKIM, and DMARC PASS, with delivery after one second. Message
+time is September 27, 00:51:36 UTC. This closes the missing sign-in-header
+evidence without another send or staging credential. Full message content and
+sign-in codes are not retained in the repository.
+
+One new Google report arrived at 6:18 a.m. Maryland time. The supported Gmail
+download and private local XML parser produced three rows and five observations
+for September 26 UTC: three aligned passes (one website, two business Google)
+and two failures signed for another domain with a local-policy ARC override.
+The latter is consistent with relaying, not established legitimate mail or fraud.
+The reporting period predates the recorded staging message and broker inquiry;
+do not use it as delivery confirmation for either. The report identity was
+compared with the earlier analysis and is new. The previous eight files were
+not reread or reparsed.
+
+Updated the email runbook and open sender-inventory checkpoint, keeping the
+earlier three unexplained unsigned failures and recurring-reader assignment
+open. Asked the owner to confirm any additional sending apps. Private evidence
+is `outputs/email-delivery-evidence-20260927.json` and
+`outputs/dmarc-reports-20260927.private/analysis.json`; raw report and hash stay
+outside the repository. Documentation/evidence only: no code, DNS, account
+setting, external message, paid service, or launch/payment decision changed.
+The website remains at the already-verified PR #250 release.
+
+Validation: the existing deadline parser includes the updated open email item
+with no malformed dates; the reduced private proof matches the parsed report
+totals; `git diff --check` passes. Saved as a local documentation commit, with
+no PR, push, or deployment needed for this inbox-evidence pass.
+
 ## 2026-09-27 - Finish Spanish privacy controls and preserve form state
 
 The private privacy center now has published Spanish interface coverage for the
