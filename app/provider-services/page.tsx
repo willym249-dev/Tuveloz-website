@@ -72,7 +72,7 @@ export default function ProviderServicesPage() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  async function submit(action: string, payload: Record<string, unknown>, success: string) {
+  async function submit(action: string, payload: Record<string, unknown>, success: string): Promise<boolean> {
     setBusy(action);
     setError("");
     setNotice("");
@@ -86,8 +86,10 @@ export default function ProviderServicesPage() {
       if (!response.ok) throw new Error(result.error || "Unable to save this provider setting.");
       setData(result);
       setNotice(success);
+      return true;
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save this provider setting.");
+      return false;
     } finally {
       setBusy("");
     }
@@ -97,7 +99,7 @@ export default function ProviderServicesPage() {
     event.preventDefault();
     const form = event.currentTarget;
     const values = Object.fromEntries(new FormData(form).entries());
-    await submit("save-catalog-item", {
+    const saved = await submit("save-catalog-item", {
       service: values.service,
       priceType: values.priceType,
       startingPrice: values.startingPrice,
@@ -105,15 +107,15 @@ export default function ProviderServicesPage() {
       description: values.description,
       active: values.active === "on",
     }, "Service and provider-set price saved.");
-    form.reset();
+    if (saved) form.reset();
   }
 
   async function addCredential(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const values = Object.fromEntries(new FormData(form).entries());
-    await submit("add-credential", values, "Credential submitted for Tuveloz review.");
-    form.reset();
+    const saved = await submit("add-credential", values, "Credential submitted for Tuveloz review.");
+    if (saved) form.reset();
   }
 
   return (

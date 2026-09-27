@@ -133,6 +133,14 @@ invented or substituted. Obtain a supported notice source or reviewer guidance
 before claiming the wider notice collection is complete; no outside inquiry
 has been sent.
 
+September 27 follow-up: the current upstream main tree
+`08c2ee8e07e9b9a5fdde871a57c0df67b5750219` also has no license/notice file,
+and the scoped issue search found no existing license question. A short public
+question requesting the official MIT text, copyright attribution and its
+applicability to 1.7.0 is prepared in the private output
+`hiogawa-license-inquiry-20260927.md`. Permission to post it was requested from
+the owner; it remains unsent. No license terms or copyright owner were inferred.
+
 Private evidence: `outputs/distributed-packages-20260927.json`,
 `outputs/distributed-packages-build-20260927.log`, and the preserved collection's
 `manifest.json`. No package was installed or upgraded, no application code or

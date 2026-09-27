@@ -11,6 +11,45 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Preserve provider tool drafts after rejected saves
+
+Fresh review found no open PR and GitHub main still at `643a143`. Preserved
+the prior local release/notice record commit and continued on
+`fix/provider-tool-draft-retention-20260927`. While reconciling the older
+PR #33/#46 checklist entry, found that both forms in `/provider-services`
+unconditionally reset after their shared save helper handled an error.
+
+Reproduced lost service and credential drafts with the real page in isolated
+Chromium and WebKit fixtures: all twelve validation, unavailable-server and
+network-failure cases lost entered values before the fix. The save helper now
+returns its success result and each caller resets only after success. Re-ran
+all twelve scenarios successfully, including exact retained fields, no
+automatic resubmission, deliberate retry with the same payload, clearing
+after success and credentials remaining pending/private. Corrected the test
+fixture to serve the existing local badge asset; it permits no external calls.
+Added the regression to the normal release workflow. This is a narrow failed-
+save draft repair, not a claim that every malformed-response or timeout path
+on that page has been reviewed.
+
+Production build and all 793 tests pass; TypeScript passes; lint has no errors
+and the same existing language-navigation warning. No API, database, policy,
+provider approval, live transaction, signup flow or launch switch changed.
+No paid call or real provider record was used. Evidence:
+`outputs/provider-tools-before-20260927/`,
+`outputs/provider-tools-after-20260927/`, and the full test/lint/typecheck logs.
+The source fix is local and awaits publication approval and normal release
+checks; production remains PR #251.
+
+The upstream notice review found no existing license issue or license file
+on the current `hi-ogawa/js-utils` main tree. Prepared a short public inquiry
+requesting the official attribution for the embedded 1.7.0 helper; owner
+approval to post it is pending, so nothing was sent. The retained 39-file
+collection remains private. The older closed PRs were inspected, not restored:
+PR #33's reminder/range additions are absent, and its old migration number is
+already occupied. PR #46's exact owner-only draft tool is absent, while the
+current bilingual `/ai` policy/help route exists independently. No claim of
+feature equivalence or reason to reactivate a paid API was inferred.
+
 ## 2026-09-27 - Publish PR 251 and preserve build-output notice evidence
 
 The owner explicitly approved merging PR #251 and deploying it. Fresh review

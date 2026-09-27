@@ -146,6 +146,9 @@ jobs:
       - name: Verify customer settings and saved-provider recovery
         run: npm run test:e2e:customer-tools
 
+      - name: Verify provider service and credential drafts survive failed saves
+        run: npm run test:e2e:provider-tools
+
       - name: Verify provider submission receipts, retries, and address suggestions
         run: npm run test:e2e:provider-submission
 
