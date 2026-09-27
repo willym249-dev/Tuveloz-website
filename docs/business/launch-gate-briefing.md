@@ -225,6 +225,20 @@ Also needs an official legal source.
 *Existing:* the eligibility matrix above. Services without both records stay
 disabled, which is enforced rather than promised.
 
+September 27's [resolved insurance inventory](provider-insurance-review-matrix.md)
+executes the current requirement resolver for all 25 services and 47 configured
+service/pathway combinations. Of 23 independent-provider combinations, only
+towing/storage and vehicle lockout select named insurance evidence; the other
+21 select none recognized by the insurance classifier. All 24 employee/trainee
+combinations select workers' compensation. No combination selects the defined
+broker coverage determination evidence type. These are configuration facts,
+not findings that coverage is unnecessary. Package contents and exact coverage
+still need review. All services remain disabled. The inventory prepares the
+specific insurer questions without adding blanket requirements or purchasing
+coverage. Platform service activation and individual provider coverage must be
+reviewed separately; a service activation record proves neither an applicant's
+policy nor its authenticity.
+
 **`vehicle_incident_claims_and_stop_work`** — *safety and claims, required*
 Also needs a legal source and the owner.
 *Existing:* [`../operations/vehicle-incident-claims-and-stop-work-plan.md`](../operations/vehicle-incident-claims-and-stop-work-plan.md),

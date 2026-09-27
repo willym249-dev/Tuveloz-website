@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Prepare insurer decisions from the actual provider checklist
+
+Preserved completed PR #254 and local release-evidence commit `a87f938`; fresh
+GitHub checks found no open PR and main still `a1f9ace`. Instead of repeating
+release work, executed the unchanged jurisdiction-aware policy resolver and
+insurance classifier locally for all 25 services and 47 configured pathways.
+The new indexed `business/provider-insurance-review-matrix.md` records exact
+coverage selections, location boundaries and questions for the insurance review.
+
+Only two of 23 independent-provider combinations select named insurance
+evidence: towing/storage and lockout. The other 21 do not; all 24 employee/trainee
+combinations select workers' compensation. No resolved combination selects the
+defined broker coverage determination type. Empty coverage selections are not
+evidence that insurance is unnecessary; package evidence and the written insurer
+decision remain separate. All 25 services stay disabled. Do not mark the provider
+insurance matrix gate complete or invent a universal requirement from older
+prose. The platform policy and each provider's coverage need separate evidence.
+
+Private inventory `outputs/provider-insurance-inventory-20260927.json` retains
+all requirements, exact service/pathway/scope/location identifiers, source hashes
+and generation time. The local helper uses the real resolver without duplicating
+its policy logic. No application source, policy release, provider record, paid
+service or outgoing message changed. The existing Founder Shield inquiry and
+September 30 checkpoint remain in place; no duplicate inquiry was sent.
+
 ## 2026-09-27 - PR #254 published; provider validity repair verified live
 
 Continued the owner's standing instruction to fix and finish Tuveloz. PR #254
