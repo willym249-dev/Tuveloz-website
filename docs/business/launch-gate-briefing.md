@@ -8,12 +8,12 @@
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
 who is allowed to answer it, and what the code already implements — with file
 references, so a reviewer confirms findings instead of interviewing someone from
-scratch. The authenticated production review page was refreshed on September 26,
-2026 at 14:06 UTC: all eighteen review controls showed Pending, with no approved
+scratch. The authenticated production review page was refreshed on September 27,
+2026: all eighteen review controls showed Pending, with no approved
 gate visible. The request passed real owner signed-token verification and the
 existing scanner operational proof passed; neither approves a reviewer gate.
 There are **seventeen required gates and one optional employee/trainee lane**.
-Recheck the live page before recording a decision; the September 26 control
+Recheck the live page before recording a decision; the September 27 control
 count is a dated snapshot. Start with the current
 [`2026-09-25-prelaunch-reconciliation.md`](./2026-09-25-prelaunch-reconciliation.md)
 before using the older evidence below.
@@ -53,15 +53,20 @@ These completed technical checks do not approve the remaining launch gates.
 the missing nine-event Connected accounts / Snapshot destination is now Active,
 and its dedicated secret is encrypted in Cloudflare production. The existing
 Identity and V2 thin Connect destinations were preserved. A deployed synthetic
-probe found that the snapshot route incorrectly constructs the payment client
-before signature verification; the current payment lock therefore produces
-503. A narrow static-signature-verifier fix and nine real-route/migrated-SQL
-tests pass locally, along with all 756 tests/build. Release and post-release
-verification are pending. No booking/payment lock changed. See
+probe found that the snapshot route incorrectly constructed the payment client
+before signature verification, producing 503 while payments were locked.
+PR #246 fixed this using static signature verification. All 756 tests/build,
+the PR checks and production workflow `36297054968` passed. The exact live
+release is `31980998846d1f749fce7bcca539a39edb2e2711`; six deployed endpoint
+checks passed at 05:39 UTC, including valid/duplicate acceptance and rejection
+of missing, wrong, expired and altered-body signatures. This used a synthetic
+unmapped account and proves neither vendor-originated delivery nor settlement.
+No booking/payment lock changed. Setup and release are complete. See
 [`DEPLOYMENT.md`](../../DEPLOYMENT.md) for the existing event list and the
-September 27 log entry for exact observations. The CLI could not refresh D1
-gate decisions due to account/credential authorization error 7403; this does
-not supersede the dated September 26 owner-page evidence above.
+September 27 log entry for exact observations. Although the CLI could not
+refresh D1 gate decisions, the authenticated owner page was read successfully
+on September 27: eighteen Pending controls, real transactions OFF, and zero
+activated services. No decision, owner choice, or launch control was changed.
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
