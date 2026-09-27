@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, lte, or } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt, lte, notInArray, or, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { getDb } from "../db";
 import { stripePayments } from "../db/schema";
@@ -321,52 +321,72 @@ async function paymentForStripeObject(
   return payment ?? null;
 }
 
-function paymentStatusAfterRefundedCharge(
-  payment: typeof stripePayments.$inferSelect,
-  charge: Stripe.Charge,
-) {
-  if (payment.disputeStatus || REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)) {
-    return payment.status;
-  }
-  if (charge.amount_refunded <= 0) return payment.status;
-  return charge.refunded ? "refunded" : "partially_refunded";
+function unchangedRefundSnapshot(payment: typeof stripePayments.$inferSelect) {
+  return and(
+    eq(stripePayments.refundAmountCents, payment.refundAmountCents),
+    eq(stripePayments.refundedAt, payment.refundedAt),
+    eq(stripePayments.lastRefundEventCreated, payment.lastRefundEventCreated),
+    eq(stripePayments.lastRefundEventId, payment.lastRefundEventId),
+  );
+}
+
+async function paymentForRefundCharge(stripeClient: Stripe, chargeId: string, paymentIntentId: string) {
+  const payment = await paymentForStripeObject(chargeId, paymentIntentId);
+  if (payment) return payment;
+  // A refund can arrive before checkout completion stores the Charge ID.
+  // Keep the original PaymentIntent fallback, then fetch again after reading
+  // the local version so that the eventual write can detect concurrent changes.
+  const charge = await stripeClient.charges.retrieve(chargeId);
+  return paymentForStripeObject(chargeId, stripeObjectId(charge.payment_intent));
+}
+
+function preserveDisputeOrLaunchHold(nextStatus: string) {
+  // Evaluate against the row being written, not the earlier read. A concurrent
+  // dispute or launch hold must survive while refund facts are still recorded.
+  return sql<string>`case
+    when ${stripePayments.status} = 'paid_launch_readiness_hold'
+      or ${stripePayments.disputeStatus} <> '' then ${stripePayments.status}
+    else ${nextStatus} end`;
 }
 
 export async function recordRefundedCharge(
   stripeClient: Stripe,
   eventCharge: Stripe.Charge,
 ) {
-  // Re-read Stripe instead of trusting a potentially delayed snapshot. This
-  // prevents an old charge.refunded delivery from reducing a newer hold.
-  const charge = await stripeClient.charges.retrieve(eventCharge.id);
-  const payment = await paymentForStripeObject(
-    charge.id,
-    stripeObjectId(charge.payment_intent),
-  );
-  if (!payment) {
-    console.warn("Ignoring a refunded charge without a Tuveloz payment record", {
-      chargeId: charge.id,
-    });
-    return;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    // Read the local version before fetching Stripe. If another refund writer
+    // wins, fetch again rather than imposing a stale amount or a high-water mark.
+    const payment = await paymentForRefundCharge(stripeClient, eventCharge.id, stripeObjectId(eventCharge.payment_intent));
+    if (!payment) {
+      console.warn("Ignoring a refunded charge without a Tuveloz payment record", {
+        chargeId: eventCharge.id,
+      });
+      return;
+    }
+    const charge = await stripeClient.charges.retrieve(eventCharge.id);
+    const now = new Date().toISOString();
+    const [updated] = await getDb().update(stripePayments).set({
+      refundAmountCents: charge.amount_refunded,
+      refundedAt: charge.amount_refunded > 0 ? payment.refundedAt || now : "",
+      status: sql<string>`case
+        when ${stripePayments.status} = 'paid_launch_readiness_hold'
+          or ${stripePayments.disputeStatus} <> ''
+          or ${inArray(stripePayments.status, [...REFUND_HOLD_PAYMENT_STATUSES])}
+          or ${charge.amount_refunded} <= 0 then ${stripePayments.status}
+        else ${charge.refunded ? "refunded" : "partially_refunded"} end`,
+      updatedAt: now,
+    }).where(and(eq(stripePayments.id, payment.id), unchangedRefundSnapshot(payment)))
+      .returning({ id: stripePayments.id });
+    if (updated) return;
   }
-
-  const now = new Date().toISOString();
-  await getDb().update(stripePayments).set({
-    refundAmountCents: charge.amount_refunded,
-    refundedAt: charge.amount_refunded > 0
-      ? payment.refundedAt || now
-      : "",
-    status: paymentStatusAfterRefundedCharge(payment, charge),
-    updatedAt: now,
-  }).where(eq(stripePayments.id, payment.id));
+  // The webhook receipt stays failed/retryable if contention persists.
+  throw new Error("Refund charge reconciliation changed concurrently; retry required");
 }
 
 function refundPaymentStatus(
-  payment: typeof stripePayments.$inferSelect,
   refund: Stripe.Refund,
   charge: Stripe.Charge,
 ) {
-  if (payment.disputeStatus) return payment.status;
   switch (refund.status) {
     case "succeeded":
       return charge.refunded ? "refunded" : "partially_refunded";
@@ -394,65 +414,81 @@ export async function recordRefundStatus(
   eventId: string,
   eventCreated: number,
 ) {
-  const refund = await stripeClient.refunds.retrieve(eventRefund.id);
-  const chargeId = stripeObjectId(refund.charge) || stripeObjectId(eventRefund.charge);
-  if (!chargeId) {
-    console.warn("Ignoring a refund without a Stripe Charge", {
-      eventId,
-      refundId: refund.id,
-    });
-    return;
-  }
-  const charge = await stripeClient.charges.retrieve(chargeId);
-  const payment = await paymentForStripeObject(
-    charge.id,
-    stripeObjectId(charge.payment_intent) || stripeObjectId(refund.payment_intent),
-  );
-  if (!payment) {
-    console.warn("Ignoring a refund without a Tuveloz payment record", {
-      eventId,
-      refundId: refund.id,
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const refund = await stripeClient.refunds.retrieve(eventRefund.id);
+    const chargeId = stripeObjectId(refund.charge) || stripeObjectId(eventRefund.charge);
+    if (!chargeId) {
+      console.warn("Ignoring a refund without a Stripe Charge", {
+        eventId,
+        refundId: refund.id,
+      });
+      return;
+    }
+    const payment = await paymentForRefundCharge(
+      stripeClient,
       chargeId,
-    });
-    return;
-  }
-  if (eventCreated < payment.lastRefundEventCreated) {
-    console.warn("Ignoring an older Stripe refund event", {
-      eventId,
-      refundId: refund.id,
-      eventCreated,
-      lastRefundEventCreated: payment.lastRefundEventCreated,
-    });
-    return;
-  }
+      stripeObjectId(refund.payment_intent) || stripeObjectId(eventRefund.payment_intent),
+    );
+    if (!payment) {
+      console.warn("Ignoring a refund without a Tuveloz payment record", {
+        eventId,
+        refundId: refund.id,
+        chargeId,
+      });
+      return;
+    }
+    if (eventCreated < payment.lastRefundEventCreated) {
+      console.warn("Ignoring an older Stripe refund event", {
+        eventId,
+        refundId: refund.id,
+        eventCreated,
+        lastRefundEventCreated: payment.lastRefundEventCreated,
+      });
+      return;
+    }
 
-  const nextStatus = refundPaymentStatus(payment, refund, charge);
-  if (
-    eventCreated === payment.lastRefundEventCreated
-    && REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)
-    && !REFUND_HOLD_PAYMENT_STATUSES.has(nextStatus)
-  ) {
-    // Stripe event timestamps have one-second precision. An equally timed safe
-    // event cannot clear an already-recorded adverse refund state.
-    return;
-  }
+    if (
+      eventCreated === payment.lastRefundEventCreated
+      && (REFUND_HOLD_PAYMENT_STATUSES.has(payment.status)
+        || (payment.refundStatus !== "" && payment.refundStatus !== "succeeded"))
+      && refund.status === "succeeded"
+    ) {
+      // Stripe event timestamps have one-second precision. An equally timed safe
+      // event cannot clear an already-recorded adverse refund state.
+      return;
+    }
 
-  const now = new Date().toISOString();
-  await getDb().update(stripePayments).set({
-    refundAmountCents: charge.amount_refunded,
-    refundedAt: charge.amount_refunded > 0 ? payment.refundedAt || now : "",
-    refundStatus: refund.status ?? "unknown",
-    refundUpdatedAt: now,
-    refundFailureReason: refund.failure_reason?.slice(0, 120) ?? "",
-    lastRefundId: refund.id,
-    lastRefundEventCreated: eventCreated,
-    lastRefundEventId: eventId,
-    status: nextStatus,
-    updatedAt: now,
-  }).where(and(
-    eq(stripePayments.id, payment.id),
-    lte(stripePayments.lastRefundEventCreated, eventCreated),
-  ));
+    const charge = await stripeClient.charges.retrieve(chargeId);
+    const nextStatus = refundPaymentStatus(refund, charge);
+    const now = new Date().toISOString();
+    const [updated] = await getDb().update(stripePayments).set({
+      refundAmountCents: charge.amount_refunded,
+      refundedAt: charge.amount_refunded > 0 ? payment.refundedAt || now : "",
+      refundStatus: refund.status ?? "unknown",
+      refundUpdatedAt: now,
+      refundFailureReason: refund.failure_reason?.slice(0, 120) ?? "",
+      lastRefundId: refund.id,
+      lastRefundEventCreated: eventCreated,
+      lastRefundEventId: eventId,
+      status: preserveDisputeOrLaunchHold(nextStatus),
+      updatedAt: now,
+    }).where(and(
+      eq(stripePayments.id, payment.id),
+      unchangedRefundSnapshot(payment),
+      lte(stripePayments.lastRefundEventCreated, eventCreated),
+      // Repeat the equal-second guard atomically; a dispute can mask the refund
+      // hold in the aggregate status, so also check the dedicated refund state.
+      refund.status === "succeeded" ? or(
+        lt(stripePayments.lastRefundEventCreated, eventCreated),
+        and(
+          notInArray(stripePayments.status, [...REFUND_HOLD_PAYMENT_STATUSES]),
+          inArray(stripePayments.refundStatus, ["", "succeeded"]),
+        ),
+      ) : undefined,
+    )).returning({ id: stripePayments.id });
+    if (updated) return;
+  }
+  throw new Error("Refund reconciliation changed concurrently; retry required");
 }
 
 export async function recordDisputeStatus(
@@ -496,11 +532,16 @@ export async function recordDisputeStatus(
     lastDisputeId: dispute.id,
     lastDisputeEventCreated: eventCreated,
     lastDisputeEventId: eventId,
-    status,
+    status: sql<string>`case when ${stripePayments.status} = 'paid_launch_readiness_hold'
+      then ${stripePayments.status} else ${status} end`,
     updatedAt: now,
   }).where(and(
     eq(stripePayments.id, payment.id),
     lte(stripePayments.lastDisputeEventCreated, eventCreated),
+    dispute.status === "won" ? or(
+      lt(stripePayments.lastDisputeEventCreated, eventCreated),
+      inArray(stripePayments.disputeStatus, ["", "won"]),
+    ) : undefined,
   ));
 }
 

@@ -13,6 +13,12 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
+The September 27 refund/dispute concurrency repair is locally verified (776
+tests/build, TypeScript and lint) and awaiting the required release workflows.
+It preserves current dispute/launch holds and retries conflicting refund writes;
+it has not changed production yet. See the newest LOG entry. The completed
+checkout repair below remains the last verified live version.
+
 - Last confirmed release at this record update:
   `27c1fe73f86443dcfa9dcddac950eeea442e0ac4` (PR #247), built September 27 at
   06:20:45 UTC. Every job in production workflow `36299174143` passed, including
