@@ -37,9 +37,22 @@ All data and network responses are synthetic; no live export, privacy request,
 email, provider approval or payment occurred. The private privacy center remains
 English-only under the existing reviewed-language routing rules; this repair
 does not claim a Spanish version or create a public alias. No policy text or
-launch gate changed. PR and production verification are pending. Private test
-proof is retained outside the public repository. Full privacy/retention review
-and owner decisions remain separate from these technical results.
+launch gate changed.
+
+Published as PR #249: tested head `9a99f97` merged as
+`f78d76a45e33e1105d7c83d565047e217fd41a5d`. Required PR verification
+`36305955945` and all three jobs in production workflow `36306743015` passed,
+including the browser suite and end-to-end provider signup. The release was
+built at 08:52:13 UTC. Independent public health at 08:54:23 UTC confirmed the
+exact version, ready application/database/schema, and no missing tables or
+guarded triggers. Accounts/applications remain open; customer requests/payments
+remain closed. Four read-only live API checks confirmed unsigned access and
+invalid privacy scopes are rejected with private, no-store error responses.
+Authenticated isolation/recovery proof remains synthetic, not a live export or
+privacy submission. Private evidence is retained outside the public repository
+in `pr249-live-release-20260927.json` and the corresponding workflow records.
+Full privacy/retention review, reviewed Spanish privacy controls, and owner
+decisions remain separate. Do not repeat this completed repair or PR #248.
 
 ## 2026-09-27 - Preserve concurrent refund, dispute and launch holds
 
