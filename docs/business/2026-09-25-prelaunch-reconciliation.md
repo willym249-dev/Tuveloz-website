@@ -57,9 +57,16 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   Files and hashes remain private. Sender completeness, new-report monitoring,
   and any DMARC enforcement change remain pending; no DNS was changed. See the
   [email-authentication runbook](../operations/email-authentication.md).
-- The business Gmail inbox loads. Activation and payment receipts are present.
-  Exact Google Admin subscription details still require a fresh account
-  verification; an old suspension warning is not current proof of a problem.
+- The business Gmail inbox loads. September 26 Google Admin inspection confirmed
+  Business Plus Active, Flexible Plan, one license, a displayed $19.80 monthly
+  estimate and $26.40/user/month after the November 5 discount ends. Billing
+  inspection is complete; November 1 is the cost-review checkpoint. No plan changed.
+- The owner-approved hosted customer upload passed on isolated staging at
+  `7348f7d`: one normal email code/sign-in, one actual image/note submission,
+  private-image read and refresh persistence, with no changes to earlier holds,
+  provider approval, payments or provider messages. Temporary credentials were
+  revoked/removed, the customer signed out, and no-send defaults restored.
+  See [`../STAGING.md`](../STAGING.md); do not repeat it as an unfinished upload.
 - The owner-operated ClamAV task is scheduled and its September 26 09:29 UTC
   run completed without errors after a successful signature refresh. The earlier
   "missing complete file scan" statement was incorrect: September 6 manual and
@@ -90,7 +97,7 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   regression failed before the fix, then all 725 tests and twelve incident browser
   scenarios passed. Production release `36261358204` and exact live health are
   verified. The incident runbook has a scoped official-source check and unsent
-  bilingual response drafts. Insurer review, hosted participant upload, actual
+  bilingual response drafts. Insurer review, actual
   notification delivery, and launch approvals remain separate.
 
 - PR #240 corrects misleading account welcome notices and their workspace
@@ -166,7 +173,7 @@ Actual owner UI/API resolution and later hold release passed against synthetic
 staging D1 records; the original resolution and other incident's hold were
 preserved, with verified owner audit and no payment or notification records.
 The reports were seeded fixtures. The later link/read check is recorded below;
-hosted participant upload, insurer/notification handling, an actual payout, and complete process review remain outside these
+The later hosted participant upload is complete as recorded above. Insurer/notification handling, an actual payout, and complete process review remain outside these
 results. All eighteen live review controls still showed Pending. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
@@ -179,8 +186,9 @@ with synthetic bindings, including rollback and wrong-account rejection. The
 existing private staging deployment `36252778621` also passed actual owner
 linking and opening of a seeded synthetic image from R2. Independent D1 checks
 confirmed preserved references/resolution/holds and one new owner audit, with
-no payment, notification, or provider approval. The hosted participant upload,
-insurer/source review, and launch approval remain separate. PRs #238 and #239
+no payment, notification, or provider approval. The later hosted participant
+upload is complete as recorded above; insurer/source review and launch approval
+remain separate. PRs #238 and #239
 are published together as `36e9376`; production run `36254642943` passed and
 public health at 16:28:35 UTC confirmed that exact release with all health checks
 ready and customer requests/payments closed. A staging screenshot also exposed

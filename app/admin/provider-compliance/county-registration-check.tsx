@@ -81,7 +81,7 @@ export function CountyRegistrationCheck({ providerId, evidenceId, disabled }: {
     <p>This check does not approve the provider or confirm insurance. Ask OCP to confirm current standing and the services covered before accepting the registration.</p>
     <div className="county-registration-links">
       <a href={COUNTY_REGISTRATION_SOURCE} target="_blank" rel="noreferrer">View county records</a>
-      <a href="https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html" target="_blank" rel="noreferrer">Contact OCP</a>
+      <a href="https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing" target="_blank" rel="noreferrer">Contact OCP</a>
     </div>
   </section>;
 }

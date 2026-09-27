@@ -89,9 +89,10 @@ evidence, messages, the appointment record, arrival tracking, and the
 authorization chain. The incident console can now link saved photos and notes
 from the same job through `evidenceReferences`. PRs #238 and #239 are published;
 the September 26 hosted owner rehearsal verified linking and opening a seeded
-private image without changing earlier references or payment holds. A hosted
-participant upload and the full process review remain separate unfinished
-checks; see the dated evidence below. Do not delete a message, image, or job record after an incident
+private image without changing earlier references or payment holds. The later
+owner-approved hosted customer upload and credential cleanup passed; see
+[`../STAGING.md`](../STAGING.md). Full process review remains unfinished.
+Do not delete a message, image, or job record after an incident
 — the same rule as the security plan, for the same reason.
 
 **4. Payment stays held.** It holds itself. Do not release it to settle a
@@ -306,8 +307,9 @@ coverage opinion, legal sign-off, or approval of the implemented marketplace.
 
 The owner/insurer still needs to establish coverage, notice deadlines, claims
 contacts, the communication process, and who may authorize resumption or hold
-release. The hosted participant upload and real notification delivery remain
-unverified. No launch gate has been marked approved.
+release. The hosted customer upload is verified in `STAGING.md`; real
+incident-triggered notification delivery remains unverified. No launch gate
+has been marked approved.
 
 ## Resolution and records
 
@@ -376,8 +378,9 @@ deleting potentially committed evidence.
 synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
 draft, and refreshing after a saved upload never resubmits it. Neither test uses
 hosted R2 or attaches the photo to `job_incidents`. The additional incident-link
-test below covers that separate route; a hosted participant upload remains
-unverified. Owner and insurer review remain required independently of these tests.
+test below covers that separate route. The later hosted customer upload passed
+as recorded in `STAGING.md`. Owner and insurer review remain required
+independently of these tests.
 
 ### Linking saved evidence to an incident
 
@@ -402,7 +405,8 @@ atomic rollback, concurrent changes, lost acknowledgements, and unchanged holds.
 The actual console passes owner/customer/provider selection, rejected-attempt
 retention, retry, and photo-opening checks in Chromium and WebKit. These are
 synthetic technical tests. The hosted owner link/read check is recorded below;
-a hosted participant upload and real insurer workflow remain separate.
+the later hosted customer upload is recorded in `STAGING.md`. The real insurer
+workflow remains separate and incomplete.
 
 ### Owner decisions and later hold release
 

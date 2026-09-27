@@ -1,4 +1,4 @@
-import { officialSourceReferenceIsValid } from "./legal-compliance-evidence";
+import { canonicalOfficialSourceReference, officialSourceReferenceIsValid } from "./legal-compliance-evidence";
 
 export type LaunchReviewStage = "provider_onboarding" | "transaction_pilot";
 
@@ -38,7 +38,7 @@ const OFFICIAL_SOURCE = {
   electronicAcceptance:
     "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=21-106",
   montgomeryRepairRegistration:
-    "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
+    "https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing",
   marylandBusinessRecords:
     "https://dat.maryland.gov/pages/services.aspx",
   marylandPrivacy:
@@ -382,7 +382,9 @@ export function officialSourceReferenceIsAllowedForLaunchGate(
   reference: string,
 ) {
   return officialSourceReferenceIsValid(reference)
-    && Boolean(gate.acceptedOfficialSourceReferences?.includes(reference));
+    && Boolean(gate.acceptedOfficialSourceReferences?.some((acceptedReference) => (
+      canonicalOfficialSourceReference(acceptedReference) === canonicalOfficialSourceReference(reference)
+    )));
 }
 
 export function launchDecisionState(

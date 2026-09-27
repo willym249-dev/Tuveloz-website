@@ -43,10 +43,11 @@ still needs the genuine provider Identity result and each gate's review evidence
 Stripe business-account verification is separate
 from a provider applicant's ID and selfie check.
 
-Google Workspace mail loads again, and the business inbox contains activation
-and payment receipts. Google Admin still requires a fresh account verification
-before its exact subscription details can be recorded as gate evidence. See
-the dated item in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md).
+Google Admin subscription inspection completed September 26: Business Plus is
+Active on a Flexible Plan with one license. The vendor record holds the current
+displayed price and November cost-review checkpoint. The hosted customer image
+upload and temporary-email cleanup also passed; see [`../STAGING.md`](../STAGING.md).
+These completed technical checks do not approve the remaining launch gates.
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
@@ -382,7 +383,7 @@ should contain only record cards and sanitized evidence references.
 | Security/privacy reviewer and identity vendor | Scanner and Identity canaries, storage/access/deletion controls, privacy and incident plans | Verify the actual results, matching rules, retention/deletion, access boundaries and recovery exercises; state scope and limitations. |
 | Screening/compliance reviewer | Existing no-criminal-background-check position and public wording | Confirm the claims match checks actually performed and document applicable source requirements. |
 
-The County's [registration guidance](https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html)
+The County's [registration guidance](https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing)
 specifically includes mobile repair businesses. It was retrieved in this review;
 use it as a source, then verify each actual provider's registration. Maryland's
 [repair invoice statute](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=14-1003)

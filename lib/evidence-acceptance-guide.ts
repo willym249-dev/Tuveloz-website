@@ -44,7 +44,7 @@ const VENDOR_METHOD: AcceptanceMethod = "approved_verification_vendor";
 const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   ocp_vehicle_service_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
-    authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
+    authorityUrl: "https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing",
     recommendedMethod: ISSUER_METHOD,
     steps: [
       "Run the county registration check to compare the number, exact legal business name and expiration date with official records.",
@@ -86,7 +86,7 @@ const GUIDE_BY_REQUIREMENT: Record<string, AcceptanceGuide> = {
   },
   ocp_towing_registration: {
     authorityLabel: "Montgomery County Office of Consumer Protection",
-    authorityUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
+    authorityUrl: "https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing",
     recommendedMethod: ISSUER_METHOD,
     steps: ["Run the county registration check, then confirm current standing and towing authorization directly with OCP. The dataset's registration type describes the business structure, not the services authorized."],
   },

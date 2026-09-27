@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Correct moved county guidance and reconcile completed launch checks
+
+Read-only continuation found the old OCP registration URL now redirects to the
+general department homepage. Direct HTTP verification returned 200 for both,
+but only the current repair/maintenance/towing page contains the registration
+guidance. Updated the credential links, evidence-acceptance guidance, and legal
+review source suggestions. Exact legacy references remain accepted as the
+same source without rewriting stored evidence. Generic county homepages,
+lookalike domains, modified URLs and incomplete reviews remain rejected.
+No service classification, required document, evidence acceptance or launch
+decision changed. The current county page still leaves service-specific
+interpretations to the required confirmation; this is not a blanket legal
+or provider-compliance approval.
+
+Added three behavioral regression tests covering saved-reference compatibility,
+unrelated-source rejection, and actual launch-gate validation. The production
+build and all 743 tests pass; typecheck passes; lint has no errors and the one
+pre-existing site-language warning. An initial test-local variable name violated
+the Next.js lint rule and was renamed; the lint rerun passed. Reconciled stale
+briefing, incident-plan and deadline text which still described the completed
+hosted upload or Google Admin inspection as unfinished. Historical LOG entries
+remain dated history. This source update is prepared for review and is not yet
+deployed to staging or production; earlier deployed upload proof applies to
+`7348f7d`, and production remains `2bdab8b` at the last verified check.
+
 ## 2026-09-26 - Complete hosted customer image upload and temporary-access cleanup
 
 The owner specifically approved staging deployment, a one-hour owner-only code
