@@ -44,6 +44,18 @@ workflow. This entry records prepared source work, not publication. The last
 verified live release remains PR #244 at `40d9234`; do not call this account
 translation live until a separately approved release is verified.
 
+The first PR #245 Verify run (`36288242807`) caught a remaining early-click
+race in the actual homepage path: clicking before hydration saved Spanish
+opened an English account. Reproduced locally with homepage scripts withheld.
+Spanish account links now include an explicit `lang=es` hint on the same
+private path; changing language replaces only that hint, preserving role,
+return destination, anchor, history state and entered form data. Both browser
+engines pass all eight actual homepage navigation cases, including the
+unhydrated Spanish page and reload after switching. All 24 affected account
+language scenarios and 31 focused unit checks passed again. No production
+change was made by the failed workflow. The corrected version passes the
+production build, all 747 tests, typecheck and lint (one existing warning).
+
 ## 2026-09-26 - Publish PR #244 and verify the live release
 
 The owner explicitly approved publication after automatic approval review

@@ -13,6 +13,8 @@ for (const [engine, browserType] of Object.entries(engines)) {
     for (const language of ["en", "es"]) {
       for (const destination of ["account", "provider"]) {
         const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+        // A fast click must retain Spanish even before the homepage hydrates.
+        let holdHomepageScripts = language === "es" && destination === "account";
         // A navigation check cannot accidentally create an account or application.
         await context.route("**/*", async (route) => {
           if (!["GET", "HEAD"].includes(route.request().method())) return route.abort();
@@ -28,7 +30,13 @@ for (const [engine, browserType] of Object.entries(engines)) {
               headers["content-security-policy"] = headers["content-security-policy"]
                 .split(";").filter((part) => part.trim() !== "upgrade-insecure-requests").join(";");
             }
-            return route.fulfill({ response, headers });
+            // Keep the real server-rendered links while withholding only the
+            // homepage boot scripts. Aborting shared script requests instead
+            // can poison WebKit's module cache on the next page.
+            const body = holdHomepageScripts
+              ? (await response.text()).replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
+              : undefined;
+            return route.fulfill({ response, headers, ...(body === undefined ? {} : { body }) });
           }
           return route.continue();
         });
@@ -44,6 +52,11 @@ for (const [engine, browserType] of Object.entries(engines)) {
           const cta = page.locator(".final-cta");
           const button = cta.locator(destination === "account" ? 'a[href*="/account"]' : 'a[href*="/join"]');
           await button.scrollIntoViewIfNeeded();
+          if (holdHomepageScripts) {
+            assert.equal(await page.evaluate(() => localStorage.getItem("tuveloz-language")), null,
+              "the unhydrated homepage has not saved a language preference");
+            holdHomepageScripts = false;
+          }
           await button.click();
           await page.waitForURL((url) => destination === "account"
             ? url.pathname === "/account" : /\/(?:es\/)?join$/.test(url.pathname), { waitUntil: "domcontentloaded" });
@@ -58,6 +71,8 @@ for (const [engine, browserType] of Object.entries(engines)) {
             await page.reload({ waitUntil: "domcontentloaded" });
             await page.getByRole("heading", { name: language === "es" ? "Cree una cuenta." : "Create an account.", exact: true }).waitFor();
             await page.getByRole("button", { name: language === "es" ? "Change the whole page to English" : "Cambiar toda la página a español", exact: true }).click();
+            await page.getByRole("heading", { name: language === "es" ? "Create an account." : "Cree una cuenta.", exact: true }).waitFor();
+            await page.reload({ waitUntil: "domcontentloaded" });
             await page.getByRole("heading", { name: language === "es" ? "Create an account." : "Cree una cuenta.", exact: true }).waitFor();
             assert.equal(new URL(page.url()).pathname, "/account", "language switching keeps the private account route");
             assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,

@@ -88,7 +88,16 @@ test("Spanish navigation uses only reviewed routes and preserves attribution and
   assert.equal(spanishInterfaceHref("/join?ref=local#provider-apply"), "/es/join?ref=local#provider-apply");
   assert.equal(spanishInterfaceHref("/"), "/es");
   assert.equal(spanishInterfaceHref("/terms"), "/es/terms");
-  for (const href of ["/account?role=provider", "/customer-agreement", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
+  for (const href of ["/customer-agreement", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
     assert.equal(spanishInterfaceHref(href), href);
   }
+});
+
+test("Spanish account links carry language before hydration without losing role or return destination", () => {
+  const href = "/account?role=customer&mode=create&next=%2Fcustomer%3Ftab%3Djobs#signup";
+  const translated = spanishInterfaceHref(href);
+  assert.equal(translated, href.replace("#signup", "&lang=es#signup"));
+  assert.equal(spanishInterfaceHref(translated), translated, "nested translation must not duplicate language hints");
+  assert.equal(spanishInterfaceHref("/account"), "/account?lang=es");
+  assert.equal(spanishInterfaceHref("/account?lang=en"), "/account?lang=es");
 });

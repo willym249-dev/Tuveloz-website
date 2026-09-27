@@ -8,9 +8,16 @@ export function translateInterfaceValue(source: string, placeholder = false): st
 }
 
 export function spanishInterfaceHref(href: string): string {
-  // Relative public paths only: account, legal, API and external links stay put.
+  // Relative paths only; external and unreviewed routes stay put.
   if (!href.startsWith("/") || href.startsWith("//")) return href;
   const match = href.match(/^([^?#]*)([\s\S]*)$/)!;
+  if (match[1] === "/account") {
+    // Carry the language in server-rendered links too: a visitor can click
+    // before hydration saves their preference. The private path stays put.
+    const account = new URL(href, "https://tuveloz.com");
+    account.searchParams.set("lang", "es");
+    return `${account.pathname}${account.search}${account.hash}`;
+  }
   const path = spanishPathFor(match[1]);
   return path ? `${path}${match[2]}` : href;
 }
