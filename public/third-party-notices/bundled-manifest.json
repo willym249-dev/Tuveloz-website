@@ -1,0 +1,664 @@
+{
+  "reviewed": "2026-09-27",
+  "scope": "Notices for installed package versions observed in a local production build. Includes tree-shaken modules; not a complete embedded-component or deployment-runtime review.",
+  "observedBuild": {
+    "sourceCommit": "643a1437add35efbb579a95ec4a9f7e5fedd1d09",
+    "checkedAt": "2026-09-27T13:34:24.367Z",
+    "lockSha256": "b1337344ee728496462fd38dba4d50dd477517cb1042b476c557df3102d75599"
+  },
+  "packages": [
+    {
+      "name": "@hexagon/base64",
+      "version": "1.1.28",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@hexagon/base64",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/hexagon-base64-1.1.28-1.txt",
+          "source": "node_modules/@hexagon/base64/LICENSE",
+          "sha256": "b9c657e3785c8b54b6165808e2a2744dfa33251f5bb8f2324ac5f70ff0d9af57",
+          "bytes": 1101
+        }
+      ]
+    },
+    {
+      "name": "@levischuck/tiny-cbor",
+      "version": "0.2.11",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@levischuck/tiny-cbor",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/levischuck-tiny-cbor-0.2.11-1.txt",
+          "source": "node_modules/@levischuck/tiny-cbor/LICENSE",
+          "sha256": "5871de52772b5b8e6a7054616a4b59f3f7a7949adb588af7eddcf825c8db86b8",
+          "bytes": 1061
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-android",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-android",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-android-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-android/LICENSE",
+          "sha256": "3ee7c4b649b783688f1186c9aa0da50e331027514c9bfa143f27983e23783c71",
+          "bytes": 1056
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-cms",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-cms",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-cms-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-cms/LICENSE",
+          "sha256": "1ecdd8e8977af83c07c5f97bec87b47d27059b7ea323ca3160fbfa2314f5d99c",
+          "bytes": 1057
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-csr",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-csr",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-csr-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-csr/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-ecc",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-ecc",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-ecc-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-ecc/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-pfx",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-pfx",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-pfx-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-pfx/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-pkcs8",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-pkcs8",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-pkcs8-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-pkcs8/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-pkcs9",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-pkcs9",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-pkcs9-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-pkcs9/LICENSE",
+          "sha256": "3ee7c4b649b783688f1186c9aa0da50e331027514c9bfa143f27983e23783c71",
+          "bytes": 1056
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-rsa",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-rsa",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-rsa-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-rsa/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-schema",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-schema",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-schema-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-schema/LICENSE",
+          "sha256": "1ecdd8e8977af83c07c5f97bec87b47d27059b7ea323ca3160fbfa2314f5d99c",
+          "bytes": 1057
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-x509",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-x509",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-x509-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-x509/LICENSE",
+          "sha256": "1ecdd8e8977af83c07c5f97bec87b47d27059b7ea323ca3160fbfa2314f5d99c",
+          "bytes": 1057
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/asn1-x509-attr",
+      "version": "2.8.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/asn1-x509-attr",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-asn1-x509-attr-2.8.0-1.txt",
+          "source": "node_modules/@peculiar/asn1-x509-attr/LICENSE",
+          "sha256": "031b1aac1313d91559ecc89cb6ce7c822f39f1a1259fae0f9b8d01a90c35c85a",
+          "bytes": 1059
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/utils",
+      "version": "2.0.3",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/utils",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-utils-2.0.3-1.txt",
+          "source": "node_modules/@peculiar/utils/LICENSE",
+          "sha256": "ce2ae0f0066d1be56ab4ec851cc611805bb95cdc8dd858b301e22ee54b351d43",
+          "bytes": 1084
+        }
+      ]
+    },
+    {
+      "name": "@peculiar/x509",
+      "version": "1.14.3",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@peculiar/x509",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/peculiar-x509-1.14.3-1.txt",
+          "source": "node_modules/@peculiar/x509/LICENSE",
+          "sha256": "3d5d1b1150b1fc25144d342daaba3875899b8dc2fcb172ea4810cc69affbe4d3",
+          "bytes": 1091
+        }
+      ]
+    },
+    {
+      "name": "@simplewebauthn/browser",
+      "version": "13.3.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@simplewebauthn/browser",
+      "environments": [
+        "client",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "simplewebauthn-browser-LICENSE.txt",
+          "source": "node_modules/@simplewebauthn/browser/LICENSE.md",
+          "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63",
+          "bytes": 1071
+        }
+      ]
+    },
+    {
+      "name": "@simplewebauthn/server",
+      "version": "13.3.2",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@simplewebauthn/server",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "simplewebauthn-server-LICENSE.txt",
+          "source": "node_modules/@simplewebauthn/server/LICENSE.md",
+          "sha256": "bd9e3f45696472076c7160c7f66e54b2d62d38bc2646c812d19be83ee4400c63",
+          "bytes": 1071
+        }
+      ]
+    },
+    {
+      "name": "@vitejs/plugin-rsc",
+      "version": "0.5.26",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/@vitejs/plugin-rsc",
+      "environments": [
+        "client",
+        "rsc",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "bundled/vitejs-plugin-rsc-0.5.26-1.txt",
+          "source": "https://github.com/vitejs/vite-plugin-react/blob/65d378fc4d9bd8d383dc7598817261b3bdcb0861/LICENSE",
+          "sha256": "29b68325fe026047d13e187b44c33b2acacf7dc647dec4583702e59f235e13b5",
+          "bytes": 1103
+        }
+      ]
+    },
+    {
+      "name": "asn1js",
+      "version": "3.0.10",
+      "declaredLicense": "BSD-3-Clause",
+      "packageDirectory": "node_modules/asn1js",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/asn1js-3.0.10-1.txt",
+          "source": "node_modules/asn1js/LICENSE",
+          "sha256": "ebe5d98519d0dfcbcb80e20b22a56e7321e8557cd14355760434bbd4c1f4f683",
+          "bytes": 1571
+        }
+      ]
+    },
+    {
+      "name": "dijkstrajs",
+      "version": "1.0.3",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/dijkstrajs",
+      "environments": [
+        "client",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "bundled/dijkstrajs-1.0.3-1.txt",
+          "source": "node_modules/dijkstrajs/LICENSE.md",
+          "sha256": "c46324e45a005413535a6fb7a97e9eacd3cc6bf30335b7d5c10b8ee3af9e60c2",
+          "bytes": 714
+        }
+      ]
+    },
+    {
+      "name": "drizzle-orm",
+      "version": "0.45.2",
+      "declaredLicense": "Apache-2.0",
+      "packageDirectory": "node_modules/drizzle-orm",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "drizzle-orm-LICENSE.txt",
+          "source": "https://github.com/drizzle-team/drizzle-orm/blob/273c78071d4841b497f5144734b38294df7ec64b/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "bytes": 11357
+        }
+      ]
+    },
+    {
+      "name": "jose",
+      "version": "6.2.4",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/jose",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "jose-LICENSE.txt",
+          "source": "node_modules/jose/LICENSE.md",
+          "sha256": "8078b0829d6c3e9ecde2f003e1966e4cad3efc6e7a640efbab0313cc166b1af1",
+          "bytes": 1079
+        }
+      ]
+    },
+    {
+      "name": "pngjs",
+      "version": "5.0.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/pngjs",
+      "environments": [
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "bundled/pngjs-5.0.0-1.txt",
+          "source": "node_modules/pngjs/LICENSE",
+          "sha256": "176b07a18c0bb3836aaeb61088fd0bf11a38f66e6f15e3fbda85faa225250d6e",
+          "bytes": 1151
+        }
+      ]
+    },
+    {
+      "name": "pvtsutils",
+      "version": "1.3.6",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/pvtsutils",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/pvtsutils-1.3.6-1.txt",
+          "source": "node_modules/pvtsutils/LICENSE",
+          "sha256": "c620c1d08a47c93ce242914a4269b86e41df5a97845325725a5f83d5d6f9d7fd",
+          "bytes": 1084
+        }
+      ]
+    },
+    {
+      "name": "pvutils",
+      "version": "1.1.5",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/pvutils",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/pvutils-1.1.5-1.txt",
+          "source": "node_modules/pvutils/LICENSE",
+          "sha256": "15c88630f1e778db64a446cb31b67362cc9eb7a048fdf5ac7ab51905b74464cd",
+          "bytes": 1137
+        }
+      ]
+    },
+    {
+      "name": "qrcode",
+      "version": "1.5.4",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/qrcode",
+      "environments": [
+        "client",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "qrcode-LICENSE.txt",
+          "source": "node_modules/qrcode/license",
+          "sha256": "8df47c6ad9ac2c41eb9b2a72def9908959da0ede8dadd56c7b249c1bdb0c5ce6",
+          "bytes": 1076
+        }
+      ]
+    },
+    {
+      "name": "react",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/react",
+      "environments": [
+        "client",
+        "rsc",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "react-LICENSE.txt",
+          "source": "node_modules/react/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ]
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/react-dom",
+      "environments": [
+        "client",
+        "rsc",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "react-dom-LICENSE.txt",
+          "source": "node_modules/react-dom/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ]
+    },
+    {
+      "name": "react-server-dom-webpack",
+      "version": "19.2.8",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/react-server-dom-webpack",
+      "environments": [
+        "client",
+        "rsc",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "bundled/react-server-dom-webpack-19.2.8-1.txt",
+          "source": "node_modules/react-server-dom-webpack/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ]
+    },
+    {
+      "name": "reflect-metadata",
+      "version": "0.2.2",
+      "declaredLicense": "Apache-2.0",
+      "packageDirectory": "node_modules/reflect-metadata",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/reflect-metadata-0.2.2-1.txt",
+          "source": "node_modules/reflect-metadata/CopyrightNotice.txt",
+          "sha256": "19246466cb51e46c12b22e43b4d2703ac981cb4295d061d6e20609bd5845510b",
+          "bytes": 834
+        },
+        {
+          "file": "bundled/reflect-metadata-0.2.2-2.txt",
+          "source": "node_modules/reflect-metadata/LICENSE",
+          "sha256": "c5217b0544ea9c91d010863582d6f6b35ec50e4146c34dee085ddcec5dd92def",
+          "bytes": 9141
+        }
+      ]
+    },
+    {
+      "name": "scheduler",
+      "version": "0.27.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/scheduler",
+      "environments": [
+        "client"
+      ],
+      "notices": [
+        {
+          "file": "bundled/scheduler-0.27.0-1.txt",
+          "source": "node_modules/scheduler/LICENSE",
+          "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+          "bytes": 1088
+        }
+      ]
+    },
+    {
+      "name": "stripe",
+      "version": "22.3.2",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/stripe",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "stripe-LICENSE.txt",
+          "source": "node_modules/stripe/LICENSE",
+          "sha256": "b36d54d51ac6f20b867c24264b9433f54372c3370d4984cf1c9884c5c6de1f7a",
+          "bytes": 1113
+        }
+      ]
+    },
+    {
+      "name": "tslib",
+      "version": "2.8.1",
+      "declaredLicense": "0BSD",
+      "packageDirectory": "node_modules/tslib",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/tslib-2.8.1-1.txt",
+          "source": "node_modules/tslib/CopyrightNotice.txt",
+          "sha256": "da16ddb65f8ca390998fb99223d0112498b56b45784d00afd77ff8ce1ac4de8b",
+          "bytes": 822
+        },
+        {
+          "file": "bundled/tslib-2.8.1-2.txt",
+          "source": "node_modules/tslib/LICENSE.txt",
+          "sha256": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",
+          "bytes": 655
+        }
+      ]
+    },
+    {
+      "name": "tslib",
+      "version": "1.14.1",
+      "declaredLicense": "0BSD",
+      "packageDirectory": "node_modules/tsyringe/node_modules/tslib",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/tslib-1.14.1-1.txt",
+          "source": "node_modules/tsyringe/node_modules/tslib/CopyrightNotice.txt",
+          "sha256": "dd835e67a9a297da32f9467d7677a5d02c8e50e10f15da43b810147c79c04b9b",
+          "bytes": 824
+        },
+        {
+          "file": "bundled/tslib-1.14.1-2.txt",
+          "source": "node_modules/tsyringe/node_modules/tslib/LICENSE.txt",
+          "sha256": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",
+          "bytes": 655
+        }
+      ]
+    },
+    {
+      "name": "tsyringe",
+      "version": "4.10.0",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/tsyringe",
+      "environments": [
+        "rsc"
+      ],
+      "notices": [
+        {
+          "file": "bundled/tsyringe-4.10.0-1.txt",
+          "source": "node_modules/tsyringe/LICENSE",
+          "sha256": "27ebda9d51f0a56b7e281ccd8230a27236dcb51c05f64b07869ecf6e965d68b0",
+          "bytes": 1162
+        }
+      ]
+    },
+    {
+      "name": "vinext",
+      "version": "0.0.50",
+      "declaredLicense": "MIT",
+      "packageDirectory": "node_modules/vinext",
+      "environments": [
+        "client",
+        "rsc",
+        "ssr"
+      ],
+      "notices": [
+        {
+          "file": "bundled/vinext-0.0.50-1.txt",
+          "source": "node_modules/vinext/LICENSE",
+          "sha256": "19a7b85046eb77c8ab308c68569abbbb59235814297b9c95dc90480f71ec7198",
+          "bytes": 1073
+        }
+      ]
+    }
+  ],
+  "unresolvedEmbeddedComponents": [
+    {
+      "name": "@hiogawa/utils",
+      "version": "1.7.0",
+      "declaredLicense": "MIT",
+      "containingPackage": "@vitejs/plugin-rsc@0.5.26",
+      "sourceReleaseCommit": "71f588d9ed860b2104ae4ce4f97dcf0af5d6249c",
+      "noticeStatus": "No license file in exact npm archive or official release tree. No generic copyright/license text substituted. Resolve with upstream or reviewer before claiming complete notice coverage."
+    }
+  ]
+}

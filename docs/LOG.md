@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Prepare the remaining collected software notices
+
+Fresh GitHub inspection found no open PR and main unchanged at `a1f9ace`.
+Preserved the completed Stripe correction and earlier documentation commits.
+Validated the saved notice inventory against the unchanged lockfile, installed
+package names/versions and source bytes before preparing 31 additional files
+(40,076 bytes) under `public/third-party-notices/bundled/`. A separate bundled
+manifest covers 36 observed package installations and 39 notice references,
+reusing eight existing direct files. All nine original direct notices and their
+manifest remain byte-identical. Git attributes preserve upstream notice bytes.
+
+The fresh local production build at `e2ff632` succeeded. Its observer found the
+same 36 installed package locations across 172 chunks. All notice references,
+both manifests and the README were verified byte-for-byte in `dist/client`.
+No package installation, dependency upgrade, application/policy change, send,
+paid service or deployment occurred. This is notice packaging proof, not a
+blanket license or ownership determination.
+
+The manifest explicitly records the unresolved `@hiogawa/utils@1.7.0` attribution;
+no copyright owner or license text was invented. The prepared public upstream
+question was shown for specific send approval and remains unsent. Existing
+owner-authority and asset-source requirements remain in the same record card.
+Private proof: `bundled-notices-preparation-20260927.json`,
+`distributed-packages-current-20260927.json`, `bundled-notices-build-20260927.log`
+and `bundled-notices-validation-20260927.json`. Collection is ready for a future
+approved release; do not repeat this completed preparation.
+
 ## 2026-09-27 - Correct Stripe's business description and verify receipt email
 
 Following the exact replacement presented for owner review and the instruction

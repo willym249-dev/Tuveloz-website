@@ -112,9 +112,9 @@ byte matches the production deployment.
 
 Preserved 39 license/copyright files for those 36 package installations in the
 private `outputs/distributed-notices-20260927/` collection. Copies were checked
-byte-for-byte against their recorded sources and hashed. This collection has
-not been added to the public notice directory or deployed. Existing direct
-dependency notices remain a separate, explicitly scoped collection.
+byte-for-byte against their recorded sources and hashed. The follow-up below
+prepares their repository packaging; only the nine direct-dependency notices
+are currently confirmed deployed.
 
 The installed `@vitejs/plugin-rsc` package omits its own license file. Its
 upstream MIT notice was preserved from the official `plugin-rsc@0.5.26` tag,
@@ -146,6 +146,40 @@ Private evidence: `outputs/distributed-packages-20260927.json`,
 `manifest.json`. No package was installed or upgraded, no application code or
 configuration was changed, and no launch gate was approved. Owner contribution
 records, brand-master provenance and final distribution review remain open.
+
+### Notice packaging prepared September 27 — not deployed
+
+[`bundled-manifest.json`](../../public/third-party-notices/bundled-manifest.json)
+now describes the 36 observed package installations and all 39 notice references.
+Eight references reuse the existing direct-dependency files. The other 31
+unmodified files, totaling 40,076 bytes, are prepared under
+`public/third-party-notices/bundled/`. The original direct manifest and all nine
+direct notices are unchanged. The README distinguishes the two inventories and
+the bundled manifest explicitly retains the unresolved embedded-helper notice.
+No generic license text or attribution was substituted.
+
+Before copying, each installed name/version was checked against the lockfile
+and the preserved package observation; every source notice's size and SHA-256
+matched. Local notices also matched the installed originals. The two previously
+verified upstream-only notices retain their exact release-commit URLs and
+preserved hashes. The lockfile is unchanged from the source inventory.
+
+A fresh production build at runtime-equivalent local commit `e2ff632` observed
+the same 36 package installations across 172 chunks. Every notice referenced by
+the bundled manifest, both manifests and the README reached `dist/client` with
+exact bytes. This confirms packaging in the local build, not a deployment or
+complete license clearance. The public manifest preserves the original dated
+build observation; private evidence records this fresh comparison.
+
+`.gitattributes` preserves the additional notice files' original bytes and
+whitespace. Private preparation/build/verification evidence:
+`outputs/bundled-notices-preparation-20260927.json`,
+`outputs/bundled-notices-build-20260927.log`,
+`outputs/distributed-packages-current-20260927.json` and
+`outputs/bundled-notices-validation-20260927.json`.
+No application flow, dependency version, policy or launch control changed.
+The exact upstream inquiry was presented again for specific send approval;
+it remains unsent until the owner answers. Do not repeat the notice collection.
 
 ## What depends on it
 
