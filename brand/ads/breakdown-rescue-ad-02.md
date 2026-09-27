@@ -1,5 +1,12 @@
 # Ad 02 — "The Rescue" (30s, customer launch / coming-soon teaser)
 
+**Historical concept; publication not cleared (reviewed September 27, 2026).**
+The stock and music suggestions below are not evidence of current licenses,
+free downloads, or permission to purchase. Customer bookings remain closed;
+Tuveloz connects customers with independent providers and does not repair cars.
+Any future version needs current claims, creative and rights review. Follow
+[the handoff status](HANDOFF.md); no paid upgrade or generation is requested.
+
 Concept (Wil's): Aerial view, car cruising a scenic coastal road, music up.
 Car breaks down — music cuts dead. Driver calls Tuveloz. Car fixed.
 Music slams back in as they drive away.

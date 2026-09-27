@@ -1,4 +1,16 @@
-# Ad production handoff — status as of 2026-08-04 (updated same day)
+# Ad production handoff — historical August 2026 work
+
+**Reviewed September 27, 2026: this is an archive, not a current work order.**
+The August account prices, credits and browser state below are historical.
+Do not renew a subscription, purchase stock, generate new media, restore an
+old ad for publication, or publish based on these notes. The recorded Ad 01
+music window closed and its two renders/music file remain absent locally.
+The R2 manifest is a checksum inventory, not a license to use archived media.
+Surviving visuals are not cleared merely because they remain in this folder.
+See the [ownership and asset record](../../docs/records/code-ownership-and-contributors.md)
+for current evidence and missing permissions. Future creative should follow
+the owner's preference for simple, professional visuals without fake-looking
+AI pictures; no paid upgrade is requested.
 
 CORRECTION (verified on artlist.io/account/plan-and-billings, logged in as
 hello@tuveloz.com): the plan is **AI Starter / AI Suite $19.99/mo**, NOT Max.
@@ -48,7 +60,7 @@ text-to-video; one-shot prompts, no retries.
 - Once a track is chosen and downloaded: save as
   `brand/ads/ad-01-assets/music.mp3`, re-run `build-ad-01.ps1`.
 
-## Current task: build Ad 01 (provider recruitment)
+## Historical task: build Ad 01 (provider recruitment)
 
 Full spec: [provider-recruitment-ad-01.md](provider-recruitment-ad-01.md).
 Ad 02 spec (customer launch, "The Rescue"): [breakdown-rescue-ad-02.md](breakdown-rescue-ad-02.md).
@@ -87,18 +99,19 @@ green lawns, vertical 9:16, no text, no logos
 installed via winget). Drop assets into `brand/ads/ad-01-assets/` as
 `scene1.*` (mechanic) / `scene2.*` (detailing) / `scene3.*` (jumper cables) /
 `scene4.*` (aerial video or 4th image) / `music.mp3`, re-run the script, done.
-Missing files render as labeled placeholder slates — current
-`ad-01-9x16.mp4` / `ad-01-1x1.mp4` are placeholder drafts (captions + branded
-end card verified, no music).
+Missing files render as labeled placeholder slates. The two named final
+renders are absent as checked September 27; do not treat the earlier draft
+description as evidence of current files or permission to publish.
 
-### Assembly plan (no credits — local edit)
+### Historical assembly plan (requires fresh creative and rights review)
 15s vertical: hook "Tired of working somebody else's route?" → 3 images with
 Ken Burns motion (+ aerial video if available) → "Set your own prices." /
 "Pick your own jobs." / "Keep 100% of your price. Join free." (fee is
 customer-side 5% per Section 7 sign-off — providers keep their full quote;
 never express the customer fee as a provider deduction) → logo end card
 (brand/tuveloz-lockup-horizontal.svg + Tuveloz Logo.png), tuveloz.com/join,
-"Customer choice. Provider freedom." Citadel under it all, captions burned in.
+"Customer choice. Provider freedom." Captions burned in. The former Citadel
+music suggestion is withdrawn; no replacement track is cleared by this plan.
 Export 1080x1920 (Reels/TikTok/Shorts) + 1080x1080 (feed).
 Assets folder: brand/ads/ad-01-assets/ (create; pull files from Downloads).
 

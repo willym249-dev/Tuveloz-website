@@ -96,15 +96,21 @@ of the repair question is not absence of towing paperwork.
 No application copy, eligibility rule, policy hash, jurisdiction approval,
 provider status, or launch control changed during this review.
 
-## Prepared OCP inquiry — not sent
+## OCP inquiry — sent September 27, 2026
 
 Recipient verified in the County's
 [Business Education and Registration Unit page](https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear).
-Sending requires the owner's approval because this contacts an outside agency
-on Tuveloz's behalf. No fee, filing, appointment, or private document disclosure
-is included. A September 27 search of business Sent mail to that recipient
-returned no messages. Recheck for this subject immediately before sending to
-avoid a duplicate if another session completes it.
+The owner approved the exact message below. Sent once from the business Gmail
+account at 7:20 a.m. Maryland time on September 27. A fresh pre-send search
+found no message to the recipient. Gmail then confirmed "Message sent"; the
+refreshed Sent search contained one matching message, and its full body,
+sender, recipient and date were verified. Do not resend this inquiry.
+
+Private screenshot: `outputs/county-inquiry-sent-20260927.png`. This confirms
+sending, not receipt, a reply, or an agency determination. No fee, filing,
+appointment, private document disclosure or paid work was authorized. Review
+for a response on October 2; that is an internal checkpoint, not a promised
+agency response date.
 
 **From:** hello@tuveloz.com
 

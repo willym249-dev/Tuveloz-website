@@ -11,6 +11,46 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Send the approved county inquiry and refresh asset records
+
+The owner's "Yes and continue" approved the prepared OCP inquiry. A refreshed
+business Gmail Sent search was empty before sending. Sent the exact approved
+message once from hello@tuveloz.com to OCP.Licensing@montgomerycountymd.gov at
+7:20 a.m. Maryland time. Gmail confirmed sending; a refreshed Sent search
+contained one matching message, whose complete body, sender, recipient and
+timestamp were verified. Do not resend. Private screenshot:
+`outputs/county-inquiry-sent-20260927.png`. No receipt, answer or agency
+determination is claimed. No attachment, application, fee or paid work was
+authorized. Updated the source review, launch briefing and October 2 answer
+checkpoint to distinguish the completed send from pending written guidance.
+
+Fresh GitHub checks found no open PR and main still at `546e60a`. Preserved
+the three local documentation commits and completed live release. Refreshed
+the company-authority contribution card: main has 503 commits (434 under the
+willym249-dev label and 69 under Claude), not evidence of legal authorship.
+All nine installed direct dependency versions match the lockfile. The private
+inventory contains 741 package entries and hashes of 28 tracked assets and
+available direct-dependency license files. `jose`'s missing lockfile license
+field is resolved by its installed MIT license. Drizzle's root notice absence,
+older tracked font provenance, distributed third-party notices, and master
+logo/contributor source records remain review items, not findings of unlawful
+use. Development/optional packages are not automatically deployed artifacts.
+
+Found contradictory historical ad instructions: the handoff recorded an
+expired music window but later told readers to reuse that track; another plan
+called surviving visuals already licensed. Corrected those statements and
+marked four ad plans as historical proposals requiring current rights/claims
+review. The old music and two Ad 01 renders remain absent locally; no media
+was restored, deleted, replaced or published. No subscription or billing
+setting was inspected or changed. Asked the owner who contributed material;
+the answer and private records are still pending.
+
+Private audit evidence: `outputs/ownership-asset-evidence-20260927.json`.
+This continuation changes documentation only; no dependency, application,
+eligibility rule, launch/payment control or live website changed. Validation
+uses the existing deadline parser, local evidence/relative-link checks and
+`git diff --check`; a production rebuild is not needed for these records.
+
 ## 2026-09-27 - Compare provider requirements with official service definitions
 
 No open PR at start; main remains `546e60a`. Preserved the two local completion/

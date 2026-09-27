@@ -1,5 +1,13 @@
 # Ad 01 — Provider Recruitment (15s vertical, Reels/TikTok)
 
+**Historical concept; publication not cleared (reviewed September 27, 2026).**
+The stock-download and assembly steps below describe an earlier proposal,
+not current permission to purchase or publish. "Zero credits" does not mean
+licensed or free. The old Ad 01 music/renders were removed after the recorded
+publication window closed. Follow [the current status notice](HANDOFF.md)
+and the [asset record](../../docs/records/code-ownership-and-contributors.md)
+before reuse. No subscription upgrade or new media generation is requested.
+
 Phase: pre-launch (provider onboarding open, customer requests not live).
 Goal: provider signups at https://tuveloz.com/join
 Formats: 9:16 (Reels/TikTok/Shorts) primary · 1:1 (feed) secondary
