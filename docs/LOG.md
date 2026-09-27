@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Preserve concurrent refund, dispute and launch holds
+
+The next bounded reconciliation review reproduced overlapping refund/dispute
+writes that replaced a newer hold, replaced a newer refund total, or cleared an
+adverse result with an equally timed success. These were isolated synthetic
+failures, not real transactions. PR #247's completed checkout repair is preserved.
+
+Refund writers now read the local version before reading the Stripe Charge,
+check that version in the SQL write, and reread on contention (three attempts;
+continued contention throws so the webhook remains retryable). This preserves
+current totals without treating the largest observed amount as permanent: a
+genuine later refund failure can still correct the total. SQL evaluates dispute
+and launch holds against the row being written. Equal-second refund successes
+cannot erase adverse refund fields hidden by a dispute; equal-second dispute
+wins cannot replace an adverse dispute. Newer authoritative updates still work,
+and PaymentIntent matching before checkout stores a Charge ID is retained.
+
+Ten added behavior cases execute migrated in-memory SQL, including deterministic
+interleavings, retry exhaustion, reverse arrival order and positive controls.
+Outbound calls are blocked and Stripe reads are synthetic. All 776 tests, the
+production build and TypeScript pass. Lint has no errors and its existing single
+navigation warning. Private before/after logs are retained outside the public
+repository. No schema, fee, UI, credential, provider approval or launch/payment
+switch changed. Release checks and exact production verification are pending;
+do not describe this repair as deployed yet. This is not proof of real money
+movement or Stripe-originated financial delivery.
+
 ## 2026-09-27 - Prevent checkout notifications from overwriting newer payment states
 
 The next isolated payment/refund review reproduced three failure-path defects:
@@ -33,9 +60,18 @@ including matching positive controls, duplicate handling, refund/dispute holds
 and preservation of launch holds. The obsolete assertion requiring a warning
 string was replaced by this behavior coverage. All 766 tests, the production
 build and TypeScript pass; lint has no errors and its one existing navigation
-warning. Release is pending. No live charges, refunds or provider records were
-created or changed. Founder Shield still has no reply in the focused business
-inbox search; no duplicate inquiry was sent.
+warning. PR #247 passed both PR workflows, including the browser signup and
+bilingual flow checks. Tested head `b4058bf031b760df3faf4e0cb95246eca69facdd`
+merged as `27c1fe73f86443dcfa9dcddac950eeea442e0ac4`. Production workflow
+`36299174143` passed all three jobs. A separate read-only public health check
+at 06:22:43 UTC verified that exact release (built 06:20:45 UTC), ready
+application/database/schema, no missing tables/triggers, accounts/applications
+open and requests/payments closed. Private before/after test logs and release
+proof are retained outside the public repository. No live charges, refunds or
+provider records were created or changed. This does not prove real Stripe
+checkout/refund/dispute/payout delivery or approve launch. The focused business
+inbox search found no Founder Shield reply; no duplicate inquiry was sent.
+Do not repeat the completed repair or the preceding PR #246 connection setup.
 
 ## 2026-09-27 - Enable approved payout-status feed and fix its payment-client dependency
 
