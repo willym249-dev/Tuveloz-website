@@ -94,6 +94,12 @@ email**. Stripe displayed **Email received**, captured at 20:21 UTC. Its
 displayed 24-hour estimate is not a promised reply deadline. No case number or
 human response was shown; do not mistake the initial AI answer for approval.
 
+A subsequent business-inbox check found Stripe's **We've received your message**
+acknowledgment from `support@stripe.com`, displayed September 27 at 4:20 p.m.
+Gmail identifies the sender as Verified Sender. The body confirms receipt and
+says a response will follow; it contains no substantive review decision. Its
+private message reference and screenshot are retained outside the repository.
+
 The submitted email includes the complete message below and a routing note
 requesting human Connect review, a written reply to the business inbox, and
 clarification of a legacy fee description without account changes. Private
@@ -135,18 +141,21 @@ not change settings, activate payments or enroll us in a paid service.
 Thank you,
 Tuveloz
 
-## Saved business-description discrepancy
+## Saved business description — corrected and verified
 
 After the automated support reply mentioned a different fee, a targeted read of
 the actual Business details product-description field confirmed that its last
-sentence still says Tuveloz charges customers a **10% platform service fee**.
-That is stale account copy, not the website's current price. The application
+sentence still said Tuveloz charges customers a **10% platform service fee**.
+That was stale account copy, not the website's current price. The application
 constant remains 500 basis points and providers keep their full quoted amount.
-The editor was closed without saving; legal, address and tax fields were not
-changed. Correcting this processor-facing description is a separate account
-update, not a change to the site's fee or an acceptance of Stripe terms.
+After the owner was shown the exact replacement and instructed us to continue,
+only the product-description field was replaced and saved. Reopening the saved
+record returned the full replacement below, confirming persistence. The editor
+was then dismissed without additional edits. Legal, address and tax fields were
+not edited. This processor-facing correction does not change the site's fee,
+accept Stripe terms, or establish approval of the proposed launch scope.
 
-Prepared replacement for owner review:
+Saved replacement:
 
 > Tuveloz is an online marketplace connecting customers in Montgomery County,
 > Maryland, with independent vehicle-service businesses. Providers set
@@ -159,6 +168,11 @@ Prepared replacement for owner review:
 
 ## History
 
+- **2026-09-27:** Saved the owner-reviewed business description and reopened the
+  record to verify every word. Correction complete; do not repeat the request or
+  update. The subsequent scoped business-inbox search found Stripe's receipt
+  acknowledgment only; no substantive Stripe, county or broker reply appeared
+  in the inspected sender/date scope. Original inquiry remains pending.
 - **2026-09-27:** Owner-approved inquiry reached Stripe's email support queue;
   confirmation captured. Requested human review and distinguished the verified
   July 29 approval from the AI's conflicting date/fee statements. Directly

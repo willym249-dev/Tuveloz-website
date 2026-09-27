@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Correct Stripe's business description and verify receipt email
+
+Following the exact replacement presented for owner review and the instruction
+to continue, updated only Stripe's Business details product-description field.
+Reopened the saved record and verified the complete replacement: Montgomery
+County marketplace, independent providers, labor-only quotes and separately
+purchased parts, accounts/applications open, bookings/payments closed, and a 5%
+Customer Service Fee added to the quote with the full quote going to providers.
+The earlier legacy 10% description is corrected. Legal, address, tax, bank,
+terms and payment controls were not edited. No website change or deployment.
+
+Checked the existing business inbox with a bounded sender/date query covering
+Stripe, Founder Shield/Baldwin and Montgomery County. It returned only Stripe's
+"We've received your message" acknowledgment from support@stripe.com, displayed
+at 4:20 p.m. September 27 with Gmail's Verified Sender indicator. The body
+confirms receipt and a future response, not approval. No substantive reply from
+the three inquiries appeared in that search. Nothing was resent. The existing
+September 30 and October 2 review checkpoints remain.
+
+Private evidence preserves the exact saved text and receipt observation. Two
+cropped dashboard screenshot attempts timed out; they are not claimed as proof.
+Persistence was verified from the reopened field. The business-mail screenshot
+`stripe-support-acknowledgment-20260927.png` succeeded. Fresh GitHub inspection
+found no open PR and main unchanged at `a1f9ace`; prior documentation commits
+were preserved.
+
 ## 2026-09-27 - Submit approved Stripe clarification and prepare the transaction map
 
 Preserved the three existing documentation commits and released runtime. The

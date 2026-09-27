@@ -440,12 +440,14 @@ quote flow's delayed transfers, account conditions and customer disclosures.
 The setup page also displays an onboarding-responsibility acknowledgment action;
 its effect/necessity has not been established and it was not accepted. The owner-
 approved clarification was submitted September 27 and Stripe confirmed email
-receipt; the human reply remains pending. A targeted field read also confirmed
-legacy fee wording in Stripe's saved business description, with a correction
-prepared in the card. The site's current fee is unchanged. Current indirect charges omit
+receipt, followed by an acknowledgment in the business inbox; the human review
+reply remains pending. With the owner's approval, the legacy fee wording in
+Stripe's saved business description was corrected to the current 5% fee and
+prelaunch state. Reopening the saved record verified the complete replacement.
+This correction is complete and the site's fee is unchanged. Current indirect charges omit
 `on_behalf_of`, which Stripe's documentation treats as platform merchant of record;
 reconcile the final disclosures with the separate CPA/legal review. No new legal
-or tax conclusion, paid service, gate approval or account setting was applied.
+or tax conclusion, paid service or gate approval was applied.
 Live mode remains locked (`STRIPE_LIVE_MODE_ENABLED = false`).
 
 ### CPA or tax adviser
