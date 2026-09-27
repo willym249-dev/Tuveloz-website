@@ -51,6 +51,7 @@ self-contained page.
 | [`legal/provider-service-requirements-review.md`](legal/provider-service-requirements-review.md) | Which of the 25 provider services has a supported county-registration category, and which exact scope questions still need an agency answer? |
 | [`legal/`](legal/) | Policy research, agreement drafts, and compliance analysis added from here on. |
 | [`records/`](records/) | The register of real-world documents — insurance, formation, licenses, approvals — and where the originals are kept. |
+| [`records/stripe-connect-platform-approval.md`](records/stripe-connect-platform-approval.md) | What did Stripe already approve, which current settings match it, and what payment-flow clarification remains? |
 
 The seven published legal documents themselves are not files in this folder.
 They are pages under `app/` (terms, customer agreement, provider agreement,

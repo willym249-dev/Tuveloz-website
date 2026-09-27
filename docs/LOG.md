@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Recover existing Stripe approval; narrow remaining processor review
+
+Preserved local commits `a87f938` and `7e259cb`; fresh GitHub inspection found no
+open PR and main still `a1f9ace`. A scoped business-Gmail search found Stripe's
+July 29 "Your Connect application is approved" email. It explicitly approves
+TUVELOZ LLC to create live connected accounts and charges. Gmail displays the
+verified sender, stripe.com signature and expected business recipient. This is
+existing processor approval, not merely bank-linking evidence; earlier summaries
+that failed to recognize it were incomplete.
+
+Signed-in Stripe Platform profile and Platform setup agree: buyers purchase from
+the platform, individual seller payouts, platform fee/loss responsibility, Express
+and Stripe-hosted/embedded onboarding. The refund/loss acknowledgment is dated
+July 29. Current source matches those responsibility/dashboard settings. Both
+pages also show an onboarding-compliance acknowledgment action; it was not
+accepted and its account effect is not yet established.
+
+Created the indexed processor approval record card, corrected the register/vendor
+card/launch packet, and prepared a narrowly scoped support clarification instead
+of repeating the Connect application. Questions cover exact services, transfer
+delay/reserves, receipt/statement disclosures and the displayed acknowledgment.
+Stripe's current documentation identifies the platform as merchant of record for
+the implemented indirect charge shape without `on_behalf_of`; the CPA/legal review
+and final policy wording still need reconciliation. No gate, runtime source,
+account setting, provider, charge, transfer, paid service or outgoing message
+changed. The personal Gmail connector was not used to read business mail; the
+existing business browser session supplied this evidence.
+
 ## 2026-09-27 - Prepare insurer decisions from the actual provider checklist
 
 Preserved completed PR #254 and local release-evidence commit `a87f938`; fresh

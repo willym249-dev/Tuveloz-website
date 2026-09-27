@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 
 This folder tracks the real-world documents the business depends on — insurance
 certificates, formation paperwork, licenses, registrations, vendor approvals,
@@ -68,12 +68,15 @@ the launch gate.
 | Domain registration — tuveloz.com | Registration | Porkbun | 2027-07-22; review renewal 2027-06-22 | [card](domain-registration-tuveloz-com.md) |
 | Code ownership and contributors | Ownership | — | Does not expire | [card](code-ownership-and-contributors.md) |
 | Essential vendor accounts | Vendor | Several | Plan, billing and credential deadlines are tracked separately | [card](essential-vendor-accounts.md) |
+| Stripe Connect initial approval | Processor approval | Stripe | No expiry stated; current flow/scope reconciliation pending | [card](stripe-connect-platform-approval.md) |
 | LLC formation — Maryland | Formation | Maryland SDAT | First annual report tracked for 2027-04-15 | [card](llc-formation-maryland.md) |
 | EIN assignment | Tax registration | IRS | Does not expire | [card](ein-assignment.md) |
 
 Still unfiled and named in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md): general
-liability insurance, the operating agreement, any Montgomery County licence, and
-Stripe's approval of the marketplace model. Each blocks a gate of its own.
+liability insurance, the operating agreement, and applicable Montgomery County
+licences. Stripe's July 29 initial Connect approval is now filed above. Its current
+payment-flow/service-scope reconciliation remains open; do not repeat onboarding
+or describe the initial approval as missing.
 
 ## Keeping it current
 
