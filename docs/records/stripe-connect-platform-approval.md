@@ -70,7 +70,8 @@ policy wording solely to make a label match. This is not a tax determination.
    evidence for `stripe_connect_business_model`; do not restart the application.
 2. Ask Stripe only whether the current payment flow and intended service category
    fit that approval, what transfer-delay/reserve/refund limits apply, and whether
-   the displayed acknowledgment requires action. A prepared message is below.
+   the displayed acknowledgment requires action. The owner-approved inquiry
+   below was submitted September 27; Stripe confirmed email receipt.
 3. Match the initial enabled service list to the insurer/legal decisions before
    representing specialist services as supported. The full catalog is not the
    launch commitment.
@@ -83,11 +84,20 @@ date in Tuveloz's launch controls. This email states no expiration; obtaining a
 supported review interval is still necessary rather than fabricating an expiry.
 No admin gate, service activation, provider approval or payment lock was changed.
 
-## Prepared support inquiry — not sent
+## Support inquiry — sent September 27; reply pending
 
 Destination: Stripe Support through the authenticated TUVELOZ LLC account.
 No attachments, government/bank identifiers, API keys or provider records.
-Sending requires permission for this particular outside-business message.
+The owner explicitly authorized this message. It was submitted through Stripe's
+authenticated support flow, selecting **Platform account** and **Send us an
+email**. Stripe displayed **Email received**, captured at 20:21 UTC. Its
+displayed 24-hour estimate is not a promised reply deadline. No case number or
+human response was shown; do not mistake the initial AI answer for approval.
+
+The submitted email includes the complete message below and a routing note
+requesting human Connect review, a written reply to the business inbox, and
+clarification of a legacy fee description without account changes. Private
+submission proof is retained outside the repository. Do not send a duplicate.
 
 **Subject: Tuveloz — confirm existing Connect approval against our payment flow**
 
@@ -125,8 +135,35 @@ not change settings, activate payments or enroll us in a paid service.
 Thank you,
 Tuveloz
 
+## Saved business-description discrepancy
+
+After the automated support reply mentioned a different fee, a targeted read of
+the actual Business details product-description field confirmed that its last
+sentence still says Tuveloz charges customers a **10% platform service fee**.
+That is stale account copy, not the website's current price. The application
+constant remains 500 basis points and providers keep their full quoted amount.
+The editor was closed without saving; legal, address and tax fields were not
+changed. Correcting this processor-facing description is a separate account
+update, not a change to the site's fee or an acceptance of Stripe terms.
+
+Prepared replacement for owner review:
+
+> Tuveloz is an online marketplace connecting customers in Montgomery County,
+> Maryland, with independent vehicle-service businesses. Providers set
+> labor-only quotes and perform the work; customers buy parts separately.
+> Customer accounts and provider applications are open. Customer bookings and
+> payments are not yet available. The planned payment flow collects the provider
+> quote plus a 5% Customer Service Fee from the customer; the provider receives
+> the full quoted amount after job completion and owner release checks. Initial
+> services remain subject to licensing and insurance review.
+
 ## History
 
+- **2026-09-27:** Owner-approved inquiry reached Stripe's email support queue;
+  confirmation captured. Requested human review and distinguished the verified
+  July 29 approval from the AI's conflicting date/fee statements. Directly
+  confirmed the stale product-description fee and prepared the correction.
+  No support answer, account update, term acceptance or launch approval claimed.
 - **2026-09-27:** Read the approval email and sender details in the business inbox;
   compared signed-in historical/current Connect selections to source. Recorded
   initial approval as complete and prepared only the remaining clarification.

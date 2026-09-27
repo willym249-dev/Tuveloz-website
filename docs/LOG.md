@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Submit approved Stripe clarification and prepare the transaction map
+
+Preserved the three existing documentation commits and released runtime. The
+owner approved the prepared Stripe inquiry. Submitted its complete body through
+the authenticated TUVELOZ LLC support page, requested human Connect review and
+selected Platform account / Send us an email. The page confirmed Email received;
+private screenshot `stripe-support-email-received-20260927.png` preserves it.
+No case number or human answer was shown. The displayed 24-hour estimate is not
+a promised deadline; the existing September 30 checkpoint remains.
+
+The initial automated response incorrectly associated approval with the account
+creation date and mentioned legacy fee wording. The July 29 business-inbox
+approval remains the primary evidence. A targeted read of the product-description
+field independently confirmed stale 10% copy in Stripe. Prepared a replacement
+with the actual 5% Customer Service Fee, full provider quote and closed-booking
+state; no account setting was saved. Automatic review rejected an overbroad
+business-page read, so the field-only check was used without exposing unrelated
+private identifiers. No terms, payment lock or live transaction changed.
+
+Extended the existing launch briefing with a source-backed transaction map for
+the tax reviewer. It separates quote charges, held amounts, full-quote transfers,
+processor costs, refund/dispute events and the different storefront branch.
+Highlighted checkout's zero-tax code restriction as an assumption requiring
+review, not evidence of tax exemption. No CPA opinion or gate approval claimed.
+
+Validation: all 15 fee-consistency checks pass. Their first run caught two
+ambiguous responsibility phrases in the prior documentation; both now clearly
+say the platform is responsible for Stripe costs and negative balances. Runtime
+source, reviewed policies and release history are unchanged.
+
 ## 2026-09-27 - Recover existing Stripe approval; narrow remaining processor review
 
 Preserved local commits `a87f938` and `7e259cb`; fresh GitHub inspection found no
@@ -22,7 +52,8 @@ existing processor approval, not merely bank-linking evidence; earlier summaries
 that failed to recognize it were incomplete.
 
 Signed-in Stripe Platform profile and Platform setup agree: buyers purchase from
-the platform, individual seller payouts, platform fee/loss responsibility, Express
+the platform, individual seller payouts, platform responsibility for Stripe costs
+and negative balances, Express
 and Stripe-hosted/embedded onboarding. The refund/loss acknowledgment is dated
 July 29. Current source matches those responsibility/dashboard settings. Both
 pages also show an onboarding-compliance acknowledgment action; it was not

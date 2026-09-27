@@ -428,7 +428,8 @@ broker appointment and policy purchase remain separate owner decisions.
 The processor evidence must cover the actual marketplace model.
 *Existing approval found September 27:* Stripe's July 29 email approves TUVELOZ
 LLC to create live connected accounts and charges. The current signed-in
-Platform setup matches `lib/stripe-provider.ts`: platform fee/loss responsibility,
+Platform setup matches `lib/stripe-provider.ts`: platform responsibility for
+Stripe costs and negative balances,
 Express dashboard and Stripe-hosted/embedded onboarding. The platform liability
 acknowledgment is dated July 29. Initial Connect approval is complete; do not
 restart it or describe this as unfinished bank setup.
@@ -437,8 +438,11 @@ The [approval record card](../records/stripe-connect-platform-approval.md) prese
 that evidence and narrows the remaining work to exact service scope, the current
 quote flow's delayed transfers, account conditions and customer disclosures.
 The setup page also displays an onboarding-responsibility acknowledgment action;
-its effect/necessity has not been established and it was not accepted. An unsent
-support clarification is ready in the card. Current indirect charges omit
+its effect/necessity has not been established and it was not accepted. The owner-
+approved clarification was submitted September 27 and Stripe confirmed email
+receipt; the human reply remains pending. A targeted field read also confirmed
+legacy fee wording in Stripe's saved business description, with a correction
+prepared in the card. The site's current fee is unchanged. Current indirect charges omit
 `on_behalf_of`, which Stripe's documentation treats as platform merchant of record;
 reconcile the final disclosures with the separate CPA/legal review. No new legal
 or tax conclusion, paid service, gate approval or account setting was applied.
@@ -470,6 +474,32 @@ that application code never reaches trades a real risk of dropping a launch
 guard against a theoretical one. Worth raising at this gate so the CPA sees the
 actual state: the application explicitly writes 500, and the historical default
 needs a fresh schema inspection before anyone treats it as current evidence.
+
+#### Current transaction map for the tax review
+
+Source reviewed September 27 at released runtime commit `a1f9ace`; these are
+implementation observations, not tax conclusions or real transaction results.
+Use the canonical worked example in `lib/customer-fee.ts`: a $100 provider quote,
+$5 Customer Service Fee, $105 customer total and $100 provider transfer. The
+$5 difference is before Stripe costs, refunds, losses and any taxes determined
+by the review; it must not be described as net profit.
+
+| Step | What the source does | What the reviewer must decide or reconcile |
+| --- | --- | --- |
+| Authorized quote | Stores the provider amount, fee rate, fee amount, customer total and accepted scope. Checkout requires the exact current authorization. | Treatment of each amount and the precise seller/customer relationships for each initial service. |
+| Labor-only boundary | Checkout rejects nonzero parts, tax or other amounts and requires labor to equal the provider subtotal. This is a code restriction, not a finding that services or fees are tax-exempt. | Whether the proposed launch transactions require tax collection or reporting. If they do, specify the calculation, receipt and accounting changes before opening checkout. |
+| Customer charge | Quote jobs use platform Checkout with separate quote/fee lines and the `separate_transfer` strategy. The stored payment snapshot includes `providerAmountCents`, `applicationFeeCents` and `customerTotalCents`. | Revenue versus amounts held for providers; applicable tax base; recognition timing and reconciliation records. A field named `applicationFeeCents` does not itself prove a Stripe Application Fee object exists in this branch. |
+| Provider transfer | Completion and owner release checks precede a transfer of the full provider quote. The route rereads the succeeded PaymentIntent and amount, checks refunds/disputes/holds and payout readiness, and ties the transfer to the source charge. | Approved transfer timing, responsibilities while money is held, and reconciliation of transfers versus later bank payouts. Neither is proved by a test-only result. |
+| Processor costs | Current Connect defaults assign Stripe fees and loss liability to the platform; release transfers the full provider amount. | Record actual processor charges, reserves and other costs separately. Obtain the applicable account pricing rather than inserting a guessed net margin. |
+| Refunds and disputes | Signed payment events record refund/dispute facts; the release route blocks adverse states and outstanding refund requests/reserves. | The customer-fee refund rule, post-transfer recovery, chargeback costs and bookkeeping entries. Receiving an event is not evidence that Tuveloz initiated a refund or recovered provider funds. |
+| Separate storefront branch | Product payments use `destination_charge` with `application_fee_amount` and `transfer_data`; this differs from completion-held quote transfers. | Keep this branch outside an assumed labor-only launch scope unless separately reviewed. Do not carry its timing/accounting conclusions into the quote flow. |
+
+Sources: `lib/customer-fee.ts`, `app/api/stripe/checkout/route.ts`,
+`app/api/stripe/admin/payments/route.ts`,
+`app/api/stripe/webhooks/payments/route.ts`, `lib/stripe-payments.ts`,
+`lib/stripe-provider.ts` and `db/schema.ts`. The Stripe clarification above and
+the CPA's own written determination must settle the remaining questions. No
+tax setting, accounting election, released policy, fee or launch lock changed.
 
 **`checkout_fee_receipt_copy`** — *payments, required* — also needs a legal source
 *Existing:* the fee has one canonical name across every surface, enforced by
