@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Check Maryland agency records and send the approved broker inquiry
+
+Reconciled the completed release before continuing: remote main remains
+`f31f85c` and there are no open PRs. Extended the existing insurance section in
+`business/launch-gate-briefing.md`; did not repeat the website release or open
+another insurance application. Founder Shield's own terms name both The
+Baldwin Group Specialty Solutions, LLC and Foundershield LLC. After resolving
+the initial browser-panel interruption with the owner's instruction, the
+official Maryland agency search showed Foundershield LLC license 2192404
+Inactive, The Baldwin Group Specialty Solutions, LLC license 3002989862
+Active, and Marsh USA LLC license 1280 Active. Public result snapshots are
+saved as outputs/broker-{foundershield,baldwin,marsh}-mia-20260927.txt.
+
+These are preliminary agency listings, not proof of Tuveloz coverage or the
+assigned producer's authority. The older inactive name must not be confused
+with the active Baldwin entity. Maryland warns its status data can lag and
+links to SBS for current details; SBS terms were not accepted, and no SBS
+search was submitted. Exact contracting entity/individual, authorized lines,
+dates, orders, eligibility and pricing still need confirmation. No further
+owner action is needed to close the initial browser panel.
+
+Prepared the exact initial inquiry to Founder Shield's published
+`info@foundershield.com` address. The owner specifically approved this body,
+recipient and business sender. Sent from `hello@tuveloz.com` on September 27
+at 12:31 a.m. Maryland time; Gmail's Sent folder and expanded headers confirm
+the sender, recipient, subject and matching body. Screenshot evidence is
+`outputs/broker-inquiry-sent-20260927.png`; recipient delivery/read/response
+is not yet confirmed. Do not resend. The Gmail connector was linked to a
+personal account, so no send was made through it; the verified Tuveloz Chrome
+profile supplied the business mailbox.
+
+The inquiry asks about prelaunch marketplace fit, exact agency/license and
+fees, excludes private records, and authorizes no paid work, broker appointment
+or coverage. No quote form or insurance application was submitted, no costs
+incurred, and no application code or launch controls changed. Updated the
+existing September 30 insurance review to await a reply. Documentation diff
+checked; no code tests were needed for this record update.
+
 ## 2026-09-27 - Publish PR #245 and verify live Spanish account controls
 
 The owner explicitly approved publishing the Spanish account fix. Confirmed
