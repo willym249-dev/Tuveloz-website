@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Enable approved payout-status feed and fix its payment-client dependency
+
+The owner approved the prepared connection, encrypted signing-secret storage,
+and synthetic testing. Stripe created `Tuveloz provider payout safety` as an
+Active, Connected accounts, Snapshot destination on API `2026-06-24.dahlia`
+with exactly the nine reviewed events. Cloudflare production now shows
+`STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET` as Value encrypted. The existing
+Identity/thin Connect destinations and other credentials were preserved;
+`STRIPE_ALLOW_LIVE_MODE` remains false. No purchase or real payment occurred.
+Private masked setup screenshots are retained outside the repository.
+
+The deployed synthetic probe caught a real configuration-dependent defect:
+with a live payment key present but payments code-locked, this snapshot route
+constructed the payment client before verifying a webhook. It returned 503
+even for an invalid signature. No synthetic event reached a database write.
+Public health remained ready at release `f31f85c`, with bookings/payments closed.
+
+The targeted fix calls Stripe's existing static webhook verifier directly.
+It requires the dedicated signing secret and uses the same cryptographic
+provider; it creates no API client, makes no vendor request and changes no
+payment lock or payout decision. A real-route/migrated-SQL regression reproduced
+the 503 before the fix. Nine new local tests exercise locked/absent API keys,
+bad signatures, unmapped providers, duplicates, failed/canceled payouts,
+deleted/expired payout accounts, stale/equal-time events, wrong-mode snapshots,
+storage retries and abandoned processing claims. Synthetic tests create no
+payment, email or provider approval.
+
+Validation: all 756 tests and the production build pass; TypeScript passes;
+lint has no errors and one existing site-language navigation warning. The
+fix is awaiting normal PR/release checks and post-release signed endpoint
+verification. Setup alone is not proof of Stripe-originated delivery, bank
+settlement or launch readiness. Do not repeat the completed credential setup.
+
 ## 2026-09-27 - Confirm the missing provider payout-status connection
 
 Continued after the insurance explanation without repeating completed releases.

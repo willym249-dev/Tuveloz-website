@@ -49,15 +49,15 @@ displayed price and November cost-review checkpoint. The hosted customer image
 upload and temporary-email cleanup also passed; see [`../STAGING.md`](../STAGING.md).
 These completed technical checks do not approve the remaining launch gates.
 
-**September 27 payment-configuration review:** the dedicated connected-account
-snapshot secret is missing, and Stripe's live and original Test-mode lists
-have no `/api/stripe/webhooks/connected-accounts` destination. The existing
-Identity and V2 thin Connect destinations are separate and were preserved.
-A nine-event Connected accounts / Snapshot destination is prepared but
-unsubmitted, pending specific owner confirmation for the financial-data feed
-and encrypted signing-secret storage. It will not enable bookings or live
-payments. Payout safety remains closed without a valid snapshot; source checks
-pass, but delivery and failure/recovery testing are unfinished. See
+**September 27 payment-configuration review:** after specific owner approval,
+the missing nine-event Connected accounts / Snapshot destination is now Active,
+and its dedicated secret is encrypted in Cloudflare production. The existing
+Identity and V2 thin Connect destinations were preserved. A deployed synthetic
+probe found that the snapshot route incorrectly constructs the payment client
+before signature verification; the current payment lock therefore produces
+503. A narrow static-signature-verifier fix and nine real-route/migrated-SQL
+tests pass locally, along with all 756 tests/build. Release and post-release
+verification are pending. No booking/payment lock changed. See
 [`DEPLOYMENT.md`](../../DEPLOYMENT.md) for the existing event list and the
 September 27 log entry for exact observations. The CLI could not refresh D1
 gate decisions due to account/credential authorization error 7403; this does
