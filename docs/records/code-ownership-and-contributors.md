@@ -153,7 +153,7 @@ Private evidence: `outputs/distributed-packages-20260927.json`,
 configuration was changed, and no launch gate was approved. Owner contribution
 records, brand-master provenance and final distribution review remain open.
 
-### Notice packaging prepared September 27 — not deployed
+### Notice packaging prepared and published September 27
 
 [`bundled-manifest.json`](../../public/third-party-notices/bundled-manifest.json)
 now describes the 36 observed package installations and all 39 notice references.
@@ -188,9 +188,18 @@ All 809 existing tests subsequently passed, and the TypeScript/Worker check
 passed. Lint had zero errors and the one unchanged language-navigation warning.
 The first restricted test attempt hit Windows directory permissions; rerunning
 the same suite with the required access passed without source changes. This is
-local release preparation; remote PR/release checks have not run for this branch.
+local release preparation; the completed remote publication is recorded below.
 The upstream inquiry is posted as recorded above. Do not repeat the collection
 or ask again for permission to send that completed message.
+
+### Publication verified September 27
+
+PR #255 merged tested head 1821c39 as b5c67a9. Both PR workflows and all three production jobs in 36355757574 passed. Independent live verification at 22:52:46 UTC confirmed the exact release, ready application/database/schema, both notice manifests and README, and every byte/hash of all 40 unique notice files (31 added plus nine original). The bundled inventory covers 36 installations and 39 references. Signed-out provider access remains 401/no-store/error-only. Accounts/applications are open; customer requests/payments remain closed.
+
+See private pr255-live-release-20260927.json and
+pr255-production-result-20260927.json. Packaging and publication are complete;
+issue #276 and final distribution/ownership review remain open. Do not repeat
+notice collection or publication.
 
 ## What depends on it
 

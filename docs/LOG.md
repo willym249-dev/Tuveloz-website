@@ -11,6 +11,62 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Reconcile Stripe's written response and prepare remaining questions
+
+The scoped business-inbox search found a substantive Stripe Support response
+dated September 27 at 5:24 p.m. Maryland time. Expanded sender details show
+stripe.com signing and TLS. It confirms Tuveloz as the payment merchant for the
+described separate-charge/transfer flow, Tuveloz's responsibility for Stripe
+costs, refunds, disputes and losses, and a separate onboarding acknowledgment by an
+authorized representative. The earlier July 29 approval and loss acknowledgment
+remain complete. No broker/county reply appeared in the scoped search.
+
+Compared the reply to official Stripe documentation and released source
+`b5c67a9`. Current Stripe public business name and statement descriptor already
+show TUVELOZ LLC; no correction was needed. Platform setup still exposes the
+separate onboarding acknowledgment. It was not clicked or accepted. Support's
+reference to a live quote flow conflicts with the closed application state; it
+does not authorize activation. Transfer time limits, specific service restrictions
+and account-specific reserve conditions remain unanswered.
+
+Updated the existing processor record and launch briefing with a surface-by-surface
+disclosure review and English/Spanish wording drafts. Prepared one same-thread
+Gmail reply covering only the missing questions, acknowledgment text and closed
+launch state. The body was read back, a screenshot saved, and the unsent reply
+left open for owner review. It has not been sent; the earlier approval covered
+the original inquiry. No runtime, policy release, account setting, launch gate,
+payment or paid service changed.
+
+Private evidence: stripe-written-response-review-20260927.json,
+stripe-support-followup-20260927.md and stripe-followup-draft-20260927.png.
+The independent upstream issue check still shows #276 Open with zero comments.
+All 15 fee-consistency checks pass after clarifying the processor-cost wording
+in this record; deadline parsing and the whitespace check also pass. Only
+documentation changed, so the completed application/browser release tests were
+not repeated. Preserve these local records for the next authorized release.
+Keep September 30/October 2/October 4 response checkpoints. Do not repeat the
+published PR #255 release, known-correct Stripe fields or original inquiries.
+
+## 2026-09-27 - Publish and independently verify PR #255
+
+PR #255 merged tested head 1821c39 as b5c67a9. Both PR workflows and all three production jobs in 36355757574 passed. Independent live verification at 22:52:46 UTC confirmed the exact release, ready application/database/schema, both notice manifests and README, and every byte/hash of all 40 unique notice files (31 added plus nine original). The bundled inventory covers 36 installations and 39 references. Signed-out provider access remains 401/no-store/error-only. Accounts/applications are open; customer requests/payments remain closed.
+
+The owner approved the prepared push, pull request, conditional merge and
+normal deployment by continuing the explicit publication request. The exact
+approved head was merged only after the required checks passed. No application
+code, dependency, policy release, migration or launch setting changed.
+
+This completes publication of the additional software notices and the saved
+Stripe/insurance/release records. Do not repeat this release or its approval.
+The upstream helper attribution question in issue #276 remains pending, along
+with owner contribution records, brand provenance and launch-review evidence.
+
+Private proof: pr255-pr-verification-result-20260927.json,
+pr255-pr-build-result-20260927.json, pr255-merge-result-20260927.json,
+pr255-production-result-20260927.json and pr255-live-release-20260927.json.
+This post-release handoff stays local until the next authorized substantive
+release; it does not need a separate deployment.
+
 ## 2026-09-27 - Post approved attribution inquiry and complete local release checks
 
 Verified the existing GitHub identity, exact upstream repository and absence of

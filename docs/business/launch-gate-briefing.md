@@ -434,21 +434,24 @@ Express dashboard and Stripe-hosted/embedded onboarding. The platform liability
 acknowledgment is dated July 29. Initial Connect approval is complete; do not
 restart it or describe this as unfinished bank setup.
 
-The [approval record card](../records/stripe-connect-platform-approval.md) preserves
-that evidence and narrows the remaining work to exact service scope, the current
-quote flow's delayed transfers, account conditions and customer disclosures.
-The setup page also displays an onboarding-responsibility acknowledgment action;
-its effect/necessity has not been established and it was not accepted. The owner-
-approved clarification was submitted September 27 and Stripe confirmed email
-receipt, followed by an acknowledgment in the business inbox; the human review
-reply remains pending. With the owner's approval, the legacy fee wording in
-Stripe's saved business description was corrected to the current 5% fee and
-prelaunch state. Reopening the saved record verified the complete replacement.
-This correction is complete and the site's fee is unchanged. Current indirect charges omit
-`on_behalf_of`, which Stripe's documentation treats as platform merchant of record;
-reconcile the final disclosures with the separate CPA/legal review. No new legal
-or tax conclusion, paid service or gate approval was applied.
-Live mode remains locked (`STRIPE_LIVE_MODE_ENABLED = false`).
+The [approval record card](../records/stripe-connect-platform-approval.md) now
+records Stripe's substantive September 27, 5:24 p.m. business-inbox reply. Stripe
+confirms TUVELOZ LLC as payment merchant for the described quote flow, platform
+fee/refund/dispute/loss responsibility, and the need for an authorized representative
+to complete the separate onboarding acknowledgment. Its statement about no
+recurring renewal applies to that acknowledgment, not a new expiry for approval.
+The live dashboard already shows TUVELOZ LLC as both public name and statement
+descriptor, so those fields need no change. The acknowledgment remains unaccepted.
+
+Specific service restrictions, maximum transfer delay and account-specific reserve
+conditions remain unanswered. A narrow reply is prepared locally for send approval;
+do not repeat the initial inquiry. Support called the quote flow live in one sentence,
+but customer bookings/payments remain closed. The record card maps the remaining
+checkout, confirmation, English/Spanish policy and accepted-evidence disclosures,
+with proposed bilingual wording for review. The 5% account-description correction
+and initial Connect approval remain complete. No runtime, policy, fee, account
+setting or launch gate changed. Live mode remains locked
+(`STRIPE_LIVE_MODE_ENABLED = false`).
 
 ### CPA or tax adviser
 
