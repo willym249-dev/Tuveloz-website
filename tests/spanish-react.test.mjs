@@ -33,6 +33,27 @@ test("the private account translates without becoming a public Spanish route", (
   assert.equal(pathHasSpanish("/customer-agreement"), false);
 });
 
+test("private privacy controls translate in place without exposing a public alias", () => {
+  assert.equal(pathHasSpanish("/privacy-center"), true);
+  assert.equal(englishPathFor("/es/privacy-center"), null);
+  assert.equal(spanishPathFor("/privacy-center"), null);
+  assert.ok(!spanishPagePaths().includes("/es/privacy-center"));
+  const href = "/privacy-center?scope=provider#privacy-request";
+  assert.equal(spanishInterfaceHref(href), "/privacy-center?scope=provider&lang=es#privacy-request");
+  assert.equal(spanishInterfaceHref(spanishInterfaceHref(href)), spanishInterfaceHref(href));
+  assert.equal(spanishInterfaceHref("/api/privacy-center/export?scope=provider"), "/api/privacy-center/export?scope=provider");
+});
+
+test("privacy API validation and recovery errors have reviewed Spanish display text", () => {
+  const api = readFileSync(new URL('../app/api/privacy-center/route.ts', import.meta.url), 'utf8');
+  const errors = [...api.matchAll(/error: ("(?:[^"\\]|\\.)*")/g)].map(([, literal]) => JSON.parse(literal));
+  assert.ok(errors.length >= 10, 'cover actual server messages, including error paths');
+  for (const text of errors) {
+    assert.ok(spanishText[text], `missing privacy error translation: ${text}`);
+    assert.notEqual(spanishText[text], text);
+  }
+});
+
 test("placeholders use reviewed display copy when no special placeholder wording exists", () => {
   for (const text of ["Tell us what should be added", "Suggest another provider feature", "Suggest another improvement"]) {
     const input = translate(h("input", { placeholder: text }));

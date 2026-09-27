@@ -14,10 +14,10 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `59b9e91f7f56b051888f6aab74732a4b5ec809fc` (PR #248), built September 27 at
-  07:29:50 UTC. Every job in production workflow `36302540175` passed, including
-  776 tests/build, full Spanish navigation and end-to-end provider signup.
-  Public health at 07:31:55 UTC confirmed the exact commit, ready
+  `f78d76a45e33e1105d7c83d565047e217fd41a5d` (PR #249), built September 27 at
+  08:52:13 UTC. Every job in production workflow `36306743015` passed, including
+  789 tests/build, required Spanish navigation and end-to-end provider signup.
+  Public health at 08:54:23 UTC confirmed the exact commit, ready
   application/database/schema, accounts/applications open, and customer
   requests/payments closed. The earlier county guidance and saved-reference
   fixes remain published. This does not approve provider credentials or launch.
@@ -120,9 +120,19 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 The September 27 privacy-isolation/recovery check uses real signed sessions and
 migrated synthetic account records. Isolation passed; API outage handling,
 bounded browser waits, explicit refresh and provider-view preservation are now
-repaired locally. All 789 tests/build and eighteen mobile browser cases pass;
-release verification is pending. This does not approve the privacy/retention
-gate or supply reviewed Spanish for the English-only private privacy center.
+published and verified as PR #249. All 789 tests/build and eighteen added mobile
+browser cases pass, as do required PR and production checks. Four read-only live
+requests confirm unsigned/invalid-scope access is rejected with private,
+no-store responses; authenticated behavior remains synthetic proof. No real
+privacy request or export was submitted. This does not approve the
+privacy/retention gate or supply reviewed Spanish for the English-only private
+privacy center; that language follow-up has its own checkpoint in OPEN-ITEMS.
+
+That language follow-up is now implemented locally: Spanish privacy controls,
+messages and status history, preserved original user content, language-aware
+sign-in/return links, and scoped mobile checkbox/select fixes. All 793 tests
+and sixty-four synthetic browser scenarios pass; publication and production
+verification are pending. This does not change PR #249's dated live evidence.
 
 - PR #241 makes emergency-contact and safety-stop incident reports stop the job
   timer regardless of a low/moderate severity selection, preserving the payment

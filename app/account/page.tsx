@@ -86,8 +86,12 @@ function CodeDeliveryHint() {
 }
 
 function destinationAfterSignIn(destination: string) {
-  const privacyReturn = new URLSearchParams(window.location.search).get("privacy") === "1";
-  return privacyReturn ? "/privacy-center" : destination;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("privacy") !== "1") return destination;
+  const language = params.get("lang");
+  return language === "en" || language === "es"
+    ? `/privacy-center?lang=${language}`
+    : "/privacy-center";
 }
 
 export default function AccountPage() {

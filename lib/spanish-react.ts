@@ -11,7 +11,7 @@ export function spanishInterfaceHref(href: string): string {
   // Relative paths only; external and unreviewed routes stay put.
   if (!href.startsWith("/") || href.startsWith("//")) return href;
   const match = href.match(/^([^?#]*)([\s\S]*)$/)!;
-  if (match[1] === "/account") {
+  if (["/account", "/privacy-center"].includes(match[1])) {
     // Carry the language in server-rendered links too: a visitor can click
     // before hydration saves their preference. The private path stays put.
     const account = new URL(href, "https://tuveloz.com");

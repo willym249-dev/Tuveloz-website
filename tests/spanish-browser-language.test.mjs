@@ -44,6 +44,29 @@ test("account language hints work before storage and stay consistent after switc
   assert.equal(languageClient("/customer-agreement", "es", false, "?lang=es").getLanguageSnapshot(), "en");
 });
 
+test("private privacy language hints preserve data scope and work without browser storage", () => {
+  const client = languageClient("/privacy-center", "en", true, "?scope=provider&lang=es");
+  assert.equal(client.getLanguageSnapshot(), "es");
+  client.setStoredLanguage("en");
+  assert.equal(client.getLanguageSnapshot(), "en");
+  assert.equal(client.location.search, "?scope=provider&lang=en");
+  assert.deepEqual(client.assigned, [], "language switching must preserve the open form");
+  client.setStoredLanguage("es");
+  assert.equal(client.getLanguageSnapshot(), "es");
+});
+
+test("privacy sign-in returns preserve language without changing other account destinations", () => {
+  const account = read("app/account/page.tsx");
+  const helper = account.slice(account.indexOf("function destinationAfterSignIn("), account.indexOf("export default function AccountPage"));
+  function destination(search) {
+    return new Function("exports", "window", `${compile(helper)}; return destinationAfterSignIn('/customer');`)({}, { location: { search } });
+  }
+  assert.equal(destination("?privacy=1&lang=es"), "/privacy-center?lang=es");
+  assert.equal(destination("?privacy=1&lang=en"), "/privacy-center?lang=en");
+  assert.equal(destination("?privacy=1&lang=invalid"), "/privacy-center");
+  assert.equal(destination("?lang=es"), "/customer");
+});
+
 test("explicit Spanish URLs stay Spanish with an English saved preference", () => {
   for (const path of ["/es", "/es/", "/es/join", "/es/post-job"]) {
     assert.equal(languageClient(path).getLanguageSnapshot(), "es", path);
