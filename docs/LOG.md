@@ -11,6 +11,43 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Publish and independently verify PR 252
+
+After the owner continued the scoped publication request, automatic approval
+review allowed the exact-head gated release. All required PR checks passed for
+`71238f94c82b48404a5ffa6a9c4b45b527813cc0`, including the new twelve-case provider
+tools browser regression. PR #252 merged as
+`0d6fc3d08b46626e30a8cc70d96c69bd5976a813` at 14:26:36 UTC. Normal production
+workflow `36325931216` passed all three jobs at 14:42:49 UTC, including the
+793-test suite, both browser engines, Spanish coverage, provider signup,
+fresh-database migrations, production build and exact-release readiness.
+Lint retains one existing language-navigation warning and no errors.
+No further publication approval or repeat release is needed for this repair.
+A fresh concurrent-work check found no open pull requests.
+
+Independent public verification at 14:45:25 UTC confirmed the exact merge,
+ready application/database/schema, no missing tables or guarded triggers and
+unchanged onboarding-only state. Accounts/applications remain open; requests
+and payments remain closed. The signed-out provider-tools API returned 401,
+no-store and an error-only response.
+
+The initial local bundle filename returned 404. The actual live page references
+`/assets/page-B41cR2t_.js`; its SHA-256 is
+`8d32ee93c74e1c069221285ab41f7e3119781517f78737c8386d20157d72d335`.
+Its bytes exactly match the originally hashed tested module except for the
+single generated link import filename (`link-C7x9CXCy.js` locally versus
+`link-C3TwM0-s.js` live). All four direct imports return 200. This is scoped
+component comparison, not a claim that the whole dependency graph is byte
+identical. No website change was needed to resolve the verification mismatch.
+
+Evidence: `outputs/pr252-production-result-20260927.json`,
+`outputs/pr252-production-checks-20260927.log`,
+`outputs/pr252-live-release-20260927.json` and the retained browser regressions.
+Behavioral proof uses isolated synthetic fixtures; no real provider account,
+credential, message, payment or launch decision was written. The separate
+upstream license inquiry remains unsent pending explicit approval. The final
+release record is saved locally after publication; it is not another deployment.
+
 ## 2026-09-27 - Preserve provider tool drafts after rejected saves
 
 Fresh review found no open PR and GitHub main still at `643a143`. Preserved
