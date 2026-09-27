@@ -33,9 +33,18 @@ including matching positive controls, duplicate handling, refund/dispute holds
 and preservation of launch holds. The obsolete assertion requiring a warning
 string was replaced by this behavior coverage. All 766 tests, the production
 build and TypeScript pass; lint has no errors and its one existing navigation
-warning. Release is pending. No live charges, refunds or provider records were
-created or changed. Founder Shield still has no reply in the focused business
-inbox search; no duplicate inquiry was sent.
+warning. PR #247 passed both PR workflows, including the browser signup and
+bilingual flow checks. Tested head `b4058bf031b760df3faf4e0cb95246eca69facdd`
+merged as `27c1fe73f86443dcfa9dcddac950eeea442e0ac4`. Production workflow
+`36299174143` passed all three jobs. A separate read-only public health check
+at 06:22:43 UTC verified that exact release (built 06:20:45 UTC), ready
+application/database/schema, no missing tables/triggers, accounts/applications
+open and requests/payments closed. Private before/after test logs and release
+proof are retained outside the public repository. No live charges, refunds or
+provider records were created or changed. This does not prove real Stripe
+checkout/refund/dispute/payout delivery or approve launch. The focused business
+inbox search found no Founder Shield reply; no duplicate inquiry was sent.
+Do not repeat the completed repair or the preceding PR #246 connection setup.
 
 ## 2026-09-27 - Enable approved payout-status feed and fix its payment-client dependency
 

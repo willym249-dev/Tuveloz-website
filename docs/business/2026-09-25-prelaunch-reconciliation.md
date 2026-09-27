@@ -14,19 +14,22 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `31980998846d1f749fce7bcca539a39edb2e2711` (PR #246), built September 27 at
-  05:37:27 UTC. Every job in production workflow `36297054968` passed, including
-  756 tests/build, full Spanish navigation and end-to-end provider signup.
-  Public health at 05:39:09 UTC confirmed the exact commit, ready
+  `27c1fe73f86443dcfa9dcddac950eeea442e0ac4` (PR #247), built September 27 at
+  06:20:45 UTC. Every job in production workflow `36299174143` passed, including
+  766 tests/build, full Spanish navigation and end-to-end provider signup.
+  Public health at 06:22:43 UTC confirmed the exact commit, ready
   application/database/schema, accounts/applications open, and customer
   requests/payments closed. The earlier county guidance and saved-reference
   fixes remain published. This does not approve provider credentials or launch.
   The approved nine-event payout-status destination is Active with its dedicated
-  secret encrypted in production. Six deployed signature/duplicate checks passed
-  using an unmapped synthetic event; this is not Stripe-originated delivery or
+  secret encrypted in production. PR #246's six deployed signature/duplicate
+  checks passed on `3198099` using an unmapped synthetic event; this is not Stripe-originated delivery or
   settlement proof. The temporary signing material was cleared. Do not repeat
-  the completed setup. The later checkout notification repair is separately
-  recorded at the top of LOG; its publication is still pending.
+  the completed setup. PR #247 also repairs wrong-session and concurrent
+  checkout updates with conditional SQL that preserves newer payment and hold
+  states. Ten added actual-route/helper and migrated-SQL tests demonstrate the
+  failures before the repairs and success afterward. No real Stripe operation
+  was performed; release proof does not satisfy payment/insurance launch review.
 - The Spanish customer account gap is closed. Live mobile clicks of the bottom
   Spanish homepage buttons reached the customer creation and provider forms.
   Account creation, sign-in and reset controls are translated; reload retains
