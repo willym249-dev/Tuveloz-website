@@ -11,6 +11,39 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Prepare complete Spanish account controls
+
+Reproduced the customer-language gap with four failing fresh-entry checks
+(customer/provider in Chromium and WebKit). Enabled translation in the existing
+private `/account` interface, wrapped the rendered account controls and code
+hint in the existing React translation boundary, and completed missing UI/API
+messages. An explicit Spanish public URL now retains the visitor's preference
+for the full navigation into account creation. Translation changes labels,
+validation and status messages; submitted values and API routes are unchanged.
+The public Spanish-route list is separate from account interface availability:
+no `/es/account` route, sitemap addition or Worker cache change was introduced.
+Existing legal releases, consent choices, launch/payment/SMS locks, and account
+authentication rules remain unchanged.
+
+All 60 account-form mobile scenarios passed across Chromium/WebKit and both
+account roles. They cover existing English failure recovery plus Spanish
+entry/reload, language switching, local validation, request throttling, code
+verification errors, and preserved form values/consent/request payloads. A
+320px screenshot exposed one untranslated consent conjunction; corrected it
+and added a consent-label assertion. All 24 affected Spanish scenarios passed
+again, and the screenshot was visually checked. The production build and all
+745 tests pass; typecheck passes; lint has the one existing language-navigation
+warning. An initial sandboxed suite run could not resolve esbuild dependencies;
+the permitted filesystem-access rerun passed. Two old tests assuming account
+translation was forbidden were updated while retaining public-route denial.
+
+Extended the existing full-site navigation and Spanish rendering checks to
+verify the customer CTA, hydration, reload, language switch and retained
+preference across an English-only legal page. Those run in the required PR
+workflow. This entry records prepared source work, not publication. The last
+verified live release remains PR #244 at `40d9234`; do not call this account
+translation live until a separately approved release is verified.
+
 ## 2026-09-26 - Publish PR #244 and verify the live release
 
 The owner explicitly approved publication after automatic approval review

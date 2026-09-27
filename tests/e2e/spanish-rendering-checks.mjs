@@ -91,9 +91,12 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.waitForFunction(() => document.documentElement.lang === "en");
     assert.equal(await page.locator("[data-language-control]").count(), 0);
 
-    // Changing language must keep the same checked service and entered email.
+    // An English-only agreement must not erase the language chosen on /es.
     await page.goto(`${origin}/join`, { waitUntil: "domcontentloaded" });
+    await waitForLanguage("es");
+    await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
     await waitForLanguage("en");
+    // Changing language must keep the same checked service and entered email.
     await page.locator(".provider-service-groups .service-group > summary").first().click();
     const service = page.locator('input[name="provider-service"]').first();
     const serviceValue = await service.getAttribute("value");

@@ -32,9 +32,19 @@ test("explicit Spanish URLs stay Spanish with an English saved preference", () =
 });
 
 test("legal and unknown pages stay English regardless of saved preference", () => {
-  for (const path of ["/customer-agreement", "/es/customer-agreement", "/account", "/unknown"]) {
+  for (const path of ["/customer-agreement", "/es/customer-agreement", "/es/account", "/unknown"]) {
     assert.equal(languageClient(path, "es").getLanguageSnapshot(), "en", path);
   }
+});
+
+test("account controls retain Spanish and can switch even when storage is blocked", () => {
+  assert.equal(languageClient("/account", "es").getLanguageSnapshot(), "es");
+  const client = languageClient("/account", "en", true);
+  client.setStoredLanguage("es");
+  assert.equal(client.getLanguageSnapshot(), "es");
+  client.setStoredLanguage("en");
+  assert.equal(client.getLanguageSnapshot(), "en");
+  assert.deepEqual(client.assigned, [], "changing account language must not navigate or discard form state");
 });
 
 test("blocked browser storage does not break language selection", () => {

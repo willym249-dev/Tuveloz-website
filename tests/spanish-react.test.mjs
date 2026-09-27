@@ -22,6 +22,16 @@ function load(name) {
 }
 const { spanishInterfaceTree: translate, spanishInterfaceHref } = load("./spanish-react");
 const { spanishText } = load("./spanish-dictionary");
+const { pathHasSpanish, englishPathFor, spanishPathFor, spanishPagePaths } = load("./spanish-routes");
+
+test("the private account translates without becoming a public Spanish route", () => {
+  assert.equal(pathHasSpanish("/account"), true);
+  assert.equal(englishPathFor("/es/account"), null);
+  assert.equal(spanishPathFor("/account"), null);
+  assert.ok(!spanishPagePaths().includes("/es/account"));
+  assert.equal(pathHasSpanish("/admin"), false);
+  assert.equal(pathHasSpanish("/customer-agreement"), false);
+});
 
 test("placeholders use reviewed display copy when no special placeholder wording exists", () => {
   for (const text of ["Tell us what should be added", "Suggest another provider feature", "Suggest another improvement"]) {

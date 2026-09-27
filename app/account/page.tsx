@@ -17,6 +17,7 @@ import { track } from "../../lib/analytics";
 import { REMEMBERED_EMAIL_KEY } from "../../lib/remembered-email";
 import { requestAccountResponse } from "../../lib/account-response";
 import { SiteLanguageButton } from "../components/site-language";
+import { InterfaceCopy } from "../components/interface-copy";
 import { BrandMark } from "../components/tuveloz-icons";
 
 type Role = "customer" | "provider";
@@ -74,11 +75,13 @@ function passwordRules(value: string) {
  */
 function CodeDeliveryHint() {
   return (
+    <InterfaceCopy>
     <small className="account-code-hint">
       The code can take a minute to arrive and expires after 10 minutes. Check
       your spam or junk folder before asking for another — only 3 codes can be
       sent to an email every 15 minutes.
     </small>
+    </InterfaceCopy>
   );
 }
 
@@ -609,6 +612,7 @@ export default function AccountPage() {
     : "Provider applicants can sign in to complete onboarding. Approved providers can also open their workspace here.";
 
   return (
+    <InterfaceCopy>
     <main className="account-shell">
       <header className="account-header">
         <Link className="brand" href="/" aria-label="Tuveloz home">
@@ -1287,5 +1291,6 @@ export default function AccountPage() {
         </div>
       </section>
     </main>
+    </InterfaceCopy>
   );
 }

@@ -163,6 +163,21 @@ export function SiteLanguageProvider({ children, initialLanguage = "en" }: {
   }, [pathname]);
 
   useEffect(() => {
+    // A visitor may enter on /es directly, without ever pressing the switch.
+    // Carry that preference into the private account page's full navigation.
+    // Other pages must not overwrite a saved preference during hydration.
+    if (englishPathFor(window.location.pathname) === null || language !== "es") return;
+    inMemoryLanguage = "es";
+    try {
+      if (window.localStorage.getItem(LANGUAGE_KEY) !== "es") {
+        window.localStorage.setItem(LANGUAGE_KEY, "es");
+      }
+    } catch {
+      // The current page still switches when browser storage is unavailable.
+    }
+  }, [language, pathname]);
+
+  useEffect(() => {
     document.documentElement.lang = language;
     // Keep each page's title instead of replacing every title with the brand.
     const translatePage = () => {

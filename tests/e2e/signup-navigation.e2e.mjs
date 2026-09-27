@@ -53,6 +53,15 @@ for (const [engine, browserType] of Object.entries(engines)) {
             await page.locator('input[type="password"]').nth(1).waitFor({ state: "visible" });
             assert.equal(await page.locator('input[type="password"]').count(), 2,
               "create-account form, not sign-in, must open");
+            await page.getByRole("heading", { name: language === "es" ? "Cree una cuenta." : "Create an account.", exact: true }).waitFor();
+            await page.waitForFunction(expected => document.documentElement.lang === expected, language);
+            await page.reload({ waitUntil: "domcontentloaded" });
+            await page.getByRole("heading", { name: language === "es" ? "Cree una cuenta." : "Create an account.", exact: true }).waitFor();
+            await page.getByRole("button", { name: language === "es" ? "Change the whole page to English" : "Cambiar toda la página a español", exact: true }).click();
+            await page.getByRole("heading", { name: language === "es" ? "Create an account." : "Cree una cuenta.", exact: true }).waitFor();
+            assert.equal(new URL(page.url()).pathname, "/account", "language switching keeps the private account route");
+            assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true,
+              "translated account controls fit the phone");
           } else {
             // Check the form's actual position, not just the URL or presence in the DOM.
             await page.waitForFunction(() => {

@@ -35,7 +35,9 @@ export const SPANISH_READY_PATHS = [
 export const SPANISH_PREFIX = "/es";
 
 export function pathHasSpanish(pathname: string) {
-  return SPANISH_READY_PATHS.includes(pathname);
+  // The private account interface translates in place. It must not gain a
+  // public /es alias, sitemap entry, or changed cache behavior.
+  return SPANISH_READY_PATHS.includes(pathname) || pathname === "/account";
 }
 
 /**
@@ -49,12 +51,12 @@ export function englishPathFor(pathname: string): string | null {
   if (pathname !== SPANISH_PREFIX && !pathname.startsWith(`${SPANISH_PREFIX}/`)) return null;
   const remainder = pathname.slice(SPANISH_PREFIX.length);
   const english = remainder === "" || remainder === "/" ? "/" : remainder.replace(/\/$/, "");
-  return pathHasSpanish(english) ? english : null;
+  return SPANISH_READY_PATHS.includes(english) ? english : null;
 }
 
 /** The Spanish URL for an English path, or null when it has no reviewed twin. */
 export function spanishPathFor(pathname: string): string | null {
-  if (!pathHasSpanish(pathname)) return null;
+  if (!SPANISH_READY_PATHS.includes(pathname)) return null;
   return pathname === "/" ? SPANISH_PREFIX : `${SPANISH_PREFIX}${pathname}`;
 }
 

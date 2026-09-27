@@ -37,7 +37,7 @@ test("Spanish is offered per path, not site-wide", async () => {
   assert.match(language, /if \(!available\) return null;/);
 });
 
-test("untranslated legal and account pages are not marked Spanish-ready", async () => {
+test("untranslated legal pages and private interfaces stay out of public Spanish routes", async () => {
   const routes = await read("lib/spanish-routes.ts");
   const list = routes.slice(
     routes.indexOf("export const SPANISH_READY_PATHS"),

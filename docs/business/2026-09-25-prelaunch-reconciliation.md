@@ -31,6 +31,9 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   describe this as a broken CTA or claim complete customer-account translation.
   The direct `/es/account` probe is an unsupported, unlinked path, not evidence
   of a bad site link. No account or code was submitted during these checks.
+  A subsequent source fix is prepared with 745 tests/build and mobile account
+  scenarios passing; it is not yet published. Follow the latest LOG/PR result
+  before treating this live gap as resolved.
 - PR #243 adds automatic **owner** incident alerts, quarantined test previews,
   and scheduled recovery. All 733 local tests, production build, typecheck,
   lint, twelve Chromium/WebKit incident scenarios, and required release gates
