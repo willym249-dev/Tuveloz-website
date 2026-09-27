@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Finish Spanish privacy controls and preserve form state
+
+The private privacy center now has local Spanish interface coverage for the
+request form, communication preferences, history/statuses, consent provenance,
+service/validation errors, notices and accessible labels. It uses the existing
+React translation boundary and translates in place, without a public
+`/es/privacy-center` alias. User-entered details, owner response notes, email,
+request identifiers and API values stay unchanged. Dates follow the selected
+language. Language hints survive reload and blocked browser storage; sign-in
+and return navigation preserve the selected language.
+
+The mobile review also found oversized checkboxes and a low-contrast native
+request dropdown. A long Spanish selected value in WebKit overflowed the
+320px page after the contrast adjustment; a focused reproduction confirmed the
+native control behavior and passed after scoped appearance/width corrections.
+The overflow assertion remains enforced. These styles do not change other
+forms. Synthetic Chromium/WebKit coverage expanded from eighteen to
+sixty-four scenarios across English/Spanish at 390px/320px, including all
+request states, draft/checkbox retention, successful writes with original
+values, failed/stalled requests, validation and expired-session redirects.
+The dictionary/error and private-route checks bring the regression suite to
+793 passing tests. Build, TypeScript and lint pass with the existing navigation
+warning. No real account, privacy request, data export, email or payment changed.
+
+PR and production verification are pending. The latest confirmed live version
+remains PR #249 (`f78d76a`). No policy release or launch control changed. This
+interface translation is not a full privacy/retention launch review.
+
 ## 2026-09-27 - Verify privacy isolation and recover from privacy-service failures
 
 A focused review exercised real signed account sessions and privacy API queries

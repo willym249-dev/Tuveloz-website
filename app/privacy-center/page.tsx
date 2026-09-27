@@ -2,7 +2,8 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { SiteLanguageButton } from "../components/site-language";
+import { SiteLanguageButton, useSiteLanguage, type SiteLanguage } from "../components/site-language";
+import { InterfaceCopy } from "../components/interface-copy";
 import { BrandMark } from "../components/tuveloz-icons";
 
 type AccountRole = "customer" | "provider";
@@ -59,10 +60,18 @@ const REQUEST_LABELS: Record<PrivacyRequestType, string> = {
   appeal: "Appeal an earlier privacy decision",
 };
 
-function readableDate(value: string) {
-  if (!value) return "Not recorded";
+const STATUS_LABELS: Record<PrivacyRequest["status"], string> = {
+  submitted: "Submitted",
+  "in-review": "In review",
+  completed: "Completed",
+  denied: "Denied",
+  withdrawn: "Withdrawn",
+};
+
+function readableDate(value: string, language: SiteLanguage) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  if (!value || Number.isNaN(date.getTime())) return language === "es" ? "Sin registrar" : "Not recorded";
+  return date.toLocaleString(language === "es" ? "es-US" : "en-US");
 }
 
 async function privacyUpdate(send: (signal: AbortSignal) => Promise<Response>) {
@@ -88,6 +97,7 @@ async function privacyUpdate(send: (signal: AbortSignal) => Promise<Response>) {
 }
 
 export default function PrivacyCenterPage() {
+  const { language } = useSiteLanguage();
   const [data, setData] = useState<PrivacyCenterData | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -108,7 +118,8 @@ export default function PrivacyCenterPage() {
     try {
       const response = await fetch(`/api/privacy-center${query}`, { cache: "no-store", signal: controller.signal });
       if (response.status === 401) {
-        window.location.replace("/account?role=customer&privacy=1");
+        const languageHint = document.documentElement.lang === "es" ? "es" : "en";
+        window.location.replace(`/account?role=customer&privacy=1&lang=${languageHint}`);
         return;
       }
       const result = await response.json().catch(() => null) as PrivacyCenterData | null;
@@ -276,6 +287,7 @@ export default function PrivacyCenterPage() {
   ) ?? [];
 
   return (
+    <InterfaceCopy>
     <main className="account-shell">
       <header className="account-header">
         <Link className="brand" href="/" aria-label="Tuveloz home">
@@ -284,7 +296,7 @@ export default function PrivacyCenterPage() {
         </Link>
         <div className="account-header-actions">
           <SiteLanguageButton />
-          <Link className="account-home-link" href="/account">
+          <Link className="account-home-link" href={`/account?lang=${language}`}>
             Account
           </Link>
         </div>
@@ -295,7 +307,7 @@ export default function PrivacyCenterPage() {
           <span className="account-kicker">Privacy and data</span>
           <h1>Your information. Your choices.</h1>
           <p>Download a privacy-safe account copy, manage optional communications, and submit verified privacy requests.</p>
-          {data && <small>{data.role} account · {data.email}</small>}
+          {data && <small>{data.role === "provider" ? "Provider account" : "Customer account"} · <span data-no-interface-translation>{data.email}</span></small>}
         </div>
 
         {error && <div className="account-login-message">
@@ -364,7 +376,7 @@ export default function PrivacyCenterPage() {
                   <h2>Optional email settings</h2>
                 </div>
               </div>
-              <form className="customer-profile-form" onSubmit={savePreferences}>
+              <form className="customer-profile-form privacy-preferences" onSubmit={savePreferences}>
                 <label>
                   <input
                     checked={marketingEmail}
@@ -412,7 +424,7 @@ export default function PrivacyCenterPage() {
                 )}
                 {data.role === "customer" && launchNotificationEmail && launchConsent.at && (
                   <p className="hint">
-                    Agreed {readableDate(launchConsent.at)}
+                    Agreed <span data-no-interface-translation>{readableDate(launchConsent.at, language)}</span>
                     {launchConsent.version ? ` · policy version ${launchConsent.version}` : ""}
                     {launchConsent.source === "account_create"
                       ? " · from account creation"
@@ -443,7 +455,7 @@ export default function PrivacyCenterPage() {
                   <h2>Submit a privacy request</h2>
                 </div>
               </div>
-              <form className="customer-profile-form" onSubmit={submitRequest}>
+              <form className="customer-profile-form privacy-request-form" onSubmit={submitRequest}>
                 <label>
                   Request type
                   <select
@@ -518,13 +530,13 @@ export default function PrivacyCenterPage() {
                     <article className="account-request" key={item.id}>
                       <span>
                         <strong>{REQUEST_LABELS[item.requestType]}</strong>
-                        <small>{item.id} · submitted {readableDate(item.createdAt)}</small>
-                        {item.details && <small>{item.details}</small>}
-                        {item.resolutionNote && <small>Decision: {item.resolutionNote}</small>}
+                        <small><span data-no-interface-translation>{item.id}</span> · submitted <span data-no-interface-translation>{readableDate(item.createdAt, language)}</span></small>
+                        {item.details && <small data-no-interface-translation>{item.details}</small>}
+                        {item.resolutionNote && <small>Decision: <span data-no-interface-translation>{item.resolutionNote}</span></small>}
                       </span>
                       <span>
                         <span className={`account-status ${item.status === "completed" ? "is-active" : ""}`}>
-                          {item.status}
+                          {STATUS_LABELS[item.status]}
                         </span>
                         {(item.status === "submitted" || item.status === "in-review") && (
                           <button
@@ -553,5 +565,6 @@ export default function PrivacyCenterPage() {
         )}
       </section>
     </main>
+    </InterfaceCopy>
   );
 }

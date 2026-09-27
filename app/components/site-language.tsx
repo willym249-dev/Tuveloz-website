@@ -101,7 +101,7 @@ function getLanguageSnapshot(): SiteLanguage {
   if (englishPathFor(window.location.pathname) !== null) return "es";
   // A page without reviewed Spanish stays English no matter what is stored.
   if (!pathHasSpanish(window.location.pathname)) return "en";
-  if (window.location.pathname === "/account") {
+  if (["/account", "/privacy-center"].includes(window.location.pathname)) {
     const linkedLanguage = new URLSearchParams(window.location.search).get("lang");
     if (linkedLanguage === "es" || linkedLanguage === "en") return linkedLanguage;
   }
@@ -128,11 +128,11 @@ function subscribeLanguage(listener: () => void) {
 
 function setStoredLanguage(language: SiteLanguage) {
   inMemoryLanguage = language;
-  if (window.location.pathname === "/account") {
+  if (["/account", "/privacy-center"].includes(window.location.pathname)) {
     // Replace only the language hint, without navigating or losing form state.
     const params = new URLSearchParams(window.location.search);
     params.set("lang", language);
-    window.history.replaceState(window.history.state, "", `/account?${params}${window.location.hash}`);
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}?${params}${window.location.hash}`);
   }
   try {
     window.localStorage.setItem(LANGUAGE_KEY, language);
@@ -176,7 +176,7 @@ export function SiteLanguageProvider({ children, initialLanguage = "en" }: {
     // A visitor may enter on /es directly, without ever pressing the switch.
     // Carry that preference into the private account page's full navigation.
     // Other pages must not overwrite a saved preference during hydration.
-    const accountInSpanish = window.location.pathname === "/account"
+    const accountInSpanish = ["/account", "/privacy-center"].includes(window.location.pathname)
       && new URLSearchParams(window.location.search).get("lang") === "es";
     if ((!accountInSpanish && englishPathFor(window.location.pathname) === null) || language !== "es") return;
     inMemoryLanguage = "es";

@@ -11383,6 +11383,58 @@ footer > p,
   padding: 0;
 }
 
+.privacy-preferences label {
+  align-items: flex-start;
+  color: #dbe6ee;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 12px;
+  line-height: 1.5;
+  min-height: 44px;
+}
+
+.privacy-preferences input[type="checkbox"] {
+  accent-color: #ff6a00;
+  flex: 0 0 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  min-height: 0;
+  padding: 0;
+  width: 18px;
+}
+
+.privacy-request-form,
+.privacy-request-form label {
+  min-width: 0;
+}
+
+.privacy-request-form select,
+.privacy-request-form textarea {
+  background: #041421;
+  border: 1px solid #36536b;
+  border-radius: 12px;
+  color: #f7fbff;
+  font: inherit;
+  font-size: 16px;
+  max-width: 100%;
+  min-height: 48px;
+  min-width: 0;
+  padding: 12px;
+  width: 100%;
+}
+
+.privacy-request-form select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #f7fbff 50%), linear-gradient(135deg, #f7fbff 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-repeat: no-repeat;
+  background-size: 5px 5px;
+  overflow: hidden;
+  padding-right: 36px;
+  text-overflow: ellipsis;
+}
+
 .customer-profile-fields input {
   font-size: 16px;
 }

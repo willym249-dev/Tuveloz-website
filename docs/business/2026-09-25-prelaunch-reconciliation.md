@@ -128,6 +128,12 @@ privacy request or export was submitted. This does not approve the
 privacy/retention gate or supply reviewed Spanish for the English-only private
 privacy center; that language follow-up has its own checkpoint in OPEN-ITEMS.
 
+That language follow-up is now implemented locally: Spanish privacy controls,
+messages and status history, preserved original user content, language-aware
+sign-in/return links, and scoped mobile checkbox/select fixes. All 793 tests
+and sixty-four synthetic browser scenarios pass; publication and production
+verification are pending. This does not change PR #249's dated live evidence.
+
 - PR #241 makes emergency-contact and safety-stop incident reports stop the job
   timer regardless of a low/moderate severity selection, preserving the payment
   hold. Ordinary low-severity claims do not claim a work stoppage. The actual-route
