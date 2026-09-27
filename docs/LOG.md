@@ -11,6 +11,83 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Preserve provider tool drafts after rejected saves
+
+Fresh review found no open PR and GitHub main still at `643a143`. Preserved
+the prior local release/notice record commit and continued on
+`fix/provider-tool-draft-retention-20260927`. While reconciling the older
+PR #33/#46 checklist entry, found that both forms in `/provider-services`
+unconditionally reset after their shared save helper handled an error.
+
+Reproduced lost service and credential drafts with the real page in isolated
+Chromium and WebKit fixtures: all twelve validation, unavailable-server and
+network-failure cases lost entered values before the fix. The save helper now
+returns its success result and each caller resets only after success. Re-ran
+all twelve scenarios successfully, including exact retained fields, no
+automatic resubmission, deliberate retry with the same payload, clearing
+after success and credentials remaining pending/private. Corrected the test
+fixture to serve the existing local badge asset; it permits no external calls.
+Added the regression to the normal release workflow. This is a narrow failed-
+save draft repair, not a claim that every malformed-response or timeout path
+on that page has been reviewed.
+
+Production build and all 793 tests pass; TypeScript passes; lint has no errors
+and the same existing language-navigation warning. No API, database, policy,
+provider approval, live transaction, signup flow or launch switch changed.
+No paid call or real provider record was used. Evidence:
+`outputs/provider-tools-before-20260927/`,
+`outputs/provider-tools-after-20260927/`, and the full test/lint/typecheck logs.
+The source fix is local and awaits publication approval and normal release
+checks; production remains PR #251.
+
+The upstream notice review found no existing license issue or license file
+on the current `hi-ogawa/js-utils` main tree. Prepared a short public inquiry
+requesting the official attribution for the embedded 1.7.0 helper; owner
+approval to post it is pending, so nothing was sent. The retained 39-file
+collection remains private. The older closed PRs were inspected, not restored:
+PR #33's reminder/range additions are absent, and its old migration number is
+already occupied. PR #46's exact owner-only draft tool is absent, while the
+current bilingual `/ai` policy/help route exists independently. No claim of
+feature equivalence or reason to reactivate a paid API was inferred.
+
+## 2026-09-27 - Publish PR 251 and preserve build-output notice evidence
+
+The owner explicitly approved merging PR #251 and deploying it. Fresh review
+confirmed the unchanged tested head `19e56e7`, the expected base `546e60a`,
+clean merge status and successful required checks. Merged through the normal
+workflow as `643a1437add35efbb579a95ec4a9f7e5fedd1d09`; the earlier automatic
+approval block is resolved. Production workflow `36322688451` passed all jobs,
+including 793 tests/build, both browser engines, Spanish coverage, the complete
+provider signup, fresh-database migration rehearsal and exact-release checks.
+The existing language-navigation lint warning remains unchanged.
+
+At 13:46:49 UTC an independent public check confirmed the exact release,
+ready application/database/schema and unchanged onboarding-only state.
+All nine live direct-dependency notices matched their recorded SHA-256 values;
+the previously served unused font returned 404. Four actual clicks from the
+bottom mobile homepage opened the customer creation form and provider
+application in English and Spanish. Both provider links scrolled to the form;
+all four pages fit the 390-pixel viewport and no page errors were captured.
+No account, application, email or payment was submitted. Language and viewport
+were restored after checking. Evidence: `outputs/pr251-live-release-20260927.json`,
+`outputs/pr251-live-mobile-navigation-20260927.json`,
+`outputs/pr251-live-spanish-provider-mobile-20260927.png` and the saved
+production-check log. This release is complete; do not repeat its approval
+or publication steps.
+
+Continued the existing ownership/notice review with a separate local build
+observer, without changing application files or dependencies. It identified
+36 installed package/version locations across 172 emitted chunks. Preserved
+39 exact-source notice files privately and recorded the missing official
+notice for the bundled `@hiogawa/utils@1.7.0` helper. The Vite plugin's own
+missing packaged notice was recovered from its pinned official release.
+See `records/code-ownership-and-contributors.md` for sources and limits.
+The additional collection and this follow-up record are local only; they are
+not part of PR #251's published nine-notice collection. No upstream inquiry,
+purchase or launch approval occurred. County and broker inquiries remain
+sent once, with their existing response checkpoints; the owner's application
+remains the final step.
+
 ## 2026-09-27 - Remove unused font cache and preserve dependency notices
 
 Fresh GitHub read found no open PR and main remained `546e60a`. Preserved all

@@ -67,8 +67,9 @@ All nine direct dependency notices are preserved without modification in
 [`public/third-party-notices/`](../../public/third-party-notices/), with exact
 versions, sources and SHA-256 hashes in `manifest.json`. Eight were copied from
 the matching installed packages; Drizzle came from the pinned upstream source.
-These static files are prepared for the next approved website release, not
-confirmed live. Update this collection when a direct dependency changes. This
+These static files are confirmed live through owner-approved PR #251, release
+`643a143`. September 27 independent checks matched all nine live notice hashes.
+Update this collection when a direct dependency changes. This
 closes the missing direct-dependency notice collection, not the wider review
 of distributed transitive dependencies or ownership.
 
@@ -83,7 +84,7 @@ still need reconciliation before this card can support final sign-off.
 | Asset group | Verified repository evidence | Remaining provenance record |
 | --- | --- | --- |
 | Website badge, icons and link preview | `scripts/generate-brand-assets.mjs` uses `brand/tuveloz-icon.svg` and `brand/social-media-kit/Tuveloz Logo.png`; the public assets and both masters are hashed in the private inventory. This pass did not regenerate or replace them. | Owner's source/creation record or applicable rights for the masters. Consistent appearance is not ownership evidence. |
-| Current homepage and fonts | Homepage source uses the shared brand mark, with no stock photo/video references found in that file. Current layout/CSS use system fonts. | September 27 cleanup removes eleven unused cached fonts and two generated stylesheets from the current checkout; Git history preserves them. The old build copied all eleven fonts despite no page import. The updated build contains none, and its regression check passes. `.vinext` is now ignored. This cleanup is tested locally and awaits publication. |
+| Current homepage and fonts | Homepage source uses the shared brand mark, with no stock photo/video references found in that file. Current layout/CSS use system fonts. | September 27 owner-approved PR #251 removed eleven unused cached fonts and two generated stylesheets; Git history preserves them. The old build copied all eleven fonts despite no page import. The updated build contains none and its regression check passes. `.vinext` is now ignored. Release 643a143 is confirmed live; the formerly served font returns 404. |
 | Older Ad 01 media | The August handoff records an expired music publication window and removal of two renders plus `music.mp3`. All three remain absent locally. | The R2 checksum manifest still lists the old renders; an archive entry is not permission to publish. Do not restore these for publication. Other surviving generated visuals need their own source/rights records before reuse. |
 | Older ad plans | September 27 notices distinguish historical proposals from current publication or purchase authorization. | Recheck claims, permissions and any applicable participant releases before a new campaign. The owner's preference is simple, professional creative without fake-looking AI pictures. |
 
@@ -98,6 +99,53 @@ records the successful build and all 793 tests after removal. TypeScript
 passes; lint has zero errors and one unchanged `site-language.tsx` warning.
 Pages, styling, dependency versions, policy releases and launch locks were
 not changed.
+
+## September 27 build-output notice review
+
+A separate local production build of merged source `643a143` used a temporary,
+read-only bundler observer. The observer recorded 172 JavaScript chunks across
+the browser, SSR and RSC outputs and 36 installed package/version locations.
+Every observed installed version matches the lockfile. This is more specific
+than the 741-entry lockfile inventory, which also includes development-only and
+other-platform packages. It is local build evidence, not proof that every
+byte matches the production deployment.
+
+Preserved 39 license/copyright files for those 36 package installations in the
+private `outputs/distributed-notices-20260927/` collection. Copies were checked
+byte-for-byte against their recorded sources and hashed. This collection has
+not been added to the public notice directory or deployed. Existing direct
+dependency notices remain a separate, explicitly scoped collection.
+
+The installed `@vitejs/plugin-rsc` package omits its own license file. Its
+upstream MIT notice was preserved from the official `plugin-rsc@0.5.26` tag,
+resolved to commit `65d378fc4d9bd8d383dc7598817261b3bdcb0861`; the Git blob hash
+and saved bytes match. The MIT, Apache-2.0, BSD-3-Clause and 0BSD declarations
+in the observed package set do not by themselves establish complete coverage.
+
+The review also found a bundled component that is not a separate installed
+package: `@hiogawa/utils@1.7.0`, identified by a source-region marker inside
+the plugin's emitted helper module. Its exact npm archive passed the registry's
+SHA-512 integrity value. It declares MIT, but neither that six-file archive
+nor the official release commit
+`71f588d9ed860b2104ae4ce4f97dcf0af5d6249c` contains a license file. The release
+history identifies that commit as version 1.7.0. No generic copyright text was
+invented or substituted. Obtain a supported notice source or reviewer guidance
+before claiming the wider notice collection is complete; no outside inquiry
+has been sent.
+
+September 27 follow-up: the current upstream main tree
+`08c2ee8e07e9b9a5fdde871a57c0df67b5750219` also has no license/notice file,
+and the scoped issue search found no existing license question. A short public
+question requesting the official MIT text, copyright attribution and its
+applicability to 1.7.0 is prepared in the private output
+`hiogawa-license-inquiry-20260927.md`. Permission to post it was requested from
+the owner; it remains unsent. No license terms or copyright owner were inferred.
+
+Private evidence: `outputs/distributed-packages-20260927.json`,
+`outputs/distributed-packages-build-20260927.log`, and the preserved collection's
+`manifest.json`. No package was installed or upgraded, no application code or
+configuration was changed, and no launch gate was approved. Owner contribution
+records, brand-master provenance and final distribution review remain open.
 
 ## What depends on it
 
