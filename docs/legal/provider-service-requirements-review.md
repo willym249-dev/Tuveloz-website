@@ -100,7 +100,7 @@ provider status, or launch control changed during this review.
 
 Recipient verified in the County's
 [Business Education and Registration Unit page](https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear).
-The owner approved the exact message below. Sent once from the business Gmail
+The owner approved the exact message recorded privately below. Sent once from the business Gmail
 account at 7:20 a.m. Maryland time on September 27. A fresh pre-send search
 found no message to the recipient. Gmail then confirmed "Message sent"; the
 refreshed Sent search contained one matching message, and its full body,
@@ -118,38 +118,10 @@ agency response date.
 
 **Subject:** Tuveloz — registration questions before opening vehicle-service bookings
 
-Hello,
-
-We're preparing Tuveloz, an online marketplace connecting customers with
-independent vehicle-service businesses in Montgomery County. Providers set
-their quotes and perform the work; Tuveloz does not repair vehicles. Accounts
-and provider applications are open, but customer bookings and payments are not.
-Our planned checkout adds a 5% customer platform fee to the provider's quote.
-
-We want to ask applicants only for the registration their work requires.
-Could you help us confirm the following under Chapter 31A, or direct us to
-the appropriate office?
-
-1. Does Tuveloz itself need a registration for this marketplace role, separately
-   from each provider's registration?
-2. Does repair/maintenance registration cover read-only OBD code reporting,
-   12-volt jump-starts, and basic replacements such as wiper blades, filters,
-   bulbs, batteries, and temporary spare tires?
-3. Is registration required for customer-requested vehicle photos and recorded
-   customer facts only, a factual visual condition report without diagnosis or
-   a safety opinion, or cleaning/detailing without repair or paint correction?
-   For cleaning, please distinguish interior-only, waterless, and captured-water
-   methods; we understand wastewater controls are a separate requirement.
-4. Do licensed vehicle lockout services or state-authorized inspection stations
-   also need county registration? How should storage-only and emergency fuel
-   delivery services be classified?
-5. How should a mobile provider determine which county or municipal registration
-   rules apply at a job address? Appendix F shows differences between towns;
-   please point us to the current guidance and any separate municipal contacts.
-
-Please reply by email with the applicable provisions or written guidance. This
-is an information request, not a registration application or authorization for
-paid work. Please let us know before any fee would apply.
-
-Thank you,
-Tuveloz
+The exact sent body is retained privately in
+`outputs/county-inquiry-sent-20260927.txt`; use that record or Gmail Sent when
+checking what the agency received. The message asks about the marketplace,
+narrow repair/maintenance work, non-repair services, specialty credentials,
+and municipal applicability. It explains that bookings/payments are closed
+and the planned 5% Customer Service Fee is added to the provider quote.
+This paragraph is a summary using the current fee name, not a verbatim quote.

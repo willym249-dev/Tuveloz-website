@@ -11,6 +11,46 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Remove unused font cache and preserve dependency notices
+
+Fresh GitHub read found no open PR and main remained `546e60a`. Preserved all
+four local documentation commits and continued on
+`fix/remove-unused-font-cache-20260927`. The prior asset review identified
+eleven old font files and two generated stylesheets; the existing build
+actually copied all eleven into client assets although the current layout/CSS
+uses system fonts and no page imports them. The installed vinext font plugin
+copies cached fonts without checking whether a page references them.
+
+Extended the existing rendered-asset regression to reject that stale cache.
+It failed against the previous build as expected. Removed only the thirteen
+tracked `.vinext/fonts` files, keeping them recoverable in Git history, and
+ignored generated `.vinext` output. No app component, page, style, dependency
+version, database, legal policy or launch/payment control changed.
+
+Preserved all nine direct dependency notices in `public/third-party-notices`
+with exact versions, source references and SHA-256 hashes. Eight came from the
+matching installed packages. Drizzle ORM's missing package notice was obtained
+from its official 0.45.2 tag, pinned to commit
+`273c78071d4841b497f5144734b38294df7ec64b`; upstream Git blob and saved bytes
+were checked. This scoped collection does not clear every transitive package,
+brand asset or owner contribution record. No paid service was used.
+
+The first full run exposed restricted-filesystem bundler failures and one
+real documentation issue: the saved county-email transcript used a retired
+fee name. Kept that sent transcript verbatim outside the repository and
+replaced the repeated body with a clearly labeled summary using the canonical
+Customer Service Fee name. The sent email was not edited or resent, and the
+fee-copy guard was not relaxed. Its fifteen checks pass. Re-ran the full suite
+with the filesystem access required by the existing bundler: production build
+and all 793 tests pass. TypeScript passes; lint reports zero errors and the
+same `site-language.tsx` warning as the unchanged source on main.
+
+Private evidence: `outputs/unused-font-cache-before-20260927.log`,
+`outputs/font-cleanup-tests-20260927.log`, `outputs/font-cleanup-lint-20260927.log`,
+`outputs/font-cleanup-types-20260927.log`, and
+`outputs/county-inquiry-sent-20260927.txt`. Publication remains pending owner
+approval and normal PR/production verification; no push or deploy occurred.
+
 ## 2026-09-27 - Send the approved county inquiry and refresh asset records
 
 The owner's "Yes and continue" approved the prepared OCP inquiry. A refreshed

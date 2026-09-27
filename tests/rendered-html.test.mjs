@@ -1323,7 +1323,8 @@ test("owner Access identifiers survive every Cloudflare deployment", async () =>
 
 test("browser assets never expose private build paths or broken generated fonts", async () => {
   const distDirectory = fileURLToPath(new URL("../dist", import.meta.url));
-  const files = (await builtFiles(distDirectory))
+  const allFiles = await builtFiles(distDirectory);
+  const files = allFiles
     .filter((path) => [".css", ".html"].includes(extname(path)));
   const contents = (await Promise.all(
     files.map((path) => readFile(path, "utf8")),
@@ -1337,6 +1338,9 @@ test("browser assets never expose private build paths or broken generated fonts"
   assert.ok(!contents.includes(".vinext/fonts"));
   assert.ok(!layout.includes("next/font"));
   assert.ok(layout.includes('className="antialiased"'));
+  // vinext copies cached fonts even when no page imports them. The site uses
+  // system fonts, so an old checked-in cache must not enter the release.
+  assert.deepEqual(allFiles.filter((path) => /[/\\]_vinext_fonts[/\\]/.test(path)), []);
 });
 
 test("guest request consent choices are optional, explicit, and recorded", async () => {
