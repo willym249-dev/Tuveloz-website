@@ -51,6 +51,7 @@ self-contained page.
 | [`legal/provider-service-requirements-review.md`](legal/provider-service-requirements-review.md) | Which of the 25 provider services has a supported county-registration category, and which exact scope questions still need an agency answer? |
 | [`legal/`](legal/) | Policy research, agreement drafts, and compliance analysis added from here on. |
 | [`records/`](records/) | The register of real-world documents — insurance, formation, licenses, approvals — and where the originals are kept. |
+| [`records/stripe-connect-platform-approval.md`](records/stripe-connect-platform-approval.md) | What did Stripe already approve, which current settings match it, and what payment-flow clarification remains? |
 
 The seven published legal documents themselves are not files in this folder.
 They are pages under `app/` (terms, customer agreement, provider agreement,
@@ -65,6 +66,7 @@ pinned to a reviewed content hash in `config/policy-releases.json`.
 | --- | --- |
 | [`business/`](business/) | Plans, pricing decisions, market notes, and provider programs added from here on. |
 | [`business/launch-gate-briefing.md`](business/launch-gate-briefing.md) | What does each of the 18 launch gates ask, who is allowed to answer it, and what evidence already exists in the code? |
+| [`business/provider-insurance-review-matrix.md`](business/provider-insurance-review-matrix.md) | Which insurance evidence does each service/pathway actually request, and what must the insurer decide before those services open? |
 | [`../brand/outreach/`](../brand/outreach/) | Provider recruitment kits, the founding provider program, the growth playbook, and the Montgomery County outreach worklist. |
 | [`../brand/ads/`](../brand/ads/) | Ad concepts, production briefs, and finished cuts. |
 | [`../brand/social-media-kit/`](../brand/social-media-kit/) | Profile and cover images for every platform, plus the brand colors and how to regenerate assets. |

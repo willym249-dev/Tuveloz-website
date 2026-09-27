@@ -201,10 +201,12 @@ rows. No real email was sent as a test. Real-channel/inbox evidence and the
 separate process review still need completion before this gate can be approved.
 September 27 isolated migrated-SQL tests confirm the expiration cutoff and
 rechecks at all seven work stages, plus replacement/scan/scope protections.
-They also reproduced ignored document start dates and recorded pathway bounds;
-the local repair passes all 809 tests/build with rules version `0.14.2`.
-Publication is tracked in `OPEN-ITEMS.md`; this simulation does not establish
-real-channel delivery or grant any provider or launch approval.
+They also reproduced ignored document start dates and recorded pathway bounds.
+PR #254 publishes the repair with rules version `0.14.2`; all 809 tests/build
+and production workflow `36333832839` passed. Independent live verification at
+16:52:43 UTC confirmed exact release `a1f9ace`, ready health checks, protected
+provider access and preserved launch locks. This simulation and release do not
+establish real-channel delivery or grant any provider or launch approval.
 The owner evidence pre-screen in
 `lib/evidence-review-assistant.ts` can never auto-accept; its only automatic
 action is a reversible bilingual correction request for a provably expired
@@ -222,6 +224,20 @@ platform coverage.
 Also needs an official legal source.
 *Existing:* the eligibility matrix above. Services without both records stay
 disabled, which is enforced rather than promised.
+
+September 27's [resolved insurance inventory](provider-insurance-review-matrix.md)
+executes the current requirement resolver for all 25 services and 47 configured
+service/pathway combinations. Of 23 independent-provider combinations, only
+towing/storage and vehicle lockout select named insurance evidence; the other
+21 select none recognized by the insurance classifier. All 24 employee/trainee
+combinations select workers' compensation. No combination selects the defined
+broker coverage determination evidence type. These are configuration facts,
+not findings that coverage is unnecessary. Package contents and exact coverage
+still need review. All services remain disabled. The inventory prepares the
+specific insurer questions without adding blanket requirements or purchasing
+coverage. Platform service activation and individual provider coverage must be
+reviewed separately; a service activation record proves neither an applicant's
+policy nor its authenticity.
 
 **`vehicle_incident_claims_and_stop_work`** — *safety and claims, required*
 Also needs a legal source and the owner.
@@ -409,11 +425,30 @@ broker appointment and policy purchase remain separate owner decisions.
 ### Payment processor
 
 **`stripe_connect_business_model`** — *payments, required*
-The processor must approve the actual marketplace model, not a description of it.
-*Existing:* `lib/stripe-provider.ts:46-47` sets `fees_collector: "application"`
-and `losses_collector: "application"` — the platform absorbs processing fees and
-chargeback losses rather than passing them to providers. Live mode is locked
-(`STRIPE_LIVE_MODE_ENABLED = false`).
+The processor evidence must cover the actual marketplace model.
+*Existing approval found September 27:* Stripe's July 29 email approves TUVELOZ
+LLC to create live connected accounts and charges. The current signed-in
+Platform setup matches `lib/stripe-provider.ts`: platform responsibility for
+Stripe costs and negative balances,
+Express dashboard and Stripe-hosted/embedded onboarding. The platform liability
+acknowledgment is dated July 29. Initial Connect approval is complete; do not
+restart it or describe this as unfinished bank setup.
+
+The [approval record card](../records/stripe-connect-platform-approval.md) preserves
+that evidence and narrows the remaining work to exact service scope, the current
+quote flow's delayed transfers, account conditions and customer disclosures.
+The setup page also displays an onboarding-responsibility acknowledgment action;
+its effect/necessity has not been established and it was not accepted. The owner-
+approved clarification was submitted September 27 and Stripe confirmed email
+receipt, followed by an acknowledgment in the business inbox; the human review
+reply remains pending. With the owner's approval, the legacy fee wording in
+Stripe's saved business description was corrected to the current 5% fee and
+prelaunch state. Reopening the saved record verified the complete replacement.
+This correction is complete and the site's fee is unchanged. Current indirect charges omit
+`on_behalf_of`, which Stripe's documentation treats as platform merchant of record;
+reconcile the final disclosures with the separate CPA/legal review. No new legal
+or tax conclusion, paid service or gate approval was applied.
+Live mode remains locked (`STRIPE_LIVE_MODE_ENABLED = false`).
 
 ### CPA or tax adviser
 
@@ -441,6 +476,32 @@ that application code never reaches trades a real risk of dropping a launch
 guard against a theoretical one. Worth raising at this gate so the CPA sees the
 actual state: the application explicitly writes 500, and the historical default
 needs a fresh schema inspection before anyone treats it as current evidence.
+
+#### Current transaction map for the tax review
+
+Source reviewed September 27 at released runtime commit `a1f9ace`; these are
+implementation observations, not tax conclusions or real transaction results.
+Use the canonical worked example in `lib/customer-fee.ts`: a $100 provider quote,
+$5 Customer Service Fee, $105 customer total and $100 provider transfer. The
+$5 difference is before Stripe costs, refunds, losses and any taxes determined
+by the review; it must not be described as net profit.
+
+| Step | What the source does | What the reviewer must decide or reconcile |
+| --- | --- | --- |
+| Authorized quote | Stores the provider amount, fee rate, fee amount, customer total and accepted scope. Checkout requires the exact current authorization. | Treatment of each amount and the precise seller/customer relationships for each initial service. |
+| Labor-only boundary | Checkout rejects nonzero parts, tax or other amounts and requires labor to equal the provider subtotal. This is a code restriction, not a finding that services or fees are tax-exempt. | Whether the proposed launch transactions require tax collection or reporting. If they do, specify the calculation, receipt and accounting changes before opening checkout. |
+| Customer charge | Quote jobs use platform Checkout with separate quote/fee lines and the `separate_transfer` strategy. The stored payment snapshot includes `providerAmountCents`, `applicationFeeCents` and `customerTotalCents`. | Revenue versus amounts held for providers; applicable tax base; recognition timing and reconciliation records. A field named `applicationFeeCents` does not itself prove a Stripe Application Fee object exists in this branch. |
+| Provider transfer | Completion and owner release checks precede a transfer of the full provider quote. The route rereads the succeeded PaymentIntent and amount, checks refunds/disputes/holds and payout readiness, and ties the transfer to the source charge. | Approved transfer timing, responsibilities while money is held, and reconciliation of transfers versus later bank payouts. Neither is proved by a test-only result. |
+| Processor costs | Current Connect defaults assign Stripe fees and loss liability to the platform; release transfers the full provider amount. | Record actual processor charges, reserves and other costs separately. Obtain the applicable account pricing rather than inserting a guessed net margin. |
+| Refunds and disputes | Signed payment events record refund/dispute facts; the release route blocks adverse states and outstanding refund requests/reserves. | The customer-fee refund rule, post-transfer recovery, chargeback costs and bookkeeping entries. Receiving an event is not evidence that Tuveloz initiated a refund or recovered provider funds. |
+| Separate storefront branch | Product payments use `destination_charge` with `application_fee_amount` and `transfer_data`; this differs from completion-held quote transfers. | Keep this branch outside an assumed labor-only launch scope unless separately reviewed. Do not carry its timing/accounting conclusions into the quote flow. |
+
+Sources: `lib/customer-fee.ts`, `app/api/stripe/checkout/route.ts`,
+`app/api/stripe/admin/payments/route.ts`,
+`app/api/stripe/webhooks/payments/route.ts`, `lib/stripe-payments.ts`,
+`lib/stripe-provider.ts` and `db/schema.ts`. The Stripe clarification above and
+the CPA's own written determination must settle the remaining questions. No
+tax setting, accounting election, released policy, fee or launch lock changed.
 
 **`checkout_fee_receipt_copy`** — *payments, required* — also needs a legal source
 *Existing:* the fee has one canonical name across every surface, enforced by
@@ -503,7 +564,7 @@ should contain only record cards and sanitized evidence references.
 | Owner | Formation and ownership records, domain and vendor cards, contribution record | Confirm who can bind the LLC, where originals are kept, and any contributor assignments or licenses. |
 | Official legal/licensing sources | Eligibility matrix, application and acceptance flow, repair records, published policies | Map each exact service and jurisdiction to applicable requirements and implemented duties; identify unresolved interpretations. |
 | Insurance broker/carrier | Exact service list, independent mobile-provider model, incident plan | Written platform and provider coverage decisions, exclusions, effective/expiry dates, claims contacts, and notification duties. A provider's certificate alone does not prove platform coverage. |
-| Stripe/payment processor | Connect configuration, separate transfers, refund/dispute and payout controls | An account-specific decision covering this marketplace model, supported services, loss responsibility, reserves, and payout controls. Bank linking alone does not supply that decision. |
+| Stripe/payment processor | July 29 Connect approval; September 27 matching platform/fee/loss/Express settings; current payment-flow comparison | Clarify remaining service scope, transfer delays, reserves, disclosures and any outstanding acknowledgment against the existing approval. Do not repeat the approved Connect application. See the processor record card. |
 | CPA/tax adviser | Provider quote, 5% customer fee, ledger, refunds, chargebacks and receipts | Confirm seller/merchant-of-record treatment, collection and reporting responsibilities, and treatment of every amount; list assumptions needing evidence. |
 | Security/privacy reviewer and identity vendor | Scanner and Identity canaries, storage/access/deletion controls, privacy and incident plans | Verify the actual results, matching rules, retention/deletion, access boundaries and recovery exercises; state scope and limitations. |
 | Screening/compliance reviewer | Existing no-criminal-background-check position and public wording | Confirm the claims match checks actually performed and document applicable source requirements. |

@@ -2,7 +2,7 @@
 
 - **Status:** partly verified — account details awaiting the owner
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 
 The product's vendor dependencies. Configuration and account access are
 observations, not proof of subscription continuity or approval of the business
@@ -27,7 +27,7 @@ model. Recheck billing and contract records before approving a launch gate.
 | Porkbun | The domain name itself | [`domain-registration-tuveloz-com.md`](domain-registration-tuveloz-com.md) |
 | Google Workspace | Business mail, including `hello@tuveloz.com` | — |
 | Resend | Every sign-in code, account creation, and password reset | — |
-| Stripe | Provider Identity checks now; payments after a separate release | Dedicated live Identity key and signed webhook configured. A genuine provider result and the separate `stripe_connect_business_model` evidence are still required. |
+| Stripe | Provider Identity checks now; payments after a separate release | Dedicated live Identity key and signed webhook configured. [July 29 initial Connect approval](stripe-connect-platform-approval.md) and matching current fee/loss/Express selections verified September 27. A genuine provider Identity result and narrower payment-flow/service-scope reconciliation remain; do not repeat the initial Connect application. |
 | Owner-operated ClamAV | Malware and file-safety scanning before uploaded evidence can leave quarantine | Selected in production. Manual and automatic synthetic-file results from September 6 were confirmed in live records September 26 and accepted by current application proof validation. Refresh before the October 6 age limit. |
 | Cloudmersive | Optional fallback malware scanner | September 26 signed-in account review confirms Free Tier. The subscription-management link redirects to an upgrade offer, without showing an active paid subscription or charge history. The earlier account and secrets are retained; no paid upgrade is required for the selected owner-operated scanner. |
 

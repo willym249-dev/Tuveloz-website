@@ -11,6 +11,195 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Post approved attribution inquiry and complete local release checks
+
+Verified the existing GitHub identity, exact upstream repository and absence of
+an existing license issue, then posted the exact owner-reviewed question as
+[hi-ogawa/js-utils #276](https://github.com/hi-ogawa/js-utils/issues/276) at
+21:52:09 UTC. A separate read confirmed title, full body, author and Open status,
+with zero comments at that check. The message is sent; do not repeat approval or
+posting. No private identifiers, source bundle or attachments were transmitted.
+The October 4 checkpoint is an internal review date, not a promised answer.
+
+Preserved notice preparation commit `f8dadfc` and all earlier documentation
+commits. The same existing suite passed all 809 tests after the restricted
+attempt could not resolve project files because of Windows directory access.
+No code change was needed. TypeScript/Worker validation passed; lint reported
+zero errors and the unchanged `site-language.tsx` navigation warning. The prior
+fresh build and all 39 notice-reference byte checks remain applicable; only
+record cards changed after that build. Private logs are
+`notices-release-tests-20260927.log`, `notices-release-typecheck-20260927.log`
+and `notices-release-lint-20260927.log`.
+
+The prepared branch changes notices, Git attributes and evidence documents;
+application code, dependencies, policy releases, migrations and launch controls
+are unchanged. No push, PR, deployment, paid service or launch approval occurred.
+Publishing remains a separate final step; the unresolved helper notice remains
+explicitly recorded pending an authoritative answer.
+
+## 2026-09-27 - Prepare the remaining collected software notices
+
+Fresh GitHub inspection found no open PR and main unchanged at `a1f9ace`.
+Preserved the completed Stripe correction and earlier documentation commits.
+Validated the saved notice inventory against the unchanged lockfile, installed
+package names/versions and source bytes before preparing 31 additional files
+(40,076 bytes) under `public/third-party-notices/bundled/`. A separate bundled
+manifest covers 36 observed package installations and 39 notice references,
+reusing eight existing direct files. All nine original direct notices and their
+manifest remain byte-identical. Git attributes preserve upstream notice bytes.
+
+The fresh local production build at `e2ff632` succeeded. Its observer found the
+same 36 installed package locations across 172 chunks. All notice references,
+both manifests and the README were verified byte-for-byte in `dist/client`.
+No package installation, dependency upgrade, application/policy change, send,
+paid service or deployment occurred. This is notice packaging proof, not a
+blanket license or ownership determination.
+
+The manifest explicitly records the unresolved `@hiogawa/utils@1.7.0` attribution;
+no copyright owner or license text was invented. The prepared public upstream
+question was shown for specific send approval and remains unsent. Existing
+owner-authority and asset-source requirements remain in the same record card.
+Private proof: `bundled-notices-preparation-20260927.json`,
+`distributed-packages-current-20260927.json`, `bundled-notices-build-20260927.log`
+and `bundled-notices-validation-20260927.json`. Collection is ready for a future
+approved release; do not repeat this completed preparation.
+
+## 2026-09-27 - Correct Stripe's business description and verify receipt email
+
+Following the exact replacement presented for owner review and the instruction
+to continue, updated only Stripe's Business details product-description field.
+Reopened the saved record and verified the complete replacement: Montgomery
+County marketplace, independent providers, labor-only quotes and separately
+purchased parts, accounts/applications open, bookings/payments closed, and a 5%
+Customer Service Fee added to the quote with the full quote going to providers.
+The earlier legacy 10% description is corrected. Legal, address, tax, bank,
+terms and payment controls were not edited. No website change or deployment.
+
+Checked the existing business inbox with a bounded sender/date query covering
+Stripe, Founder Shield/Baldwin and Montgomery County. It returned only Stripe's
+"We've received your message" acknowledgment from support@stripe.com, displayed
+at 4:20 p.m. September 27 with Gmail's Verified Sender indicator. The body
+confirms receipt and a future response, not approval. No substantive reply from
+the three inquiries appeared in that search. Nothing was resent. The existing
+September 30 and October 2 review checkpoints remain.
+
+Private evidence preserves the exact saved text and receipt observation. Two
+cropped dashboard screenshot attempts timed out; they are not claimed as proof.
+Persistence was verified from the reopened field. The business-mail screenshot
+`stripe-support-acknowledgment-20260927.png` succeeded. Fresh GitHub inspection
+found no open PR and main unchanged at `a1f9ace`; prior documentation commits
+were preserved.
+
+## 2026-09-27 - Submit approved Stripe clarification and prepare the transaction map
+
+Preserved the three existing documentation commits and released runtime. The
+owner approved the prepared Stripe inquiry. Submitted its complete body through
+the authenticated TUVELOZ LLC support page, requested human Connect review and
+selected Platform account / Send us an email. The page confirmed Email received;
+private screenshot `stripe-support-email-received-20260927.png` preserves it.
+No case number or human answer was shown. The displayed 24-hour estimate is not
+a promised deadline; the existing September 30 checkpoint remains.
+
+The initial automated response incorrectly associated approval with the account
+creation date and mentioned legacy fee wording. The July 29 business-inbox
+approval remains the primary evidence. A targeted read of the product-description
+field independently confirmed stale 10% copy in Stripe. Prepared a replacement
+with the actual 5% Customer Service Fee, full provider quote and closed-booking
+state; no account setting was saved. Automatic review rejected an overbroad
+business-page read, so the field-only check was used without exposing unrelated
+private identifiers. No terms, payment lock or live transaction changed.
+
+Extended the existing launch briefing with a source-backed transaction map for
+the tax reviewer. It separates quote charges, held amounts, full-quote transfers,
+processor costs, refund/dispute events and the different storefront branch.
+Highlighted checkout's zero-tax code restriction as an assumption requiring
+review, not evidence of tax exemption. No CPA opinion or gate approval claimed.
+
+Validation: all 15 fee-consistency checks pass. Their first run caught two
+ambiguous responsibility phrases in the prior documentation; both now clearly
+say the platform is responsible for Stripe costs and negative balances. Runtime
+source, reviewed policies and release history are unchanged.
+
+## 2026-09-27 - Recover existing Stripe approval; narrow remaining processor review
+
+Preserved local commits `a87f938` and `7e259cb`; fresh GitHub inspection found no
+open PR and main still `a1f9ace`. A scoped business-Gmail search found Stripe's
+July 29 "Your Connect application is approved" email. It explicitly approves
+TUVELOZ LLC to create live connected accounts and charges. Gmail displays the
+verified sender, stripe.com signature and expected business recipient. This is
+existing processor approval, not merely bank-linking evidence; earlier summaries
+that failed to recognize it were incomplete.
+
+Signed-in Stripe Platform profile and Platform setup agree: buyers purchase from
+the platform, individual seller payouts, platform responsibility for Stripe costs
+and negative balances, Express
+and Stripe-hosted/embedded onboarding. The refund/loss acknowledgment is dated
+July 29. Current source matches those responsibility/dashboard settings. Both
+pages also show an onboarding-compliance acknowledgment action; it was not
+accepted and its account effect is not yet established.
+
+Created the indexed processor approval record card, corrected the register/vendor
+card/launch packet, and prepared a narrowly scoped support clarification instead
+of repeating the Connect application. Questions cover exact services, transfer
+delay/reserves, receipt/statement disclosures and the displayed acknowledgment.
+Stripe's current documentation identifies the platform as merchant of record for
+the implemented indirect charge shape without `on_behalf_of`; the CPA/legal review
+and final policy wording still need reconciliation. No gate, runtime source,
+account setting, provider, charge, transfer, paid service or outgoing message
+changed. The personal Gmail connector was not used to read business mail; the
+existing business browser session supplied this evidence.
+
+## 2026-09-27 - Prepare insurer decisions from the actual provider checklist
+
+Preserved completed PR #254 and local release-evidence commit `a87f938`; fresh
+GitHub checks found no open PR and main still `a1f9ace`. Instead of repeating
+release work, executed the unchanged jurisdiction-aware policy resolver and
+insurance classifier locally for all 25 services and 47 configured pathways.
+The new indexed `business/provider-insurance-review-matrix.md` records exact
+coverage selections, location boundaries and questions for the insurance review.
+
+Only two of 23 independent-provider combinations select named insurance
+evidence: towing/storage and lockout. The other 21 do not; all 24 employee/trainee
+combinations select workers' compensation. No resolved combination selects the
+defined broker coverage determination type. Empty coverage selections are not
+evidence that insurance is unnecessary; package evidence and the written insurer
+decision remain separate. All 25 services stay disabled. Do not mark the provider
+insurance matrix gate complete or invent a universal requirement from older
+prose. The platform policy and each provider's coverage need separate evidence.
+
+Private inventory `outputs/provider-insurance-inventory-20260927.json` retains
+all requirements, exact service/pathway/scope/location identifiers, source hashes
+and generation time. The local helper uses the real resolver without duplicating
+its policy logic. No application source, policy release, provider record, paid
+service or outgoing message changed. The existing Founder Shield inquiry and
+September 30 checkpoint remain in place; no duplicate inquiry was sent.
+
+## 2026-09-27 - PR #254 published; provider validity repair verified live
+
+Continued the owner's standing instruction to fix and finish Tuveloz. PR #254
+merged tested head `2a0373b` as `a1f9ace7f1777170702e43213dace33638d6ee84` at
+16:35:55 UTC after all required checks passed and the reviewed head/base were
+reconfirmed unchanged. Both PR workflows passed; production workflow
+`36333832839` then passed all three jobs, including 809 tests/build, required
+browser checks, the migration rehearsal and end-to-end provider signup.
+
+Independent live verification at 16:52:43 UTC matched that exact release and
+confirmed ready application/database/schema, no missing tables or guarded
+triggers, and signed-out provider onboarding returning 401/no-store/error-only.
+Accounts/applications remain open; customer requests/payments remain closed.
+The document-start and recorded pathway-validity checks are published under
+eligibility rules `0.14.2`. No real provider, document, email or payment was
+changed as a test. The runtime simulations below establish the date/replacement
+behavior; deployment/health do not grant provider approval or finish the
+real-channel reminder and operational launch review.
+
+Private evidence: `outputs/pr254-merge-result-20260927.json`, both PR result
+files, `outputs/pr254-production-result-20260927.json`, and
+`outputs/pr254-live-release-20260927.json`. Preserved PR #253 and its release
+record. The completion checklist and launch handoff now mark this repair
+published; do not repeat its approval, repair or deployment. Follow-up evidence
+notes are committed locally without triggering another documentation-only release.
+
 ## 2026-09-27 - Verify expiration blocking; repair ignored validity starts and pathway dates
 
 After PR #253, a fresh concurrent-work check found no open PR and main still

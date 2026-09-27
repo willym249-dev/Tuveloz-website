@@ -1,2 +1,3 @@
 # Preserve upstream notice bytes, including their original whitespace.
 public/third-party-notices/*-LICENSE.txt -text -whitespace
+public/third-party-notices/bundled/*.txt -text -whitespace
