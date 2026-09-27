@@ -4,7 +4,7 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
-- **Last reconciled:** 2026-09-26
+- **Last reconciled:** 2026-09-27
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
@@ -14,26 +14,23 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `40d92341b05dc1cbf19ae1835a9a8bdc26d4a663` (PR #244), built September 27 at
-  01:56:08 UTC (September 26 in Maryland). All jobs in release workflow
-  `36286456127` passed. Public verification at 02:01:41 UTC confirmed the exact
-  commit, ready application/database/schema, accounts/applications open, and
-  customer requests/payments closed. Homepage, customer account creation and
-  English/Spanish provider signup pages returned 200. Fresh mobile clicks of
-  both bottom homepage signup buttons reached the correct forms without
-  horizontal overflow; provider language switching passed. The county guidance
-  links and saved-reference compatibility correction are published. This does
-  not approve provider credentials or customer launch.
-- One website follow-up remains from that mobile check: choosing customer signup
-  from the Spanish homepage reaches the working English-only `/account` screen
-  without a language control. Account creation/sign-in/code/reset translation
-  needs a focused fix and validation. The provider form is translated; do not
-  describe this as a broken CTA or claim complete customer-account translation.
-  The direct `/es/account` probe is an unsupported, unlinked path, not evidence
-  of a bad site link. No account or code was submitted during these checks.
-  A subsequent source fix is prepared with 745 tests/build and mobile account
-  scenarios passing; it is not yet published. Follow the latest LOG/PR result
-  before treating this live gap as resolved.
+  `f31f85c588b9745f6e2dc10cf18002185a53f9f8` (PR #245), built September 27 at
+  04:04:01 UTC. Every job in production workflow `36292505581` passed, including
+  747 tests/build, full Spanish navigation and end-to-end provider signup.
+  Public health at 04:07:04 UTC confirmed the exact commit, ready
+  application/database/schema, accounts/applications open, and customer
+  requests/payments closed. The earlier county guidance and saved-reference
+  fixes remain published. This does not approve provider credentials or launch.
+- The Spanish customer account gap is closed. Live mobile clicks of the bottom
+  Spanish homepage buttons reached the customer creation and provider forms.
+  Account creation, sign-in and reset controls are translated; reload retains
+  Spanish, switching works both ways, and the synthetic unsubmitted email was
+  visually retained before clearing it. The account fits 320px and 390px phone
+  widths. Spanish links carry a language hint so a click before hydration also
+  works; the private route stays `/account`, with no `/es/account` public alias.
+  No account, code, provider application, password change or consent was
+  submitted. Browser error logs were empty; English and normal viewport were
+  restored and the verification tab closed. Do not repeat this completed fix.
 - PR #243 adds automatic **owner** incident alerts, quarantined test previews,
   and scheduled recovery. All 733 local tests, production build, typecheck,
   lint, twelve Chromium/WebKit incident scenarios, and required release gates

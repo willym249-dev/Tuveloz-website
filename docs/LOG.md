@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-09-27
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,37 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-27 - Publish PR #245 and verify live Spanish account controls
+
+The owner explicitly approved publishing the Spanish account fix. Confirmed
+the clean checkout, passing required checks and unchanged head `a186d1d`, then
+merged PR #245 as `f31f85c588b9745f6e2dc10cf18002185a53f9f8` at September 27
+03:49:01 UTC (September 26 in Maryland). Every production job in workflow
+`36292505581` passed, including browser account signup, 747 tests/build, all
+form recovery suites, Spanish rendering/navigation, provider signup,
+migrations and deployment. The release was built at 04:04:01 UTC on September
+27. Public health at 04:07:04 UTC confirmed the exact merge commit and ready
+application/database/schema. Accounts/applications remain open; customer
+requests/payments remain closed.
+
+Actual Chrome checks on tuveloz.com clicked the bottom Spanish homepage
+customer button and opened the Spanish create-account form. Reload retained
+Spanish; English/Spanish switching worked, and the entered synthetic email
+was visually retained after switching before being cleared. Sign-in and
+password-reset screens showed their Spanish controls. The form fits 390px and
+320px widths without horizontal overflow; the 320px screenshot was saved and
+visually reviewed. The bottom provider button opened the Spanish application
+at step 1, with the form settled about 100px below the viewport top. Browser
+error logs were empty. No account, verification email, provider application,
+password change, legal consent or payment was submitted. Restored English,
+reset the viewport and closed the verification tab.
+
+Evidence: outputs/pr245-health-20260927.json,
+outputs/pr245-live-release-20260927.json and
+outputs/pr245-live-spanish-mobile-20260927.png in the task workspace. This
+closes the Spanish account release item; it does not approve real-provider
+credentials, insurance or customer launch. No paid upgrade was added.
 
 ## 2026-09-26 - Prepare complete Spanish account controls
 
