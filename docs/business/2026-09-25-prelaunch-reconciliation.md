@@ -14,13 +14,19 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `f31f85c588b9745f6e2dc10cf18002185a53f9f8` (PR #245), built September 27 at
-  04:04:01 UTC. Every job in production workflow `36292505581` passed, including
-  747 tests/build, full Spanish navigation and end-to-end provider signup.
-  Public health at 04:07:04 UTC confirmed the exact commit, ready
+  `31980998846d1f749fce7bcca539a39edb2e2711` (PR #246), built September 27 at
+  05:37:27 UTC. Every job in production workflow `36297054968` passed, including
+  756 tests/build, full Spanish navigation and end-to-end provider signup.
+  Public health at 05:39:09 UTC confirmed the exact commit, ready
   application/database/schema, accounts/applications open, and customer
   requests/payments closed. The earlier county guidance and saved-reference
   fixes remain published. This does not approve provider credentials or launch.
+  The approved nine-event payout-status destination is Active with its dedicated
+  secret encrypted in production. Six deployed signature/duplicate checks passed
+  using an unmapped synthetic event; this is not Stripe-originated delivery or
+  settlement proof. The temporary signing material was cleared. Do not repeat
+  the completed setup. The later checkout notification repair is separately
+  recorded at the top of LOG; its publication is still pending.
 - The Spanish customer account gap is closed. Live mobile clicks of the bottom
   Spanish homepage buttons reached the customer creation and provider forms.
   Account creation, sign-in and reset controls are translated; reload retains
@@ -56,8 +62,10 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
   owner's test Inbox, passed SPF/DKIM/DMARC, and its reply was opened in the
   business Inbox. Private receipt evidence is retained outside the repository.
   That manual test does not prove automatic incident delivery or staffing.
-  The existing launch briefing contains an unsent cost-conscious broker
-  inquiry. No coverage or launch approval was recorded.
+  The specifically approved broker inquiry was sent September 27 at 12:31 a.m.
+  Maryland time. There is no reply in the latest focused business-inbox search;
+  keep the September 30 review checkpoint and do not resend it. No coverage or
+  launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
 - September 26 local review of all eight approved authentication-report

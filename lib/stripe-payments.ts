@@ -265,7 +265,13 @@ export async function recordPaidCheckoutSession(
     status: nextStatus,
     paidAt: payment.paidAt || now,
     updatedAt: now,
-  }).where(eq(stripePayments.id, payment.id));
+  }).where(and(
+    eq(stripePayments.id, payment.id),
+    eq(stripePayments.checkoutSessionId, session.id),
+    // Stripe reads above can overlap another notification or a launch hold.
+    // A result based on the previous state must not overwrite that decision.
+    eq(stripePayments.status, payment.status),
+  ));
 }
 
 const CHECKOUT_FAILURE_MUTABLE_STATUSES = new Set([
@@ -280,32 +286,20 @@ export async function recordCheckoutSessionStatus(
   status: "checkout_expired" | "payment_failed",
 ) {
   const paymentRecordId = session.metadata?.tuveloz_payment_record_id ?? "";
-  if (!paymentRecordId) return;
-
-  const [payment] = await getDb().select({
-    id: stripePayments.id,
-    status: stripePayments.status,
-  }).from(stripePayments)
-    .where(eq(stripePayments.id, paymentRecordId))
-    .limit(1);
-  if (!payment) return;
+  if (!paymentRecordId || !session.id) return;
 
   // Stripe may deliver webhooks more than once or out of order. An old
-  // expiration/failure event must never replace a successful, refunded, or
-  // disputed payment state.
-  if (!CHECKOUT_FAILURE_MUTABLE_STATUSES.has(payment.status)) {
-    console.warn("Ignoring a late Checkout failure status", {
-      paymentRecordId,
-      currentStatus: payment.status,
-      ignoredStatus: status,
-    });
-    return;
-  }
-
+  // expiration/failure must match the stored Session and a still-pending
+  // payment. Check both in the write itself: a separate read can race with
+  // completion, a refund/dispute hold, or replacement of the Session.
   await getDb().update(stripePayments).set({
     status,
     updatedAt: new Date().toISOString(),
-  }).where(eq(stripePayments.id, payment.id));
+  }).where(and(
+    eq(stripePayments.id, paymentRecordId),
+    eq(stripePayments.checkoutSessionId, session.id),
+    inArray(stripePayments.status, [...CHECKOUT_FAILURE_MUTABLE_STATUSES]),
+  ));
 }
 
 async function paymentForStripeObject(

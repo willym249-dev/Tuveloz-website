@@ -786,7 +786,8 @@ test("Stripe webhooks quarantine refunds and disputes before provider release", 
   assert.ok(paymentSource.includes("recordRefundedCharge"));
   assert.ok(paymentSource.includes("recordDisputeStatus"));
   assert.ok(paymentSource.includes("CHECKOUT_FAILURE_MUTABLE_STATUSES"));
-  assert.ok(paymentSource.includes("Ignoring a late Checkout failure status"));
+  // Checkout ordering and session binding are exercised with actual SQL in
+  // stripe-payment-notification-behavior.test.mjs, not a warning-text check.
   assert.ok(checkoutSource.includes("REVIEW_PAYMENT_STATUSES"));
   assert.ok(releaseSource.includes("payment.refundAmountCents > 0"));
   assert.ok(releaseSource.includes("charge.amount_refunded > 0"));
