@@ -111,9 +111,15 @@ electronic acceptance, evidence requests, corrections, and appeals.
 services, jurisdiction `US-MD-MontgomeryCounty`. Requirements resolve per
 jurisdiction (`lib/provider-policy.ts`), and a jurisdiction must carry
 `local_requirements_reviewed: true` through its whole chain before a service
-opens there. **Caveat for the reviewer:** the service-code to legal-category map
-in `lib/provider-compliance.ts` is best-faith and has not been confirmed against
-sources.
+opens there. The September 27
+[service requirements review](../legal/provider-service-requirements-review.md)
+now compares all 25 codes and the executed signup-document resolver with
+official county/state sources. It supports retaining the broad repair and
+towing categories while identifying seven county-scope questions, municipal
+applicability limits, and the distinct state paperwork definition. These
+questions remain unresolved; the source review does not approve the mapping
+or the existing reviewed-jurisdiction flags. One focused OCP inquiry is prepared
+and awaiting owner send authorization. No eligibility rule changed.
 
 **`customer_workflow_and_terms_requirements`** — *legal, required*
 *Existing:* seven policy pages under `app/`, each SHA-pinned to an active entry

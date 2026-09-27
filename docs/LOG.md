@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Compare provider requirements with official service definitions
+
+No open PR at start; main remains `546e60a`. Preserved the two local completion/
+email evidence commits. This pass addresses the previously unconfirmed legal-
+category mapping in the launch briefing rather than repeating the live release
+or inbox tests. Read the county registration guidance, current online 31A-1,
+municipal applicability table, DEP wash-water guidance, and Maryland 14-1001.
+
+Executed the existing policy, compliance, and signup-document modules for all
+25 codes. Sixteen eligible-pathway entries request county repair registration,
+towing has its own certificate, seven county-scope categories need an agency
+answer, and the broad repair category remains prohibited. All 25 stay disabled
+or prohibited. The seven existing document checks pass, including every
+independently selectable service pair and removal/deduplication behavior.
+
+Filed and indexed `legal/provider-service-requirements-review.md` with the
+all-code inventory, sourced conclusions and explicit inferences. Important
+remaining questions are photo-only versus vehicle examination, cleaning scope,
+overlapping specialty credentials, municipality boundaries, and the different
+state/county repair definitions. No unsupported exemption or new document
+requirement was put into the signup flow. Updated the launch briefing and added
+an October 2 follow-up checkpoint. The exact one-message OCP inquiry is prepared
+for owner review, not sent; no agency determination or paid service is claimed.
+
+Private inspection proof: `outputs/provider-requirements-snapshot-20260927.json`;
+existing checks: `outputs/provider-requirements-checks-20260927.log`.
+No application, payment, legal-release text, eligibility configuration, or live
+website change was made. The next action is owner approval of the prepared
+agency email; a county reply cannot itself approve a provider or launch gate.
+
+Validation confirms every matrix code appears exactly once in the review, the
+deadline parser includes the new October 2 checkpoint without malformed dates,
+and diff whitespace checks pass. Business Gmail's focused Sent search found no
+mail to the OCP licensing recipient. Documentation is saved locally; no PR,
+push, deployment, or message send occurred.
+
 ## 2026-09-27 - Verify the received sign-in header and read one new mail report
 
 Preserved PR #250's completed release and its local evidence commit `d43188c`.

@@ -3,7 +3,9 @@
 Policy research, agreement drafts, regulatory analysis, and the reasoning behind
 compliance decisions.
 
-Nothing filed yet.
+- [Provider service requirements review](provider-service-requirements-review.md)
+  compares all 25 catalog entries with official sources and preserves the
+  unanswered OCP scope questions. The inquiry is prepared, not sent.
 
 **The published legal documents are not here.** All seven — Terms of Service,
 Customer Agreement, Provider Agreement, Privacy Notice, Payment Policy,
