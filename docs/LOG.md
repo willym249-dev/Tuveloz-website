@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Post approved attribution inquiry and complete local release checks
+
+Verified the existing GitHub identity, exact upstream repository and absence of
+an existing license issue, then posted the exact owner-reviewed question as
+[hi-ogawa/js-utils #276](https://github.com/hi-ogawa/js-utils/issues/276) at
+21:52:09 UTC. A separate read confirmed title, full body, author and Open status,
+with zero comments at that check. The message is sent; do not repeat approval or
+posting. No private identifiers, source bundle or attachments were transmitted.
+The October 4 checkpoint is an internal review date, not a promised answer.
+
+Preserved notice preparation commit `f8dadfc` and all earlier documentation
+commits. The same existing suite passed all 809 tests after the restricted
+attempt could not resolve project files because of Windows directory access.
+No code change was needed. TypeScript/Worker validation passed; lint reported
+zero errors and the unchanged `site-language.tsx` navigation warning. The prior
+fresh build and all 39 notice-reference byte checks remain applicable; only
+record cards changed after that build. Private logs are
+`notices-release-tests-20260927.log`, `notices-release-typecheck-20260927.log`
+and `notices-release-lint-20260927.log`.
+
+The prepared branch changes notices, Git attributes and evidence documents;
+application code, dependencies, policy releases, migrations and launch controls
+are unchanged. No push, PR, deployment, paid service or launch approval occurred.
+Publishing remains a separate final step; the unresolved helper notice remains
+explicitly recorded pending an authoritative answer.
+
 ## 2026-09-27 - Prepare the remaining collected software notices
 
 Fresh GitHub inspection found no open PR and main unchanged at `a1f9ace`.

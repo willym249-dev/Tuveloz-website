@@ -130,16 +130,22 @@ nor the official release commit
 `71f588d9ed860b2104ae4ce4f97dcf0af5d6249c` contains a license file. The release
 history identifies that commit as version 1.7.0. No generic copyright text was
 invented or substituted. Obtain a supported notice source or reviewer guidance
-before claiming the wider notice collection is complete; no outside inquiry
-has been sent.
+before claiming the wider notice collection is complete. The owner-approved
+upstream inquiry is now posted as recorded below; no answer is recorded yet.
 
 September 27 follow-up: the current upstream main tree
 `08c2ee8e07e9b9a5fdde871a57c0df67b5750219` also has no license/notice file,
 and the scoped issue search found no existing license question. A short public
 question requesting the official MIT text, copyright attribution and its
 applicability to 1.7.0 is prepared in the private output
-`hiogawa-license-inquiry-20260927.md`. Permission to post it was requested from
-the owner; it remains unsent. No license terms or copyright owner were inferred.
+`hiogawa-license-inquiry-20260927.md`. After the owner was shown the exact public
+question and instructed us to continue, it was posted through the existing
+repository-owner GitHub account on September 27 at 21:52:09 UTC:
+[hi-ogawa/js-utils issue #276](https://github.com/hi-ogawa/js-utils/issues/276).
+A fresh issue read verified the title, complete body, author and Open status;
+zero comments were present at that check. Do not repost it. This requests an
+authoritative notice and version applicability; it does not infer license terms
+or a copyright owner, authorize payment, or establish clearance.
 
 Private evidence: `outputs/distributed-packages-20260927.json`,
 `outputs/distributed-packages-build-20260927.log`, and the preserved collection's
@@ -178,8 +184,13 @@ whitespace. Private preparation/build/verification evidence:
 `outputs/distributed-packages-current-20260927.json` and
 `outputs/bundled-notices-validation-20260927.json`.
 No application flow, dependency version, policy or launch control changed.
-The exact upstream inquiry was presented again for specific send approval;
-it remains unsent until the owner answers. Do not repeat the notice collection.
+All 809 existing tests subsequently passed, and the TypeScript/Worker check
+passed. Lint had zero errors and the one unchanged language-navigation warning.
+The first restricted test attempt hit Windows directory permissions; rerunning
+the same suite with the required access passed without source changes. This is
+local release preparation; remote PR/release checks have not run for this branch.
+The upstream inquiry is posted as recorded above. Do not repeat the collection
+or ask again for permission to send that completed message.
 
 ## What depends on it
 
