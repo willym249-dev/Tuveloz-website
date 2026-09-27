@@ -201,10 +201,12 @@ rows. No real email was sent as a test. Real-channel/inbox evidence and the
 separate process review still need completion before this gate can be approved.
 September 27 isolated migrated-SQL tests confirm the expiration cutoff and
 rechecks at all seven work stages, plus replacement/scan/scope protections.
-They also reproduced ignored document start dates and recorded pathway bounds;
-the local repair passes all 809 tests/build with rules version `0.14.2`.
-Publication is tracked in `OPEN-ITEMS.md`; this simulation does not establish
-real-channel delivery or grant any provider or launch approval.
+They also reproduced ignored document start dates and recorded pathway bounds.
+PR #254 publishes the repair with rules version `0.14.2`; all 809 tests/build
+and production workflow `36333832839` passed. Independent live verification at
+16:52:43 UTC confirmed exact release `a1f9ace`, ready health checks, protected
+provider access and preserved launch locks. This simulation and release do not
+establish real-channel delivery or grant any provider or launch approval.
 The owner evidence pre-screen in
 `lib/evidence-review-assistant.ts` can never auto-accept; its only automatic
 action is a reversible bilingual correction request for a provably expired

@@ -13,7 +13,18 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-- Latest completed release: PR #253, `ed6c5930214a33bb0dff4048398e266410da2e89`.
+- Latest completed release: PR #254, `a1f9ace7f1777170702e43213dace33638d6ee84`.
+  Both PR workflows and all three production jobs in `36333832839` passed,
+  including 809 tests/build, required browser/migration checks and complete
+  provider signup. Independent live verification at September 27 16:52:43 UTC
+  confirms the exact release, ready application/database/schema, signed-out
+  provider access denial and preserved launch locks. Recorded evidence start
+  dates and pathway start/end bounds now participate in eligibility decisions
+  under rules `0.14.2`. Isolated SQL tests also confirm existing expiration
+  cutoffs, all-stage rechecks and replacement protections. No real provider,
+  document or message was changed as a test; launch review remains separate.
+  See `LOG.md`; do not repeat this completed repair or deployment.
+- Earlier completed release: PR #253, `ed6c5930214a33bb0dff4048398e266410da2e89`.
   The owner explicitly approved this publication. Both PR workflows and all
   three production jobs in `36329213779` passed, including 800 tests/build and
   required browser/migration checks. Independent live verification at September
@@ -213,7 +224,7 @@ workspace still has no new paid provider activation. No paid upgrade was made.
 | Customer accounts and provider applications | Already open. Pending customer-launch reviews do not close these flows. Existing tests and dated production evidence above remain completed work. |
 | Provider activation | The genuine applicant still needs matching Identity, service-specific evidence and official/issuer checks. Keep the owner's application last as requested. A scanner result cannot approve credentials. |
 | Customer bookings and payments | Require the existing seventeen required launch gates, real-world evidence and supported recorded approvals. The optional employee/trainee lane is separate. No gate has been approved by these tests. |
-| Website repairs that remain reproducible | Finish each scoped repair and verify its release. The September 27 expiration-reminder mismatch is published and independently verified in PR #253, with isolated transport/SQL behavior proof. Real-channel delivery and the associated launch review remain pending. |
+| Website repairs that remain reproducible | Finish each scoped repair and verify its release. The September 27 reminder-delivery repair (PR #253) and evidence-start/pathway-validity repair (PR #254) are published and independently verified, with isolated runtime/SQL proof. Real reminder inbox delivery and the associated operational launch review remain pending. |
 | Optional product ideas | The separate mobile repository, historical reminder/range features, and additional paid-AI integrations are not prerequisites for this website's current account/application flows. Scope them separately instead of restoring old branches. |
 | Dated maintenance and outside responses | Use the existing deadlines for the county and broker replies, search processing, scanner freshness, credentials, billing and annual filings. A future maintenance checkpoint is not unfinished setup. |
 

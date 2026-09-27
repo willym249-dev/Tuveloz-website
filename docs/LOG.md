@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - PR #254 published; provider validity repair verified live
+
+Continued the owner's standing instruction to fix and finish Tuveloz. PR #254
+merged tested head `2a0373b` as `a1f9ace7f1777170702e43213dace33638d6ee84` at
+16:35:55 UTC after all required checks passed and the reviewed head/base were
+reconfirmed unchanged. Both PR workflows passed; production workflow
+`36333832839` then passed all three jobs, including 809 tests/build, required
+browser checks, the migration rehearsal and end-to-end provider signup.
+
+Independent live verification at 16:52:43 UTC matched that exact release and
+confirmed ready application/database/schema, no missing tables or guarded
+triggers, and signed-out provider onboarding returning 401/no-store/error-only.
+Accounts/applications remain open; customer requests/payments remain closed.
+The document-start and recorded pathway-validity checks are published under
+eligibility rules `0.14.2`. No real provider, document, email or payment was
+changed as a test. The runtime simulations below establish the date/replacement
+behavior; deployment/health do not grant provider approval or finish the
+real-channel reminder and operational launch review.
+
+Private evidence: `outputs/pr254-merge-result-20260927.json`, both PR result
+files, `outputs/pr254-production-result-20260927.json`, and
+`outputs/pr254-live-release-20260927.json`. Preserved PR #253 and its release
+record. The completion checklist and launch handoff now mark this repair
+published; do not repeat its approval, repair or deployment. Follow-up evidence
+notes are committed locally without triggering another documentation-only release.
+
 ## 2026-09-27 - Verify expiration blocking; repair ignored validity starts and pathway dates
 
 After PR #253, a fresh concurrent-work check found no open PR and main still
