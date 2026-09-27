@@ -47,7 +47,8 @@ test("staging is owner-only, non-indexable, and skips background production acti
   assert.match(worker, /Tuveloz staging requires signed owner verification/);
 
   assert.match(banner, /Test mode — admin staging site/);
-  assert.match(banner, /No real payments, emails, customer jobs, or provider notifications/);
+  assert.match(banner, /No real payments, customer jobs, or provider notifications/);
+  assert.match(banner, /Test sign-in emails go only to the owner when temporarily enabled/);
   assert.match(layout, /<StagingEnvironmentBanner \/>/);
 });
 

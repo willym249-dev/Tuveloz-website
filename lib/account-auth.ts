@@ -39,6 +39,7 @@ import {
 } from "./policies";
 import { ELIGIBILITY_RULES_VERSION } from "./provider-eligibility-engine";
 import { resendEmailsUrl } from "./resend-endpoint";
+import { accountEmailDelivery } from "./account-email-delivery";
 
 export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -467,8 +468,7 @@ async function sendLoginCodeEmail(
   role: AccountRole,
   code: string,
 ) {
-  const apiKey = runtimeEnv().RESEND_API_KEY;
-  const from = runtimeEnv().RESEND_FROM_EMAIL;
+  const { apiKey, from, subjectPrefix, notice } = accountEmailDelivery(email, runtimeEnv());
   if (!apiKey || !from) {
     throw new Error("Passwordless email is not configured.");
   }
@@ -483,8 +483,9 @@ async function sendLoginCodeEmail(
     body: JSON.stringify({
       from,
       to: [email],
-      subject: "Your Tuveloz sign-in code",
+      subject: `${subjectPrefix}Your Tuveloz sign-in code`,
       text: [
+        ...(notice ? [notice, ""] : []),
         `Your Tuveloz ${roleLabel} sign-in code is:`,
         "",
         code,
@@ -613,8 +614,7 @@ async function sendPasswordVerificationEmail(
   purpose: PasswordChallengePurpose,
   code: string,
 ) {
-  const apiKey = runtimeEnv().RESEND_API_KEY;
-  const from = runtimeEnv().RESEND_FROM_EMAIL;
+  const { apiKey, from, subjectPrefix, notice } = accountEmailDelivery(email, runtimeEnv());
   if (!apiKey || !from) {
     throw new Error("Password verification email is not configured.");
   }
@@ -634,12 +634,13 @@ async function sendPasswordVerificationEmail(
     body: JSON.stringify({
       from,
       to: [email],
-      subject: purpose === "create"
+      subject: subjectPrefix + (purpose === "create"
         ? "Verify your Tuveloz account"
         : purpose === "reset"
           ? "Reset your Tuveloz password"
-          : "Verify your Tuveloz sign-in",
+          : "Verify your Tuveloz sign-in"),
       text: [
+        ...(notice ? [notice, ""] : []),
         `Use this code to ${actionLabel} for your Tuveloz ${roleLabel} workspace:`,
         "",
         code,

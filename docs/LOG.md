@@ -11,6 +11,324 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Correct moved county guidance and reconcile completed launch checks
+
+Read-only continuation found the old OCP registration URL now redirects to the
+general department homepage. Direct HTTP verification returned 200 for both,
+but only the current repair/maintenance/towing page contains the registration
+guidance. Updated the credential links, evidence-acceptance guidance, and legal
+review source suggestions. Exact legacy references remain accepted as the
+same source without rewriting stored evidence. Generic county homepages,
+lookalike domains, modified URLs and incomplete reviews remain rejected.
+No service classification, required document, evidence acceptance or launch
+decision changed. The current county page still leaves service-specific
+interpretations to the required confirmation; this is not a blanket legal
+or provider-compliance approval.
+
+Added three behavioral regression tests covering saved-reference compatibility,
+unrelated-source rejection, and actual launch-gate validation. The production
+build and all 743 tests pass; typecheck passes; lint has no errors and the one
+pre-existing site-language warning. An initial test-local variable name violated
+the Next.js lint rule and was renamed; the lint rerun passed. Reconciled stale
+briefing, incident-plan and deadline text which still described the completed
+hosted upload or Google Admin inspection as unfinished. Historical LOG entries
+remain dated history. This source update is prepared for review and is not yet
+deployed to staging or production; earlier deployed upload proof applies to
+`7348f7d`, and production remains `2bdab8b` at the last verified check.
+
+## 2026-09-26 - Complete hosted customer image upload and temporary-access cleanup
+
+The owner specifically approved staging deployment, a one-hour owner-only code
+email window, a synthetic image upload, and key cleanup. Staging workflow
+`36283229583` passed at `7348f7d`; main and production stayed `2bdab8b`. Created
+one sending-only Resend key restricted to updates.tuveloz.com and stored it only
+in the private staging Worker. Added a temporary auth signing secret because
+that Worker previously had none. No production credential was copied.
+
+Preserved all earlier fixtures; validated the two new job/quote inserts against
+in-memory migrated SQLite before adding them to staging. One email code reached
+the business inbox and normal customer sign-in consumed it. The actual form
+saved the clearly labeled test PNG and note at 01:00:13 UTC September 27
+(September 26 evening locally). D1 confirmed one customer-condition record and
+private R2 key; refresh retained the same record and the 600-by-260 image loaded.
+The browser's read-only file-list inspection did not expose the selected file;
+the completed upload, D1 key, and loaded image provide the actual result.
+Do not resubmit based only on that inspection.
+
+Earlier evidence and both incident hold decisions remained unchanged. No
+payments, provider messages, notification outbox entries, Identity sessions or
+credential reviews were created. The test provider remains unapproved with
+alerts disabled. Direct signed-out image navigation returned a Chrome client
+block, so it is not recorded as an application HTTP-denial assertion.
+
+Cleanup verified: normal sign-out left zero account sessions and the evidence
+workspace returned to sign-in; the temporary Resend key was revoked; temporary
+Resend and auth Worker secrets removed; email flag false and expiry/from blank.
+Normal sender stayed empty and both Stripe live-mode flags stayed false. The
+original Resend key and owner Access remained. Private screenshots and JSON
+proof stay outside git. Closed the hosted-upload checkpoint; retained the
+synthetic records instead of destroying the audit evidence. No paid upgrade,
+production deployment, real provider approval, or launch decision occurred.
+Final production health read reports application/database/schema ready and
+onboarding-only with customer jobs/payments closed.
+
+## 2026-09-26 - Complete account regression and verify Workspace billing
+
+The existing account browser regression passed on local commit `770008e` using
+its own temporary worktree, synthetic credentials, local D1 and mail catcher.
+Account creation/sign-in, throttling, Spanish routes and mobile widths, language
+switching, saved drafts, and provider form/document guidance checks passed. No
+message left the machine. This complements the 740-test/build, lint, and type
+checks; it does not complete the hosted upload. Prepared a Resend key form with
+Sending access restricted to updates.tuveloz.com, without submitting it, and
+asked for the specific one-hour owner-only rehearsal and cleanup approval.
+
+The existing Google Admin tab became accessible. Read-only inspection confirmed
+Business Plus Active, Flexible Plan, one assigned license, $19.80/user/month
+through the displayed November 5 discount period and $26.40 afterward. The
+estimated monthly bill is $19.80 and next billing date October 1. Closed the
+password-blocked billing inspection and added a November 1 cost-review
+checkpoint. No billing, subscription, payment method, or plan changed. Updated
+the private vendor-cost summary without retaining payment IDs or credentials.
+
+## 2026-09-26 - Prepare restricted staging authentication for the remaining upload test
+
+No open PR and main remains `2bdab8b`; preserved earlier handoff commits and
+completed rehearsal fixtures. The outstanding hosted participant upload needs
+an ordinary account session, but staging intentionally lacks email delivery.
+Prepared a disabled-by-default authentication sender using a separate key,
+the exact owner recipient, the canonical private staging origin, and an expiry
+no more than 24 hours away. Normal Resend settings must remain empty in staging;
+the separate key cannot turn on support/marketing/provider notification mail.
+No session bypass, password change, production secret, provider approval, or
+launch-setting change was introduced. The staging banner now describes the
+possible temporary owner-code exception accurately.
+
+Added executable tests for recipient denial, missing/expired configuration,
+single-use code verification, unchanged production settings, and support-mail
+isolation. All 740 tests and the production build pass; typecheck passes; lint
+has no errors and one existing site-language navigation warning. The first full
+run hit sandbox directory permissions in eight existing/new bundled tests;
+the permitted unsandboxed local rerun passed. Updated the existing staging
+runbook, email runbook, and September 28 checkpoint with activation and cleanup
+steps. No credential has been created, no real email sent, and no deployment
+or hosted participant upload has occurred. Scoped owner approval is needed to
+activate the prepared rehearsal.
+
+## 2026-09-26 - Prepare specific insurance inquiry options and clarify the TikTok draft
+
+Preserved the local handoff commits, with no open PR and remote main still
+`2bdab8b`. Added two official-source broker candidates to the existing launch
+briefing and insurance review checkpoint: Founder Shield and Marsh Sharing
+Economy. Both describe relevant marketplace work; eligibility, Maryland
+licenses, fees, and service-specific coverage are unverified. Included the
+published contact routes and the questions needed before a quote application.
+No broker message, application, private-document upload, policy selection,
+purchase, or launch approval occurred. Documentation only; checked the diff
+without rerunning application tests or deploying the site.
+
+The owner's TikTok question referred to a composer owned by the separate
+"Plan realistic Tuveloz ads" task. Its latest saved September 26 10:02 a.m.
+checkpoint records the three-image tire-pressure draft as unsubmitted, with
+no new publication, schedule, campaign, or spend. The browser refused a claim
+because that task already owns the tab; left it untouched and reported the
+dated checkpoint rather than asserting a fresh live composer inspection.
+
+## 2026-09-26 - Verify free vendor plans and isolate the remaining billing check
+
+No open PRs and main still `2bdab8b`; preserved existing local handoff commits.
+Cloudmersive's already authorized business login required an emailed security
+verification. Completed that login through its vendor-domain link without
+recording the token, and observed Free Tier. The subscription-management link
+redirected to an upgrade offer, so no historical-charge conclusion is claimed.
+Resend's Billing tab lists Transactional and Marketing at $0/month each, with
+no payment method and no invoices. Free transactional limits display 3,000
+monthly / 100 daily emails; paid overage controls are disabled. No API scan,
+document upload, test send, purchase, payment retry, cancellation, or plan change.
+
+Google Admin requires the owner's fresh password check before showing billing.
+Asked for that specific step and left only its page ready for the owner. Mailbox
+availability is already established; subscription details remain unverified.
+Added the September 28 follow-up, corrected the vendor card's obsolete blanket
+payment-method reminder, and reconciled the document register with the already
+verified domain expiry and LLC annual-report checkpoint. No production code,
+launch decision, test suite, or deployment changed. Private summary retained as
+`outputs/vendor-cost-review-20260926.json`.
+
+## 2026-09-26 - Close the old redirect check and verify search coverage
+
+No open PRs; remote main remains `2bdab8b`. Preserved the existing local handoff
+commits. Search Console's three redirect examples are expected HTTP/www homepage
+variants, not QR links; public GETs confirm single 308 redirects to the HTTPS
+apex. The public robots response disallows `/q/`. Closed only that overdue
+checkpoint and corrected its old assumption that a report entry proves a failed
+deployment. The homepage and both signup languages remain individually indexed
+with successful Google fetches and matching canonicals. Sitemap status is
+Success with 51 discovered pages. All 51 public URLs passed the scoped HTTP,
+title, canonical, and noindex check at 23:49:14 UTC; this is not a repeated
+interactive signup test.
+
+The founding-provider page's stored Google record still reports an August 8
+404, while current HTTP returns 200 and Google's September 26 live test passes.
+Validation started September 5 remains pending; no request was restarted.
+Updated the existing profile audit and October 2 follow-up. Saved the two
+scoped evidence JSON files outside the repo. No site/account/Maps settings,
+messages, costs, or launch controls changed; no application deployment or
+full test suite was needed for this read-only review.
+
+## 2026-09-26 - Inspect Resend settings and correct enforcement guidance
+
+Preserved the completed checks and clean local handoff branch; no open PRs,
+remote main still `2bdab8b`. Automatic approval review initially blocked the
+Resend Google sign-in. The owner then explicitly approved that account/settings
+inspection, and sign-in succeeded without an account change. The existing
+Tuveloz domain has sending enabled and verified DKIM, SPF TXT, and sending MX.
+No key-size or rotation option was exposed by its Records, Configuration, or
+domain menus, or by the reviewed public domain-update documentation. No keys,
+DNS records, TLS/tracking settings, subscription, or delivery configuration
+changed; no message or support inquiry was sent.
+
+Google's current sender guidance requires at least 1024-bit DKIM and recommends
+2048 where supported. Recorded that the current website key is not itself a
+delivery failure or a reason to buy a plan. Prepared an unsent provider question
+about a supported migration, cost, overlap, and rollback. Rotation stays open.
+Also corrected the future DMARC rollout instructions: RFC 9989 removed `pct`,
+so fractional enforcement is not a reliable way to limit affected messages.
+The owner sender-inventory answer and recurring reader remain pending; retain
+`p=none`. These are maintenance-document corrections only. No application tests,
+deployment, previous report parsing, or delivery tests were repeated.
+
+## 2026-09-26 - Complete the approved eight-report authentication review
+
+The owner's continuation approved the pending scoped attachment review. Used
+Gmail's normal download buttons and the supported browser download event/path
+API to retrieve exactly the eight selected files. The previously blocked Chrome
+download-manager page was not used. Parsed seven ZIP reports and one GZIP report
+locally with external XML resolution/DTDs disabled and bounded content size;
+raw reports, hashes, and analysis remain outside the repository. No third-party
+analysis upload, mail send, subscription, DNS change, or production deployment.
+
+The eight reporter/report-ID pairs are unique: eleven rows describe fifteen
+message observations, with three aligned passes and twelve failures. Nine
+failures on August 27, August 31, and September 4 have Google's historical
+unaligned default signature, consistent with the earlier configuration issue.
+Two of those observations involve a different envelope domain and may reflect
+forwarding/rewriting. The passing samples are two Tuveloz-signed Google messages
+and one website/Resend message. Three newer rows (September 22, 23, and 24)
+each show one unsigned message from a different unrecognized source with SPF
+softfail. These are possible spoofing; neither fraud nor account compromise nor
+inbox delivery is established. The sparse report set is not an overall delivery
+rate. Its mixed September 4 UTC report cannot place a message before/after the
+exact repair time.
+
+Updated the existing runbook and closed only the eight-file review checkpoint.
+Asked whether the owner uses any Tuveloz sender beyond business Gmail and the
+website; confirmation, new-report review, and recurring monitoring ownership
+remain pending. Added a September 28 checkpoint and kept p=none. Preserve the
+previous DNS value for any later reviewed enforcement rollout, and do not add
+unknown source IPs to SPF just to eliminate failures. No code tests/release were
+rerun for this documentation-only update. Save this local handoff with the
+existing unpublished doc commits for the next substantive authorized release.
+
+## 2026-09-26 - Check sender configuration and locate aggregate reports
+
+Continued from the completed incident-alert release and production follow-up;
+neither was repeated. No open PRs were present and remote main remained
+`2bdab8b`. Existing local handoff commits were preserved.
+
+Public DNS and key inspection confirmed Google's 2048-bit Workspace key,
+the website sender's existing 1024-bit Resend key and SES SPF, and monitoring-only
+DMARC. Source inspection identified the shared Resend sending configuration and
+confirmed staging remains intentionally unable to send. Closed the staging
+email decision checkpoint by retaining that configuration. No key, DNS, account,
+credential, launch, or payment setting changed; no email was sent or new service
+purchased.
+
+The business inbox has eight matching DMARC report messages in the prior-month
+search: seven Google and one Microsoft. This establishes report receipt only.
+Their aggregate contents were not parsed. One download was requested, but no
+file was successfully located; Gmail's archive preview exposed a filename only.
+Browser policy blocked Chrome's download manager and automatic approval review
+blocked the alternate download-interface check. Asked for scoped owner permission
+to download/read those eight attachments locally and stopped that work pending
+the answer. No workaround or external analysis upload was used.
+
+Updated the existing email-authentication runbook with current evidence,
+configuration-based sender inventory, and explicit limits. Corrected old wording
+that every sign-in needs an email code, that p=none means receivers cannot filter,
+and that no support-message authentication header had been checked. The aggregate
+review, recurring reader, provider-coordinated DKIM rotation, and later staged
+DMARC enforcement remain open. Supporting summary is private local output
+`email-authentication-review-20260926.json`; code tests/deployment were not
+repeated for documentation-only changes.
+
+Keep this handoff local with the preceding doc commits; do not trigger another
+production release solely to publish status notes. Include it with the next
+substantive authorized release.
+
+## 2026-09-26 - Verify production mail queue and the post-release schedule
+
+Read-only production D1 queries found zero incident reports and zero incident
+alerts. There is no missed incident email to replay. All seven existing outbox
+rows are recorded as sent, with one attempt each and no pending/failed rows:
+four account-security messages, one owner support alert, and two other messages.
+These database states record service acceptance, not universal inbox delivery.
+
+Cloudflare shows the existing fifteen-minute trigger and a successful run at
+22:45:27 UTC, after PR #243 deployed. Its preceding nine displayed runs were
+also successful. The last-24-hour Worker error metric was zero. Logs and traces
+are disabled; a successful cron invocation and aggregate error metric do not
+prove every caught subtask succeeded. No monitoring setting was changed.
+
+Re-read the existing automatic website support test in the business Inbox,
+matching its subject and September 5 00:59:20 UTC outbox timestamp. Gmail's
+original-message view confirms receipt at 00:59:21 UTC, the configured website
+sender, business recipient, and SPF/DKIM/DMARC pass. This preserves the already
+completed September 4 local-date proof in
+`operations/2026-09-04-support-reliability.md`; it was not a new test or send.
+The separate September 26 manual mailbox round trip also remains complete.
+
+Incident-specific production inbox delivery remains unproven. Do not create a
+fake live incident, reclassify a test record, or enable customer transactions
+to clear that item. The current route and test-mail quarantine remain intact.
+Sanitized observations are retained outside the repo in
+`incident-alert-production-followup-20260926.json`. No code, production data,
+credential, subscription, payment, deployment, or launch decision changed.
+This documentation handoff stays local for the next authorized code release.
+
+## 2026-09-26 - Verify published owner incident alerts and record responder availability
+
+PR #243 merged as `2bdab8b940748f137b495c7c131f9044bf57b3b8` after both
+required PR workflows passed (`36275390201` and `36275390430`). All three jobs
+in the normal production workflow `36276226206` passed. Public verification
+at 22:42:41 UTC confirmed that exact release, built at 22:40:23 UTC, with ready
+application/database/schema, English and Spanish signup pages returning 200,
+and signed-out job operations returning 401. Accounts and applications remain
+open; customer requests and payments remain closed. Local validation includes
+733 passing tests plus twelve Chromium/WebKit incident scenarios, lint,
+typecheck, and the production build.
+The test-only incident route, test-alert quarantine, and customer-launch and
+payment locks remain unchanged. No real incident email was sent; production
+incident-triggered inbox delivery remains unproven. The separately completed
+manual mailbox round trip is not that proof.
+
+Sanitized release evidence is retained outside the repo as
+`incident-alert-release-20260926.json`,
+`incident-alert-production-run-20260926.json`, and
+`incident-alert-validation-20260926.json`.
+
+The owner answered "anytime" to the question about checking hello@tuveloz.com.
+The existing incident runbook now names the owner as primary responder with
+that self-reported availability. No backup contact was supplied. The remaining
+checkpoint is a practical fallback and process review, not another request
+for the already-answered primary-responder question. No public promise of
+24/7 staffing or a guaranteed response deadline was added.
+
+Keep this factual handoff local until the next authorized code release rather
+than redeploying solely to publish a release receipt. The earlier manual
+mailbox proof, scanner results, backups, and staged incident evidence are
+preserved; do not rerun them without a specific new verification need.
+
 ## 2026-09-26 - Prepare durable automatic owner incident alerts
 
 Saved incident reports now queue a bilingual owner alert with a protected

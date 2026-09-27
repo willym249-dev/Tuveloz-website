@@ -89,9 +89,10 @@ evidence, messages, the appointment record, arrival tracking, and the
 authorization chain. The incident console can now link saved photos and notes
 from the same job through `evidenceReferences`. PRs #238 and #239 are published;
 the September 26 hosted owner rehearsal verified linking and opening a seeded
-private image without changing earlier references or payment holds. A hosted
-participant upload and the full process review remain separate unfinished
-checks; see the dated evidence below. Do not delete a message, image, or job record after an incident
+private image without changing earlier references or payment holds. The later
+owner-approved hosted customer upload and credential cleanup passed; see
+[`../STAGING.md`](../STAGING.md). Full process review remains unfinished.
+Do not delete a message, image, or job record after an incident
 — the same rule as the security plan, for the same reason.
 
 **4. Payment stays held.** It holds itself. Do not release it to settle a
@@ -150,11 +151,25 @@ Local verification passed 733 tests, production build, typecheck, lint (one
 existing warning), and the Chromium/WebKit incident checks. The real SQL tests
 cover privacy, wrong assignment links, interrupted enqueueing, concurrency,
 receipt failure, retries, no duplicate send, and test quarantine. External
-email transport is intercepted. This is implementation/test evidence; check
-the release record before claiming deployment. The separate manual mailbox
-round trip below passed, but no real incident alert was sent. Owner coverage,
-fallback contact, insurer review, hosted participant upload, and launch
-approval remain outstanding.
+email transport is intercepted. PR #243 is confirmed deployed as `2bdab8b`:
+all production jobs in `36276226206` passed, and public verification at
+22:42:41 UTC confirmed the exact release and retained launch locks. The separate
+manual mailbox round trip below passed, but production incident-triggered
+inbox delivery remains unproven; no real incident alert was sent. The owner's
+availability is recorded below; fallback contact, insurer review, hosted
+participant upload, and launch approval remain outstanding.
+
+Read-only production follow-up on September 26 found zero incident reports
+and alerts; there is no missed incident notice to resend. All seven existing
+outbox messages were recorded as accepted, with no pending or failed rows.
+Cloudflare recorded a successful fifteen-minute scheduled invocation at
+22:45:27 UTC after this release. That does not prove each caught subtask or
+incident-email delivery. The previously completed automatic website support
+test was re-read in the business Inbox: its September 5 00:59:21 UTC receipt
+passes SPF, DKIM, and DMARC. See
+[the original support record](2026-09-04-support-reliability.md). That historical
+support receipt, the manual mailbox round trip, and the isolated incident
+tests are separate evidence. No new email was sent in this follow-up.
 
 **Both sides, promptly and factually:** that an incident is recorded, the
 confirmed work status, whether payment is held, and what happens next. A routine
@@ -208,9 +223,10 @@ Spanish: “La retención del pago es parte de la revisión y no determina quié
 es responsable. Puedes rechazar trabajo adicional sin una penalización por
 rechazarlo.”
 
-Before use, the owner must choose a reachable responder and a realistic update
-deadline. After sending, record the channel, recipient role, actual timestamp,
-delivery receipt or failure, next follow-up, and a private evidence reference.
+Before use, the owner must confirm who can respond to that incident and set a
+realistic update deadline. After sending, record the channel, recipient role,
+actual timestamp, delivery receipt or failure, next follow-up, and a private
+evidence reference.
 A draft, queue entry, or copied message is not proof of delivery. If delivery
 fails, record it and use an authorized alternative channel; never mark a notice
 sent simply to clear the review screen.
@@ -257,10 +273,12 @@ falta hacer nada más.”
 
 This checks the **manual mailbox round trip**, not incident-triggered website
 mail, delivery to every email provider, a staffing commitment, or emergency
-dispatch. Before launch, the owner still needs to name the person who checks
-the incident console and inbox, set actual coverage hours and a fallback
-contact, and obtain the required process review. Those cannot be inferred from
-a successful test message.
+dispatch. On September 26, the owner answered "anytime" when asked about
+availability to check hello@tuveloz.com. Record the owner as the primary
+responder with that self-reported availability. No backup contact was named.
+This is not evidence of continuously staffed support, a guaranteed response
+deadline, or a launch approval. Before launch, confirm a practical fallback
+for times the owner cannot respond and obtain the required process review.
 
 For a real incident, the responder records a next-update deadline after checking
 availability, sends each participant a separate factual message, and logs the
@@ -289,8 +307,9 @@ coverage opinion, legal sign-off, or approval of the implemented marketplace.
 
 The owner/insurer still needs to establish coverage, notice deadlines, claims
 contacts, the communication process, and who may authorize resumption or hold
-release. The hosted participant upload and real notification delivery remain
-unverified. No launch gate has been marked approved.
+release. The hosted customer upload is verified in `STAGING.md`; real
+incident-triggered notification delivery remains unverified. No launch gate
+has been marked approved.
 
 ## Resolution and records
 
@@ -359,8 +378,9 @@ deleting potentially committed evidence.
 synthetic loopback API: uploaded bytes arrive, rejected submissions retain their
 draft, and refreshing after a saved upload never resubmits it. Neither test uses
 hosted R2 or attaches the photo to `job_incidents`. The additional incident-link
-test below covers that separate route; a hosted participant upload remains
-unverified. Owner and insurer review remain required independently of these tests.
+test below covers that separate route. The later hosted customer upload passed
+as recorded in `STAGING.md`. Owner and insurer review remain required
+independently of these tests.
 
 ### Linking saved evidence to an incident
 
@@ -385,7 +405,8 @@ atomic rollback, concurrent changes, lost acknowledgements, and unchanged holds.
 The actual console passes owner/customer/provider selection, rejected-attempt
 retention, retry, and photo-opening checks in Chromium and WebKit. These are
 synthetic technical tests. The hosted owner link/read check is recorded below;
-a hosted participant upload and real insurer workflow remain separate.
+the later hosted customer upload is recorded in `STAGING.md`. The real insurer
+workflow remains separate and incomplete.
 
 ### Owner decisions and later hold release
 

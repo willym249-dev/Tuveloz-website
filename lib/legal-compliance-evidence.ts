@@ -29,7 +29,17 @@ export type MandatoryLegalComplianceScope = {
 const CONSUMER_PROTECTION_SOURCE =
   "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=13-301";
 const MONTGOMERY_REPAIR_REGISTRATION_SOURCE =
+  "https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing";
+const LEGACY_MONTGOMERY_REPAIR_REGISTRATION_SOURCE =
   "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html";
+
+// The county moved this page. Compare the exact old reference as its current
+// equivalent without rewriting saved evidence or accepting other county pages.
+export function canonicalOfficialSourceReference(reference: string) {
+  return reference === LEGACY_MONTGOMERY_REPAIR_REGISTRATION_SOURCE
+    ? MONTGOMERY_REPAIR_REGISTRATION_SOURCE
+    : reference;
+}
 const MARYLAND_REPAIR_INVOICE_SOURCE =
   "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=14-1003";
 const MARYLAND_REPAIR_AUTHORIZATION_SOURCE =
@@ -273,7 +283,9 @@ export function hasCompleteMandatoryLegalComplianceEvidence(
     && evidence.officialSourceReferences.every(officialSourceReferenceIsValid)
     && requiredOfficialSources.length > 0
     && requiredOfficialSources.every((requiredSource) => (
-      evidence.officialSourceReferences.includes(requiredSource)
+      evidence.officialSourceReferences.some((reference) => (
+        canonicalOfficialSourceReference(reference) === requiredSource
+      ))
     ))
     && evidence.ownerAcknowledged
     && professionalReviewChoiceIsComplete;

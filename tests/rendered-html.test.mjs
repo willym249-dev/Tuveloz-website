@@ -1240,7 +1240,7 @@ test("public claims scope credential records while real provider auth requires e
   assert.ok(requirementSource.includes("Montgomery County motor-vehicle repair registration"));
   assert.ok(requirementSource.includes("Maryland safety-inspection station license"));
   assert.ok(requirementSource.includes("Maryland safety-inspection mechanic registration"));
-  assert.ok(requirementSource.includes("https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html"));
+  assert.ok(requirementSource.includes("https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing"));
   assert.ok(requirementSource.includes("https://egov.maryland.gov/msp/msis/Lookup"));
   assert.ok(requirementSource.includes('assessment.diagnosticsScope === "official-authorized"'));
   assert.ok(requirementSource.includes('record.status !== "verified"'));

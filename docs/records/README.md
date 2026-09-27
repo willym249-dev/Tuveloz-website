@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-06
+- **Last reviewed:** 2026-09-26
 
 This folder tracks the real-world documents the business depends on — insurance
 certificates, formation paperwork, licenses, registrations, vendor approvals,
@@ -56,17 +56,19 @@ keep that reference.
 
 ## Register
 
-Five cards opened 2026-08-16 against the `entity_authority_domain_and_code`
-launch gate. Two are evidenced from this repository and public DNS; three are
-blanks holding the shape of a document only the owner can supply. A blank card
-is still useful — it names what is missing and what is waiting on it.
+Five cards were opened August 16 against the `entity_authority_domain_and_code`
+launch gate. The domain and LLC cards now contain September 26 verification;
+the vendor card distinguishes checked settings from pending billing evidence.
+The EIN card remains blank, and private formation/authority originals still
+need the owner's record-location confirmation. These observations do not approve
+the launch gate.
 
 | Document | Type | Issuer | Expires | Card |
 | --- | --- | --- | --- | --- |
-| Domain registration — tuveloz.com | Registration | Porkbun | **unrecorded** | [card](domain-registration-tuveloz-com.md) |
+| Domain registration — tuveloz.com | Registration | Porkbun | 2027-07-22; review renewal 2027-06-22 | [card](domain-registration-tuveloz-com.md) |
 | Code ownership and contributors | Ownership | — | Does not expire | [card](code-ownership-and-contributors.md) |
-| Essential vendor accounts | Vendor | Several | Payment methods do | [card](essential-vendor-accounts.md) |
-| LLC formation — Maryland | Formation | Maryland SDAT | Annual report does | [card](llc-formation-maryland.md) |
+| Essential vendor accounts | Vendor | Several | Plan, billing and credential deadlines are tracked separately | [card](essential-vendor-accounts.md) |
+| LLC formation — Maryland | Formation | Maryland SDAT | First annual report tracked for 2027-04-15 | [card](llc-formation-maryland.md) |
 | EIN assignment | Tax registration | IRS | Does not expire | [card](ein-assignment.md) |
 
 Still unfiled and named in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md): general

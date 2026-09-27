@@ -51,7 +51,7 @@ const MONTGOMERY_REPAIR_REGISTRATION: ProviderCredentialRequirement = {
   publicLabel: "Montgomery County repair registration checked",
   jurisdiction: "Montgomery County, Maryland",
   issuingAuthority: "Montgomery County Office of Consumer Protection",
-  legalBasisUrl: "https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html",
+  legalBasisUrl: "https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing",
   officialLookupUrl: "https://data.montgomerycountymd.gov/stories/s/OCP-Perspective/kzze-c2zt/",
   verificationGuidance: "Match the provider's exact business name to the County's official repair-and-towing records. If the public record is unclear, confirm with the issuing authority before marking verified.",
 };

@@ -43,10 +43,11 @@ still needs the genuine provider Identity result and each gate's review evidence
 Stripe business-account verification is separate
 from a provider applicant's ID and selfie check.
 
-Google Workspace mail loads again, and the business inbox contains activation
-and payment receipts. Google Admin still requires a fresh account verification
-before its exact subscription details can be recorded as gate evidence. See
-the dated item in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md).
+Google Admin subscription inspection completed September 26: Business Plus is
+Active on a Flexible Plan with one license. The vendor record holds the current
+displayed price and November cost-review checkpoint. The hosted customer image
+upload and temporary-email cleanup also passed; see [`../STAGING.md`](../STAGING.md).
+These completed technical checks do not approve the remaining launch gates.
 
 **Every gate requires a validity date** (`requiresValidThrough` is true on all
 eighteen), so each answer expires. Two launch gates already fail on a legal
@@ -253,6 +254,33 @@ checks licensing; it does not rank insurers or confirm that a specific policy
 covers this marketplace. No broker was contacted, quote submitted, policy
 selected, or fee incurred by preparing this draft.
 
+#### Broker candidates checked September 26 — inquiry options only
+
+These are candidates based on their published services, not approved brokers,
+coverage recommendations, or evidence that Tuveloz qualifies. No price has been
+quoted. Reuse the request above rather than starting a second application.
+
+| Candidate | Reason to ask | Published contact route | Still needs confirmation |
+| --- | --- | --- | --- |
+| [Founder Shield](https://foundershield.com/industry/on-demand/) | Advertises insurance for on-demand and shared-economy businesses. Its [startup page](https://foundershield.com/startup-insurance/) also describes early-stage support. | The on-demand page lists `info@foundershield.com` and 646-854-1058. | Acceptance of a prelaunch Maryland vehicle-service marketplace without venture funding; exact agency and producer license; minimum premium and broker fees; mobile-service and independent-provider exclusions. |
+| [Marsh Sharing Economy](https://www.marsh.com/en/services/sharing-economy.html) | Explicitly discusses liability for companies facilitating peer-to-peer transactions and the participants. Its [US page](https://www.marsh.com/en/locations/united-states.html) includes this practice. | Use the official site's Contact us route and request the US Sharing Economy practice. The reviewed contact link redirected to a regional selector; no named US adviser was verified. | Willingness to serve Tuveloz at its current size, relevant Maryland license, minimum premium and advisory fees, and the same service-specific exclusions. |
+
+Founder Shield has a direct published inquiry address, making an initial fit
+question practical; that is a contact-route observation, not a claim that its
+coverage is better or cheaper. Before sharing private application documents or
+appointing either broker, verify the exact agency and assigned producer in the
+[Maryland regulator's search](https://insurance.maryland.gov/consumer/pages/companysearchinstructions.aspx).
+Neither license was verified in this research. The regulator notes that its
+records update weekly and that it does not rank insurers.
+
+The first question should be whether they can assess this exact marketplace
+and whether an initial inquiry or quote carries a fee. A response must separate
+platform protection from each provider's insurance and explain exclusions for
+the actual services. Do not choose generic repair-shop or personal-auto
+coverage merely because the marketplace involves cars. Obtain written answers
+and comparable costs before selecting any policy. Nothing was sent, scheduled,
+purchased, or recorded as an approved launch gate by this research.
+
 ### Payment processor
 
 **`stripe_connect_business_model`** — *payments, required*
@@ -355,7 +383,7 @@ should contain only record cards and sanitized evidence references.
 | Security/privacy reviewer and identity vendor | Scanner and Identity canaries, storage/access/deletion controls, privacy and incident plans | Verify the actual results, matching rules, retention/deletion, access boundaries and recovery exercises; state scope and limitations. |
 | Screening/compliance reviewer | Existing no-criminal-background-check position and public wording | Confirm the claims match checks actually performed and document applicable source requirements. |
 
-The County's [registration guidance](https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html)
+The County's [registration guidance](https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing)
 specifically includes mobile repair businesses. It was retrieved in this review;
 use it as a source, then verify each actual provider's registration. Maryland's
 [repair invoice statute](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gcl&section=14-1003)

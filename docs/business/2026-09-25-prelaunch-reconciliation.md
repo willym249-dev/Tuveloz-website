@@ -13,19 +13,30 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-Prepared after the release below: automatic **owner** incident alerts, with
-quarantined test previews and scheduled recovery. Local build, all 733 tests,
-typecheck, lint, and Chromium/WebKit incident checks passed. This preparation
-is not a production-release claim. The incident route remains test-only;
-participant/insurer messages, actual responder coverage, and launch approval
-remain separate. See the incident runbook for behavior and evidence.
-
 - Last confirmed release at this record update:
-  `39431aa1e1a599de9dad9157ee640fd0a9066700` (PR #242), built September 26 at
-  19:14:18 UTC. Its release workflow passed and public health at 19:16:20 UTC
+  `2bdab8b940748f137b495c7c131f9044bf57b3b8` (PR #243), built September 26 at
+  22:40:23 UTC. All jobs in release workflow `36276226206` passed. Public
+  verification at 22:42:41 UTC
   confirmed the exact commit, ready application/database/schema, and closed
-  customer-launch gates. Consult the current pull-request/release result for
+  customer-launch gates. English/Spanish signup pages returned 200; signed-out
+  job operations returned 401. Consult the current pull-request/release result for
   subsequent changes; a source update alone does not establish deployment.
+- PR #243 adds automatic **owner** incident alerts, quarantined test previews,
+  and scheduled recovery. All 733 local tests, production build, typecheck,
+  lint, twelve Chromium/WebKit incident scenarios, and required release gates
+  passed. The incident route remains test-only. No real incident alert was
+  sent, so production incident-triggered inbox delivery remains unproven.
+  The owner reports availability "anytime" to check the business inbox; a
+  fallback contact is still unspecified, and no guaranteed response deadline
+  was promised. Participant/insurer notices and launch approval remain separate.
+- September 26 production follow-up found no incident reports or incident
+  alerts, no pending/failed email rows, and seven existing service-accepted
+  emails. The 22:45:27 UTC scheduled invocation succeeded after PR #243.
+  The existing September 4 local-date automatic website support message was
+  re-read in the business Inbox with SPF/DKIM/DMARC pass. This preserves
+  completed support-delivery proof without a new send; it does not establish
+  current incident-triggered inbox delivery. No production data or settings
+  changed. Detailed results and limits are in the incident runbook.
 - PR #242 requires an email-service receipt before the outbox records a send
   as accepted. Six malformed-success response cases now remain retryable with
   the same key; later acceptance stops repeat sends. All 726 tests, build,
@@ -34,14 +45,28 @@ remain separate. See the incident runbook for behavior and evidence.
   September 26 at 21:49–21:50 UTC: the English/Spanish sample reached the
   owner's test Inbox, passed SPF/DKIM/DMARC, and its reply was opened in the
   business Inbox. Private receipt evidence is retained outside the repository.
-  This does not implement automatic incident alerts or establish staffing.
+  That manual test does not prove automatic incident delivery or staffing.
   The existing launch briefing contains an unsent cost-conscious broker
   inquiry. No coverage or launch approval was recorded.
 - Customer accounts and provider applications are open. Customer requests,
   quotes, bookings, and payments remain closed.
-- The business Gmail inbox loads. Activation and payment receipts are present.
-  Exact Google Admin subscription details still require a fresh account
-  verification; an old suspension warning is not current proof of a problem.
+- September 26 local review of all eight approved authentication-report
+  attachments is complete: fifteen message observations, three aligned passes,
+  nine historical Google-related failures, and three recent unsigned failures.
+  The newer failures are possible spoofing, not confirmed fraud or compromise.
+  Files and hashes remain private. Sender completeness, new-report monitoring,
+  and any DMARC enforcement change remain pending; no DNS was changed. See the
+  [email-authentication runbook](../operations/email-authentication.md).
+- The business Gmail inbox loads. September 26 Google Admin inspection confirmed
+  Business Plus Active, Flexible Plan, one license, a displayed $19.80 monthly
+  estimate and $26.40/user/month after the November 5 discount ends. Billing
+  inspection is complete; November 1 is the cost-review checkpoint. No plan changed.
+- The owner-approved hosted customer upload passed on isolated staging at
+  `7348f7d`: one normal email code/sign-in, one actual image/note submission,
+  private-image read and refresh persistence, with no changes to earlier holds,
+  provider approval, payments or provider messages. Temporary credentials were
+  revoked/removed, the customer signed out, and no-send defaults restored.
+  See [`../STAGING.md`](../STAGING.md); do not repeat it as an unfinished upload.
 - The owner-operated ClamAV task is scheduled and its September 26 09:29 UTC
   run completed without errors after a successful signature refresh. The earlier
   "missing complete file scan" statement was incorrect: September 6 manual and
@@ -72,7 +97,7 @@ remain separate. See the incident runbook for behavior and evidence.
   regression failed before the fix, then all 725 tests and twelve incident browser
   scenarios passed. Production release `36261358204` and exact live health are
   verified. The incident runbook has a scoped official-source check and unsent
-  bilingual response drafts. Insurer review, hosted participant upload, actual
+  bilingual response drafts. Insurer review, actual
   notification delivery, and launch approvals remain separate.
 
 - PR #240 corrects misleading account welcome notices and their workspace
@@ -148,7 +173,7 @@ Actual owner UI/API resolution and later hold release passed against synthetic
 staging D1 records; the original resolution and other incident's hold were
 preserved, with verified owner audit and no payment or notification records.
 The reports were seeded fixtures. The later link/read check is recorded below;
-hosted participant upload, insurer/notification handling, an actual payout, and complete process review remain outside these
+The later hosted participant upload is complete as recorded above. Insurer/notification handling, an actual payout, and complete process review remain outside these
 results. All eighteen live review controls still showed Pending. See the
 [incident plan](../operations/vehicle-incident-claims-and-stop-work-plan.md)
 for exact scope; its launch review remains pending.
@@ -161,8 +186,9 @@ with synthetic bindings, including rollback and wrong-account rejection. The
 existing private staging deployment `36252778621` also passed actual owner
 linking and opening of a seeded synthetic image from R2. Independent D1 checks
 confirmed preserved references/resolution/holds and one new owner audit, with
-no payment, notification, or provider approval. The hosted participant upload,
-insurer/source review, and launch approval remain separate. PRs #238 and #239
+no payment, notification, or provider approval. The later hosted participant
+upload is complete as recorded above; insurer/source review and launch approval
+remain separate. PRs #238 and #239
 are published together as `36e9376`; production run `36254642943` passed and
 public health at 16:28:35 UTC confirmed that exact release with all health checks
 ready and customer requests/payments closed. A staging screenshot also exposed

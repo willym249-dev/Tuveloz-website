@@ -14,9 +14,23 @@ Before acceptance, obtain OCP confirmation of current standing and exact service
 
 Official sources:
 
-- https://www.montgomerycountymd.gov/OCP/bear/mvrt-repairs.html
+- https://www.montgomerycountymd.gov/office-consumer-protection/business-education-registration-unit-bear/motor-vehicle-repair-maintenance-towing
 - https://data.montgomerycountymd.gov/Consumer-Housing/Motor-Vehicle-Repair-and-Towing/dngn-wp3e
-- https://www.montgomerycountymd.gov/OCP/licensing/mvr_tow_main.html
+
+September 26 source check: the old `/OCP/licensing/mvr_tow_main.html` URL
+redirects to OCP's general homepage, which no longer contains the registration
+instructions. The current link above returned the specific registration page.
+Updated guidance uses that page; exact legacy references remain readable in
+saved legal reviews without changing their contents or accepting a generic
+county homepage as review evidence.
+
+The county guidance covers repair, maintenance and towing businesses, including
+mobile repair. It distinguishes the repair invoice requirement, towing's
+liability certificate, and optional ASE-discount documentation. Tuveloz's own
+insurance requirements remain separate. This source check does not resolve the
+service-specific scope of detailing, observation, or photography; keep those
+existing activation restrictions pending the required confirmation. No provider,
+document or launch gate was approved by this review.
 
 ## Insurance confirmation
 

@@ -71,6 +71,11 @@ const config = {
     OWNER_EMAIL: ownerEmail,
     OWNER_ACCESS_AUD: ownerAccessAudience,
     RESEND_FROM_EMAIL: "",
+    // Temporary owner-only authentication rehearsal; off after each deploy.
+    // The separately scoped key must never use RESEND_API_KEY.
+    STAGING_AUTH_EMAIL_ENABLED: "false",
+    STAGING_AUTH_EMAIL_EXPIRES_AT: "",
+    STAGING_AUTH_FROM_EMAIL: "",
     SITE_URL: "https://staging.tuveloz.com",
     STRIPE_ALLOW_LIVE_MODE: "false",
     STRIPE_IDENTITY_ALLOW_LIVE_MODE: "false",

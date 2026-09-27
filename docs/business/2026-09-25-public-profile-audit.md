@@ -89,6 +89,46 @@ The sitemap showed **Success**, 51 discovered pages, and a September 21 last-rea
 date. These results do not prove a refreshed snippet or ranking. Search Console
 requests for Tuveloz cannot refresh Facebook's own URL.
 
+## September 26 search follow-up
+
+Read the existing domain property without submitting another indexing or
+validation request. The September 20 aggregate report shows 7 indexed URLs and
+49 exclusions: 44 discovered but not indexed, one crawled but not indexed,
+one historical 404, and three redirects. These counts predate some individual
+URL checks and do not mean 49 broken website pages.
+
+The three redirect examples are the HTTP and www homepage variants; each
+currently returns a single 308 to `https://tuveloz.com/`. There are no `/q/`
+examples in this report, and the current public robots file disallows `/q/`.
+The overdue QR-redirect check is complete. Preserve these canonical redirects;
+their exclusion is expected, as explained in
+[Google's indexing report guidance](https://support.google.com/webmasters/answer/7440203).
+
+Individual URL inspection confirms the homepage and both `/join` and
+`/es/join` are indexed, fetch successfully, permit crawling/indexing, and use
+the same canonical URL selected by Google. The displayed crawl dates are
+September 26 for the homepage and September 25 for both signup languages.
+This confirms the previously recorded indexing state; it does not prove new
+rankings or refreshed search-result wording. The sitemap still reports Success,
+51 discovered pages, and a September 21 last read.
+
+A read-only public check at 23:49:14 UTC fetched all 51 sitemap URLs: every
+response was 200, had a title and one matching canonical, and contained no
+`noindex` in the checked response headers or metadata. No duplicate sitemap
+URLs or unexpected redirects were found. Both signup languages publish reciprocal
+language links. These are HTTP/metadata checks, not another form-submission test.
+
+The historical 404 is `/founding-providers`, last crawled August 8. Its validation
+still says Started, dated September 5. It currently returns 200, and Google's
+September 26 live test reports **URL is available to Google / Page can be indexed**.
+Its stored index status remains 404/not indexed pending Google's recrawl.
+Do not restart an in-progress validation or claim the live test proves indexing.
+Retain the October 2 follow-up for that result and the remaining search coverage.
+
+Evidence outside the repository: `outputs/search-console-review-20260926.json`
+and `outputs/seo-public-review-20260926.json`. No site, Maps, email, or account
+setting changed; no paid service was added.
+
 ## Owner action boundary
 
 The completed actions above were specifically approved in the owner conversation.
