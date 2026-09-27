@@ -189,14 +189,23 @@ and the entered-window notice; `lib/compliance-reminder-delivery.ts` processes
 them and `lib/email-notifications.ts` handles the durable outbox. September 27
 runtime tests found that the persisted expiration-event prefix was not
 recognized by the email policy: reminders stayed pending without reaching the
-transport. The local repair recognizes only that event family and rechecks
+transport. PR #253's published repair recognizes only that event family and rechecks
 the real provider, recipient, accepted evidence, exact service, original
 expiration, due time and cancellation state before every send/retry. Test
 providers and staging cannot use this reminder channel. All 800 tests/build,
-TypeScript and lint passed (one existing warning); the repair is not yet
-published. No real email was sent. Real-channel/inbox evidence and the
-separate automatic-expiration-blocking review still need completion before
-this gate can be approved. The owner evidence pre-screen in
+TypeScript and lint passed (one existing warning). Production workflow
+`36329213779` passed; independent health at September 27 15:37:58 UTC confirmed
+release `ed6c593`, ready application/database/schema and preserved launch locks.
+Pre-release D1 counts found zero reminders and zero expiration-family outbox
+rows. No real email was sent as a test. Real-channel/inbox evidence and the
+separate process review still need completion before this gate can be approved.
+September 27 isolated migrated-SQL tests confirm the expiration cutoff and
+rechecks at all seven work stages, plus replacement/scan/scope protections.
+They also reproduced ignored document start dates and recorded pathway bounds;
+the local repair passes all 809 tests/build with rules version `0.14.2`.
+Publication is tracked in `OPEN-ITEMS.md`; this simulation does not establish
+real-channel delivery or grant any provider or launch approval.
+The owner evidence pre-screen in
 `lib/evidence-review-assistant.ts` can never auto-accept; its only automatic
 action is a reversible bilingual correction request for a provably expired
 document.
