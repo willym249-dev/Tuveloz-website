@@ -14,13 +14,26 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 ## Verified in production
 
 - Last confirmed release at this record update:
-  `2bdab8b940748f137b495c7c131f9044bf57b3b8` (PR #243), built September 26 at
-  22:40:23 UTC. All jobs in release workflow `36276226206` passed. Public
-  verification at 22:42:41 UTC
-  confirmed the exact commit, ready application/database/schema, and closed
-  customer-launch gates. English/Spanish signup pages returned 200; signed-out
-  job operations returned 401. Consult the current pull-request/release result for
-  subsequent changes; a source update alone does not establish deployment.
+  `40d92341b05dc1cbf19ae1835a9a8bdc26d4a663` (PR #244), built September 27 at
+  01:56:08 UTC (September 26 in Maryland). All jobs in release workflow
+  `36286456127` passed. Public verification at 02:01:41 UTC confirmed the exact
+  commit, ready application/database/schema, accounts/applications open, and
+  customer requests/payments closed. Homepage, customer account creation and
+  English/Spanish provider signup pages returned 200. Fresh mobile clicks of
+  both bottom homepage signup buttons reached the correct forms without
+  horizontal overflow; provider language switching passed. The county guidance
+  links and saved-reference compatibility correction are published. This does
+  not approve provider credentials or customer launch.
+- One website follow-up remains from that mobile check: choosing customer signup
+  from the Spanish homepage reaches the working English-only `/account` screen
+  without a language control. Account creation/sign-in/code/reset translation
+  needs a focused fix and validation. The provider form is translated; do not
+  describe this as a broken CTA or claim complete customer-account translation.
+  The direct `/es/account` probe is an unsupported, unlinked path, not evidence
+  of a bad site link. No account or code was submitted during these checks.
+  A subsequent source fix is prepared with 745 tests/build and mobile account
+  scenarios passing; it is not yet published. Follow the latest LOG/PR result
+  before treating this live gap as resolved.
 - PR #243 adds automatic **owner** incident alerts, quarantined test previews,
   and scheduled recovery. All 733 local tests, production build, typecheck,
   lint, twelve Chromium/WebKit incident scenarios, and required release gates

@@ -42,7 +42,7 @@ test("only reviewed paths get a Spanish URL", () => {
   // An /es/ URL for a page without reviewed Spanish promises a translation that
   // does not exist — worse than having no Spanish URL at all.
   assert.match(PAGE, /englishPathFor/);
-  assert.match(ROUTES, /return pathHasSpanish\(english\) \? english : null;/);
+  assert.match(ROUTES, /return SPANISH_READY_PATHS\.includes\(english\) \? english : null;/);
 });
 
 test("an unreviewed /es path is a 404, never an untranslated page", () => {

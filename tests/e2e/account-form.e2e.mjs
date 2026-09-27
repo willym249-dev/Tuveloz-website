@@ -29,7 +29,7 @@ const server = createServer((request, response) => {
   if (assets.has(path)) {
     response.writeHead(200, { "content-type": path.endsWith(".css") ? "text/css" : path.endsWith(".png") ? "image/png" : "text/javascript" });
     response.end(assets.get(path));
-  } else if (request.method === "GET" && path === "/account") {
+  } else if (request.method === "GET" && ["/account", "/es"].includes(path)) {
     response.writeHead(200, { "content-type": "text/html" });
     response.end('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/' + css + '"></head><body><div id="root"></div><script src="/' + js + '"></script></body></html>');
   } else {
@@ -62,6 +62,7 @@ try {
       for (const role of ["customer", "provider"]) {
         const challenge = json(200, { ok: true, challengeRequired: true, message: "Enter the 6-digit code sent to your email to finish signing in." });
         async function run(name, responses, action, options = {}) {
+          if (process.env.ACCOUNT_CASE && !name.includes(process.env.ACCOUNT_CASE)) return;
           const context = await browser.newContext({ viewport: { width: browserType === webkit ? 320 : 390, height: 844 } });
           const page = await context.newPage();
           page.setDefaultTimeout(2500);
@@ -90,6 +91,9 @@ try {
           });
           const result = { browser: browserType.name(), role, name };
           try {
+            if (options.language) await page.addInitScript(language => {
+              localStorage.setItem("tuveloz-language", language);
+            }, options.language);
             if (options.passkey) await page.addInitScript(() => {
               Object.defineProperty(window, "PublicKeyCredential", { configurable: true, value: class {
                 static async isUserVerifyingPlatformAuthenticatorAvailable() { return true; }
@@ -97,8 +101,9 @@ try {
             });
             if (options.clock) await page.clock.install();
             const sessionStarted = options.sessionGate ? page.waitForRequest(request => new URL(request.url()).pathname === "/api/account") : null;
-            await page.goto(origin + "/account?role=" + role + "&mode=" + (options.mode ?? "signin"));
-            await page.locator('.account-role-tabs button[aria-pressed="true"]').filter({ hasText: role === "provider" ? "Provider" : "Customer" }).waitFor();
+            await page.goto(origin + (options.spanishEntry ? "/es" : "/account") + "?role=" + role + "&mode=" + (options.mode ?? "signin"));
+            if (options.spanishEntry) await page.getByRole("link", { name: "Crear una cuenta gratis", exact: true }).click();
+            await page.locator('.account-role-tabs button[aria-pressed="true"]').filter({ hasText: options.language === "es" || options.spanishEntry ? (role === "provider" ? "Proveedor" : "Cliente") : (role === "provider" ? "Provider" : "Customer") }).waitFor();
             if (sessionStarted) await sessionStarted;
             await action(page, requests);
             assert.deepEqual(errors, [], "no account-page render crashes");
@@ -119,6 +124,79 @@ try {
           }
           report.cases.push(result);
           console.log(result.status.toUpperCase() + " " + result.browser + " " + role + " " + name + (result.error ? ": " + result.error : ""));
+        }
+
+        await run("language-entry", [], async page => {
+          await page.getByRole("heading", { name: "Cree una cuenta.", exact: true }).waitFor();
+          await page.reload();
+          await page.getByRole("heading", { name: "Cree una cuenta.", exact: true }).waitFor();
+          assert.equal(new URL(page.url()).pathname, "/account", "account retains its private canonical route");
+          assert.equal(new URL(page.url()).searchParams.get("role"), role);
+          assert.doesNotMatch(await page.locator('input[name="policy-consent"]').locator('..').innerText(), /\band\b/, "the entire consent label must be Spanish");
+          if (outputDir) await page.screenshot({ path: resolve(outputDir, browserType.name() + "-" + role + "-spanish-create.png"), fullPage: true });
+        }, { spanishEntry: true, mode: "create" });
+
+        await run("language-validation", [], async (page, requests) => {
+          await page.getByLabel("Correo electrónico", { exact: true }).fill(email);
+          await form(page).locator('input[name="password"]').fill("Short!");
+          await form(page).locator('input[name="confirm-password"]').fill("Short!");
+          await page.locator('input[name="policy-consent"]').check();
+          await pressSubmit(page);
+          await page.getByRole("alert").filter({ hasText: "Use al menos 10 caracteres." }).waitFor();
+          assert.equal(requests.length, 0, "validation must still stop invalid submissions");
+          await form(page).locator('input[name="password"]').fill(password);
+          await pressSubmit(page);
+          await page.getByRole("alert").filter({ hasText: "Las contraseñas no coinciden." }).waitFor();
+          assert.equal(requests.length, 0);
+        }, { mode: "create", language: "es" });
+
+        for (const mode of ["create", "reset", "signin", "code"]) {
+          await run("language-" + mode, [
+            json(429, { error: "Too many codes were requested for this email. Please wait 15 minutes and try again." }),
+            json(200, { ok: true, challengeRequired: true, message: "If that email is eligible, a verification code is on its way." }),
+            json(400, { error: "That code is invalid or expired." }),
+          ], async (page, requests) => {
+            const esToggle = page.getByRole("button", { name: "Change the whole page to English", exact: true });
+            await page.getByLabel("Correo electrónico", { exact: true }).fill(email);
+            if (mode !== "code") await form(page).locator('input[name="password"]').fill(password);
+            if (["create", "reset"].includes(mode)) {
+              await form(page).locator('input[name="confirm-password"]').fill(password);
+              if (mode === "create") {
+                const requiredConsent = page.locator('input[name="policy-consent"]');
+                assert.equal(await requiredConsent.isChecked(), false);
+                await requiredConsent.check();
+                if (role === "customer") assert.equal(await page.locator('input[name="launch-notification-consent"]').isChecked(), false);
+              }
+            }
+            await esToggle.click();
+            await page.getByLabel("Email address", { exact: true }).waitFor();
+            assert.equal(await page.getByLabel("Email address", { exact: true }).inputValue(), email);
+            if (mode !== "code") assert.equal(await form(page).locator('input[name="password"]').inputValue(), password);
+            await page.getByRole("button", { name: "Cambiar toda la página a español", exact: true }).click();
+            await page.getByLabel("Correo electrónico", { exact: true }).waitFor();
+            if (mode === "create") assert.equal(await page.locator('input[name="policy-consent"]').isChecked(), true);
+            await pressSubmit(page);
+            await page.getByRole("alert").filter({ hasText: "Se solicitaron demasiados códigos" }).waitFor();
+            assert.equal(await page.getByLabel("Correo electrónico", { exact: true }).inputValue(), email);
+            await pressSubmit(page);
+            await codeInput(page).waitFor();
+            await page.getByRole("status").filter({ hasText: "Si ese correo cumple los requisitos" }).waitFor();
+            await page.getByText(/El código puede tardar un minuto/).waitFor();
+            await codeInput(page).fill("123456");
+            await pressSubmit(page);
+            await page.getByRole("alert").filter({ hasText: "Ese código no es válido o ya venció." }).waitFor();
+            assert.equal(await codeInput(page).inputValue(), "123456");
+            assert.equal(requests[0].body.email, email);
+            assert.equal(requests[0].body.role, role);
+            assert.equal(requests[2].body.code, "123456");
+            assert.equal(requests[2].body.role, role);
+            if (["create", "reset"].includes(mode)) {
+              assert.equal(requests[2].body.password, password);
+              assert.equal(requests[2].body.purpose, mode);
+              assert.equal(requests[2].body.termsAccepted, mode === "create");
+              assert.equal(requests[2].body.launchNotificationConsent, false);
+            }
+          }, { mode, language: "es" });
         }
 
         await run("passkey-options-retry", [json(503, { error: "Passkey sign-in is unavailable." }), json(200, { options: {} })], async (page, requests) => {

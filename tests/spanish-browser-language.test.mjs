@@ -11,19 +11,38 @@ const routes = {};
 new Function("exports", compile(read("lib/spanish-routes.ts")))(routes);
 const source = read("app/components/site-language.tsx");
 const helpers = source.slice(source.indexOf("let inMemoryLanguage:"), source.indexOf("const SiteLanguageContext"));
-function languageClient(pathname, saved = "en", blocked = false) {
+function languageClient(pathname, saved = "en", blocked = false, search = "?source=test") {
   const assigned = [];
   const events = [];
   const window = {
-    location: { pathname, search: "?source=test", hash: "#provider-apply", assign(value) { assigned.push(value); } },
+    location: { pathname, search, hash: "#provider-apply", assign(value) { assigned.push(value); } },
+    history: { state: { retained: true }, replaceState(state, _unused, href) {
+      assert.deepEqual(state, { retained: true });
+      const url = new URL(href, "https://tuveloz.com");
+      window.location.search = url.search;
+      window.location.hash = url.hash;
+    } },
     localStorage: { getItem() { if (blocked) throw Error("blocked"); return saved; }, setItem(_key, value) { if (blocked) throw Error("blocked"); saved = value; } },
     dispatchEvent(event) { events.push(event.type); },
   };
   const methods = new Function("exports", "window", "englishPathFor", "pathHasSpanish", "LANGUAGE_KEY", "LANGUAGE_EVENT",
     `${compile(helpers)}; return {getLanguageSnapshot, setStoredLanguage};`,
   )({}, window, routes.englishPathFor, routes.pathHasSpanish, "test-language", "test-language-change");
-  return { ...methods, assigned, events };
+  return { ...methods, assigned, events, location: window.location };
 }
+
+test("account language hints work before storage and stay consistent after switching", () => {
+  const client = languageClient("/account", "en", true, "?role=customer&mode=create&lang=es");
+  assert.equal(client.getLanguageSnapshot(), "es");
+  client.setStoredLanguage("en");
+  assert.equal(client.getLanguageSnapshot(), "en");
+  assert.equal(client.location.search, "?role=customer&mode=create&lang=en");
+  assert.equal(client.location.hash, "#provider-apply");
+  assert.deepEqual(client.assigned, []);
+  assert.equal(languageClient("/account", "es", false, "?lang=en").getLanguageSnapshot(), "en");
+  assert.equal(languageClient("/account", "es", false, "?lang=invalid").getLanguageSnapshot(), "es");
+  assert.equal(languageClient("/customer-agreement", "es", false, "?lang=es").getLanguageSnapshot(), "en");
+});
 
 test("explicit Spanish URLs stay Spanish with an English saved preference", () => {
   for (const path of ["/es", "/es/", "/es/join", "/es/post-job"]) {
@@ -32,9 +51,19 @@ test("explicit Spanish URLs stay Spanish with an English saved preference", () =
 });
 
 test("legal and unknown pages stay English regardless of saved preference", () => {
-  for (const path of ["/customer-agreement", "/es/customer-agreement", "/account", "/unknown"]) {
+  for (const path of ["/customer-agreement", "/es/customer-agreement", "/es/account", "/unknown"]) {
     assert.equal(languageClient(path, "es").getLanguageSnapshot(), "en", path);
   }
+});
+
+test("account controls retain Spanish and can switch even when storage is blocked", () => {
+  assert.equal(languageClient("/account", "es").getLanguageSnapshot(), "es");
+  const client = languageClient("/account", "en", true);
+  client.setStoredLanguage("es");
+  assert.equal(client.getLanguageSnapshot(), "es");
+  client.setStoredLanguage("en");
+  assert.equal(client.getLanguageSnapshot(), "en");
+  assert.deepEqual(client.assigned, [], "changing account language must not navigate or discard form state");
 });
 
 test("blocked browser storage does not break language selection", () => {
