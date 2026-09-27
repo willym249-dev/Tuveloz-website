@@ -13,17 +13,11 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Verified in production
 
-The September 27 refund/dispute concurrency repair is locally verified (776
-tests/build, TypeScript and lint) and awaiting the required release workflows.
-It preserves current dispute/launch holds and retries conflicting refund writes;
-it has not changed production yet. See the newest LOG entry. The completed
-checkout repair below remains the last verified live version.
-
 - Last confirmed release at this record update:
-  `27c1fe73f86443dcfa9dcddac950eeea442e0ac4` (PR #247), built September 27 at
-  06:20:45 UTC. Every job in production workflow `36299174143` passed, including
-  766 tests/build, full Spanish navigation and end-to-end provider signup.
-  Public health at 06:22:43 UTC confirmed the exact commit, ready
+  `59b9e91f7f56b051888f6aab74732a4b5ec809fc` (PR #248), built September 27 at
+  07:29:50 UTC. Every job in production workflow `36302540175` passed, including
+  776 tests/build, full Spanish navigation and end-to-end provider signup.
+  Public health at 07:31:55 UTC confirmed the exact commit, ready
   application/database/schema, accounts/applications open, and customer
   requests/payments closed. The earlier county guidance and saved-reference
   fixes remain published. This does not approve provider credentials or launch.
@@ -36,6 +30,11 @@ checkout repair below remains the last verified live version.
   states. Ten added actual-route/helper and migrated-SQL tests demonstrate the
   failures before the repairs and success afterward. No real Stripe operation
   was performed; release proof does not satisfy payment/insurance launch review.
+  PR #248 adds ten behavior cases for overlapping refund/dispute reconciliation:
+  current dispute/launch holds survive, equally timed adverse results remain
+  recorded, and conflicting refund writes reread Stripe before saving. A genuine
+  failed-refund correction can still update the amount. Retry exhaustion stays
+  retryable. No real transaction was performed; do not repeat either repair.
 - The Spanish customer account gap is closed. Live mobile clicks of the bottom
   Spanish homepage buttons reached the customer creation and provider forms.
   Account creation, sign-in and reset controls are translated; reload retains
@@ -117,6 +116,13 @@ checkout repair below remains the last verified live version.
   does not make an owner contact invalid. See the domain record for scope.
 
 ## Published code and its activation limits
+
+The September 27 privacy-isolation/recovery check uses real signed sessions and
+migrated synthetic account records. Isolation passed; API outage handling,
+bounded browser waits, explicit refresh and provider-view preservation are now
+repaired locally. All 789 tests/build and eighteen mobile browser cases pass;
+release verification is pending. This does not approve the privacy/retention
+gate or supply reviewed Spanish for the English-only private privacy center.
 
 - PR #241 makes emergency-contact and safety-stop incident reports stop the job
   timer regardless of a low/moderate severity selection, preserving the payment

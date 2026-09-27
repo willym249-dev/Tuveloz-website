@@ -60,6 +60,11 @@ const REQUEST_TYPES = new Set<PrivacyRequestType>([
   "appeal",
 ]);
 
+function privacyJson(body: unknown, init: ResponseInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("cache-control", "private, no-store");
+  return Response.json(body, { ...init, headers });
+}
 function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
 }
@@ -162,42 +167,58 @@ async function responseData(
 export async function GET(request: Request) {
   const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
   if (requestedScope === null) {
-    return Response.json(
+    return privacyJson(
       { error: "Choose either customer or provider privacy data." },
       { status: 400, headers: { "cache-control": "private, no-store" } },
     );
   }
-  const account = await signedInAccount(request, requestedScope);
-  if (!account) {
-    return Response.json(
-      { error: "Sign in to your Tuveloz account to use the privacy center." },
-      { status: 401, headers: { "cache-control": "private, no-store" } },
+  try {
+    const account = await signedInAccount(request, requestedScope);
+    if (!account) {
+      return privacyJson(
+        { error: "Sign in to your Tuveloz account to use the privacy center." },
+        { status: 401, headers: { "cache-control": "private, no-store" } },
+      );
+    }
+    return privacyJson(
+      await responseData(account.email, account.role, account.availablePrivacyScopes),
+      { headers: { "cache-control": "private, no-store" } },
+    );
+  } catch {
+    console.error("Unable to load Tuveloz privacy controls");
+    return privacyJson(
+      { error: "We couldn't load your privacy center. Please try again." },
+      { status: 503, headers: { "retry-after": "5" } },
     );
   }
-  return Response.json(
-    await responseData(account.email, account.role, account.availablePrivacyScopes),
-    { headers: { "cache-control": "private, no-store" } },
-  );
 }
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
-    return Response.json({ error: "This privacy action must come from Tuveloz." }, { status: 403 });
+    return privacyJson({ error: "This privacy action must come from Tuveloz." }, { status: 403 });
   }
   const requestedScope = parsePrivacyScope(new URL(request.url).searchParams.getAll("scope"));
   if (requestedScope === null) {
-    return Response.json(
+    return privacyJson(
       { error: "Choose either customer or provider privacy data." },
       { status: 400 },
     );
   }
-  const account = await signedInAccount(request, requestedScope);
-  if (!account) {
-    return Response.json({ error: "Sign in to manage privacy choices." }, { status: 401 });
-  }
-
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const account = await signedInAccount(request, requestedScope);
+    if (!account) {
+      return privacyJson({ error: "Sign in to manage privacy choices." }, { status: 401 });
+    }
+    let body: Record<string, unknown>;
+    try {
+      const value: unknown = await request.json();
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return privacyJson({ error: "Please send a valid privacy request." }, { status: 400 });
+      }
+      body = value as Record<string, unknown>;
+    } catch {
+      return privacyJson({ error: "Please send a valid privacy request." }, { status: 400 });
+    }
     const action = text(body.action, 40);
     await ensurePreferences(account.email, account.role);
 
@@ -254,7 +275,7 @@ export async function POST(request: Request) {
         account.email,
         account.role,
       ).run();
-      return Response.json({
+      return privacyJson({
         ok: true,
         ...(await responseData(
           account.email,
@@ -266,7 +287,7 @@ export async function POST(request: Request) {
 
     if (action === "withdraw-request") {
       const id = text(body.id, 100);
-      if (!id) throw new Error("Choose a privacy request to withdraw.");
+      if (!id) return privacyJson({ error: "Choose a privacy request to withdraw." }, { status: 400 });
       const result = await env.DB.prepare(
         `UPDATE privacy_requests
             SET status = 'withdrawn',
@@ -279,9 +300,9 @@ export async function POST(request: Request) {
             AND status IN ('submitted','in-review')`,
       ).bind(id, account.email, account.role).run();
       if ((result.meta?.changes ?? 0) === 0) {
-        throw new Error("That request is no longer available to withdraw.");
+        return privacyJson({ error: "That request is no longer available to withdraw." }, { status: 400 });
       }
-      return Response.json({
+      return privacyJson({
         ok: true,
         ...(await responseData(
           account.email,
@@ -292,31 +313,31 @@ export async function POST(request: Request) {
     }
 
     if (action !== "submit-request") {
-      return Response.json({ error: "Unknown privacy-center action." }, { status: 400 });
+      return privacyJson({ error: "Unknown privacy-center action." }, { status: 400 });
     }
 
     const requestType = text(body.requestType, 40) as PrivacyRequestType;
     const details = text(body.details, 2000);
     const relatedRequestId = text(body.relatedRequestId, 100);
     if (!REQUEST_TYPES.has(requestType)) {
-      return Response.json({ error: "Choose a listed privacy request." }, { status: 400 });
+      return privacyJson({ error: "Choose a listed privacy request." }, { status: 400 });
     }
     if ((requestType === "correction" || requestType === "appeal") && details.length < 10) {
-      return Response.json(
+      return privacyJson(
         { error: "Explain what should be corrected or why the earlier decision should be reviewed." },
         { status: 400 },
       );
     }
     if (requestType === "appeal") {
       if (!relatedRequestId) {
-        return Response.json({ error: "Choose the earlier privacy request being appealed." }, { status: 400 });
+        return privacyJson({ error: "Choose the earlier privacy request being appealed." }, { status: 400 });
       }
       const earlier = await env.DB.prepare(
         `SELECT id, status FROM privacy_requests
           WHERE id = ? AND lower(email) = lower(?) AND role = ? LIMIT 1`,
       ).bind(relatedRequestId, account.email, account.role).first<{ id: string; status: string }>();
       if (!earlier || !new Set(["denied", "completed"]).has(earlier.status)) {
-        return Response.json(
+        return privacyJson(
           { error: "An appeal must identify a completed or denied privacy request from this account." },
           { status: 409 },
         );
@@ -332,7 +353,7 @@ export async function POST(request: Request) {
         LIMIT 1`,
     ).bind(account.email, account.role, requestType).first<{ id: string }>();
     if (existing) {
-      return Response.json(
+      return privacyJson(
         { error: "This account already has an active request of that type." },
         { status: 409 },
       );
@@ -414,7 +435,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return Response.json({
+    return privacyJson({
       ok: true,
       requestId: id,
       ...(await responseData(
@@ -423,8 +444,13 @@ export async function POST(request: Request) {
         account.availablePrivacyScopes,
       )),
     }, { status: 201 });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to update privacy choices.";
-    return Response.json({ error: message }, { status: 400 });
+  } catch {
+    // A write can succeed before its confirmation read fails. Avoid claiming
+    // nothing was saved, exposing database details, or encouraging a duplicate.
+    console.error("Unable to confirm Tuveloz privacy update");
+    return privacyJson(
+      { error: "We couldn't confirm this update. Refresh your privacy center to check it before trying again." },
+      { status: 503, headers: { "retry-after": "5" } },
+    );
   }
 }

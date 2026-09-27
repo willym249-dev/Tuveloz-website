@@ -704,15 +704,14 @@ export async function GET(request: Request) {
       { status: 400, headers: { "cache-control": "private, no-store" } },
     );
   }
-  const account = await signedInAccount(request, requestedScope);
-  if (!account) {
-    return Response.json(
-      { error: "Sign in to export your Tuveloz account data." },
-      { status: 401, headers: { "cache-control": "private, no-store" } },
-    );
-  }
-
   try {
+    const account = await signedInAccount(request, requestedScope);
+    if (!account) {
+      return Response.json(
+        { error: "Sign in to export your Tuveloz account data." },
+        { status: 401, headers: { "cache-control": "private, no-store" } },
+      );
+    }
     const [common, roleData] = await Promise.all([
       commonExport(account.email, account.role),
       account.role === "customer"
@@ -742,11 +741,11 @@ export async function GET(request: Request) {
         "x-content-type-options": "nosniff",
       },
     });
-  } catch (error) {
-    console.error("Unable to generate Tuveloz privacy export", error);
+  } catch {
+    console.error("Unable to generate Tuveloz privacy export");
     return Response.json(
-      { error: "Tuveloz could not generate the account export." },
-      { status: 503, headers: { "cache-control": "private, no-store" } },
+      { error: "We couldn't prepare your download. Please try again." },
+      { status: 503, headers: { "cache-control": "private, no-store", "retry-after": "5" } },
     );
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { SiteLanguageButton } from "../components/site-language";
 import { BrandMark } from "../components/tuveloz-icons";
@@ -65,6 +65,28 @@ function readableDate(value: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
+async function privacyUpdate(send: (signal: AbortSignal) => Promise<Response>) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  let message = "We couldn't confirm this update. Refresh your privacy center to check it before trying again.";
+  try {
+    const response = await send(controller.signal);
+    const result = await response.json().catch(() => null) as (PrivacyCenterData & { error?: string }) | null;
+    if (!response.ok) {
+      if (typeof result?.error === "string") message = result.error;
+      throw new Error(message);
+    }
+    if (!result?.preferences || !result.immediateTools || !Array.isArray(result.requests)
+      || !Array.isArray(result.availablePrivacyScopes) || !Array.isArray(result.notices)
+      || !["customer", "provider"].includes(result.role)) throw new Error(message);
+    return result;
+  } catch {
+    throw new Error(message);
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export default function PrivacyCenterPage() {
   const [data, setData] = useState<PrivacyCenterData | null>(null);
   const [error, setError] = useState("");
@@ -76,26 +98,53 @@ export default function PrivacyCenterPage() {
   const [optionalReminderEmail, setOptionalReminderEmail] = useState(true);
   const [launchNotificationEmail, setLaunchNotificationEmail] = useState(false);
   const [launchConsent, setLaunchConsent] = useState({ at: "", version: "", source: "" });
+  const requestedScope = useRef<AccountRole | undefined>(undefined);
 
   async function load(scope?: AccountRole) {
+    requestedScope.current = scope;
     const query = scope ? `?scope=${scope}` : "";
-    const response = await fetch(`/api/privacy-center${query}`, { cache: "no-store" });
-    const result = await response.json() as PrivacyCenterData & { error?: string };
-    if (response.status === 401) {
-      window.location.replace("/account?role=customer&privacy=1");
-      return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(`/api/privacy-center${query}`, { cache: "no-store", signal: controller.signal });
+      if (response.status === 401) {
+        window.location.replace("/account?role=customer&privacy=1");
+        return;
+      }
+      const result = await response.json().catch(() => null) as PrivacyCenterData | null;
+      if (!response.ok || !result || !result.preferences || !result.immediateTools
+        || !Array.isArray(result.requests) || !Array.isArray(result.availablePrivacyScopes)
+        || !Array.isArray(result.notices) || !["customer", "provider"].includes(result.role)) {
+        throw new Error("Invalid privacy response");
+      }
+      setData(result);
+      setMarketingEmail(result.preferences.marketingEmail);
+      setProductUpdateEmail(result.preferences.productUpdateEmail);
+      setOptionalReminderEmail(result.preferences.optionalReminderEmail);
+      setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
+      setLaunchConsent({
+        at: result.preferences.launchNotificationConsentAt,
+        version: result.preferences.launchNotificationConsentVersion,
+        source: result.preferences.launchNotificationConsentSource,
+      });
+    } catch {
+      throw new Error("We couldn't load your privacy center. Please try again.");
+    } finally {
+      window.clearTimeout(timeout);
     }
-    if (!response.ok) throw new Error(result.error || "Unable to load the privacy center.");
-    setData(result);
-    setMarketingEmail(result.preferences.marketingEmail);
-    setProductUpdateEmail(result.preferences.productUpdateEmail);
-    setOptionalReminderEmail(result.preferences.optionalReminderEmail);
-    setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
-    setLaunchConsent({
-      at: result.preferences.launchNotificationConsentAt,
-      version: result.preferences.launchNotificationConsentVersion,
-      source: result.preferences.launchNotificationConsentSource,
-    });
+  }
+
+  async function refreshPrivacyCenter() {
+    setBusy("refresh");
+    setError("");
+    setNotice("");
+    try {
+      await load(requestedScope.current);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "We couldn't load your privacy center. Please try again.");
+    } finally {
+      setBusy("");
+    }
   }
 
   async function selectPrivacyScope(scope: AccountRole) {
@@ -115,7 +164,8 @@ export default function PrivacyCenterPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void load().catch((reason) => {
+      const scope = new URLSearchParams(window.location.search).get("scope");
+      void load(scope === "customer" || scope === "provider" ? scope : undefined).catch((reason) => {
         setError(reason instanceof Error ? reason.message : "Unable to load the privacy center.");
       });
     }, 0);
@@ -128,8 +178,9 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
+      const result = await privacyUpdate(signal => fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
+        signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "save-preferences",
@@ -138,9 +189,7 @@ export default function PrivacyCenterPage() {
           optionalReminderEmail,
           launchNotificationEmail,
         }),
-      });
-      const result = await response.json() as PrivacyCenterData & { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to save communication choices.");
+      }));
       setData(result);
       setMarketingEmail(result.preferences.marketingEmail);
       setProductUpdateEmail(result.preferences.productUpdateEmail);
@@ -167,8 +216,9 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
+      const result = await privacyUpdate(signal => fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
+        signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "submit-request",
@@ -176,19 +226,17 @@ export default function PrivacyCenterPage() {
           relatedRequestId: values.relatedRequestId,
           details: values.details,
         }),
-      });
-      const result = await response.json() as PrivacyCenterData & { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to submit the privacy request.");
+      }));
       setData(result);
       setMarketingEmail(result.preferences.marketingEmail);
       setProductUpdateEmail(result.preferences.productUpdateEmail);
       setOptionalReminderEmail(result.preferences.optionalReminderEmail);
-    setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
-    setLaunchConsent({
-      at: result.preferences.launchNotificationConsentAt,
-      version: result.preferences.launchNotificationConsentVersion,
-      source: result.preferences.launchNotificationConsentSource,
-    });
+      setLaunchNotificationEmail(result.preferences.launchNotificationEmail);
+      setLaunchConsent({
+        at: result.preferences.launchNotificationConsentAt,
+        version: result.preferences.launchNotificationConsentVersion,
+        source: result.preferences.launchNotificationConsentSource,
+      });
       form.reset();
       setRequestType("access");
       setNotice(
@@ -208,13 +256,12 @@ export default function PrivacyCenterPage() {
     setError("");
     setNotice("");
     try {
-      const response = await fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
+      const result = await privacyUpdate(signal => fetch(`/api/privacy-center?scope=${data?.role ?? "customer"}`, {
         method: "POST",
+        signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "withdraw-request", id }),
-      });
-      const result = await response.json() as PrivacyCenterData & { error?: string };
-      if (!response.ok) throw new Error(result.error || "Unable to withdraw the request.");
+      }));
       setData(result);
       setNotice("Privacy request withdrawn.");
     } catch (reason) {
@@ -251,7 +298,12 @@ export default function PrivacyCenterPage() {
           {data && <small>{data.role} account · {data.email}</small>}
         </div>
 
-        {error && <p className="form-error account-login-message" role="alert">{error}</p>}
+        {error && <div className="account-login-message">
+          <p className="form-error" role="alert">{error}</p>
+          <button className="contact-cta ghost" type="button" disabled={Boolean(busy)} onClick={() => void refreshPrivacyCenter()}>
+            Refresh privacy center
+          </button>
+        </div>}
         {notice && <p className="portal-success account-login-message" role="status">{notice}</p>}
         {!data && !error && <p className="admin-note account-loading">Loading privacy controls…</p>}
 
