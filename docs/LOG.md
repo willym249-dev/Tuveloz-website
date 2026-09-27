@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Verify privacy isolation and recover from privacy-service failures
+
+A focused review exercised real signed account sessions and privacy API queries
+against migrated in-memory SQLite with synthetic customer/provider records.
+The account-isolation checks already passed: forged/revoked sessions, unrelated
+application IDs, cross-account withdrawals and cross-origin writes are rejected;
+blocked/declined applicants retain only their own privacy access. Exported data
+does not include the seeded password, document-hash or storage-key secrets.
+
+Five recovery cases failed before repair: authentication/storage errors escaped
+the API handlers, writes could return internal errors, failed confirmation reads
+misrepresented a saved choice, and malformed bodies lacked a useful private
+response. The APIs now return private, retryable service errors and separate
+validation errors; raw database details are excluded from responses and logs.
+The page has bounded read/write waits, rejects malformed success responses,
+offers an explicit refresh that reads rather than repeats a write, and preserves
+the requested customer/provider scope. A direct provider-privacy link now loads
+that view instead of silently defaulting to the current customer role.
+
+All 789 tests/build, TypeScript and lint pass (one existing navigation warning).
+Thirteen added test counts cover actual authentication and SQL; eighteen mobile
+Chromium/WebKit scenarios pass, and the browser checks are added to required CI.
+All data and network responses are synthetic; no live export, privacy request,
+email, provider approval or payment occurred. The private privacy center remains
+English-only under the existing reviewed-language routing rules; this repair
+does not claim a Spanish version or create a public alias. No policy text or
+launch gate changed. PR and production verification are pending. Private test
+proof is retained outside the public repository. Full privacy/retention review
+and owner decisions remain separate from these technical results.
+
 ## 2026-09-27 - Preserve concurrent refund, dispute and launch holds
 
 The next bounded reconciliation review reproduced overlapping refund/dispute

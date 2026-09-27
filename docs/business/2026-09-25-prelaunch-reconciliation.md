@@ -117,6 +117,13 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Published code and its activation limits
 
+The September 27 privacy-isolation/recovery check uses real signed sessions and
+migrated synthetic account records. Isolation passed; API outage handling,
+bounded browser waits, explicit refresh and provider-view preservation are now
+repaired locally. All 789 tests/build and eighteen mobile browser cases pass;
+release verification is pending. This does not approve the privacy/retention
+gate or supply reviewed Spanish for the English-only private privacy center.
+
 - PR #241 makes emergency-contact and safety-stop incident reports stop the job
   timer regardless of a low/moderate severity selection, preserving the payment
   hold. Ordinary low-severity claims do not claim a work stoppage. The actual-route
