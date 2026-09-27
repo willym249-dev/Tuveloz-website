@@ -184,8 +184,19 @@ it applies to a given incident is a legal determination the plan routes to
 counsel rather than answering.
 
 **`provider_expiration_reminder_delivery`** — *provider compliance, required*
-*Existing:* `lib/provider-compliance-notifications.ts` and
-`lib/appointment-reminders.ts`. The owner evidence pre-screen in
+*Existing:* the provider-evidence upload route schedules the five lead times
+and the entered-window notice; `lib/compliance-reminder-delivery.ts` processes
+them and `lib/email-notifications.ts` handles the durable outbox. September 27
+runtime tests found that the persisted expiration-event prefix was not
+recognized by the email policy: reminders stayed pending without reaching the
+transport. The local repair recognizes only that event family and rechecks
+the real provider, recipient, accepted evidence, exact service, original
+expiration, due time and cancellation state before every send/retry. Test
+providers and staging cannot use this reminder channel. All 800 tests/build,
+TypeScript and lint passed (one existing warning); the repair is not yet
+published. No real email was sent. Real-channel/inbox evidence and the
+separate automatic-expiration-blocking review still need completion before
+this gate can be approved. The owner evidence pre-screen in
 `lib/evidence-review-assistant.ts` can never auto-accept; its only automatic
 action is a reversible bilingual correction request for a provably expired
 document.
