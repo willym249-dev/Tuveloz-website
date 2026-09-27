@@ -11,6 +11,41 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - PR #253 published; expiration reminder repair verified live
+
+The owner explicitly approved publishing the tested reminder repair. That
+approval covered the PR, normal release checks, merge, deployment and valid
+queued reminder delivery; do not request it again. Tested head `6a36c51`
+merged in PR #253 as `ed6c5930214a33bb0dff4048398e266410da2e89` at 15:20:50 UTC.
+Both PR workflows passed. One local GitHub check-monitor connection was
+interrupted; resuming the monitor completed normally, without rerunning tests
+or bypassing checks. The merge verified the reviewed head and unchanged base.
+
+Production workflow `36329213779` passed all three jobs, including all 800
+tests/build, required browser checks, the fresh-database migration rehearsal
+and end-to-end provider signup. Independent live verification at 15:37:58 UTC
+confirmed the exact merge commit, ready application/database/schema and no
+missing tables or guarded triggers. Signed-out provider onboarding returns
+401 with no-store, error-only output. Accounts/applications remain open;
+customer job requests and payments remain closed.
+
+Before release, a read-only aggregate query in the signed-in Cloudflare D1
+console found zero compliance reminders and zero expiration-family outbox
+rows. The CLI read had failed authentication; the browser check required no
+new credential or record changes. Those counts describe that check, not future
+traffic. No real reminder was sent as a verification test. The isolated SQL
+and intercepted-transport tests establish delivery/retry behavior; health and
+release checks do not establish real inbox delivery or approve a launch gate.
+Real-channel evidence and automatic-expiration-blocking review remain pending.
+
+Private evidence: `outputs/pr253-merge-result-20260927.json`, the PR and
+production result files, `outputs/pr253-live-release-20260927.json`, and
+`outputs/pr253-reminder-counts-browser-20260927.json`. The launch packet and
+completion checklist now distinguish this completed release from the remaining
+real-world review. No policy, provider eligibility, payment/SMS switch or paid
+plan changed. Follow-up documentation is preserved locally; no second
+deployment is needed just to publish these evidence notes.
+
 ## 2026-09-27 - Repair blocked expiration reminders; reconcile remaining scope
 
 Fresh GitHub review found no open PR and main unchanged at `0d6fc3d`.
