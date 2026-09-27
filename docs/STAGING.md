@@ -53,9 +53,42 @@ with its link and hold intact. This follow-up was read-only.
 - Provider reminders and background email delivery do not run in staging.
 - Never copy the production D1 database ID, production R2 bucket, live Stripe key, production webhook secret, or Resend API key into the staging environment.
 
-## Prepared owner-only sign-in rehearsal — not activated
+## Owner-only hosted upload rehearsal — passed and cleaned up September 26
 
-The remaining hosted participant upload requires an ordinary customer session;
+The owner approved the private deployment, one-hour owner-only email window,
+synthetic image upload, and temporary-key cleanup. Workflow
+[`36283229583`](https://github.com/willym249-dev/Tuveloz-website/actions/runs/36283229583)
+passed and deployed branch commit `7348f7d8b0f7b053103cd554d928c6c4b488959e`
+to the separate staging Worker. It did not deploy or merge to production.
+
+One real code email reached the business inbox and was consumed through the
+normal customer sign-in page. The separate synthetic upload job reused the
+existing unapproved test provider. The real multipart form saved a customer
+condition image and note at 01:00:13 UTC September 27 (9:00:13 PM September 26
+in Maryland). D1 recorded exactly one new evidence item with a private R2 PNG
+key. A page refresh retained the same record and loaded its 600-by-260 image.
+Private screenshots and a JSON result are retained outside the repository.
+
+The earlier photo, resolved incident A, and open incident B with its payment
+hold were preserved. Payment, notification outbox, message, Identity-session,
+and credential-review counts remained zero. The synthetic provider remains
+new, not reviewed, test-only, with alerts off. This proves the hosted customer
+upload path, not provider verification, coverage, a claims outcome, or live
+payments. A direct signed-out image navigation was blocked by Chrome itself;
+do not call that an application HTTP-denial test. The signed-out workspace
+correctly returned to the sign-in page.
+
+Cleanup completed within the approved window: customer signed out, zero
+remaining account sessions, one consumed code, email flag false, expiry and
+sender blank, temporary Resend key revoked, and both newly introduced Worker
+secrets (`STAGING_AUTH_RESEND_API_KEY` and `AUTH_CODE_SECRET`) removed. The
+original Resend key and owner Access protection were untouched. The synthetic
+records remain as evidence; do not recreate or overwrite them. The live health
+check still reports `2bdab8b`, onboarding-only, with jobs and payments closed.
+
+### Procedure for a future separately authorized rehearsal
+
+The hosted participant upload requires an ordinary customer session;
 the owner Access session alone cannot upload as a customer. Existing local
 authentication and upload tests do not prove this hosted path. Do not mint a
 session, copy a production cookie, disable Access, or turn a real record into
@@ -70,7 +103,7 @@ The helper requires every condition below before sending a code:
 - The recipient exactly matches `OWNER_EMAIL` after case normalization.
 - `STAGING_AUTH_EMAIL_ENABLED=true` and a future
   `STAGING_AUTH_EMAIL_EXPIRES_AT` no more than 24 hours away. Use an explicit
-  UTC ISO timestamp and a one-hour window for the planned rehearsal.
+  UTC ISO timestamp and a one-hour window for a rehearsal.
 - A dedicated `STAGING_AUTH_RESEND_API_KEY` and `STAGING_AUTH_FROM_EMAIL`.
 - The normal `RESEND_API_KEY` and `RESEND_FROM_EMAIL` remain empty.
 
@@ -93,11 +126,13 @@ unchanged holds, and absence of payments or provider messages. These results
 must be recorded before calling the hosted upload complete.
 
 Finish by signing out, disabling the flag, clearing the expiry/from setting,
-and removing only the newly created test credential with owner approval.
+and removing only newly created test credentials, including a temporary
+`AUTH_CODE_SECRET` if one was required because staging had none, under the
+specific cleanup approval.
 Expiry stops new sends; it does not revoke an already issued code/session or
 the vendor key. Normal code expiry, attempt limits, session expiry, and owner
-Access verification still apply. This preparation is not evidence of an
-actual delivered email or hosted upload.
+Access verification still apply. The completed result above applies only to
+the recorded rehearsal, not to future code or configuration changes.
 
 ## One-time Cloudflare setup
 

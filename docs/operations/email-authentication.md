@@ -289,7 +289,7 @@ enforcement before that inventory is complete silently sends real mail to spam.
 Deadlines for each step are tracked in [`../OPEN-ITEMS.md`](../OPEN-ITEMS.md);
 the automated weekly check reads that table, not this page.
 
-## Staging deliberately cannot send
+## Staging defaults to no sending; one owner-only rehearsal completed
 
 `scripts/generate-staging-wrangler.mjs` sets `RESEND_FROM_EMAIL` to an empty
 string, and `RESEND_API_KEY` is a per-Worker secret that the staging Worker does
@@ -297,10 +297,14 @@ not hold. The send path fails closed when either is missing, so staging returns
 a 503 rather than delivering. This is by design and documented in
 [`../STAGING.md`](../STAGING.md).
 
-The consequence is that no end-to-end email test is possible on staging as
-currently configured. A disabled-by-default authentication-only option is now
-prepared in `lib/account-email-delivery.ts`; see the owner-only rehearsal in
-[`../STAGING.md`](../STAGING.md). It requires a separate domain-scoped credential,
-the exact owner recipient, explicit activation, and a bounded expiry. Other
-mailers do not read its credential, and normal Resend settings stay empty.
-No credential, activation, or actual delivery is established by this preparation.
+`lib/account-email-delivery.ts` provides a disabled-by-default authentication-only
+exception using a separate domain-scoped credential, the exact owner recipient,
+explicit activation, and a bounded expiry. Other mailers do not read that key.
+The owner-approved September 26 hosted rehearsal sent one code to the business
+inbox and completed normal customer sign-in and an actual private image upload.
+The temporary key was then revoked, both temporary Worker secrets removed,
+the account signed out, the enable flag set false, and sender/expiry cleared.
+Normal Resend settings remained empty throughout. Staging is back to no-send.
+See [`../STAGING.md`](../STAGING.md) for evidence and cleanup details. This is
+delivery/sign-in proof for that test, not a fresh SPF/DKIM/DMARC header audit or
+proof of real incident-triggered delivery. No paid upgrade was added.

@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-26 - Complete hosted customer image upload and temporary-access cleanup
+
+The owner specifically approved staging deployment, a one-hour owner-only code
+email window, a synthetic image upload, and key cleanup. Staging workflow
+`36283229583` passed at `7348f7d`; main and production stayed `2bdab8b`. Created
+one sending-only Resend key restricted to updates.tuveloz.com and stored it only
+in the private staging Worker. Added a temporary auth signing secret because
+that Worker previously had none. No production credential was copied.
+
+Preserved all earlier fixtures; validated the two new job/quote inserts against
+in-memory migrated SQLite before adding them to staging. One email code reached
+the business inbox and normal customer sign-in consumed it. The actual form
+saved the clearly labeled test PNG and note at 01:00:13 UTC September 27
+(September 26 evening locally). D1 confirmed one customer-condition record and
+private R2 key; refresh retained the same record and the 600-by-260 image loaded.
+The browser's read-only file-list inspection did not expose the selected file;
+the completed upload, D1 key, and loaded image provide the actual result.
+Do not resubmit based only on that inspection.
+
+Earlier evidence and both incident hold decisions remained unchanged. No
+payments, provider messages, notification outbox entries, Identity sessions or
+credential reviews were created. The test provider remains unapproved with
+alerts disabled. Direct signed-out image navigation returned a Chrome client
+block, so it is not recorded as an application HTTP-denial assertion.
+
+Cleanup verified: normal sign-out left zero account sessions and the evidence
+workspace returned to sign-in; the temporary Resend key was revoked; temporary
+Resend and auth Worker secrets removed; email flag false and expiry/from blank.
+Normal sender stayed empty and both Stripe live-mode flags stayed false. The
+original Resend key and owner Access remained. Private screenshots and JSON
+proof stay outside git. Closed the hosted-upload checkpoint; retained the
+synthetic records instead of destroying the audit evidence. No paid upgrade,
+production deployment, real provider approval, or launch decision occurred.
+Final production health read reports application/database/schema ready and
+onboarding-only with customer jobs/payments closed.
+
 ## 2026-09-26 - Complete account regression and verify Workspace billing
 
 The existing account browser regression passed on local commit `770008e` using
