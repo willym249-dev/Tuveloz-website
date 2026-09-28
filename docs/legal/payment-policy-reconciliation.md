@@ -196,6 +196,45 @@ movement must use the recorded settled payment and remaining refundable amount,
 not an unpaid quote, a newly recalculated fee, a client-supplied total or a
 simulation record. Keep the existing launch locks and owner decision boundary.
 
+### September 28 - guarded full-refund execution implementation
+
+The new `/api/stripe/admin/refunds` POST accepts only a saved adjustment ID and
+verifies the owner's signed access token and request origin. Its server-side
+executor remains closed by the existing real-marketplace release gate and
+Stripe key locks. No simulation override or new credentials were added.
+
+The first implementation accepts only a separately approved real cancellation,
+before work, for the full settled customer payment on an unreleased quote.
+The approval must contain `details.paymentSnapshot` matching the saved payment,
+scope, authorization, charge, transfer group and customer/provider/fee amounts.
+It rejects simulation approvals, missing evidence, prior refunds, partial or
+post-start cases, disputed payments and transfers. Stripe's current intent,
+charge, refund list and payment-specific transfer group are checked first.
+Provider recovery and automatic partial allocation are not implemented.
+
+One durable `stripe_full_refund` execution row per payment prevents duplicate
+submissions, including from different decisions. It references the original
+accounting decision without booking its financial impacts a second time.
+After any attempted submission, retries only retrieve the original refund;
+they never repeat the mutation, even after Stripe's idempotency window. A lost
+response, rejection or absent result stays under review. Current Stripe refund
+responses distinguish pending/action-needed/failed/canceled from succeeded;
+the existing webhook reconciliation remains responsible for payment totals.
+
+**Still required:** the production decision UI/workflow that creates this exact
+reviewed approval and immutable snapshot, policy adoption, refund operation
+during a future marketplace pause, operator recovery for unconfirmed/no-send
+reservations, and an approved end-to-end Stripe sandbox rehearsal. Existing
+test approvals remain `approved_test_only` and cannot trigger this executor.
+There is no refund button exposed to customers/providers and no live activation.
+Local behavioral proof uses migrated SQLite, real owner-token verification and
+the actual Stripe SDK with intercepted synthetic responses; it is not a real
+Stripe refund. See LOG for release and verification status.
+
+Stripe references checked September 28: [refund creation](https://docs.stripe.com/api/refunds/create),
+[idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),
+and [transfer-group lookup](https://docs.stripe.com/api/transfers/list).
+
 Before calling the refund workflow complete, verify these outcomes with isolated
 records and an approved Stripe test when the transaction path is ready:
 
