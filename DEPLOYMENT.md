@@ -97,6 +97,13 @@ it signs every customer and provider out. The Stripe values must be sandbox
 `sk_test_...`, `rk_test_...`, and `whsec_...` values during testing. Do not add any real secret
 value to `wrangler.jsonc`.
 
+The payment client accepts only account-level standard or restricted API keys
+with an explicit mode. Both `sk_live_` and `rk_live_` remain blocked by the same
+code-controlled payment lock; restricted permissions do not make a live key a
+sandbox key. Public, webhook, organization and unknown key formats are rejected.
+The dedicated Identity configuration and snapshot signature receiver remain
+separate. Do not change keys or release flags to bypass a closed launch gate.
+
 Leave `STRIPE_ALLOW_LIVE_MODE` set to `"false"` in `wrangler.jsonc` until the
 legal business owner has completed the live-account, compliance, refund,
 dispute, and provider-payout review.

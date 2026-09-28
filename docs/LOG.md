@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Restricted live payment-key guard repaired; publication pending
+
+Continued from clean local 00376fb and remote production b20d524; no open PRs
+were present. The remaining thin-event delivery path intentionally still uses
+the guarded payment client. No separate live credential or release bypass was
+introduced to make that path appear operational during prelaunch.
+
+While reviewing that boundary, found getStripeClient rejected sk_live_ but
+accepted rk_live_ without checking the payment release lock. Stripe's official
+[key documentation](https://docs.stripe.com/keys), checked September 28,
+confirms restricted keys also have live/test modes and configurable permissions.
+A real-factory/SDK test with synthetic credentials reproduced the failure before
+the change. The repair applies the existing live lock to both key types and
+rejects public, webhook, organization, missing-mode and unknown key formats.
+Standard and restricted sandbox keys still work. No secret values were read,
+created, changed or transmitted, and Identity's separate client is unchanged.
+
+The focused guard/launch/webhook checks passed, followed by the production build
+and all 831 tests with zero failures. Lint passed with the existing warning in
+unchanged site-language.tsx. The suite includes the prior local sender/retry
+coverage; neither it nor this repair proves actual provider inbox delivery.
+Private build/test log: outputs/stripe-key-guard-full-tests-20260928.log.
+Prepared for review; not yet published. No launch/payment/SMS flag changed.
+
 ## 2026-09-28 - Existing receipt test resolved; provider alert sender checked locally
 
 Continued from published b20d524 and the completed seller-compliance acceptance,
