@@ -47,6 +47,7 @@
     "test:e2e:notifications": "node tests/e2e/notifications.e2e.mjs",
     "test:e2e:privacy": "node tests/e2e/privacy-center.e2e.mjs",
     "test:e2e:payment-disclosure": "node tests/e2e/payment-disclosure.e2e.mjs",
+    "test:e2e:quote-checkout": "node tests/e2e/quote-checkout.e2e.mjs",
     "test:e2e:about-forms": "node tests/e2e/about-forms.e2e.mjs",
     "test:e2e:public-actions": "node tests/e2e/public-actions.e2e.mjs"
   },

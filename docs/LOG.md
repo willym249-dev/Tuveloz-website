@@ -11,6 +11,47 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Repair stale quote consent and checkout response handling locally
+
+Continued from the preserved local Spanish/reconciliation drafts; no open PRs
+and remote main still 299fd4c at the initial check. Reproduced a concrete bug in
+the private active quote-payment component: updating scope on the same quote
+kept the prior checkbox checked and did not fetch the current authorization.
+The production wrapper remains closed, so this was an isolated prelaunch test,
+not evidence of a live customer charge or a production consent incident.
+
+The active card now remounts its consent state when quote, scope, shown price,
+provider name, access token or language changes. It cancels/ignores superseded
+readiness and checkout responses, checks the returned scope and amounts against
+the displayed quote, and refuses duplicate checkout starts. Readiness requests
+time out after twenty seconds with a retry action. A mismatched quote offers a
+full page refresh; a server conflict removes stale consent and its download
+until a fresh review. Aborting a browser request does not reverse server work.
+Existing server authorization checks, exact agreement text, versions, hashes,
+provider evidence, fees and all launch locks are unchanged.
+
+Added `test:e2e:quote-checkout` to required verification. The isolated Vite fixture
+exposes the private component in its in-memory bundle only; it never alters a
+launch constant, contacts Stripe, or writes a real record. Twenty-two Chromium/
+WebKit cases passed at 390px/320px: changed scope, late reads, price/access/
+language resets, network retry, mismatched scope and refresh, timeout recovery,
+409 recovery, exact authorization download, late POST after leaving or changing
+scope, successful synthetic redirect and the unchanged production closed panel.
+No captured page errors, unexpected external requests or horizontal overflow.
+Language-context reset is tested on a fixture route; the real quote route is
+still English-only and customer Spanish policy adoption remains unfinished.
+
+Validation: the new scope-change test failed against the original component,
+then passed with the repair. All 812 existing tests and the production build
+passed. Type generation and TypeScript completed; the sandbox prevented only
+Wrangler's optional external log-file write. Lint passed with one existing
+`site-language.tsx` navigation warning. Kept the existing policy-gate assertion
+unchanged by preserving its button-condition order. Whitespace check passed.
+Private full-suite log: quote-checkout-fulltests-20260927.log. These changes and
+the preceding three documentation commits are local, not pushed or deployed.
+Do not repeat PR #256 publication or describe this as completed Spanish consent,
+hosted Stripe verification, policy adoption, or marketplace launch.
+
 ## 2026-09-27 - Complete Spanish customer drafts and narrow the consent gap
 
 Prepared the full Spanish Customer Agreement against the unchanged English
