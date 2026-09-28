@@ -1,6 +1,6 @@
 # Stripe Connect platform approval
 
-- **Status:** active — initial approval verified; current launch-scope reconciliation pending
+- **Status:** active — initial approval and written processor reply verified; launch-scope reconciliation pending
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-27
 
@@ -40,9 +40,11 @@ settings. This is a comparison, not a new acceptance or account change.
 
 The historical Platform profile also says individual seller payouts and platform
 refund/chargeback liability. Both the historical profile and current setup show
-an onboarding/seller-compliance acknowledgment button. It was not clicked or
-accepted. A displayed button alone does not establish an account restriction;
-clarify whether any acknowledgment is outstanding before accepting terms.
+an onboarding/seller-compliance acknowledgment button. Stripe's September 27
+written reply confirms that an authorized representative needs to complete it.
+The same button remains visible in Platform setup. It was not clicked or
+accepted; its exact terms and consequences still need review. This is separate
+from the negative-balance acknowledgment already dated July 29.
 
 Sources: `lib/stripe-provider.ts`, `app/api/stripe/checkout/route.ts`, and
 `app/api/stripe/admin/payments/route.ts`, inspected at local documentation commit
@@ -68,23 +70,28 @@ policy wording solely to make a label match. This is not a tax determination.
 
 1. Preserve the July 29 approval and the matching current selections as existing
    evidence for `stripe_connect_business_model`; do not restart the application.
-2. Ask Stripe only whether the current payment flow and intended service category
-   fit that approval, what transfer-delay/reserve/refund limits apply, and whether
-   the displayed acknowledgment requires action. The owner-approved inquiry
-   below was submitted September 27; Stripe confirmed email receipt.
+2. Preserve the September 27 substantive response below. Prepare a same-thread
+   follow-up only for unanswered transfer-delay and service-category questions,
+   account-specific conditions, and the exact onboarding acknowledgment text.
+   The owner-approved follow-up was sent September 27 at 8:05 p.m. Maryland time;
+   do not repeat either inquiry. The remaining answers are pending.
 3. Match the initial enabled service list to the insurer/legal decisions before
    representing specialist services as supported. The full catalog is not the
    launch commitment.
-4. Reconcile merchant-of-record and receipt/statement wording with the processor,
-   then let the CPA/tax adviser settle tax and reporting responsibilities. The
-   CPA gate remains separate; processor setup is not a tax opinion.
+4. Use the confirmed platform merchant-of-record role to finish the checkout,
+   receipt and policy disclosure review below. The current public business name
+   and statement descriptor already show TUVELOZ LLC; do not replace them.
+   The CPA gate remains separate; processor setup is not a tax opinion.
+5. Review the outstanding onboarding acknowledgment with the authorized owner
+   before acceptance. Do not infer permission to accept it from support's email,
+   or turn completion into permission to open bookings or payments.
 
 `stripe_connect_business_model` requires an evidence reference and valid-through
 date in Tuveloz's launch controls. This email states no expiration; obtaining a
 supported review interval is still necessary rather than fabricating an expiry.
 No admin gate, service activation, provider approval or payment lock was changed.
 
-## Support inquiry — sent September 27; reply pending
+## Support inquiry — sent September 27; written reply received
 
 Destination: Stripe Support through the authenticated TUVELOZ LLC account.
 No attachments, government/bank identifiers, API keys or provider records.
@@ -141,6 +148,97 @@ not change settings, activate payments or enroll us in a paid service.
 Thank you,
 Tuveloz
 
+## Written response received September 27
+
+Business Gmail shows **Re: Your recent question for Stripe about Connect** from
+`support@stripe.com`, September 27 at **5:24 p.m. Maryland time**. The message is
+signed by Smriti. Expanded sender details show `stripe.com` signing, a Salesforce
+mailing domain and TLS. This is the substantive response, separate from the
+4:20 p.m. acknowledgment. The original remains in the business inbox; private
+message references and observations stay outside this repository.
+
+| Question | Stripe's written answer | What remains |
+| --- | --- | --- |
+| Merchant of record | TUVELOZ LLC is the payment merchant for Express accounts with separate charges/transfers and no `on_behalf_of`. | Make checkout, payment confirmation and policies explicit before launch; this does not make Tuveloz the repair business or settle tax law. |
+| Customer identity/disclosure | Receipts/statements must identify TUVELOZ LLC or a registered DBA; explain that payment is with Tuveloz while the provider performs labor. | Current dashboard public name and descriptor were independently read as TUVELOZ LLC. A real or authorized test receipt remains separate evidence. |
+| Fees, refunds and disputes | Platform bears the stated Stripe fees/loss exposure; disputes can debit the platform even after a provider transfer. | Final refund/recovery controls, financial reserves and tax/accounting review. This is not a promise that recovery from a provider succeeds. |
+| Existing approval | The reply confirms the described general Connect arrangement. | No specific service-category determination or maximum transfer-delay answer was supplied. |
+| Onboarding acknowledgment | An authorized representative must complete it; it is one-time with no recurring renewal date, subject to later configuration changes. | Review exact terms and obtain the applicable acceptance authorization. No acknowledgment was accepted during this inspection. |
+| Other payment branch | A later destination-charge launch needs its own assessment. | Both current branches omit `on_behalf_of`; support's conditional discussion of destination charges with that parameter is not evidence that the code uses it. |
+
+The response calls the quote flow "live" in one sentence, but both our original
+inquiry and current release evidence say payments/bookings remain closed. The
+follow-up corrects that description. Do not treat it as a launch authorization.
+The email does not set an expiry for the overall Connect approval; its statement
+about no recurring renewal applies specifically to the onboarding acknowledgment.
+
+Official documentation rechecked September 27 supports the payment-model facts:
+[merchant of record](https://docs.stripe.com/connect/merchant-of-record),
+[statement descriptor usage](https://docs.stripe.com/connect/statement-descriptors#statement-descriptor-usage),
+and [disputes](https://docs.stripe.com/connect/disputes#destination-and-separate-charges-and-transfers).
+Support's linked reserves page was not readable through the public fetch tool;
+its specific reserve discussion is retained as correspondence, not independent
+confirmation of an amount, deadline or account restriction.
+
+### Disclosure review — local implementation prepared, not published
+
+Source reviewed at released commit `b5c67a9`. Keep the current account settings,
+policy releases, fee, provider quote and launch controls intact while this review
+is unresolved. A processor statement is not a substitute for the separate tax,
+consumer-policy and service-scope decisions.
+
+| Surface | Current evidence | Required review action |
+| --- | --- | --- |
+| Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. | Complete for the observed fields; do not change or repeat setup. Actual receipt rendering is not yet proved. |
+| `app/components/quote-payment-card.tsx` | Shows provider identity, price, fee and policy consent; no explicit payment-merchant sentence. | Place the approved bilingual payment-merchant disclosure by the total before checkout. |
+| `app/api/stripe/checkout/route.ts` | Hosted Checkout has provider labor/fee lines; neither branch sets `on_behalf_of`; no explicit merchant `custom_text` is supplied. | Add approved hosted-checkout disclosure and verify both language paths without changing charge type or transferring money. |
+| `app/success/page.tsx` | Shows Tuveloz branding and an authorized payment summary, but does not explicitly identify TUVELOZ LLC as payment merchant. | Add the approved merchant identification to verified payment confirmations, without presenting a failed or canceled checkout as paid. |
+| `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and Spanish counterparts | Current review text leaves payment-role decisions pending and describes the provider's service contract separately. | Reconcile exact wording with the processor answer and applicable review; keep vehicle-service responsibility distinct from payment responsibility. Release any changes through the existing policy-hash/version process. |
+| Accepted customer evidence | `lib/customer-policy-acceptance.ts` binds released documents to checkout; quote checkout also records exact authorization. | Bind approved wording to the relevant policy/evidence versions, then verify consent, saved records and bilingual display. Do not fabricate a review or reuse stale hashes. |
+
+Proposed short pre-payment wording for review:
+
+> Your payment is to TUVELOZ LLC. [Provider business] will perform the vehicle
+> service. Your total includes the provider's labor quote and a separate 5%
+> Customer Service Fee. For payment or refund questions, contact hello@tuveloz.com.
+
+Spanish draft:
+
+> El pago se realiza a TUVELOZ LLC. [Nombre del negocio proveedor] realizará el
+> servicio de su vehículo. El total incluye la mano de obra cotizada por el
+> proveedor y una tarifa de servicio al cliente del 5%, indicada por separado.
+> Para preguntas sobre el pago o un reembolso, escriba a hello@tuveloz.com.
+
+Proposed verified-payment label: **Payment collected by TUVELOZ LLC. Vehicle
+service provided by [Provider business].** Spanish: **Pago recibido por TUVELOZ
+LLC. Servicio del vehículo prestado por [nombre del negocio proveedor].**
+These are review drafts, not published policies, a new receipt, a promise of
+refund eligibility, or proof of legal/tax approval.
+
+The next local change adds concise payment-merchant wording to the quote total,
+hosted Checkout submit text, and authenticated payment record, with English and
+Spanish text. The hosted session and return links preserve the selected language.
+The payment-result page now translates in place, distinguishes unavailable records
+from closed checkout, and uses readable status labels without calling pending,
+failed, refunded or disputed payments paid. It creates no public Spanish payment
+record alias. Amounts, payment type, provider settlement and launch locks are
+unchanged. This implementation is not deployed, a real Stripe receipt test, a
+policy release, or completion of the remaining policy/acceptance evidence review.
+
+### Narrow follow-up — sent September 27
+
+The owner approved the exact prepared reply, then instructed us to continue.
+Business Gmail confirmed **Message sent** at **8:05 p.m. Maryland time**.
+Expanded sent-message details independently show `hello@tuveloz.com` to
+`support@stripe.com`, the existing subject, and the exact approved body.
+The reply and screenshot are retained privately as
+`outputs/stripe-support-followup-20260927.md` and
+`outputs/stripe-followup-sent-20260927.png`. It asks for the unanswered timing
+and service-category conditions and the acknowledgment text, corrects the
+"live" description, and authorizes no setting change, acceptance or paid service.
+The clarification request is complete; the answers remain pending. Do not resend
+or ask for this send approval again. Keep the September 30 review checkpoint.
+
 ## Saved business description — corrected and verified
 
 After the automated support reply mentioned a different fee, a targeted read of
@@ -168,6 +266,17 @@ Saved replacement:
 
 ## History
 
+- **2026-09-27:** Sent the exact owner-approved follow-up in the existing thread
+  and verified its recipient, timestamp and body. No acknowledgment accepted or
+  setting changed. Prepared the local bilingual payment-disclosure/result-page
+  repair; publication, policy review and actual hosted-receipt proof are separate.
+- **2026-09-27:** Read the substantive 5:24 p.m. reply, checked its sender details,
+  and reconciled it with official Stripe documentation and current source. Public
+  name/statement descriptor already match. Outstanding onboarding acknowledgment
+  independently observed without acceptance. Prepared bilingual disclosure and
+  narrow follow-up drafts; no account, application code, policy, payment, send or
+  launch decision changed. The scoped inbox search found no broker/county reply;
+  upstream software issue #276 remains Open with zero comments.
 - **2026-09-27:** Saved the owner-reviewed business description and reopened the
   record to verify every word. Correction complete; do not repeat the request or
   update. The subsequent scoped business-inbox search found Stripe's receipt

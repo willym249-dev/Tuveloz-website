@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
+import { PAYMENT_MERCHANT_DISCLOSURE } from "../../lib/payment-merchant";
+import { useSiteLanguage } from "./site-language";
 
 type PaymentSummary = {
   id: string;
@@ -81,6 +83,7 @@ function ActiveQuotePaymentCard({
   accessToken,
   quote,
 }: QuotePaymentCardProps) {
+  const { language } = useSiteLanguage();
   const laborOnlyQuote = (
     Number(quote.partsPriceCents) === 0
     && Number(quote.priceCents) === Number(quote.laborPriceCents)
@@ -137,6 +140,7 @@ function ActiveQuotePaymentCard({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           quoteId: quote.id,
+          language,
           token: accessToken,
           policyAccepted: acceptedPaymentPolicy,
           checkoutAgreementKey: checkoutAcceptance?.agreementKey,
@@ -201,6 +205,9 @@ function ActiveQuotePaymentCard({
         </div>
         <div className="total"><dt>Total</dt><dd>{dollars(quote.customerTotalCents)}</dd></div>
       </dl>
+      <p className="payment-release-note" data-manual-language lang={language}>
+        {PAYMENT_MERCHANT_DISCLOSURE[language]}
+      </p>
       <small className="payment-release-note">
         Authorized job scope version {quote.scopeVersion}.
       </small>

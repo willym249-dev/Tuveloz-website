@@ -11,6 +11,106 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Send approved Stripe reply and prepare payment-disclosure repair
+
+Sent the exact owner-approved same-thread reply to support@stripe.com from
+hello@tuveloz.com. Gmail displayed Message sent; expanded sent-message details
+and body confirm September 27 at 8:05 p.m. Maryland time, the intended recipient,
+subject and approved text. The existing processor card, deadline row and private
+checklist now distinguish the completed send from the unanswered questions.
+Private proof: stripe-followup-sent-20260927.png. Do not resend or ask for this
+send approval again. No Stripe acknowledgment, setting or paid service changed.
+
+Prepared a local fix identifying TUVELOZ LLC as payment merchant beside the
+quote total, in hosted Checkout submit text, and on authenticated payment records.
+The short wording keeps independent-provider service responsibility explicit
+without duplicating the price/fee breakdown. Supported English/Spanish locale is
+carried into Checkout and its return links. The result page translates in place
+with an obvious language button and localized policy/application links; it does
+not add a public /es/success route or translate original service names.
+
+The same review found failed record lookups silently showing the closed-checkout
+message. They now show an unavailable-record message and a support/sign-in next
+step. Readable bilingual statuses distinguish paid, pending, failed, refunded and
+disputed records. Unknown status values remain under review. A canceled URL no
+longer asserts that no payment occurred. The existing authenticated/private-token
+checks remain intact; no private token enters the return URLs or Stripe metadata.
+
+Validation: production build and all 812 tests pass; TypeScript passes; lint has
+zero errors and the one unchanged language-navigation warning. Thirty-two local
+mobile Chromium/WebKit cases pass across both languages, paid/pending/failed/
+refunded states, missing records, network failure, cancellation and closed
+checkout. They verify no overflow, readable labels, correct links, language
+switching without a second lookup, private-header access and no outbound calls.
+The browser check is included in the existing verification workflow. The first
+full-suite attempt hit local sandbox ancestor-directory access errors; the same
+suite passed with the required read access. A missing request-body language type
+was corrected before the passing TypeScript/full-suite run. Deadline parsing and
+whitespace checks pass. Private test logs/screenshots use payment-disclosure-20260927.
+
+This is prepared locally, not pushed or deployed. No released policy/hash,
+acceptance evidence, fee, payment strategy, transfer, provider record, dependency,
+service activation or launch lock changed. Real Stripe hosted-receipt proof and
+the separate policy/acceptance review remain outstanding. The owner must approve
+this new publication; earlier publication approvals and the reply-send approval
+are not reused for it. Keep the remaining Stripe/broker/county checkpoints.
+
+## 2026-09-27 - Reconcile Stripe's written response and prepare remaining questions
+
+The scoped business-inbox search found a substantive Stripe Support response
+dated September 27 at 5:24 p.m. Maryland time. Expanded sender details show
+stripe.com signing and TLS. It confirms Tuveloz as the payment merchant for the
+described separate-charge/transfer flow, Tuveloz's responsibility for Stripe
+costs, refunds, disputes and losses, and a separate onboarding acknowledgment by an
+authorized representative. The earlier July 29 approval and loss acknowledgment
+remain complete. No broker/county reply appeared in the scoped search.
+
+Compared the reply to official Stripe documentation and released source
+`b5c67a9`. Current Stripe public business name and statement descriptor already
+show TUVELOZ LLC; no correction was needed. Platform setup still exposes the
+separate onboarding acknowledgment. It was not clicked or accepted. Support's
+reference to a live quote flow conflicts with the closed application state; it
+does not authorize activation. Transfer time limits, specific service restrictions
+and account-specific reserve conditions remain unanswered.
+
+Updated the existing processor record and launch briefing with a surface-by-surface
+disclosure review and English/Spanish wording drafts. Prepared one same-thread
+Gmail reply covering only the missing questions, acknowledgment text and closed
+launch state. The body was read back, a screenshot saved, and the unsent reply
+left open for owner review. It has not been sent; the earlier approval covered
+the original inquiry. No runtime, policy release, account setting, launch gate,
+payment or paid service changed.
+
+Private evidence: stripe-written-response-review-20260927.json,
+stripe-support-followup-20260927.md and stripe-followup-draft-20260927.png.
+The independent upstream issue check still shows #276 Open with zero comments.
+All 15 fee-consistency checks pass after clarifying the processor-cost wording
+in this record; deadline parsing and the whitespace check also pass. Only
+documentation changed, so the completed application/browser release tests were
+not repeated. Preserve these local records for the next authorized release.
+Keep September 30/October 2/October 4 response checkpoints. Do not repeat the
+published PR #255 release, known-correct Stripe fields or original inquiries.
+
+## 2026-09-27 - Publish and independently verify PR #255
+
+PR #255 merged tested head 1821c39 as b5c67a9. Both PR workflows and all three production jobs in 36355757574 passed. Independent live verification at 22:52:46 UTC confirmed the exact release, ready application/database/schema, both notice manifests and README, and every byte/hash of all 40 unique notice files (31 added plus nine original). The bundled inventory covers 36 installations and 39 references. Signed-out provider access remains 401/no-store/error-only. Accounts/applications are open; customer requests/payments remain closed.
+
+The owner approved the prepared push, pull request, conditional merge and
+normal deployment by continuing the explicit publication request. The exact
+approved head was merged only after the required checks passed. No application
+code, dependency, policy release, migration or launch setting changed.
+
+This completes publication of the additional software notices and the saved
+Stripe/insurance/release records. Do not repeat this release or its approval.
+The upstream helper attribution question in issue #276 remains pending, along
+with owner contribution records, brand provenance and launch-review evidence.
+
+Private proof: pr255-pr-verification-result-20260927.json,
+pr255-pr-build-result-20260927.json, pr255-merge-result-20260927.json,
+pr255-production-result-20260927.json and pr255-live-release-20260927.json.
+This post-release handoff stays local until the next authorized substantive
+release; it does not need a separate deployment.
+
 ## 2026-09-27 - Post approved attribution inquiry and complete local release checks
 
 Verified the existing GitHub identity, exact upstream repository and absence of

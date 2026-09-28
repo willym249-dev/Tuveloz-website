@@ -10382,6 +10382,14 @@ footer > p,
   padding: 30px clamp(22px, 7vw, 100px);
 }
 
+.payment-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .payment-result-shell > section {
   align-self: center;
   background: #101010;

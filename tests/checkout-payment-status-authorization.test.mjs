@@ -80,7 +80,7 @@ test("guest checkout keeps the private request token out of Stripe and URL param
   assert.match(route, /request\.headers\.get\(REQUEST_ACCESS_TOKEN_HEADER\)/);
   assert.match(
     route,
-    /success_url: `\$\{rootUrl\}\/success\?session_id=\{CHECKOUT_SESSION_ID\}`/,
+    /success_url: `\$\{rootUrl\}\/success\?session_id=\{CHECKOUT_SESSION_ID\}&lang=\$\{body.language === "es" \? "es" : "en"\}`/,
   );
   assert.doesNotMatch(route, /success_url:[^\n]*token=/);
 });

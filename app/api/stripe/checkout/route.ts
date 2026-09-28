@@ -16,6 +16,7 @@ import {
   isSameOriginRequest,
 } from "../../../../lib/account-auth";
 import { customerPriceFor } from "../../../../lib/customer-fee";
+import { hostedPaymentDisclosure } from "../../../../lib/payment-merchant";
 import { isLaborOnlyPartsSource } from "../../../../lib/service-matching";
 import {
   CUSTOMER_CHECKOUT_AGREEMENT_KEY,
@@ -489,6 +490,7 @@ export async function POST(request: Request) {
 
   const body = (await request.json()) as {
     productId?: unknown;
+    language?: unknown;
     quoteId?: unknown;
     token?: unknown;
     customerEmail?: unknown;
@@ -1147,6 +1149,7 @@ export async function POST(request: Request) {
     const checkoutSession = await stripeClient.checkout.sessions.create(
       {
         line_items: lineItems,
+        ...hostedPaymentDisclosure(body.language),
         payment_intent_data: paymentIntentData,
         metadata,
         mode: "payment",
@@ -1160,8 +1163,8 @@ export async function POST(request: Request) {
               },
             }
           : { customer_email: customerEmail }),
-        success_url: `${rootUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${rootUrl}/success?canceled=1`,
+        success_url: `${rootUrl}/success?session_id={CHECKOUT_SESSION_ID}&lang=${body.language === "es" ? "es" : "en"}`,
+        cancel_url: `${rootUrl}/success?canceled=1&lang=${body.language === "es" ? "es" : "en"}`,
       },
       {
         idempotencyKey: `tuveloz-checkout-${paymentId}`,
