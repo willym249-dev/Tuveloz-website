@@ -21,7 +21,7 @@ appeared. Do not resend those inquiries.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
-| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. | Complete; preserve it. An actual hosted Checkout/receipt rehearsal remains separate. |
+| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. September 27 standalone Stripe test checkouts and actual receipts verify merchant, totals, successful status and a Spanish decline/retry. | Hosted presentation rehearsal complete within its isolated scope. Spanish line-item repair is tested locally but not published; Stripe receipt headings still use English. Production integration, receipt-language propagation and customer consent remain separate. |
 | Payment Policy introduction and sections 3, 5, 8 | Still treats the processor's merchant role and some refund/dispute responsibilities as undecided. | Reflect the confirmed configuration while leaving unresolved transfer limits, reserves and legal/tax treatment expressly unresolved. |
 | Terms section 7 | Says the planned fee is charged on completed jobs. The quote checkout uses payment mode without manual capture; completion checks govern the later provider transfer. | Make customer collection and provider transfer distinct. Do not imply that collection waits for job completion or silently change the charge strategy. |
 | Customer Agreement section 7 | Describes the proposed fee but omits explicit payment-merchant identification. | Add the reviewed payment wording and an accurate checkout-timing explanation. |
@@ -158,6 +158,13 @@ and included in the accepted evidence, not only inserted beside a checkbox.
    test-mode success is not a real customer charge, provider settlement or tax
    approval. No live charge, production provider or launch override is needed.
 
+Step 6's standalone presentation rehearsal completed September 27; see the
+[processor record](../records/stripe-connect-platform-approval.md#hosted-test-mode-rehearsal--completed-september-27).
+Do not repeat it as an uncompleted task. Actual English/Spanish hosted messages,
+itemized amounts, paid receipts and Spanish decline/retry were verified. The
+discovered Spanish line-item repair remains local. Stripe's receipt headings
+remain English, and full customer consent/production integration are not proved.
+
 This review is ready for continuation. It does not require another deployment
 of PR #256 or another inquiry email. No application or active policy file was
 edited while preparing it.
@@ -227,7 +234,7 @@ provider's own warranty or service description silently.
 | `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. Existing provider release metadata and acceptance hashes remain valid; customer additions must not imply provider re-acceptance. |
 | `lib/customer-policy-acceptance.ts` | Supply the customer purpose's exact reviewed language, document URLs and translation metadata. Reject missing, stale or future-dated translations. Keep old evidence readable and unchanged. |
 | `lib/customer-checkout-acceptance.ts` | Generate the entire checkbox text, including labor-only and merchant statements, for one explicit presentation language. Hash that text together with the selected reviewed releases and the exact scope. |
-| `QuotePaymentCard` | Scope/price/access/language reset, matching-response checks, canceled late responses and retry controls are implemented and browser-tested locally September 27; publication remains pending. The readiness GET is still English-only. Future translated acceptance must send the reviewed language on GET as well as POST and keep dynamic evidence outside DOM dictionary translation. |
+| `QuotePaymentCard` | Scope/price/access/language reset, matching-response checks, canceled late responses and retry controls were published in PR #257/release 59c7815 and verified September 27. The payment panel remains closed and the readiness GET is still English-only. Future translated acceptance must send the reviewed language on GET as well as POST and keep dynamic evidence outside DOM dictionary translation. |
 | `app/api/stripe/checkout/route.ts` | Recompute the same current presentation server-side, reject a mismatched hash/language, then write and reread exact evidence before contacting Stripe. Preserve all existing eligibility, authorization and launch checks. |
 | `customer_agreement_acceptances` | The unique key includes request, quote, agreement key/version and scope version, but not language/hash. Use a reviewed presentation-specific agreement version, within the existing 300-character input bound, or a reviewed schema design. Do not overwrite an English acceptance to save a Spanish one or allow silent `onConflictDoNothing()` reuse. |
 

@@ -14,9 +14,12 @@ and stores additional notices in bundled/. Its build observation date and
 source revision are recorded in bundled-manifest.json. Some observed modules
 may be removed by tree shaking; inclusion is not proof that they run in a browser.
 
-This remains a scoped collection. The bundled manifest explicitly identifies
-an embedded helper whose notice source is unresolved; no replacement copyright
-text has been invented. The collection is not a complete review of embedded
+The embedded @hiogawa/utils@1.7.0 helper now includes the official MIT notice
+added by its maintainer in response to issue #276. The bundled manifest records
+that response, the exact source commit and the unmodified notice hash. This
+supplements the original package archive, which had no license file.
+
+This remains a scoped collection. No copyright text has been invented. The collection is not a complete review of embedded
 components, deployment runtimes, trademarks, photos or media. It does not grant
 a license to Tuveloz's own code, brand or third-party media.
 

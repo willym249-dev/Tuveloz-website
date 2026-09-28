@@ -11,6 +11,118 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Upstream notice resolved and combined release prepared
+
+The owner supplied the GitHub reply, then asked us to complete the check and
+continue. Upstream issue #276 is Closed with the repository owner's direct
+answer, and PR #277 merged as 978a54938a661c389d7fe80b457eef2c2441ff08. That PR
+explicitly closes our question about the missing MIT notice for utils 1.7.0.
+Our installed plugin is still 0.5.26 and still contains the 1.7.0 source marker;
+the maintainer's note about removal in a newer plugin does not change our copy.
+
+Preserved the official 1,070-byte MIT notice exactly, with its source commit,
+Git blob, SHA-256 and linked maintainer response. Added it to the public notice
+collection and moved the specific component to the manifest's resolved list.
+No license text, attribution or date was invented. The original archive's
+missing-file history is preserved. No package upgrade or paid license is needed
+for this notice update; package-lock.json remains unchanged.
+
+All 41 unique notice files, both manifests and the README match the production
+build byte-for-byte, including every one of the 40 previously published files.
+The combined Spanish checkout-label repair and notice addition pass build and
+all 812 tests. Earlier TypeScript/lint checks remain valid for the unchanged
+application repair; remote release checks will run again. No competing PR was
+open and main remained 59c7815 before publication. Continue the authorized
+combined release without requesting the same publication permission again.
+
+Private source/validation evidence: hiogawa-license-source-20260927.json,
+hiogawa-notice-validation-20260927.json and checkout-notice-fulltests-20260927.log.
+The specific upstream response task is complete. Publication is still pending
+at this entry; overall ownership/reviewer evidence and launch controls remain
+separate. No reply or new inquiry was sent.
+
+## 2026-09-27 - Hosted Stripe test payments and Spanish line-item repair
+
+Continued from PR #257 without repeating its release. No competing PR was open
+and main remained 59c7815. The scoped business-inbox refresh still showed the
+existing Stripe reply and acknowledgment only; no new Stripe/broker/county
+answer in that scope and no inquiry resent.
+
+Using the previously authorized official CLI test scope, restored a temporary
+one-hour session for only the existing TUVELOZ LLC test environment. Two
+standalone hosted Checkout rehearsals completed: English and Spanish, each
+with a clearly synthetic $100 labor item plus a separate $5 Customer Service
+Fee. Stripe reported each Session complete/paid and its PaymentIntent succeeded,
+with exactly one successful test charge each and no provider transfer. The
+Spanish flow first rejected Stripe's documented decline card, displayed a
+Spanish error, remained unpaid, then successfully retried the same Session.
+Both actual Stripe receipts show TUVELOZ LLC and the correct itemized total.
+
+The first Spanish preview exposed English merchant-supplied fee and quote
+descriptions. Added a shared bilingual fee-label helper and translated the
+fixed quote-description prefix in the checkout route. Both payment branches use
+their existing authorized rate; amounts, provider names, charge strategy,
+policies, accepted evidence and launch locks are unchanged. The replacement
+Spanish sandbox Session used the actual helper and showed the corrected wording
+on Checkout and the fee label on its receipt. The unused original preview was
+expired. The receipt's surrounding Stripe headings still render in English;
+customer receipt-language propagation needs a separate verified change. Test
+receipt branding also does not establish current live receipt styling.
+
+All 812 tests and the build passed. TypeScript passed; lint has only the existing
+site-language.tsx warning. Sandbox module-resolution restrictions required the
+usual approved normal-permission test run; no code check was bypassed. Thirty
+focused checkout/fee tests also passed. The code repair is local, not deployed.
+Publication is a separate next step; do not repeat the completed hosted tests.
+
+CLI logout explicitly reported all contexts logged out and session revoked;
+whoami independently returned Authenticated: false. Removed the dedicated local
+config and closed only the three temporary auth/checkout tabs. Private test IDs,
+receipt links, screenshots, API responses and the non-secret summary stay outside
+the repository in work/stripe-checkout-rehearsal and outputs. These are standalone
+Stripe presentation/receipt checks, not the production application payment flow,
+actual provider settlement, a real bank statement, inbox delivery or launch
+approval. No real card, identity document, live charge or gate override was used.
+
+## 2026-09-27 - PR 257 published and independently verified
+
+The owner asked to continue after the concrete publication request for 8268dcf.
+Confirmed the checkout was clean, no competing PR was open and main was still
+299fd4c. Pushed the reviewed branch, opened PR #257, and attached it to the task.
+Both PR workflows passed against exact head
+8268dcf09ed104eff85ce8b9daef3e64d084b102: verification 36369995415 and deployment
+validation 36369995760. Merged with an explicit matching-head check at
+2026-09-28 02:45:34 UTC as 59c7815022827a3b2a7696110d204611d177d3fd.
+
+Production workflow 36371052324 passed all three jobs, including required
+verification, account signup, deployment and its exact-release/database check.
+The independent public check at 03:03:22 UTC confirmed the same live commit,
+healthy application/database/schema, no missing guarded tables/triggers,
+accounts and provider applications open, and customer requests/payments closed.
+Eight public HTTP checks passed: health, three payment-result URLs, private
+unknown-payment rejection, closed quote-readiness response, unauthenticated
+provider rejection and the absent public Spanish payment-result alias. Relevant
+private responses remain non-cacheable. No real submission, Stripe session,
+charge, provider settlement, legal adoption or launch decision was created.
+
+The new twenty-two synthetic checkout browser cases also passed in both GitHub
+verification runs. They verify the component before future launch, not an active
+production checkout. The earlier full Spanish Customer Agreement and payment
+wording drafts are now in repository history but remain drafts. Provider
+acceptance evidence, legal release manifests and launch locks are unchanged.
+Do not republish PR #256 or #257 or redo the completed stale-consent repair.
+
+During release, refreshed the existing business Gmail search scoped to Stripe,
+Founder Shield/Baldwin and Montgomery County senders. It still showed only the
+existing Stripe response thread and acknowledgment. No new reply in that scope
+and no inquiry resent. Remaining processor answers, final policy/Spanish
+customer integration and actual hosted Stripe receipt proof remain separate.
+
+Evidence outside the repository: pr257-production-release-20260927.json,
+pr257-live-release-20260927.json and verify-quote-checkout-release-20260927.mjs.
+Fast-forwarded this checkout to the merge; retain this handoff locally for the
+next substantive release rather than causing a status-only deployment.
+
 ## 2026-09-27 - Repair stale quote consent and checkout response handling locally
 
 Continued from the preserved local Spanish/reconciliation drafts; no open PRs

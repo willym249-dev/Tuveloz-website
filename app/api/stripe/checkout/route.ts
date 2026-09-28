@@ -15,7 +15,7 @@ import {
   getAccountSession,
   isSameOriginRequest,
 } from "../../../../lib/account-auth";
-import { customerPriceFor } from "../../../../lib/customer-fee";
+import { customerPriceFor, hostedCustomerServiceFeeText } from "../../../../lib/customer-fee";
 import { hostedPaymentDisclosure } from "../../../../lib/payment-merchant";
 import { isLaborOnlyPartsSource } from "../../../../lib/service-matching";
 import {
@@ -628,10 +628,7 @@ export async function POST(request: Request) {
           price_data: {
             currency,
             unit_amount: applicationFeeCents,
-            product_data: {
-              name: "Customer Service Fee",
-              description: "5% Customer Service Fee, calculated on the provider's price",
-            },
+            product_data: hostedCustomerServiceFeeText(body.language, totals.customerFeeRateBps),
           },
           quantity: 1,
         },
@@ -858,7 +855,9 @@ export async function POST(request: Request) {
             unit_amount: providerAmountCents,
             product_data: {
               name: productName,
-              description: `Labor-only provider quote from ${selection.providerName}`,
+              description: body.language === "es"
+                ? `Cotización de mano de obra de ${selection.providerName}`
+                : `Labor-only provider quote from ${selection.providerName}`,
             },
           },
           quantity: 1,
@@ -867,10 +866,7 @@ export async function POST(request: Request) {
           price_data: {
             currency,
             unit_amount: applicationFeeCents,
-            product_data: {
-              name: "Customer Service Fee",
-              description: `${scopePrice.customerFeeRateBps / 100}% Customer Service Fee, calculated on the provider's price`,
-            },
+            product_data: hostedCustomerServiceFeeText(body.language, scopePrice.customerFeeRateBps),
           },
           quantity: 1,
         },

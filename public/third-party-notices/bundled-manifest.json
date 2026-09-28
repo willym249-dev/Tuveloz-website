@@ -651,14 +651,26 @@
       ]
     }
   ],
-  "unresolvedEmbeddedComponents": [
+  "unresolvedEmbeddedComponents": [],
+  "resolvedEmbeddedComponents": [
     {
       "name": "@hiogawa/utils",
       "version": "1.7.0",
       "declaredLicense": "MIT",
       "containingPackage": "@vitejs/plugin-rsc@0.5.26",
       "sourceReleaseCommit": "71f588d9ed860b2104ae4ce4f97dcf0af5d6249c",
-      "noticeStatus": "No license file in exact npm archive or official release tree. No generic copyright/license text substituted. Resolve with upstream or reviewer before claiming complete notice coverage."
+      "noticeBasis": "Maintainer added this repository MIT notice in PR 277, explicitly closing issue 276 about the missing notice for version 1.7.0. It supplements the original archive, which contained no license file.",
+      "maintainerResponse": "https://github.com/hi-ogawa/js-utils/issues/276#issuecomment-5862858336",
+      "noticeCommit": "978a54938a661c389d7fe80b457eef2c2441ff08",
+      "notices": [
+        {
+          "file": "bundled/hiogawa-utils-1.7.0-LICENSE.txt",
+          "source": "https://github.com/hi-ogawa/js-utils/blob/978a54938a661c389d7fe80b457eef2c2441ff08/LICENSE",
+          "sourceGitBlob": "fb2084d564e77db7b6247cf52ed5a0f4d71eef37",
+          "sha256": "bbea4cfaf9ae6f3dcfd3ca5eb4a1e4d3c33c4219da7524df8c485cc60e7e4521",
+          "bytes": 1070
+        }
+      ]
     }
   ]
 }

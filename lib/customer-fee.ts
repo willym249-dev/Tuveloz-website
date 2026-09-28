@@ -19,6 +19,22 @@ export const CUSTOMER_SERVICE_FEE_NAME = "Customer Service Fee";
 export const CUSTOMER_SERVICE_FEE_LABEL =
   `${CUSTOMER_SERVICE_FEE_NAME} (${CUSTOMER_SERVICE_FEE_PERCENT}%)`;
 
+// Stripe localizes its form, but displays merchant-supplied line items verbatim.
+// Use the authorized rate for wording; this helper does not calculate a charge.
+export function hostedCustomerServiceFeeText(language: unknown, feeRateBps: number) {
+  const percent = feeRateBps / 100;
+  if (language === "es") {
+    return {
+      name: "Tarifa de Servicio al Cliente",
+      description: `Tarifa de Servicio al Cliente del ${percent}%, calculada sobre el precio del proveedor`,
+    };
+  }
+  return {
+    name: CUSTOMER_SERVICE_FEE_NAME,
+    description: `${percent}% ${CUSTOMER_SERVICE_FEE_NAME}, calculated on the provider's price`,
+  };
+}
+
 /**
  * The reviewed and locked fee model. Stated as numbers because a worked example
  * cannot be misread the way a sentence can, and because this is the exact case

@@ -12,6 +12,7 @@ import {
   CUSTOMER_SERVICE_FEE_PERCENT,
   CUSTOMER_SERVICE_FEE_RATE_BPS,
   customerPriceFor,
+  hostedCustomerServiceFeeText,
   PROVIDER_PAYOUT_DISCLOSURE,
 } from "../lib/customer-fee.ts";
 
@@ -112,6 +113,17 @@ test("the fee has one canonical name and one disclosure for each audience", () =
   assert.match(PROVIDER_PAYOUT_DISCLOSURE, /full quoted price/);
   assert.match(PROVIDER_PAYOUT_DISCLOSURE, /never deducted from your payout/);
   assert.match(PROVIDER_PAYOUT_DISCLOSURE, /charged to the customer on top of it/);
+
+  for (const language of [undefined, "fr", "en", "es"]) {
+    const price = customerPriceFor(100_00);
+    const item = hostedCustomerServiceFeeText(language, price.customerFeeRateBps);
+    assert.equal(item.name, language === "es" ? "Tarifa de Servicio al Cliente" : CUSTOMER_SERVICE_FEE_NAME);
+    assert.match(item.description, /5%/);
+    assert.match(item.description, language === "es" ? /precio del proveedor/ : /provider's price/);
+    assert.deepEqual(Object.keys(item).sort(), ["description", "name"]);
+    assert.equal(price.customerTotalCents, 105_00);
+  }
+  assert.match(hostedCustomerServiceFeeText("es", 250).description, /2\.5%/);
 });
 
 /**
@@ -187,7 +199,8 @@ test("the agreements and the Stripe receipt describe the same fee", async () => 
   assert.match(payments, /fee equal to 5% of the\s+provider/);
 
   // The line item a customer actually sees on the receipt and the authorization.
-  assert.match(checkout, /name: "Customer Service Fee"/);
+  assert.match(checkout, /hostedCustomerServiceFeeText\(body\.language, totals\.customerFeeRateBps\)/);
+  assert.match(checkout, /hostedCustomerServiceFeeText\(body\.language, scopePrice\.customerFeeRateBps\)/);
   assert.match(authDoc, /<td>Customer Service Fee<\/td>/);
 
   // The fee Stripe retains is the customer fee, charged on top of the total.
