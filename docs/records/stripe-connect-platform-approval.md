@@ -2,7 +2,7 @@
 
 - **Status:** active — initial approval and written processor reply verified; launch-scope reconciliation pending
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 
 This card preserves the existing Connect approval so future work does not repeat
 onboarding or treat a completed processor application as missing. It also records
@@ -42,9 +42,10 @@ The historical Platform profile also says individual seller payouts and platform
 refund/chargeback liability. Both the historical profile and current setup show
 an onboarding/seller-compliance acknowledgment button. Stripe's September 27
 written reply confirms that an authorized representative needs to complete it.
-The same button remains visible in Platform setup. It was not clicked or
-accepted; its exact terms and consequences still need review. This is separate
-from the negative-balance acknowledgment already dated July 29.
+The September 28 read-only preview exposed its two duties and exact acceptance
+sentence, recorded below. The checkbox remains unchecked and nothing was
+accepted. This is separate from the negative-balance acknowledgment already
+dated July 29.
 
 Sources: `lib/stripe-provider.ts`, `app/api/stripe/checkout/route.ts`, and
 `app/api/stripe/admin/payments/route.ts`, inspected at local documentation commit
@@ -70,11 +71,11 @@ policy wording solely to make a label match. This is not a tax determination.
 
 1. Preserve the July 29 approval and the matching current selections as existing
    evidence for `stripe_connect_business_model`; do not restart the application.
-2. Preserve the September 27 substantive response below. Prepare a same-thread
-   follow-up only for unanswered transfer-delay and service-category questions,
-   account-specific conditions, and the exact onboarding acknowledgment text.
-   The owner-approved follow-up was sent September 27 at 8:05 p.m. Maryland time;
-   do not repeat either inquiry. The remaining answers are pending.
+2. Preserve both substantive responses below. The owner-approved follow-up sent
+   September 27 at 8:05 p.m. received an answer September 28 at 2:49 p.m.
+   Do not repeat either inquiry. Reconcile the general holding guidance with
+   the documented US reserve ceiling; neither is a target provider payout time.
+   Category review still depends on the finalized service scope.
 3. Match the initial enabled service list to the insurer/legal decisions before
    representing specialist services as supported. The full catalog is not the
    launch commitment.
@@ -82,9 +83,10 @@ policy wording solely to make a label match. This is not a tax determination.
    receipt and policy disclosure review below. The current public business name
    and statement descriptor already show TUVELOZ LLC; do not replace them.
    The CPA gate remains separate; processor setup is not a tax opinion.
-5. Review the outstanding onboarding acknowledgment with the authorized owner
-   before acceptance. Do not infer permission to accept it from support's email,
-   or turn completion into permission to open bookings or payments.
+5. Present the reviewed onboarding acknowledgment to the authorized owner before
+   acceptance. The notification gap found during this review is repaired locally
+   but publication and actual delivery evidence remain separate. Do not infer
+   permission to accept from support's email or turn it into launch permission.
 
 `stripe_connect_business_model` requires an evidence reference and valid-through
 date in Tuveloz's launch controls. This email states no expiration; obtaining a
@@ -180,6 +182,55 @@ Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
 
+## Follow-up response and acknowledgment preview — September 28
+
+The existing business-inbox thread received a reply from `support@stripe.com`
+at **2:49 p.m. Maryland time**, signed by Smriti. Expanded sender details show
+`stripe.com` signing, Salesforce mailing infrastructure and TLS. The original
+and exact private observations are retained outside the repository in
+`outputs/stripe-support-reply-20260928.txt` and
+`outputs/stripe-seller-compliance-review-20260928.txt`.
+
+| Subject | What the new response establishes | Remaining boundary |
+| --- | --- | --- |
+| Holding funds | Support states no account-specific hold period and recommends no more than 90 days after service completion; it describes two years as a technical ceiling. | The linked public page instead lists two years for US reserves and 90 days for other countries, without stating the email's 90-days-after-completion rule. Preserve both sources as distinct; do not invent a binding deadline or implement either as the normal payout delay. |
+| Service categories | The general Connect approval covers the described structure, not every vehicle-service category. | Cross-check the finalized, insured/licensed launch list against restricted-business rules. The full catalog is not approved by this response. |
+| Financial responsibility | The platform retains fees, refund, fraud and chargeback exposure; reserves may apply. | No specific reserve amount, new account restriction or insurance/tax clearance was supplied. |
+| Onboarding acknowledgment | Full duties can be reviewed in the Dashboard before acceptance. | The preview was read; acceptance remains a separate authorized-owner action. |
+
+Public references checked September 28:
+[holding funds](https://docs.stripe.com/connect/account-balances#holding-funds),
+[risk responsibility](https://docs.stripe.com/connect/risk-management), and
+[restricted businesses](https://stripe.com/legal/restricted-businesses).
+The holding page supports purpose-based retention until a service is completed
+and confirmed; it does not justify arbitrary delays or establish legal advice.
+
+The **Ongoing seller compliance** preview displays these duties:
+
+- **Seller communication:** notify sellers when risk/fraud prevention or
+  mitigation affects their account.
+- **Seller remediation:** collect additional required information, using
+  Stripe-hosted or embedded onboarding if appropriate.
+
+Exact acceptance sentence: "I acknowledge I have reviewed and agree to my
+responsibility for ongoing seller compliance."
+
+The checkbox was left unchecked and Acknowledge remained disabled. No new terms,
+setting, fee, purchase, email or launch action was accepted or submitted.
+Preview screenshot: `outputs/stripe-seller-compliance-terms-20260928.png`.
+
+The source review found that V2 requirements/capability events only logged their
+current status. The local repair queues a protected provider notice and email
+intent atomically, with English/Spanish copy, a secure workspace link, event
+deduplication, ownership rechecks and test/staging suppression. Storage failures
+keep the signed webhook retryable. It also keeps the provider's Stripe update
+button visible when requirements exist even while transfers remain active.
+No raw requirement details or bank/identity data enter the notice. Existing
+payment-client and launch locks remain intact; this is not proof of live webhook
+delivery while that client is code-locked, nor proof that an email reached an
+inbox. Verify deployment and approved live operation separately before marking
+ongoing seller communication operationally complete.
+
 ### Disclosure review — interface repair published; policy and receipt-language review pending
 
 The original source review used `b5c67a9`; the table below is reconciled to
@@ -194,7 +245,7 @@ in the [payment policy reconciliation](../legal/payment-policy-reconciliation.md
 | --- | --- | --- |
 | Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. September 27 standalone test receipts also identify TUVELOZ LLC and itemize the correct total. | Preserve these verified fields. Actual bank-statement and live receipt presentation remain separate. |
 | `app/components/quote-payment-card.tsx` | PR #256 places the bilingual payment-merchant disclosure beside the total. | Complete for this interface; preserve it. The broader quote authorization remains English-only. |
-| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. September 27 standalone hosted rehearsal verifies both merchant messages; a discovered Spanish line-item gap is repaired locally and verified in a replacement sandbox Session. | Publish the tested label repair separately. Verify receipt-language propagation; do not repeat the completed hosted checks or call them production-app integration proof. |
+| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. September 27 standalone hosted rehearsal verifies both merchant messages; a discovered Spanish line-item gap was verified in a replacement sandbox Session, then published in PR #258/release 03f92dd on September 28. | Label publication is complete. Verify receipt-language propagation; do not repeat the completed hosted checks or call them production-app integration proof. |
 | `app/success/page.tsx` | PR #256 identifies TUVELOZ LLC on an authenticated payment record and distinguishes payment states in both languages. | Complete for the published interface; preserve it. This is not an actual Stripe receipt. |
 | `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and `app/provider-agreement/page.tsx` | Current text leaves some payment-role decisions pending; Terms section 7 can imply collection only after completion. Terms, Payment Policy and Provider Agreement have complete, separately hashed Spanish translations; Customer Agreement does not have a Spanish-ready route. | Review the exact clauses and timing together. A complete customer translation draft is now prepared; adopt its final paired wording before release through the existing translation/policy version process. |
 | Accepted customer evidence | Released English documents and exact scope are recorded. The customer authorization omits the merchant sentence, language and Spanish release metadata. The provider path already binds all three relevant translation hashes and language. | Extend the customer path using the existing provider approach, preserving prior records. Verify saved/downloaded text and stale-consent rejection. Do not duplicate the provider system, fabricate review or reuse stale hashes. |
@@ -259,9 +310,53 @@ session was revoked, unauthenticated status rechecked, dedicated config removed,
 and three disposable browser tabs closed. Test records remain clearly labeled
 in Stripe; private API evidence and screenshots stay outside the repository.
 The code repair passed build, all 812 tests, TypeScript and lint with the existing
-warning; publication remains pending. See LOG for the exact boundary and result.
+warning. PR #258 published the repair September 28 as 03f92dd after all required
+checks; the exact live release was independently verified. Receipt headings and
+production payment integration remain separate. See LOG for the exact result.
 
 Reference: [Stripe test-card documentation](https://docs.stripe.com/testing).
+
+### Receipt-language follow-up — investigated September 28
+
+The actual Spanish test receipt has Spanish line items but English surrounding
+headings. The [receipt localization documentation](https://docs.stripe.com/receipts#localization)
+points to customer locale data at Checkout creation; its detailed table describes
+invoice behavior. Treat applying `preferred_locales` to standard charge receipts
+as a hypothesis until a new actual test receipt confirms it. Do not enable paid
+one-time invoice creation just to change language.
+
+Current `lib/stripe-customers.ts` creates a Customer with email and metadata,
+and returns an existing Customer without setting a language. Checkout supplies
+that Customer only when the signed-in customer owns the matching email. The
+fallback uses `customer_email`. Preserve this ownership boundary: never attach
+a saved Stripe Customer to a guest just because the entered email matches.
+
+The next focused repair must preserve the stable Customer creation parameters
+and idempotency key; adding a changing language to that existing create request
+can conflict with a retry. If locale updates are used, guard each write with the
+current marketplace checks and verify their failure/retry behavior, existing and
+new Customers, guest handling, and concurrent language choices. Existing saved
+payment methods, policy evidence and payment amounts must stay unchanged.
+The [Customer update API](https://docs.stripe.com/api/customers/update) supports
+partial updates; send only the intended preference field. No Customer, setting,
+invoice, payment or runtime source was changed during this investigation.
+
+### Receipt-language experiment — awaiting owner click September 28
+
+Prepared a new, isolated Spanish test Checkout for a synthetic Customer whose
+preferred locales explicitly contain es. It retains the tested $100 service
+plus $5 fee and does not enable invoice creation or a provider transfer. The
+final Pay action was blocked by automatic approval review, which requires the
+owner to press the button even in test mode. No indirect payment attempt was
+made. Latest API evidence is open/unpaid with no receipt, so the localization
+hypothesis is still unverified and no application change is justified yet.
+
+The one-hour CLI test session was revoked, unauthenticated status confirmed,
+and its temporary configuration removed. The ready Checkout tab remains for
+the owner until its own one-hour expiry. Private evidence and exact expiry are
+in work/stripe-receipt-language-20260928 outside the repository. Inspect this
+existing Session before creating another. PR #258 remains published and complete;
+this outstanding experiment does not reopen its label or notice work.
 
 ### Narrow follow-up — sent September 27
 
@@ -274,8 +369,9 @@ The reply and screenshot are retained privately as
 `outputs/stripe-followup-sent-20260927.png`. It asks for the unanswered timing
 and service-category conditions and the acknowledgment text, corrects the
 "live" description, and authorizes no setting change, acceptance or paid service.
-The clarification request is complete; the answers remain pending. Do not resend
-or ask for this send approval again. Keep the September 30 review checkpoint.
+The clarification request is complete; its September 28 answer is recorded
+above. Do not resend or ask for send approval again. Keep the September 30
+checkpoint for the remaining owner, service-scope and disclosure decisions.
 
 ## Saved business description — corrected and verified
 

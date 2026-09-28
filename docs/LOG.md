@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,128 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-28 - Stripe reply verified; provider account notices repaired locally
+
+Read the new September 28 2:49 p.m. Stripe Support reply in the business inbox.
+Expanded details confirm support@stripe.com, stripe.com signing and TLS.
+The general Connect approval remains complete, but the reply does not approve
+every service category. Recorded the distinction between its holding guidance
+and the linked public US reserve ceiling; no arbitrary payout deadline added.
+Opened only the seller-compliance preview, expanded both duties and saved the
+exact text privately. It requires seller communication and collection of further
+information through secure onboarding. Nothing was accepted; checkbox unchecked.
+
+Source review found V2 requirements/capability webhooks only logged status.
+The local repair atomically queues account/email notices for the uniquely mapped
+real provider, uses the provider's English/Spanish preference, suppresses test and
+staging events, rechecks ownership, and deduplicates signed retries. A failed
+notification write leaves the Stripe receipt retryable. Messages contain no
+private requirement descriptions, identity or bank details and link to the
+signed-in Stripe panel. The existing outbox handles delivery/retries. No message
+was sent as a test. The update button now also appears when requirements exist
+while Stripe transfers are still active.
+
+Validation: 13 new behavioral/rendered-panel checks pass; full build and all
+825 tests pass, TypeScript passes, lint has no errors and one existing
+site-language.tsx navigation warning. The first full test run was blocked by
+Windows sandbox parent-directory permissions; the same suite passed with normal
+local filesystem access. Logs are outside the repo in outputs/stripe-account-
+notifications-tests-20260928-verified.log and the matching lint log.
+
+No competing PR was open; remote main remains 03f92dd. Existing local handoff
+commits preserved on fix/stripe-account-notifications-20260928. This repair is
+local, not published. Payment-client/live-mode guards remain unchanged, so this
+is not proof of production live webhook delivery, provider inbox receipt or
+complete operational seller compliance. No account terms, legal policy, payment
+setting, provider approval or launch switch changed.
+
+The separate Spanish receipt-language Checkout still displays its test form;
+no completion was observed. Its owner-only Pay click remains outstanding and
+the prior CLI session remains revoked. Do not create a duplicate or bypass that
+handoff. Business browser IDs changed again; identify the tuveloz.com profile
+rather than trusting a saved numeric browser ID. Connected Gmail MCP is the
+personal account, so no personal mail was searched.
+
+## 2026-09-28 - Receipt-language test prepared; owner payment click required
+
+Continued from published PR #258 without republishing it. Main remains 03f92dd,
+no competing PR is open, and the earlier local handoff commit is preserved.
+Read the actual existing Spanish test receipt: fee text is Spanish, surrounding
+headings remain English. Rechecked Stripe's current documentation; customer
+preferred locales remain a hypothesis for these standard charge receipts.
+
+Restored the previously authorized one-hour CLI session for only TUVELOZ LLC
+test mode, using an isolated configuration. Created one clearly synthetic
+Customer with preferred_locales=[es] and one Spanish hosted Checkout Session
+for $100 simulated service plus $5 fee. Invoice creation is disabled, with no
+provider transfer configured. No real customer, card or money was used. The
+browser form is filled with Stripe's documented synthetic card and accurately
+identified the operator as an AI agent.
+
+Automatic approval review rejected the final Pay click and expressly requires
+the owner to perform it, even in test mode. Did not retry through a different
+tool or API. Asked the owner to click Pagar; the prepared browser tab is retained.
+The read-only API check still reports open/unpaid, no PaymentIntent or receipt.
+Do not call this receipt-language verification complete or publish a speculative
+customer-preference change. If the prepared Session expires, inspect its state
+before preparing another; do not overwrite the existing evidence.
+
+Revoked the temporary CLI session, independently confirmed Authenticated:false,
+and removed its isolated configuration. The one-hour Checkout remains available
+for the owner; CLI logout does not complete or cancel the test payment. Private
+test objects, expiry and cleanup evidence are in
+work/stripe-receipt-language-20260928; the ready screenshot is
+outputs/stripe-receipt-language-ready-20260928.png. No application code, policy,
+payment setting, launch control or production release changed. No new automated
+tests were needed for this documentation-only handoff.
+
+The September 28 scoped business-inbox refresh still shows the September 27
+Stripe reply/acknowledgment only, with no new broker/county answer. No message
+was sent. Current business Chrome is browser 3 (tuveloz.com); browser 4 is Edge,
+so do not reuse the old browser-4 assumption from prior sessions.
+
+## 2026-09-28 - PR 258 published and independently verified
+
+Completed the owner's authorized combined release without repeating approval.
+PR #258 merged tested head 348f4bf as 03f92dd155157190bee559729631b1aa83557780.
+Both required PR workflows passed. All three jobs in production workflow
+36375909647 passed, including the full 812-test build, browser checks, fresh
+migration rehearsal, deployment and exact release verification. GitHub's
+tuveloz/production-deployment status is success for that same merge commit.
+
+Independent public verification at 2026-09-28T04:19:17.531Z passed all 52 HTTP
+checks. The exact release and application/database/schema are ready; all 41
+unique notice files, both manifests and the README match their expected bytes.
+That includes the new official MIT notice supplied by the maintainer and every
+one of the 40 earlier files. Closed checkout, unknown-session privacy,
+signed-out provider denial and public payment-result routes also passed.
+Accounts and provider applications remain open; requests and payments closed.
+
+The first independent pass detected different hashes for two metadata files
+after the local Git fast-forward converted their working-copy line endings.
+Both live files exactly matched their committed Git blobs; only Windows CRLF
+conversion differed. Corrected the private verifier to compare metadata with
+the exact release's Git bytes, retaining all original notice hash checks. The
+full rerun passed. No website repair or second deployment was needed. The
+comparison evidence is pr258-manifest-line-endings-20260928.json.
+
+Spanish fee and quote labels are published. Their earlier actual Stripe test
+Checkout/receipt proof remains separate from production payment integration.
+Stripe's surrounding receipt headings still need verified language handling;
+the processor record now records the ownership and idempotency requirements for
+that follow-up. No new Stripe Customer, invoice, test payment or live charge was
+created. No dependency upgrade, paid license or launch/policy decision changed.
+
+The scoped business-inbox refresh found only the existing Stripe answer and
+acknowledgment, with no new broker/county answer in the inspected scope. Nothing
+was resent. Preserve pending processor, insurance, county and policy reviews.
+
+Evidence outside the repository: pr258-merged-checks-20260928.json,
+pr258-production-release-20260928.json, pr258-production-status-20260928.json,
+pr258-live-release-20260927.json and verify-pr258-release-20260927.mjs.
+Publication is complete; do not repeat approval, notice collection, hosted tests
+or deployment. This status handoff is retained locally for the next useful PR.
 
 ## 2026-09-27 - Upstream notice resolved and combined release prepared
 
