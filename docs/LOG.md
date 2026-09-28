@@ -11,7 +11,7 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Test refund total and fee allocation repaired; release pending
+## 2026-09-28 - Test refund total and fee allocation published and verified
 
 Continued from clean ecd20e3 and production b916a4e with no open PRs. Preserved
 the owner's full-refund choice and all active policy/launch/payment controls.
@@ -40,8 +40,21 @@ amounts, authorized changes, stale/missing prices, repeat approval and persisted
 test/access restrictions. No Stripe/email/network call, real account record,
 refund, migration, key, active policy or launch flag changed.
 Private logs: outputs/refund-allocation-full-tests-20260928.log and
-outputs/refund-allocation-lint-20260928.log. Publication is pending the required
-GitHub checks. Real refund initiation, cumulative settled-payment limits,
+outputs/refund-allocation-lint-20260928.log. Published under the owner's standing
+instruction to publish fixes and continue. PR #261 merged tested head
+72846f2639561ea1e334c2845e1ef4135d0edb91 as
+3b7ae69fbcae3d737430ecfa9ccf389a0357ab3b after both required PR workflows passed.
+Production workflow 36489545629 completed all three jobs successfully at
+22:15:58 UTC, including its separate browser, bilingual, signup, migration,
+build and deployment checks. Independent verification at
+2026-09-28T22:17:14.585Z passed all eleven targeted HTTP checks and confirmed
+that exact release with ready application/database/schema. Private operations
+reject signed-out GET/POST with 401 and cross-origin POST with 403, all no-store;
+checkout remains closed. No test records were created in production. Accounts
+and provider applications remain open; customer jobs and payments remain closed.
+Private proof: outputs/pr261-production-release-20260928.json and
+outputs/pr261-live-release-20260928.json. Do not repeat the merge or deployment.
+Real refund initiation, cumulative settled-payment limits,
 eligibility/policy adoption and permitted transfer recovery remain unfinished;
 this test accounting repair must not be presented as live refund execution.
 

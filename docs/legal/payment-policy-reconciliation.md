@@ -159,13 +159,15 @@ the selected rule rather than silently broadening or removing it.
 
 ### Refund implementation findings — September 28 source review
 
-**Accounting repair prepared September 28:** the test request/cancellation paths
+**Accounting repair published September 28 in PR #261 (`3b7ae69`):** the test request/cancellation paths
 now use the validated saved customer total, record the separate provider/fee
 amounts, and require an explicit owner fee allocation for partial test refunds.
 Full refunds automatically include the entire saved fee. The new migrated-SQL
 route tests pass, including $105 / $100 / $5, scope changes, missing/stale prices,
 rounding, amount limits, repeat approvals and access/test isolation. All 840
-tests and the production build pass locally. See LOG for publication status.
+tests and the production build pass locally; both required PR workflows and all
+three production jobs passed. Independent HTTP checks confirmed the exact
+healthy release and eleven public/private-route safeguards. See LOG for proof.
 This repairs the simulation accounting only. Real Stripe refund initiation,
 eligibility rules, cumulative paid/refunded limits and transfer recovery are
 still separate work; no effective policy or launch control changed.
