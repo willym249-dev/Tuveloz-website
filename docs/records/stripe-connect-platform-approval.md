@@ -290,6 +290,23 @@ The [Customer update API](https://docs.stripe.com/api/customers/update) supports
 partial updates; send only the intended preference field. No Customer, setting,
 invoice, payment or runtime source was changed during this investigation.
 
+### Receipt-language experiment — awaiting owner click September 28
+
+Prepared a new, isolated Spanish test Checkout for a synthetic Customer whose
+preferred locales explicitly contain es. It retains the tested $100 service
+plus $5 fee and does not enable invoice creation or a provider transfer. The
+final Pay action was blocked by automatic approval review, which requires the
+owner to press the button even in test mode. No indirect payment attempt was
+made. Latest API evidence is open/unpaid with no receipt, so the localization
+hypothesis is still unverified and no application change is justified yet.
+
+The one-hour CLI test session was revoked, unauthenticated status confirmed,
+and its temporary configuration removed. The ready Checkout tab remains for
+the owner until its own one-hour expiry. Private evidence and exact expiry are
+in work/stripe-receipt-language-20260928 outside the repository. Inspect this
+existing Session before creating another. PR #258 remains published and complete;
+this outstanding experiment does not reopen its label or notice work.
+
 ### Narrow follow-up — sent September 27
 
 The owner approved the exact prepared reply, then instructed us to continue.

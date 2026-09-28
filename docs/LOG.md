@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Receipt-language test prepared; owner payment click required
+
+Continued from published PR #258 without republishing it. Main remains 03f92dd,
+no competing PR is open, and the earlier local handoff commit is preserved.
+Read the actual existing Spanish test receipt: fee text is Spanish, surrounding
+headings remain English. Rechecked Stripe's current documentation; customer
+preferred locales remain a hypothesis for these standard charge receipts.
+
+Restored the previously authorized one-hour CLI session for only TUVELOZ LLC
+test mode, using an isolated configuration. Created one clearly synthetic
+Customer with preferred_locales=[es] and one Spanish hosted Checkout Session
+for $100 simulated service plus $5 fee. Invoice creation is disabled, with no
+provider transfer configured. No real customer, card or money was used. The
+browser form is filled with Stripe's documented synthetic card and accurately
+identified the operator as an AI agent.
+
+Automatic approval review rejected the final Pay click and expressly requires
+the owner to perform it, even in test mode. Did not retry through a different
+tool or API. Asked the owner to click Pagar; the prepared browser tab is retained.
+The read-only API check still reports open/unpaid, no PaymentIntent or receipt.
+Do not call this receipt-language verification complete or publish a speculative
+customer-preference change. If the prepared Session expires, inspect its state
+before preparing another; do not overwrite the existing evidence.
+
+Revoked the temporary CLI session, independently confirmed Authenticated:false,
+and removed its isolated configuration. The one-hour Checkout remains available
+for the owner; CLI logout does not complete or cancel the test payment. Private
+test objects, expiry and cleanup evidence are in
+work/stripe-receipt-language-20260928; the ready screenshot is
+outputs/stripe-receipt-language-ready-20260928.png. No application code, policy,
+payment setting, launch control or production release changed. No new automated
+tests were needed for this documentation-only handoff.
+
+The September 28 scoped business-inbox refresh still shows the September 27
+Stripe reply/acknowledgment only, with no new broker/county answer. No message
+was sent. Current business Chrome is browser 3 (tuveloz.com); browser 4 is Edge,
+so do not reuse the old browser-4 assumption from prior sessions.
+
 ## 2026-09-28 - PR 258 published and independently verified
 
 Completed the owner's authorized combined release without repeating approval.
