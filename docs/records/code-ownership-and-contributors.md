@@ -131,7 +131,8 @@ nor the official release commit
 history identifies that commit as version 1.7.0. No generic copyright text was
 invented or substituted. Obtain a supported notice source or reviewer guidance
 before claiming the wider notice collection is complete. The owner-approved
-upstream inquiry is now posted as recorded below; no answer is recorded yet.
+upstream inquiry was posted as recorded below; its later response is recorded
+under "Maintainer notice supplied".
 
 September 27 follow-up: the current upstream main tree
 `08c2ee8e07e9b9a5fdde871a57c0df67b5750219` also has no license/notice file,
@@ -198,8 +199,42 @@ PR #255 merged tested head 1821c39 as b5c67a9. Both PR workflows and all three p
 
 See private pr255-live-release-20260927.json and
 pr255-production-result-20260927.json. Packaging and publication are complete;
-issue #276 and final distribution/ownership review remain open. Do not repeat
-notice collection or publication.
+issue #276 was still awaiting an answer at that verification. Its later response
+is recorded below; final distribution/ownership review remains separate. Do not
+repeat the completed collection or PR #255 publication.
+
+### Maintainer notice supplied — September 27
+
+The owner supplied the response and asked us to finish the check. The upstream
+[issue #276](https://github.com/hi-ogawa/js-utils/issues/276) is now Closed.
+The repository owner says the license was added through
+[PR #277](https://github.com/hi-ogawa/js-utils/pull/277), which explicitly closes
+our question about the official notice for version 1.7.0. The PR says the packages
+already declare MIT and adds the missing repository license text. It merged at
+2026-09-28 03:35:11 UTC (September 27 Maryland time).
+
+Current installed `@vitejs/plugin-rsc@0.5.26` and its lockfile entry still match.
+Its `dist/dist-rz-Bnebz.js` still identifies the embedded `@hiogawa/utils@1.7.0`
+source region. The maintainer also mentions removal in a later plugin version;
+that does not remove the helper from our installed version. No upgrade is needed
+to preserve the newly supplied notice, and no dependency was changed.
+
+Copied the exact 1,070-byte MIT text from official commit
+`978a54938a661c389d7fe80b457eef2c2441ff08`, with its attribution to
+Hiroshi Ogawa, into `public/third-party-notices/bundled/hiogawa-utils-1.7.0-LICENSE.txt`.
+Git blob `fb2084d564e77db7b6247cf52ed5a0f4d71eef37` and SHA-256
+`bbea4cfaf9ae6f3dcfd3ca5eb4a1e4d3c33c4219da7524df8c485cc60e7e4521`
+match the upstream bytes. The bundled manifest records the pinned source,
+maintainer response and resolution basis in `resolvedEmbeddedComponents`; the
+previous unresolved list is empty. The original archive still had no notice;
+we do not rewrite that historical fact or claim a retroactively changed archive.
+
+This resolves the specific missing-notice inquiry based on the maintainer's
+direct response and explicitly linked fix. The supplemental notice and README
+are prepared for publication with the approved Spanish checkout-label fix.
+The existing 40 notice files and original direct manifest are preserved. Overall
+ownership, brand provenance, private contributor evidence and launch review
+remain separate; no legal gate was marked approved and no reply was sent.
 
 ## What depends on it
 

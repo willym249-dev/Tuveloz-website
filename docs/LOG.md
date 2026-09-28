@@ -11,6 +11,36 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Upstream notice resolved and combined release prepared
+
+The owner supplied the GitHub reply, then asked us to complete the check and
+continue. Upstream issue #276 is Closed with the repository owner's direct
+answer, and PR #277 merged as 978a54938a661c389d7fe80b457eef2c2441ff08. That PR
+explicitly closes our question about the missing MIT notice for utils 1.7.0.
+Our installed plugin is still 0.5.26 and still contains the 1.7.0 source marker;
+the maintainer's note about removal in a newer plugin does not change our copy.
+
+Preserved the official 1,070-byte MIT notice exactly, with its source commit,
+Git blob, SHA-256 and linked maintainer response. Added it to the public notice
+collection and moved the specific component to the manifest's resolved list.
+No license text, attribution or date was invented. The original archive's
+missing-file history is preserved. No package upgrade or paid license is needed
+for this notice update; package-lock.json remains unchanged.
+
+All 41 unique notice files, both manifests and the README match the production
+build byte-for-byte, including every one of the 40 previously published files.
+The combined Spanish checkout-label repair and notice addition pass build and
+all 812 tests. Earlier TypeScript/lint checks remain valid for the unchanged
+application repair; remote release checks will run again. No competing PR was
+open and main remained 59c7815 before publication. Continue the authorized
+combined release without requesting the same publication permission again.
+
+Private source/validation evidence: hiogawa-license-source-20260927.json,
+hiogawa-notice-validation-20260927.json and checkout-notice-fulltests-20260927.log.
+The specific upstream response task is complete. Publication is still pending
+at this entry; overall ownership/reviewer evidence and launch controls remain
+separate. No reply or new inquiry was sent.
+
 ## 2026-09-27 - Hosted Stripe test payments and Spanish line-item repair
 
 Continued from PR #257 without repeating its release. No competing PR was open
