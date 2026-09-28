@@ -11,7 +11,75 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Restricted live payment-key guard repaired; publication pending
+## 2026-09-28 - Test refund total and fee allocation repaired; release pending
+
+Continued from clean ecd20e3 and production b916a4e with no open PRs. Preserved
+the owner's full-refund choice and all active policy/launch/payment controls.
+Five route scenarios reproduced baseline failures using migrated in-memory
+SQLite and synthetic participants; authentication identities and Cloudflare
+bindings are fixtures, and every outbound call is forbidden.
+
+The test-only refund/cancellation paths now validate the saved customer price
+and include the Customer Service Fee in the ceiling. A full $105 refund records
+$100 as provider impact and $5 as the fee returned by Tuveloz; it does not assign
+the fee to provider earnings. Requests bind the accepted quote, scope and price;
+approval rejects missing/stale snapshots. Authorized changes use their saved
+price without falling back to an older quote. Invoice/payout subtotal logic is
+unchanged. Full allocations include the complete fee automatically; a partial
+test approval requires an explicit fee amount within both saved components,
+without defining a new partial-refund policy. The owner form and returned
+records show that distinction. Existing denied/history records stay intact;
+legacy requests without a price snapshot can be denied, but need a new test
+review before approval. An already-decided refund cannot append a second audit.
+
+All 41 focused checks passed, then the production build and all 840 tests with
+zero failures. Lint passed with the existing warning in unchanged
+site-language.tsx. Eight new behavior cases cover real route/SQL persistence,
+full refunds and cancellations, explicit partial allocations, rounding, maximum
+amounts, authorized changes, stale/missing prices, repeat approval and persisted
+test/access restrictions. No Stripe/email/network call, real account record,
+refund, migration, key, active policy or launch flag changed.
+Private logs: outputs/refund-allocation-full-tests-20260928.log and
+outputs/refund-allocation-lint-20260928.log. Publication is pending the required
+GitHub checks. Real refund initiation, cumulative settled-payment limits,
+eligibility/policy adoption and permitted transfer recovery remain unfinished;
+this test accounting repair must not be presented as live refund execution.
+
+## 2026-09-28 - Owner full-refund decision and remaining implementation boundary
+
+Continued from clean 0b738be and verified production b916a4e with no open PRs.
+The owner explicitly chose full refunds including the 5% Customer Service Fee
+for provider cancellation/no-show or customer cancellation before work starts.
+The question disclosed Tuveloz would cover original Stripe processing fees that
+are not returned. This business choice is settled; do not ask it again. Added
+matching English/Spanish candidate clauses and a $100 + $5 = $105 refund example
+to the existing payment-policy-reconciliation.md, with remaining partial-refund,
+provider-recovery and policy-adoption decisions kept separate.
+
+Source review found the current job-operation refund/cancellation path is
+restricted to persisted test jobs/providers and never creates a Stripe refund.
+Its authorizedJobTotal ceiling is the provider subtotal, excluding the customer
+fee; its decision handlers also attribute the entire refund to provider impact.
+The draft now identifies both accounting gaps and exact verification cases.
+Do not globally increase authorizedJobTotal, since invoice/payout checks need
+the provider subtotal. A future real refund must bind the settled payment and
+remaining refundable amount, separately account for the Customer Service Fee,
+and distinguish decision/request/pending/succeeded/failed states. Signed Stripe
+refund callbacks and prior concurrency repairs remain completed separate work;
+they do not establish refund initiation or provider recovery.
+
+The scoped hello@tuveloz.com inbox search, refreshed September 28 at about
+5:15 p.m. Maryland time, found no messages after September 26 addressed to the
+business inbox from foundershield.com, baldwin.com or montgomerycountymd.gov.
+This is not an exhaustive mailbox assertion. No duplicate inquiry was sent.
+Corrected one stale draft sentence that still called PR #258's published
+Spanish line-item repair local. No runtime, active policy, release hash,
+credential, payment or launch control changed; these are local review records.
+All 15 existing customer-fee consistency checks pass after using the canonical
+fee name throughout the new draft. Git whitespace validation passes. No full
+build or deployment was repeated for these documentation-only changes.
+
+## 2026-09-28 - Restricted live payment-key guard published and verified
 
 Continued from clean local 00376fb and remote production b20d524; no open PRs
 were present. The remaining thin-event delivery path intentionally still uses
@@ -33,7 +101,21 @@ and all 831 tests with zero failures. Lint passed with the existing warning in
 unchanged site-language.tsx. The suite includes the prior local sender/retry
 coverage; neither it nor this repair proves actual provider inbox delivery.
 Private build/test log: outputs/stripe-key-guard-full-tests-20260928.log.
-Prepared for review; not yet published. No launch/payment/SMS flag changed.
+Published under the owner's standing instruction to publish fixes and continue.
+PR #260 merged tested head 72d9077 as
+b916a4ef4420002703310996c81be5090a9064f7 after all required PR checks passed.
+Production workflow 36481473413 completed successfully, including the separate
+bilingual browser/signup checks, migration rehearsal, build, Cloudflare deploy
+and exact-release check. Independent verification at
+2026-09-28T21:02:17.303Z passed all eight targeted HTTP checks and confirmed that
+exact commit with ready application/database/schema. Customer accounts and
+provider applications remain open; job requests and payments remain closed.
+Private proof: outputs/pr260-production-release-20260928.json and
+outputs/pr260-live-release-20260928.json. The reusable HTTP script now accepts a
+PR number so it does not relabel this proof as PR #259 or overwrite its record.
+No launch/payment/SMS flag changed. The published safeguard does not establish
+real provider inbox delivery, receipt localization, or business launch approval.
+Do not repeat this merge, acceptance or release.
 
 ## 2026-09-28 - Existing receipt test resolved; provider alert sender checked locally
 

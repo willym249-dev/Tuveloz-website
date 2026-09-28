@@ -21,6 +21,7 @@ import {
   type AccountRole,
 } from "../../../lib/account-auth";
 import { customerPriceFor } from "../../../lib/customer-fee";
+import { testRefundAllocation, testRefundCents, type TestRefundPrice } from "../../../lib/test-refund-allocation";
 import {
   CUSTOMER_COMPLETION_AGREEMENT_KEY,
   CUSTOMER_COMPLETION_AGREEMENT_VERSION,
@@ -539,6 +540,49 @@ async function authorizedJobTotal(context: AssignedJobOperationContext) {
   return changedTotal ?? (await acceptedQuoteAmounts(context)).providerAmountCents;
 }
 
+// Simulation uses the accepted quote/scope price, never a client amount or a
+// newly chosen rate. Invoice/payout totals above remain provider subtotals.
+async function authorizedTestRefundPrice(context: AssignedJobOperationContext): Promise<TestRefundPrice | null> {
+  const [change] = await getDb().select({
+    priceBreakdown: jobChangeOrders.priceBreakdown,
+    scopeVersion: jobChangeOrders.proposedScopeVersion,
+  }).from(jobChangeOrders).where(and(
+    eq(jobChangeOrders.requestId, context.requestId),
+    eq(jobChangeOrders.quoteId, context.quoteId),
+    eq(jobChangeOrders.status, "authorized"),
+  )).orderBy(desc(jobChangeOrders.proposedScopeVersion)).limit(1);
+  let price: CompletePriceBreakdown | null;
+  if (change) {
+    if (change.scopeVersion !== context.scopeVersion) return null;
+    price = completePriceBreakdown(change.priceBreakdown);
+  } else {
+    if (context.scopeVersion !== 1) return null;
+    const [quote] = await getDb().select({
+      totalAmountCents: providerQuotes.priceCents,
+      laborAmountCents: providerQuotes.laborPriceCents,
+      partsAmountCents: providerQuotes.partsPriceCents,
+      customerFeeRateBps: providerQuotes.customerFeeRateBps,
+      customerFeeCents: providerQuotes.customerFeeCents,
+      customerTotalCents: providerQuotes.customerTotalCents,
+    }).from(providerQuotes).where(and(
+      eq(providerQuotes.id, context.quoteId),
+      eq(providerQuotes.requestId, context.requestId),
+      eq(providerQuotes.status, "accepted"),
+    )).limit(1);
+    if (!quote || Object.values(quote).some(value => testRefundCents(value) === null)) return null;
+    price = completePriceBreakdown(JSON.stringify({ ...quote, taxAmountCents: 0, otherAmountCents: 0 }));
+  }
+  if (!price || !Number.isSafeInteger(price.customerTotalCents)) return null;
+  return {
+    providerAmountCents: price.totalAmountCents,
+    customerFeeCents: price.customerFeeCents,
+    customerTotalCents: price.customerTotalCents,
+    customerFeeRateBps: price.customerFeeRateBps,
+    scopeVersion: context.scopeVersion,
+    quoteId: context.quoteId,
+  };
+}
+
 async function openOperationalBlocks(requestId: string) {
   const db = getDb();
   const [incidents, cancellations, changes] = await Promise.all([
@@ -713,6 +757,7 @@ export async function GET(request: Request) {
       decidedAt: item.decidedAt,
       providerImpactCents: item.providerImpactCents,
       customerImpactCents: item.customerImpactCents,
+      refundAllocation: parseJsonRecord(item.details).allocation ?? null,
     })),
     lifecycle,
   });
@@ -1596,10 +1641,11 @@ export async function POST(request: Request) {
   if (action === "request-refund") {
     const roleError = requireRole(actor, "customer", "provider");
     if (roleError) return roleError;
-    const amountCents = integerCents(body.amountCents, false);
+    const amountCents = testRefundCents(body.amountCents);
     const reasonCode = clean(body.reasonCode, 60);
     const explanation = clean(body.explanation, 1800);
-    const authorizedTotalCents = await authorizedJobTotal(context);
+    const priceSnapshot = await authorizedTestRefundPrice(context);
+    if (!priceSnapshot) return response({ error: "The saved customer price needs review before a test refund can be recorded." }, 409);
     const allowedReasons = [
       "cancellation",
       "provider_no_show",
@@ -1610,14 +1656,15 @@ export async function POST(request: Request) {
     ];
     if (
       amountCents === null
-      || amountCents > authorizedTotalCents
+      || amountCents === 0
+      || amountCents > priceSnapshot.customerTotalCents
       || !allowedReasons.includes(reasonCode)
       || explanation.length < 10
     ) {
-      return response({ error: "Enter a refund amount no greater than the authorized provider total, a reason, and an explanation." }, 400);
+      return response({ error: "Enter a refund amount within the saved customer total, including the Customer Service Fee, a reason, and an explanation." }, 400);
     }
     const idempotencyKey = await sha256JobOperationText(
-      `test-refund:${requestId}:${actor.role}:${actor.email}:${amountCents}:${reasonCode}:${explanation}`,
+      `test-refund:${requestId}:${actor.role}:${actor.email}:${amountCents}:${reasonCode}:${explanation}:${JSON.stringify(priceSnapshot)}`,
     );
     const [duplicate] = await db.select({ id: paymentAdjustments.id })
       .from(paymentAdjustments)
@@ -1633,7 +1680,7 @@ export async function POST(request: Request) {
       amountCents,
       status: "requested",
       reasonCode,
-      details: JSON.stringify({ explanation, testOnly: true, stripeExecutionAllowed: false }),
+      details: JSON.stringify({ explanation, priceSnapshot, testOnly: true, stripeExecutionAllowed: false }),
       requestedByRole: actor.role,
       requestedById: actor.email,
       requestedAt: now,
@@ -1715,24 +1762,39 @@ export async function POST(request: Request) {
     if (adjustment.paymentId || adjustment.stripeRefundId) {
       return response({ error: "This test-only workflow cannot modify a Stripe payment." }, 409);
     }
+    let allocation: ReturnType<typeof testRefundAllocation> = null;
+    if (decision === "approve") {
+      const currentPrice = await authorizedTestRefundPrice(context);
+      const savedPrice = parseJsonRecord(adjustment.details).priceSnapshot;
+      if (!currentPrice || !savedPrice || typeof savedPrice !== "object"
+        || Object.entries(currentPrice).some(([key, value]) => (
+          (savedPrice as Record<string, unknown>)[key] !== value
+        ))) {
+        return response({ error: "The refund's saved customer price is missing or has changed. Submit a new test review." }, 409);
+      }
+      allocation = testRefundAllocation(currentPrice, adjustment.amountCents, body.customerFeeRefundCents);
+      if (!allocation) return response({ error: "Full refunds must include the entire Customer Service Fee. For a partial test refund, record the fee amount explicitly within the saved price." }, 400);
+    }
     const nextStatus = decision === "approve" ? "approved_test_only" : "denied";
-    await db.update(paymentAdjustments).set({
+    const decided = await db.update(paymentAdjustments).set({
       status: nextStatus,
       details: JSON.stringify({
         priorDetails: adjustment.details,
         decisionReason,
+        allocation,
         testOnly: true,
         stripeExecutionAllowed: false,
       }),
       decidedBy: actor.email,
       decidedAt: now,
-      providerImpactCents: decision === "approve" ? -adjustment.amountCents : 0,
-      customerImpactCents: decision === "approve" ? adjustment.amountCents : 0,
+      providerImpactCents: allocation ? -allocation.providerRefundCents : 0,
+      customerImpactCents: allocation?.customerRefundCents ?? 0,
       updatedAt: now,
     }).where(and(
       eq(paymentAdjustments.id, adjustment.id),
       eq(paymentAdjustments.status, "requested"),
-    ));
+    )).returning({ id: paymentAdjustments.id });
+    if (!decided.length) return response({ error: "This refund request was already decided." }, 409);
     await appendJobLifecycleEvent({
       requestId,
       quoteId: context.quoteId,
@@ -1744,7 +1806,7 @@ export async function POST(request: Request) {
       toStatus: context.requestStatus,
       scopeVersion: context.scopeVersion,
       reasonCode: adjustment.reasonCode,
-      details: { adjustmentId, amountCents: adjustment.amountCents, stripeExecutionAllowed: false },
+      details: { adjustmentId, amountCents: adjustment.amountCents, allocation, stripeExecutionAllowed: false },
     });
     return response({ ok: true, status: nextStatus, stripeRefundCreated: false });
   }
@@ -1755,27 +1817,32 @@ export async function POST(request: Request) {
     const cancellationId = clean(body.cancellationId, 80);
     const decision = clean(body.decision, 20);
     const decisionReason = clean(body.decisionReason, 1200);
-    const proposedRefundCents = integerCents(body.proposedRefundCents);
-    const retainedAmountCents = integerCents(body.retainedAmountCents);
+    const proposedRefundCents = testRefundCents(body.proposedRefundCents);
+    const retainedAmountCents = testRefundCents(body.retainedAmountCents);
     const [cancellation] = await db.select().from(jobCancellations)
       .where(and(
         eq(jobCancellations.id, cancellationId),
         eq(jobCancellations.requestId, requestId),
       )).limit(1);
     if (!cancellation) return response({ error: "Cancellation review not found." }, 404);
+    if (cancellation.quoteId !== context.quoteId) return response({ error: "This cancellation belongs to an earlier quote. Review the current assignment first." }, 409);
     if (!OPEN_CANCELLATION_STATUSES.includes(cancellation.status)) {
       return response({ error: "This cancellation was already decided." }, 409);
     }
-    const authorizedTotalCents = await authorizedJobTotal(context);
+    const priceSnapshot = await authorizedTestRefundPrice(context);
+    if (!priceSnapshot) return response({ error: "The saved customer price needs review before a test cancellation decision." }, 409);
     if (
       !["approve", "deny"].includes(decision)
       || decisionReason.length < 5
       || proposedRefundCents === null
       || retainedAmountCents === null
-      || proposedRefundCents + retainedAmountCents > authorizedTotalCents
+      || proposedRefundCents + retainedAmountCents > priceSnapshot.customerTotalCents
     ) {
-      return response({ error: "Record a decision, reason, and refund/retained amounts within the authorized total." }, 400);
+      return response({ error: "Record a decision, reason, and refund/retained amounts within the saved customer total, including the Customer Service Fee." }, 400);
     }
+    const allocation = decision === "approve"
+      ? testRefundAllocation(priceSnapshot, proposedRefundCents, body.customerFeeRefundCents) : null;
+    if (decision === "approve" && !allocation) return response({ error: "Full refunds must include the entire Customer Service Fee. For a partial test refund, record the fee amount explicitly within the saved price." }, 400);
     let adjustmentId = "";
     if (decision === "approve" && proposedRefundCents > 0) {
       adjustmentId = crypto.randomUUID();
@@ -1787,13 +1854,13 @@ export async function POST(request: Request) {
         amountCents: proposedRefundCents,
         status: "approved_test_only",
         reasonCode: cancellation.cancellationType,
-        details: JSON.stringify({ cancellationId, testOnly: true, stripeExecutionAllowed: false }),
+        details: JSON.stringify({ cancellationId, priceSnapshot, allocation, testOnly: true, stripeExecutionAllowed: false }),
         requestedByRole: "owner",
         requestedById: actor.email,
         requestedAt: now,
         decidedBy: actor.email,
         decidedAt: now,
-        providerImpactCents: -proposedRefundCents,
+        providerImpactCents: -(allocation?.providerRefundCents ?? 0),
         customerImpactCents: proposedRefundCents,
         idempotencyKey: await sha256JobOperationText(`test-cancellation-refund:${cancellationId}`),
         createdAt: now,
@@ -1826,7 +1893,7 @@ export async function POST(request: Request) {
       toStatus: decision === "approve" ? "cancelled" : context.requestStatus,
       scopeVersion: context.scopeVersion,
       reasonCode: cancellation.cancellationType,
-      details: { cancellationId, proposedRefundCents, retainedAmountCents, stripeExecutionAllowed: false },
+      details: { cancellationId, proposedRefundCents, retainedAmountCents, priceSnapshot, allocation, stripeExecutionAllowed: false },
     });
     return response({ ok: true, status: nextStatus, stripeRefundCreated: false });
   }

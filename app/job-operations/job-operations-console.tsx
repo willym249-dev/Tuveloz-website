@@ -461,7 +461,7 @@ export function JobOperationsConsole() {
                   busy={isBusy("request-refund")}
                   onSubmit={submit}
                   fields={[
-                    { name: "amountCents", label: "Requested amount (cents)", type: "number", min: 1, required: true },
+                    { name: "amountCents", label: "Requested refund including any Customer Service Fee (cents)", type: "number", min: 1, required: true },
                     { name: "reasonCode", label: "Reason", type: "select", required: true, options: [
                       { label: "Cancellation", value: "cancellation" }, { label: "Provider no-show", value: "provider_no_show" },
                       { label: "Work not performed", value: "work_not_performed" }, { label: "Unauthorized charge", value: "unauthorized_charge" },
@@ -520,9 +520,10 @@ export function JobOperationsConsole() {
                     { name: "decision", label: "Decision", type: "select", required: true, options: [{ label: "Approve (test only)", value: "approve" }, { label: "Deny", value: "deny" }] },
                     { name: "proposedRefundCents", label: "Proposed test refund (cents)", type: "number", min: 0, required: true },
                     { name: "retainedAmountCents", label: "Proposed retained amount (cents)", type: "number", min: 0, required: true },
+                    { name: "customerFeeRefundCents", label: "Customer Service Fee portion (cents; required for a partial test refund)", type: "number", min: 0 },
                     { name: "decisionReason", label: "Decision reason", type: "textarea", required: true },
                   ]}
-                  warning="No Stripe refund is created. Final schedules and allocation still require approved rules."
+                  warning="A full test refund includes the entire Customer Service Fee automatically. Partial refunds need an explicit fee portion. No money is sent; final eligibility and recovery rules still need review."
                 />)}
                 {data.incidents.filter((item) => ["open", "under_review", "insurer_review"].includes(String(item.status))).map((item) => <OperationForm
                   key={`incident-decision-${item.id}`}
@@ -563,9 +564,10 @@ export function JobOperationsConsole() {
                   onSubmit={submit}
                   fields={[
                     { name: "decision", label: "Decision", type: "select", required: true, options: [{ label: "Approve (test record only)", value: "approve" }, { label: "Deny", value: "deny" }] },
+                    { name: "customerFeeRefundCents", label: "Customer Service Fee portion (cents; required for a partial test refund)", type: "number", min: 0 },
                     { name: "decisionReason", label: "Decision reason", type: "textarea", required: true },
                   ]}
-                  warning="Approval records an accounting decision only. It never calls Stripe."
+                  warning="A full test refund includes the entire Customer Service Fee automatically. Partial refunds need an explicit fee portion. Approval records a test decision only; it never calls Stripe."
                 />)}
                 <OperationForm
                   title="Place reserve or dispute hold"
@@ -656,7 +658,10 @@ export function JobOperationsConsole() {
           </RecordSection>
 
           <RecordSection title="Refunds, reserves, and disputes" records={data.paymentAdjustments} empty="No payment adjustment or hold exists.">
-            {(item) => <><h3>{words(item.adjustmentType)} / {words(item.status)}</h3><p><strong>Amount:</strong> {money(item.amountCents)} / <strong>reason:</strong> {words(item.reasonCode)} / <strong>requested by:</strong> {words(item.requestedByRole)}</p><p>Provider impact: {money(item.providerImpactCents)} / customer impact: {money(item.customerImpactCents)}</p></>}
+            {(item) => {
+              const allocation = item.refundAllocation as Record<string, unknown> | null;
+              return <><h3>{words(item.adjustmentType)} / {words(item.status)}</h3><p><strong>Amount:</strong> {money(item.amountCents)} / <strong>reason:</strong> {words(item.reasonCode)} / <strong>requested by:</strong> {words(item.requestedByRole)}</p><p>Provider impact: {money(item.providerImpactCents)} / customer impact: {money(item.customerImpactCents)}</p>{allocation && <p>Customer Service Fee returned in this test: {money(allocation.customerFeeRefundCents)} / Tuveloz impact: {money(allocation.platformImpactCents)}</p>}</>;
+            }}
           </RecordSection>
 
           <RecordSection title="Immutable lifecycle history" records={data.lifecycle} empty="No lifecycle event exists yet.">
