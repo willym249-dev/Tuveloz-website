@@ -73,7 +73,8 @@ policy wording solely to make a label match. This is not a tax determination.
 2. Preserve the September 27 substantive response below. Prepare a same-thread
    follow-up only for unanswered transfer-delay and service-category questions,
    account-specific conditions, and the exact onboarding acknowledgment text.
-   The follow-up is prepared locally, not sent; do not repeat the initial inquiry.
+   The owner-approved follow-up was sent September 27 at 8:05 p.m. Maryland time;
+   do not repeat either inquiry. The remaining answers are pending.
 3. Match the initial enabled service list to the insurer/legal decisions before
    representing specialist services as supported. The full catalog is not the
    launch commitment.
@@ -179,7 +180,7 @@ Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
 
-### Disclosure review — prepared, not implemented
+### Disclosure review — local implementation prepared, not published
 
 Source reviewed at released commit `b5c67a9`. Keep the current account settings,
 policy releases, fee, provider quote and launch controls intact while this review
@@ -214,16 +215,29 @@ LLC. Servicio del vehículo prestado por [nombre del negocio proveedor].**
 These are review drafts, not published policies, a new receipt, a promise of
 refund eligibility, or proof of legal/tax approval.
 
-### Narrow follow-up — prepared, not sent
+The next local change adds concise payment-merchant wording to the quote total,
+hosted Checkout submit text, and authenticated payment record, with English and
+Spanish text. The hosted session and return links preserve the selected language.
+The payment-result page now translates in place, distinguishes unavailable records
+from closed checkout, and uses readable status labels without calling pending,
+failed, refunded or disputed payments paid. It creates no public Spanish payment
+record alias. Amounts, payment type, provider settlement and launch locks are
+unchanged. This implementation is not deployed, a real Stripe receipt test, a
+policy release, or completion of the remaining policy/acceptance evidence review.
 
-The exact proposed reply is saved privately as
-`outputs/stripe-support-followup-20260927.md` and prepared as an unsent same-thread
-reply in business Gmail. Its body was read back and a private screenshot saved.
-It asks for the unanswered timing
+### Narrow follow-up — sent September 27
+
+The owner approved the exact prepared reply, then instructed us to continue.
+Business Gmail confirmed **Message sent** at **8:05 p.m. Maryland time**.
+Expanded sent-message details independently show `hello@tuveloz.com` to
+`support@stripe.com`, the existing subject, and the exact approved body.
+The reply and screenshot are retained privately as
+`outputs/stripe-support-followup-20260927.md` and
+`outputs/stripe-followup-sent-20260927.png`. It asks for the unanswered timing
 and service-category conditions and the acknowledgment text, corrects the
 "live" description, and authorizes no setting change, acceptance or paid service.
-The initial send approval covered the earlier inquiry; obtain specific approval
-before sending this new reply. Keep the existing September 30 review checkpoint.
+The clarification request is complete; the answers remain pending. Do not resend
+or ask for this send approval again. Keep the September 30 review checkpoint.
 
 ## Saved business description — corrected and verified
 
@@ -252,6 +266,10 @@ Saved replacement:
 
 ## History
 
+- **2026-09-27:** Sent the exact owner-approved follow-up in the existing thread
+  and verified its recipient, timestamp and body. No acknowledgment accepted or
+  setting changed. Prepared the local bilingual payment-disclosure/result-page
+  repair; publication, policy review and actual hosted-receipt proof are separate.
 - **2026-09-27:** Read the substantive 5:24 p.m. reply, checked its sender details,
   and reconciled it with official Stripe documentation and current source. Public
   name/statement descriptor already match. Outstanding onboarding acknowledgment

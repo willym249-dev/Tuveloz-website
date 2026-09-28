@@ -119,6 +119,9 @@ jobs:
       - name: Verify private account recovery and data scope in Chromium and WebKit
         run: npm run test:e2e:privacy
 
+      - name: Verify bilingual payment records without real charges
+        run: npm run test:e2e:payment-disclosure
+
       - name: Verify provider onboarding receipts and retry behavior in both languages
         run: npm run test:e2e:onboarding
 

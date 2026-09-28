@@ -444,12 +444,15 @@ The live dashboard already shows TUVELOZ LLC as both public name and statement
 descriptor, so those fields need no change. The acknowledgment remains unaccepted.
 
 Specific service restrictions, maximum transfer delay and account-specific reserve
-conditions remain unanswered. A narrow reply is prepared locally for send approval;
-do not repeat the initial inquiry. Support called the quote flow live in one sentence,
+conditions remain unanswered. The owner-approved narrow reply was sent in the
+same thread September 27 at 8:05 p.m. Maryland time; recipient and full body were
+verified after Gmail confirmed Message sent. Do not repeat either inquiry or its
+send approval. Support called the quote flow live in one sentence,
 but customer bookings/payments remain closed. The record card maps the remaining
 checkout, confirmation, English/Spanish policy and accepted-evidence disclosures,
-with proposed bilingual wording for review. The 5% account-description correction
-and initial Connect approval remain complete. No runtime, policy, fee, account
+with a local bilingual checkout/payment-result implementation awaiting publication
+and separate policy/evidence review. The 5% account-description correction
+and initial Connect approval remain complete. No published policy, fee, account
 setting or launch gate changed. Live mode remains locked
 (`STRIPE_LIVE_MODE_ENABLED = false`).
 

@@ -11,6 +11,50 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Send approved Stripe reply and prepare payment-disclosure repair
+
+Sent the exact owner-approved same-thread reply to support@stripe.com from
+hello@tuveloz.com. Gmail displayed Message sent; expanded sent-message details
+and body confirm September 27 at 8:05 p.m. Maryland time, the intended recipient,
+subject and approved text. The existing processor card, deadline row and private
+checklist now distinguish the completed send from the unanswered questions.
+Private proof: stripe-followup-sent-20260927.png. Do not resend or ask for this
+send approval again. No Stripe acknowledgment, setting or paid service changed.
+
+Prepared a local fix identifying TUVELOZ LLC as payment merchant beside the
+quote total, in hosted Checkout submit text, and on authenticated payment records.
+The short wording keeps independent-provider service responsibility explicit
+without duplicating the price/fee breakdown. Supported English/Spanish locale is
+carried into Checkout and its return links. The result page translates in place
+with an obvious language button and localized policy/application links; it does
+not add a public /es/success route or translate original service names.
+
+The same review found failed record lookups silently showing the closed-checkout
+message. They now show an unavailable-record message and a support/sign-in next
+step. Readable bilingual statuses distinguish paid, pending, failed, refunded and
+disputed records. Unknown status values remain under review. A canceled URL no
+longer asserts that no payment occurred. The existing authenticated/private-token
+checks remain intact; no private token enters the return URLs or Stripe metadata.
+
+Validation: production build and all 812 tests pass; TypeScript passes; lint has
+zero errors and the one unchanged language-navigation warning. Thirty-two local
+mobile Chromium/WebKit cases pass across both languages, paid/pending/failed/
+refunded states, missing records, network failure, cancellation and closed
+checkout. They verify no overflow, readable labels, correct links, language
+switching without a second lookup, private-header access and no outbound calls.
+The browser check is included in the existing verification workflow. The first
+full-suite attempt hit local sandbox ancestor-directory access errors; the same
+suite passed with the required read access. A missing request-body language type
+was corrected before the passing TypeScript/full-suite run. Deadline parsing and
+whitespace checks pass. Private test logs/screenshots use payment-disclosure-20260927.
+
+This is prepared locally, not pushed or deployed. No released policy/hash,
+acceptance evidence, fee, payment strategy, transfer, provider record, dependency,
+service activation or launch lock changed. Real Stripe hosted-receipt proof and
+the separate policy/acceptance review remain outstanding. The owner must approve
+this new publication; earlier publication approvals and the reply-send approval
+are not reused for it. Keep the remaining Stripe/broker/county checkpoints.
+
 ## 2026-09-27 - Reconcile Stripe's written response and prepare remaining questions
 
 The scoped business-inbox search found a substantive Stripe Support response
