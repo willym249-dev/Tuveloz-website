@@ -367,7 +367,7 @@ The [Customer update API](https://docs.stripe.com/api/customers/update) supports
 partial updates; send only the intended preference field. No Customer, setting,
 invoice, payment or runtime source was changed during this investigation.
 
-### Receipt-language experiment — test window ended; no receipt confirmed
+### Receipt-language experiment — no payments on the existing test Customer
 
 Prepared a new, isolated Spanish test Checkout for a synthetic Customer whose
 preferred locales explicitly contain es. It retains the tested $100 service
@@ -384,9 +384,17 @@ page. That message does not distinguish the two states. No completion or receipt
 was independently confirmed, and the unusable tab was closed. The private
 evidence and exact expiry remain in work/stripe-receipt-language-20260928 and
 outputs/stripe-receipt-language-unavailable-20260928.png outside the repository.
-Inspect the existing Session through authorized test access before creating
-another; do not describe an owner-ready checkout as still open. PR #258 remains
-published and complete; this experiment does not reopen its label or notice work.
+The subsequent September 28 signed-in Test-mode Dashboard inspection located
+the existing synthetic Customer by its test email and rehearsal metadata. Its
+Payments section shows **No payments**, and expanded details confirm
+**Spanish (Spain)**. This experiment produced no receipt; the Customer preference
+alone does not prove receipt localization. The Customer page does not establish
+the exact Checkout Session status enum. No new Session, credential, payment or
+invoice was created. Do not prepare a replacement until the owner is ready for
+the final Pay step, and do not describe the expired test window as still open.
+PR #258 remains published and complete; this experiment does not reopen its
+label or notice work. Private current observations are appended to
+work/stripe-receipt-language-20260928/summary.json.
 
 ### Narrow follow-up — sent September 27
 

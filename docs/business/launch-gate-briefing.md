@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 - **Applies to:** the 18 launch gates in `lib/launch-readiness.ts`
 
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
@@ -441,18 +441,29 @@ fee/refund/dispute/loss responsibility, and the need for an authorized represent
 to complete the separate onboarding acknowledgment. Its statement about no
 recurring renewal applies to that acknowledgment, not a new expiry for approval.
 The live dashboard already shows TUVELOZ LLC as both public name and statement
-descriptor, so those fields need no change. The acknowledgment remains unaccepted.
+descriptor, so those fields need no change. The owner subsequently approved the
+reviewed acknowledgment, and Stripe confirms acceptance September 28, 2026.
+Do not request that acceptance again.
 
-Specific service restrictions, maximum transfer delay and account-specific reserve
-conditions remain unanswered. The owner-approved narrow reply was sent in the
-same thread September 27 at 8:05 p.m. Maryland time; recipient and full body were
-verified after Gmail confirmed Message sent. Do not repeat either inquiry or its
-send approval. Support called the quote flow live in one sentence,
+The owner-approved narrow reply sent September 27 at 8:05 p.m. received an answer
+September 28 at 2:49 p.m. The record card preserves the response's holding
+guidance separately from the linked public reserve ceiling; neither establishes
+a normal payout delay. The finalized insured/licensed service list still needs
+category review, and no specific reserve amount or tax/insurance clearance was
+supplied. Do not repeat either inquiry or its send approval. Support called the
+quote flow live in one sentence,
 but customer bookings/payments remain closed. The record card maps the remaining
 checkout, confirmation, English/Spanish policy and accepted-evidence disclosures,
 with the bilingual checkout/payment-result interface repair published in PR #256
 and independently verified at release 299fd4c. Separate policy/evidence review
-and actual hosted-receipt proof remain. The
+and actual production integration remain. The isolated September 27 hosted tests
+and receipts are already complete; September 28 Spanish labels were published
+through PR #258. The separate Customer-locale receipt experiment has no payments
+on its synthetic test Customer, so it produced no receipt and does not justify a
+localization change. PR #259's provider notices/update-button repair is also
+published and verified. Actual Stripe-originated notice/inbox delivery remains
+unproven; the thin-event payment client still respects the live-payment lock.
+Local sender/retry tests are not operational delivery proof. The
 [payment-policy reconciliation](../legal/payment-policy-reconciliation.md)
 now supplies candidate bilingual clauses and the exact remaining gaps: collection
 timing versus provider transfer, merchant wording in saved customer consent, the
