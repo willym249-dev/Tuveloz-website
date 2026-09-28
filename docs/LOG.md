@@ -11,7 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Test refund total and fee allocation repaired; release pending
+## 2026-09-28 - Guarded full-refund execution prepared; live path remains closed
+
+Continued from clean 2cfd068 / production 3b7ae69 with no open PRs. Preserved
+PR #261's completed simulation repair and the owner's settled full-refund rule.
+Added an owner-authenticated endpoint and full-refund executor for the narrow
+pre-work, approved real cancellation case. It validates the immutable approved
+payment snapshot, the settled charge and its current Stripe state, prior
+refunds and the payment-specific transfer group. Test jobs/providers and
+approved_test_only decisions cannot use it. No live key or launch gate changed.
+
+A permanent execution reservation uses the existing unique idempotency index;
+no migration is required. Concurrent or different approvals cannot submit
+twice. A lost response or process interruption leaves a durable hold, and later
+requests only retrieve the original refund by ID/metadata, never resubmit it
+after Stripe's key-retention window. Pending/failed/canceled/unknown results do
+not claim success. Conditional payment writes preserve concurrent changes;
+versioned execution writes preserve newer reconciliation. The original decision
+owns the provider/customer accounting impacts; the execution row does not
+double-book them or create a transfer reversal.
+
+The endpoint remains closed by the existing real-marketplace release gate.
+Its future operator decision UI, reviewed approval/snapshot creation, policy
+adoption, paused-marketplace refund access, no-send/uncertain recovery and real
+Stripe sandbox rehearsal are still unfinished. Do not present this backend
+implementation as a live refund service. No real record, remote Stripe request,
+email, payment or active policy was changed during local verification.
+All 852 tests and the production build passed, including eleven new behavioral
+scenarios using actual signed owner tokens, migrated SQLite and Stripe SDK
+transport intercepted entirely inside the test process. The real production
+gate was separately verified closed. Full-total/fee binding, different/repeated
+approvals, simultaneous clicks, lost responses, retries beyond 24 hours,
+pending/failure states, transfers, changed evidence and reconciliation races
+passed. TypeScript and lint passed (one existing site-language.tsx warning).
+Private proof: outputs/stripe-full-refund-full-tests-20260928.log and
+outputs/stripe-full-refund-lint-20260928.log. Required remote checks and
+publication verification are pending; no deployment is claimed here.
+
+## 2026-09-28 - Test refund total and fee allocation published and verified
 
 Continued from clean ecd20e3 and production b916a4e with no open PRs. Preserved
 the owner's full-refund choice and all active policy/launch/payment controls.
@@ -40,8 +77,21 @@ amounts, authorized changes, stale/missing prices, repeat approval and persisted
 test/access restrictions. No Stripe/email/network call, real account record,
 refund, migration, key, active policy or launch flag changed.
 Private logs: outputs/refund-allocation-full-tests-20260928.log and
-outputs/refund-allocation-lint-20260928.log. Publication is pending the required
-GitHub checks. Real refund initiation, cumulative settled-payment limits,
+outputs/refund-allocation-lint-20260928.log. Published under the owner's standing
+instruction to publish fixes and continue. PR #261 merged tested head
+72846f2639561ea1e334c2845e1ef4135d0edb91 as
+3b7ae69fbcae3d737430ecfa9ccf389a0357ab3b after both required PR workflows passed.
+Production workflow 36489545629 completed all three jobs successfully at
+22:15:58 UTC, including its separate browser, bilingual, signup, migration,
+build and deployment checks. Independent verification at
+2026-09-28T22:17:14.585Z passed all eleven targeted HTTP checks and confirmed
+that exact release with ready application/database/schema. Private operations
+reject signed-out GET/POST with 401 and cross-origin POST with 403, all no-store;
+checkout remains closed. No test records were created in production. Accounts
+and provider applications remain open; customer jobs and payments remain closed.
+Private proof: outputs/pr261-production-release-20260928.json and
+outputs/pr261-live-release-20260928.json. Do not repeat the merge or deployment.
+Real refund initiation, cumulative settled-payment limits,
 eligibility/policy adoption and permitted transfer recovery remain unfinished;
 this test accounting repair must not be presented as live refund execution.
 

@@ -159,13 +159,15 @@ the selected rule rather than silently broadening or removing it.
 
 ### Refund implementation findings — September 28 source review
 
-**Accounting repair prepared September 28:** the test request/cancellation paths
+**Accounting repair published September 28 in PR #261 (`3b7ae69`):** the test request/cancellation paths
 now use the validated saved customer total, record the separate provider/fee
 amounts, and require an explicit owner fee allocation for partial test refunds.
 Full refunds automatically include the entire saved fee. The new migrated-SQL
 route tests pass, including $105 / $100 / $5, scope changes, missing/stale prices,
 rounding, amount limits, repeat approvals and access/test isolation. All 840
-tests and the production build pass locally. See LOG for publication status.
+tests and the production build pass locally; both required PR workflows and all
+three production jobs passed. Independent HTTP checks confirmed the exact
+healthy release and eleven public/private-route safeguards. See LOG for proof.
 This repairs the simulation accounting only. Real Stripe refund initiation,
 eligibility rules, cumulative paid/refunded limits and transfer recovery are
 still separate work; no effective policy or launch control changed.
@@ -193,6 +195,45 @@ its own validated price/payment snapshot and explicit allocation. Actual money
 movement must use the recorded settled payment and remaining refundable amount,
 not an unpaid quote, a newly recalculated fee, a client-supplied total or a
 simulation record. Keep the existing launch locks and owner decision boundary.
+
+### September 28 - guarded full-refund execution implementation
+
+The new `/api/stripe/admin/refunds` POST accepts only a saved adjustment ID and
+verifies the owner's signed access token and request origin. Its server-side
+executor remains closed by the existing real-marketplace release gate and
+Stripe key locks. No simulation override or new credentials were added.
+
+The first implementation accepts only a separately approved real cancellation,
+before work, for the full settled customer payment on an unreleased quote.
+The approval must contain `details.paymentSnapshot` matching the saved payment,
+scope, authorization, charge, transfer group and customer/provider/fee amounts.
+It rejects simulation approvals, missing evidence, prior refunds, partial or
+post-start cases, disputed payments and transfers. Stripe's current intent,
+charge, refund list and payment-specific transfer group are checked first.
+Provider recovery and automatic partial allocation are not implemented.
+
+One durable `stripe_full_refund` execution row per payment prevents duplicate
+submissions, including from different decisions. It references the original
+accounting decision without booking its financial impacts a second time.
+After any attempted submission, retries only retrieve the original refund;
+they never repeat the mutation, even after Stripe's idempotency window. A lost
+response, rejection or absent result stays under review. Current Stripe refund
+responses distinguish pending/action-needed/failed/canceled from succeeded;
+the existing webhook reconciliation remains responsible for payment totals.
+
+**Still required:** the production decision UI/workflow that creates this exact
+reviewed approval and immutable snapshot, policy adoption, refund operation
+during a future marketplace pause, operator recovery for unconfirmed/no-send
+reservations, and an approved end-to-end Stripe sandbox rehearsal. Existing
+test approvals remain `approved_test_only` and cannot trigger this executor.
+There is no refund button exposed to customers/providers and no live activation.
+Local behavioral proof uses migrated SQLite, real owner-token verification and
+the actual Stripe SDK with intercepted synthetic responses; it is not a real
+Stripe refund. See LOG for release and verification status.
+
+Stripe references checked September 28: [refund creation](https://docs.stripe.com/api/refunds/create),
+[idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),
+and [transfer-group lookup](https://docs.stripe.com/api/transfers/list).
 
 Before calling the refund workflow complete, verify these outcomes with isolated
 records and an approved Stripe test when the transaction path is ready:
