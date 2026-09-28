@@ -2,7 +2,7 @@
 
 - **Status:** draft; not an effective policy or launch approval
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
 
 This is the specific remaining policy work after PR #256, reviewed against
@@ -21,7 +21,7 @@ appeared. Do not resend those inquiries.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
-| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. September 27 standalone Stripe test checkouts and actual receipts verify merchant, totals, successful status and a Spanish decline/retry. | Hosted presentation rehearsal complete within its isolated scope. Spanish line-item repair is tested locally but not published; Stripe receipt headings still use English. Production integration, receipt-language propagation and customer consent remain separate. |
+| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. September 27 standalone Stripe test checkouts and actual receipts verify merchant, totals, successful status and a Spanish decline/retry. | Hosted presentation rehearsal complete within its isolated scope. Spanish line-item repair is published through PR #258/release 03f92dd and independently verified September 28; Stripe receipt headings still use English. Production integration, receipt-language propagation and customer consent remain separate. |
 | Payment Policy introduction and sections 3, 5, 8 | Still treats the processor's merchant role and some refund/dispute responsibilities as undecided. | Reflect the confirmed configuration while leaving unresolved transfer limits, reserves and legal/tax treatment expressly unresolved. |
 | Terms section 7 | Says the planned fee is charged on completed jobs. The quote checkout uses payment mode without manual capture; completion checks govern the later provider transfer. | Make customer collection and provider transfer distinct. Do not imply that collection waits for job completion or silently change the charge strategy. |
 | Customer Agreement section 7 | Describes the proposed fee but omits explicit payment-merchant identification. | Add the reviewed payment wording and an accurate checkout-timing explanation. |

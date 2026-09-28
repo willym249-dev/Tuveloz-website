@@ -2,7 +2,7 @@
 
 - **Status:** active — initial approval and written processor reply verified; launch-scope reconciliation pending
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 
 This card preserves the existing Connect approval so future work does not repeat
 onboarding or treat a completed processor application as missing. It also records
@@ -194,7 +194,7 @@ in the [payment policy reconciliation](../legal/payment-policy-reconciliation.md
 | --- | --- | --- |
 | Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. September 27 standalone test receipts also identify TUVELOZ LLC and itemize the correct total. | Preserve these verified fields. Actual bank-statement and live receipt presentation remain separate. |
 | `app/components/quote-payment-card.tsx` | PR #256 places the bilingual payment-merchant disclosure beside the total. | Complete for this interface; preserve it. The broader quote authorization remains English-only. |
-| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. September 27 standalone hosted rehearsal verifies both merchant messages; a discovered Spanish line-item gap is repaired locally and verified in a replacement sandbox Session. | Publish the tested label repair separately. Verify receipt-language propagation; do not repeat the completed hosted checks or call them production-app integration proof. |
+| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. September 27 standalone hosted rehearsal verifies both merchant messages; a discovered Spanish line-item gap was verified in a replacement sandbox Session, then published in PR #258/release 03f92dd on September 28. | Label publication is complete. Verify receipt-language propagation; do not repeat the completed hosted checks or call them production-app integration proof. |
 | `app/success/page.tsx` | PR #256 identifies TUVELOZ LLC on an authenticated payment record and distinguishes payment states in both languages. | Complete for the published interface; preserve it. This is not an actual Stripe receipt. |
 | `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and `app/provider-agreement/page.tsx` | Current text leaves some payment-role decisions pending; Terms section 7 can imply collection only after completion. Terms, Payment Policy and Provider Agreement have complete, separately hashed Spanish translations; Customer Agreement does not have a Spanish-ready route. | Review the exact clauses and timing together. A complete customer translation draft is now prepared; adopt its final paired wording before release through the existing translation/policy version process. |
 | Accepted customer evidence | Released English documents and exact scope are recorded. The customer authorization omits the merchant sentence, language and Spanish release metadata. The provider path already binds all three relevant translation hashes and language. | Extend the customer path using the existing provider approach, preserving prior records. Verify saved/downloaded text and stale-consent rejection. Do not duplicate the provider system, fabricate review or reuse stale hashes. |
@@ -259,9 +259,36 @@ session was revoked, unauthenticated status rechecked, dedicated config removed,
 and three disposable browser tabs closed. Test records remain clearly labeled
 in Stripe; private API evidence and screenshots stay outside the repository.
 The code repair passed build, all 812 tests, TypeScript and lint with the existing
-warning; publication remains pending. See LOG for the exact boundary and result.
+warning. PR #258 published the repair September 28 as 03f92dd after all required
+checks; the exact live release was independently verified. Receipt headings and
+production payment integration remain separate. See LOG for the exact result.
 
 Reference: [Stripe test-card documentation](https://docs.stripe.com/testing).
+
+### Receipt-language follow-up — investigated September 28
+
+The actual Spanish test receipt has Spanish line items but English surrounding
+headings. The [receipt localization documentation](https://docs.stripe.com/receipts#localization)
+points to customer locale data at Checkout creation; its detailed table describes
+invoice behavior. Treat applying `preferred_locales` to standard charge receipts
+as a hypothesis until a new actual test receipt confirms it. Do not enable paid
+one-time invoice creation just to change language.
+
+Current `lib/stripe-customers.ts` creates a Customer with email and metadata,
+and returns an existing Customer without setting a language. Checkout supplies
+that Customer only when the signed-in customer owns the matching email. The
+fallback uses `customer_email`. Preserve this ownership boundary: never attach
+a saved Stripe Customer to a guest just because the entered email matches.
+
+The next focused repair must preserve the stable Customer creation parameters
+and idempotency key; adding a changing language to that existing create request
+can conflict with a retry. If locale updates are used, guard each write with the
+current marketplace checks and verify their failure/retry behavior, existing and
+new Customers, guest handling, and concurrent language choices. Existing saved
+payment methods, policy evidence and payment amounts must stay unchanged.
+The [Customer update API](https://docs.stripe.com/api/customers/update) supports
+partial updates; send only the intended preference field. No Customer, setting,
+invoice, payment or runtime source was changed during this investigation.
 
 ### Narrow follow-up — sent September 27
 

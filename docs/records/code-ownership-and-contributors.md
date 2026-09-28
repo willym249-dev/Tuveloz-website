@@ -2,7 +2,7 @@
 
 - **Status:** partial evidence; owner records still required
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 
 This card inventories repository authorship, dependency notices, and asset
 provenance for the company-authority gate. It does not establish copyright
@@ -231,7 +231,11 @@ we do not rewrite that historical fact or claim a retroactively changed archive.
 
 This resolves the specific missing-notice inquiry based on the maintainer's
 direct response and explicitly linked fix. The supplemental notice and README
-are prepared for publication with the approved Spanish checkout-label fix.
+were published with the approved Spanish checkout-label fix in PR #258 on
+September 28. Production release 03f92dd passed all required checks; independent
+live verification confirms the exact bytes of all 41 notice files, both manifests
+and README. No upgrade or paid license was added. Broader ownership and final
+review requirements remain separate.
 The existing 40 notice files and original direct manifest are preserved. Overall
 ownership, brand provenance, private contributor evidence and launch review
 remain separate; no legal gate was marked approved and no reply was sent.

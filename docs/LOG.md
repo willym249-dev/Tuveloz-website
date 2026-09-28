@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-09-28
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,48 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-28 - PR 258 published and independently verified
+
+Completed the owner's authorized combined release without repeating approval.
+PR #258 merged tested head 348f4bf as 03f92dd155157190bee559729631b1aa83557780.
+Both required PR workflows passed. All three jobs in production workflow
+36375909647 passed, including the full 812-test build, browser checks, fresh
+migration rehearsal, deployment and exact release verification. GitHub's
+tuveloz/production-deployment status is success for that same merge commit.
+
+Independent public verification at 2026-09-28T04:19:17.531Z passed all 52 HTTP
+checks. The exact release and application/database/schema are ready; all 41
+unique notice files, both manifests and the README match their expected bytes.
+That includes the new official MIT notice supplied by the maintainer and every
+one of the 40 earlier files. Closed checkout, unknown-session privacy,
+signed-out provider denial and public payment-result routes also passed.
+Accounts and provider applications remain open; requests and payments closed.
+
+The first independent pass detected different hashes for two metadata files
+after the local Git fast-forward converted their working-copy line endings.
+Both live files exactly matched their committed Git blobs; only Windows CRLF
+conversion differed. Corrected the private verifier to compare metadata with
+the exact release's Git bytes, retaining all original notice hash checks. The
+full rerun passed. No website repair or second deployment was needed. The
+comparison evidence is pr258-manifest-line-endings-20260928.json.
+
+Spanish fee and quote labels are published. Their earlier actual Stripe test
+Checkout/receipt proof remains separate from production payment integration.
+Stripe's surrounding receipt headings still need verified language handling;
+the processor record now records the ownership and idempotency requirements for
+that follow-up. No new Stripe Customer, invoice, test payment or live charge was
+created. No dependency upgrade, paid license or launch/policy decision changed.
+
+The scoped business-inbox refresh found only the existing Stripe answer and
+acknowledgment, with no new broker/county answer in the inspected scope. Nothing
+was resent. Preserve pending processor, insurance, county and policy reviews.
+
+Evidence outside the repository: pr258-merged-checks-20260928.json,
+pr258-production-release-20260928.json, pr258-production-status-20260928.json,
+pr258-live-release-20260927.json and verify-pr258-release-20260927.mjs.
+Publication is complete; do not repeat approval, notice collection, hosted tests
+or deployment. This status handoff is retained locally for the next useful PR.
 
 ## 2026-09-27 - Upstream notice resolved and combined release prepared
 
