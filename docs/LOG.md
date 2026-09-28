@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Test refund total and fee allocation repaired; release pending
+
+Continued from clean ecd20e3 and production b916a4e with no open PRs. Preserved
+the owner's full-refund choice and all active policy/launch/payment controls.
+Five route scenarios reproduced baseline failures using migrated in-memory
+SQLite and synthetic participants; authentication identities and Cloudflare
+bindings are fixtures, and every outbound call is forbidden.
+
+The test-only refund/cancellation paths now validate the saved customer price
+and include the Customer Service Fee in the ceiling. A full $105 refund records
+$100 as provider impact and $5 as the fee returned by Tuveloz; it does not assign
+the fee to provider earnings. Requests bind the accepted quote, scope and price;
+approval rejects missing/stale snapshots. Authorized changes use their saved
+price without falling back to an older quote. Invoice/payout subtotal logic is
+unchanged. Full allocations include the complete fee automatically; a partial
+test approval requires an explicit fee amount within both saved components,
+without defining a new partial-refund policy. The owner form and returned
+records show that distinction. Existing denied/history records stay intact;
+legacy requests without a price snapshot can be denied, but need a new test
+review before approval. An already-decided refund cannot append a second audit.
+
+All 41 focused checks passed, then the production build and all 840 tests with
+zero failures. Lint passed with the existing warning in unchanged
+site-language.tsx. Eight new behavior cases cover real route/SQL persistence,
+full refunds and cancellations, explicit partial allocations, rounding, maximum
+amounts, authorized changes, stale/missing prices, repeat approval and persisted
+test/access restrictions. No Stripe/email/network call, real account record,
+refund, migration, key, active policy or launch flag changed.
+Private logs: outputs/refund-allocation-full-tests-20260928.log and
+outputs/refund-allocation-lint-20260928.log. Publication is pending the required
+GitHub checks. Real refund initiation, cumulative settled-payment limits,
+eligibility/policy adoption and permitted transfer recovery remain unfinished;
+this test accounting repair must not be presented as live refund execution.
+
 ## 2026-09-28 - Owner full-refund decision and remaining implementation boundary
 
 Continued from clean 0b738be and verified production b916a4e with no open PRs.

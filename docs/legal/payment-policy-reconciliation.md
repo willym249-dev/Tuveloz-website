@@ -159,14 +159,25 @@ the selected rule rather than silently broadening or removing it.
 
 ### Refund implementation findings — September 28 source review
 
-The published code at `b916a4e` does **not** yet implement that full-refund rule.
+**Accounting repair prepared September 28:** the test request/cancellation paths
+now use the validated saved customer total, record the separate provider/fee
+amounts, and require an explicit owner fee allocation for partial test refunds.
+Full refunds automatically include the entire saved fee. The new migrated-SQL
+route tests pass, including $105 / $100 / $5, scope changes, missing/stale prices,
+rounding, amount limits, repeat approvals and access/test isolation. All 840
+tests and the production build pass locally. See LOG for publication status.
+This repairs the simulation accounting only. Real Stripe refund initiation,
+eligibility rules, cumulative paid/refunded limits and transfer recovery are
+still separate work; no effective policy or launch control changed.
+
+The baseline published code at `b916a4e` did **not** implement that full-refund rule.
 `app/api/job-operations/route.ts` requires a persisted test job and test provider;
 its refund/cancellation decisions explicitly return `stripeRefundCreated: false`.
 No `refunds.create` call is present in the application/API refund paths reviewed.
 Stripe webhooks can record a refund made through Stripe, which is a different
 capability from initiating a refund from the Tuveloz workflow.
 
-Two concrete accounting gaps are present even in the test workflow:
+Two concrete accounting gaps were reproduced in the baseline test workflow:
 
 - `authorizedJobTotal()` returns the provider subtotal. `request-refund` and
   `decide-cancellation` use that ceiling, so the $105 full-refund example is
