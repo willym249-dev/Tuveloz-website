@@ -11,7 +11,7 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Guarded full-refund execution prepared; live path remains closed
+## 2026-09-28 - Guarded full-refund backend published; live path remains closed
 
 Continued from clean 2cfd068 / production 3b7ae69 with no open PRs. Preserved
 PR #261's completed simulation repair and the owner's settled full-refund rule.
@@ -45,8 +45,30 @@ approvals, simultaneous clicks, lost responses, retries beyond 24 hours,
 pending/failure states, transfers, changed evidence and reconciliation races
 passed. TypeScript and lint passed (one existing site-language.tsx warning).
 Private proof: outputs/stripe-full-refund-full-tests-20260928.log and
-outputs/stripe-full-refund-lint-20260928.log. Required remote checks and
-publication verification are pending; no deployment is claimed here.
+outputs/stripe-full-refund-lint-20260928.log.
+
+Published under the owner's standing instruction to publish fixes and continue.
+PR #262 merged head fd99d3ae3e866f294fdb56f14266c7e48f95f5b7 as
+907bf5e4775ed2e07d350452b688d26b6338c6bd at 23:05:43 UTC, after both PR workflows
+36494640443 and 36494640976 passed. Production workflow 36496136066 completed
+all three jobs successfully. Independent verification at 23:24:50.430 UTC
+confirmed that exact healthy release, ready application/database/schema and
+thirteen HTTP safeguards. Accounts/applications remain open; customer requests
+and payments remain closed. The new refund endpoint is intercepted by
+Cloudflare owner login for both signed-out and forged-email requests (302,
+no-store); application-level signed-owner checks have isolated behavioral proof.
+The first probe followed that login redirect and saw HTTP 200, so its expected
+403 was wrong. Corrected the probe to inspect the real 302 without following or
+retaining the login query. This was a verifier correction, not an application
+authentication bypass. Private proof: outputs/pr262-production-release-20260928.json
+and outputs/pr262-live-release-20260928.json. No production test record or actual
+Stripe refund was created. Do not repeat this publication or PR #261's repair.
+
+At about 6:53 p.m. Maryland time, refreshed the existing scoped business Gmail
+search for messages after September 26 addressed to hello@tuveloz.com from
+foundershield.com, baldwin.com or montgomerycountymd.gov. It still showed no
+matching messages. This is a scoped search result, not an exhaustive inbox
+claim. No new inquiry or other message was sent.
 
 ## 2026-09-28 - Test refund total and fee allocation published and verified
 
