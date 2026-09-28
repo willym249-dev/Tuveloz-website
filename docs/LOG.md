@@ -11,7 +11,7 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Restricted live payment-key guard repaired; publication pending
+## 2026-09-28 - Restricted live payment-key guard published and verified
 
 Continued from clean local 00376fb and remote production b20d524; no open PRs
 were present. The remaining thin-event delivery path intentionally still uses
@@ -33,7 +33,21 @@ and all 831 tests with zero failures. Lint passed with the existing warning in
 unchanged site-language.tsx. The suite includes the prior local sender/retry
 coverage; neither it nor this repair proves actual provider inbox delivery.
 Private build/test log: outputs/stripe-key-guard-full-tests-20260928.log.
-Prepared for review; not yet published. No launch/payment/SMS flag changed.
+Published under the owner's standing instruction to publish fixes and continue.
+PR #260 merged tested head 72d9077 as
+b916a4ef4420002703310996c81be5090a9064f7 after all required PR checks passed.
+Production workflow 36481473413 completed successfully, including the separate
+bilingual browser/signup checks, migration rehearsal, build, Cloudflare deploy
+and exact-release check. Independent verification at
+2026-09-28T21:02:17.303Z passed all eight targeted HTTP checks and confirmed that
+exact commit with ready application/database/schema. Customer accounts and
+provider applications remain open; job requests and payments remain closed.
+Private proof: outputs/pr260-production-release-20260928.json and
+outputs/pr260-live-release-20260928.json. The reusable HTTP script now accepts a
+PR number so it does not relabel this proof as PR #259 or overwrite its record.
+No launch/payment/SMS flag changed. The published safeguard does not establish
+real provider inbox delivery, receipt localization, or business launch approval.
+Do not repeat this merge, acceptance or release.
 
 ## 2026-09-28 - Existing receipt test resolved; provider alert sender checked locally
 
