@@ -21,7 +21,7 @@ appeared. Do not resend those inquiries.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
-| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. | Complete; preserve it. An actual hosted Checkout/receipt rehearsal remains separate. |
+| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. September 27 standalone Stripe test checkouts and actual receipts verify merchant, totals, successful status and a Spanish decline/retry. | Hosted presentation rehearsal complete within its isolated scope. Spanish line-item repair is tested locally but not published; Stripe receipt headings still use English. Production integration, receipt-language propagation and customer consent remain separate. |
 | Payment Policy introduction and sections 3, 5, 8 | Still treats the processor's merchant role and some refund/dispute responsibilities as undecided. | Reflect the confirmed configuration while leaving unresolved transfer limits, reserves and legal/tax treatment expressly unresolved. |
 | Terms section 7 | Says the planned fee is charged on completed jobs. The quote checkout uses payment mode without manual capture; completion checks govern the later provider transfer. | Make customer collection and provider transfer distinct. Do not imply that collection waits for job completion or silently change the charge strategy. |
 | Customer Agreement section 7 | Describes the proposed fee but omits explicit payment-merchant identification. | Add the reviewed payment wording and an accurate checkout-timing explanation. |
@@ -157,6 +157,13 @@ and included in the accepted evidence, not only inserted beside a checkbox.
    displayed merchant, total, language and paid status. Record the boundary:
    test-mode success is not a real customer charge, provider settlement or tax
    approval. No live charge, production provider or launch override is needed.
+
+Step 6's standalone presentation rehearsal completed September 27; see the
+[processor record](../records/stripe-connect-platform-approval.md#hosted-test-mode-rehearsal--completed-september-27).
+Do not repeat it as an uncompleted task. Actual English/Spanish hosted messages,
+itemized amounts, paid receipts and Spanish decline/retry were verified. The
+discovered Spanish line-item repair remains local. Stripe's receipt headings
+remain English, and full customer consent/production integration are not proved.
 
 This review is ready for continuation. It does not require another deployment
 of PR #256 or another inquiry email. No application or active policy file was

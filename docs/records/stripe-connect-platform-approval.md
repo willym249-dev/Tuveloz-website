@@ -160,7 +160,7 @@ message references and observations stay outside this repository.
 | Question | Stripe's written answer | What remains |
 | --- | --- | --- |
 | Merchant of record | TUVELOZ LLC is the payment merchant for Express accounts with separate charges/transfers and no `on_behalf_of`. | Make checkout, payment confirmation and policies explicit before launch; this does not make Tuveloz the repair business or settle tax law. |
-| Customer identity/disclosure | Receipts/statements must identify TUVELOZ LLC or a registered DBA; explain that payment is with Tuveloz while the provider performs labor. | Current dashboard public name and descriptor were independently read as TUVELOZ LLC. A real or authorized test receipt remains separate evidence. |
+| Customer identity/disclosure | Receipts/statements must identify TUVELOZ LLC or a registered DBA; explain that payment is with Tuveloz while the provider performs labor. | Current dashboard public name and descriptor were independently read as TUVELOZ LLC. Authorized standalone test receipts now confirm the merchant name and itemization; real bank-statement and production integration evidence remain separate. |
 | Fees, refunds and disputes | Platform bears the stated Stripe fees/loss exposure; disputes can debit the platform even after a provider transfer. | Final refund/recovery controls, financial reserves and tax/accounting review. This is not a promise that recovery from a provider succeeds. |
 | Existing approval | The reply confirms the described general Connect arrangement. | No specific service-category determination or maximum transfer-delay answer was supplied. |
 | Onboarding acknowledgment | An authorized representative must complete it; it is one-time with no recurring renewal date, subject to later configuration changes. | Review exact terms and obtain the applicable acceptance authorization. No acknowledgment was accepted during this inspection. |
@@ -180,7 +180,7 @@ Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
 
-### Disclosure review — interface repair published; policy and receipt review pending
+### Disclosure review — interface repair published; policy and receipt-language review pending
 
 The original source review used `b5c67a9`; the table below is reconciled to
 published release `299fd4c`. Keep the current account settings, policy releases,
@@ -192,9 +192,9 @@ in the [payment policy reconciliation](../legal/payment-policy-reconciliation.md
 
 | Surface | Current evidence | Required review action |
 | --- | --- | --- |
-| Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. | Complete for the observed fields; do not change or repeat setup. Actual receipt rendering is not yet proved. |
+| Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. September 27 standalone test receipts also identify TUVELOZ LLC and itemize the correct total. | Preserve these verified fields. Actual bank-statement and live receipt presentation remain separate. |
 | `app/components/quote-payment-card.tsx` | PR #256 places the bilingual payment-merchant disclosure beside the total. | Complete for this interface; preserve it. The broader quote authorization remains English-only. |
-| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. | Preserve the completed implementation; verify actual hosted rendering in the separate test-mode rehearsal. |
+| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. September 27 standalone hosted rehearsal verifies both merchant messages; a discovered Spanish line-item gap is repaired locally and verified in a replacement sandbox Session. | Publish the tested label repair separately. Verify receipt-language propagation; do not repeat the completed hosted checks or call them production-app integration proof. |
 | `app/success/page.tsx` | PR #256 identifies TUVELOZ LLC on an authenticated payment record and distinguishes payment states in both languages. | Complete for the published interface; preserve it. This is not an actual Stripe receipt. |
 | `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and `app/provider-agreement/page.tsx` | Current text leaves some payment-role decisions pending; Terms section 7 can imply collection only after completion. Terms, Payment Policy and Provider Agreement have complete, separately hashed Spanish translations; Customer Agreement does not have a Spanish-ready route. | Review the exact clauses and timing together. A complete customer translation draft is now prepared; adopt its final paired wording before release through the existing translation/policy version process. |
 | Accepted customer evidence | Released English documents and exact scope are recorded. The customer authorization omits the merchant sentence, language and Spanish release metadata. The provider path already binds all three relevant translation hashes and language. | Extend the customer path using the existing provider approach, preserving prior records. Verify saved/downloaded text and stale-consent rejection. Do not duplicate the provider system, fabricate review or reuse stale hashes. |
@@ -233,6 +233,35 @@ unchanged. The owner-approved head 04cb36b was merged as 299fd4c; production run
 Maryland time. The interface repair is published. It is not a real Stripe receipt
 test, a policy release, or completion of the policy/acceptance evidence review.
 Do not repeat its publication approval or deployment.
+
+### Hosted test-mode rehearsal — completed September 27
+
+The previously authorized temporary CLI session had only the existing Tuveloz
+test environment. English and Spanish hosted Checkout Sessions each charged
+Stripe's documented synthetic card $105 in test mode: $100 for a clearly labeled
+test service and $5 Customer Service Fee. Each Session became complete/paid,
+with one succeeded charge and no provider transfer. The Spanish Session first
+returned card_declined and an unpaid state, then succeeded on retry. No real
+customer, provider, card, ID or bank transfer was used.
+
+Actual hosted views identify TUVELOZ LLC and show the expected totals and
+merchant message. The first Spanish preview showed English fee/quote labels;
+the local repair now supplies Spanish wording and the replacement preview and
+receipt confirm it. The original unpaid preview was expired. Stripe receipt
+headings remain English; fee translation does not complete receipt localization.
+Test receipt styling is not evidence of current live receipt branding. No actual
+email receipt or bank-statement delivery was tested.
+
+The production app's closed payment/provider gates were not bypassed. These
+Sessions reproduce presentation fields outside the app and cannot establish the
+full application/webhook/settlement flow or approve any launch control. The CLI
+session was revoked, unauthenticated status rechecked, dedicated config removed,
+and three disposable browser tabs closed. Test records remain clearly labeled
+in Stripe; private API evidence and screenshots stay outside the repository.
+The code repair passed build, all 812 tests, TypeScript and lint with the existing
+warning; publication remains pending. See LOG for the exact boundary and result.
+
+Reference: [Stripe test-card documentation](https://docs.stripe.com/testing).
 
 ### Narrow follow-up — sent September 27
 

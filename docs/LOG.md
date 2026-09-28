@@ -11,6 +11,49 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Hosted Stripe test payments and Spanish line-item repair
+
+Continued from PR #257 without repeating its release. No competing PR was open
+and main remained 59c7815. The scoped business-inbox refresh still showed the
+existing Stripe reply and acknowledgment only; no new Stripe/broker/county
+answer in that scope and no inquiry resent.
+
+Using the previously authorized official CLI test scope, restored a temporary
+one-hour session for only the existing TUVELOZ LLC test environment. Two
+standalone hosted Checkout rehearsals completed: English and Spanish, each
+with a clearly synthetic $100 labor item plus a separate $5 Customer Service
+Fee. Stripe reported each Session complete/paid and its PaymentIntent succeeded,
+with exactly one successful test charge each and no provider transfer. The
+Spanish flow first rejected Stripe's documented decline card, displayed a
+Spanish error, remained unpaid, then successfully retried the same Session.
+Both actual Stripe receipts show TUVELOZ LLC and the correct itemized total.
+
+The first Spanish preview exposed English merchant-supplied fee and quote
+descriptions. Added a shared bilingual fee-label helper and translated the
+fixed quote-description prefix in the checkout route. Both payment branches use
+their existing authorized rate; amounts, provider names, charge strategy,
+policies, accepted evidence and launch locks are unchanged. The replacement
+Spanish sandbox Session used the actual helper and showed the corrected wording
+on Checkout and the fee label on its receipt. The unused original preview was
+expired. The receipt's surrounding Stripe headings still render in English;
+customer receipt-language propagation needs a separate verified change. Test
+receipt branding also does not establish current live receipt styling.
+
+All 812 tests and the build passed. TypeScript passed; lint has only the existing
+site-language.tsx warning. Sandbox module-resolution restrictions required the
+usual approved normal-permission test run; no code check was bypassed. Thirty
+focused checkout/fee tests also passed. The code repair is local, not deployed.
+Publication is a separate next step; do not repeat the completed hosted tests.
+
+CLI logout explicitly reported all contexts logged out and session revoked;
+whoami independently returned Authenticated: false. Removed the dedicated local
+config and closed only the three temporary auth/checkout tabs. Private test IDs,
+receipt links, screenshots, API responses and the non-secret summary stay outside
+the repository in work/stripe-checkout-rehearsal and outputs. These are standalone
+Stripe presentation/receipt checks, not the production application payment flow,
+actual provider settlement, a real bank statement, inbox delivery or launch
+approval. No real card, identity document, live charge or gate override was used.
+
 ## 2026-09-27 - PR 257 published and independently verified
 
 The owner asked to continue after the concrete publication request for 8268dcf.
