@@ -11,6 +11,45 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Publish and independently verify PR #256
+
+The owner continued the explicit publication request for tested head 04cb36b.
+Created PR #256 and merged that exact head only after both required PR workflows
+passed. Merge 299fd4c598fb082422660ae5cbab731de5f4bb81 landed at September 28
+00:54:03 UTC (September 27 Maryland time). Production run 36363910803 passed all
+three jobs, including the full verification workflow, before deployment.
+
+Independent live verification at 01:11:33 UTC confirmed the exact merge commit,
+ready application/database/schema, accounts/applications open and customer
+requests/payments closed. The new result-page header is served. Unknown payment
+reads return 404/private-no-store/error-only; new quote readiness returns the
+closed-marketplace response; signed-out provider access returns 401/no-store.
+There is no public /es/success alias.
+
+Live mobile browser verification at 390px and 320px confirmed both language-switch
+directions, the Spanish provider link opening the actual application form, the
+Spanish payment-policy link, and the customer link reaching Spanish customer
+sign-in. The missing-record message presents recovery guidance without displaying
+a payment merchant or paid claim. Cancellation text works in both languages.
+No horizontal overflow or captured console errors were observed. No form,
+account, provider, real payment or new email was submitted during verification.
+Temporary viewport overrides were reset after screenshots and evidence were saved.
+
+This completes the approved publication. Do not repeat the approval, repair or
+deployment. All 812 tests/build, TypeScript and 32 synthetic mobile browser cases
+passed locally and the required GitHub workflows passed. Authenticated paid,
+pending, failed and refunded states were exercised with isolated synthetic data;
+actual hosted Checkout/receipt proof and reviewed policy/acceptance evidence
+remain separate. No Stripe terms, fee, payment strategy, policy release or launch
+lock changed. Stripe's already-sent follow-up still awaits the remaining answers.
+
+Private proof: pr256-premerge-checks-20260927.json,
+pr256-pr-verification-result-20260927.json, pr256-pr-build-result-20260927.json,
+pr256-merge-result-20260927.json, pr256-production-result-20260927.json,
+pr256-live-release-20260927.json and pr256-live-browser-20260927.json.
+This post-release handoff stays local for the next substantive release; it does
+not require another status-only deployment.
+
 ## 2026-09-27 - Send approved Stripe reply and prepare payment-disclosure repair
 
 Sent the exact owner-approved same-thread reply to support@stripe.com from

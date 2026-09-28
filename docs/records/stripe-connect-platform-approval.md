@@ -180,7 +180,7 @@ Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
 
-### Disclosure review — local implementation prepared, not published
+### Disclosure review — interface repair published; policy and receipt review pending
 
 Source reviewed at released commit `b5c67a9`. Keep the current account settings,
 policy releases, fee, provider quote and launch controls intact while this review
@@ -215,15 +215,18 @@ LLC. Servicio del vehículo prestado por [nombre del negocio proveedor].**
 These are review drafts, not published policies, a new receipt, a promise of
 refund eligibility, or proof of legal/tax approval.
 
-The next local change adds concise payment-merchant wording to the quote total,
+PR #256 adds concise payment-merchant wording to the quote total,
 hosted Checkout submit text, and authenticated payment record, with English and
 Spanish text. The hosted session and return links preserve the selected language.
 The payment-result page now translates in place, distinguishes unavailable records
 from closed checkout, and uses readable status labels without calling pending,
 failed, refunded or disputed payments paid. It creates no public Spanish payment
 record alias. Amounts, payment type, provider settlement and launch locks are
-unchanged. This implementation is not deployed, a real Stripe receipt test, a
-policy release, or completion of the remaining policy/acceptance evidence review.
+unchanged. The owner-approved head 04cb36b was merged as 299fd4c; production run
+36363910803 and independent live release/browser checks passed September 27
+Maryland time. The interface repair is published. It is not a real Stripe receipt
+test, a policy release, or completion of the policy/acceptance evidence review.
+Do not repeat its publication approval or deployment.
 
 ### Narrow follow-up — sent September 27
 
@@ -266,6 +269,11 @@ Saved replacement:
 
 ## History
 
+- **2026-09-27:** Published the owner-approved interface repair as PR #256 after
+  all required checks passed. Exact release and live bilingual result-page links,
+  closed/missing/canceled states, private API rejection and closed launch controls
+  verified. Hosted receipt proof, policy/evidence review and remaining Stripe
+  answers are still separate. No terms accepted or payment setting changed.
 - **2026-09-27:** Sent the exact owner-approved follow-up in the existing thread
   and verified its recipient, timestamp and body. No acknowledgment accepted or
   setting changed. Prepared the local bilingual payment-disclosure/result-page

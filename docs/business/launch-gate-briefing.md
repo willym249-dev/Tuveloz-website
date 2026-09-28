@@ -450,8 +450,9 @@ verified after Gmail confirmed Message sent. Do not repeat either inquiry or its
 send approval. Support called the quote flow live in one sentence,
 but customer bookings/payments remain closed. The record card maps the remaining
 checkout, confirmation, English/Spanish policy and accepted-evidence disclosures,
-with a local bilingual checkout/payment-result implementation awaiting publication
-and separate policy/evidence review. The 5% account-description correction
+with the bilingual checkout/payment-result interface repair published in PR #256
+and independently verified at release 299fd4c. Separate policy/evidence review
+and actual hosted-receipt proof remain. The 5% account-description correction
 and initial Connect approval remain complete. No published policy, fee, account
 setting or launch gate changed. Live mode remains locked
 (`STRIPE_LIVE_MODE_ENABLED = false`).
