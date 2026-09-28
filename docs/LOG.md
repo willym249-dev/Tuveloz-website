@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Owner full-refund decision and remaining implementation boundary
+
+Continued from clean 0b738be and verified production b916a4e with no open PRs.
+The owner explicitly chose full refunds including the 5% Customer Service Fee
+for provider cancellation/no-show or customer cancellation before work starts.
+The question disclosed Tuveloz would cover original Stripe processing fees that
+are not returned. This business choice is settled; do not ask it again. Added
+matching English/Spanish candidate clauses and a $100 + $5 = $105 refund example
+to the existing payment-policy-reconciliation.md, with remaining partial-refund,
+provider-recovery and policy-adoption decisions kept separate.
+
+Source review found the current job-operation refund/cancellation path is
+restricted to persisted test jobs/providers and never creates a Stripe refund.
+Its authorizedJobTotal ceiling is the provider subtotal, excluding the customer
+fee; its decision handlers also attribute the entire refund to provider impact.
+The draft now identifies both accounting gaps and exact verification cases.
+Do not globally increase authorizedJobTotal, since invoice/payout checks need
+the provider subtotal. A future real refund must bind the settled payment and
+remaining refundable amount, separately account for the Customer Service Fee,
+and distinguish decision/request/pending/succeeded/failed states. Signed Stripe
+refund callbacks and prior concurrency repairs remain completed separate work;
+they do not establish refund initiation or provider recovery.
+
+The scoped hello@tuveloz.com inbox search, refreshed September 28 at about
+5:15 p.m. Maryland time, found no messages after September 26 addressed to the
+business inbox from foundershield.com, baldwin.com or montgomerycountymd.gov.
+This is not an exhaustive mailbox assertion. No duplicate inquiry was sent.
+Corrected one stale draft sentence that still called PR #258's published
+Spanish line-item repair local. No runtime, active policy, release hash,
+credential, payment or launch control changed; these are local review records.
+All 15 existing customer-fee consistency checks pass after using the canonical
+fee name throughout the new draft. Git whitespace validation passes. No full
+build or deployment was repeated for these documentation-only changes.
+
 ## 2026-09-28 - Restricted live payment-key guard published and verified
 
 Continued from clean local 00376fb and remote production b20d524; no open PRs

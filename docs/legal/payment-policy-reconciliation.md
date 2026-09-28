@@ -1,6 +1,6 @@
 # Payment wording and acceptance review
 
-- **Status:** draft; not an effective policy or launch approval
+- **Status:** draft; full-refund business rule approved September 28; not an effective policy or launch approval
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-28
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
@@ -112,7 +112,89 @@ alone cannot turn the existing flow into delayed customer capture.
 Stripe describes platform debits for this charge type in its
 [dispute documentation](https://docs.stripe.com/connect/disputes).
 These paragraphs do not grant blanket refund eligibility or a new recovery
-right. Final cancellation and Customer Service Fee refund rules remain separate.
+right. The owner decision below settles the specified full-refund cases;
+partial refunds and post-transfer recovery still require review.
+
+### Full refunds — owner decision recorded September 28
+
+The owner explicitly selected **"Full refund including the 5% fee"** for a
+provider cancellation, provider no-show, or customer cancellation before work
+starts. The question disclosed that Tuveloz would cover original Stripe
+processing fees that Stripe does not return. Do not ask for this decision again.
+This records the intended business rule; it does not release the policy, approve
+the launch gate, create a refund or settle every cancellation scenario.
+
+**English — candidate replacement in Payment Policy sections 6–7**
+
+> If your provider cancels or does not show up, you will receive a full refund
+> of the payment you made through Tuveloz, including the 5% Customer Service Fee.
+> You will also receive a full refund if you cancel before authorized work
+> begins. We will not deduct payment-processing fees from these refunds.
+
+**Spanish — matching candidate**
+
+> Si su proveedor cancela o no se presenta, recibirá un reembolso completo del
+> pago que hizo a través de Tuveloz, incluida la Tarifa de Servicio al Cliente
+> del 5%. También recibirá un reembolso completo si cancela antes de que comience
+> el trabajo autorizado. No descontaremos los cargos por procesamiento de pagos
+> de estos reembolsos.
+
+**Amount and responsibility:** for a $100 provider quote plus the $5 Customer
+Service Fee, a qualifying full refund is **$105**, not $100. The $5 is Tuveloz's
+fee and must not be counted as provider earnings or deducted from the provider
+as though the provider received it. Original processor charges retained by
+Stripe are a separate Tuveloz cost, never a deduction from this customer refund.
+Use actual processor amounts for accounting rather than a guessed fee. Stripe's
+[refund documentation](https://docs.stripe.com/refunds), checked September 28,
+states that original processing fees are not returned. The operational process
+must track a requested, pending, failed or completed refund accurately; an
+internal approval is not proof that the customer's money was returned.
+
+Still separate: partial refunds after authorized work starts, customer no-shows,
+safety-related stoppages, provider compensation and any lawful recovery of a
+previous transfer. Separately purchased parts remain outside Tuveloz's payment.
+Do not add a cancellation penalty or promise automatic recovery from a provider
+to fill these gaps. Review the existing inability-to-perform clause alongside
+the selected rule rather than silently broadening or removing it.
+
+### Refund implementation findings — September 28 source review
+
+The published code at `b916a4e` does **not** yet implement that full-refund rule.
+`app/api/job-operations/route.ts` requires a persisted test job and test provider;
+its refund/cancellation decisions explicitly return `stripeRefundCreated: false`.
+No `refunds.create` call is present in the application/API refund paths reviewed.
+Stripe webhooks can record a refund made through Stripe, which is a different
+capability from initiating a refund from the Tuveloz workflow.
+
+Two concrete accounting gaps are present even in the test workflow:
+
+- `authorizedJobTotal()` returns the provider subtotal. `request-refund` and
+  `decide-cancellation` use that ceiling, so the $105 full-refund example is
+  rejected against a $100 quote.
+- The decision handlers assign the negative refund amount to
+  `providerImpactCents`. Increasing the ceiling alone would incorrectly assign
+  Tuveloz's $5 fee to the provider. The customer, provider and platform portions
+  must be separate; a provider-impact record is not a transfer reversal.
+
+Do not change `authorizedJobTotal()` globally: invoice and payout checks also
+use it and must retain their provider-subtotal meaning. The refund path needs
+its own validated price/payment snapshot and explicit allocation. Actual money
+movement must use the recorded settled payment and remaining refundable amount,
+not an unpaid quote, a newly recalculated fee, a client-supplied total or a
+simulation record. Keep the existing launch locks and owner decision boundary.
+
+Before calling the refund workflow complete, verify these outcomes with isolated
+records and an approved Stripe test when the transaction path is ready:
+
+| Case | Required result |
+| --- | --- |
+| Provider cancels or does not appear; $100 quote + $5 fee was paid | $105 customer refund; $100 provider portion and $5 Customer Service Fee recorded separately |
+| Customer cancels before authorized labor begins | Same full-total rule, using the accepted payment snapshot and recorded cancellation/work facts |
+| No successful charge | No refund and no claim that money was returned |
+| Prior partial refund or repeated request | Never exceed the remaining refundable charge; a retry cannot create a second refund |
+| Provider transfer already occurred | Separately review and track any permitted recovery; do not silently charge the provider the Customer Service Fee |
+| Stripe returns pending or failed, or the callback is delayed | Preserve the accurate status and payout hold; do not label approval as a completed refund |
+| Work has begun or facts are disputed | Route to the applicable reviewed decision process; do not infer a partial-fee rule from this full-refund choice |
 
 ### Exact authorization — addition to the existing itemized acceptance
 
@@ -136,7 +218,7 @@ and included in the accepted evidence, not only inserted beside a checkbox.
 | Decision | Evidence or owner needed | Do not substitute |
 | --- | --- | --- |
 | Operating transfer timing, reserve conditions and category restrictions | Reconcile the received September 28 answer and finalize the insured/licensed service scope | A general Connect approval, the public reserve ceiling used as a normal payout delay, or a guessed deadline |
-| Cancellation and full/partial Customer Service Fee refunds | Documented owner policy consistent with applicable law and processor rules | A UI status or an assumed refund promise |
+| Partial refunds, post-start/no-show/unsafe-work cases and provider recovery | The owner approved full refunds including the 5% fee for provider cancellation/no-show and customer cancellation before work starts on September 28. Review the remaining cases and complete the actual refund path described above | Asking the settled full-refund question again, applying it to every scenario, or treating a test approval as returned money |
 | Tax collection/reporting and accounting | Required tax review against the existing transaction map | A Stripe merchant label or a zero-tax code restriction |
 | Policy adoption and scope | Actual review of these clauses, related liability/service provisions and unresolved decisions | A passing hash test or a fabricated reviewer record |
 
@@ -170,8 +252,9 @@ Step 6's standalone presentation rehearsal completed September 27; see the
 [processor record](../records/stripe-connect-platform-approval.md#hosted-test-mode-rehearsal--completed-september-27).
 Do not repeat it as an uncompleted task. Actual English/Spanish hosted messages,
 itemized amounts, paid receipts and Spanish decline/retry were verified. The
-discovered Spanish line-item repair remains local. Stripe's receipt headings
-remain English, and full customer consent/production integration are not proved.
+discovered Spanish line-item repair was published and independently verified in
+PR #258 on September 28. Stripe's receipt headings remain English, and full
+customer consent/production integration are not proved.
 
 This review is ready for continuation. It does not require another deployment
 of PR #256 or another inquiry email. No application or active policy file was
