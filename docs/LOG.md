@@ -11,6 +11,45 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - PR 257 published and independently verified
+
+The owner asked to continue after the concrete publication request for 8268dcf.
+Confirmed the checkout was clean, no competing PR was open and main was still
+299fd4c. Pushed the reviewed branch, opened PR #257, and attached it to the task.
+Both PR workflows passed against exact head
+8268dcf09ed104eff85ce8b9daef3e64d084b102: verification 36369995415 and deployment
+validation 36369995760. Merged with an explicit matching-head check at
+2026-09-28 02:45:34 UTC as 59c7815022827a3b2a7696110d204611d177d3fd.
+
+Production workflow 36371052324 passed all three jobs, including required
+verification, account signup, deployment and its exact-release/database check.
+The independent public check at 03:03:22 UTC confirmed the same live commit,
+healthy application/database/schema, no missing guarded tables/triggers,
+accounts and provider applications open, and customer requests/payments closed.
+Eight public HTTP checks passed: health, three payment-result URLs, private
+unknown-payment rejection, closed quote-readiness response, unauthenticated
+provider rejection and the absent public Spanish payment-result alias. Relevant
+private responses remain non-cacheable. No real submission, Stripe session,
+charge, provider settlement, legal adoption or launch decision was created.
+
+The new twenty-two synthetic checkout browser cases also passed in both GitHub
+verification runs. They verify the component before future launch, not an active
+production checkout. The earlier full Spanish Customer Agreement and payment
+wording drafts are now in repository history but remain drafts. Provider
+acceptance evidence, legal release manifests and launch locks are unchanged.
+Do not republish PR #256 or #257 or redo the completed stale-consent repair.
+
+During release, refreshed the existing business Gmail search scoped to Stripe,
+Founder Shield/Baldwin and Montgomery County senders. It still showed only the
+existing Stripe response thread and acknowledgment. No new reply in that scope
+and no inquiry resent. Remaining processor answers, final policy/Spanish
+customer integration and actual hosted Stripe receipt proof remain separate.
+
+Evidence outside the repository: pr257-production-release-20260927.json,
+pr257-live-release-20260927.json and verify-quote-checkout-release-20260927.mjs.
+Fast-forwarded this checkout to the merge; retain this handoff locally for the
+next substantive release rather than causing a status-only deployment.
+
 ## 2026-09-27 - Repair stale quote consent and checkout response handling locally
 
 Continued from the preserved local Spanish/reconciliation drafts; no open PRs
