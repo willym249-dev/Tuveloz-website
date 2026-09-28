@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Stripe acknowledgment accepted; PR 259 published and verified
+
+The owner explicitly approved both publication and the exact seller-compliance
+acknowledgment. Submitted the reviewed acknowledgment; Stripe replaced the
+action with View acknowledgement and displayed September 28, 2026 as accepted.
+Saved proof privately in outputs/stripe-seller-compliance-accepted-20260928.png.
+Do not ask for acceptance again or confuse this with the July 29 loss-liability
+acknowledgment, a new paid plan, or approval to open customer payments.
+
+PR #259 merged tested head a4c02c6 as b20d524b96240d6e5971483ddb0cc040a5a6ba9f.
+All required PR checks and production workflow 36474134777 passed, including
+825 tests/build, bilingual browser flows and the migration rehearsal.
+Independent live verification at 2026-09-28T20:04:07.610Z passed all eight
+targeted HTTP checks, confirmed that exact release and ready application,
+database and schema, and preserved closed/private routes and launch controls.
+The initial raw-HTML sign-in-text assertion was incorrect for this client page;
+source/browser inspection confirmed hydration and the provider sign-in redirect.
+HTTP assertions now cover the route shell, with separate live browser proof of
+provider sign-in and the supported Spanish account page. The private workspace
+lang query is not a supported translation switch; no new bilingual-workspace
+claim or production runtime change was made during verification.
+The provider alert/update-button fix is published. Actual Stripe-originated
+delivery and provider inbox receipt are still separate operational evidence.
+No real provider notice, payment, identity document or settlement was used.
+
+The older Spanish receipt test window ended at 3:42 p.m. Maryland time. A
+refresh returned Stripe's combined completed-or-timed-out page; no receipt or
+payment completion was independently confirmed. Saved that observation and
+closed the unusable tab. The last API result at preparation was open/unpaid.
+Temporary CLI credentials remain revoked; no replacement checkout or indirect
+payment was attempted. Inspect the existing Session through authorized test
+access before preparing another. The prior owner-only Pay restriction remains.
+
+Remaining scope: actual provider delivery evidence, the isolated receipt-language
+experiment, customer consent/policy reconciliation, and supported service,
+insurance and tax decisions. This acceptance/release clears none of those gates.
+Earlier releases and completed business setup are preserved; do not repeat them.
+
 ## 2026-09-28 - Stripe reply verified; provider account notices repaired locally
 
 Read the new September 28 2:49 p.m. Stripe Support reply in the business inbox.

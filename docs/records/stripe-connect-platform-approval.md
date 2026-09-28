@@ -1,6 +1,6 @@
 # Stripe Connect platform approval
 
-- **Status:** active — initial approval and written processor reply verified; launch-scope reconciliation pending
+- **Status:** active — initial approval, written reply and seller-compliance acknowledgment verified; launch-scope reconciliation pending
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-28
 
@@ -43,9 +43,9 @@ refund/chargeback liability. Both the historical profile and current setup show
 an onboarding/seller-compliance acknowledgment button. Stripe's September 27
 written reply confirms that an authorized representative needs to complete it.
 The September 28 read-only preview exposed its two duties and exact acceptance
-sentence, recorded below. The checkbox remains unchecked and nothing was
-accepted. This is separate from the negative-balance acknowledgment already
-dated July 29.
+sentence, recorded below. After the owner explicitly agreed, the acknowledgment
+was accepted and the Dashboard confirmed September 28, 2026. This is separate
+from the negative-balance acknowledgment already dated July 29.
 
 Sources: `lib/stripe-provider.ts`, `app/api/stripe/checkout/route.ts`, and
 `app/api/stripe/admin/payments/route.ts`, inspected at local documentation commit
@@ -83,10 +83,10 @@ policy wording solely to make a label match. This is not a tax determination.
    receipt and policy disclosure review below. The current public business name
    and statement descriptor already show TUVELOZ LLC; do not replace them.
    The CPA gate remains separate; processor setup is not a tax opinion.
-5. Present the reviewed onboarding acknowledgment to the authorized owner before
-   acceptance. The notification gap found during this review is repaired locally
-   but publication and actual delivery evidence remain separate. Do not infer
-   permission to accept from support's email or turn it into launch permission.
+5. Preserve the completed September 28 owner-authorized acknowledgment below;
+   do not request it again. The notification gap found during this review is
+   published in PR #259, with actual delivery evidence tracked separately.
+   Acceptance is not launch permission or proof of operational notification delivery.
 
 `stripe_connect_business_model` requires an evidence reference and valid-through
 date in Tuveloz's launch controls. This email states no expiration; obtaining a
@@ -165,7 +165,7 @@ message references and observations stay outside this repository.
 | Customer identity/disclosure | Receipts/statements must identify TUVELOZ LLC or a registered DBA; explain that payment is with Tuveloz while the provider performs labor. | Current dashboard public name and descriptor were independently read as TUVELOZ LLC. Authorized standalone test receipts now confirm the merchant name and itemization; real bank-statement and production integration evidence remain separate. |
 | Fees, refunds and disputes | Platform bears the stated Stripe fees/loss exposure; disputes can debit the platform even after a provider transfer. | Final refund/recovery controls, financial reserves and tax/accounting review. This is not a promise that recovery from a provider succeeds. |
 | Existing approval | The reply confirms the described general Connect arrangement. | No specific service-category determination or maximum transfer-delay answer was supplied. |
-| Onboarding acknowledgment | An authorized representative must complete it; it is one-time with no recurring renewal date, subject to later configuration changes. | Review exact terms and obtain the applicable acceptance authorization. No acknowledgment was accepted during this inspection. |
+| Onboarding acknowledgment | An authorized representative must complete it; it is one-time with no recurring renewal date, subject to later configuration changes. | The September 27 inspection made no acceptance. The owner subsequently approved the exact preview and Stripe recorded acceptance September 28; see below. |
 | Other payment branch | A later destination-charge launch needs its own assessment. | Both current branches omit `on_behalf_of`; support's conditional discussion of destination charges with that parameter is not evidence that the code uses it. |
 
 The response calls the quote flow "live" in one sentence, but both our original
@@ -196,7 +196,7 @@ and exact private observations are retained outside the repository in
 | Holding funds | Support states no account-specific hold period and recommends no more than 90 days after service completion; it describes two years as a technical ceiling. | The linked public page instead lists two years for US reserves and 90 days for other countries, without stating the email's 90-days-after-completion rule. Preserve both sources as distinct; do not invent a binding deadline or implement either as the normal payout delay. |
 | Service categories | The general Connect approval covers the described structure, not every vehicle-service category. | Cross-check the finalized, insured/licensed launch list against restricted-business rules. The full catalog is not approved by this response. |
 | Financial responsibility | The platform retains fees, refund, fraud and chargeback exposure; reserves may apply. | No specific reserve amount, new account restriction or insurance/tax clearance was supplied. |
-| Onboarding acknowledgment | Full duties can be reviewed in the Dashboard before acceptance. | The preview was read; acceptance remains a separate authorized-owner action. |
+| Onboarding acknowledgment | Full duties can be reviewed in the Dashboard before acceptance. | Preview reviewed, then explicitly approved by the owner; acceptance saved September 28. |
 
 Public references checked September 28:
 [holding funds](https://docs.stripe.com/connect/account-balances#holding-funds),
@@ -215,12 +215,19 @@ The **Ongoing seller compliance** preview displays these duties:
 Exact acceptance sentence: "I acknowledge I have reviewed and agree to my
 responsibility for ongoing seller compliance."
 
-The checkbox was left unchecked and Acknowledge remained disabled. No new terms,
-setting, fee, purchase, email or launch action was accepted or submitted.
-Preview screenshot: `outputs/stripe-seller-compliance-terms-20260928.png`.
+The initial review left the checkbox unchecked. The owner subsequently explicitly
+agreed after the exact duties and acceptance sentence were presented. The approved
+checkbox and Acknowledge were submitted September 28. Stripe then replaced the
+action with View acknowledgement and displayed: "You acknowledged your
+responsibilities on September 28, 2026." Acceptance is complete. It changes no
+payment, booking, fee, service, tax or insurance approval.
+
+Private evidence remains outside this repository:
+`outputs/stripe-seller-compliance-terms-20260928.png` (preview) and
+`outputs/stripe-seller-compliance-accepted-20260928.png` (saved result).
 
 The source review found that V2 requirements/capability events only logged their
-current status. The local repair queues a protected provider notice and email
+current status. PR #259 now queues a protected provider notice and email
 intent atomically, with English/Spanish copy, a secure workspace link, event
 deduplication, ownership rechecks and test/staging suppression. Storage failures
 keep the signed webhook retryable. It also keeps the provider's Stripe update
@@ -228,8 +235,27 @@ button visible when requirements exist even while transfers remain active.
 No raw requirement details or bank/identity data enter the notice. Existing
 payment-client and launch locks remain intact; this is not proof of live webhook
 delivery while that client is code-locked, nor proof that an email reached an
-inbox. Verify deployment and approved live operation separately before marking
-ongoing seller communication operationally complete.
+inbox. Deployment is verified below; approved live operation remains separate
+before marking ongoing seller communication operationally complete.
+
+### Provider account-notification repair — published September 28
+
+The owner explicitly approved publication. PR #259 merged tested head a4c02c6
+as b20d524 after all required PR checks passed. Production workflow 36474134777
+passed its release checks and deployment. Independent HTTP verification at
+2026-09-28T20:04:07.610Z confirmed the exact healthy release and all eight
+targeted checks: three private APIs reject anonymous reads, unsigned Connect
+webhooks reject before processing, checkout stays closed, and the provider route
+shells load. Separate browser checks confirmed provider sign-in navigation and
+the supported account lang=es page. All 825 tests/build and the
+required bilingual browser/migration checks passed. Synthetic route/panel tests
+cover the alert transaction, retries, isolation and update-button visibility.
+
+No real provider email, payment, identity document or settlement was used.
+Live thin-event delivery and actual provider inbox receipt remain unproven;
+the payment client and all launch/payment/SMS locks are unchanged. This release
+and the separate accepted acknowledgment do not approve an operating launch.
+Private proof: outputs/pr259-live-release-20260928.json and matching workflow log.
 
 ### Disclosure review — interface repair published; policy and receipt-language review pending
 
@@ -341,22 +367,26 @@ The [Customer update API](https://docs.stripe.com/api/customers/update) supports
 partial updates; send only the intended preference field. No Customer, setting,
 invoice, payment or runtime source was changed during this investigation.
 
-### Receipt-language experiment — awaiting owner click September 28
+### Receipt-language experiment — test window ended; no receipt confirmed
 
 Prepared a new, isolated Spanish test Checkout for a synthetic Customer whose
 preferred locales explicitly contain es. It retains the tested $100 service
 plus $5 fee and does not enable invoice creation or a provider transfer. The
 final Pay action was blocked by automatic approval review, which requires the
 owner to press the button even in test mode. No indirect payment attempt was
-made. Latest API evidence is open/unpaid with no receipt, so the localization
+made. The last API check at preparation was open/unpaid with no receipt; the localization
 hypothesis is still unverified and no application change is justified yet.
 
 The one-hour CLI test session was revoked, unauthenticated status confirmed,
-and its temporary configuration removed. The ready Checkout tab remains for
-the owner until its own one-hour expiry. Private evidence and exact expiry are
-in work/stripe-receipt-language-20260928 outside the repository. Inspect this
-existing Session before creating another. PR #258 remains published and complete;
-this outstanding experiment does not reopen its label or notice work.
+and its temporary configuration removed. After the one-hour expiry at 3:42 p.m.
+Maryland time, a browser refresh returned Stripe's combined completed-or-timed-out
+page. That message does not distinguish the two states. No completion or receipt
+was independently confirmed, and the unusable tab was closed. The private
+evidence and exact expiry remain in work/stripe-receipt-language-20260928 and
+outputs/stripe-receipt-language-unavailable-20260928.png outside the repository.
+Inspect the existing Session through authorized test access before creating
+another; do not describe an owner-ready checkout as still open. PR #258 remains
+published and complete; this experiment does not reopen its label or notice work.
 
 ### Narrow follow-up — sent September 27
 
