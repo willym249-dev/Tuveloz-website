@@ -11,6 +11,164 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Repair stale quote consent and checkout response handling locally
+
+Continued from the preserved local Spanish/reconciliation drafts; no open PRs
+and remote main still 299fd4c at the initial check. Reproduced a concrete bug in
+the private active quote-payment component: updating scope on the same quote
+kept the prior checkbox checked and did not fetch the current authorization.
+The production wrapper remains closed, so this was an isolated prelaunch test,
+not evidence of a live customer charge or a production consent incident.
+
+The active card now remounts its consent state when quote, scope, shown price,
+provider name, access token or language changes. It cancels/ignores superseded
+readiness and checkout responses, checks the returned scope and amounts against
+the displayed quote, and refuses duplicate checkout starts. Readiness requests
+time out after twenty seconds with a retry action. A mismatched quote offers a
+full page refresh; a server conflict removes stale consent and its download
+until a fresh review. Aborting a browser request does not reverse server work.
+Existing server authorization checks, exact agreement text, versions, hashes,
+provider evidence, fees and all launch locks are unchanged.
+
+Added `test:e2e:quote-checkout` to required verification. The isolated Vite fixture
+exposes the private component in its in-memory bundle only; it never alters a
+launch constant, contacts Stripe, or writes a real record. Twenty-two Chromium/
+WebKit cases passed at 390px/320px: changed scope, late reads, price/access/
+language resets, network retry, mismatched scope and refresh, timeout recovery,
+409 recovery, exact authorization download, late POST after leaving or changing
+scope, successful synthetic redirect and the unchanged production closed panel.
+No captured page errors, unexpected external requests or horizontal overflow.
+Language-context reset is tested on a fixture route; the real quote route is
+still English-only and customer Spanish policy adoption remains unfinished.
+
+Validation: the new scope-change test failed against the original component,
+then passed with the repair. All 812 existing tests and the production build
+passed. Type generation and TypeScript completed; the sandbox prevented only
+Wrangler's optional external log-file write. Lint passed with one existing
+`site-language.tsx` navigation warning. Kept the existing policy-gate assertion
+unchanged by preserving its button-condition order. Whitespace check passed.
+Private full-suite log: quote-checkout-fulltests-20260927.log. These changes and
+the preceding three documentation commits are local, not pushed or deployed.
+Do not repeat PR #256 publication or describe this as completed Spanish consent,
+hosted Stripe verification, policy adoption, or marketplace launch.
+
+## 2026-09-27 - Complete Spanish customer drafts and narrow the consent gap
+
+Prepared the full Spanish Customer Agreement against the unchanged English
+source hash 76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2.
+All eleven sections and fourteen paragraphs are covered, with both Spanish
+policy links, original policy date and fee retained. Added the complete proposed
+Spanish checkout authorization, both warranty alternatives and exact customer
+integration boundaries to the existing payment reconciliation. These are drafts,
+not new effective agreements or evidence of customer acceptance.
+
+Corrected an overly broad finding from the preceding entry: six existing Spanish
+legal pages are complete `lib/policy-spanish/` sources, with a separate release
+manifest and an already language-bound provider acceptance path. They are not
+merely dictionary replacements. The customer path lacks this integration. Updated
+the current review, processor card, briefing and checkpoint so future work reuses
+the completed provider system instead of rebuilding it.
+
+The customer-acceptance unique index has no language/hash field; a future
+presentation-specific version or reviewed schema design must allow distinct
+immutable records. The readiness GET currently omits language while POST carries
+it; future translated consent needs both, stale-response handling and immediate
+checkbox reset. The hashed Spanish Terms source labels its customer-agreement
+link English-only, so publication needs coordinated translation versioning and
+preservation of prior provider acceptances. No policy hash was quietly changed.
+
+Built an isolated static local comparison preview from the draft and original
+English markup, with the existing site stylesheet. Both switch directions and
+390px/320px mobile widths passed visual/DOM inspection without overflow or captured
+console errors. This is a review preview, not production routing, React hydration
+or persisted consent proof. Reset the viewport and closed the temporary preview.
+
+Validation: twenty existing fee/provider-Spanish tests passed. Structural checks
+confirmed all sections, paragraphs and links, and all seven English plus six
+Spanish policy source hashes remain unchanged. Whitespace check passed. Private
+evidence: customer-spanish-draft-validation-20260927.json,
+customer-spanish-preservation-checks-20260927.log,
+customer-agreement-preview-browser-20260927.json and
+customer-agreement-spanish-mobile-20260927.png. The standalone HTML is also saved.
+No runtime, active policy, migration, account, message, payment or launch setting
+changed. No new inbox check was needed immediately after the prior scoped check.
+Keep this local with acc6e40 and f612b0f; no status-only deployment is needed.
+
+## 2026-09-27 - Prepare exact payment-policy and consent reconciliation
+
+Continued after the completed PR #256 release. GitHub shows no open pull
+requests and main remains 299fd4c; the prior local handoff f612b0f is preserved.
+The business Chrome profile is now exposed as browser 4, while browser 3 is
+a different profile. Recovered the existing hello@tuveloz.com Gmail tab through
+the supported browser inventory. The scoped Stripe/Founder Shield/Baldwin/county
+search still shows only Stripe's existing acknowledgment and substantive reply;
+the thread ends with our already-sent 8:05 p.m. follow-up. No new answer found
+in that scope and no message resent. This is not a check of every possible sender.
+
+Prepared `legal/payment-policy-reconciliation.md` with candidate English/Spanish
+paragraphs and a concrete release/verification sequence. Source review found
+that Terms section 7 can imply charging only after completion, while the planned
+Checkout uses payment mode without manual capture and holds the later provider
+transfer. The exact saved authorization lacks the new merchant sentence and a
+language field; the Customer Agreement and quote route are not Spanish-ready.
+Existing canonical policy hashes bind English source pages, not the Spanish
+dictionary or a presented language. These limitations are now explicit rather
+than treating PR #256's bilingual result page as full contract-flow proof.
+
+Rechecked official Stripe merchant, dispute and manual-capture documentation.
+Kept legal/tax conclusions, transfer timing limits, fee-refund decisions and
+binding acknowledgment acceptance pending their actual evidence. Corrected the
+processor card's stale pre-PR #256 interface rows so future work will not repeat
+the completed implementation. Linked the draft from the index and launch packet,
+and updated the existing September 30 policy review checkpoint.
+
+Validation: 21 existing fee, policy-release-integrity and customer-policy-gate
+checks passed; whitespace check passed. Private test output is
+`outputs/payment-policy-review-checks-20260927.log`. No runtime file, policy page,
+hash/version, accepted record, credential, Stripe setting or launch lock changed.
+This is local review preparation, not a publication or legal approval. Preserve
+it with the prior handoff for the next substantive release; do not create a
+status-only deployment or repeat the completed PR #256 release.
+
+## 2026-09-27 - Publish and independently verify PR #256
+
+The owner continued the explicit publication request for tested head 04cb36b.
+Created PR #256 and merged that exact head only after both required PR workflows
+passed. Merge 299fd4c598fb082422660ae5cbab731de5f4bb81 landed at September 28
+00:54:03 UTC (September 27 Maryland time). Production run 36363910803 passed all
+three jobs, including the full verification workflow, before deployment.
+
+Independent live verification at 01:11:33 UTC confirmed the exact merge commit,
+ready application/database/schema, accounts/applications open and customer
+requests/payments closed. The new result-page header is served. Unknown payment
+reads return 404/private-no-store/error-only; new quote readiness returns the
+closed-marketplace response; signed-out provider access returns 401/no-store.
+There is no public /es/success alias.
+
+Live mobile browser verification at 390px and 320px confirmed both language-switch
+directions, the Spanish provider link opening the actual application form, the
+Spanish payment-policy link, and the customer link reaching Spanish customer
+sign-in. The missing-record message presents recovery guidance without displaying
+a payment merchant or paid claim. Cancellation text works in both languages.
+No horizontal overflow or captured console errors were observed. No form,
+account, provider, real payment or new email was submitted during verification.
+Temporary viewport overrides were reset after screenshots and evidence were saved.
+
+This completes the approved publication. Do not repeat the approval, repair or
+deployment. All 812 tests/build, TypeScript and 32 synthetic mobile browser cases
+passed locally and the required GitHub workflows passed. Authenticated paid,
+pending, failed and refunded states were exercised with isolated synthetic data;
+actual hosted Checkout/receipt proof and reviewed policy/acceptance evidence
+remain separate. No Stripe terms, fee, payment strategy, policy release or launch
+lock changed. Stripe's already-sent follow-up still awaits the remaining answers.
+
+Private proof: pr256-premerge-checks-20260927.json,
+pr256-pr-verification-result-20260927.json, pr256-pr-build-result-20260927.json,
+pr256-merge-result-20260927.json, pr256-production-result-20260927.json,
+pr256-live-release-20260927.json and pr256-live-browser-20260927.json.
+This post-release handoff stays local for the next substantive release; it does
+not require another status-only deployment.
+
 ## 2026-09-27 - Send approved Stripe reply and prepare payment-disclosure repair
 
 Sent the exact owner-approved same-thread reply to support@stripe.com from

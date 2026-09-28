@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { PAYMENT_MERCHANT_DISCLOSURE } from "../../lib/payment-merchant";
-import { useSiteLanguage } from "./site-language";
+import { useSiteLanguage, type SiteLanguage } from "./site-language";
 
 type PaymentSummary = {
   id: string;
@@ -23,6 +23,8 @@ type CheckoutAcceptance = {
   presentedText: string;
   cancellationRefundSummary: string;
   scope: {
+    quoteId: string;
+    scopeVersion: number;
     providerLegalName: string;
     serviceCodes: string[];
     scheduledFor: string;
@@ -34,6 +36,7 @@ type CheckoutAcceptance = {
     taxAmountCents: number;
     otherAmountCents: number;
     providerAmountCents: number;
+    customerFeeRateBps: number;
     customerFeeCents: number;
     customerTotalCents: number;
   };
@@ -84,6 +87,33 @@ function ActiveQuotePaymentCard({
   quote,
 }: QuotePaymentCardProps) {
   const { language } = useSiteLanguage();
+  const [retry, setRetry] = useState(0);
+  // Remount before rendering a changed quote or access context. Old consent,
+  // downloads and in-flight redirects must never carry into a new presentation.
+  const presentationKey = JSON.stringify([
+    accessToken, language, retry, quote.id, quote.scopeVersion, quote.providerName,
+    quote.priceCents, quote.laborPriceCents, quote.partsPriceCents,
+    quote.customerFeeRateBps, quote.customerFeeCents, quote.customerTotalCents,
+  ]);
+  return (
+    <QuoteCheckout
+      key={presentationKey}
+      accessToken={accessToken}
+      quote={quote}
+      language={language}
+      onRetry={() => setRetry(value => value + 1)}
+    />
+  );
+}
+
+function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCardProps & {
+  language: SiteLanguage;
+  onRetry: () => void;
+}) {
+  const {
+    id: quoteId, scopeVersion, priceCents, laborPriceCents, partsPriceCents,
+    customerFeeRateBps, customerFeeCents, customerTotalCents,
+  } = quote;
   const laborOnlyQuote = (
     Number(quote.partsPriceCents) === 0
     && Number(quote.priceCents) === Number(quote.laborPriceCents)
@@ -97,11 +127,20 @@ function ActiveQuotePaymentCard({
   const [checkoutAcceptance, setCheckoutAcceptance] =
     useState<CheckoutAcceptance | null>(null);
   const [error, setError] = useState("");
+  const [quoteChanged, setQuoteChanged] = useState(false);
+  const checkoutRequest = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const query = new URLSearchParams({ quoteId: quote.id });
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+      setError("Checking this quote took too long. Please try again.");
+      setLoading(false);
+    }, 20_000);
+    const query = new URLSearchParams({ quoteId });
     fetch(`/api/stripe/checkout?${query}`, {
       cache: "no-store",
+      signal: controller.signal,
       headers: accessToken
         ? { "x-tuveloz-request-token": accessToken }
         : undefined,
@@ -114,29 +153,58 @@ function ActiveQuotePaymentCard({
           checkoutAcceptance?: CheckoutAcceptance | null;
           error?: string;
         };
+        if (controller.signal.aborted) return;
         if (!response.ok) throw new Error(result.error || "Unable to check payment readiness.");
-        setCheckoutAllowed(result.checkoutAllowed ?? false);
+        const scope = result.checkoutAcceptance?.scope;
+        if (result.checkoutAcceptance && (
+          !scope || scope.quoteId !== quoteId || scope.scopeVersion !== scopeVersion
+          || scope.providerAmountCents !== Number(priceCents)
+          || scope.laborAmountCents !== Number(laborPriceCents)
+          || scope.partsAmountCents !== Number(partsPriceCents)
+          || scope.customerFeeRateBps !== customerFeeRateBps
+          || scope.customerFeeCents !== Number(customerFeeCents)
+          || scope.customerTotalCents !== Number(customerTotalCents)
+        )) {
+          setQuoteChanged(true);
+          throw new Error("This quote changed. Refresh the page to review the latest details before paying.");
+        }
+        setCheckoutAllowed(result.checkoutAllowed === true);
         setReason(result.reason ?? "");
         setPayment(result.payment ?? null);
         setCheckoutAcceptance(result.checkoutAcceptance ?? null);
         setAcceptedPaymentPolicy(false);
       })
       .catch((failure) => {
+        if (controller.signal.aborted) return;
         setError(failure instanceof Error ? failure.message : "Unable to check payment readiness.");
       })
-      .finally(() => setLoading(false));
-  }, [accessToken, quote.id]);
+      .finally(() => {
+        window.clearTimeout(timeout);
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+      checkoutRequest.current?.abort();
+    };
+  }, [accessToken, quoteId, scopeVersion, priceCents, laborPriceCents,
+    partsPriceCents, customerFeeRateBps, customerFeeCents, customerTotalCents]);
 
   async function openCheckout() {
+    if (loading || busy || checkoutRequest.current || !checkoutAllowed
+      || !checkoutAcceptance || !acceptedPaymentPolicy) return;
     if (!laborOnlyQuote) {
       setError("Checkout is blocked because this quote is not labor only.");
       return;
     }
     setBusy(true);
     setError("");
+    const controller = new AbortController();
+    checkoutRequest.current = controller;
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
+        signal: controller.signal,
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           quoteId: quote.id,
@@ -153,8 +221,14 @@ function ActiveQuotePaymentCard({
         error?: string;
         payment?: PaymentSummary;
       };
+      if (controller.signal.aborted) return;
       if (!response.ok || !result.url) {
         if (result.payment) setPayment(result.payment);
+        if (response.status === 409) {
+          setCheckoutAllowed(false);
+          setCheckoutAcceptance(null);
+          setAcceptedPaymentPolicy(false);
+        }
         throw new Error(result.error || "Unable to open Stripe Checkout.");
       }
       if (accessToken) {
@@ -164,8 +238,11 @@ function ActiveQuotePaymentCard({
       }
       window.location.assign(result.url);
     } catch (failure) {
+      if (controller.signal.aborted) return;
       setError(failure instanceof Error ? failure.message : "Unable to open Stripe Checkout.");
       setBusy(false);
+    } finally {
+      if (checkoutRequest.current === controller) checkoutRequest.current = null;
     }
   }
 
@@ -239,7 +316,19 @@ function ActiveQuotePaymentCard({
               Checkout is blocked because the stored quote contains a parts or non-labor amount.
             </p>
           )}
-          {error && <p className="form-error" role="alert">{error}</p>}
+          {error && (
+            <div>
+              <p className="form-error" role="alert">{error}</p>
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={quoteChanged ? () => window.location.reload() : onRetry}
+                type="button"
+              >
+                {quoteChanged ? "Refresh quote details" : "Check quote again"}
+              </button>
+            </div>
+          )}
           {checkoutAcceptance ? (
             <>
               <dl className="quote-breakdown" aria-label="Exact checkout authorization">
@@ -270,6 +359,7 @@ function ActiveQuotePaymentCard({
               <label className="policy-consent payment-policy-consent">
                 <input
                   checked={acceptedPaymentPolicy}
+                  disabled={busy}
                   onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
                   type="checkbox"
                 />
@@ -294,7 +384,7 @@ function ActiveQuotePaymentCard({
           )}
           <button
             className="button primary"
-            disabled={!checkoutAllowed || !checkoutAcceptance || !laborOnlyQuote || !acceptedPaymentPolicy || busy}
+            disabled={!checkoutAllowed || !checkoutAcceptance || !laborOnlyQuote || !acceptedPaymentPolicy || loading || busy}
             onClick={openCheckout}
             type="button"
           >

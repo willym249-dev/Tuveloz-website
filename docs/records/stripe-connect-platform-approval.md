@@ -180,21 +180,24 @@ Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
 
-### Disclosure review — local implementation prepared, not published
+### Disclosure review — interface repair published; policy and receipt review pending
 
-Source reviewed at released commit `b5c67a9`. Keep the current account settings,
-policy releases, fee, provider quote and launch controls intact while this review
-is unresolved. A processor statement is not a substitute for the separate tax,
-consumer-policy and service-scope decisions.
+The original source review used `b5c67a9`; the table below is reconciled to
+published release `299fd4c`. Keep the current account settings, policy releases,
+fee, provider quote and launch controls intact while the remaining review is
+unresolved. A processor statement is not a substitute for the separate tax,
+consumer-policy and service-scope decisions. The specific candidate English and
+Spanish clauses, collection-timing discrepancy and acceptance-language gaps are
+in the [payment policy reconciliation](../legal/payment-policy-reconciliation.md).
 
 | Surface | Current evidence | Required review action |
 | --- | --- | --- |
 | Stripe public name/card statement | Both display TUVELOZ LLC in signed-in Business details. | Complete for the observed fields; do not change or repeat setup. Actual receipt rendering is not yet proved. |
-| `app/components/quote-payment-card.tsx` | Shows provider identity, price, fee and policy consent; no explicit payment-merchant sentence. | Place the approved bilingual payment-merchant disclosure by the total before checkout. |
-| `app/api/stripe/checkout/route.ts` | Hosted Checkout has provider labor/fee lines; neither branch sets `on_behalf_of`; no explicit merchant `custom_text` is supplied. | Add approved hosted-checkout disclosure and verify both language paths without changing charge type or transferring money. |
-| `app/success/page.tsx` | Shows Tuveloz branding and an authorized payment summary, but does not explicitly identify TUVELOZ LLC as payment merchant. | Add the approved merchant identification to verified payment confirmations, without presenting a failed or canceled checkout as paid. |
-| `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and Spanish counterparts | Current review text leaves payment-role decisions pending and describes the provider's service contract separately. | Reconcile exact wording with the processor answer and applicable review; keep vehicle-service responsibility distinct from payment responsibility. Release any changes through the existing policy-hash/version process. |
-| Accepted customer evidence | `lib/customer-policy-acceptance.ts` binds released documents to checkout; quote checkout also records exact authorization. | Bind approved wording to the relevant policy/evidence versions, then verify consent, saved records and bilingual display. Do not fabricate a review or reuse stale hashes. |
+| `app/components/quote-payment-card.tsx` | PR #256 places the bilingual payment-merchant disclosure beside the total. | Complete for this interface; preserve it. The broader quote authorization remains English-only. |
+| `app/api/stripe/checkout/route.ts` | PR #256 supplies merchant `custom_text`, locale and language-preserving return URLs. Neither branch sets `on_behalf_of`. | Preserve the completed implementation; verify actual hosted rendering in the separate test-mode rehearsal. |
+| `app/success/page.tsx` | PR #256 identifies TUVELOZ LLC on an authenticated payment record and distinguishes payment states in both languages. | Complete for the published interface; preserve it. This is not an actual Stripe receipt. |
+| `app/payments/page.tsx`, `app/terms/page.tsx`, `app/customer-agreement/page.tsx` and `app/provider-agreement/page.tsx` | Current text leaves some payment-role decisions pending; Terms section 7 can imply collection only after completion. Terms, Payment Policy and Provider Agreement have complete, separately hashed Spanish translations; Customer Agreement does not have a Spanish-ready route. | Review the exact clauses and timing together. A complete customer translation draft is now prepared; adopt its final paired wording before release through the existing translation/policy version process. |
+| Accepted customer evidence | Released English documents and exact scope are recorded. The customer authorization omits the merchant sentence, language and Spanish release metadata. The provider path already binds all three relevant translation hashes and language. | Extend the customer path using the existing provider approach, preserving prior records. Verify saved/downloaded text and stale-consent rejection. Do not duplicate the provider system, fabricate review or reuse stale hashes. |
 
 Proposed short pre-payment wording for review:
 
@@ -209,21 +212,27 @@ Spanish draft:
 > proveedor y una tarifa de servicio al cliente del 5%, indicada por separado.
 > Para preguntas sobre el pago o un reembolso, escriba a hello@tuveloz.com.
 
-Proposed verified-payment label: **Payment collected by TUVELOZ LLC. Vehicle
+Historical draft verified-payment label: **Payment collected by TUVELOZ LLC. Vehicle
 service provided by [Provider business].** Spanish: **Pago recibido por TUVELOZ
 LLC. Servicio del vehículo prestado por [nombre del negocio proveedor].**
-These are review drafts, not published policies, a new receipt, a promise of
-refund eligibility, or proof of legal/tax approval.
+This label was superseded for the interface by PR #256's neutral payment-record
+label, which also works for pending, failed and refunded records. The paragraphs
+above remain review drafts, not published policies, a new receipt, a promise of
+refund eligibility, or proof of legal/tax approval. Use the linked reconciliation
+for the next policy review rather than replaying this earlier interface proposal.
 
-The next local change adds concise payment-merchant wording to the quote total,
+PR #256 adds concise payment-merchant wording to the quote total,
 hosted Checkout submit text, and authenticated payment record, with English and
 Spanish text. The hosted session and return links preserve the selected language.
 The payment-result page now translates in place, distinguishes unavailable records
 from closed checkout, and uses readable status labels without calling pending,
 failed, refunded or disputed payments paid. It creates no public Spanish payment
 record alias. Amounts, payment type, provider settlement and launch locks are
-unchanged. This implementation is not deployed, a real Stripe receipt test, a
-policy release, or completion of the remaining policy/acceptance evidence review.
+unchanged. The owner-approved head 04cb36b was merged as 299fd4c; production run
+36363910803 and independent live release/browser checks passed September 27
+Maryland time. The interface repair is published. It is not a real Stripe receipt
+test, a policy release, or completion of the policy/acceptance evidence review.
+Do not repeat its publication approval or deployment.
 
 ### Narrow follow-up — sent September 27
 
@@ -266,6 +275,11 @@ Saved replacement:
 
 ## History
 
+- **2026-09-27:** Published the owner-approved interface repair as PR #256 after
+  all required checks passed. Exact release and live bilingual result-page links,
+  closed/missing/canceled states, private API rejection and closed launch controls
+  verified. Hosted receipt proof, policy/evidence review and remaining Stripe
+  answers are still separate. No terms accepted or payment setting changed.
 - **2026-09-27:** Sent the exact owner-approved follow-up in the existing thread
   and verified its recipient, timestamp and body. No acknowledgment accepted or
   setting changed. Prepared the local bilingual payment-disclosure/result-page

@@ -450,8 +450,17 @@ verified after Gmail confirmed Message sent. Do not repeat either inquiry or its
 send approval. Support called the quote flow live in one sentence,
 but customer bookings/payments remain closed. The record card maps the remaining
 checkout, confirmation, English/Spanish policy and accepted-evidence disclosures,
-with a local bilingual checkout/payment-result implementation awaiting publication
-and separate policy/evidence review. The 5% account-description correction
+with the bilingual checkout/payment-result interface repair published in PR #256
+and independently verified at release 299fd4c. Separate policy/evidence review
+and actual hosted-receipt proof remain. The
+[payment-policy reconciliation](../legal/payment-policy-reconciliation.md)
+now supplies candidate bilingual clauses and the exact remaining gaps: collection
+timing versus provider transfer, merchant wording in saved customer consent, the
+English-only Customer Agreement, and missing customer-side Spanish acceptance
+metadata. The complete Spanish customer agreement and checkout templates are
+prepared. Existing provider Spanish releases already bind language and exact
+translation hashes; reuse them instead of rebuilding that completed work. These are prepared
+review items, not new approvals or published policy changes. The 5% account-description correction
 and initial Connect approval remain complete. No published policy, fee, account
 setting or launch gate changed. Live mode remains locked
 (`STRIPE_LIVE_MODE_ENABLED = false`).
