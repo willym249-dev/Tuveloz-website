@@ -1,0 +1,163 @@
+# Payment wording and acceptance review
+
+- **Status:** draft; not an effective policy or launch approval
+- **Owner:** hello@tuveloz.com
+- **Last reviewed:** 2026-09-27
+- **Applies to:** proposed labor-only quote checkout, Montgomery County launch
+
+This is the specific remaining policy work after PR #256, reviewed against
+release `299fd4c`. It preserves the existing service-provider relationship, 5%
+Customer Service Fee and closed marketplace. Nothing below changes an account,
+accepted agreement, charge, policy release or launch decision.
+
+## Evidence and findings
+
+Stripe's September 27 written response and the
+[processor record](../records/stripe-connect-platform-approval.md) establish
+the payment role for the described configuration. Its follow-up answers remain
+pending. The September 27 evening business-inbox check found the existing reply
+and acknowledgment only in the scoped Stripe/broker/county search; no new answer
+appeared. Do not resend those inquiries.
+
+| Surface | Verified current behavior | Work still needed |
+| --- | --- | --- |
+| Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. | Complete; preserve it. An actual hosted Checkout/receipt rehearsal remains separate. |
+| Payment Policy introduction and sections 3, 5, 8 | Still treats the processor's merchant role and some refund/dispute responsibilities as undecided. | Reflect the confirmed configuration while leaving unresolved transfer limits, reserves and legal/tax treatment expressly unresolved. |
+| Terms section 7 | Says the planned fee is charged on completed jobs. The quote checkout uses payment mode without manual capture; completion checks govern the later provider transfer. | Make customer collection and provider transfer distinct. Do not imply that collection waits for job completion or silently change the charge strategy. |
+| Customer Agreement section 7 | Describes the proposed fee but omits explicit payment-merchant identification. | Add the reviewed payment wording and an accurate checkout-timing explanation. |
+| Provider Agreement section 11 | Full provider quote is preserved, but transfer/recovery wording is broad. | Reconcile the eventual timing and recovery terms with Stripe's answer; do not invent a maximum delay or automatic recovery right. |
+| Exact checkout authorization | `lib/customer-checkout-acceptance.ts` saves provider identity, price, scope, policies and warranty text. It does not contain the new payment-merchant sentence. | Include the reviewed merchant/timing wording in the exact displayed and saved authorization; version it and test stale-consent rejection. |
+| Spanish policies and evidence | Terms, Payment Policy and Provider Agreement use shared pages plus `lib/spanish-dictionary.ts`. `/customer-agreement` and the quote route are absent from `SPANISH_READY_PATHS`; exact checkout authorization has no language field and is generated in English. | Review full Spanish customer-agreement and checkout text before enabling their language paths. Existing bilingual result/hosted messages do not establish a fully Spanish contract flow. |
+| Release integrity | `config/policy-releases.json` binds the seven English page sources. The canonical hashes do not bind the dictionary or a presented language. | Decide and implement explicit language/translation-release evidence before claiming that a saved acceptance proves the Spanish wording shown. Current hashing is useful, but is not that proof. |
+
+The timing finding is an inference from the checkout source plus Stripe's
+[manual-capture documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method),
+which requires an explicit manual-capture setting for an authorization-only
+Checkout Session. This review did not create or inspect a new real payment.
+
+## Proposed clauses for review
+
+These are exact candidate paragraphs, not approved replacements. Keep the
+current onboarding-only notice. Incorporate the agreed paragraphs in the
+relevant sections rather than adding repeated disclaimers throughout each page.
+Do not publish the partial Spanish paragraphs as a complete translated agreement.
+
+### Payment recipient — Payment Policy section 3 and Customer Agreement section 7
+
+**English**
+
+> When payments open, your payment through Tuveloz will be to TUVELOZ LLC,
+> processed by Stripe. Your selected independent provider business performs the
+> vehicle service. For help with a payment or refund, contact hello@tuveloz.com.
+
+**Spanish**
+
+> Cuando se habiliten los pagos, el pago que haga a través de Tuveloz se realizará
+> a TUVELOZ LLC y será procesado por Stripe. El negocio proveedor independiente
+> que usted elija realizará el servicio de su vehículo. Para obtener ayuda con
+> un pago o reembolso, escriba a hello@tuveloz.com.
+
+This identifies the payment recipient consistently with
+[Stripe's merchant rules](https://docs.stripe.com/connect/merchant-of-record).
+It does not decide tax treatment or disclaim Tuveloz's mandatory duties. Review
+related Terms sections 2–3 and liability language together so they cannot be read
+as disclaiming Tuveloz's payment responsibilities.
+
+### Price and collection — Terms section 7 and Payment Policy section 4
+
+**English**
+
+> Under the planned payment flow, you will see the provider's labor quote, a
+> separate 5% Customer Service Fee and the total before paying. You pay that total
+> at checkout. The provider's transfer is a later step, after completion and the
+> required payment checks. The Customer Service Fee is added to your total and
+> is not deducted from the provider's quote. Any parts are purchased separately
+> by you.
+
+**Spanish**
+
+> Según el proceso de pago previsto, verá la cotización de mano de obra del
+> proveedor, una Tarifa de Servicio al Cliente del 5% por separado y el total
+> antes de pagar. Pagará ese total al finalizar el pago. La transferencia al
+> proveedor se realizará después de que termine el trabajo y se completen las
+> verificaciones de pago necesarias. La tarifa se suma a su total y no se
+> descuenta de la cotización del proveedor. Usted compra las piezas por separado.
+
+The reviewer must confirm this timing as the intended product behavior. If a
+different timing is chosen, it needs a separately reviewed implementation; text
+alone cannot turn the existing flow into delayed customer capture.
+
+### Processor responsibilities — Payment Policy sections 5 and 8
+
+**English**
+
+> For this payment flow, Tuveloz is responsible to Stripe for refunds, payment
+> disputes and the associated processor costs. A provider transfer does not
+> remove those responsibilities. Any adjustment or recovery from a provider
+> must follow the accepted provider agreement, Stripe's rules and applicable law.
+
+**Spanish**
+
+> En este proceso de pago, Tuveloz es responsable ante Stripe de los reembolsos,
+> las disputas de pago y los costos asociados del procesador. Transferir dinero
+> a un proveedor no elimina esas responsabilidades. Cualquier ajuste o
+> recuperación de fondos de un proveedor debe respetar el acuerdo aceptado con
+> ese proveedor, las reglas de Stripe y la ley aplicable.
+
+Stripe describes platform debits for this charge type in its
+[dispute documentation](https://docs.stripe.com/connect/disputes).
+These paragraphs do not grant blanket refund eligibility or a new recovery
+right. Final cancellation and Customer Service Fee refund rules remain separate.
+
+### Exact authorization — addition to the existing itemized acceptance
+
+**English**
+
+> I authorize the displayed total to be paid to TUVELOZ LLC through Stripe at
+> checkout. My selected independent provider performs the vehicle service.
+
+**Spanish**
+
+> Autorizo el pago del total mostrado a TUVELOZ LLC a través de Stripe al
+> finalizar el pago. El proveedor independiente que elegí realiza el servicio
+> del vehículo.
+
+Keep the exact amount, provider identity, scope, date, warranty choice and
+policy references already present. This addition must be generated on the server
+and included in the accepted evidence, not only inserted beside a checkbox.
+
+## Decisions still required
+
+| Decision | Evidence or owner needed | Do not substitute |
+| --- | --- | --- |
+| Transfer limit, reserve conditions and category restrictions | Stripe's answer to the already-sent follow-up | A general Connect approval or a guessed payout deadline |
+| Separate onboarding acknowledgment | Exact terms and authorized-owner action-time approval | The support email or previous deployment approval |
+| Cancellation and full/partial Customer Service Fee refunds | Documented owner policy consistent with applicable law and processor rules | A UI status or an assumed refund promise |
+| Tax collection/reporting and accounting | Required tax review against the existing transaction map | A Stripe merchant label or a zero-tax code restriction |
+| Policy adoption and scope | Actual review of these clauses, related liability/service provisions and unresolved decisions | A passing hash test or a fabricated reviewer record |
+
+## Release and verification sequence
+
+1. Resolve the applicable decisions and review complete English/Spanish text.
+   Preserve existing accepted records; no retrospective wording replacement.
+2. Update only the affected policy versions, effective timestamps and unique
+   release IDs after adoption, with the reviewed source hashes. Update all
+   affected customer/provider bundles. Do not label this draft active.
+3. Bind presented language, exact translated wording and its reviewed version
+   into the checkout authorization evidence. Preserve provider-entered names,
+   scope and amounts; never translate user data to manufacture consent.
+4. Reject checkout if the submitted evidence differs from the latest authorized
+   scope, language or policy bundle. Require a fresh explicit acceptance after a
+   material change. Keep historical acceptance text intact.
+5. Verify bilingual policy links and exact acceptance/download equality; test
+   price/provider/scope/policy/language changes, stale submissions and immutable
+   history using isolated records. Retain the current launch locks.
+6. Run a separately scoped Stripe test-mode hosted checkout/receipt rehearsal,
+   using clearly synthetic participants and approved access. Check actual
+   displayed merchant, total, language and paid status. Record the boundary:
+   test-mode success is not a real customer charge, provider settlement or tax
+   approval. No live charge, production provider or launch override is needed.
+
+This review is ready for continuation. It does not require another deployment
+of PR #256 or another inquiry email. No application or active policy file was
+edited while preparing it.

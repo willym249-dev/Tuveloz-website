@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Prepare exact payment-policy and consent reconciliation
+
+Continued after the completed PR #256 release. GitHub shows no open pull
+requests and main remains 299fd4c; the prior local handoff f612b0f is preserved.
+The business Chrome profile is now exposed as browser 4, while browser 3 is
+a different profile. Recovered the existing hello@tuveloz.com Gmail tab through
+the supported browser inventory. The scoped Stripe/Founder Shield/Baldwin/county
+search still shows only Stripe's existing acknowledgment and substantive reply;
+the thread ends with our already-sent 8:05 p.m. follow-up. No new answer found
+in that scope and no message resent. This is not a check of every possible sender.
+
+Prepared `legal/payment-policy-reconciliation.md` with candidate English/Spanish
+paragraphs and a concrete release/verification sequence. Source review found
+that Terms section 7 can imply charging only after completion, while the planned
+Checkout uses payment mode without manual capture and holds the later provider
+transfer. The exact saved authorization lacks the new merchant sentence and a
+language field; the Customer Agreement and quote route are not Spanish-ready.
+Existing canonical policy hashes bind English source pages, not the Spanish
+dictionary or a presented language. These limitations are now explicit rather
+than treating PR #256's bilingual result page as full contract-flow proof.
+
+Rechecked official Stripe merchant, dispute and manual-capture documentation.
+Kept legal/tax conclusions, transfer timing limits, fee-refund decisions and
+binding acknowledgment acceptance pending their actual evidence. Corrected the
+processor card's stale pre-PR #256 interface rows so future work will not repeat
+the completed implementation. Linked the draft from the index and launch packet,
+and updated the existing September 30 policy review checkpoint.
+
+Validation: 21 existing fee, policy-release-integrity and customer-policy-gate
+checks passed; whitespace check passed. Private test output is
+`outputs/payment-policy-review-checks-20260927.log`. No runtime file, policy page,
+hash/version, accepted record, credential, Stripe setting or launch lock changed.
+This is local review preparation, not a publication or legal approval. Preserve
+it with the prior handoff for the next substantive release; do not create a
+status-only deployment or repeat the completed PR #256 release.
+
 ## 2026-09-27 - Publish and independently verify PR #256
 
 The owner continued the explicit publication request for tested head 04cb36b.
