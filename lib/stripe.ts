@@ -59,16 +59,24 @@ export function stripeIdentityLiveModeEnabled() {
  */
 export function getStripeClient() {
   const secretKey = requiredRuntimeValue("STRIPE_SECRET_KEY");
+  // Only account-level server keys belong here. An unknown/organization key
+  // must not evade mode detection, and public/webhook keys are not API secrets.
+  if (!/^(sk|rk)_(test|live)_\S+$/.test(secretKey)) {
+    throw new StripeConfigurationError(
+      "STRIPE_SECRET_KEY must be a standard or restricted account-level Stripe API key with an explicit test or live mode.",
+    );
+  }
 
   // Keep a copied live key from silently turning a local demo into real money.
+  // Restricted keys may also have write permissions; they need the same lock.
   // An adult legal owner can deliberately enable live mode after the full
   // business, compliance, dispute, and refund review is complete.
   if (
-    secretKey.startsWith("sk_live_")
+    (secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_"))
     && !stripeLiveModeEnabled()
   ) {
     throw new StripeConfigurationError(
-      "A live Stripe key was provided while live mode is code-disabled. Use a sandbox sk_test_ key; an environment variable cannot enable live payments before a reviewed marketplace release.",
+      "A live Stripe key was provided while live mode is code-disabled. Use a sandbox sk_test_ or rk_test_ key; an environment variable cannot enable live payments before a reviewed marketplace release.",
     );
   }
 

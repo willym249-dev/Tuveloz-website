@@ -6,18 +6,23 @@
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
 
 This is the specific remaining policy work after PR #256, reviewed against
-release `299fd4c`. It preserves the existing service-provider relationship, 5%
+release `299fd4c`, with completed processor/release evidence updated September 28.
+It preserves the existing service-provider relationship, 5%
 Customer Service Fee and closed marketplace. Nothing below changes an account,
 accepted agreement, charge, policy release or launch decision.
 
 ## Evidence and findings
 
-Stripe's September 27 written response and the
+Stripe's September 27 and September 28 written responses and the
 [processor record](../records/stripe-connect-platform-approval.md) establish
-the payment role for the described configuration. Its follow-up answers remain
-pending. The September 27 evening business-inbox check found the existing reply
-and acknowledgment only in the scoped Stripe/broker/county search; no new answer
-appeared. Do not resend those inquiries.
+the payment role for the described configuration. The follow-up was answered
+September 28 at 2:49 p.m.; preserve its holding guidance separately from the
+linked public reserve ceiling, without inventing a normal payout delay. The
+owner-approved seller-compliance acknowledgment is accepted and PR #259's
+provider alert/update-button repair is published as `b20d524`. Actual
+Stripe-originated delivery and provider inbox receipt remain separate evidence.
+The September 28 scoped business-inbox search found no new broker/county reply.
+Do not repeat the inquiries, acknowledgment or completed releases.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
@@ -130,11 +135,14 @@ and included in the accepted evidence, not only inserted beside a checkbox.
 
 | Decision | Evidence or owner needed | Do not substitute |
 | --- | --- | --- |
-| Transfer limit, reserve conditions and category restrictions | Stripe's answer to the already-sent follow-up | A general Connect approval or a guessed payout deadline |
-| Separate onboarding acknowledgment | Exact terms and authorized-owner action-time approval | The support email or previous deployment approval |
+| Operating transfer timing, reserve conditions and category restrictions | Reconcile the received September 28 answer and finalize the insured/licensed service scope | A general Connect approval, the public reserve ceiling used as a normal payout delay, or a guessed deadline |
 | Cancellation and full/partial Customer Service Fee refunds | Documented owner policy consistent with applicable law and processor rules | A UI status or an assumed refund promise |
 | Tax collection/reporting and accounting | Required tax review against the existing transaction map | A Stripe merchant label or a zero-tax code restriction |
 | Policy adoption and scope | Actual review of these clauses, related liability/service provisions and unresolved decisions | A passing hash test or a fabricated reviewer record |
+
+The separate seller-compliance acknowledgment is complete, confirmed in Stripe
+on September 28. It is not a remaining acceptance task or approval of these
+draft customer/provider policies.
 
 ## Release and verification sequence
 

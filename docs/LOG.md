@@ -11,6 +11,102 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Restricted live payment-key guard repaired; publication pending
+
+Continued from clean local 00376fb and remote production b20d524; no open PRs
+were present. The remaining thin-event delivery path intentionally still uses
+the guarded payment client. No separate live credential or release bypass was
+introduced to make that path appear operational during prelaunch.
+
+While reviewing that boundary, found getStripeClient rejected sk_live_ but
+accepted rk_live_ without checking the payment release lock. Stripe's official
+[key documentation](https://docs.stripe.com/keys), checked September 28,
+confirms restricted keys also have live/test modes and configurable permissions.
+A real-factory/SDK test with synthetic credentials reproduced the failure before
+the change. The repair applies the existing live lock to both key types and
+rejects public, webhook, organization, missing-mode and unknown key formats.
+Standard and restricted sandbox keys still work. No secret values were read,
+created, changed or transmitted, and Identity's separate client is unchanged.
+
+The focused guard/launch/webhook checks passed, followed by the production build
+and all 831 tests with zero failures. Lint passed with the existing warning in
+unchanged site-language.tsx. The suite includes the prior local sender/retry
+coverage; neither it nor this repair proves actual provider inbox delivery.
+Private build/test log: outputs/stripe-key-guard-full-tests-20260928.log.
+Prepared for review; not yet published. No launch/payment/SMS flag changed.
+
+## 2026-09-28 - Existing receipt test resolved; provider alert sender checked locally
+
+Continued from published b20d524 and the completed seller-compliance acceptance,
+with no open PRs or newer remote release at inspection. The signed-in Test-mode
+Stripe Dashboard shows No payments on the existing synthetic receipt-language
+Customer and Spanish (Spain) in its expanded details. This experiment produced
+no receipt; the Customer page does not establish the exact Session status enum.
+No new Checkout, credential, payment, invoice or settings change was made.
+Recorded the current observation in the private experiment summary and updated
+the existing checklist. Only prepare a replacement when the owner is ready for
+the required final Pay step; do not repeat the completed hosted tests.
+
+The business-inbox search addressed to hello@tuveloz.com after September 26 from
+the existing broker/Baldwin/county domains returned no matches. This is a scoped
+observation, not an exhaustive mailbox claim; no inquiry was resent. Corrected
+stale launch-briefing and policy-draft text that still called the September 28
+Stripe reply and acknowledgment pending. No released policy or hash changed.
+
+Extended tests/stripe-account-notifications.test.mjs through the real
+flushPendingEmailNotifications implementation and migrated local SQLite, using
+intercepted synthetic email-service responses. All 15 focused checks pass:
+English/Spanish payloads reach the sender while payment locks remain closed;
+service failure and a missing message receipt remain retryable; the same
+idempotency key and content survive retries; a successful acceptance and replay
+do not resend. The initial sandbox run failed before executing tests because
+esbuild could not read a parent directory; the approved local rerun passed.
+
+Only tests and documentation changed, saved locally for the next reviewed
+release. No runtime change or deployment is needed for these checks. Service
+acceptance in a fixture is not an actual provider inbox delivery. The live
+thin-event route still uses the guarded payment client; actual Stripe-originated
+delivery remains separate and unproven. No real provider message, vendor call,
+charge, identity document, paid service or launch/payment/SMS unlock occurred.
+
+## 2026-09-28 - Stripe acknowledgment accepted; PR 259 published and verified
+
+The owner explicitly approved both publication and the exact seller-compliance
+acknowledgment. Submitted the reviewed acknowledgment; Stripe replaced the
+action with View acknowledgement and displayed September 28, 2026 as accepted.
+Saved proof privately in outputs/stripe-seller-compliance-accepted-20260928.png.
+Do not ask for acceptance again or confuse this with the July 29 loss-liability
+acknowledgment, a new paid plan, or approval to open customer payments.
+
+PR #259 merged tested head a4c02c6 as b20d524b96240d6e5971483ddb0cc040a5a6ba9f.
+All required PR checks and production workflow 36474134777 passed, including
+825 tests/build, bilingual browser flows and the migration rehearsal.
+Independent live verification at 2026-09-28T20:04:07.610Z passed all eight
+targeted HTTP checks, confirmed that exact release and ready application,
+database and schema, and preserved closed/private routes and launch controls.
+The initial raw-HTML sign-in-text assertion was incorrect for this client page;
+source/browser inspection confirmed hydration and the provider sign-in redirect.
+HTTP assertions now cover the route shell, with separate live browser proof of
+provider sign-in and the supported Spanish account page. The private workspace
+lang query is not a supported translation switch; no new bilingual-workspace
+claim or production runtime change was made during verification.
+The provider alert/update-button fix is published. Actual Stripe-originated
+delivery and provider inbox receipt are still separate operational evidence.
+No real provider notice, payment, identity document or settlement was used.
+
+The older Spanish receipt test window ended at 3:42 p.m. Maryland time. A
+refresh returned Stripe's combined completed-or-timed-out page; no receipt or
+payment completion was independently confirmed. Saved that observation and
+closed the unusable tab. The last API result at preparation was open/unpaid.
+Temporary CLI credentials remain revoked; no replacement checkout or indirect
+payment was attempted. Inspect the existing Session through authorized test
+access before preparing another. The prior owner-only Pay restriction remains.
+
+Remaining scope: actual provider delivery evidence, the isolated receipt-language
+experiment, customer consent/policy reconciliation, and supported service,
+insurance and tax decisions. This acceptance/release clears none of those gates.
+Earlier releases and completed business setup are preserved; do not repeat them.
+
 ## 2026-09-28 - Stripe reply verified; provider account notices repaired locally
 
 Read the new September 28 2:49 p.m. Stripe Support reply in the business inbox.

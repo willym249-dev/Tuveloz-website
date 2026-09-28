@@ -13,7 +13,8 @@ import * as jsxRuntime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 
 // Real route, Stripe signatures and migrated SQL; all vendor reads are local
-// fixtures and every other network call fails. No real accounts or mail.
+// fixtures. Mail responses are intercepted locally; all other network calls
+// fail. No real accounts or mail.
 test("Stripe account changes durably notify only the correct real provider", async t => {
   const repo = resolve(import.meta.dirname, "..");
   const tempRoot = resolve(tmpdir());
@@ -26,6 +27,7 @@ test("Stripe account changes durably notify only the correct real provider", asy
   const type = "v2.core.account[requirements].updated";
   const state = { db: null, failBatch: false, failComplete: false,
     beforeBatch: null, reads: [], events: new Map(), account: null,
+    mailRequests: [], mailResponses: [],
     env: { STRIPE_SECRET_KEY: "sk_test_synthetic_account_notice_fixture",
       STRIPE_CONNECT_WEBHOOK_SECRET: secret, SITE_URL: "https://tuveloz.invalid",
       APP_ENVIRONMENT: "production", STRIPE_ALLOW_LIVE_MODE: "false" } };
@@ -39,6 +41,8 @@ test("Stripe account changes durably notify only the correct real provider", asy
       'test-only','test-only','unverified',?,?,?)`).run(testProvider, accountId, language);
     state.env.APP_ENVIRONMENT = "production";
     state.failBatch = false; state.failComplete = false; state.beforeBatch = null; state.reads = [];
+    state.mailRequests = []; state.mailResponses = [];
+    delete state.env.RESEND_API_KEY; delete state.env.RESEND_FROM_EMAIL;
     state.account = { id: accountId, livemode: true, dashboard: "express",
       configuration: { recipient: { capabilities: { stripe_balance: { stripe_transfers: { status: "active" } } } } },
       requirements: { summary: { minimum_deadline: { status: "currently_due" } },
@@ -87,6 +91,19 @@ test("Stripe account changes durably notify only the correct real provider", asy
     globalThis.fetch = async (input, init) => {
       const url = new URL(typeof input === "string" ? input : input.url ?? input);
       const method = init?.method ?? input.method ?? "GET";
+      if (url.hostname === "api.resend.com") {
+        assert.equal(url.pathname, "/emails"); assert.equal(method, "POST");
+        const headers = new Headers(init.headers);
+        assert.equal(headers.get("Authorization"), "Bearer re_synthetic_notice_fixture");
+        const body = JSON.parse(init.body);
+        assert.deepEqual(body.to, ["provider@example.invalid"]);
+        assert.equal(body.from, "Tuveloz <notices@example.invalid>");
+        state.mailRequests.push({ body, key: headers.get("Idempotency-Key") });
+        const response = state.mailResponses.shift();
+        assert.ok(response, "Unexpected email attempt: no local response fixture");
+        return new Response(JSON.stringify(response.body), { status: response.status,
+          headers: { "content-type": "application/json" } });
+      }
       assert.equal(method, "GET", "Fixture allows no API writes or sends");
       assert.equal(url.hostname, "api.stripe.com");
       state.reads.push(url.pathname);
@@ -102,6 +119,7 @@ test("Stripe account changes durably notify only the correct real provider", asy
       export { POST } from "./app/api/stripe/webhooks/connect/route";
       export { stripeLiveModeEnabled } from "./lib/stripe";
       export { emailEventAllowedByReleaseState } from "./lib/email-event-policy";
+      export { flushPendingEmailNotifications } from "./lib/email-notifications";
     `, resolveDir: repo, loader: "ts" }, bundle: true, platform: "node", format: "cjs",
       outfile: bundle, target: "node22", logLevel: "silent", plugins: [{ name: "local-bindings", setup(builder) {
         builder.onResolve({ filter: /^cloudflare:workers$/ }, () => ({ path: "env", namespace: "fixture" }));
@@ -146,6 +164,57 @@ test("Stripe account changes durably notify only the correct real provider", asy
       reset({ language: "Spanish" }); await send(event());
       assert.match(outbox()[0].subject, /Revisa tu cuenta/);
       assert.match(outbox()[0].text_body, /No envíes documentos/);
+    });
+    await t.test("actual outbox sender accepts both languages while payments remain closed, without resending", async () => {
+      for (const language of ["English", "Spanish"]) {
+        reset({ language }); const value = event();
+        assert.equal((await send(value)).status, 200);
+        const notice = outbox()[0];
+        state.env.RESEND_API_KEY = "re_synthetic_notice_fixture";
+        state.env.RESEND_FROM_EMAIL = "Tuveloz <notices@example.invalid>";
+        state.mailResponses = [{ status: 200, body: { id: "synthetic_message_accepted" } }];
+        await api.flushPendingEmailNotifications();
+        assert.equal(state.mailRequests.length, 1);
+        assert.deepEqual(state.mailRequests[0], { key: notice.event_key, body: {
+          from: state.env.RESEND_FROM_EMAIL, to: ["provider@example.invalid"],
+          subject: notice.subject, text: notice.text_body,
+        } });
+        assert.doesNotMatch(state.mailRequests[0].body.text, /SENSITIVE|acct_/);
+        assert.equal(outbox()[0].status, "sent"); assert.equal(outbox()[0].attempts, 1);
+        assert.ok(outbox()[0].sent_at); assert.equal(outbox()[0].last_error, "");
+        assert.equal(api.stripeLiveModeEnabled(), false);
+        await send(value); await api.flushPendingEmailNotifications();
+        assert.equal(state.mailRequests.length, 1); assert.equal(outbox().length, 1);
+        assert.equal(outbox()[0].status, "sent"); assert.equal(outbox()[0].attempts, 1);
+      }
+    });
+    await t.test("actual sender retries service errors and missing acceptance receipts with one stable key", async () => {
+      reset({ language: "Spanish" }); assert.equal((await send(event())).status, 200);
+      const notice = outbox()[0];
+      state.env.RESEND_API_KEY = "re_synthetic_notice_fixture";
+      state.env.RESEND_FROM_EMAIL = "Tuveloz <notices@example.invalid>";
+      state.mailResponses = [
+        { status: 503, body: { message: "Synthetic service unavailable" } },
+        { status: 200, body: {} },
+        { status: 200, body: { id: "synthetic_retry_accepted" } },
+      ];
+      for (const attempt of [1, 2]) {
+        await api.flushPendingEmailNotifications();
+        assert.equal(outbox()[0].status, "failed"); assert.equal(outbox()[0].attempts, attempt);
+        assert.equal(outbox()[0].sent_at, "");
+        assert.match(outbox()[0].last_error, attempt === 1 ? /503/ : /did not confirm acceptance/);
+      }
+      await api.flushPendingEmailNotifications();
+      assert.equal(outbox()[0].status, "sent"); assert.equal(outbox()[0].attempts, 3);
+      assert.equal(outbox()[0].last_error, ""); assert.ok(outbox()[0].sent_at);
+      assert.equal(state.mailRequests.length, 3);
+      for (const request of state.mailRequests) {
+        assert.equal(request.key, notice.event_key);
+        assert.deepEqual(request, state.mailRequests[0]);
+      }
+      await api.flushPendingEmailNotifications();
+      assert.equal(state.mailRequests.length, 3); assert.equal(outbox().length, 1);
+      assert.equal(outbox()[0].status, "sent"); assert.equal(outbox()[0].attempts, 3);
     });
     await t.test("signed retries produce one account notice and one email intent", async () => {
       reset(); const value = event(); await send(value);
