@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-27 - Complete Spanish customer drafts and narrow the consent gap
+
+Prepared the full Spanish Customer Agreement against the unchanged English
+source hash 76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2.
+All eleven sections and fourteen paragraphs are covered, with both Spanish
+policy links, original policy date and fee retained. Added the complete proposed
+Spanish checkout authorization, both warranty alternatives and exact customer
+integration boundaries to the existing payment reconciliation. These are drafts,
+not new effective agreements or evidence of customer acceptance.
+
+Corrected an overly broad finding from the preceding entry: six existing Spanish
+legal pages are complete `lib/policy-spanish/` sources, with a separate release
+manifest and an already language-bound provider acceptance path. They are not
+merely dictionary replacements. The customer path lacks this integration. Updated
+the current review, processor card, briefing and checkpoint so future work reuses
+the completed provider system instead of rebuilding it.
+
+The customer-acceptance unique index has no language/hash field; a future
+presentation-specific version or reviewed schema design must allow distinct
+immutable records. The readiness GET currently omits language while POST carries
+it; future translated consent needs both, stale-response handling and immediate
+checkbox reset. The hashed Spanish Terms source labels its customer-agreement
+link English-only, so publication needs coordinated translation versioning and
+preservation of prior provider acceptances. No policy hash was quietly changed.
+
+Built an isolated static local comparison preview from the draft and original
+English markup, with the existing site stylesheet. Both switch directions and
+390px/320px mobile widths passed visual/DOM inspection without overflow or captured
+console errors. This is a review preview, not production routing, React hydration
+or persisted consent proof. Reset the viewport and closed the temporary preview.
+
+Validation: twenty existing fee/provider-Spanish tests passed. Structural checks
+confirmed all sections, paragraphs and links, and all seven English plus six
+Spanish policy source hashes remain unchanged. Whitespace check passed. Private
+evidence: customer-spanish-draft-validation-20260927.json,
+customer-spanish-preservation-checks-20260927.log,
+customer-agreement-preview-browser-20260927.json and
+customer-agreement-spanish-mobile-20260927.png. The standalone HTML is also saved.
+No runtime, active policy, migration, account, message, payment or launch setting
+changed. No new inbox check was needed immediately after the prior scoped check.
+Keep this local with acc6e40 and f612b0f; no status-only deployment is needed.
+
 ## 2026-09-27 - Prepare exact payment-policy and consent reconciliation
 
 Continued after the completed PR #256 release. GitHub shows no open pull

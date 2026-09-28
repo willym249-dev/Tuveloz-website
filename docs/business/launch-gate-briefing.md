@@ -455,8 +455,11 @@ and independently verified at release 299fd4c. Separate policy/evidence review
 and actual hosted-receipt proof remain. The
 [payment-policy reconciliation](../legal/payment-policy-reconciliation.md)
 now supplies candidate bilingual clauses and the exact remaining gaps: collection
-timing versus provider transfer, merchant wording in saved consent, the English-only
-Customer Agreement, and unbound Spanish acceptance text. These are prepared
+timing versus provider transfer, merchant wording in saved customer consent, the
+English-only Customer Agreement, and missing customer-side Spanish acceptance
+metadata. The complete Spanish customer agreement and checkout templates are
+prepared. Existing provider Spanish releases already bind language and exact
+translation hashes; reuse them instead of rebuilding that completed work. These are prepared
 review items, not new approvals or published policy changes. The 5% account-description correction
 and initial Connect approval remain complete. No published policy, fee, account
 setting or launch gate changed. Live mode remains locked

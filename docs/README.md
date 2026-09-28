@@ -50,6 +50,7 @@ self-contained page.
 | [`INTEGRATED_REVIEW_CHECKLIST.md`](INTEGRATED_REVIEW_CHECKLIST.md) | What ships in this build, and what is deliberately switched off before launch? |
 | [`legal/provider-service-requirements-review.md`](legal/provider-service-requirements-review.md) | Which of the 25 provider services has a supported county-registration category, and which exact scope questions still need an agency answer? |
 | [`legal/payment-policy-reconciliation.md`](legal/payment-policy-reconciliation.md) | Which payment clauses, collection-timing statements and bilingual consent records still need review after PR #256, and what is the proposed wording? |
+| [`legal/customer-agreement-spanish-draft.md`](legal/customer-agreement-spanish-draft.md) | What is the complete Spanish translation of the current Customer Agreement, and which English release does it translate? |
 | [`legal/`](legal/) | Policy research, agreement drafts, and compliance analysis added from here on. |
 | [`records/`](records/) | The register of real-world documents — insurance, formation, licenses, approvals — and where the originals are kept. |
 | [`records/stripe-connect-platform-approval.md`](records/stripe-connect-platform-approval.md) | What did Stripe already approve, which current settings match it, and what payment-flow clarification remains? |

@@ -27,8 +27,8 @@ appeared. Do not resend those inquiries.
 | Customer Agreement section 7 | Describes the proposed fee but omits explicit payment-merchant identification. | Add the reviewed payment wording and an accurate checkout-timing explanation. |
 | Provider Agreement section 11 | Full provider quote is preserved, but transfer/recovery wording is broad. | Reconcile the eventual timing and recovery terms with Stripe's answer; do not invent a maximum delay or automatic recovery right. |
 | Exact checkout authorization | `lib/customer-checkout-acceptance.ts` saves provider identity, price, scope, policies and warranty text. It does not contain the new payment-merchant sentence. | Include the reviewed merchant/timing wording in the exact displayed and saved authorization; version it and test stale-consent rejection. |
-| Spanish policies and evidence | Terms, Payment Policy and Provider Agreement use shared pages plus `lib/spanish-dictionary.ts`. `/customer-agreement` and the quote route are absent from `SPANISH_READY_PATHS`; exact checkout authorization has no language field and is generated in English. | Review full Spanish customer-agreement and checkout text before enabling their language paths. Existing bilingual result/hosted messages do not establish a fully Spanish contract flow. |
-| Release integrity | `config/policy-releases.json` binds the seven English page sources. The canonical hashes do not bind the dictionary or a presented language. | Decide and implement explicit language/translation-release evidence before claiming that a saved acceptance proves the Spanish wording shown. Current hashing is useful, but is not that proof. |
+| Spanish policies and evidence | Six existing policies use complete `lib/policy-spanish/` translations rendered by `PolicyPage`, with hashes in `config/policy-spanish-releases.json`. Provider acceptance already records the exact translation and language. `/customer-agreement` and the quote route remain English-only. | Preserve the existing provider system. Review the [complete Customer Agreement translation](customer-agreement-spanish-draft.md) and the customer checkout text below before enabling their language paths. |
+| Customer release integrity | `lib/customer-policy-acceptance.ts` uses the English policy manifest. The checkout authorization has no language field and does not include the existing Spanish release metadata. | Extend the customer evidence path using the existing translation-release approach. Do not duplicate or replace the completed provider implementation. Bilingual result/hosted messages alone do not prove Spanish customer consent. |
 
 The timing finding is an inference from the checkout source plus Stripe's
 [manual-capture documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method),
@@ -161,3 +161,84 @@ and included in the accepted evidence, not only inserted beside a checkbox.
 This review is ready for continuation. It does not require another deployment
 of PR #256 or another inquiry email. No application or active policy file was
 edited while preparing it.
+
+## Complete proposed Spanish checkout authorization
+
+This is the full candidate checkbox text, including the existing outer
+labor-only statement and the proposed merchant sentence. Bracketed values are
+server-generated placeholders, not fabricated customer or provider data.
+The two warranty paragraphs are alternatives: show only the applicable one.
+Neither this draft nor a preferred language grants authorization to pay.
+
+> Confirmo que este pago incluye únicamente mano de obra para el servicio del
+> vehículo. No incluye piezas suministradas por el proveedor, reembolsos por
+> piezas, impuestos sobre piezas ni cargos por piezas.
+>
+> Acepto los Términos de uso, el Acuerdo del cliente y la Política de pagos,
+> cancelaciones y reembolsos que se muestran para la cotización [quoteId],
+> versión [scopeVersion] del alcance del trabajo.
+>
+> Nombre legal del proveedor: [providerLegalName]. Códigos de los servicios
+> específicos: [serviceCodes]. Fecha y hora programadas: [scheduledFor].
+> Identificador de la persona que realizará el trabajo: [performingPersonId].
+> Identificador del supervisor: [supervisorPersonId, or "ninguno"].
+>
+> Desglose del precio: mano de obra [laborAmount]; piezas [partsAmount];
+> impuestos [taxAmount]; otros cargos [otherAmount]; importe total del proveedor
+> [providerAmount]; Tarifa de Servicio al Cliente [customerFee]; total a pagar
+> [customerTotal].
+>
+> Autorizo el pago del total mostrado a TUVELOZ LLC a través de Stripe al
+> finalizar el pago. El negocio proveedor que elegí, [providerLegalName],
+> realiza únicamente los servicios del vehículo indicados; TUVELOZ no los realiza.
+
+**If the provider offers a workmanship warranty:**
+
+> Garantía de mano de obra ofrecida por el negocio proveedor:
+> [workmanshipWarranty, unchanged]. Esa garantía es entre el negocio proveedor
+> y yo. TUVELOZ no la ofrece, respalda ni administra.
+
+**If no workmanship warranty is offered:**
+
+> El negocio proveedor no ofrece garantía de mano de obra para este trabajo.
+> Cada proveedor independiente decide si ofrece una; Tuveloz no la exige.
+> Confirmé que comprendía esta condición al seleccionar al proveedor.
+
+**Closing text for both cases:**
+
+> El pago no autoriza trabajo adicional ni un aumento de precio. Las
+> cancelaciones, los reembolsos, las disputas y los pagos al proveedor se
+> gestionan conforme a la Política de pagos, cancelaciones y reembolsos mostrada
+> y a la ley aplicable. Revisar los registros de pago o de transferencia no
+> significa que TUVELOZ certifique la reparación.
+>
+> Puedo guardar o descargar este registro exacto de aceptación.
+
+Render the same server-generated text into the checkbox, download and immutable
+record. Preserve money in cents in the data; display USD consistently. Preserve
+provider names, identifiers, scope codes, appointment values and warranty text
+exactly. A translation of the surrounding labels must never translate a
+provider's own warranty or service description silently.
+
+## Concrete integration boundaries
+
+| Existing component | Required customer-side change after text adoption |
+| --- | --- |
+| `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. Existing provider release metadata and acceptance hashes remain valid; customer additions must not imply provider re-acceptance. |
+| `lib/customer-policy-acceptance.ts` | Supply the customer purpose's exact reviewed language, document URLs and translation metadata. Reject missing, stale or future-dated translations. Keep old evidence readable and unchanged. |
+| `lib/customer-checkout-acceptance.ts` | Generate the entire checkbox text, including labor-only and merchant statements, for one explicit presentation language. Hash that text together with the selected reviewed releases and the exact scope. |
+| `QuotePaymentCard` | Send the selected language on the readiness GET as well as POST; currently only POST carries it. On a presentation or scope change, immediately clear consent and disable payment until a matching response arrives. Discard late responses for the prior quote/language. Keep dynamic evidence outside DOM dictionary translation. |
+| `app/api/stripe/checkout/route.ts` | Recompute the same current presentation server-side, reject a mismatched hash/language, then write and reread exact evidence before contacting Stripe. Preserve all existing eligibility, authorization and launch checks. |
+| `customer_agreement_acceptances` | The unique key includes request, quote, agreement key/version and scope version, but not language/hash. Use a reviewed presentation-specific agreement version, within the existing 300-character input bound, or a reviewed schema design. Do not overwrite an English acceptance to save a Spanish one or allow silent `onConflictDoNothing()` reuse. |
+
+Before a release, exercise both warranty branches, literal provider data,
+all itemized amounts, full translated policy links, saved/downloaded text,
+language toggles while requests are in flight, tampered/stale submissions,
+and two immutable language-specific acceptances for one scope. These are
+required future customer-path checks, not results claimed by this draft.
+
+**Correction to the initial review:** existing Spanish legal pages are complete
+versioned translations, not merely dictionary substitutions. Their provider
+acceptance path already binds language and translation hashes. The initial
+review's broader description was incorrect; only the unimplemented customer
+path needs this extension. Preserve the existing provider release tests.
