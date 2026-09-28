@@ -42,9 +42,10 @@ The historical Platform profile also says individual seller payouts and platform
 refund/chargeback liability. Both the historical profile and current setup show
 an onboarding/seller-compliance acknowledgment button. Stripe's September 27
 written reply confirms that an authorized representative needs to complete it.
-The same button remains visible in Platform setup. It was not clicked or
-accepted; its exact terms and consequences still need review. This is separate
-from the negative-balance acknowledgment already dated July 29.
+The September 28 read-only preview exposed its two duties and exact acceptance
+sentence, recorded below. The checkbox remains unchecked and nothing was
+accepted. This is separate from the negative-balance acknowledgment already
+dated July 29.
 
 Sources: `lib/stripe-provider.ts`, `app/api/stripe/checkout/route.ts`, and
 `app/api/stripe/admin/payments/route.ts`, inspected at local documentation commit
@@ -70,11 +71,11 @@ policy wording solely to make a label match. This is not a tax determination.
 
 1. Preserve the July 29 approval and the matching current selections as existing
    evidence for `stripe_connect_business_model`; do not restart the application.
-2. Preserve the September 27 substantive response below. Prepare a same-thread
-   follow-up only for unanswered transfer-delay and service-category questions,
-   account-specific conditions, and the exact onboarding acknowledgment text.
-   The owner-approved follow-up was sent September 27 at 8:05 p.m. Maryland time;
-   do not repeat either inquiry. The remaining answers are pending.
+2. Preserve both substantive responses below. The owner-approved follow-up sent
+   September 27 at 8:05 p.m. received an answer September 28 at 2:49 p.m.
+   Do not repeat either inquiry. Reconcile the general holding guidance with
+   the documented US reserve ceiling; neither is a target provider payout time.
+   Category review still depends on the finalized service scope.
 3. Match the initial enabled service list to the insurer/legal decisions before
    representing specialist services as supported. The full catalog is not the
    launch commitment.
@@ -82,9 +83,10 @@ policy wording solely to make a label match. This is not a tax determination.
    receipt and policy disclosure review below. The current public business name
    and statement descriptor already show TUVELOZ LLC; do not replace them.
    The CPA gate remains separate; processor setup is not a tax opinion.
-5. Review the outstanding onboarding acknowledgment with the authorized owner
-   before acceptance. Do not infer permission to accept it from support's email,
-   or turn completion into permission to open bookings or payments.
+5. Present the reviewed onboarding acknowledgment to the authorized owner before
+   acceptance. The notification gap found during this review is repaired locally
+   but publication and actual delivery evidence remain separate. Do not infer
+   permission to accept from support's email or turn it into launch permission.
 
 `stripe_connect_business_model` requires an evidence reference and valid-through
 date in Tuveloz's launch controls. This email states no expiration; obtaining a
@@ -179,6 +181,55 @@ and [disputes](https://docs.stripe.com/connect/disputes#destination-and-separate
 Support's linked reserves page was not readable through the public fetch tool;
 its specific reserve discussion is retained as correspondence, not independent
 confirmation of an amount, deadline or account restriction.
+
+## Follow-up response and acknowledgment preview — September 28
+
+The existing business-inbox thread received a reply from `support@stripe.com`
+at **2:49 p.m. Maryland time**, signed by Smriti. Expanded sender details show
+`stripe.com` signing, Salesforce mailing infrastructure and TLS. The original
+and exact private observations are retained outside the repository in
+`outputs/stripe-support-reply-20260928.txt` and
+`outputs/stripe-seller-compliance-review-20260928.txt`.
+
+| Subject | What the new response establishes | Remaining boundary |
+| --- | --- | --- |
+| Holding funds | Support states no account-specific hold period and recommends no more than 90 days after service completion; it describes two years as a technical ceiling. | The linked public page instead lists two years for US reserves and 90 days for other countries, without stating the email's 90-days-after-completion rule. Preserve both sources as distinct; do not invent a binding deadline or implement either as the normal payout delay. |
+| Service categories | The general Connect approval covers the described structure, not every vehicle-service category. | Cross-check the finalized, insured/licensed launch list against restricted-business rules. The full catalog is not approved by this response. |
+| Financial responsibility | The platform retains fees, refund, fraud and chargeback exposure; reserves may apply. | No specific reserve amount, new account restriction or insurance/tax clearance was supplied. |
+| Onboarding acknowledgment | Full duties can be reviewed in the Dashboard before acceptance. | The preview was read; acceptance remains a separate authorized-owner action. |
+
+Public references checked September 28:
+[holding funds](https://docs.stripe.com/connect/account-balances#holding-funds),
+[risk responsibility](https://docs.stripe.com/connect/risk-management), and
+[restricted businesses](https://stripe.com/legal/restricted-businesses).
+The holding page supports purpose-based retention until a service is completed
+and confirmed; it does not justify arbitrary delays or establish legal advice.
+
+The **Ongoing seller compliance** preview displays these duties:
+
+- **Seller communication:** notify sellers when risk/fraud prevention or
+  mitigation affects their account.
+- **Seller remediation:** collect additional required information, using
+  Stripe-hosted or embedded onboarding if appropriate.
+
+Exact acceptance sentence: "I acknowledge I have reviewed and agree to my
+responsibility for ongoing seller compliance."
+
+The checkbox was left unchecked and Acknowledge remained disabled. No new terms,
+setting, fee, purchase, email or launch action was accepted or submitted.
+Preview screenshot: `outputs/stripe-seller-compliance-terms-20260928.png`.
+
+The source review found that V2 requirements/capability events only logged their
+current status. The local repair queues a protected provider notice and email
+intent atomically, with English/Spanish copy, a secure workspace link, event
+deduplication, ownership rechecks and test/staging suppression. Storage failures
+keep the signed webhook retryable. It also keeps the provider's Stripe update
+button visible when requirements exist even while transfers remain active.
+No raw requirement details or bank/identity data enter the notice. Existing
+payment-client and launch locks remain intact; this is not proof of live webhook
+delivery while that client is code-locked, nor proof that an email reached an
+inbox. Verify deployment and approved live operation separately before marking
+ongoing seller communication operationally complete.
 
 ### Disclosure review — interface repair published; policy and receipt-language review pending
 
@@ -318,8 +369,9 @@ The reply and screenshot are retained privately as
 `outputs/stripe-followup-sent-20260927.png`. It asks for the unanswered timing
 and service-category conditions and the acknowledgment text, corrects the
 "live" description, and authorizes no setting change, acceptance or paid service.
-The clarification request is complete; the answers remain pending. Do not resend
-or ask for this send approval again. Keep the September 30 review checkpoint.
+The clarification request is complete; its September 28 answer is recorded
+above. Do not resend or ask for send approval again. Keep the September 30
+checkpoint for the remaining owner, service-scope and disclosure decisions.
 
 ## Saved business description — corrected and verified
 

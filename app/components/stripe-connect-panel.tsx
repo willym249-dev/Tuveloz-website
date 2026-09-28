@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
+import { stripeAccountNeedsAttention } from "../../lib/stripe-account-attention";
 
 type ConnectStatus = {
   accountId: string;
@@ -200,7 +201,7 @@ export function StripeConnectPanel({ signedIn }: { signedIn: boolean }) {
                 </article>
               </div>
 
-              {!connect.status.readyToReceivePayments && (
+              {stripeAccountNeedsAttention(connect.status) && (
                 <div className="stripe-status-card needs-action">
                   <strong>Finish Stripe onboarding</strong>
                   <p>

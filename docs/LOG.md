@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Stripe reply verified; provider account notices repaired locally
+
+Read the new September 28 2:49 p.m. Stripe Support reply in the business inbox.
+Expanded details confirm support@stripe.com, stripe.com signing and TLS.
+The general Connect approval remains complete, but the reply does not approve
+every service category. Recorded the distinction between its holding guidance
+and the linked public US reserve ceiling; no arbitrary payout deadline added.
+Opened only the seller-compliance preview, expanded both duties and saved the
+exact text privately. It requires seller communication and collection of further
+information through secure onboarding. Nothing was accepted; checkbox unchecked.
+
+Source review found V2 requirements/capability webhooks only logged status.
+The local repair atomically queues account/email notices for the uniquely mapped
+real provider, uses the provider's English/Spanish preference, suppresses test and
+staging events, rechecks ownership, and deduplicates signed retries. A failed
+notification write leaves the Stripe receipt retryable. Messages contain no
+private requirement descriptions, identity or bank details and link to the
+signed-in Stripe panel. The existing outbox handles delivery/retries. No message
+was sent as a test. The update button now also appears when requirements exist
+while Stripe transfers are still active.
+
+Validation: 13 new behavioral/rendered-panel checks pass; full build and all
+825 tests pass, TypeScript passes, lint has no errors and one existing
+site-language.tsx navigation warning. The first full test run was blocked by
+Windows sandbox parent-directory permissions; the same suite passed with normal
+local filesystem access. Logs are outside the repo in outputs/stripe-account-
+notifications-tests-20260928-verified.log and the matching lint log.
+
+No competing PR was open; remote main remains 03f92dd. Existing local handoff
+commits preserved on fix/stripe-account-notifications-20260928. This repair is
+local, not published. Payment-client/live-mode guards remain unchanged, so this
+is not proof of production live webhook delivery, provider inbox receipt or
+complete operational seller compliance. No account terms, legal policy, payment
+setting, provider approval or launch switch changed.
+
+The separate Spanish receipt-language Checkout still displays its test form;
+no completion was observed. Its owner-only Pay click remains outstanding and
+the prior CLI session remains revoked. Do not create a duplicate or bypass that
+handoff. Business browser IDs changed again; identify the tuveloz.com profile
+rather than trusting a saved numeric browser ID. Connected Gmail MCP is the
+personal account, so no personal mail was searched.
+
 ## 2026-09-28 - Receipt-language test prepared; owner payment click required
 
 Continued from published PR #258 without republishing it. Main remains 03f92dd,

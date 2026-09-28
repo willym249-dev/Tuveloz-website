@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { queueStripeAccountAttention } from "../../../../../lib/stripe-account-notifications";
 import {
   getStripeClient,
   getStripeWebhookSecret,
@@ -12,9 +13,11 @@ import {
   failStripeWebhookEvent,
 } from "../../../../../lib/stripe-webhook-events";
 
-async function handleRequirementsUpdated(
+async function handleAccountUpdated(
   stripeClient: Stripe,
   accountId: string,
+  eventId: string,
+  livemode: boolean,
   stripeContext?: Stripe.StripeContextType,
 ) {
   const status = await retrieveRecipientAccountStatus(
@@ -22,28 +25,10 @@ async function handleRequirementsUpdated(
     accountId,
     stripeContext,
   );
-  console.info("Stripe connected-account requirements changed", {
-    accountId,
-    requirementsStatus: status.requirementsStatus,
-    outstandingRequirements: status.requirements.length,
-  });
-}
-
-async function handleRecipientCapabilityUpdated(
-  stripeClient: Stripe,
-  accountId: string,
-  stripeContext?: Stripe.StripeContextType,
-) {
-  const status = await retrieveRecipientAccountStatus(
-    stripeClient,
-    accountId,
-    stripeContext,
-  );
-  console.info("Stripe connected-account recipient capability changed", {
-    accountId,
-    transferStatus: status.transferStatus,
-    readyToReceivePayments: status.readyToReceivePayments,
-  });
+  if (status.accountId !== accountId || status.livemode !== livemode) {
+    throw new Error("Stripe account status does not match the signed event.");
+  }
+  await queueStripeAccountAttention({ eventId, livemode, status });
 }
 
 export async function POST(request: Request) {
@@ -97,19 +82,19 @@ export async function POST(request: Request) {
       {},
       thinEvent.context ? { stripeContext: thinEvent.context } : undefined,
     );
+    if (event.id !== thinEvent.id || event.livemode !== thinEvent.livemode
+      || event.type !== thinEvent.type) {
+      throw new Error("Stripe event does not match its signed notification.");
+    }
     let handled = true;
     switch (event.type) {
       case "v2.core.account[requirements].updated":
-        await handleRequirementsUpdated(
-          stripeClient,
-          event.related_object.id,
-          thinEvent.context,
-        );
-        break;
       case "v2.core.account[configuration.recipient].capability_status_updated":
-        await handleRecipientCapabilityUpdated(
+        await handleAccountUpdated(
           stripeClient,
           event.related_object.id,
+          event.id,
+          event.livemode,
           thinEvent.context,
         );
         break;
