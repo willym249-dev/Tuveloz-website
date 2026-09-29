@@ -48,9 +48,29 @@ work. No import or new connection was made. Private evidence:
 stripe-delivery-inventory-20260929.json and stripe-payment-destination-audit-20260929.json.
 No event was sent/replayed and no credential, destination or live setting changed.
 
+A fourteen-event payment destination is prepared in Stripe but **not saved**;
+specific owner approval for its creation and matching Cloudflare signing-secret
+replacement is pending as of September 29 02:22 a.m. Maryland time. Check later
+owner replies before repeating the question. Private handoff:
+stripe-payment-destination-prepared-20260929.json and its preview image. Confirm
+no intervening destination was created before saving. This setup cannot replace
+actual delivery evidence or the reviewed live-payment release.
+
 ## Verified in production
 
-- Latest verified production release: PR #265,
+- Latest verified production release: PR #266,
+  `d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b`, verified September 29 at 06:22:38 UTC.
+  All 872 tests/build, both required PR workflows and all three production jobs
+  passed. Thirteen independent live HTTP checks verified the exact healthy
+  release, payment signature rejection before API access, other signature
+  boundaries, bilingual signup pages and preserved launch locks. Completed
+  notifications can acknowledge a genuine duplicate after API access becomes
+  unavailable; applying a new event still requires every original client/release
+  check and remains retryable when blocked. Isolated signed-route/SQL tests prove
+  those retry behaviors without live data. Evidence: pr266-production-release-20260929.json
+  and pr266-live-release-20260929.json. Do not repeat this repair or its release.
+
+- Earlier completed release: PR #265,
   `48c8ba947c10d2bce68e1637f5e9d401561c7cc8`, verified September 28 Maryland time.
   All 869 tests/build, both required PR workflows and all three production jobs
   passed. Thirteen independent live HTTP checks at 2026-09-29 03:41:15 UTC

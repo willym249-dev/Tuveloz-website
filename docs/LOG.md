@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Payment authentication repair published; connection awaiting approval
+
+PR #266's tested head de8bd8d4fcbedd1bdb8ba543ea031b6c89ce05ee passed required
+workflows 36528083779 and 36528084050. Merged as
+d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b. All three production jobs in
+36529405266 passed, including the complete provider signup and 872-test build.
+Thirteen independent live HTTP checks at 06:22:38 UTC confirmed the exact
+healthy release, missing/invalid signature rejection, English/Spanish signup
+pages and preserved onboarding-only locks. In particular, the forged payment
+signature now returns 400 before payment API access is checked. No valid
+event, production test record, real payment or refund was created by the probe.
+Duplicate and retry behavior has isolated signed-route/migrated-SQL proof.
+Evidence: task outputs/pr266-verification-20260929.json,
+pr266-build-check-20260929.json, pr266-production-release-20260929.json and
+pr266-live-release-20260929.json. This repair is complete; do not repeat it.
+
+Prepared, but did not save, the missing live destination named Tuveloz payment
+status: Your account / Snapshot / 2026-06-24.dahlia, fourteen selected events
+matching the fourteen existing receiver handlers, endpoint
+https://tuveloz.com/api/stripe/webhooks/payments. Cloudflare's read-only secret
+name listing confirms the existing tuveloz Worker has STRIPE_PAYMENT_WEBHOOK_SECRET;
+no value was read, changed or retained. The pending specific owner question asks
+to create this connection and replace only its matching signing secret there.
+Browser rules require confirmation because the connection grants ongoing access
+to payment-event data. No approval response has arrived at this entry. Check
+subsequent owner messages before asking again. The prepared tab is retained;
+the original Stripe user tab is restored to Sandbox/Refunded.
+
+Private handoff: stripe-payment-destination-prepared-20260929.json and
+stripe-payment-destination-preview-20260929.png. Recheck for an intervening
+owner-created destination before saving, so no duplicate is created. Creation,
+secret installation and real vendor delivery remain unfinished. Per Stripe's
+https://docs.stripe.com/webhooks#view-event-deliveries, inspect an actual delivery
+record and corresponding receiver receipt; Active alone is not delivery proof.
+Keep test/live modes separate and preserve both completed refund rehearsals.
+
+The existing hello@tuveloz.com Gmail search was refreshed for broker/county
+senders after September 26 and still displayed no matches. This is that scoped
+search result, not a claim about all mail. No message was sent or inquiry
+repeated. Evidence: launch-reply-check-20260929.json. No paid plan, policy,
+launch approval, live-payment/SMS lock or real participant record changed.
+
 ## 2026-09-29 - Payment delivery configuration checked; authentication repair prepared
 
 Continued from clean c7894bc; remote main remains the verified PR #265 release,
