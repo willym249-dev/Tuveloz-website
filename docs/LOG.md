@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Stalled checkout recovery prepared and tested
+
+No open PRs or competing repair existed before this work. Reproduced two failures
+in the actual quote card with isolated browser requests: a stalled checkout POST
+never leaves Opening Stripe, and a lost response leaves the previous acceptance
+selected and the payment button available without a fresh status read.
+
+The quote card now stops waiting after twenty seconds, cancels its browser
+request, clears the old consent and offers an explicit quote/status refresh.
+Network failures and unsuccessful server responses also require fresh review.
+The refresh sends only GET; another POST needs new consent and an explicit click.
+A late response cannot redirect, and already-paid status removes the payment
+action. The new recovery explanation and action are available in English and
+Spanish. Timer cleanup preserves unmount/scope-change protections. No server
+guard, Stripe operation, policy text or launch switch changed.
+
+All 872 tests and the production build pass, plus 28 mobile Chromium/WebKit
+scenarios and 26 focused contract/fee checks. TypeScript passes; lint has only the
+existing site-language.tsx warning. The two new failures were observed before the
+repair. The first sandboxed full-suite run hit esbuild directory permissions;
+the approved normal-context rerun passed. Private logs:
+checkout-recovery-full-tests-20260929.log, checkout-recovery-browser-20260929.log,
+checkout-recovery-lint-20260929.log. Publication and release verification are
+still pending at this entry; no checkout or charge was opened.
+
+Stripe's webhook guide (https://docs.stripe.com/webhooks#test-your-handler),
+checked September 29, recommends sandbox/CLI events for tests. Preserve the
+completed local Stripe refund rehearsal; the newly saved live destination has no
+actual delivery evidence yet. Do not open bookings, send a live charge or replace
+the live signing secret to manufacture test evidence. A hosted sandbox rehearsal
+is a separate scope from live-originated delivery and eventual settlement.
+
 ## 2026-09-29 - Stripe payment connection created and matching secret installed
 
 The owner continued after the exact request to create Tuveloz payment status and

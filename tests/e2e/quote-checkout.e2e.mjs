@@ -168,6 +168,56 @@ try {
         assert.equal(await consent(page).isChecked(), false);
       });
 
+      await run("stalled-checkout-requires-status-refresh-without-resubmitting", async ({ page, next, requests, waitForRequest }) => {
+        await next(0, ready()); await settled(page); await consent(page).check();
+        await page.clock.install(); await pay(page).click(); await waitForRequest(1);
+        await page.clock.fastForward(20_001);
+        await page.getByRole("alert").waitFor();
+        assert.equal(await pay(page).isDisabled(), true); assert.equal(await consent(page).count(), 0);
+        assert.equal(requests.filter(request => request.method === "POST").length, 1);
+        await next(1, { url: `${origin}/should-not-open` });
+        assert.equal(new URL(page.url()).pathname, "/account");
+        assert.equal(await page.evaluate(() => sessionStorage.getItem("tuveloz:checkout-status-token")), null);
+        await page.getByRole("button", { name: "Check quote again", exact: true }).click();
+        await next(2, { ...ready(), payment: { id: "synthetic-paid", scopeVersion: 1,
+          status: "paid_pending_completion", paidAt: "2026-09-29", releasedAt: "", refundAmountCents: 0, disputeStatus: "" } });
+        await card(page).getByText(/Paid\. The provider amount/).waitFor();
+        assert.equal(requests[2].method, "GET");
+        assert.equal(requests.filter(request => request.method === "POST").length, 1);
+        assert.equal(await pay(page).count(), 0);
+      });
+
+      await run("lost-checkout-response-requires-new-review", async ({ page, next, requests }) => {
+        await next(0, ready()); await settled(page); await consent(page).check(); await pay(page).click();
+        await next(1, "network"); await page.getByRole("alert").waitFor();
+        assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+        await page.getByRole("button", { name: "Check quote again", exact: true }).click();
+        await next(2, { ...ready(), payment: { id: "synthetic-open", scopeVersion: 1,
+          status: "checkout_open", paidAt: "", releasedAt: "", refundAmountCents: 0, disputeStatus: "" } });
+        await settled(page); assert.equal(await consent(page).isChecked(), false);
+        assert.equal(await pay(page).isDisabled(), true);
+        assert.equal(requests[2].method, "GET");
+        assert.equal(requests.filter(request => request.method === "POST").length, 1);
+        await consent(page).check(); await pay(page).click();
+        await next(3, { url: `${origin}/synthetic-existing-checkout` });
+        await page.waitForURL(`${origin}/synthetic-existing-checkout`);
+      });
+
+      await run("stalled-checkout-shows-spanish-recovery", async ({ page, next, requests, waitForRequest }) => {
+        await next(0, ready()); await settled(page);
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(1, ready()); await settled(page); await consent(page).check();
+        await page.clock.install(); await pay(page).click(); await waitForRequest(2);
+        await page.clock.fastForward(20_001);
+        await page.getByRole("alert").filter({ hasText: "No pudimos confirmar si se abrió el pago en Stripe." }).waitFor();
+        assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+        assert.equal(requests.filter(request => request.method === "POST").length, 1);
+        await page.getByRole("button", { name: "Revisar cotización", exact: true }).click();
+        await next(3, ready()); await settled(page);
+        assert.equal(await consent(page).isChecked(), false);
+        assert.equal(requests[3].method, "GET");
+      });
+
       await run("server-conflict-requires-new-review-and-download", async ({ page, next, requests }) => {
         const record = acceptance();
         await next(0, ready(record)); await settled(page); await consent(page).check();

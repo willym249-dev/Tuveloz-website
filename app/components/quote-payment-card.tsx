@@ -201,6 +201,25 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
     setError("");
     const controller = new AbortController();
     checkoutRequest.current = controller;
+    const recoveryMessage = language === "es"
+      ? "No pudimos confirmar si se abrió el pago en Stripe. Revisa tu cotización antes de volver a intentarlo."
+      : "We couldn’t confirm whether Stripe Checkout opened. Check your quote before trying again.";
+    function requireFreshReview(message: string) {
+      setCheckoutAllowed(false);
+      setCheckoutAcceptance(null);
+      setAcceptedPaymentPolicy(false);
+      setError(message);
+      setBusy(false);
+    }
+    // Aborting the browser request cannot cancel server-side session creation.
+    // Require a fresh status read and consent; never automatically repeat POST.
+    const timeout = window.setTimeout(() => {
+      if (controller.signal.aborted) return;
+      controller.abort();
+      requireFreshReview(recoveryMessage);
+    }, 20_000);
+    controller.signal.addEventListener("abort", () => window.clearTimeout(timeout), { once: true });
+    let failureMessage = recoveryMessage;
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
@@ -224,12 +243,8 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
       if (controller.signal.aborted) return;
       if (!response.ok || !result.url) {
         if (result.payment) setPayment(result.payment);
-        if (response.status === 409) {
-          setCheckoutAllowed(false);
-          setCheckoutAcceptance(null);
-          setAcceptedPaymentPolicy(false);
-        }
-        throw new Error(result.error || "Unable to open Stripe Checkout.");
+        failureMessage = result.error || recoveryMessage;
+        throw new Error(failureMessage);
       }
       if (accessToken) {
         window.sessionStorage.setItem(CHECKOUT_STATUS_TOKEN_KEY, accessToken);
@@ -237,11 +252,11 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
         window.sessionStorage.removeItem(CHECKOUT_STATUS_TOKEN_KEY);
       }
       window.location.assign(result.url);
-    } catch (failure) {
+    } catch {
       if (controller.signal.aborted) return;
-      setError(failure instanceof Error ? failure.message : "Unable to open Stripe Checkout.");
-      setBusy(false);
+      requireFreshReview(failureMessage);
     } finally {
+      window.clearTimeout(timeout);
       if (checkoutRequest.current === controller) checkoutRequest.current = null;
     }
   }
@@ -321,11 +336,15 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
               <p className="form-error" role="alert">{error}</p>
               <button
                 className="button secondary"
+                data-manual-language
+                lang={language}
                 disabled={busy}
                 onClick={quoteChanged ? () => window.location.reload() : onRetry}
                 type="button"
               >
-                {quoteChanged ? "Refresh quote details" : "Check quote again"}
+                {quoteChanged
+                  ? language === "es" ? "Actualizar detalles de la cotización" : "Refresh quote details"
+                  : language === "es" ? "Revisar cotización" : "Check quote again"}
               </button>
             </div>
           )}
