@@ -8,13 +8,16 @@
 Turns eighteen blank gates into a review packet. For each gate: what it asks,
 who is allowed to answer it, and what the code already implements — with file
 references, so a reviewer confirms findings instead of interviewing someone from
-scratch. The authenticated production review page was refreshed on September 27,
+scratch. The authenticated production review page was refreshed on September 28,
 2026: all eighteen review controls showed Pending, with no approved
 gate visible. The request passed real owner signed-token verification and the
 existing scanner operational proof passed; neither approves a reviewer gate.
 There are **seventeen required gates and one optional employee/trainee lane**.
-Recheck the live page before recording a decision; the September 27 control
-count is a dated snapshot. Start with the current
+Recheck the live page before recording a decision; the September 28 control
+count is a dated snapshot (11:25 p.m. Maryland time). The eighteen Pending
+controls include seventeen required records and one optional lane; completed
+technical work does not disappear because the final reviewer record is missing.
+Private evidence: launch-review-status-20260929.json. Start with the current
 [`2026-09-25-prelaunch-reconciliation.md`](./2026-09-25-prelaunch-reconciliation.md)
 before using the older evidence below.
 

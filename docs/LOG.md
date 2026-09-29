@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-28
+- **Last reviewed:** 2026-09-29
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,80 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-29 - Payment delivery configuration checked; authentication repair prepared
+
+Continued from clean c7894bc; remote main remains the verified PR #265 release,
+and there were no open PRs. Read-only live Stripe Dashboard inspection confirms
+four active destinations, none pointing to /api/stripe/webhooks/payments.
+The previous Import entry is **Import from test mode**, offering only the
+six-event test Identity destination. It is not a hidden legacy payment endpoint.
+Canceled that preview and restored the existing tab to Sandbox/Refunded. No
+destination, key, event, transaction or setting changed. Private evidence:
+task outputs/stripe-payment-destination-audit-20260929.json.
+
+The receiving route also tried to construct the guarded payment client before
+authenticating signatures or checking a completed receipt. Three regressions
+reproduced with real signatures, actual route code and migrated isolated SQL:
+forgeries returned a configuration failure instead of signature rejection;
+completed duplicates failed after API access became unavailable; and blocked
+authenticated attempts had no durable failure receipt.
+
+Signature verification now uses the static Stripe verifier. Only a newly
+acquired authenticated attempt constructs the payment client. Completed
+duplicates acknowledge without reapplying; a new event with absent, invalid or
+locked API access remains 503/retryable, records its own failed attempt, and
+does not change payments. Every existing client/release check remains intact.
+No handler or fee/policy rule changed. All 872 tests and build, 36 focused tests,
+TypeScript and lint passed (the existing site-language warning remains).
+Evidence: payment-webhook-auth-before-20260929.log,
+payment-webhook-auth-focused-20260929.log, payment-webhook-auth-full-tests-20260929.log,
+payment-webhook-auth-typecheck-20260929.log and payment-webhook-auth-lint-20260929.log.
+
+Required remote checks and publication are next. Missing live payment-destination
+configuration, its matching signing secret, reviewed mode and actual vendor
+delivery remain separate. Do not create a duplicate Identity endpoint, import
+test configuration into live, remove launch locks, or repeat completed refunds.
+
+## 2026-09-28 - Stripe attempt protection published; pilot finish line reconciled
+
+PR #265's tested head 193905bb1106fcdfc47d6eb6e070f929bd828dff passed both
+required workflows (36515750327 and 36515750449), including all 869 tests/build
+and required browser checks. Merged as 48c8ba947c10d2bce68e1637f5e9d401561c7cc8.
+All three production jobs in 36516985448 passed. Thirteen independent live
+HTTP checks at 2026-09-29 03:41:15 UTC confirmed that exact deployed release,
+ready application/database/schema, rejection of missing/invalid Stripe
+signatures on all four routes, and English/Spanish account and provider pages.
+Accounts/applications remain open; customer requests/payments remain closed.
+Stale-attempt behavior is proven by isolated migrated-SQL and signed-route
+tests, not by introducing a race or signed test event into production.
+
+Private evidence: task outputs/pr265-verification-20260929.json,
+pr265-build-check-20260929.json, pr265-production-release-20260929.json and
+pr265-live-release-20260929.json. No real participant record, payment, refund,
+email, credential, paid service, policy or launch control changed. Do not repeat
+this release or either completed Stripe sandbox refund rehearsal.
+
+Read-only Stripe review found four active destinations; the payout-safety
+destination's displayed week had zero deliveries. That does not establish
+processor-originated delivery. One importable legacy entry remains uninspected;
+do not infer a missing payment endpoint or create a duplicate. The existing
+Stripe tab was restored to its original Sandbox/Refunded payment view.
+
+The authenticated launch page at September 28 11:25 p.m. Maryland time showed
+seventeen required Pending review records and one optional employee/trainee
+lane, real transactions OFF and zero activated services. The retained scanner
+operational proof passes; genuine provider Identity remains unproven. These
+review records do not erase completed implementation or testing. No decision
+was entered. The temporary review tab was closed. Private evidence:
+stripe-delivery-inventory-20260929.json and launch-review-status-20260929.json.
+
+The existing prelaunch reconciliation now groups the first-pilot finish line
+into payment/consent, business/service/insurance/tax, privacy/operations,
+genuine provider verification, and final pilot release. Optional features and
+routine maintenance are separate. There is no verified full-launch date;
+outside answers and evidence-backed decisions remain necessary. Keep the
+owner's genuine provider application last and preserve completed setup.
 
 ## 2026-09-28 - Fence Stripe notification receipts by processing attempt
 

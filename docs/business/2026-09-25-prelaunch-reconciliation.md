@@ -4,16 +4,74 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
-- **Last reconciled:** 2026-09-27
+- **Last reconciled:** 2026-09-29
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
+## Remaining work for the first customer pilot
+
+This is the existing launch scope grouped by who can finish it, not a new
+feature list or a promise that all work ends after a fixed number of hours.
+Accounts and provider applications are already open. The seventeen required
+review gates remain the acceptance criteria; the signed owner-page refresh
+on September 28 at 11:25 p.m. Maryland time showed all seventeen still pending,
+plus the optional lane. These are review records, not seventeen new code bugs.
+The scanner operational check passed; genuine provider Identity remains unproven.
+Code checks cannot approve those gates.
+
+| Work group | What is complete | What still closes the group |
+| --- | --- | --- |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, and PR #264 recovery repair are verified. | Finish reviewed policy adoption and exact English/Spanish customer consent; resolve partial/provider recovery and starting new refunds during pauses; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
+| Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
+| Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
+| Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |
+| Final pilot release | Existing locks and eligibility checks keep the current site onboarding-only. | Record supported dated decisions, enable only approved services through the existing reviewed release process, and verify the small customer pilot before widening it. Do not mark launch approval from test counts. |
+
+Optional mobile-app extraction, employee/trainee pathways, new paid AI features,
+old abandoned feature branches and future marketing improvements are outside
+this first-pilot finish line. Scheduled billing/domain reviews, future filings
+and optional DNS hardening remain maintenance or separately reviewed work.
+The still-unset launch-update email postal footer is a distinct delivery setting;
+business Gmail activation and its completed mailbox tests stay complete.
+
+The September 28 Stripe Dashboard inspection found the payout-safety destination
+Active but **zero deliveries in its displayed This week history**. Its zero error
+rate is not delivery proof. The September 29 read-only follow-up resolves the
+Import entry: it offers only the test-mode Identity destination, not a hidden
+legacy payment endpoint. The live list has four active destinations and none
+for /api/stripe/webhooks/payments. The missing payment destination, its matching
+private secret, reviewed mode and actual delivery rehearsal remain configuration
+work. No import or new connection was made. Private evidence:
+stripe-delivery-inventory-20260929.json and stripe-payment-destination-audit-20260929.json.
+No event was sent/replayed and no credential, destination or live setting changed.
+
 ## Verified in production
 
-- Latest completed release: PR #254, `a1f9ace7f1777170702e43213dace33638d6ee84`.
+- Latest verified production release: PR #265,
+  `48c8ba947c10d2bce68e1637f5e9d401561c7cc8`, verified September 28 Maryland time.
+  All 869 tests/build, both required PR workflows and all three production jobs
+  passed. Thirteen independent live HTTP checks at 2026-09-29 03:41:15 UTC
+  confirmed the exact healthy release, four Stripe routes rejecting missing or
+  invalid signatures, English/Spanish signup pages and preserved launch locks.
+  Old notification attempts cannot overwrite a newer receipt attempt; that
+  behavior has isolated migrated-SQL and signed-route proof. Production
+  vendor-originated delivery remains separate. No real event or transaction
+  was created. Evidence: pr265-production-release-20260929.json and
+  pr265-live-release-20260929.json. Do not repeat this release.
+
+- Earlier completed release: PR #264,
+  `bafe9a7fee67a1ff7ceeb32fa79feab47ad18297`, verified September 28 Maryland time.
+  All 863 tests/build and required PR/production jobs passed. Nineteen live HTTP
+  checks and the authenticated owner queue/Refresh control passed. Existing
+  refund status can be checked during a pause; confirmed-unsent retry requires
+  fresh eligibility and explicit confirmation. Both real Stripe sandbox refund
+  rehearsals are complete, temporary access revoked and local listeners stopped.
+  Preserve the completed PR #255–#264 work in LOG; do not repeat those releases.
+
+- Earlier completed release: PR #254, `a1f9ace7f1777170702e43213dace33638d6ee84`.
   Both PR workflows and all three production jobs in `36333832839` passed,
   including 809 tests/build, required browser/migration checks and complete
   provider signup. Independent live verification at September 27 16:52:43 UTC

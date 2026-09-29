@@ -28,13 +28,12 @@ export async function POST(request: Request) {
 
   let processingClaim: StripeWebhookClaim | null = null;
   try {
-    const stripeClient = getStripeClient();
     const webhookSecret = getStripeWebhookSecret("STRIPE_PAYMENT_WEBHOOK_SECRET");
 
     // Signature verification requires the untouched request text. Parsing JSON
     // first would change the signed bytes and make verification unreliable.
     const rawBody = await request.text();
-    const event = await stripeClient.webhooks.constructEventAsync(
+    const event = await Stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
       webhookSecret,
@@ -61,6 +60,12 @@ export async function POST(request: Request) {
     }
 
     processingClaim = claim;
+
+    // Authentication and completed-receipt acknowledgement need only the
+    // signing secret. Keep payment access behind the existing key/release
+    // checks before any new event is applied. Unavailable access leaves this
+    // authenticated attempt failed and retryable, without changing a payment.
+    const stripeClient = getStripeClient();
 
     let handled = true;
     switch (event.type) {
