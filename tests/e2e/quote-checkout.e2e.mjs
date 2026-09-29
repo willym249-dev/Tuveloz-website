@@ -236,6 +236,58 @@ try {
         assert.deepEqual(JSON.parse(content), { quoteId: "synthetic-quote-a", ...revised });
       });
 
+      await run("checkbox-and-download-contain-the-same-entire-authorization", async ({ page, next }) => {
+        const record = { ...acceptance(), presentedText:
+          "I confirm this payment includes vehicle-service labor only and no provider-supplied parts, parts reimbursement, parts tax, or parts charge. SYNTHETIC authorization; not a real transaction." };
+        await next(0, ready(record)); await settled(page);
+        const label = card(page).locator(".payment-policy-consent");
+        assert.equal(await label.innerText(), record.presentedText);
+        assert.equal(await consent(page).getAttribute("checked"), null);
+        assert.equal(await card(page).getByRole("checkbox", { name: record.presentedText, exact: true }).count(), 1);
+        assert.equal(await label.getByRole("link").count(), 0, "policy links must not add unrecorded checkbox wording");
+        const downloading = page.waitForEvent("download");
+        await card(page).getByRole("button", { name: "Download this exact authorization" }).click();
+        const download = await downloading;
+        let content = ""; for await (const chunk of await download.createReadStream()) content += chunk.toString();
+        assert.deepEqual(JSON.parse(content), { quoteId: "synthetic-quote-a", ...record });
+        assert.equal(JSON.parse(content).presentedText, await label.innerText());
+        assert.equal(await consent(page).isChecked(), false, "downloading never gives consent");
+        const details = await card(page).locator('dl[aria-label="Exact checkout authorization"] > div')
+          .evaluateAll(rows => rows.slice(0, 6).map(row => {
+            const term = row.querySelector("dt"), value = row.querySelector("dd");
+            return { label: term.textContent, labelWidth: term.getBoundingClientRect().width,
+              valueClipped: value.scrollWidth > value.clientWidth + 1,
+              right: value.getBoundingClientRect().right, rowRight: row.getBoundingClientRect().right };
+          }));
+        for (const detail of details) {
+          assert.ok(detail.labelWidth >= 100, `readable metadata label: ${detail.label}`);
+          assert.equal(detail.valueClipped, false, `unclipped metadata: ${detail.label}`);
+          assert.ok(detail.right <= detail.rowRight, `metadata stays inside card: ${detail.label}`);
+        }
+        if (process.env.QUOTE_EVIDENCE_DIR) {
+          await card(page).screenshot({ path: resolve(process.env.QUOTE_EVIDENCE_DIR,
+            `checkout-consent-${browserType.name()}.png`) });
+        }
+      });
+
+      await run("language-change-preserves-literal-authorization-and-provider-data", async ({ page, next }) => {
+        // Deliberate dictionary collisions: these are opaque synthetic values,
+        // not permission to translate a legal name, provider warranty or record.
+        const literal = "Terms of Use";
+        const record = { ...acceptance(1, { providerLegalName: literal, workmanshipWarranty: literal }),
+          presentedText: literal, cancellationRefundSummary: literal };
+        await next(0, ready(record)); await settled(page);
+        await consent(page).check();
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(1, ready(record)); await settled(page);
+        assert.equal(await page.locator("html").getAttribute("lang"), "es");
+        assert.equal(await card(page).locator(".payment-policy-consent").innerText(), literal);
+        assert.equal(await card(page).getByRole("checkbox", { name: literal, exact: true }).count(), 1);
+        assert.equal(await card(page).locator("dd").filter({ hasText: literal }).count(), 2);
+        assert.equal(await card(page).locator(".payment-policy-consent span").getAttribute("lang"), "en");
+        assert.equal(await consent(page).isChecked(), false);
+      });
+
       await run("late-post-cannot-navigate-after-leaving", async ({ page, next }) => {
         await next(0, ready()); await settled(page); await consent(page).check(); await pay(page).click();
         await page.getByRole("button", { name: "Leave quote", exact: true }).click();

@@ -34,7 +34,7 @@ test("checkout agreement displays and hashes exact parties, work, schedule, and 
   ]) assert.ok(acceptance.includes(phrase), phrase);
   assert.match(acceptance, /providerLegalIdentitySourceEvidenceId/);
   assert.match(acceptance, /serviceCodes: \[\.\.\.scope\.serviceCodes\]/);
-  assert.match(acceptance, /checkout:3/);
+  assert.match(acceptance, /checkout:4/);
   assert.ok(acceptance.includes("Workmanship warranty offered by the provider business:"));
   assert.ok(acceptance.includes("The provider business offers no workmanship warranty for this job."));
 

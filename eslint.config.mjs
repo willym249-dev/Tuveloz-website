@@ -20,6 +20,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Disposable Wrangler bundles from the isolated delivery rehearsal.
+    "rehearsal-worker/outputs/**",
     "next-env.d.ts",
     "worker-configuration.d.ts",
   ]),

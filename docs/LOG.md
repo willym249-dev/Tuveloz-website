@@ -11,6 +11,53 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Exact checkout record repaired locally; no new broker/county reply
+
+No open PR or newer main release was found before starting. The completed
+hosted sandbox test and cleanup remain recorded below. The scoped business
+Gmail search for broker/county replies since September 27 returned no matches;
+no email was sent and the pending inquiries were not repeated.
+
+Found a concrete mismatch in the closed customer checkout: its checkbox
+included the labor-only sentence outside `presentedText`, while the download
+and immutable evidence saved only `presentedText`. A new browser regression
+failed on the extra, unrecorded checkbox text before the repair. Moved the
+unchanged sentence into the server-generated text and the policy-reference
+links outside the checkbox label. New acceptance keys use `checkout:4`, so
+version 3 records are not overwritten or relabeled. Existing server comparison
+rejects stale versions/hashes. English consent and literal provider values are
+excluded from interface/browser translation. This does not adopt the proposed
+merchant/refund wording or complete reviewed Spanish customer consent.
+
+The subsequent visual phone check caught a second defect: the amount-style
+two-column layout squeezed metadata labels to a few pixels while long names,
+identifiers and warranty values overflowed their row. Long-text authorization
+details now use full-width labels and wrapping values; prices retain their
+compact columns. A regression failed before the CSS repair and now checks
+readable label width and unclipped values on both mobile browser engines.
+
+Validation: production build passed; all 881 tests passed after updating the
+existing labor-only source assertion to its new shared location. Both warranty
+branches, exact saved text/hash, changed provider/price hashes, checkbox label
+and download equality, unchecked consent after downloads/language changes,
+late-response recovery and unchanged launch locks are covered. All 32 mobile
+Chromium/WebKit cases passed. TypeScript passed; lint passes with the existing
+site-language navigation warning. Lint now ignores the disposable bundled
+output from the completed isolated rehearsal, without excluding its source.
+The first broad test attempt hit sandbox esbuild filesystem restrictions;
+normal-permission rerun resolved them. No dependency upgrade, external API
+transaction, active policy release or live-site change was made.
+
+Status at preparation: local and tested. Proceeding under the owner's existing
+authorization to publish fixes; publication and deployed verification must be
+recorded separately when completed. Preserve the prior local rehearsal/helper
+commits and all launch locks, and distinguish this accuracy fix from the
+still-pending customer policy release.
+Evidence is in local `outputs/checkout-consent-final-tests-20260929.log`,
+`outputs/checkout-consent-browser-tests-20260929.log`, and the synthetic
+`outputs/checkout-consent-{chromium,webkit}.png` screenshots. Earlier failing
+regressions are diagnostic history, not unresolved launch defects.
+
 ## 2026-09-29 - Hosted sandbox Stripe delivery and duplicate handling verified; cleanup complete
 
 The live payment destination still shows no event deliveries. Its setup and

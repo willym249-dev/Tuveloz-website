@@ -281,7 +281,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
     <section className="quote-payment-card">
       <div>
         <span className="portal-service">Secure payment</span>
-        <h2>Pay {quote.providerName}&apos;s accepted quote</h2>
+        <h2>Pay <span data-no-interface-translation translate="no">{quote.providerName}</span>&apos;s accepted quote</h2>
         <p>
           Hosted Checkout is provided by Stripe. Tuveloz does not receive or
           store your card number.
@@ -351,16 +351,17 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
           {checkoutAcceptance ? (
             <>
               <dl className="quote-breakdown" aria-label="Exact checkout authorization">
-                <div><dt>Provider legal identity</dt><dd>{checkoutAcceptance.scope.providerLegalName}</dd></div>
-                <div><dt>Exact service codes</dt><dd>{checkoutAcceptance.scope.serviceCodes.join(", ")}</dd></div>
-                <div><dt>Scheduled time</dt><dd>{checkoutAcceptance.scope.scheduledFor}</dd></div>
-                <div><dt>Performing person ID</dt><dd>{checkoutAcceptance.scope.performingPersonId}</dd></div>
-                <div><dt>Supervisor person ID</dt><dd>{checkoutAcceptance.scope.supervisorPersonId || "none"}</dd></div>
-                <div>
+                <div className="quote-authorization-detail"><dt>Provider legal identity</dt><dd data-no-interface-translation translate="no">{checkoutAcceptance.scope.providerLegalName}</dd></div>
+                <div className="quote-authorization-detail"><dt>Exact service codes</dt><dd data-no-interface-translation translate="no">{checkoutAcceptance.scope.serviceCodes.join(", ")}</dd></div>
+                <div className="quote-authorization-detail"><dt>Scheduled time</dt><dd data-no-interface-translation translate="no">{checkoutAcceptance.scope.scheduledFor}</dd></div>
+                <div className="quote-authorization-detail"><dt>Performing person ID</dt><dd data-no-interface-translation translate="no">{checkoutAcceptance.scope.performingPersonId}</dd></div>
+                <div className="quote-authorization-detail"><dt>Supervisor person ID</dt><dd><span data-no-interface-translation translate="no">{checkoutAcceptance.scope.supervisorPersonId}</span>{!checkoutAcceptance.scope.supervisorPersonId && "none"}</dd></div>
+                <div className="quote-authorization-detail">
                   <dt>Workmanship warranty</dt>
                   <dd>
                     {checkoutAcceptance.scope.workmanshipWarranty?.trim()
-                      || "None offered — you confirmed this when you selected the provider"}
+                      ? <span data-no-interface-translation translate="no">{checkoutAcceptance.scope.workmanshipWarranty}</span>
+                      : "None offered — you confirmed this when you selected the provider"}
                   </dd>
                 </div>
                 <div><dt>Labor</dt><dd>{dollars(checkoutAcceptance.scope.laborAmountCents)}</dd></div>
@@ -373,7 +374,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
               </dl>
               <p className="admin-note">
                 <strong>Cancellation and refund summary:</strong>{" "}
-                {checkoutAcceptance.cancellationRefundSummary}
+                <span data-no-interface-translation translate="no" lang="en">{checkoutAcceptance.cancellationRefundSummary}</span>
               </p>
               <label className="policy-consent payment-policy-consent">
                 <input
@@ -382,15 +383,18 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
                   onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
                   type="checkbox"
                 />
-                <span>
-                  I confirm this payment includes vehicle-service labor only and no
-                  provider-supplied parts, parts reimbursement, parts tax, or parts charge.{" "}
-                  {checkoutAcceptance.presentedText}{" "}
-                  <Link href="/terms">Terms of Use</Link>{" · "}
-                  <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
-                  <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+                {/* The server currently releases English authorization only.
+                    Keep its exact bytes, including provider text, out of the
+                    interface dictionary until reviewed language evidence exists. */}
+                <span data-no-interface-translation translate="no" lang="en">
+                  {checkoutAcceptance.presentedText}
                 </span>
               </label>
+              <p className="admin-note">
+                <Link href="/terms">Terms of Use</Link>{" · "}
+                <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
+                <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+              </p>
               <button className="button secondary" onClick={downloadAcceptance} type="button">
                 Download this exact authorization
               </button>

@@ -21,14 +21,16 @@ test("customer and provider forms describe OEM and aftermarket as communication 
 });
 
 test("customer quote and payment screens show zero parts through Tuveloz", async () => {
-  const [requestPage, paymentCard] = await Promise.all([
+  const [requestPage, paymentCard, acceptance] = await Promise.all([
     read("app/my-request/page.tsx"),
     read("app/components/quote-payment-card.tsx"),
+    read("lib/customer-checkout-acceptance.ts"),
   ]);
   assert.match(requestPage, /Parts charged through Tuveloz<\/dt><dd>\$0\.00/);
   assert.match(paymentCard, /const laborOnlyQuote/);
   assert.match(paymentCard, /Checkout is blocked because this quote is not labor only/);
-  assert.match(paymentCard, /provider-supplied parts, parts reimbursement, parts tax, or parts charge/);
+  assert.match(acceptance, /provider-supplied parts, parts reimbursement, parts tax, or parts charge/);
+  assert.match(paymentCard, /checkoutAcceptance\.presentedText/);
 });
 
 test("obsolete parts-shopping component is gone", async () => {

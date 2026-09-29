@@ -4,7 +4,7 @@ import { sha256Text } from "./provider-policy-acceptance";
 
 export const CUSTOMER_CHECKOUT_AGREEMENT_KEY = "customer_checkout_authorization";
 export const CUSTOMER_CHECKOUT_AGREEMENT_VERSION =
-  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:3`;
+  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:4`;
 
 export const CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY =
   "Payment does not authorize added work or a price increase. Cancellation, refund, dispute, and payout handling follows the displayed Payment, Cancellation and Refund Policy and applicable law. TUVELOZ does not certify the repair merely because payment or payout records are reviewed.";
@@ -52,6 +52,7 @@ export function customerCheckoutAcceptanceText(
   scope: CustomerCheckoutAcceptanceScope,
 ) {
   return [
+    "I confirm this payment includes vehicle-service labor only and no provider-supplied parts, parts reimbursement, parts tax, or parts charge.",
     `I agree to the Terms of Use, Customer Agreement, and Payment, Cancellation and Refund Policy shown for quote ${scope.quoteId}, scope version ${scope.scopeVersion}.`,
     `Provider legal identity: ${scope.providerLegalName}.`,
     `Exact service codes: ${scope.serviceCodes.join(", ")}.`,
