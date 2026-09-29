@@ -367,6 +367,43 @@ The [Customer update API](https://docs.stripe.com/api/customers/update) supports
 partial updates; send only the intended preference field. No Customer, setting,
 invoice, payment or runtime source was changed during this investigation.
 
+### Full sandbox refund — verified September 28
+
+Reused the successful English hosted-checkout rehearsal payment above. Stripe
+Test mode displayed the synthetic customer, the $100 service and $5 Customer
+Service Fee. The owner performed the final full-refund click at 9:10 p.m. EDT.
+The actual refund.updated event at 9:10:23 p.m. reports amount 10500 USD cents,
+status succeeded, and the original payment/charge IDs. The payment page shows
+Refunded, refunded amount $105, retained processor fee $3.35 and net -$3.35.
+All amounts are test ledger entries; no real money moved. Do not generalize
+this one processing fee into a price guarantee.
+
+This completes the standalone Stripe Dashboard refund check, including return
+of the entire Customer Service Fee. It does not exercise Tuveloz's owner refund
+API, prove deployed webhook receipt/accounting, or settle policy adoption.
+The application-initiated sandbox integration was verified separately below. No new payment,
+credential, live setting or provider transfer was created. Private references
+are in task outputs/stripe-dashboard-test-refund-20260928.json. Preserve the
+earlier checkout evidence and do not repeat this completed refund.
+
+### Application-initiated sandbox refund — verified September 28
+
+The owner completed a separate synthetic $105 Checkout and the final refund
+click in the published Tuveloz owner component running in a private local
+fixture. Stripe reports one matching succeeded refund for all 10500 USD cents;
+the test charge is fully refunded. The actual webhook handler processed four
+signed Stripe events through the CLI listener and recorded the local payment
+as refunded. Checking status through the actual UI issued no additional refund.
+
+The actual SDK/routes were used with a strict official-CLI OAuth transport,
+migrated isolated SQLite, synthetic owner issuer/records and a local future-
+release gate fixture. Production Cloudflare delivery, live settlement, policy
+adoption and launch approval were not tested. No production records, flags or
+published policy changed. The scoped test login is revoked, its config removed,
+and the local server/listener stopped. Private evidence is in task
+outputs/stripe-owner-refund-integration-20260928.json. Preserve both completed
+refund rehearsals; do not create another charge to repeat them.
+
 ### Receipt-language experiment — no payments on the existing test Customer
 
 Prepared a new, isolated Spanish test Checkout for a synthetic Customer whose
