@@ -11,6 +11,18 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #268 dependency audit repaired before publication
+
+The first PR verification stopped at npm's high/critical security audit.
+The existing Cloudflare build-tool chain resolved `undici@7.29.0`. The
+[maintainer advisory](https://github.com/nodejs/undici/security/advisories/GHSA-rfgv-xxqx-mfg5)
+and [7.29.1 release](https://github.com/nodejs/undici/releases/tag/v7.29.1)
+identify the patched 7.x version. Added an exact `undici: 7.29.1` override;
+the lockfile changes only that installed package's version, URL and integrity.
+No audit threshold was weakened or broad Cloudflare/Next.js upgrade made.
+The resulting npm audit reports zero vulnerabilities. Publication still must
+wait for the new commit's required checks and exact deployed verification.
+
 ## 2026-09-29 - Exact checkout record repaired locally; no new broker/county reply
 
 No open PR or newer main release was found before starting. The completed

@@ -87,6 +87,7 @@
   "type": "module",
   "displayName": "Tuveloz",
   "overrides": {
+    "undici": "7.29.1",
     "postcss": "8.5.25",
     "sharp": "0.35.4",
     "image-size": "$image-size",
