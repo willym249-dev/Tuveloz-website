@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefundReview, RefundReviewQueue } from "../../lib/stripe-refund-review";
+import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue } from "../../lib/stripe-refund-response";
 import { ConfirmAction } from "./confirm-action";
 
 const labels: Record<string, string> = { customer_cancel: "Customer cancellation", provider_cancel: "Provider cancellation", provider_no_show: "Provider did not arrive", customer_no_show: "Customer did not arrive" };
@@ -41,7 +42,7 @@ function RefundCase({ id }: { id: string }) {
   const lifetime = useRef<AbortController | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
     const data = await requestJson<RefundReview>(`/api/stripe/admin/refund-reviews?cancellationId=${encodeURIComponent(id)}`, {}, signal);
-    if (!data || data.cancellationId !== id || !Array.isArray(data.blockers) || typeof data.reviewToken !== "string") throw new Error("The saved review could not be read. Refresh before approving anything.");
+    if (!isRefundReview(data, id)) throw new Error("The saved review could not be read. Refresh before approving anything.");
     return data;
   }, [id]);
   useEffect(() => {
@@ -56,11 +57,13 @@ function RefundCase({ id }: { id: string }) {
     lock.current = true; setBusy(true); setError(""); setMessage(""); setRecoveryNote("");
     setStale(true); setConfirmed(false); setConfirmSend(false);
     try {
+      let approvedId: string | null = null;
       if (action === "approve" && review) {
         if (stale || !confirmed || reason.trim().length < 10 || !review.enabled || review.blockers.length) return;
-        await requestJson("/api/stripe/admin/refund-reviews", { method: "POST", headers: { "content-type": "application/json" },
+        const saved = await requestJson("/api/stripe/admin/refund-reviews", { method: "POST", headers: { "content-type": "application/json" },
           body: JSON.stringify({ cancellationId: id, reviewToken: review.reviewToken, reason: reason.trim(), confirmed: true }) }, signal);
-        if (!signal.aborted) setMessage("Approval saved. No refund has been sent to Stripe.");
+        if (!isRefundApprovalConfirmation(saved)) throw new Error("The approval could not be confirmed. Refresh the saved review before taking another action.");
+        approvedId = saved.adjustmentId;
       }
       if ((action === "send" || action === "check") && review?.approval) {
         const retryNotSent = review.execution?.status === "refund_not_sent_review";
@@ -72,7 +75,13 @@ function RefundCase({ id }: { id: string }) {
         if (!signal.aborted && result.recovery === "not_found") setRecoveryNote("Stripe has no matching refund confirmation yet. Keep this payment under review and check its charge in Stripe. Do not send another refund while the first attempt is unconfirmed.");
       }
       const data = await load(signal);
-      if (!signal.aborted) { setReview(data); setStale(false); }
+      if (approvedId && (data.approval?.id !== approvedId || data.approval.status !== "approved")) {
+        throw new Error("The approval could not be confirmed. Refresh the saved review before taking another action.");
+      }
+      if (!signal.aborted) {
+        setReview(data); setStale(false);
+        if (approvedId && !data.execution) setMessage("Approval saved. No refund has been sent to Stripe.");
+      }
     } catch (failure) {
       if (!signal.aborted) {
         setStale(true); setConfirmed(false); setConfirmSend(false);
@@ -133,7 +142,7 @@ export function StripeRefundAdmin() {
   useEffect(() => {
     const controller = new AbortController();
     requestJson<RefundReviewQueue>("/api/stripe/admin/refund-reviews", {}, controller.signal).then(data => {
-      if (!data || !Array.isArray(data.cases)) throw new Error("Unable to read the refund review list.");
+      if (!isRefundReviewQueue(data)) throw new Error("Unable to read the refund review list. Refresh the list to try again.");
       if (!controller.signal.aborted) { setQueue(data); setError(""); }
     }).catch(failure => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : "Unable to load refund reviews."); });
     return () => controller.abort();

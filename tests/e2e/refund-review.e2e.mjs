@@ -34,7 +34,8 @@ try {
       const page = await context.newPage();
       const errors = []; page.on("pageerror", error => errors.push(error.message));
       const writes = []; let statusReads = 0, enabled = false, approved = false, execution = null, expired = false;
-      let rejectApproval = false, loseSend = false, malformed = false, recoveryMissing = false, revision = "a".repeat(64), detailRequests = 0;
+      let rejectApproval = false, loseSend = false, malformed = false, malformedQueue = false, malformedApproval = false;
+      let brokenDetails = false, recoveryMissing = false, revision = "a".repeat(64), detailRequests = 0;
       const snapshot = () => ({ cancellationId: "synthetic-cancel", requestId: "synthetic-job", cancellationType: "provider_no_show",
         reason: "Synthetic provider did not arrive.", requestedAt: "2026-09-28T10:00:00Z", customerName: "SYNTHETIC CUSTOMER",
         providerName: "SYNTHETIC PROVIDER", jobStatus: approved ? "cancelled" : "assigned", providerTravelStarted: false, workRecorded: false,
@@ -51,13 +52,14 @@ try {
         if (expired) return route.fulfill({ status: 200, contentType: "text/html", body: "<h1>Owner sign-in required</h1>" });
         if (url.pathname === "/api/stripe/admin/refund-reviews") {
           if (request.method() === "GET") {
-            if (!url.searchParams.has("cancellationId")) return route.fulfill({ json: { cases: [{ id: "synthetic-cancel", requestId: "synthetic-job",
-              customerName: "SYNTHETIC CUSTOMER", cancellationType: "provider_no_show", status: approved ? "approved" : "submitted" }], hasMore: false } });
+            if (!url.searchParams.has("cancellationId")) return route.fulfill({ json: malformedQueue ? { cases: [{ id: "synthetic-cancel" }], hasMore: false } : { cases: [{ id: "synthetic-cancel", requestId: "synthetic-job",
+              customerName: "SYNTHETIC CUSTOMER", cancellationType: "provider_no_show", status: approved ? "approved" : "submitted", requestedAt: "2026-09-28T10:00:00Z" }], hasMore: false } });
             detailRequests++;
-            return route.fulfill({ json: malformed ? { bad: true } : snapshot() });
+            return route.fulfill({ json: malformed ? { bad: true } : brokenDetails ? { ...snapshot(), approval: { id: "synthetic-approval" } } : snapshot() });
           }
           const body = request.postDataJSON(); writes.push({ path: url.pathname, body });
           if (rejectApproval) { rejectApproval = false; revision = "b".repeat(64); return route.fulfill({ status: 409, json: { error: "The records changed. Refresh the review and confirm the updated details." } }); }
+          if (malformedApproval) { malformedApproval = false; return route.fulfill({ json: {} }); }
           assert.equal(body.reviewToken, revision); assert.equal(body.confirmed, true);
           assert.deepEqual(Object.keys(body).sort(), ["cancellationId", "confirmed", "reason", "reviewToken"]);
           approved = true; return route.fulfill({ json: { adjustmentId: "synthetic-approval", refundSent: false } });
@@ -96,14 +98,22 @@ try {
         assert.equal(await reason.inputValue(), "Synthetic owner confirms no work started.");
         assert.equal(await check.isChecked(), false); assert.equal(await save.isDisabled(), true);
         await refresh.click(); await check.check();
+        malformedApproval = true; await save.click();
+        await review.getByRole("alert").waitFor();
+        assert.match(await review.getByRole("alert").textContent(), /approval could not be confirmed/i);
+        assert.equal(await review.getByText("Approval saved. No refund has been sent to Stripe.", { exact: true }).count(), 0);
+        assert.equal(await reason.inputValue(), "Synthetic owner confirms no work started.");
+        assert.equal(await check.isChecked(), false); assert.equal(await save.isDisabled(), true);
+        assert.equal(writes.filter(row => row.path.endsWith("/refunds")).length, 0);
+        await refresh.click(); await check.check();
         await save.click(); await review.getByText("Approval saved. No refund has been sent to Stripe.", { exact: true }).waitFor();
-        assert.equal(writes.length, 2); assert.equal(writes.filter(row => row.path.endsWith("/refunds")).length, 0);
+        assert.equal(writes.length, 3); assert.equal(writes.filter(row => row.path.endsWith("/refunds")).length, 0);
         const send = review.getByRole("button", { name: "Send refund to Stripe", exact: true });
         await send.click();
         await review.getByRole("group", { name: "Send this refund?" }).waitFor();
         assert.match(await review.getByRole("group").textContent(), /\$105\.00/);
-        assert.equal(writes.length, 2, "opening the confirmation must not send money");
-        await review.getByRole("button", { name: "Go back", exact: true }).click(); assert.equal(writes.length, 2);
+        assert.equal(writes.length, 3, "opening the confirmation must not send money");
+        await review.getByRole("button", { name: "Go back", exact: true }).click(); assert.equal(writes.length, 3);
         await send.click(); loseSend = true;
         await review.getByRole("button", { name: "Confirm and send refund", exact: true }).click();
         await review.getByRole("alert").waitFor(); assert.equal(await send.isDisabled(), true);
@@ -141,8 +151,18 @@ try {
         assert.match(await review.getByRole("alert").textContent(), /sign-in may have expired/);
         expired = false; malformed = true; await refresh.click();
         await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
-        assert.equal(writes.length, 4); assert.ok(detailRequests >= 5); assert.deepEqual(errors, []);
-        console.log(`PASS ${browserType.name()}: closed submission gates, paused read-only recovery, missing refund guidance, explicit unsent retry, full amount, approval/send confirmation, stale draft recovery, sign-in and malformed replies, mobile layout`);
+        malformed = false; brokenDetails = true; await refresh.click();
+        await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
+        brokenDetails = false; await refresh.click();
+        await review.getByText("The refund result is not confirmed. Check its status; do not send another refund.", { exact: true }).waitFor();
+        malformedQueue = true; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+        await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor();
+        assert.equal(await page.getByLabel("Choose a cancellation").inputValue(), "synthetic-cancel", "a bad list refresh preserves the current selection");
+        if (process.env.TUVELOZ_REFUND_SCREENSHOT_DIR) await page.screenshot({ path: resolve(process.env.TUVELOZ_REFUND_SCREENSHOT_DIR, `refund-recovery-${browserType.name()}.png`), fullPage: true });
+        malformedQueue = false; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+        await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor({ state: "hidden" });
+        assert.equal(writes.length, 5); assert.ok(detailRequests >= 5); assert.deepEqual(errors, []);
+        console.log(`PASS ${browserType.name()}: closed submission gates, paused recovery, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
       } finally { await context.close(); }
     } finally { await browser.close(); }
   }

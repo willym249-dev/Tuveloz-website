@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Refund screen reply validation prepared and tested
+
+The owner refund screen accepted an empty HTTP-success approval reply and could
+display "Approval saved" without an approval identifier. Its existing list and
+detail checks also accepted incomplete nested rows that could crash rendering.
+The new mobile browser regression failed against the previous component at the
+missing approval-error check. The repair validates complete list/detail fields,
+safe itemized amounts, the approval acknowledgment and its matching saved
+decision before displaying success. A failed response preserves the prior case,
+typed reason and status-only recovery; mutation controls require a fresh review
+and confirmation. No automatic retry is added.
+
+Production build, 885 tests, TypeScript and lint passed (the existing navigation
+warning remains). Chromium and WebKit mobile tests passed for malformed approval,
+nested detail and list replies, retained drafts/selection, paused read-only
+recovery, explicit retry, amounts, sign-in recovery and no duplicate sends.
+Tests use synthetic loopback responses; the signed-owner/migrated-SQL tests also
+confirm that real route response shapes pass the screen's validator. Initial
+sandbox test resolution was denied by Windows; the full suite passed with
+normal filesystem access. No live refund, customer record, policy or gate changed.
+
+Publication is pending. Keep PR #268 complete. Refund initiation during a future
+pause remains a separate reviewed operating rule; this repair does not loosen
+the current payout or live-key gates. Local proof is in the ignored
+`outputs/refund-response-*20260929.log` files and `refund-recovery-webkit.png`.
+
 ## 2026-09-29 - PR #268 published and independently verified
 
 PR #268 merged tested head `68d99f6` as
