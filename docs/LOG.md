@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Checkout recovery published and independently verified
+
+PR #267's tested head 9a310f7a0dc77f33d3077dcc01968e003fd7b951 passed both
+required workflows 36538538486 and 36538538944. It merged as
+676e6199cb18a1b6e044fd2d53eef543dd022eaa. All three jobs in production workflow
+36539973097 passed, including the complete provider signup and 872-test build.
+Thirteen independent live HTTP checks confirmed the exact healthy release,
+English/Spanish signup pages, missing/forged Stripe signature rejection and
+preserved onboarding-only controls. Accounts and provider applications remain
+open; requests and payments remain closed. The stalled/lost-response recovery
+has 28 actual mobile Chromium/WebKit scenario results using isolated responses;
+no real checkout, charge, refund, provider record or valid callback was created.
+
+Evidence: task outputs/pr267-verification-20260929.json,
+pr267-build-check-20260929.json, pr267-production-release-20260929.json,
+pr267-live-release-20260929.json and checkout-recovery-validation-20260929.json.
+This repair is complete; do not repeat its tests, merge or deployment without
+a new change or failure. The Stripe destination and secret installation remain
+complete; actual Stripe-originated production delivery is still unproven.
+
+The existing staging Worker requires owner verification for every request,
+including webhook endpoints (worker/index.ts). A future hosted sandbox test
+needs a separately reviewed receiver or forwarding design with isolated data;
+do not disable owner protection or replace the live signing secret. The completed
+local sandbox refund remains valid within its recorded scope. Private boundary
+record: stripe-hosted-verification-boundary-20260929.json. Other remaining launch
+decisions and the owner's last-step provider application are unchanged.
+
 ## 2026-09-29 - Stalled checkout recovery prepared and tested
 
 No open PRs or competing repair existed before this work. Reproduced two failures

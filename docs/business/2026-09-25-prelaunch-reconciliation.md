@@ -60,7 +60,19 @@ stripe-payment-connection-active-20260929.png.
 
 ## Verified in production
 
-- Latest verified production release: PR #266,
+- Latest verified production release: PR #267,
+  `676e6199cb18a1b6e044fd2d53eef543dd022eaa`, verified September 29.
+  Stalled checkout requests now stop after twenty seconds and require a fresh
+  status read and consent. Lost or unsuccessful replies also clear the prior
+  authorization; no automatic checkout retry is sent. Late replies cannot
+  redirect. English/Spanish recovery guidance, 28 mobile Chromium/WebKit cases,
+  all 872 tests/build, both required PR workflows and all three production jobs
+  passed. Thirteen independent live checks confirmed the exact healthy release,
+  signup pages, signature protections and closed requests/payments. No real
+  transaction was created. Evidence: pr267-live-release-20260929.json and
+  checkout-recovery-validation-20260929.json. Do not repeat this completed repair.
+
+- Earlier verified production release: PR #266,
   `d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b`, verified September 29 at 06:22:38 UTC.
   All 872 tests/build, both required PR workflows and all three production jobs
   passed. Thirteen independent live HTTP checks verified the exact healthy
