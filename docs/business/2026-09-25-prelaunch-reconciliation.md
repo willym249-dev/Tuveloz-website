@@ -39,25 +39,24 @@ business Gmail activation and its completed mailbox tests stay complete.
 
 The September 28 Stripe Dashboard inspection found the payout-safety destination
 Active but **zero deliveries in its displayed This week history**. Its zero error
-rate is not delivery proof. The September 29 read-only follow-up resolves the
+rate is not delivery proof. The September 29 read-only follow-up resolved the
 Import entry: it offers only the test-mode Identity destination, not a hidden
-legacy payment endpoint. The live list has four active destinations and none
-for /api/stripe/webhooks/payments. The missing payment destination, its matching
-private secret, reviewed mode and actual delivery rehearsal remain configuration
-work. No import or new connection was made. Private evidence:
-stripe-delivery-inventory-20260929.json and stripe-payment-destination-audit-20260929.json.
-No event was sent/replayed and no credential, destination or live setting changed.
+legacy payment endpoint. The four existing live destinations were preserved.
 
-A fourteen-event payment destination is prepared in Stripe but **not saved**;
-specific owner approval for its creation and matching Cloudflare signing-secret
-replacement is pending. At approximately 02:29 a.m. Maryland time, automatic
-approval review rejected creation after the owner's "contnue" reply because it
-requires explicit authorization for this exact ongoing connection. A precise
-question has been sent; wait for that answer and do not bypass the rejection.
-No destination or secret was changed. Private handoff:
-stripe-payment-destination-prepared-20260929.json and its preview image. Confirm
-no intervening destination was created before saving. This setup cannot replace
-actual delivery evidence or the reviewed live-payment release.
+The owner-approved fourteen-event **Tuveloz payment status** destination is now
+saved and Active at https://tuveloz.com/api/stripe/webhooks/payments, using Your
+account / Snapshot / 2026-06-24.dahlia. The saved subscriptions match all fourteen
+receiver handlers. Its matching STRIPE_PAYMENT_WEBHOOK_SECRET was installed by
+official Wrangler in the existing tuveloz Worker; temporary signing material was
+removed. Creation and secret installation are complete: do not repeat them.
+Production checks at 07:16:54 UTC confirm the same healthy d61bd13 release,
+unsigned/forged notification rejection and preserved closed request/payment
+controls. Stripe still shows zero deliveries; no valid event or real transaction
+was created. Actual vendor delivery, settlement and the reviewed live-payment
+release remain unfinished. Private evidence:
+stripe-payment-destination-prepared-20260929.json,
+stripe-payment-connection-verification-20260929.json and
+stripe-payment-connection-active-20260929.png.
 
 ## Verified in production
 

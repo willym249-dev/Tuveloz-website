@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Stripe payment connection created and matching secret installed
+
+The owner continued after the exact request to create Tuveloz payment status and
+store its matching secret in the existing Tuveloz Worker. Creation was accepted
+and Stripe now shows this live destination Active at
+https://tuveloz.com/api/stripe/webhooks/payments. It uses Your account / Snapshot /
+2026-06-24.dahlia; all fourteen saved subscriptions match the receiver's handlers.
+The existing Identity and Connect destinations were preserved. Do not recreate
+this payment destination or repeat either completed sandbox refund rehearsal.
+
+Official Wrangler 4.129.0 confirmed upload of STRIPE_PAYMENT_WEBHOOK_SECRET to
+the existing tuveloz Worker. Only that secret was changed. A restricted temporary
+handoff initially needed the PC owner's file permission; installation then
+succeeded, the file and empty directory were removed, and in-memory secret
+bindings were cleared. No secret value was printed or retained in project files.
+The Stripe screen has the secret hidden again.
+
+Independent production checks at 07:16:54 UTC confirmed the same d61bd13 release,
+healthy application/database/schema, no missing tables or guarded triggers,
+accounts/provider applications open, and customer requests/payments closed.
+Both missing and forged payment signatures returned HTTP 400. No valid event,
+production test receipt, payment, refund or transfer was created. Stripe displays
+zero deliveries so far: configuration is complete, actual vendor delivery and
+settlement are still separate pending evidence, not inferred from Active status.
+Private evidence: stripe-payment-destination-prepared-20260929.json,
+stripe-payment-connection-verification-20260929.json and
+stripe-payment-connection-active-20260929.png. No code or launch gate changed.
+
 ## 2026-09-29 - Payment connection blocked by automatic approval review
 
 Fresh Stripe inventory still shows four existing live destinations and no payment
