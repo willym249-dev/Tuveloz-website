@@ -23,6 +23,7 @@ self-contained page.
 | [`operations/2026-09-04-support-reliability.md`](operations/2026-09-04-support-reliability.md) | What fixes the unavailable assistant, how does owner support delivery work, and what was verified locally? |
 | [`PROVIDER_ACTIVATION_RUNBOOK.md`](PROVIDER_ACTIVATION_RUNBOOK.md) | How do we move from "applications open" to providers actually working jobs? The exact sequence and what blocks it. |
 | [`STAGING.md`](STAGING.md) | What is the difference between the test lab and staging, and how do I set staging up? |
+| [`operations/stripe-hosted-delivery-rehearsal.md`](operations/stripe-hosted-delivery-rehearsal.md) | How can we verify hosted sandbox event delivery without opening payments or weakening private staging, and what does that test not prove? |
 | [`operations/email-authentication.md`](operations/email-authentication.md) | What authenticates Tuveloz email, does SPF/DKIM/DMARC align for the sending domain, and in what order should DMARC be tightened? |
 | [`operations/business-address-review.md`](operations/business-address-review.md) | Which address/profile updates are already complete, and exactly which private records still need inspection? |
 | [`operations/zeo-remote-access-tailscale.md`](operations/zeo-remote-access-tailscale.md) | How does the phone reach the Zeo companion on the home PC, and why did the Tailscale "share a device" invite fail? |

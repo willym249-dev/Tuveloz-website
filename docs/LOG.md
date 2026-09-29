@@ -11,6 +11,42 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Hosted sandbox Stripe delivery and duplicate handling verified; cleanup complete
+
+The live payment destination still shows no event deliveries. Its setup and
+the two prior local sandbox refund rehearsals remain complete; do not repeat
+them. Private staging's owner-token gate correctly prevents direct Stripe
+callbacks and was not changed.
+
+After specific owner approval, deployed the separate guarded Worker and new
+receipt-only D1, with an Events Read-only sandbox key and separate signing
+secret. Created one unpaid sandbox checkout without customer/payment metadata
+and expired it without opening Checkout or paying. Stripe's real deliveries at
+22:21:03 and 22:21:25 UTC both returned 200; the second returned `duplicate:true`.
+D1 retained one processed test-mode receipt, attempt_count=1, with unchanged
+processed_at. The unchanged real payment route handled both deliveries.
+
+Missing/forged hosted signatures returned 400 without a receipt. Six focused
+tests, TypeScript, targeted lint, Wrangler build and a real local Cloudflare/D1
+runtime check passed. The helper allows only the selected event/session and
+platform context within its fixed one-hour window. No production code or
+configuration, private staging, launch locks, or payment records changed.
+
+Cleanup completed: disabled receiver confirmed 404; temporary Stripe key
+revoked and destination deleted; Worker and receipt-only D1 removed; synthetic
+inline price confirmed inactive. Stripe's immutable ad-hoc product remains
+with the expired unpaid session/event as sandbox audit history. Original
+databases/Workers and Stripe destinations remain. Wrangler's Worker delete reported a later missing
+KV scope; independent Cloudflare UI confirmed the Worker was already gone.
+No broader access or paid upgrade was added. Private proof:
+task outputs/stripe-hosted-delivery-result-20260929.json
+and the matching delivery/receipt/cleanup screenshots.
+
+This closes the isolated **hosted sandbox transport** gap. Production-hostname
+delivery with production secrets, live transactions/settlement and actual
+provider/launch decisions remain separate; do not call this a live-payment pass.
+Follow the indexed [rehearsal runbook](operations/stripe-hosted-delivery-rehearsal.md).
+
 ## 2026-09-29 - Checkout recovery published and independently verified
 
 PR #267's tested head 9a310f7a0dc77f33d3077dcc01968e003fd7b951 passed both

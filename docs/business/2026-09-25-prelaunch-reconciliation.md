@@ -58,6 +58,16 @@ stripe-payment-destination-prepared-20260929.json,
 stripe-payment-connection-verification-20260929.json and
 stripe-payment-connection-active-20260929.png.
 
+A fresh September 29 Stripe inspection still shows no payment deliveries.
+The owner-approved [isolated hosted sandbox test](../operations/stripe-hosted-delivery-rehearsal.md)
+is now **complete**: two actual Stripe deliveries returned 200, the second
+acknowledged the duplicate, and separate D1 stored one processed receipt with
+attempt_count=1. Forged/missing signatures were rejected. Temporary key,
+destination, Worker and receipt database were removed after verification;
+production and private staging were preserved. This proves hosted sandbox
+transport, not production delivery or live settlement. Do not repeat this
+completed test, the refund rehearsals or PR #267 without a new relevant change.
+
 ## Verified in production
 
 - Latest verified production release: PR #267,
