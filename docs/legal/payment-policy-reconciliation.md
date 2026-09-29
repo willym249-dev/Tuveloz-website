@@ -265,6 +265,15 @@ was created for this check. It does not adopt these policy drafts, change publis
 hashes or create any live refund. Paused-marketplace access, no-send/uncertain
 reservation resolution and an actual Stripe sandbox rehearsal remain separate.
 
+**Standalone processor verification, September 28:** the owner refunded the
+existing synthetic $100 service plus $5 fee through Stripe's Test-mode Dashboard.
+The actual refund.updated event reports succeeded for all $105; the test ledger
+retains the $3.35 original processor fee. This verifies that specific processor
+refund, not Tuveloz's initiation/webhook/accounting integration. The
+application-initiated sandbox rehearsal remains open; do not repeat the completed
+Dashboard refund. No real money or active policy changed. Details are in the
+Stripe processor record and LOG.
+
 Stripe references checked September 28: [refund creation](https://docs.stripe.com/api/refunds/create),
 [idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),
 and [transfer-group lookup](https://docs.stripe.com/api/transfers/list).

@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Existing Stripe sandbox payment fully refunded by owner
+
+Continued from clean b7ce070; remote main is still published e2112b5 and no
+other PR was open. Reused the existing English hosted-checkout rehearsal
+payment rather than creating another charge or credential. The signed-in Stripe
+Dashboard explicitly showed Test mode/Sandbox, the synthetic customer, $100
+service plus $5 Customer Service Fee, and the original successful payment.
+
+Prepared a full $105 refund with an explicit TEST ONLY note. The owner performed
+the final Refund click and confirmed it in chat. At September 28, 9:10:23 p.m.
+EDT, Stripe recorded the refund. Its actual refund.updated event identifies the
+original Charge/PaymentIntent, amount 10500 USD cents and status succeeded.
+The payment page shows Refunded and a $105 refunded amount. Its test ledger
+retains the original $3.35 processor fee, leaving net -$3.35. This is simulated
+money and does not charge a real card or establish a universal processing rate.
+
+The test refund and its current status are verified. This was a Dashboard
+refund of the standalone rehearsal, not a refund initiated through Tuveloz's
+owner API. It does not prove deployed webhook delivery, application accounting,
+real-bank settlement or provider-transfer recovery. No real payment/provider
+record, launch switch, policy, credential, API key or deployment changed.
+Do not repeat this standalone refund; the separate application-to-Stripe
+integration rehearsal and policy/consent decisions remain open.
+
+Source review confirms the existing receiver re-reads Stripe's refund/charge,
+keeps pending/failed results under review and ignores unrelated payments without
+a matching Tuveloz record. No speculative code change or repeated full suite.
+Private synthetic references and verified amounts are retained in task
+outputs/stripe-dashboard-test-refund-20260928.json. The user-owned Stripe tab
+remains on the completed result, with the developer panel closed.
+
 ## 2026-09-28 - Owner refund review published and independently verified
 
 PR #263's corrected head 53d78f0350a5a12c752eae69995eaa60ba3cb831 passed
