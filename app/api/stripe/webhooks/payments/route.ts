@@ -17,6 +17,7 @@ import {
   claimStripeWebhookEvent,
   completeStripeWebhookEvent,
   failStripeWebhookEvent,
+  type StripeWebhookClaim,
 } from "../../../../../lib/stripe-webhook-events";
 
 export async function POST(request: Request) {
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing Stripe-Signature header." }, { status: 400 });
   }
 
-  let claimId = "";
+  let processingClaim: StripeWebhookClaim | null = null;
   try {
     const stripeClient = getStripeClient();
     const webhookSecret = getStripeWebhookSecret("STRIPE_PAYMENT_WEBHOOK_SECRET");
@@ -49,7 +50,6 @@ export async function POST(request: Request) {
       connectedAccountId: stripeObjectId(event.account),
       objectId: typeof eventObject.id === "string" ? eventObject.id : "",
     });
-    claimId = claim.id;
     if (!claim.shouldProcess) {
       if (claim.busy) {
         return Response.json(
@@ -59,6 +59,8 @@ export async function POST(request: Request) {
       }
       return Response.json({ received: true, duplicate: true });
     }
+
+    processingClaim = claim;
 
     let handled = true;
     switch (event.type) {
@@ -104,13 +106,13 @@ export async function POST(request: Request) {
         handled = false;
         break;
     }
-    await completeStripeWebhookEvent(claim.id, handled ? "processed" : "ignored");
+    await completeStripeWebhookEvent(claim, handled ? "processed" : "ignored");
 
     return Response.json({ received: true });
   } catch (error) {
-    if (claimId) {
+    if (processingClaim) {
       try {
-        await failStripeWebhookEvent(claimId);
+        await failStripeWebhookEvent(processingClaim);
       } catch (receiptError) {
         console.error("Unable to mark the Stripe payment webhook attempt failed", receiptError);
       }

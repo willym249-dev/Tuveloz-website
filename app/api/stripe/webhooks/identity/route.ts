@@ -14,6 +14,7 @@ import {
   claimStripeWebhookEvent,
   completeStripeWebhookEvent,
   failStripeWebhookEvent,
+  type StripeWebhookClaim,
 } from "../../../../../lib/stripe-webhook-events";
 
 const STATUS_EVENTS = new Set([
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing Stripe-Signature header." }, { status: 400 });
   }
 
-  let claimId = "";
+  let processingClaim: StripeWebhookClaim | null = null;
   try {
     const stripe = getStripeIdentityClient();
     const rawBody = await request.text();
@@ -48,7 +49,6 @@ export async function POST(request: Request) {
       livemode: event.livemode,
       objectId: eventSession.id,
     });
-    claimId = claim.id;
     if (!claim.shouldProcess) {
       if (claim.busy) {
         return Response.json(
@@ -58,6 +58,8 @@ export async function POST(request: Request) {
       }
       return Response.json({ received: true, duplicate: true });
     }
+
+    processingClaim = claim;
 
     let handled = false;
     if (event.type === "identity.verification_session.redacted") {
@@ -96,12 +98,12 @@ export async function POST(request: Request) {
       // Stripe reference must be retried, never acknowledged and lost.
       throw new Error("Stripe Identity session binding is not available yet.");
     }
-    await completeStripeWebhookEvent(claim.id, handled ? "processed" : "ignored");
+    await completeStripeWebhookEvent(claim, handled ? "processed" : "ignored");
     return Response.json({ received: true });
   } catch (error) {
-    if (claimId) {
+    if (processingClaim) {
       try {
-        await failStripeWebhookEvent(claimId);
+        await failStripeWebhookEvent(processingClaim);
       } catch (receiptError) {
         console.error("Unable to mark the Stripe Identity webhook attempt failed", receiptError);
       }

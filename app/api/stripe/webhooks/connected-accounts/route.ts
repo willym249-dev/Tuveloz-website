@@ -13,6 +13,7 @@ import {
   claimStripeWebhookEvent,
   completeStripeWebhookEvent,
   failStripeWebhookEvent,
+  type StripeWebhookClaim,
 } from "../../../../../lib/stripe-webhook-events";
 
 /**
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing Stripe-Signature header." }, { status: 400 });
   }
 
-  let claimId = "";
+  let processingClaim: StripeWebhookClaim | null = null;
   try {
     const webhookSecret = getStripeWebhookSecret(
       "STRIPE_CONNECTED_ACCOUNT_WEBHOOK_SECRET",
@@ -50,7 +51,6 @@ export async function POST(request: Request) {
       connectedAccountId: stripeObjectId(event.account),
       objectId: typeof object.id === "string" ? object.id : "",
     });
-    claimId = claim.id;
     if (!claim.shouldProcess) {
       if (claim.busy) {
         return Response.json(
@@ -61,19 +61,21 @@ export async function POST(request: Request) {
       return Response.json({ received: true, duplicate: true });
     }
 
+    processingClaim = claim;
+
     const supported = connectedAccountSnapshotEventSupported(event.type);
     const recorded = supported
       ? await recordConnectedAccountSnapshotEvent(event)
       : false;
     await completeStripeWebhookEvent(
-      claim.id,
+      claim,
       supported && recorded ? "processed" : "ignored",
     );
     return Response.json({ received: true });
   } catch (error) {
-    if (claimId) {
+    if (processingClaim) {
       try {
-        await failStripeWebhookEvent(claimId);
+        await failStripeWebhookEvent(processingClaim);
       } catch (receiptError) {
         console.error(
           "Unable to mark the connected-account snapshot webhook attempt failed",
