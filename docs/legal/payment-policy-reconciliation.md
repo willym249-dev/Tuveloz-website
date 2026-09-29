@@ -262,17 +262,35 @@ HTTP checks confirmed the exact release and access safeguards, and the actual
 owner Payments view loaded its empty cancellation queue and refreshed without
 Tuveloz page errors. See LOG for the release evidence. No real approval/refund
 was created for this check. It does not adopt these policy drafts, change published
-hashes or create any live refund. Paused-marketplace access, no-send/uncertain
-reservation resolution and an actual Stripe sandbox rehearsal remain separate.
+hashes or create any live refund. Paused-marketplace access and no-send/uncertain
+reservation resolution remain separate. The subsequent isolated Stripe sandbox
+rehearsal is verified below.
 
 **Standalone processor verification, September 28:** the owner refunded the
 existing synthetic $100 service plus $5 fee through Stripe's Test-mode Dashboard.
 The actual refund.updated event reports succeeded for all $105; the test ledger
 retains the $3.35 original processor fee. This verifies that specific processor
 refund, not Tuveloz's initiation/webhook/accounting integration. The
-application-initiated sandbox rehearsal remains open; do not repeat the completed
-Dashboard refund. No real money or active policy changed. Details are in the
+application-initiated rehearsal was subsequently verified below; do not repeat
+the completed Dashboard refund. No real money or active policy changed. Details are in the
 Stripe processor record and LOG.
+
+**Application-to-Stripe verification, September 28:** the owner completed a new
+clearly labeled sandbox payment and the final refund click through the published
+Tuveloz owner component. The isolated actual approval/executor/status routes
+sent one full $105 refund; Stripe independently reports succeeded and exactly
+one matching refund. Four real signed Stripe events processed through the
+actual handler, recording the payment as refunded for 10500 cents. The UI's
+status check preserved the result without another refund submission.
+
+This used migrated local SQLite, synthetic records/owner issuer and a local
+future-release gate fixture. The actual Stripe SDK serialized requests through
+the official CLI's narrowly scoped test OAuth transport; the CLI forwarded the
+signed events locally. Production Cloudflare delivery and real-bank settlement
+were not exercised. The unmodified launch gate stayed closed. Temporary OAuth
+access was revoked and its config removed; the listener/server stopped. See
+LOG and the private integration proof. Do not repeat this completed rehearsal
+or mistake it for effective policy adoption, consent or launch approval.
 
 Stripe references checked September 28: [refund creation](https://docs.stripe.com/api/refunds/create),
 [idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),

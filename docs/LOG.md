@@ -11,6 +11,45 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Application-initiated Stripe sandbox refund verified and cleaned up
+
+Continued from clean 99271e1 with no other open PR. Used the published e2112b5
+owner component, approval/status/refund routes, signed-owner validation, Stripe
+SDK serialization and payment webhook handler in a private loopback fixture.
+Cloudflare bindings, the owner issuer, migrated SQLite records and the future
+marketplace-release decision were local fixtures. The unmodified release gate
+was separately asserted closed; no production switch, database or policy changed.
+
+The official Stripe CLI used an explicitly authorized one-hour OAuth session
+with exactly one Tuveloz sandbox context. A strict transport adapter allowed
+reads for this synthetic payment and one full refund POST only. No API secret
+was extracted or exposed to the browser. The owner clicked the final test Pay
+button and the actual Tuveloz component's Confirm and send refund button.
+
+Stripe succeeded for all 10500 USD cents: $100 provider portion plus $5 Customer
+Service Fee. The real signed refund.created, charge.refunded, refund.updated and
+charge.refund.updated events reached the local actual handler through Stripe's
+CLI listener; all four durable receipts are processed and the local payment is
+refunded for 10500 cents. The UI says Stripe confirmed the refund. Its Check
+Stripe refund status button retained that result without another POST. A
+separate Stripe read confirmed exactly one matching refund, succeeded, and a
+fully refunded test charge. No browser errors were captured. Prior offline
+checks also verified duplicate-event handling and the closed unmodified gate.
+
+Cleanup independently verified at 2026-09-29 01:58:45 UTC: the scoped CLI login
+is unauthenticated, its temporary config is removed, the local server port is
+closed and no rehearsal CLI process remains. The two temporary browser tabs
+were closed. Private proof is in task outputs/stripe-owner-refund-integration-
+20260928.json; the fixture, migrated synthetic database and detailed receipts
+remain outside the repository. No real money, customer/provider data or paid
+upgrade was used. No runtime repair or deployment was needed for this test.
+
+Do not repeat either completed sandbox refund. This verifies the isolated
+application-to-Stripe full-refund path, not production Cloudflare webhook
+delivery, real settlement or launch readiness. Paused-marketplace refund access,
+uncertain/no-send reservation resolution, partial/provider recovery rules,
+effective policy adoption and customer consent remain separate unfinished work.
+
 ## 2026-09-28 - Existing Stripe sandbox payment fully refunded by owner
 
 Continued from clean b7ce070; remote main is still published e2112b5 and no
