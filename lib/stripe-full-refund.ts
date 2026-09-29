@@ -2,7 +2,7 @@ import type Stripe from "stripe";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
-  customerRequests, jobCancellations, paymentAdjustments,
+  customerRequests, jobCancellations, jobIncidents, paymentAdjustments,
   providerApplications, providerJobRecords, stripePayments,
 } from "../db/schema";
 import { getStripeClient, stripeLiveModeEnabled } from "./stripe";
@@ -24,9 +24,10 @@ function objectId(value: unknown): string {
     : value && typeof value === "object" && "id" in value && typeof value.id === "string" ? value.id : "";
 }
 
-function snapshot(payment: Payment) {
+export function fullRefundPaymentSnapshot(payment: Payment) {
   return {
     paymentId: payment.id, requestId: payment.requestId, quoteId: payment.quoteId,
+    providerApplicationId: payment.providerApplicationId, connectedAccountId: payment.connectedAccountId, customerEmail: payment.customerEmail,
     scopeVersion: payment.scopeVersion, scopeAuthorizationDecisionId: payment.scopeAuthorizationDecisionId,
     authorizedPriceSnapshot: payment.authorizedPriceSnapshot,
     paymentIntentId: payment.paymentIntentId, chargeId: payment.chargeId, transferGroup: payment.transferGroup,
@@ -38,7 +39,7 @@ function snapshot(payment: Payment) {
 function approvedSnapshotMatches(decision: Adjustment, payment: Payment) {
   try {
     const recorded = JSON.parse(decision.details).paymentSnapshot;
-    return recorded && Object.entries(snapshot(payment)).every(([key, value]) => recorded[key] === value);
+    return recorded && Object.entries(fullRefundPaymentSnapshot(payment)).every(([key, value]) => recorded[key] === value);
   } catch { return false; }
 }
 
@@ -99,7 +100,7 @@ async function recoverRefund(stripe: Stripe, execution: Adjustment, payment: Pay
  * post-start work and provider recovery need their own reviewed workflows.
  * Existing simulation approvals cannot enter this path. No testOnly override.
  */
-export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail: string) {
+export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail: string, options: { reconcileOnly?: boolean } = {}) {
   // Remains unavailable while marketplace release/policy gates are closed.
   // Paused-marketplace refund operations need a separately reviewed release.
   if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
@@ -130,7 +131,7 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
   requireReview(approvedSnapshotMatches(decision, payment), "The approved payment snapshot is missing or has changed. Review the refund again.");
 
   const key = `tuveloz-full-refund-${payment.id}`;
-  const details = JSON.stringify({ decisionId: decision.id, ...snapshot(payment) });
+  const details = JSON.stringify({ decisionId: decision.id, ...fullRefundPaymentSnapshot(payment) });
   const [existing] = await db.select().from(paymentAdjustments).where(eq(paymentAdjustments.idempotencyKey, key)).limit(1);
   if (existing) {
     requireReview(existing.details === details && existing.paymentId === payment.id
@@ -138,16 +139,19 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
     if (existing.status === "refund_not_sent_review") return result(existing);
     return recoverRefund(getStripeClient(), existing, payment);
   }
+  requireReview(!options.reconcileOnly, "No Stripe refund attempt is saved. Review the payment before choosing Send refund.");
 
-  const [[job], [provider], cancellations, work] = await Promise.all([
+  const [[job], [provider], cancellations, work, incidents] = await Promise.all([
     db.select().from(customerRequests).where(eq(customerRequests.id, payment.requestId)).limit(1),
     db.select().from(providerApplications).where(eq(providerApplications.id, payment.providerApplicationId)).limit(1),
     db.select().from(jobCancellations).where(and(eq(jobCancellations.requestId, payment.requestId),
       eq(jobCancellations.paymentAdjustmentId, decision.id))),
     db.select().from(providerJobRecords).where(eq(providerJobRecords.requestId, payment.requestId)),
+    db.select({ id: jobIncidents.id }).from(jobIncidents).where(and(eq(jobIncidents.requestId, payment.requestId), eq(jobIncidents.holdPayments, "yes"))).limit(1),
   ]);
   requireReview(job?.isTestJob === "no" && job.status === "cancelled" && provider?.isTestProvider === "no",
     "Only a cancelled real job can use this refund path. Simulation records never create Stripe refunds.");
+  requireReview(!incidents.length, "An incident has a payment hold. Resolve that review before sending a refund.");
   requireReview(cancellations.length === 1, "The recorded cancellation needs review.");
   const cancellation = cancellations[0];
   requireReview(cancellation.status === "approved" && cancellation.quoteId === payment.quoteId
@@ -212,6 +216,7 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
       eq(stripePayments.scopeVersion, payment.scopeVersion), eq(stripePayments.authorizedPriceSnapshot, payment.authorizedPriceSnapshot),
       eq(stripePayments.scopeAuthorizationDecisionId, payment.scopeAuthorizationDecisionId),
       eq(stripePayments.providerApplicationId, payment.providerApplicationId),
+      eq(stripePayments.connectedAccountId, payment.connectedAccountId), eq(stripePayments.customerEmail, payment.customerEmail),
       eq(stripePayments.requestId, payment.requestId), eq(stripePayments.quoteId, payment.quoteId),
       eq(stripePayments.currency, payment.currency), eq(stripePayments.lastRefundId, ""),
       eq(stripePayments.transferGroup, payment.transferGroup),
@@ -227,6 +232,7 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
       sql`not exists (select 1 from provider_job_records where request_id = ${payment.requestId}
         and (job_start_decision_id <> '' or completion_decision_id <> '' or timer_started_at <> ''
           or tracked_seconds <> 0 or billable_minutes <> 0 or work_status <> 'scheduled'))`,
+      sql`not exists (select 1 from job_incidents where request_id = ${payment.requestId} and hold_payments = 'yes')`,
     )).returning({ id: stripePayments.id });
   if (!held) {
     await db.update(paymentAdjustments).set({ status: "refund_not_sent_review" }).where(eq(paymentAdjustments.id, execution.id));

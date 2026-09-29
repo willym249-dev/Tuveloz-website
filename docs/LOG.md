@@ -11,6 +11,48 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Owner cancellation refund review implemented; release verification pending
+
+Continued from clean local 0c34c82 / published 907bf5e, preserving the completed
+PR #262 backend and its postrelease evidence. Added a Cancellation refunds
+section in the owner's Payments view. It shows the saved customer/provider,
+cancellation reason, payment and full refund breakdown. Saving an approval and
+submitting to Stripe require separate explicit actions; no customer/provider
+refund button or automatic money movement was added.
+
+The owner-only review API validates signed authentication, origin, exact input,
+the current review token and the existing real-marketplace gate. One D1 batch
+conditionally inserts an immutable full-payment approval and updates the
+cancellation/job together. Complete saved-row comparisons plus current work,
+incident, payment and adjustment checks reject changes between reading and
+saving. A permanent cancellation key prevents duplicate decisions. Simulation
+records, partial/post-start cases, ambiguous payments, prior refunds/transfers
+and incident holds cannot enter this approval path. The shared payment snapshot
+now also binds the provider, connected account and customer identity.
+
+The existing executor rechecks incident holds before submission and in its
+conditional payment reservation. A new owner-only status endpoint can reconcile
+an existing execution but cannot create one. The screen preserves the reason
+after a conflict, requires refresh/reconfirmation, and treats a lost response
+as uncertain. Status checks never resubmit the refund. No migration, credential,
+production record, adopted policy, live key or launch/payment gate changed.
+
+Local validation passed: 858 tests with the production build, TypeScript and
+lint (only the existing site-language.tsx navigation warning). Final identity
+race and fee-copy checks also passed. Isolated signed-owner, migrated SQLite and actual Stripe
+SDK tests cover approval-to-execution, exact $105 total/$100 provider/$5 fee,
+stale facts, repeated/concurrent approval, rollback, incident races and read-only
+reconciliation. Mobile Chromium/WebKit tests cover confirmation, preserved draft,
+uncertain submission, reload/status-only recovery, malformed and sign-in replies,
+and horizontal fit; both engines passed and the mobile screenshot was inspected.
+All network responses in these tests are intercepted;
+this is not an actual Stripe sandbox transaction or production refund.
+
+Remaining: actual Stripe sandbox rehearsal, policy adoption and complete
+bilingual customer consent, paused-marketplace refund access, operator recovery
+of unconfirmed/no-send reservations, and partial/provider-recovery rules.
+Publication is not yet verified in this entry; see the next release evidence.
+
 ## 2026-09-28 - Guarded full-refund backend published; live path remains closed
 
 Continued from clean 2cfd068 / production 3b7ae69 with no open PRs. Preserved

@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ConfirmAction } from "../components/confirm-action";
 import { StripePaymentAdmin } from "../components/stripe-payment-admin";
+import { StripeRefundAdmin } from "../components/stripe-refund-admin";
 import {
   OwnerControlCenter,
   type AdminView,
@@ -706,7 +707,7 @@ export default function AdminPage() {
             )}
           </section>
 
-          {activeAdminView === "payments" && <StripePaymentAdmin />}
+          {activeAdminView === "payments" && <><StripeRefundAdmin /><StripePaymentAdmin /></>}
 
           <section className="admin-section" hidden={activeAdminView !== "providers"} id="owner-provider-approvals">
             <h2>Provider applications</h2>

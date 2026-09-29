@@ -7,6 +7,23 @@ function response(body: unknown, status: number) {
   return Response.json(body, { status, headers: { "cache-control": "no-store" } });
 }
 
+// Status checks may reconcile an existing reservation, but can never start one.
+export async function GET(request: Request) {
+  const owner = await verifyOwnerRequest(request);
+  if (!owner.ok) return response({ error: "Owner access required." }, 403);
+  const params = new URL(request.url).searchParams;
+  const id = params.get("adjustmentId");
+  if (!id?.trim() || id.length > 120 || params.getAll("adjustmentId").length !== 1
+    || [...params.keys()].some(key => key !== "adjustmentId")) return response({ error: "Choose one saved refund." }, 400);
+  try {
+    const refund = await executeApprovedFullRefund(id.trim(), owner.email, { reconcileOnly: true });
+    return response(refund, refund.refundSucceeded ? 200 : 202);
+  } catch (error) {
+    if (error instanceof FullRefundReviewError) return response({ error: error.message }, error.status);
+    return response({ error: "Unable to check the refund. Its saved reservation is unchanged." }, 503);
+  }
+}
+
 export async function POST(request: Request) {
   const owner = await verifyOwnerRequest(request);
   if (!owner.ok) return response({ error: "Owner access required." }, 403);

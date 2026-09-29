@@ -13206,3 +13206,11 @@ footer > p,
 .provider-onboarding-shell .account-header .account-home-link {
   margin-left: auto;
 }
+/* Owner refund reviews keep the amount, reason and separate confirmation readable on phones. */
+.stripe-refund-review { margin-top: 1.25rem; overflow-wrap: anywhere; }
+.stripe-refund-review form { display: grid; gap: 1rem; }
+.stripe-refund-review textarea { width: 100%; min-height: 6rem; }
+.stripe-refund-review .refund-review-confirm { display: flex; align-items: flex-start; gap: .75rem; }
+.stripe-refund-review .refund-review-confirm input { flex: 0 0 auto; width: 1.25rem; height: 1.25rem; margin-top: .15rem; }
+.stripe-refund-review .admin-card-top { flex-wrap: wrap; gap: .75rem; }
+.stripe-refund-review button:disabled { opacity: .55; cursor: not-allowed; }

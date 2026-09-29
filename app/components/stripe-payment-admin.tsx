@@ -143,9 +143,9 @@ export function StripePaymentAdmin() {
         procedures and completed Stripe&apos;s live-account review.
       </p>
       <p className="admin-note">
-        Refunds and disputes are handled in Stripe Dashboard. Signed webhooks
-        record those changes here and prevent affected payments from being
-        released or charged again without review.
+        Use Cancellation refunds above for eligible full refunds before work starts.
+        Other refunds and disputes need a separate review in Stripe Dashboard.
+        Signed webhooks record payment changes here and hold affected payments for review.
       </p>
       {message && <p className="portal-success" role="status">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
