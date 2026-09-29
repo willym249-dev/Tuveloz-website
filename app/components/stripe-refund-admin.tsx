@@ -11,7 +11,7 @@ const statusLabels: Record<string, string> = {
   refund_failed: "Stripe reported a failed refund. Review it before taking another action.",
   refund_canceled: "Stripe reported a cancelled refund. Review it before taking another action.",
   refund_submission_unconfirmed: "The refund result is not confirmed. Check its status; do not send another refund.",
-  refund_not_sent_review: "The records changed before submission. No refund was sent by this attempt; a separate review is needed.",
+  refund_not_sent_review: "This attempt stopped before sending a refund. Review the current cancellation and payment before retrying.",
   refund_status_review: "The refund needs a separate review.",
 };
 function money(cents: number, currency = "usd") {
@@ -36,6 +36,7 @@ function RefundCase({ id }: { id: string }) {
   const [stale, setStale] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [recoveryNote, setRecoveryNote] = useState("");
   const lock = useRef(false);
   const lifetime = useRef<AbortController | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
@@ -52,7 +53,7 @@ function RefundCase({ id }: { id: string }) {
   async function run(action: "refresh" | "approve" | "send" | "check") {
     if (lock.current || !lifetime.current || lifetime.current.signal.aborted) return;
     const signal = lifetime.current.signal;
-    lock.current = true; setBusy(true); setError(""); setMessage("");
+    lock.current = true; setBusy(true); setError(""); setMessage(""); setRecoveryNote("");
     setStale(true); setConfirmed(false); setConfirmSend(false);
     try {
       if (action === "approve" && review) {
@@ -62,11 +63,13 @@ function RefundCase({ id }: { id: string }) {
         if (!signal.aborted) setMessage("Approval saved. No refund has been sent to Stripe.");
       }
       if ((action === "send" || action === "check") && review?.approval) {
-        if (!review.enabled || (action === "send" && (stale || !confirmSend || review.execution))) return;
-        const result = await requestJson<{ status: string; refundSucceeded: boolean }>(action === "check"
+        const retryNotSent = review.execution?.status === "refund_not_sent_review";
+        if (action === "send" && (!review.enabled || stale || !confirmSend || (review.execution && !retryNotSent))) return;
+        const result = await requestJson<{ status: string; refundSucceeded: boolean; recovery?: string }>(action === "check"
           ? `/api/stripe/admin/refunds?adjustmentId=${encodeURIComponent(review.approval.id)}` : "/api/stripe/admin/refunds",
-        action === "check" ? {} : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ adjustmentId: review.approval.id }) }, signal);
+        action === "check" ? {} : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ adjustmentId: review.approval.id, ...(retryNotSent ? { action: "retry_not_sent" } : {}) }) }, signal);
         if (!result || typeof result.status !== "string") throw new Error("Stripe's result could not be read. Check the saved status before taking another action.");
+        if (!signal.aborted && result.recovery === "not_found") setRecoveryNote("Stripe has no matching refund confirmation yet. Keep this payment under review and check its charge in Stripe. Do not send another refund while the first attempt is unconfirmed.");
       }
       const data = await load(signal);
       if (!signal.aborted) { setReview(data); setStale(false); }
@@ -83,6 +86,9 @@ function RefundCase({ id }: { id: string }) {
     <div className="admin-card-top"><h3>Review cancellation</h3><button type="button" className="button secondary" disabled={busy} onClick={() => void run("refresh")}>{busy ? "Please wait…" : "Refresh saved review"}</button></div>
     {error && <p className="form-error" role="alert">{error}</p>}
     {message && <p className="portal-success" role="status">{message}</p>}
+    {recoveryNote && <div className="admin-note" role="status"><p>{recoveryNote}</p>
+      {review?.payment?.stripePaymentIntentId && <p>Stripe payment: <code>{review.payment.stripePaymentIntentId}</code></p>}
+    </div>}
     {!review ? <p>{error ? "Use Refresh saved review to try again." : "Loading the cancellation and payment…"}</p> : <>
       <p><strong>{review.customerName}</strong> · {review.providerName}</p>
       <p>{labels[review.cancellationType] ?? "Cancellation"} · Request {review.requestId}</p>
@@ -95,7 +101,7 @@ function RefundCase({ id }: { id: string }) {
       </dl>}
       {review.payment && <p className="admin-note">Payment {review.payment.id} · Paid {new Date(review.payment.paidAt).toLocaleString()}</p>}
       <p className="admin-note">The full refund includes the Customer Service Fee. Tuveloz covers any original Stripe processing fees that are not returned.</p>
-      {!review.enabled && <p className="admin-note">Refund approvals and Stripe submission are not open yet. You can inspect saved records while launch and policy checks are unfinished.</p>}
+      {!review.enabled && <p className="admin-note">New refund approvals and submissions are closed. You can still review saved records and check an existing refund status.</p>}
       {!review.approval && review.blockers.length > 0 && <ul>{review.blockers.map(item => <li key={item}>{item}</li>)}</ul>}
       {!review.approval && <form onSubmit={event => { event.preventDefault(); void run("approve"); }}>
         <label htmlFor={`refund-reason-${id}`}>Reason for approving this refund</label>
@@ -109,10 +115,10 @@ function RefundCase({ id }: { id: string }) {
         <p><strong>Saved decision:</strong> {review.approval.reason}</p>
         <p>Approval status: {review.approval.status.replaceAll("_", " ")} · {new Date(review.approval.decidedAt).toLocaleString()}</p>
         <p role="status">{review.execution ? statusLabels[review.execution.status] ?? "The refund needs a separate review." : "No Stripe refund attempt is saved."}</p>
-        {review.execution && <button type="button" className="button secondary" disabled={busy || !review.enabled} onClick={() => void run("check")}>Check Stripe refund status</button>}
-        {!review.execution && review.approval.status === "approved" && (!confirmSend
-          ? <button type="button" className="button primary" disabled={busy || stale || !review.enabled || review.payment?.status !== "paid_pending_completion"} onClick={() => setConfirmSend(true)}>Send refund to Stripe</button>
-          : <ConfirmAction title="Send this refund?" message={`Send ${money(review.approval.amountCents)} back to this customer's original payment method. This moves money and cannot be undone here.`}
+        {review.execution && <button type="button" className="button secondary" disabled={busy} onClick={() => void run("check")}>Check Stripe refund status</button>}
+        {(!review.execution || review.execution.status === "refund_not_sent_review") && review.approval.status === "approved" && (!confirmSend
+          ? <button type="button" className="button primary" disabled={busy || stale || !review.enabled || review.payment?.status !== "paid_pending_completion"} onClick={() => setConfirmSend(true)}>{review.execution ? "Review and retry refund" : "Send refund to Stripe"}</button>
+          : <ConfirmAction title={review.execution ? "Retry this unsent refund?" : "Send this refund?"} message={`Send ${money(review.approval.amountCents)} back to this customer's original payment method. This moves money and cannot be undone here.`}
             confirmLabel="Confirm and send refund" busyLabel="Sending…" busy={busy} onConfirm={() => void run("send")} onBack={() => setConfirmSend(false)} />)}
       </>}
     </>}

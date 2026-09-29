@@ -91,7 +91,7 @@ export async function getRefundReview(id: string) {
     reason: c.reason, requestedAt: c.requestedAt, customerName: job.name,
     providerName: provider?.name ?? "Provider not identified", jobStatus: job.status,
     providerTravelStarted: c.providerTravelStarted === "yes", workRecorded: facts.work.some(row => row.workStatus !== "scheduled" || row.jobStartDecisionId || row.trackedSeconds),
-    payment: p ? { id: p.id, currency: p.currency, paidAt: p.paidAt, status: p.status,
+    payment: p ? { id: p.id, stripePaymentIntentId: p.paymentIntentId, currency: p.currency, paidAt: p.paidAt, status: p.status,
       providerAmountCents: p.providerAmountCents, customerFeeCents: p.applicationFeeCents,
       customerTotalCents: p.customerTotalCents } : null,
     enabled, blockers: blockersFor(facts), reviewToken: await digest(facts),

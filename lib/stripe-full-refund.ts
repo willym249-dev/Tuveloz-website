@@ -53,6 +53,10 @@ function result(execution: Adjustment) {
   };
 }
 
+function nextVersion(execution: Adjustment) {
+  return new Date(Math.max(Date.now(), (Date.parse(execution.updatedAt) || 0) + 1)).toISOString();
+}
+
 async function saveRefund(execution: Adjustment, payment: Payment, refund: Stripe.Refund) {
   requireReview(
     refund.id && objectId(refund.charge) === payment.chargeId
@@ -66,7 +70,7 @@ async function saveRefund(execution: Adjustment, payment: Payment, refund: Strip
     ? `refund_${refund.status}` : "refund_status_review";
   // Strictly advance this row's version even when two writes share a clock
   // millisecond. A slower Stripe read must not replace a newer reconciliation.
-  const updatedAt = new Date(Math.max(Date.now(), (Date.parse(execution.updatedAt) || 0) + 1)).toISOString();
+  const updatedAt = nextVersion(execution);
   const [saved] = await getDb().update(paymentAdjustments).set({
     status, stripeRefundId: refund.id, updatedAt,
   }).where(and(eq(paymentAdjustments.id, execution.id), eq(paymentAdjustments.status, execution.status),
@@ -91,7 +95,7 @@ async function recoverRefund(stripe: Stripe, execution: Adjustment, payment: Pay
       return saveRefund(execution, payment, await stripe.refunds.retrieve(refund.id));
     }
   }
-  return result(execution);
+  return { ...result(execution), recovery: "not_found" as const };
 }
 
 /**
@@ -100,10 +104,11 @@ async function recoverRefund(stripe: Stripe, execution: Adjustment, payment: Pay
  * post-start work and provider recovery need their own reviewed workflows.
  * Existing simulation approvals cannot enter this path. No testOnly override.
  */
-export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail: string, options: { reconcileOnly?: boolean } = {}) {
-  // Remains unavailable while marketplace release/policy gates are closed.
-  // Paused-marketplace refund operations need a separately reviewed release.
-  if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
+export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail: string, options: { reconcileOnly?: boolean; retryNotSent?: boolean } = {}) {
+  // Status recovery cannot send money. Keep it available for a saved attempt
+  // during a pause; all submissions still require the original release gates.
+  // The Stripe client independently preserves its live-key lock for reads too.
+  if (!options.reconcileOnly && !(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
     throw new FullRefundReviewError("Stripe refund execution is not open yet.", 503);
   }
   const db = getDb();
@@ -135,11 +140,16 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
   const [existing] = await db.select().from(paymentAdjustments).where(eq(paymentAdjustments.idempotencyKey, key)).limit(1);
   if (existing) {
     requireReview(existing.details === details && existing.paymentId === payment.id
-      && existing.adjustmentType === "stripe_full_refund", "Another refund decision already reserved this payment.");
-    if (existing.status === "refund_not_sent_review") return result(existing);
-    return recoverRefund(getStripeClient(), existing, payment);
+      && existing.adjustmentType === "stripe_full_refund" && existing.amountCents === payment.customerTotalCents
+      && existing.currency === payment.currency, "Another refund decision already reserved this payment.");
+    requireReview(existing.stripeRefundId || ["refund_submission_unconfirmed", "refund_not_sent_review"].includes(existing.status),
+      "The saved refund status is missing its Stripe reference. Keep it under review.");
+    if (existing.status !== "refund_not_sent_review") return recoverRefund(getStripeClient(), existing, payment);
+    requireReview(!existing.stripeRefundId, "The unsent record contains a Stripe refund. Keep it under review.");
+    if (!options.retryNotSent || options.reconcileOnly) return { ...result(existing), recovery: "not_sent" as const };
   }
   requireReview(!options.reconcileOnly, "No Stripe refund attempt is saved. Review the payment before choosing Send refund.");
+  requireReview(!options.retryNotSent || existing, "No confirmed unsent attempt is available to retry. Refresh the saved review.");
 
   const [[job], [provider], cancellations, work, incidents] = await Promise.all([
     db.select().from(customerRequests).where(eq(customerRequests.id, payment.requestId)).limit(1),
@@ -192,9 +202,18 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
   if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
     throw new FullRefundReviewError("Stripe refund execution is not open yet.", 503);
   }
-  // One permanent reservation per payment, across different approved decisions
-  // and concurrent owner clicks. Repeated calls only reconcile this operation.
-  const [execution] = await db.insert(paymentAdjustments).values({
+  // A confirmed unsent attempt may be explicitly reclaimed only after every
+  // eligibility/network check above. Reuse its permanent id/key, compare the
+  // exact row version and advance it, so concurrent/stale retries cannot send.
+  // An uncertain attempt never enters this branch, even after key expiry.
+  const [execution] = existing ? await db.update(paymentAdjustments).set({
+    status: "refund_submission_unconfirmed", updatedAt: nextVersion(existing),
+  }).where(and(eq(paymentAdjustments.id, existing.id), eq(paymentAdjustments.status, "refund_not_sent_review"),
+    eq(paymentAdjustments.updatedAt, existing.updatedAt), eq(paymentAdjustments.details, details),
+    eq(paymentAdjustments.stripeRefundId, ""), eq(paymentAdjustments.amountCents, payment.customerTotalCents),
+    eq(paymentAdjustments.paymentId, payment.id), eq(paymentAdjustments.idempotencyKey, key),
+    eq(paymentAdjustments.adjustmentType, "stripe_full_refund"), eq(paymentAdjustments.currency, payment.currency)))
+    .returning() : await db.insert(paymentAdjustments).values({
     id: crypto.randomUUID(), paymentId: payment.id, requestId: payment.requestId, quoteId: payment.quoteId,
     adjustmentType: "stripe_full_refund", amountCents: payment.customerTotalCents, currency: payment.currency,
     status: "refund_submission_unconfirmed", reasonCode: decision.reasonCode, details,
@@ -220,6 +239,8 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
       eq(stripePayments.requestId, payment.requestId), eq(stripePayments.quoteId, payment.quoteId),
       eq(stripePayments.currency, payment.currency), eq(stripePayments.lastRefundId, ""),
       eq(stripePayments.transferGroup, payment.transferGroup),
+      sql`exists (select 1 from payment_adjustments where id = ${execution.id} and status = 'refund_submission_unconfirmed'
+        and updated_at = ${execution.updatedAt} and stripe_refund_id = '' and details = ${details})`,
       sql`exists (select 1 from payment_adjustments where id = ${decision.id} and status = 'approved' and details = ${decision.details}
         and amount_cents = ${payment.customerTotalCents} and payment_id = ${payment.id} and stripe_refund_id = ''
         and provider_impact_cents = ${-payment.providerAmountCents} and customer_impact_cents = ${payment.customerTotalCents})`,
@@ -235,7 +256,9 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
       sql`not exists (select 1 from job_incidents where request_id = ${payment.requestId} and hold_payments = 'yes')`,
     )).returning({ id: stripePayments.id });
   if (!held) {
-    await db.update(paymentAdjustments).set({ status: "refund_not_sent_review" }).where(eq(paymentAdjustments.id, execution.id));
+    await db.update(paymentAdjustments).set({ status: "refund_not_sent_review", updatedAt: nextVersion(execution) })
+      .where(and(eq(paymentAdjustments.id, execution.id), eq(paymentAdjustments.status, "refund_submission_unconfirmed"),
+        eq(paymentAdjustments.updatedAt, execution.updatedAt)));
     throw new FullRefundReviewError("The payment changed during refund review. No new refund was sent.");
   }
   // Once this call is attempted, an error is an uncertain result, not proof of

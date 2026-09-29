@@ -30,11 +30,12 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) return response({ error: "Cross-origin refund requests are not allowed." }, 403);
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.adjustmentId !== "string" || !body.adjustmentId.trim() || body.adjustmentId.length > 120
-    || Object.keys(body).some(key => key !== "adjustmentId")) {
+    || ("action" in body && body.action !== "retry_not_sent")
+    || Object.keys(body).some(key => key !== "adjustmentId" && key !== "action")) {
     return response({ error: "Choose one approved refund. Amounts are read from its saved payment." }, 400);
   }
   try {
-    const refund = await executeApprovedFullRefund(body.adjustmentId.trim(), owner.email);
+    const refund = await executeApprovedFullRefund(body.adjustmentId.trim(), owner.email, { retryNotSent: body.action === "retry_not_sent" });
     return response(refund, refund.refundSucceeded ? 200 : 202);
   } catch (error) {
     if (error instanceof FullRefundReviewError) return response({ error: error.message }, error.status);

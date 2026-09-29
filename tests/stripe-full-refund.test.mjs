@@ -100,6 +100,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       for (const query of readFileSync(join(repo, "drizzle", entry.tag + ".sql"), "utf8").split("--> statement-breakpoint")) if (query.trim()) database.exec(query);
     }
     const querySql = (query, params, method) => {
+      assert.ok(params.length <= 100, "every D1 statement must stay within its parameter limit");
       if (query.startsWith('update "stripe_payments"') && state.beforeWrite) { const change = state.beforeWrite; state.beforeWrite = null; change(); }
       if (query.startsWith('update "payment_adjustments"') && state.beforeExecutionWrite) { const change = state.beforeExecutionWrite; state.beforeExecutionWrite = null; change(); }
       if (method === "run") { database.prepare(query).run(...params); return { rows: [] }; }
@@ -265,11 +266,76 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       reset(); addIncident(); assert.equal((await post()).status, 409); assert.equal(posts.length, 0);
       reset(); state.beforeWrite = addIncident; assert.equal((await post()).status, 409); assert.equal(posts.length, 0);
     });
+    const statusCall = async (jwt = token) => {
+      const response = await api.refundStatus(new Request("https://tuveloz.invalid/api/stripe/admin/refunds?adjustmentId=decision-synthetic", { headers: jwt ? { "cf-access-jwt-assertion": jwt } : {} }));
+      return { status: response.status, body: await response.json() };
+    };
+    const retryUnsent = () => post({ adjustmentId: "decision-synthetic", action: "retry_not_sent" });
+    const stopBeforeSend = async () => {
+      reset(); state.beforeWrite = () => database.exec("UPDATE stripe_payments SET dispute_status='needs_response',status='disputed'");
+      assert.equal((await post()).status, 409); assert.equal(posts.length, 0);
+      assert.equal(execution().status, "refund_not_sent_review");
+    };
+    await t.test("paused marketplace permits only signed read-only recovery of an existing refund", async () => {
+      reset(); postMode = "lost"; await post(); state.open = false;
+      assert.equal((await statusCall("")).status, 403);
+      assert.equal((await statusCall()).body.refundSucceeded, true);
+      assert.equal(posts.length, 1); assert.equal((await post()).status, 503);
+      reset(); state.open = false; assert.equal((await statusCall()).status, 409);
+      assert.equal(posts.length + getCount, 0); assert.equal(execution(), undefined);
+      reset(); await post(); state.open = false; state.env.STRIPE_SECRET_KEY = "sk_live_synthetic_locked";
+      assert.equal((await statusCall()).status, 503); assert.equal(posts.length, 1);
+    });
+    await t.test("confirmed unsent attempts need explicit retry and fresh eligibility; the same reservation sends once", async () => {
+      await stopBeforeSend(); const original = execution();
+      assert.equal((await retryUnsent()).status, 409); assert.equal(posts.length, 0);
+      database.exec("UPDATE stripe_payments SET dispute_status='',status='paid_pending_completion'");
+      assert.equal((await post()).body.refundSucceeded, false); assert.equal(posts.length, 0);
+      assert.equal((await statusCall()).body.recovery, "not_sent"); assert.equal(posts.length, 0);
+      const resumed = await retryUnsent(); assert.equal(resumed.status, 200, JSON.stringify(resumed.body));
+      assert.equal(resumed.body.refundSucceeded, true); assert.equal(posts.length, 1);
+      assert.equal(execution().id, original.id); assert.equal(execution().idempotency_key, original.idempotency_key);
+      assert.equal((await retryUnsent()).body.refundSucceeded, true); assert.equal(posts.length, 1);
+    });
+    await t.test("unknown submissions cannot be retried as unsent, even when Stripe lists no refund", async () => {
+      reset(); postMode = "reject"; await post();
+      const checked = await statusCall(); assert.equal(checked.body.recovery, "not_found");
+      assert.equal(checked.body.refundSucceeded, false); assert.equal(posts.length, 1);
+      assert.equal((await retryUnsent()).body.refundSucceeded, false); assert.equal(posts.length, 1);
+      database.exec("UPDATE payment_adjustments SET status='refund_succeeded' WHERE adjustment_type='stripe_full_refund'");
+      assert.equal((await statusCall()).status, 409, "a success label without a Stripe reference is not proof");
+      reset(); assert.equal((await retryUnsent()).status, 409); assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("unsent retries retain work, incident, transfer, prior refund, identity and snapshot safeguards", async () => {
+      for (const change of [
+        () => addIncident(),
+        () => database.exec("UPDATE job_cancellations SET work_performed_cents=100"),
+        () => database.exec("UPDATE provider_applications SET is_test_provider='yes'"),
+        () => database.exec("UPDATE stripe_payments SET customer_email='changed@example.invalid'"),
+        () => transfers.push({ id: "tr_prior" }),
+        () => remote.push({ id: "re_prior", amount: 10500, status: "pending" }),
+      ]) {
+        await stopBeforeSend(); database.exec("UPDATE stripe_payments SET dispute_status='',status='paid_pending_completion'");
+        change(); assert.equal((await retryUnsent()).status, 409); assert.equal(posts.length, 0);
+        assert.equal(execution().status, "refund_not_sent_review");
+      }
+    });
+    await t.test("concurrent unsent retries cannot reserve a second execution or override a changed reservation", async () => {
+      await stopBeforeSend(); database.exec("UPDATE stripe_payments SET dispute_status='',status='paid_pending_completion'");
+      const replies = await Promise.all([retryUnsent(), retryUnsent()]);
+      assert.ok(replies.some(reply => reply.body.refundSucceeded)); assert.equal(posts.length, 1);
+      assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments WHERE adjustment_type='stripe_full_refund'").get().n, 1);
+      await stopBeforeSend(); database.exec("UPDATE stripe_payments SET dispute_status='',status='paid_pending_completion'");
+      state.beforeExecutionWrite = () => database.exec("UPDATE payment_adjustments SET updated_at='2099-01-01' WHERE adjustment_type='stripe_full_refund'");
+      assert.equal((await retryUnsent()).status, 409); assert.equal(posts.length, 0);
+      await stopBeforeSend(); state.open = false; assert.equal((await retryUnsent()).status, 503); assert.equal(posts.length, 0);
+    });
     await t.test("owner signatures, origin, exact input and the closed release gate fail before Stripe or writes", async () => {
       reset();
       for (const jwt of ["", "forged", await sign({ email: "stranger@example.invalid" })]) assert.equal((await post(undefined, jwt)).status, 403);
       assert.equal((await post(undefined, token, "https://other.invalid")).status, 403);
-      for (const body of ["{", "null", "[]", {}, { adjustmentId: 1 }, { adjustmentId: "decision-synthetic", amount: 10500 }]) assert.equal((await post(body)).status, 400);
+      for (const body of ["{", "null", "[]", {}, { adjustmentId: 1 }, { adjustmentId: "decision-synthetic", amount: 10500 },
+        { adjustmentId: "decision-synthetic", action: null }, { adjustmentId: "decision-synthetic", action: "resend" }]) assert.equal((await post(body)).status, 400);
       state.open = false; assert.equal((await post()).status, 503); assert.equal(await api.actualLaunchGate("payout", { testOnly: false }), false);
       assert.equal(posts.length + getCount, 0); assert.equal(execution(), undefined);
     });

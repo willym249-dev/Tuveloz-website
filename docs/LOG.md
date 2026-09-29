@@ -11,6 +11,43 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Refund recovery repair prepared for release
+
+Continued from clean 30c1923 and unchanged main e2112b5, with no other open PR.
+Preserved both completed Stripe rehearsals and their revoked temporary access.
+Four behavior regressions were reproduced against the published baseline before
+the repair: paused status recovery, explicit unsent retry, absent Stripe-result
+guidance and concurrent retry handling. No additional payment was created.
+
+Owner-authenticated GET recovery can now reconcile an existing saved attempt
+while marketplace approvals/submissions are closed. It cannot create a refund
+or a reservation, and the existing Stripe client still rejects a live key while
+live mode is code-disabled. POST approvals, sends and retries keep all original
+marketplace/policy, identity, amount, prior-refund, transfer, work and hold checks.
+
+A refund_not_sent_review record proves execution stopped before a Stripe POST.
+After explicit owner reconfirmation, retry_not_sent repeats all eligibility
+checks and conditionally reclaims the same permanent reservation and key using
+its exact row version. Versions also advance on stopped attempts, preventing
+stale/concurrent retries from reclaiming an intervening attempt. Unknown/pending
+submissions never use this retry branch; they only read Stripe. No matching
+result now supplies concrete review guidance and the owner-only Stripe payment
+reference rather than implying success. A success state without its Stripe
+reference fails closed. D1 parameter limits are asserted for every test query.
+
+Mobile Chromium/WebKit checks cover paused read-only checks, missing results,
+disabled sends during a pause, explicit retry confirmation, no automatic
+resubmission, stale sign-in and mobile layout. The cancellation selector now
+has readable light text on its dark background. Full build and 863 tests pass;
+lint has only the existing site-language navigation warning. Required remote
+checks and production verification are still pending at this entry. No policy,
+launch/payment/SMS lock, migration, credential or real provider record changed.
+
+Starting a new refund while the marketplace is paused remains deliberately
+blocked; this repair enables status recovery only during a pause. Resolving a
+truly ambiguous no-result attempt, partial/provider recovery, effective policy
+adoption/customer consent and production processor-delivery proof remain open.
+
 ## 2026-09-28 - Application-initiated Stripe sandbox refund verified and cleaned up
 
 Continued from clean 99271e1 with no other open PR. Used the published e2112b5
