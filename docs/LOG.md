@@ -53,6 +53,15 @@ bilingual customer consent, paused-marketplace refund access, operator recovery
 of unconfirmed/no-send reservations, and partial/provider-recovery rules.
 Publication is not yet verified in this entry; see the next release evidence.
 
+PR #263's first CI run exposed a scheduling assumption in the concurrency test:
+JWT verification could serialize the requests, so the second safely returned
+the existing approval instead of racing its insert. The test now explicitly
+holds both requests before their transactions, verifies both arrived, and then
+requires one saved decision and one conflict. The sequential idempotent retry
+case remains tested separately. No runtime guard was relaxed to fix the test.
+Scoped business Gmail search refreshed around 8:03 p.m. Maryland time found
+no new matching insurance/county replies since September 26; no email was sent.
+
 ## 2026-09-28 - Guarded full-refund backend published; live path remains closed
 
 Continued from clean 2cfd068 / production 3b7ae69 with no open PRs. Preserved

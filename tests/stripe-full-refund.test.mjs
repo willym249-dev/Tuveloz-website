@@ -17,7 +17,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
   const tempRoot = resolve(tmpdir()), scratch = mkdtempSync(join(tempRoot, "tuveloz-full-refund-"));
   const database = new DatabaseSync(":memory:"), originalFetch = globalThis.fetch;
   const issuer = "https://synthetic-refund.cloudflareaccess.com", email = "owner@example.invalid", audience = "synthetic-refund";
-  const state = { db: null, open: false, beforeWrite: null, beforeExecutionWrite: null, beforeBatch: null, failBatch: false, env: { OWNER_EMAIL: email, TEAM_DOMAIN: issuer,
+  const state = { db: null, open: false, beforeWrite: null, beforeExecutionWrite: null, beforeBatch: null, batchBarrier: null, failBatch: false, env: { OWNER_EMAIL: email, TEAM_DOMAIN: issuer,
     OWNER_ACCESS_AUD: audience, STRIPE_SECRET_KEY: "sk_test_synthetic_refund_fixture" } };
   globalThis.__fullRefund = state;
   const keys = await generateKeyPair("RS256");
@@ -32,7 +32,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
   const reset = () => {
     for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "job_cancellations", "provider_job_records", "job_incidents", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
     state.open = true; state.beforeWrite = null; state.beforeExecutionWrite = null; state.env.STRIPE_SECRET_KEY = "sk_test_synthetic_refund_fixture";
-    state.beforeBatch = null; state.failBatch = false;
+    state.beforeBatch = null; state.batchBarrier = null; state.failBatch = false;
     remote = []; transfers = []; posts = []; getCount = 0; postMode = "ok"; nextStatus = "succeeded"; beforePost = null; intentChange = null;
     seed("customer_requests", { id: "job-synthetic", name: "SYNTHETIC CUSTOMER", email: "customer@example.invalid", zip: "20910",
       vehicle: "Synthetic vehicle", service: "Synthetic service", details: "SYNTHETIC ONLY", status: "cancelled", is_test_job: "no",
@@ -108,6 +108,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       finally { database.exec("PRAGMA short_column_names=ON; PRAGMA full_column_names=OFF;"); }
     };
     state.db = drizzle(querySql, async queries => {
+      await state.batchBarrier?.();
       state.beforeBatch?.(); state.beforeBatch = null;
       database.exec("BEGIN");
       try {
@@ -236,10 +237,17 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal(database.prepare("SELECT status FROM customer_requests").get().status, "assigned");
       assert.equal(database.prepare("SELECT status FROM job_cancellations").get().status, "submitted");
     });
-    await t.test("simultaneous approvals save one immutable decision and all three allowed reasons are usable", async () => {
+    await t.test("simultaneous approvals save one immutable decision and all three allowed reasons are usable", { timeout: 15000 }, async () => {
       for (const reason of ["customer_cancel", "provider_cancel", "provider_no_show"]) {
         pendingReview(); database.prepare("UPDATE job_cancellations SET cancellation_type=?").run(reason);
+        // Force both requests past their reads before either transaction starts.
+        // Merely Promise.all-ing JWT-authenticated routes can serialize on some
+        // runtimes and legitimately return the saved idempotent result twice.
+        let arrivals = 0, release;
+        const barrier = new Promise(resolve => { release = resolve; });
+        state.batchBarrier = async () => { if (++arrivals === 2) release(); await barrier; };
         const body = await approveBody(); const replies = await Promise.all([reviewCall({ method: "POST", body }), reviewCall({ method: "POST", body })]);
+        assert.equal(arrivals, 2);
         assert.equal(replies.filter(reply => reply.status === 200).length, 1);
         assert.equal(replies.filter(reply => reply.status === 409).length, 1);
         assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments").get().n, 1);
