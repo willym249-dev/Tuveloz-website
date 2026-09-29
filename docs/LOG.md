@@ -11,6 +11,41 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Refund recovery published and independently verified
+
+PR #264's tested head 0a12f5ad39491f2ffa4b02ce09e8bf0228a98d24 passed
+both required workflows (36511932734 and 36511933088), including the full
+863-test build, TypeScript, migrations and mobile browser checks. Merged as
+bafe9a7fee67a1ff7ceeb32fa79feab47ad18297. All three production jobs in
+36513271223 passed. No release check was skipped to publish this change.
+
+Nineteen independent HTTP checks confirmed the exact deployed commit, ready
+application/database/schema, open accounts/provider applications and closed
+customer requests/payments. Unsigned and forged-email refund, retry and review
+requests still require Cloudflare owner sign-in. The authenticated live Payments
+screen loaded the accurate empty cancellation queue; Refresh list worked, with
+no captured Tuveloz page errors. No production record or money movement was
+created for verification. Local Chromium/WebKit screenshots were inspected at
+390px; the cancellation selector has readable contrast and the retry confirmation
+does not overflow. The existing unrelated site-language lint warning remains.
+
+Private release evidence: task outputs/pr264-verification-20260929.json,
+pr264-build-check-20260929.json, pr264-production-release-20260929.json,
+pr264-live-release-20260929.json and pr264-owner-ui-verification-20260929.json.
+Do not repeat this release or the two completed Stripe refund rehearsals.
+
+The built-in Gmail connector was identified as the personal account and was not
+used to search mail. The existing signed-in hello@tuveloz.com Chrome inbox was
+used instead; a focused sender/date search found no new insurer/county reply.
+No email was sent. The temporary release-check tab was closed.
+
+Completed: paused status-only recovery, explicit retry of proven-unsent attempts,
+unchanged duplicate/hold safeguards, concrete unknown-result guidance and mobile
+contrast. Still separate: permission to start a refund while paused, a reviewed
+resolution for a genuinely ambiguous absent Stripe result, partial/provider
+recovery, effective policy/customer consent and production processor delivery.
+Live payment/booking/SMS locks and published policies remain unchanged.
+
 ## 2026-09-28 - Refund recovery repair prepared for release
 
 Continued from clean 30c1923 and unchanged main e2112b5, with no other open PR.

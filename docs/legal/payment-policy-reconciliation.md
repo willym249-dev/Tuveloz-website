@@ -296,7 +296,7 @@ Stripe references checked September 28: [refund creation](https://docs.stripe.co
 [idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),
 and [transfer-group lookup](https://docs.stripe.com/api/transfers/list).
 
-**Recovery repair prepared September 28:** a signed owner may read/reconcile an
+**Recovery repair published September 28 in PR #264 (`bafe9a7`):** a signed owner may read/reconcile an
 existing attempt during a marketplace pause; this cannot start a refund and
 does not bypass the Stripe live-key lock. A confirmed unsent reservation now
 offers explicit owner retry after all original eligibility checks, reusing the
@@ -304,7 +304,10 @@ same permanent record/key and conditionally advancing its version. Unknown
 submissions still cannot be resent, including after Stripe's idempotency-key
 retention window. An empty refund lookup is not proof that it is safe to resend;
 the screen supplies the exact Stripe payment reference for separate review.
-New refunds while paused remain blocked. See LOG for testing/publication state.
+New refunds while paused remain blocked. All 863 tests/build, required PR and
+production checks passed; nineteen independent HTTP checks and the authenticated
+live empty queue/Refresh control verified the deployed release. See LOG for
+evidence and the distinction between the completed repair and remaining gates.
 
 Before calling the refund workflow complete, verify these outcomes with isolated
 records and an approved Stripe test when the transaction path is ready:
