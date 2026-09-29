@@ -22,7 +22,7 @@ test("payment notifications preserve session binding and concurrent safety holds
     STRIPE_PAYMENT_WEBHOOK_SECRET: secret, STRIPE_ALLOW_LIVE_MODE: "false",
   } };
   globalThis.__paymentNotificationBehavior = state;
-  let sequence = 0;
+  let sequence = 0, networkCalls = 0;
   const session = id => ({ id, object: "checkout.session", metadata: {
     tuveloz_payment_record_id: "payment-synthetic",
   } });
@@ -39,7 +39,7 @@ test("payment notifications preserve session binding and concurrent safety holds
       'cs_current','pi_synthetic','ch_synthetic',?)`).run(status);
   };
   try {
-    globalThis.fetch = async () => { throw Error("Outbound calls are forbidden in this isolated test"); };
+    globalThis.fetch = async () => { networkCalls++; throw Error("Outbound calls are forbidden in this isolated test"); };
     console.error = () => {}; console.warn = () => {};
     for (const entry of JSON.parse(readFileSync(join(repo, "drizzle/meta/_journal.json"), "utf8")).entries) {
       for (const statement of readFileSync(join(repo, "drizzle", entry.tag + ".sql"), "utf8").split("--> statement-breakpoint")) {
@@ -87,6 +87,66 @@ test("payment notifications preserve session binding and concurrent safety holds
       assert.equal((await send("checkout.session.expired", session("cs_current"), "whsec_wrong")).status, 400);
       assert.equal(payment().status, "checkout_open");
       assert.equal(database.prepare("SELECT count(*) n FROM stripe_webhook_events").get().n, 0);
+    });
+    const unavailableKeys = [undefined, "sk_live_synthetic_locked", "rk_live_synthetic_locked", "invalid_synthetic_key"];
+    const eventReceipt = id => database.prepare("SELECT * FROM stripe_webhook_events WHERE id=?").get(`payments:${id}`);
+    await t.test("signature rejection is independent of missing, locked or invalid payment credentials", async () => {
+      const originalKey = state.env.STRIPE_SECRET_KEY;
+      try {
+        seed();
+        const before = payment();
+        const receiptsBefore = database.prepare("SELECT count(*) n FROM stripe_webhook_events").get().n;
+        for (const key of unavailableKeys) {
+          state.env.STRIPE_SECRET_KEY = key;
+          const response = await send("checkout.session.expired", session("cs_current"), "whsec_wrong");
+          assert.equal(response.status, 400);
+          assert.deepEqual(await response.json(), { error: "Invalid Stripe webhook signature." });
+          assert.deepEqual(payment(), before);
+          assert.equal(database.prepare("SELECT count(*) n FROM stripe_webhook_events").get().n, receiptsBefore);
+        }
+        assert.equal(networkCalls, 0);
+      } finally { state.env.STRIPE_SECRET_KEY = originalKey; }
+    });
+    await t.test("authenticated completed duplicates stay acknowledged when payment access becomes unavailable", async () => {
+      const originalKey = state.env.STRIPE_SECRET_KEY;
+      try {
+        seed();
+        const id = `evt_synthetic_completed_${++sequence}`;
+        assert.equal((await send("checkout.session.expired", session("cs_current"), secret, id)).status, 200);
+        const before = payment(), receiptBefore = eventReceipt(id);
+        for (const key of unavailableKeys) {
+          state.env.STRIPE_SECRET_KEY = key;
+          const duplicate = await send("checkout.session.expired", session("cs_current"), secret, id);
+          assert.equal(duplicate.status, 200);
+          assert.deepEqual(await duplicate.json(), { received: true, duplicate: true });
+          assert.equal((await send("checkout.session.expired", session("cs_current"), "whsec_wrong", id)).status, 400);
+          assert.deepEqual(payment(), before);
+          assert.deepEqual(eventReceipt(id), receiptBefore);
+        }
+        assert.equal(networkCalls, 0);
+      } finally { state.env.STRIPE_SECRET_KEY = originalKey; }
+    });
+    await t.test("new authenticated events remain retryable without changing payments when access is unavailable", async () => {
+      const originalKey = state.env.STRIPE_SECRET_KEY;
+      try {
+        for (const key of unavailableKeys) {
+          seed();
+          const before = payment(), id = `evt_synthetic_locked_${++sequence}`;
+          state.env.STRIPE_SECRET_KEY = key;
+          const rejected = await send("checkout.session.expired", session("cs_current"), secret, id);
+          assert.equal(rejected.status, 503);
+          assert.equal(eventReceipt(id)?.status, "failed");
+          assert.equal(eventReceipt(id)?.attempt_count, 1);
+          assert.deepEqual(payment(), before);
+          assert.equal(api.stripeLiveModeEnabled(), false);
+          state.env.STRIPE_SECRET_KEY = originalKey;
+          assert.equal((await send("checkout.session.expired", session("cs_current"), secret, id)).status, 200);
+          assert.equal(eventReceipt(id)?.status, "processed");
+          assert.equal(eventReceipt(id)?.attempt_count, 2);
+          assert.equal(payment().status, "checkout_expired");
+        }
+        assert.equal(networkCalls, 0);
+      } finally { state.env.STRIPE_SECRET_KEY = originalKey; }
     });
     await t.test("an unrelated checkout session cannot expire or fail the current payment", async () => {
       for (const type of ["checkout.session.expired", "checkout.session.async_payment_failed"]) {

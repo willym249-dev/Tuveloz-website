@@ -171,6 +171,14 @@ The connected-account snapshot receiver verifies signatures without creating
 a payment API client. A present live payment key must not prevent safety
 notifications while the independent payment-release locks remain closed.
 
+The payment receiver also verifies the signature before checking payment API
+access. A completed receipt can acknowledge an authenticated duplicate without
+that access. Applying any new event still requires the existing payment-client
+checks; an unavailable or locked key returns a retryable failure and does not
+change payment data. This does not enable live money movement or establish
+Stripe-originated delivery. Configure the payment destination only with its
+matching signing secret and a reviewed plan for its mode and delivery checks.
+
 The payment and connected-account endpoints keep durable event receipts. A
 failed processing attempt is retried; an already-completed event is safely
 acknowledged without applying it again. Failed/canceled refunds, payout

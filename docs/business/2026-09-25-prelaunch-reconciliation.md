@@ -4,7 +4,7 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
-- **Last reconciled:** 2026-09-28
+- **Last reconciled:** 2026-09-29
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
@@ -39,11 +39,14 @@ business Gmail activation and its completed mailbox tests stay complete.
 
 The September 28 Stripe Dashboard inspection found the payout-safety destination
 Active but **zero deliveries in its displayed This week history**. Its zero error
-rate is not delivery proof. Four active destinations were listed; Workbench also
-showed one importable entry, which was not inspected or imported. Check that
-legacy entry before concluding a payment destination is missing or creating a
-duplicate. Private evidence: stripe-delivery-inventory-20260929.json. No event
-was sent/replayed and no credential, destination or live setting was changed.
+rate is not delivery proof. The September 29 read-only follow-up resolves the
+Import entry: it offers only the test-mode Identity destination, not a hidden
+legacy payment endpoint. The live list has four active destinations and none
+for /api/stripe/webhooks/payments. The missing payment destination, its matching
+private secret, reviewed mode and actual delivery rehearsal remain configuration
+work. No import or new connection was made. Private evidence:
+stripe-delivery-inventory-20260929.json and stripe-payment-destination-audit-20260929.json.
+No event was sent/replayed and no credential, destination or live setting changed.
 
 ## Verified in production
 
