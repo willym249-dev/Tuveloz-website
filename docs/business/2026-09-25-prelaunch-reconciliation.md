@@ -50,8 +50,11 @@ No event was sent/replayed and no credential, destination or live setting change
 
 A fourteen-event payment destination is prepared in Stripe but **not saved**;
 specific owner approval for its creation and matching Cloudflare signing-secret
-replacement is pending as of September 29 02:22 a.m. Maryland time. Check later
-owner replies before repeating the question. Private handoff:
+replacement is pending. At approximately 02:29 a.m. Maryland time, automatic
+approval review rejected creation after the owner's "contnue" reply because it
+requires explicit authorization for this exact ongoing connection. A precise
+question has been sent; wait for that answer and do not bypass the rejection.
+No destination or secret was changed. Private handoff:
 stripe-payment-destination-prepared-20260929.json and its preview image. Confirm
 no intervening destination was created before saving. This setup cannot replace
 actual delivery evidence or the reviewed live-payment release.

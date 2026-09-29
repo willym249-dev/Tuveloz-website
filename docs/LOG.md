@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Payment connection blocked by automatic approval review
+
+Fresh Stripe inventory still shows four existing live destinations and no payment
+destination. Attempted the prepared creation after the owner's "contnue" reply;
+automatic approval review rejected the click because that reply did not explicitly
+authorize this exact ongoing live payment-data connection. No workaround or second
+attempt was made. A precise approval question now names Tuveloz payment status,
+https://tuveloz.com/api/stripe/webhooks/payments, checkout/refund/dispute events,
+and storage of its matching secret in the existing Tuveloz Worker. Wait for that
+answer; do not interpret the failed attempt as creation. The form remains unsaved
+and retained for handoff. No secret was read or changed.
+
+Read-only public health at 06:31:03 UTC confirms d61bd13 remains healthy, with
+application/database/schema ready, no missing guarded triggers or tables, accounts
+and provider applications open, and customer requests/payments closed. This is a
+health check, not new transaction or vendor-delivery proof. Private evidence:
+stripe-connection-pending-health-20260929.json and
+stripe-payment-connection-pending-20260929.png. No code or live settings changed.
+
 ## 2026-09-29 - Payment authentication repair published; connection awaiting approval
 
 PR #266's tested head de8bd8d4fcbedd1bdb8ba543ea031b6c89ce05ee passed required
