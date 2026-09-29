@@ -223,8 +223,8 @@ the existing webhook reconciliation remains responsible for payment totals.
 
 **Still required:** policy adoption, refund operation during a future marketplace
 pause, operator recovery for unconfirmed/no-send reservations, and an approved
-end-to-end Stripe sandbox rehearsal. The owner review implementation below is
-awaiting release verification. Existing
+end-to-end Stripe sandbox rehearsal. The owner review implementation below was
+published and independently verified in PR #263 as e2112b5. Existing
 test approvals remain `approved_test_only` and cannot trigger this executor.
 There is no refund button exposed to customers/providers and no live activation.
 Local behavioral proof uses migrated SQLite, real owner-token verification and
@@ -256,8 +256,12 @@ GET refund endpoint can reconcile an existing reservation but cannot initiate
 one. Incident holds are also rechecked before execution. An approved decision,
 pending response or missing reply is never presented as money returned.
 
-This is implementation with isolated behavioral proof, pending release
-verification in LOG. It does not adopt these policy drafts, change published
+PR #263 published this implementation as e2112b5 on September 28. All 858
+tests/build, required PR checks and production jobs passed. Seventeen independent
+HTTP checks confirmed the exact release and access safeguards, and the actual
+owner Payments view loaded its empty cancellation queue and refreshed without
+Tuveloz page errors. See LOG for the release evidence. No real approval/refund
+was created for this check. It does not adopt these policy drafts, change published
 hashes or create any live refund. Paused-marketplace access, no-send/uncertain
 reservation resolution and an actual Stripe sandbox rehearsal remain separate.
 

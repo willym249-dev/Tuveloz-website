@@ -11,7 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
-## 2026-09-28 - Owner cancellation refund review implemented; release verification pending
+## 2026-09-28 - Owner refund review published and independently verified
+
+PR #263's corrected head 53d78f0350a5a12c752eae69995eaa60ba3cb831 passed
+both required workflows (36501426972 and 36501427345), including 858 tests/build
+and the new mobile refund browser checks. Merged as
+e2112b598bab3112def493c08cb5c78236cd40a7. All three production jobs in
+36502823353 passed; no release check was bypassed.
+
+Independent verification at 2026-09-29 00:41:22 UTC (September 28 in Maryland)
+confirmed the exact live release, ready application/database/schema and all
+seventeen public/authentication/origin checks. Accounts and provider applications
+remain open; customer requests and payments remain closed. Signed-out and
+forged-email refund/review requests require Cloudflare owner sign-in.
+
+The authenticated live owner Payments view now displays Cancellation refunds.
+Its empty queue is accurate, Refresh list works, and no Tuveloz page errors
+were captured after deployment. The rendered desktop layout was inspected;
+mobile Chromium/WebKit behavior was covered by the isolated required tests.
+No production record, approval, charge or refund was created for verification.
+
+The owner's GitHub email referred to the earlier failed run 36500989419 at
+3291eb4, before the corrected concurrency test. That failed run did not deploy;
+the corrected head and production workflow subsequently passed. Business Gmail
+also contained the already-recorded September 28 Stripe reply, not a new
+approval or request. No email or outside inquiry was sent.
+
+Evidence is in task outputs/pr263-production-release-20260928.json,
+pr263-live-release-20260928.json and pr263-owner-ui-verification-20260928.json.
+Actual Stripe sandbox refund rehearsal, policy adoption/customer consent,
+paused-marketplace access, uncertain/no-send resolution and partial/provider
+recovery rules remain unfinished. Do not repeat this completed publication or
+mistake the deployed closed workflow for a completed Stripe refund.
+
+## 2026-09-28 - Owner cancellation refund review implementation and test evidence
 
 Continued from clean local 0c34c82 / published 907bf5e, preserving the completed
 PR #262 backend and its postrelease evidence. Added a Cancellation refunds
