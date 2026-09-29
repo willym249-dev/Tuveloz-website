@@ -39,18 +39,40 @@ business Gmail activation and its completed mailbox tests stay complete.
 
 The September 28 Stripe Dashboard inspection found the payout-safety destination
 Active but **zero deliveries in its displayed This week history**. Its zero error
-rate is not delivery proof. The September 29 read-only follow-up resolves the
+rate is not delivery proof. The September 29 read-only follow-up resolved the
 Import entry: it offers only the test-mode Identity destination, not a hidden
-legacy payment endpoint. The live list has four active destinations and none
-for /api/stripe/webhooks/payments. The missing payment destination, its matching
-private secret, reviewed mode and actual delivery rehearsal remain configuration
-work. No import or new connection was made. Private evidence:
-stripe-delivery-inventory-20260929.json and stripe-payment-destination-audit-20260929.json.
-No event was sent/replayed and no credential, destination or live setting changed.
+legacy payment endpoint. The four existing live destinations were preserved.
+
+The owner-approved fourteen-event **Tuveloz payment status** destination is now
+saved and Active at https://tuveloz.com/api/stripe/webhooks/payments, using Your
+account / Snapshot / 2026-06-24.dahlia. The saved subscriptions match all fourteen
+receiver handlers. Its matching STRIPE_PAYMENT_WEBHOOK_SECRET was installed by
+official Wrangler in the existing tuveloz Worker; temporary signing material was
+removed. Creation and secret installation are complete: do not repeat them.
+Production checks at 07:16:54 UTC confirm the same healthy d61bd13 release,
+unsigned/forged notification rejection and preserved closed request/payment
+controls. Stripe still shows zero deliveries; no valid event or real transaction
+was created. Actual vendor delivery, settlement and the reviewed live-payment
+release remain unfinished. Private evidence:
+stripe-payment-destination-prepared-20260929.json,
+stripe-payment-connection-verification-20260929.json and
+stripe-payment-connection-active-20260929.png.
 
 ## Verified in production
 
-- Latest verified production release: PR #265,
+- Latest verified production release: PR #266,
+  `d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b`, verified September 29 at 06:22:38 UTC.
+  All 872 tests/build, both required PR workflows and all three production jobs
+  passed. Thirteen independent live HTTP checks verified the exact healthy
+  release, payment signature rejection before API access, other signature
+  boundaries, bilingual signup pages and preserved launch locks. Completed
+  notifications can acknowledge a genuine duplicate after API access becomes
+  unavailable; applying a new event still requires every original client/release
+  check and remains retryable when blocked. Isolated signed-route/SQL tests prove
+  those retry behaviors without live data. Evidence: pr266-production-release-20260929.json
+  and pr266-live-release-20260929.json. Do not repeat this repair or its release.
+
+- Earlier completed release: PR #265,
   `48c8ba947c10d2bce68e1637f5e9d401561c7cc8`, verified September 28 Maryland time.
   All 869 tests/build, both required PR workflows and all three production jobs
   passed. Thirteen independent live HTTP checks at 2026-09-29 03:41:15 UTC

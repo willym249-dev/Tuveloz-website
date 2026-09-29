@@ -11,6 +11,127 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Stalled checkout recovery prepared and tested
+
+No open PRs or competing repair existed before this work. Reproduced two failures
+in the actual quote card with isolated browser requests: a stalled checkout POST
+never leaves Opening Stripe, and a lost response leaves the previous acceptance
+selected and the payment button available without a fresh status read.
+
+The quote card now stops waiting after twenty seconds, cancels its browser
+request, clears the old consent and offers an explicit quote/status refresh.
+Network failures and unsuccessful server responses also require fresh review.
+The refresh sends only GET; another POST needs new consent and an explicit click.
+A late response cannot redirect, and already-paid status removes the payment
+action. The new recovery explanation and action are available in English and
+Spanish. Timer cleanup preserves unmount/scope-change protections. No server
+guard, Stripe operation, policy text or launch switch changed.
+
+All 872 tests and the production build pass, plus 28 mobile Chromium/WebKit
+scenarios and 26 focused contract/fee checks. TypeScript passes; lint has only the
+existing site-language.tsx warning. The two new failures were observed before the
+repair. The first sandboxed full-suite run hit esbuild directory permissions;
+the approved normal-context rerun passed. Private logs:
+checkout-recovery-full-tests-20260929.log, checkout-recovery-browser-20260929.log,
+checkout-recovery-lint-20260929.log. Publication and release verification are
+still pending at this entry; no checkout or charge was opened.
+
+Stripe's webhook guide (https://docs.stripe.com/webhooks#test-your-handler),
+checked September 29, recommends sandbox/CLI events for tests. Preserve the
+completed local Stripe refund rehearsal; the newly saved live destination has no
+actual delivery evidence yet. Do not open bookings, send a live charge or replace
+the live signing secret to manufacture test evidence. A hosted sandbox rehearsal
+is a separate scope from live-originated delivery and eventual settlement.
+
+## 2026-09-29 - Stripe payment connection created and matching secret installed
+
+The owner continued after the exact request to create Tuveloz payment status and
+store its matching secret in the existing Tuveloz Worker. Creation was accepted
+and Stripe now shows this live destination Active at
+https://tuveloz.com/api/stripe/webhooks/payments. It uses Your account / Snapshot /
+2026-06-24.dahlia; all fourteen saved subscriptions match the receiver's handlers.
+The existing Identity and Connect destinations were preserved. Do not recreate
+this payment destination or repeat either completed sandbox refund rehearsal.
+
+Official Wrangler 4.129.0 confirmed upload of STRIPE_PAYMENT_WEBHOOK_SECRET to
+the existing tuveloz Worker. Only that secret was changed. A restricted temporary
+handoff initially needed the PC owner's file permission; installation then
+succeeded, the file and empty directory were removed, and in-memory secret
+bindings were cleared. No secret value was printed or retained in project files.
+The Stripe screen has the secret hidden again.
+
+Independent production checks at 07:16:54 UTC confirmed the same d61bd13 release,
+healthy application/database/schema, no missing tables or guarded triggers,
+accounts/provider applications open, and customer requests/payments closed.
+Both missing and forged payment signatures returned HTTP 400. No valid event,
+production test receipt, payment, refund or transfer was created. Stripe displays
+zero deliveries so far: configuration is complete, actual vendor delivery and
+settlement are still separate pending evidence, not inferred from Active status.
+Private evidence: stripe-payment-destination-prepared-20260929.json,
+stripe-payment-connection-verification-20260929.json and
+stripe-payment-connection-active-20260929.png. No code or launch gate changed.
+
+## 2026-09-29 - Payment connection blocked by automatic approval review
+
+Fresh Stripe inventory still shows four existing live destinations and no payment
+destination. Attempted the prepared creation after the owner's "contnue" reply;
+automatic approval review rejected the click because that reply did not explicitly
+authorize this exact ongoing live payment-data connection. No workaround or second
+attempt was made. A precise approval question now names Tuveloz payment status,
+https://tuveloz.com/api/stripe/webhooks/payments, checkout/refund/dispute events,
+and storage of its matching secret in the existing Tuveloz Worker. Wait for that
+answer; do not interpret the failed attempt as creation. The form remains unsaved
+and retained for handoff. No secret was read or changed.
+
+Read-only public health at 06:31:03 UTC confirms d61bd13 remains healthy, with
+application/database/schema ready, no missing guarded triggers or tables, accounts
+and provider applications open, and customer requests/payments closed. This is a
+health check, not new transaction or vendor-delivery proof. Private evidence:
+stripe-connection-pending-health-20260929.json and
+stripe-payment-connection-pending-20260929.png. No code or live settings changed.
+
+## 2026-09-29 - Payment authentication repair published; connection awaiting approval
+
+PR #266's tested head de8bd8d4fcbedd1bdb8ba543ea031b6c89ce05ee passed required
+workflows 36528083779 and 36528084050. Merged as
+d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b. All three production jobs in
+36529405266 passed, including the complete provider signup and 872-test build.
+Thirteen independent live HTTP checks at 06:22:38 UTC confirmed the exact
+healthy release, missing/invalid signature rejection, English/Spanish signup
+pages and preserved onboarding-only locks. In particular, the forged payment
+signature now returns 400 before payment API access is checked. No valid
+event, production test record, real payment or refund was created by the probe.
+Duplicate and retry behavior has isolated signed-route/migrated-SQL proof.
+Evidence: task outputs/pr266-verification-20260929.json,
+pr266-build-check-20260929.json, pr266-production-release-20260929.json and
+pr266-live-release-20260929.json. This repair is complete; do not repeat it.
+
+Prepared, but did not save, the missing live destination named Tuveloz payment
+status: Your account / Snapshot / 2026-06-24.dahlia, fourteen selected events
+matching the fourteen existing receiver handlers, endpoint
+https://tuveloz.com/api/stripe/webhooks/payments. Cloudflare's read-only secret
+name listing confirms the existing tuveloz Worker has STRIPE_PAYMENT_WEBHOOK_SECRET;
+no value was read, changed or retained. The pending specific owner question asks
+to create this connection and replace only its matching signing secret there.
+Browser rules require confirmation because the connection grants ongoing access
+to payment-event data. No approval response has arrived at this entry. Check
+subsequent owner messages before asking again. The prepared tab is retained;
+the original Stripe user tab is restored to Sandbox/Refunded.
+
+Private handoff: stripe-payment-destination-prepared-20260929.json and
+stripe-payment-destination-preview-20260929.png. Recheck for an intervening
+owner-created destination before saving, so no duplicate is created. Creation,
+secret installation and real vendor delivery remain unfinished. Per Stripe's
+https://docs.stripe.com/webhooks#view-event-deliveries, inspect an actual delivery
+record and corresponding receiver receipt; Active alone is not delivery proof.
+Keep test/live modes separate and preserve both completed refund rehearsals.
+
+The existing hello@tuveloz.com Gmail search was refreshed for broker/county
+senders after September 26 and still displayed no matches. This is that scoped
+search result, not a claim about all mail. No message was sent or inquiry
+repeated. Evidence: launch-reply-check-20260929.json. No paid plan, policy,
+launch approval, live-payment/SMS lock or real participant record changed.
+
 ## 2026-09-29 - Payment delivery configuration checked; authentication repair prepared
 
 Continued from clean c7894bc; remote main remains the verified PR #265 release,
