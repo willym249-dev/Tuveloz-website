@@ -110,6 +110,9 @@ jobs:
       - name: Verify owner incident hold controls in Chromium and WebKit
         run: npm run test:e2e:incident-owner
 
+      - name: Verify refund review and explicit submission in Chromium and WebKit
+        run: npm run test:e2e:refund-review
+
       - name: Verify saved evidence receipts and safe refresh in Chromium and WebKit
         run: npm run test:e2e:job-evidence
 

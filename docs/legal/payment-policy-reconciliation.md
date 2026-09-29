@@ -221,15 +221,45 @@ response, rejection or absent result stays under review. Current Stripe refund
 responses distinguish pending/action-needed/failed/canceled from succeeded;
 the existing webhook reconciliation remains responsible for payment totals.
 
-**Still required:** the production decision UI/workflow that creates this exact
-reviewed approval and immutable snapshot, policy adoption, refund operation
-during a future marketplace pause, operator recovery for unconfirmed/no-send
-reservations, and an approved end-to-end Stripe sandbox rehearsal. Existing
+**Still required:** policy adoption, refund operation during a future marketplace
+pause, operator recovery for unconfirmed/no-send reservations, and an approved
+end-to-end Stripe sandbox rehearsal. The owner review implementation below is
+awaiting release verification. Existing
 test approvals remain `approved_test_only` and cannot trigger this executor.
 There is no refund button exposed to customers/providers and no live activation.
 Local behavioral proof uses migrated SQLite, real owner-token verification and
 the actual Stripe SDK with intercepted synthetic responses; it is not a real
-Stripe refund. See LOG for release and verification status.
+Stripe refund. PR #262 published this guarded backend as 907bf5e on September
+28: all 852 tests/build, both PR workflows, all three production jobs and
+thirteen independent live checks passed. The live refund URL requires Cloudflare
+owner sign-in. Execution remains closed; this release adopts no policy and
+creates no real refund. See LOG for exact release evidence.
+
+### September 28 - owner review and immutable approval implementation
+
+The owner's Payments screen now has a separate cancellation review with the
+customer/provider names, saved payment, reason and provider/Customer Service
+Fee/full-total breakdown. Approval saves a decision and cancels the job in one
+D1 transaction; it does not contact Stripe. A second explicit confirmation is
+required for submission through the guarded executor. The approved payment
+snapshot also binds the provider application, connected account and customer.
+
+A changed payment, cancellation, job, provider, started-work record or incident
+hold blocks stale approval. Partial or ambiguous cases and simulations cannot
+use it. The decision's permanent key prevents repeated/concurrent approvals;
+a failed transaction rolls back all related writes. Original processing fees
+remain Tuveloz's responsibility. No processor cost is guessed or deducted from
+the saved full customer refund.
+
+After an uncertain submission the screen offers status recovery. The owner-only
+GET refund endpoint can reconcile an existing reservation but cannot initiate
+one. Incident holds are also rechecked before execution. An approved decision,
+pending response or missing reply is never presented as money returned.
+
+This is implementation with isolated behavioral proof, pending release
+verification in LOG. It does not adopt these policy drafts, change published
+hashes or create any live refund. Paused-marketplace access, no-send/uncertain
+reservation resolution and an actual Stripe sandbox rehearsal remain separate.
 
 Stripe references checked September 28: [refund creation](https://docs.stripe.com/api/refunds/create),
 [idempotency and key retention](https://docs.stripe.com/api/idempotent_requests),
