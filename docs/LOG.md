@@ -11,6 +11,74 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-28 - Fence Stripe notification receipts by processing attempt
+
+Continued from the clean, verified PR #264 release plus its local evidence
+commit c38fbe4. Remote main remained bafe9a7 and no open PR was present.
+Production-delivery review exposed a separate receipt race: once a five-minute
+lease was reclaimed, the older Worker could still complete or fail the newer
+attempt because receipt writes matched only the event ID and processing status.
+Three isolated regressions reproduced this before the fix.
+
+The shared receipt helper now returns the attempt number acquired atomically
+with INSERT/UPDATE RETURNING. Completion and failure require that exact attempt;
+busy/terminal duplicates receive no processing authority. All four signed
+routes retain their own claim through success and error handling. Failed thin
+event retrieval still marks its own attempt retryable. This fences receipt
+state only; the existing domain-specific idempotency and safety holds remain
+necessary when an expired handler resumes. No migration is needed.
+
+All 869 tests and the production build passed, including 55 focused Stripe
+checks. New tests run real receipt SQL against the migrated isolated schema,
+exercise stale completion/failure and competing retries, and verify the actual
+signed payment, Identity, thin Connect and connected-account snapshot routes
+cannot clobber a replacement attempt. Outbound reads use synthetic fixtures;
+participant/payment/adjustment/email tables stay empty in the new route test.
+TypeScript passed; lint passed with only the pre-existing site-language warning.
+Evidence: task outputs/stripe-webhook-claims-before-20260929.log,
+stripe-webhook-claims-focused-20260929.log, stripe-webhook-claims-full-tests-20260929.log,
+stripe-webhook-claims-lint-20260929.log and stripe-webhook-claims-typecheck-20260929.log.
+
+Required remote checks and publication are next. This does not establish
+Stripe-originated production delivery, change a launch/payment/SMS lock, adopt
+policy text, create real records, send email or move money. Preserve both
+completed refund rehearsals and PR #264; do not repeat them.
+
+## 2026-09-28 - Refund recovery published and independently verified
+
+PR #264's tested head 0a12f5ad39491f2ffa4b02ce09e8bf0228a98d24 passed
+both required workflows (36511932734 and 36511933088), including the full
+863-test build, TypeScript, migrations and mobile browser checks. Merged as
+bafe9a7fee67a1ff7ceeb32fa79feab47ad18297. All three production jobs in
+36513271223 passed. No release check was skipped to publish this change.
+
+Nineteen independent HTTP checks confirmed the exact deployed commit, ready
+application/database/schema, open accounts/provider applications and closed
+customer requests/payments. Unsigned and forged-email refund, retry and review
+requests still require Cloudflare owner sign-in. The authenticated live Payments
+screen loaded the accurate empty cancellation queue; Refresh list worked, with
+no captured Tuveloz page errors. No production record or money movement was
+created for verification. Local Chromium/WebKit screenshots were inspected at
+390px; the cancellation selector has readable contrast and the retry confirmation
+does not overflow. The existing unrelated site-language lint warning remains.
+
+Private release evidence: task outputs/pr264-verification-20260929.json,
+pr264-build-check-20260929.json, pr264-production-release-20260929.json,
+pr264-live-release-20260929.json and pr264-owner-ui-verification-20260929.json.
+Do not repeat this release or the two completed Stripe refund rehearsals.
+
+The built-in Gmail connector was identified as the personal account and was not
+used to search mail. The existing signed-in hello@tuveloz.com Chrome inbox was
+used instead; a focused sender/date search found no new insurer/county reply.
+No email was sent. The temporary release-check tab was closed.
+
+Completed: paused status-only recovery, explicit retry of proven-unsent attempts,
+unchanged duplicate/hold safeguards, concrete unknown-result guidance and mobile
+contrast. Still separate: permission to start a refund while paused, a reviewed
+resolution for a genuinely ambiguous absent Stripe result, partial/provider
+recovery, effective policy/customer consent and production processor delivery.
+Live payment/booking/SMS locks and published policies remain unchanged.
+
 ## 2026-09-28 - Refund recovery repair prepared for release
 
 Continued from clean 30c1923 and unchanged main e2112b5, with no other open PR.

@@ -11,6 +11,7 @@ import {
   claimStripeWebhookEvent,
   completeStripeWebhookEvent,
   failStripeWebhookEvent,
+  type StripeWebhookClaim,
 } from "../../../../../lib/stripe-webhook-events";
 
 async function handleAccountUpdated(
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Missing Stripe-Signature header." }, { status: 400 });
   }
 
-  let claimId = "";
+  let processingClaim: StripeWebhookClaim | null = null;
   try {
     const stripeClient = getStripeClient();
     const webhookSecret = getStripeWebhookSecret("STRIPE_CONNECT_WEBHOOK_SECRET");
@@ -64,7 +65,6 @@ export async function POST(request: Request) {
       connectedAccountId: relatedObject?.id ?? "",
       objectId: relatedObject?.id ?? "",
     });
-    claimId = claim.id;
     if (!claim.shouldProcess) {
       if (claim.busy) {
         return Response.json(
@@ -74,6 +74,8 @@ export async function POST(request: Request) {
       }
       return Response.json({ received: true, duplicate: true });
     }
+
+    processingClaim = claim;
 
     // Fetch the complete V2 event through the same Stripe Client. Passing the
     // event context is important for organization or connected-account events.
@@ -102,13 +104,13 @@ export async function POST(request: Request) {
         handled = false;
         break;
     }
-    await completeStripeWebhookEvent(claim.id, handled ? "processed" : "ignored");
+    await completeStripeWebhookEvent(claim, handled ? "processed" : "ignored");
 
     return Response.json({ received: true });
   } catch (error) {
-    if (claimId) {
+    if (processingClaim) {
       try {
-        await failStripeWebhookEvent(claimId);
+        await failStripeWebhookEvent(processingClaim);
       } catch (receiptError) {
         console.error("Unable to mark the Stripe Connect thin webhook attempt failed", receiptError);
       }
