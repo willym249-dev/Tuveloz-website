@@ -1,0 +1,24 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "tuveloz-payment-delivery-rehearsal",
+  "main": "payment-delivery.ts",
+  "compatibility_date": "2026-07-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "tuveloz-payment-delivery-rehearsal-db",
+    "database_id": "REPLACE_WITH_NEW_REHEARSAL_DATABASE_ID"
+  }],
+  "vars": {
+    "APP_ENVIRONMENT": "stripe_delivery_rehearsal",
+    "REHEARSAL_ENABLED": "false",
+    "REHEARSAL_STARTS_AT": "",
+    "REHEARSAL_EXPIRES_AT": "",
+    "REHEARSAL_EVENT_ID": "",
+    "REHEARSAL_SESSION_ID": "",
+    "REHEARSAL_ACCOUNT_CONTEXT": "",
+    "STRIPE_ALLOW_LIVE_MODE": "false"
+  }
+}

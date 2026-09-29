@@ -47,6 +47,8 @@ next-env.d.ts
 /.wrangler/
 /.wrangler-staging.generated.json
 /outputs/
+/rehearsal-worker/outputs/
+/rehearsal-worker/wrangler.generated.jsonc
 /work/
 *.tsbuildinfo
 

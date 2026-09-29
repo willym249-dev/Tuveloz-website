@@ -58,9 +58,43 @@ stripe-payment-destination-prepared-20260929.json,
 stripe-payment-connection-verification-20260929.json and
 stripe-payment-connection-active-20260929.png.
 
+A fresh September 29 Stripe inspection still shows no payment deliveries.
+The owner-approved [isolated hosted sandbox test](../operations/stripe-hosted-delivery-rehearsal.md)
+is now **complete**: two actual Stripe deliveries returned 200, the second
+acknowledged the duplicate, and separate D1 stored one processed receipt with
+attempt_count=1. Forged/missing signatures were rejected. Temporary key,
+destination, Worker and receipt database were removed after verification;
+production and private staging were preserved. This proves hosted sandbox
+transport, not production delivery or live settlement. Do not repeat this
+completed test, the refund rehearsals or PR #267 without a new relevant change.
+
 ## Verified in production
 
-- Latest verified production release: PR #266,
+**Local work awaiting publication, September 29:** checkout exact-record repair
+includes the existing labor-only checkbox sentence in the shared displayed,
+downloaded and hashed text, and separates policy-reference links from the label.
+New presentations use `checkout:4`; older stored records are not rewritten.
+Literal provider details and English evidence remain outside translation.
+Long metadata now wraps beneath full-width labels instead of squeezing labels
+and clipping values on phones; itemized prices retain their compact columns.
+Production build, 881 tests, TypeScript, lint (one existing navigation warning)
+and 32 mobile Chromium/WebKit cases passed. No active legal policy or launch
+switch changed. Full Spanish customer consent is still awaiting its reviewed
+release. Scoped business-inbox review found no new broker/county reply.
+
+- Latest verified production release: PR #267,
+  `676e6199cb18a1b6e044fd2d53eef543dd022eaa`, verified September 29.
+  Stalled checkout requests now stop after twenty seconds and require a fresh
+  status read and consent. Lost or unsuccessful replies also clear the prior
+  authorization; no automatic checkout retry is sent. Late replies cannot
+  redirect. English/Spanish recovery guidance, 28 mobile Chromium/WebKit cases,
+  all 872 tests/build, both required PR workflows and all three production jobs
+  passed. Thirteen independent live checks confirmed the exact healthy release,
+  signup pages, signature protections and closed requests/payments. No real
+  transaction was created. Evidence: pr267-live-release-20260929.json and
+  checkout-recovery-validation-20260929.json. Do not repeat this completed repair.
+
+- Earlier verified production release: PR #266,
   `d61bd13ae6ddbcf71dd754e4dffd1e97f996d58b`, verified September 29 at 06:22:38 UTC.
   All 872 tests/build, both required PR workflows and all three production jobs
   passed. Thirteen independent live HTTP checks verified the exact healthy

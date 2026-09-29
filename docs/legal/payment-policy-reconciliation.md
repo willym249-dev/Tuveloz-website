@@ -2,7 +2,7 @@
 
 - **Status:** draft; full-refund business rule approved September 28; not an effective policy or launch approval
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-28
+- **Last reviewed:** 2026-09-29
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
 
 This is the specific remaining policy work after PR #256, reviewed against
@@ -21,8 +21,20 @@ linked public reserve ceiling, without inventing a normal payout delay. The
 owner-approved seller-compliance acknowledgment is accepted and PR #259's
 provider alert/update-button repair is published as `b20d524`. Actual
 Stripe-originated delivery and provider inbox receipt remain separate evidence.
-The September 28 scoped business-inbox search found no new broker/county reply.
+The September 29 scoped business-inbox search found no new broker/county reply.
 Do not repeat the inquiries, acknowledgment or completed releases.
+
+September 29 local accuracy repair, not yet published: the checkout checkbox's
+existing labor-only sentence was outside the server-generated `presentedText`,
+so the download and hashed immutable evidence omitted that sentence. The local
+repair moves the unchanged sentence into the shared text, moves reference links
+outside the checkbox label, and uses `checkout:4` for new consent records.
+It does not rewrite historical records or change a policy release, active
+policy page, fee, refund decision or launch lock. Current English evidence is
+explicitly identified and kept literal; provider-entered data is not translated.
+The mobile checkbox/download equality checks and both warranty branches pass.
+Full reviewed English/Spanish customer policy adoption remains below; do not
+describe this narrow repair as completion of that separate work.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |

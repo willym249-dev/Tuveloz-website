@@ -10268,6 +10268,18 @@ footer > p,
   margin: 0;
 }
 
+/* Names, scope and warranty text need their full row, unlike money columns. */
+.quote-breakdown .quote-authorization-detail {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.quote-authorization-detail dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .quote-payment-card .button {
   justify-self: start;
 }

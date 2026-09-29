@@ -11,6 +11,129 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #268 dependency audit repaired before publication
+
+The first PR verification stopped at npm's high/critical security audit.
+The existing Cloudflare build-tool chain resolved `undici@7.29.0`. The
+[maintainer advisory](https://github.com/nodejs/undici/security/advisories/GHSA-rfgv-xxqx-mfg5)
+and [7.29.1 release](https://github.com/nodejs/undici/releases/tag/v7.29.1)
+identify the patched 7.x version. Added an exact `undici: 7.29.1` override;
+the lockfile changes only that installed package's version, URL and integrity.
+No audit threshold was weakened or broad Cloudflare/Next.js upgrade made.
+The resulting npm audit reports zero vulnerabilities. Publication still must
+wait for the new commit's required checks and exact deployed verification.
+
+## 2026-09-29 - Exact checkout record repaired locally; no new broker/county reply
+
+No open PR or newer main release was found before starting. The completed
+hosted sandbox test and cleanup remain recorded below. The scoped business
+Gmail search for broker/county replies since September 27 returned no matches;
+no email was sent and the pending inquiries were not repeated.
+
+Found a concrete mismatch in the closed customer checkout: its checkbox
+included the labor-only sentence outside `presentedText`, while the download
+and immutable evidence saved only `presentedText`. A new browser regression
+failed on the extra, unrecorded checkbox text before the repair. Moved the
+unchanged sentence into the server-generated text and the policy-reference
+links outside the checkbox label. New acceptance keys use `checkout:4`, so
+version 3 records are not overwritten or relabeled. Existing server comparison
+rejects stale versions/hashes. English consent and literal provider values are
+excluded from interface/browser translation. This does not adopt the proposed
+merchant/refund wording or complete reviewed Spanish customer consent.
+
+The subsequent visual phone check caught a second defect: the amount-style
+two-column layout squeezed metadata labels to a few pixels while long names,
+identifiers and warranty values overflowed their row. Long-text authorization
+details now use full-width labels and wrapping values; prices retain their
+compact columns. A regression failed before the CSS repair and now checks
+readable label width and unclipped values on both mobile browser engines.
+
+Validation: production build passed; all 881 tests passed after updating the
+existing labor-only source assertion to its new shared location. Both warranty
+branches, exact saved text/hash, changed provider/price hashes, checkbox label
+and download equality, unchecked consent after downloads/language changes,
+late-response recovery and unchanged launch locks are covered. All 32 mobile
+Chromium/WebKit cases passed. TypeScript passed; lint passes with the existing
+site-language navigation warning. Lint now ignores the disposable bundled
+output from the completed isolated rehearsal, without excluding its source.
+The first broad test attempt hit sandbox esbuild filesystem restrictions;
+normal-permission rerun resolved them. No dependency upgrade, external API
+transaction, active policy release or live-site change was made.
+
+Status at preparation: local and tested. Proceeding under the owner's existing
+authorization to publish fixes; publication and deployed verification must be
+recorded separately when completed. Preserve the prior local rehearsal/helper
+commits and all launch locks, and distinguish this accuracy fix from the
+still-pending customer policy release.
+Evidence is in local `outputs/checkout-consent-final-tests-20260929.log`,
+`outputs/checkout-consent-browser-tests-20260929.log`, and the synthetic
+`outputs/checkout-consent-{chromium,webkit}.png` screenshots. Earlier failing
+regressions are diagnostic history, not unresolved launch defects.
+
+## 2026-09-29 - Hosted sandbox Stripe delivery and duplicate handling verified; cleanup complete
+
+The live payment destination still shows no event deliveries. Its setup and
+the two prior local sandbox refund rehearsals remain complete; do not repeat
+them. Private staging's owner-token gate correctly prevents direct Stripe
+callbacks and was not changed.
+
+After specific owner approval, deployed the separate guarded Worker and new
+receipt-only D1, with an Events Read-only sandbox key and separate signing
+secret. Created one unpaid sandbox checkout without customer/payment metadata
+and expired it without opening Checkout or paying. Stripe's real deliveries at
+22:21:03 and 22:21:25 UTC both returned 200; the second returned `duplicate:true`.
+D1 retained one processed test-mode receipt, attempt_count=1, with unchanged
+processed_at. The unchanged real payment route handled both deliveries.
+
+Missing/forged hosted signatures returned 400 without a receipt. Six focused
+tests, TypeScript, targeted lint, Wrangler build and a real local Cloudflare/D1
+runtime check passed. The helper allows only the selected event/session and
+platform context within its fixed one-hour window. No production code or
+configuration, private staging, launch locks, or payment records changed.
+
+Cleanup completed: disabled receiver confirmed 404; temporary Stripe key
+revoked and destination deleted; Worker and receipt-only D1 removed; synthetic
+inline price confirmed inactive. Stripe's immutable ad-hoc product remains
+with the expired unpaid session/event as sandbox audit history. Original
+databases/Workers and Stripe destinations remain. Wrangler's Worker delete reported a later missing
+KV scope; independent Cloudflare UI confirmed the Worker was already gone.
+No broader access or paid upgrade was added. Private proof:
+task outputs/stripe-hosted-delivery-result-20260929.json
+and the matching delivery/receipt/cleanup screenshots.
+
+This closes the isolated **hosted sandbox transport** gap. Production-hostname
+delivery with production secrets, live transactions/settlement and actual
+provider/launch decisions remain separate; do not call this a live-payment pass.
+Follow the indexed [rehearsal runbook](operations/stripe-hosted-delivery-rehearsal.md).
+
+## 2026-09-29 - Checkout recovery published and independently verified
+
+PR #267's tested head 9a310f7a0dc77f33d3077dcc01968e003fd7b951 passed both
+required workflows 36538538486 and 36538538944. It merged as
+676e6199cb18a1b6e044fd2d53eef543dd022eaa. All three jobs in production workflow
+36539973097 passed, including the complete provider signup and 872-test build.
+Thirteen independent live HTTP checks confirmed the exact healthy release,
+English/Spanish signup pages, missing/forged Stripe signature rejection and
+preserved onboarding-only controls. Accounts and provider applications remain
+open; requests and payments remain closed. The stalled/lost-response recovery
+has 28 actual mobile Chromium/WebKit scenario results using isolated responses;
+no real checkout, charge, refund, provider record or valid callback was created.
+
+Evidence: task outputs/pr267-verification-20260929.json,
+pr267-build-check-20260929.json, pr267-production-release-20260929.json,
+pr267-live-release-20260929.json and checkout-recovery-validation-20260929.json.
+This repair is complete; do not repeat its tests, merge or deployment without
+a new change or failure. The Stripe destination and secret installation remain
+complete; actual Stripe-originated production delivery is still unproven.
+
+The existing staging Worker requires owner verification for every request,
+including webhook endpoints (worker/index.ts). A future hosted sandbox test
+needs a separately reviewed receiver or forwarding design with isolated data;
+do not disable owner protection or replace the live signing secret. The completed
+local sandbox refund remains valid within its recorded scope. Private boundary
+record: stripe-hosted-verification-boundary-20260929.json. Other remaining launch
+decisions and the owner's last-step provider application are unchanged.
+
 ## 2026-09-29 - Stalled checkout recovery prepared and tested
 
 No open PRs or competing repair existed before this work. Reproduced two failures
