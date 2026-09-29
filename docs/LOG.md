@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #268 published and independently verified
+
+PR #268 merged tested head `68d99f6` as
+`3748f7a5f6a72d29859ef51cd586c38410a7e570`. Both PR workflows passed, and all
+three production jobs in run `36643894475` completed successfully. The release
+includes complete existing checkout consent text, readable mobile metadata,
+the narrow undici 7.29.1 security patch, and the preserved completed hosted
+sandbox rehearsal helper/record. Full build and 881 tests passed; 32 mobile
+Chromium/WebKit checkout cases passed, including new label/download equality
+and clipping checks. npm audit reported zero vulnerabilities. Existing lint
+navigation warning is unchanged; TypeScript passed.
+
+Independent live verification at `2026-09-29T23:29:48.201Z` passed thirteen HTTP
+checks: exact release, healthy application/database/schema, English/Spanish
+public and account route shells, the published wrapping CSS, private API
+authentication, closed checkout and unsigned/forged Stripe callback rejection.
+Accounts and provider applications remain open; customer requests/payments
+remain closed. No real account, quote, provider decision or payment was created.
+Public browser confirmation is retained with the proof. Local evidence:
+`outputs/checkout-consent-final-tests-20260929.log` and
+`outputs/checkout-consent-browser-tests-20260929.log` in the repository;
+`pr268-live-release-20260929.json` and `pr268-live-status-20260929.png` in the
+task output directory.
+
+Complete: do not repeat PR #268, its security patch, or the completed hosted
+sandbox/refund rehearsals. The closed checkout's behavior is proved through
+isolated local/CI browser and evidence tests; this release is not a live charge,
+provider settlement, full Spanish customer policy adoption or launch approval.
+No new broker/county reply was found in this turn's scoped business-inbox check.
+Keep the genuine owner-provider application last.
+
 ## 2026-09-29 - PR #268 dependency audit repaired before publication
 
 The first PR verification stopped at npm's high/critical security audit.

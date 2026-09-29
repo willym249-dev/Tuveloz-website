@@ -24,9 +24,9 @@ Stripe-originated delivery and provider inbox receipt remain separate evidence.
 The September 29 scoped business-inbox search found no new broker/county reply.
 Do not repeat the inquiries, acknowledgment or completed releases.
 
-September 29 local accuracy repair, not yet published: the checkout checkbox's
+September 29 accuracy repair, published and verified in PR #268: the checkout checkbox's
 existing labor-only sentence was outside the server-generated `presentedText`,
-so the download and hashed immutable evidence omitted that sentence. The local
+so the download and hashed immutable evidence omitted that sentence. The
 repair moves the unchanged sentence into the shared text, moves reference links
 outside the checkbox label, and uses `checkout:4` for new consent records.
 It does not rewrite historical records or change a policy release, active
