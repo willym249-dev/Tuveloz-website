@@ -39,7 +39,10 @@ business Gmail activation and its completed mailbox tests stay complete.
 
 September 29 scoped continuation: after the refund-only booking-pause proposal,
 the owner instructed "continue." The separate refund action is implemented and
-tested locally; publication is pending. The exact boundary and isolated proof
+tested in PR #270 (`90d6879`); both required workflows passed. Automatic approval
+review blocked the merge pending explicit approval of this exact behavior and
+deployment. That question is pending; the site still runs PR #269. Do not repeat
+the completed tests or claim publication. The exact boundary and isolated proof
 are in `legal/payment-policy-reconciliation.md` under "Booking pause and existing
 full refunds." Do not repeat the settled refund-amount question or treat this
 exception as permission to bypass onboarding mode, readiness review, Stripe

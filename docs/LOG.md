@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #270 ready; merge blocked pending explicit owner approval
+
+PR #270 is OPEN and CLEAN at tested head
+`90d6879e45bcdf21560be2d4305e3143eddd4385`. Both corrected-head workflows
+completed successfully: Verify Tuveloz `36664679771` (account signup and full
+verification) and Deploy Tuveloz PR rehearsal `36664679936`. Local production
+build/all 888 tests and lint passed after the three dependency patches; npm
+audit reports zero vulnerabilities. TypeScript and both mobile refund browser
+checks also passed. The initial failed security run is retained, not bypassed.
+
+Automatic approval review rejected the merge command before execution. It
+requires explicit owner approval for this exact booking-pause refund behavior
+and production deployment; the owner's preceding "continue" was insufficient
+for that action. The specific question is now pending: "May I merge and deploy
+PR #270?" Do not retry through another tool or change the tested head merely to
+restart checks. No merge or production deployment occurred. PR #269 / `e2a8466`
+remains the latest verified production release; current launch/payment locks
+remain closed. Do not claim PR #270 is published.
+
+Once explicitly approved, recheck the PR's exact head and required successful
+workflows, merge with `--match-head-commit`, monitor the production workflow,
+then independently verify the resulting merge commit. The prepared private
+script `verify-pr270-release-20260929.mjs` checks fourteen live HTTP outcomes,
+including default-closed checkout and protected refund/payout routes, without
+creating a real transaction. It has not run against a new release yet.
+Keep this handoff commit local until the next real code release, rather than
+pushing it now and invalidating the already-tested PR head.
+
 ## 2026-09-29 - PR #270 security gate caught newly reported dependency advisories
 
 The first Verify Tuveloz run (`36664273111`) failed the required npm security

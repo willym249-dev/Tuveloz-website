@@ -351,7 +351,10 @@ even when the job was already paid. Existing status-only recovery is separate.
 After the narrow recommendation and its preserved safeguards were presented,
 the owner instructed "continue." This accepts the described booking-pause
 change; it does not reopen the settled refund amount decision or authorize a
-real transaction. The implementation is tested locally, not yet deployed.
+real transaction. PR #270 (`90d6879`) passes local and both required GitHub
+workflows, but automatic approval review requires explicit approval of this
+exact behavior and deployment before merging. That question is pending. The
+implementation is not deployed and no existing policy has been adopted.
 
 The narrow change is a separate `refund` action used only by
 `stripe-refund-review.ts` and `stripe-full-refund.ts`. It omits the booking
@@ -374,7 +377,8 @@ They cover missing and revoked readiness, repeated approval/pre-submission
 checks, unchanged booking and payout denial, current onboarding locks and
 existing refund safety cases. The strengthened route tests fail with the old
 payout coupling. All 888 tests and production build, TypeScript and both mobile
-refund browser engines pass. Required publication checks remain separate.
+refund browser engines pass. The corrected-head PR workflows also pass; merge,
+production deployment and independent live verification remain pending.
 The completed real Stripe sandbox rehearsals need not be repeated for this
 gate-only change. Refund/cancellation notification prefixes are already
 protective in `email-event-policy.ts`; no email-policy expansion is needed.
