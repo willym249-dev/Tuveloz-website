@@ -8,6 +8,7 @@ import test from "node:test";
 import { build } from "esbuild";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
+import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue } from "../lib/stripe-refund-response.ts";
 
 // Real owner JWT verification, route, migrated database and Stripe SDK. Only
 // network responses, Cloudflare bindings and the FUTURE release gate are fixtures.
@@ -178,12 +179,16 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
     });
     await t.test("real queue hides simulations and approval saves the exact full amount without a Stripe call", async () => {
       pendingReview(); assert.equal((await reviewCall({ query: "" })).body.cases.length, 1);
+      assert.equal(isRefundReviewQueue((await reviewCall({ query: "" })).body), true);
+      assert.equal(isRefundReview((await reviewCall()).body, "cancellation-synthetic"), true);
       database.exec("UPDATE customer_requests SET is_test_job='yes'");
       assert.equal((await reviewCall({ query: "" })).body.cases.length, 0); assert.equal((await reviewCall()).status, 404);
       database.exec("UPDATE customer_requests SET is_test_job='no'; UPDATE provider_applications SET is_test_provider='yes'");
       assert.equal((await reviewCall({ query: "" })).body.cases.length, 0); assert.equal((await reviewCall()).status, 404);
       pendingReview(); const body = await approveBody(); const saved = await reviewCall({ method: "POST", body });
       assert.equal(saved.status, 200, JSON.stringify(saved.body)); assert.equal(saved.body.refundSent, false);
+      assert.equal(isRefundApprovalConfirmation(saved.body), true);
+      assert.equal(isRefundReview((await reviewCall()).body, "cancellation-synthetic"), true);
       const decision = database.prepare("SELECT * FROM payment_adjustments").get();
       assert.equal(decision.amount_cents, 10500); assert.equal(decision.provider_impact_cents, -10000); assert.equal(decision.customer_impact_cents, 10500);
       assert.equal(JSON.parse(decision.details).paymentSnapshot.customerFeeRefundCents, 500);

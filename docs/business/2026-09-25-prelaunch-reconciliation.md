@@ -70,7 +70,7 @@ completed test, the refund rehearsals or PR #267 without a new relevant change.
 
 ## Verified in production
 
-**Local work awaiting publication, September 29:** checkout exact-record repair
+**Published in PR #268, September 29:** checkout exact-record repair
 includes the existing labor-only checkbox sentence in the shared displayed,
 downloaded and hashed text, and separates policy-reference links from the label.
 New presentations use `checkout:4`; older stored records are not rewritten.
@@ -78,11 +78,16 @@ Literal provider details and English evidence remain outside translation.
 Long metadata now wraps beneath full-width labels instead of squeezing labels
 and clipping values on phones; itemized prices retain their compact columns.
 Production build, 881 tests, TypeScript, lint (one existing navigation warning)
-and 32 mobile Chromium/WebKit cases passed. No active legal policy or launch
-switch changed. Full Spanish customer consent is still awaiting its reviewed
-release. Scoped business-inbox review found no new broker/county reply.
+and 32 mobile Chromium/WebKit cases passed. All PR/production checks and thirteen
+independent live checks passed for `3748f7a` at 23:29:48 UTC. The narrow undici
+7.29.1 patch clears the npm audit without changing other package versions.
+No active legal policy or launch switch changed. Full Spanish customer consent
+is still awaiting its reviewed release. Scoped business-inbox review found no
+new broker/county reply. Do not repeat the completed release.
 
-- Latest verified production release: PR #267,
+- Latest verified production release: PR #268,
+  `3748f7a5f6a72d29859ef51cd586c38410a7e570`, verified September 29; details above.
+- Prior verified production release: PR #267,
   `676e6199cb18a1b6e044fd2d53eef543dd022eaa`, verified September 29.
   Stalled checkout requests now stop after twenty seconds and require a fresh
   status read and consent. Lost or unsuccessful replies also clear the prior
