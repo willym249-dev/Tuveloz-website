@@ -2,7 +2,7 @@
 
 - **Status:** draft; full-refund business rule approved September 28; not an effective policy or launch approval
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-29
+- **Last reviewed:** 2026-09-30
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
 
 This is the specific remaining policy work after PR #256, reviewed against
@@ -351,10 +351,10 @@ even when the job was already paid. Existing status-only recovery is separate.
 After the narrow recommendation and its preserved safeguards were presented,
 the owner instructed "continue." This accepts the described booking-pause
 change; it does not reopen the settled refund amount decision or authorize a
-real transaction. PR #270 (`90d6879`) passes local and both required GitHub
-workflows, but automatic approval review requires explicit approval of this
-exact behavior and deployment before merging. That question is pending. The
-implementation is not deployed and no existing policy has been adopted.
+real transaction. After the owner answered the specific PR #270 merge/deploy
+request, automatic approval review accepted the action. PR #270 (`90d6879`)
+is published as `c44c1ff` and independently verified September 30. Do not repeat
+the completed approval or release. No existing policy has been adopted.
 
 The narrow change is a separate `refund` action used only by
 `stripe-refund-review.ts` and `stripe-full-refund.ts`. It omits the booking
@@ -377,8 +377,10 @@ They cover missing and revoked readiness, repeated approval/pre-submission
 checks, unchanged booking and payout denial, current onboarding locks and
 existing refund safety cases. The strengthened route tests fail with the old
 payout coupling. All 888 tests and production build, TypeScript and both mobile
-refund browser engines pass. The corrected-head PR workflows also pass; merge,
-production deployment and independent live verification remain pending.
+refund browser engines pass. Both corrected-head PR workflows and all three
+production jobs passed. Fourteen live checks confirm the exact healthy release,
+protected refund/payout routes and unchanged closed checkout. No real refund
+was created to prove the future booking-pause behavior.
 The completed real Stripe sandbox rehearsals need not be repeated for this
 gate-only change. Refund/cancellation notification prefixes are already
 protective in `email-event-policy.ts`; no email-policy expansion is needed.

@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-29
+- **Last reviewed:** 2026-09-30
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,48 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-30 - PR #270 published and independently verified
+
+PR #270's tested head `90d6879` merged as
+`c44c1ffda6e59dd038a4b0959b535442b629adb7`. Both required PR workflows
+(`36664679771`, `36664679936`) and all three production jobs in
+`36666328492` passed. This publishes the scoped full-refund booking-pause
+exception and three compatible dependency patch updates described below.
+Production build/all 888 tests, TypeScript, mobile Chromium/WebKit refund
+workflows and the full release checks passed. Lint retains only the existing
+language-navigation warning; the patched dependency audit reports zero findings.
+
+Fourteen independent live HTTP checks passed at
+`2026-09-30T04:10:31.663Z` (12:10 a.m. Maryland time). They confirm the exact
+deployed commit, ready application/database/schema, English/Spanish homepages
+and both account-signup pages, protected refund/payout and private participant routes, and
+default-closed checkout. No real approval, refund, payout, customer submission
+or email was created. Future live-mode refunds during a booking pause have
+isolated real-gate route/SQL/Stripe proof, not a real-money transaction.
+
+Private task outputs: `pr270-production-release-20260930.json` and
+`pr270-live-release-20260929.json` (the latter retains its preparation-date name;
+the recorded verification timestamp is September 30). This publication is
+complete: do not repeat approval, tests, merge or deployment without a new
+relevant change. Current onboarding, customer-pause, Stripe-live and SMS-live
+locks remain unchanged. Remaining work includes policy adoption, exact
+bilingual customer consent, partial/provider recovery and real launch evidence;
+the owner's genuine provider application stays last.
+
+## 2026-09-29 - PR #270 approved merge completed; production verification running
+
+The owner directly replied "contniue" to the specific "May I merge and deploy
+PR #270?" request, which described the refund-only exception, dependency patches
+and unchanged current payment locks. With that new response, the standard
+automatic approval review accepted the same merge action. The unchanged tested
+head `90d6879` and both successful required workflows were rechecked first.
+PR #270 merged as `c44c1ffda6e59dd038a4b0959b535442b629adb7` at
+`2026-09-30T03:52:09Z` (September 29 Maryland time). Production workflow
+`36666328492` is running its mandatory verification before deployment.
+Do not ask for the settled merge approval again. Publication/live verification
+is not yet confirmed. The one unpublished handoff commit was safely replayed
+onto merged main; it was not pushed and did not trigger another release.
 
 ## 2026-09-29 - PR #270 ready; merge blocked pending explicit owner approval
 

@@ -4,7 +4,7 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
-- **Last reconciled:** 2026-09-29
+- **Last reconciled:** 2026-09-30
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
@@ -24,7 +24,7 @@ Code checks cannot approve those gates.
 
 | Work group | What is complete | What still closes the group |
 | --- | --- | --- |
-| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, and PR #264 recovery repair are verified. | Finish reviewed policy adoption and exact English/Spanish customer consent; resolve partial/provider recovery and starting new refunds during pauses; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair and PR #270's scoped booking-pause refund exception are verified. | Finish reviewed policy adoption and exact English/Spanish customer consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
 | Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
 | Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
 | Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |
@@ -37,16 +37,14 @@ and optional DNS hardening remain maintenance or separately reviewed work.
 The still-unset launch-update email postal footer is a distinct delivery setting;
 business Gmail activation and its completed mailbox tests stay complete.
 
-September 29 scoped continuation: after the refund-only booking-pause proposal,
-the owner instructed "continue." The separate refund action is implemented and
-tested in PR #270 (`90d6879`); both required workflows passed. Automatic approval
-review blocked the merge pending explicit approval of this exact behavior and
-deployment. That question is pending; the site still runs PR #269. Do not repeat
-the completed tests or claim publication. The exact boundary and isolated proof
-are in `legal/payment-policy-reconciliation.md` under "Booking pause and existing
-full refunds." Do not repeat the settled refund-amount question or treat this
-exception as permission to bypass onboarding mode, readiness review, Stripe
-live-key locks or an individual refund's owner confirmation and eligibility.
+The owner answered the specific PR #270 merge/deploy request, and automatic
+approval review accepted the action. The separate refund action is now published
+and independently verified as `c44c1ff` on September 30. The exact boundary and
+isolated proof are in `legal/payment-policy-reconciliation.md` under "Booking
+pause and existing full refunds." Do not repeat this approval, the completed
+release or the settled refund-amount question. This exception does not bypass
+onboarding mode, readiness review, Stripe live-key locks or an individual
+refund's owner confirmation and eligibility.
 
 The September 28 Stripe Dashboard inspection found the payout-safety destination
 Active but **zero deliveries in its displayed This week history**. Its zero error
@@ -81,6 +79,16 @@ completed test, the refund rehearsals or PR #267 without a new relevant change.
 
 ## Verified in production
 
+**Published in PR #270, September 30:** reviewed full refunds have a separate
+booking-pause action while transactions/provider payouts remain pause-blocked.
+Current onboarding/live-payment locks and every existing refund safeguard stay
+in place. Three compatible development-dependency patches clear the new audit
+findings. All 888 tests/build, TypeScript, both mobile refund engines, both PR
+workflows and all production jobs passed. Fourteen independent live HTTP checks
+confirmed exact release `c44c1ff`, healthy application/database/schema, account
+pages, protected refund/payout routes and closed checkout at 04:10:31 UTC.
+No real transaction or active policy changed. Complete; do not repeat.
+
 **Published in PR #269, September 29:** incomplete refund-list and nested review
 replies now preserve the last good screen and show recovery guidance. Approval
 success requires a valid acknowledgment and matching saved decision; failures
@@ -108,7 +116,9 @@ No active legal policy or launch switch changed. Full Spanish customer consent
 is still awaiting its reviewed release. Scoped business-inbox review found no
 new broker/county reply. Do not repeat the completed release.
 
-- Latest verified production release: PR #269,
+- Latest verified production release: PR #270,
+  `c44c1ffda6e59dd038a4b0959b535442b629adb7`, verified September 30 Maryland time.
+- Prior verified production release: PR #269,
   `e2a84661a0ab717e53f79e258606371be15d806b`, verified September 29 Maryland time.
 - Prior verified production release: PR #268,
   `3748f7a5f6a72d29859ef51cd586c38410a7e570`, verified September 29; details above.
