@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-29
+- **Last reviewed:** 2026-09-30
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,107 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-09-30 - Checkout language boundary tested; collection timing confirmed
+
+The owner explicitly chose payment at checkout, with provider transfer after
+completion checks. That choice and the earlier full-refund amount are settled;
+do not ask again. Updated the existing payment-policy reconciliation draft.
+No active policy, hash, reviewer decision, charge strategy or launch lock changed.
+
+Found a distinct consent gap: POST used `language` for Stripe labels while exact
+authorization remained English, and readiness GET did not request a language.
+The local fix requires explicit language, denies unavailable Spanish consent,
+rejects missing/mismatched browser responses, and records English in both the
+new `checkout:5|lang:en` immutable version and hashed evidence. Older records
+stay untouched. Existing authorized payment status remains readable. Provider
+translations are unchanged. This is a boundary repair, not completed Spanish
+customer consent or policy adoption.
+
+All 894 tests and the production build passed, including six behavioral route
+tests with synthetic records: invalid/unavailable languages, current English,
+old/tampered consent, launch lock and authorized status access. All 36 mobile
+Chromium/WebKit scenarios passed, including wrong-language responses, the
+Spanish explanation, fresh acceptance on switching back, literal text/download
+equality and existing timeout/recovery controls. TypeScript passed. Lint has
+only the existing `site-language.tsx:144` warning. Private ignored logs are
+`outputs/checkout-language-{tests,browser,typecheck,lint}-20260930.log`.
+
+The signed-in business Gmail search
+`after:2026/09/27 {from:foundershield.com from:montgomerycountymd.gov}` showed
+no matching messages. No inquiry was resent. No real payment, participant
+record, external message, account setting, paid service or deployment changed.
+This work is local and not yet published; preserve completed PR #270.
+
+## 2026-09-30 - PR #270 published and independently verified
+
+PR #270's tested head `90d6879` merged as
+`c44c1ffda6e59dd038a4b0959b535442b629adb7`. Both required PR workflows
+(`36664679771`, `36664679936`) and all three production jobs in
+`36666328492` passed. This publishes the scoped full-refund booking-pause
+exception and three compatible dependency patch updates described below.
+Production build/all 888 tests, TypeScript, mobile Chromium/WebKit refund
+workflows and the full release checks passed. Lint retains only the existing
+language-navigation warning; the patched dependency audit reports zero findings.
+
+Fourteen independent live HTTP checks passed at
+`2026-09-30T04:10:31.663Z` (12:10 a.m. Maryland time). They confirm the exact
+deployed commit, ready application/database/schema, English/Spanish homepages
+and both account-signup pages, protected refund/payout and private participant routes, and
+default-closed checkout. No real approval, refund, payout, customer submission
+or email was created. Future live-mode refunds during a booking pause have
+isolated real-gate route/SQL/Stripe proof, not a real-money transaction.
+
+Private task outputs: `pr270-production-release-20260930.json` and
+`pr270-live-release-20260929.json` (the latter retains its preparation-date name;
+the recorded verification timestamp is September 30). This publication is
+complete: do not repeat approval, tests, merge or deployment without a new
+relevant change. Current onboarding, customer-pause, Stripe-live and SMS-live
+locks remain unchanged. Remaining work includes policy adoption, exact
+bilingual customer consent, partial/provider recovery and real launch evidence;
+the owner's genuine provider application stays last.
+
+## 2026-09-29 - PR #270 approved merge completed; production verification running
+
+The owner directly replied "contniue" to the specific "May I merge and deploy
+PR #270?" request, which described the refund-only exception, dependency patches
+and unchanged current payment locks. With that new response, the standard
+automatic approval review accepted the same merge action. The unchanged tested
+head `90d6879` and both successful required workflows were rechecked first.
+PR #270 merged as `c44c1ffda6e59dd038a4b0959b535442b629adb7` at
+`2026-09-30T03:52:09Z` (September 29 Maryland time). Production workflow
+`36666328492` is running its mandatory verification before deployment.
+Do not ask for the settled merge approval again. Publication/live verification
+is not yet confirmed. The one unpublished handoff commit was safely replayed
+onto merged main; it was not pushed and did not trigger another release.
+
+## 2026-09-29 - PR #270 ready; merge blocked pending explicit owner approval
+
+PR #270 is OPEN and CLEAN at tested head
+`90d6879e45bcdf21560be2d4305e3143eddd4385`. Both corrected-head workflows
+completed successfully: Verify Tuveloz `36664679771` (account signup and full
+verification) and Deploy Tuveloz PR rehearsal `36664679936`. Local production
+build/all 888 tests and lint passed after the three dependency patches; npm
+audit reports zero vulnerabilities. TypeScript and both mobile refund browser
+checks also passed. The initial failed security run is retained, not bypassed.
+
+Automatic approval review rejected the merge command before execution. It
+requires explicit owner approval for this exact booking-pause refund behavior
+and production deployment; the owner's preceding "continue" was insufficient
+for that action. The specific question is now pending: "May I merge and deploy
+PR #270?" Do not retry through another tool or change the tested head merely to
+restart checks. No merge or production deployment occurred. PR #269 / `e2a8466`
+remains the latest verified production release; current launch/payment locks
+remain closed. Do not claim PR #270 is published.
+
+Once explicitly approved, recheck the PR's exact head and required successful
+workflows, merge with `--match-head-commit`, monitor the production workflow,
+then independently verify the resulting merge commit. The prepared private
+script `verify-pr270-release-20260929.mjs` checks fourteen live HTTP outcomes,
+including default-closed checkout and protected refund/payout routes, without
+creating a real transaction. It has not run against a new release yet.
+Keep this handoff commit local until the next real code release, rather than
+pushing it now and invalidating the already-tested PR head.
 
 ## 2026-09-29 - PR #270 security gate caught newly reported dependency advisories
 

@@ -55,7 +55,7 @@ test("customer-specific checkout readiness responses are private and never cache
   );
   assert.equal(
     (readinessBranch.match(/headers: PRIVATE_NO_STORE_HEADERS/g) ?? []).length,
-    6,
+    7,
   );
 });
 

@@ -35,6 +35,7 @@ const server = createServer((request, response) => {
 await new Promise(done => server.listen(0, "127.0.0.1", done));
 const origin = `http://127.0.0.1:${server.address().port}`;
 const acceptance = (scopeVersion = 1, overrides = {}) => ({
+  language: "en",
   agreementKey: "synthetic-authorization", agreementVersion: "synthetic:1",
   agreementHash: `synthetic-hash-${scopeVersion}`, presentedText: `SYNTHETIC consent for scope ${scopeVersion}.`,
   cancellationRefundSummary: "SYNTHETIC refund summary; not an actual agreement.",
@@ -128,11 +129,13 @@ try {
           await page.getByRole("button", { name: button, exact: true }).click();
           await card(page).getByText("Checking Stripe payment readiness…").waitFor();
           assert.equal(await consent(page).count(), 0);
-          await next(index + 1, ready(record)); await settled(page);
+          await next(index + 1, ready({ ...record, language: index === 2 ? "es" : "en" })); await settled(page);
           assert.equal(await consent(page).isChecked(), false); assert.equal(await pay(page).isDisabled(), true);
           await consent(page).check();
         }
         assert.equal(requests[2].headers["x-tuveloz-request-token"], "synthetic-token-b");
+        assert.equal(new URL(requests[0].url).searchParams.get("language"), "en");
+        assert.equal(new URL(requests[3].url).searchParams.get("language"), "es");
         await pay(page).click(); await next(4, { error: "Synthetic stop before Stripe" }, 503);
         await page.getByRole("alert").waitFor();
         assert.equal(requests[4].body.language, "es"); assert.equal(requests[4].body.token, "synthetic-token-b");
@@ -155,6 +158,38 @@ try {
         await next(1, ready()); await settled(page);
         assert.equal(await page.getByRole("alert").count(), 0);
         assert.equal(await consent(page).isChecked(), false);
+      });
+
+      await run("missing-or-mismatched-language-never-enables-payment", async ({ page, next, requests }) => {
+        await next(0, ready({ ...acceptance(), language: undefined }));
+        await page.getByRole("alert").filter({ hasText: "payment agreement in English" }).waitFor();
+        assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+        await page.getByRole("button", { name: "Check quote again", exact: true }).click();
+        await next(1, ready({ ...acceptance(), language: "es" }));
+        await page.getByRole("alert").filter({ hasText: "payment agreement in English" }).waitFor();
+        assert.equal(await consent(page).count(), 0);
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(2, ready());
+        await page.getByRole("alert").filter({ hasText: "acuerdo de pago en español" }).waitFor();
+        assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+        assert.equal(await card(page).getByRole("button", { name: "Download this exact authorization" }).count(), 0);
+        assert.equal(requests.filter(request => request.method === "POST").length, 0);
+      });
+
+      await run("unavailable-spanish-agreement-clears-consent-with-a-readable-explanation", async ({ page, next, requests }) => {
+        await next(0, ready()); await settled(page); await consent(page).check();
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(1, { checkoutAllowed: false, checkoutAcceptance: null, payment: null,
+          code: "CHECKOUT_LANGUAGE_UNAVAILABLE",
+          reason: "El pago en español aún no está disponible. Si necesitas ayuda, escribe a hello@tuveloz.com." });
+        await settled(page);
+        await card(page).getByRole("status").filter({ hasText: "El pago en español aún no está disponible." }).waitFor();
+        assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+        assert.equal(new URL(requests[1].url).searchParams.get("language"), "es");
+        assert.equal(requests.filter(request => request.method === "POST").length, 0);
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(2, ready()); await settled(page);
+        assert.equal(await consent(page).isChecked(), false); assert.equal(await pay(page).isDisabled(), true);
       });
 
       await run("stalled-readiness-times-out-and-recovers", async ({ page, next, waitForRequest }) => {
@@ -206,14 +241,14 @@ try {
       await run("stalled-checkout-shows-spanish-recovery", async ({ page, next, requests, waitForRequest }) => {
         await next(0, ready()); await settled(page);
         await page.getByRole("button", { name: "Change language", exact: true }).click();
-        await next(1, ready()); await settled(page); await consent(page).check();
+        await next(1, ready({ ...acceptance(), language: "es" })); await settled(page); await consent(page).check();
         await page.clock.install(); await pay(page).click(); await waitForRequest(2);
         await page.clock.fastForward(20_001);
         await page.getByRole("alert").filter({ hasText: "No pudimos confirmar si se abrió el pago en Stripe." }).waitFor();
         assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
         assert.equal(requests.filter(request => request.method === "POST").length, 1);
         await page.getByRole("button", { name: "Revisar cotización", exact: true }).click();
-        await next(3, ready()); await settled(page);
+        await next(3, ready({ ...acceptance(), language: "es" })); await settled(page);
         assert.equal(await consent(page).isChecked(), false);
         assert.equal(requests[3].method, "GET");
       });
@@ -279,12 +314,12 @@ try {
         await next(0, ready(record)); await settled(page);
         await consent(page).check();
         await page.getByRole("button", { name: "Change language", exact: true }).click();
-        await next(1, ready(record)); await settled(page);
+        await next(1, ready({ ...record, language: "es" })); await settled(page);
         assert.equal(await page.locator("html").getAttribute("lang"), "es");
         assert.equal(await card(page).locator(".payment-policy-consent").innerText(), literal);
         assert.equal(await card(page).getByRole("checkbox", { name: literal, exact: true }).count(), 1);
         assert.equal(await card(page).locator("dd").filter({ hasText: literal }).count(), 2);
-        assert.equal(await card(page).locator(".payment-policy-consent span").getAttribute("lang"), "en");
+        assert.equal(await card(page).locator(".payment-policy-consent span").getAttribute("lang"), "es");
         assert.equal(await consent(page).isChecked(), false);
       });
 

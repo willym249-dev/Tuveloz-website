@@ -21,6 +21,7 @@ import { isLaborOnlyPartsSource } from "../../../../lib/service-matching";
 import {
   CUSTOMER_CHECKOUT_AGREEMENT_KEY,
   CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+  CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE,
   CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
   customerCheckoutAcceptanceText,
   customerCheckoutAgreementEvidenceText,
@@ -65,6 +66,22 @@ import { verifiedProviderLegalIdentity } from "../../../../lib/provider-legal-id
 
 const PRIVATE_NO_STORE_HEADERS = { "cache-control": "private, no-store" };
 const REQUEST_ACCESS_TOKEN_HEADER = "x-tuveloz-request-token";
+
+function checkoutLanguageProblem(language: unknown) {
+  if (language !== "en" && language !== "es") {
+    return {
+      code: "CHECKOUT_LANGUAGE_REQUIRED",
+      error: "Choose English or Spanish before continuing to payment.",
+    };
+  }
+  if (language !== CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE) {
+    return {
+      code: "CHECKOUT_LANGUAGE_UNAVAILABLE",
+      error: "El pago en español aún no está disponible. Si necesitas ayuda, escribe a hello@tuveloz.com.",
+    };
+  }
+  return null;
+}
 
 function marketplacePausedResponse() {
   return Response.json(
@@ -338,6 +355,7 @@ async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection) {
   return {
     agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
     agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+    language: CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE,
     agreementHash: await customerCheckoutAgreementHash(scope),
     presentedText: customerCheckoutAcceptanceText(scope),
     cancellationRefundSummary: CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
@@ -417,6 +435,18 @@ export async function GET(request: Request) {
       checkoutAllowed: false,
       reason: "Test jobs never create real or sandbox payments.",
       payment: null,
+    }, { headers: PRIVATE_NO_STORE_HEADERS });
+  }
+  const languageProblem = checkoutLanguageProblem(searchParams.get("language"));
+  if (languageProblem) {
+    // Keep existing payment status readable in either language. Only new
+    // authorization is unavailable; never substitute English consent for Spanish.
+    return Response.json({
+      checkoutAllowed: false,
+      reason: languageProblem.error,
+      code: languageProblem.code,
+      checkoutAcceptance: null,
+      payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
     }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
   if (!customerAcceptanceBundleIsReleasedForPurpose("checkout")) {
@@ -513,6 +543,13 @@ export async function POST(request: Request) {
       error: "Standalone product checkout is disabled. A future payment must be tied to one accepted exact-service job scope, provider, performing person, schedule, and customer authorization.",
       code: "UNSCOPED_PRODUCT_CHECKOUT_DISABLED",
     }, { status: 409, headers: { "cache-control": "no-store" } });
+  }
+  const languageProblem = checkoutLanguageProblem(body.language);
+  if (languageProblem) {
+    return Response.json({ ...languageProblem, checkoutAllowed: false }, {
+      status: languageProblem.code === "CHECKOUT_LANGUAGE_REQUIRED" ? 400 : 409,
+      headers: PRIVATE_NO_STORE_HEADERS,
+    });
   }
   if (!policyAccepted(body.policyAccepted)) {
     return Response.json(
