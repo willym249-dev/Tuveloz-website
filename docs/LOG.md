@@ -11,6 +11,20 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #270 security gate caught newly reported dependency advisories
+
+The first Verify Tuveloz run (`36664273111`) failed the required npm security
+check before application tests. Its separate account-signup job and the PR
+deployment rehearsal (`36664273467`) passed; no merge or deployment occurred.
+The audit identified the existing development dependencies brace-expansion and
+fast-uri. The targeted update changes only three lockfile package entries:
+brace-expansion 1.1.18 -> 1.1.21 and 5.0.9 -> 5.0.12, plus fast-uri 3.1.7 ->
+3.1.8. The manifest and all other package versions remain unchanged; install
+scripts were disabled. The resulting npm audit reports zero vulnerabilities.
+Production build, all 888 tests and lint passed again on the patched dependencies
+(lint retains only the existing language-navigation warning).
+Do not bypass the security gate or merge the failed head.
+
 ## 2026-09-29 - Scoped booking-pause refund change implemented and tested
 
 After the refund-only exception and preserved safeguards were presented, the
