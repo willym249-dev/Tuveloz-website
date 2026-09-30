@@ -11,6 +11,23 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - PR #271 merged; production verification running
+
+PR #271 tested head `556504ec9d8548b195732bcefb62200cd7c41911` passed both
+required workflows (`36669213298`, `36669213457`), including the complete
+customer/provider signup, mobile, language, scanner and fresh-migration checks.
+The standard automatic approval review approved the requested merge/deploy.
+It merged as `61a2e4a65251d60a615f5eb9fe75d082ac0a1e88` at
+`2026-09-30T04:46:40Z`. Production workflow `36670375767` is running its
+mandatory verification. Do not repeat merge approval or the merge itself.
+The local checkout fast-forwarded cleanly to that merge. Live publication is
+not yet independently confirmed. After workflow success, run the prepared
+private `outputs/verify-pr271-release-20260930.mjs` with that exact merge SHA.
+
+The separate owner question about LLC ownership and any outside human/company
+code or asset contributions remains unanswered. Do not infer those facts from
+Git author labels or a generic permission to continue work.
+
 ## 2026-09-30 - Checkout language boundary tested; collection timing confirmed
 
 The owner explicitly chose payment at checkout, with provider transfer after
