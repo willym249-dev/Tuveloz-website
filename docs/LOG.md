@@ -11,6 +11,22 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Booking-pause refund boundary prepared; owner decision pending
+
+Read-only inspection confirms that full-refund review/execution currently use
+the payout action, so a booking pause blocks new refunds for already-paid jobs.
+The pending owner question concerns a narrow future booking-pause exception;
+the full amount including the 5% fee remains the already-settled decision.
+The existing payment-policy reconciliation now specifies the proposed separate
+refund action, unchanged mode/readiness/Stripe/owner/eligibility protections and
+isolated behavioral checks. Protective refund notifications already have their
+own classification and need no broader email permission.
+
+No runtime code, live setting, payment, message or deployment changed. No tests
+were rerun for this documentation-only preparation. The answer is required
+before changing the refund gate. PR #269 remains complete; preserve the local
+release-verification notes and do not push a documentation-only deployment.
+
 ## 2026-09-29 - PR #269 published and independently verified
 
 PR #269 merged tested head `bad6672` as
