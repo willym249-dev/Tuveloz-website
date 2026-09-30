@@ -40,12 +40,16 @@ business Gmail activation and its completed mailbox tests stay complete.
 September 30: the owner confirmed customer payment at checkout, with provider
 transfer after completion checks. Do not ask for that timing or the settled
 full-refund amount again. The scoped business-Gmail search for county/broker
-senders returned no matching reply. A local checkout-language repair now binds
+senders returned no matching reply. PR #271's published checkout-language repair binds
 new English consent, rejects missing/mismatched language and prevents Spanish
 checkout from silently using English consent. All 894 tests/build, TypeScript,
-lint (one existing warning) and 36 mobile browser checks passed. This repair is
-not yet published; complete Spanish customer policies/acceptance and policy
-adoption remain separate. See `legal/payment-policy-reconciliation.md`.
+lint (one existing warning) and 36 mobile browser checks passed. Required PR
+checks and all three production jobs passed. Seventeen independent live checks
+at `2026-09-30T05:06:35.643Z` confirmed the exact `61a2e4a` release, healthy
+schema, bilingual signup routes, private controls and closed payments. Complete
+Spanish customer policies/acceptance and policy adoption remain separate.
+The owner/contributor facts requested September 30 are still unanswered.
+See `legal/payment-policy-reconciliation.md`; do not repeat the completed release.
 
 The owner answered the specific PR #270 merge/deploy request, and automatic
 approval review accepted the action. The separate refund action is now published

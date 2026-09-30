@@ -11,6 +11,35 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - PR #271 published and independently verified
+
+PR #271 is live as `61a2e4a65251d60a615f5eb9fe75d082ac0a1e88`. Both required
+PR workflows and all three production jobs in `36670375767` passed, including
+the full 894-test build, TypeScript, mobile browser, scanner, migration,
+Spanish coverage and complete customer/provider signup checks. The focused
+local checkout run passed all 36 Chromium/WebKit cases; lint retains only its
+existing language-navigation warning.
+
+Seventeen independent live HTTP checks passed at `2026-09-30T05:06:35.643Z`:
+exact commit; ready application/database/schema; English/Spanish home and
+account-signup routes; absent unsupported public account alias; protected
+participant APIs; and closed checkout GET/POST for English, Spanish and missing
+language. The first verification script incorrectly expected `/es/account`;
+source confirmed private accounts translate through `?lang=es`. Corrected only
+the probe and verified the intended alias absence; no website repair or repeat
+deployment was needed. Evidence is in private task outputs
+`pr271-production-release-20260930.json` and `pr271-live-release-20260930.json`.
+
+New English consent now explicitly records its language and has a distinct
+immutable version. Missing/mismatched or unavailable Spanish consent cannot
+enable payment. Historical acceptances, active policy sources, provider
+translations, fees and current launch locks are preserved. No real payment,
+signup, email or reviewer approval was created by verification. This scoped
+repair is complete; do not repeat its approval, merge, tests or release without
+a new relevant change. Complete reviewed Spanish customer consent/policy
+adoption remains separate. The owner's collection timing is settled; the
+owner/contributor facts requested below remain unanswered.
+
 ## 2026-09-30 - PR #271 merged; production verification running
 
 PR #271 tested head `556504ec9d8548b195732bcefb62200cd7c41911` passed both

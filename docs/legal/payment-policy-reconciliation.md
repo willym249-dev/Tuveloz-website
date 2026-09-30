@@ -38,7 +38,7 @@ The mobile checkbox/download equality checks and both warranty branches pass.
 Full reviewed English/Spanish customer policy adoption remains below; do not
 describe this narrow repair as completion of that separate work.
 
-September 30 local language-boundary repair (not yet published): readiness GET
+September 30 language-boundary repair, published in PR #271 as `61a2e4a`: readiness GET
 now requests an explicit language, the browser rejects missing/mismatched
 presentation languages, and POST rejects an absent/invalid language or an
 unavailable Spanish authorization before database writes or Stripe access.
@@ -49,6 +49,10 @@ substitute English consent. Full reviewed Spanish customer consent remains
 unfinished. All 894 tests/build, TypeScript and 36 mobile Chromium/WebKit cases
 passed; lint has only the existing language-navigation warning. Active policy
 sources, manifests, provider acceptance and all launch locks are unchanged.
+Both required PR workflows and all three production jobs passed. Seventeen
+independent live checks at `2026-09-30T05:06:35.643Z` confirmed the exact release,
+healthy schema, bilingual account pages, private controls and closed checkout.
+Do not repeat this completed repair or treat it as translation adoption.
 
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
@@ -59,7 +63,7 @@ sources, manifests, provider acceptance and all launch locks are unchanged.
 | Provider Agreement section 11 | Full provider quote is preserved, but transfer/recovery wording is broad. | Reconcile the eventual timing and recovery terms with Stripe's answer; do not invent a maximum delay or automatic recovery right. |
 | Exact checkout authorization | `lib/customer-checkout-acceptance.ts` saves provider identity, price, scope, policies and warranty text. It does not contain the new payment-merchant sentence. | Include the reviewed merchant/timing wording in the exact displayed and saved authorization; version it and test stale-consent rejection. |
 | Spanish policies and evidence | Six existing policies use complete `lib/policy-spanish/` translations rendered by `PolicyPage`, with hashes in `config/policy-spanish-releases.json`. Provider acceptance already records the exact translation and language. `/customer-agreement` and the quote route remain English-only. | Preserve the existing provider system. Review the [complete Customer Agreement translation](customer-agreement-spanish-draft.md) and the customer checkout text below before enabling their language paths. |
-| Customer release integrity | Published `checkout:4` uses English evidence without an explicit language field. The September 30 local `checkout:5` repair binds English and denies missing/mismatched or unavailable languages; it is not yet published. | Adopt complete customer translations and bind their reviewed release metadata before enabling Spanish authorization. Preserve the completed provider implementation. Bilingual result/hosted messages alone do not prove Spanish customer consent. |
+| Customer release integrity | Published PR #271 uses `checkout:5` with explicit English evidence and rejects missing/mismatched or unavailable languages. Historical `checkout:4` records remain intact. | Adopt complete customer translations and bind their reviewed release metadata before enabling Spanish authorization. Preserve the completed provider implementation. Bilingual result/hosted messages alone do not prove Spanish customer consent. |
 
 The timing finding is an inference from the checkout source plus Stripe's
 [manual-capture documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method),
@@ -529,9 +533,9 @@ provider's own warranty or service description silently.
 | --- | --- |
 | `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. Existing provider release metadata and acceptance hashes remain valid; customer additions must not imply provider re-acceptance. |
 | `lib/customer-policy-acceptance.ts` | Supply the customer purpose's exact reviewed language, document URLs and translation metadata. Reject missing, stale or future-dated translations. Keep old evidence readable and unchanged. |
-| `lib/customer-checkout-acceptance.ts` | September 30 local repair explicitly binds English in version 5 and its hash. After adoption, add the full translated authorization and merchant statement with the reviewed release metadata; do not relabel existing records. |
-| `QuotePaymentCard` | Existing scope/price/access/language resets and retry controls remain. September 30 local repair sends language on GET as well as POST and rejects missing/mismatched response languages. Keep exact evidence outside DOM dictionary translation. The live payment panel remains closed. |
-| `app/api/stripe/checkout/route.ts` | September 30 local repair rejects absent/invalid language and unavailable Spanish consent before writes or Stripe. After translation adoption, recompute its complete presentation and preserve the current exact evidence write/reread and every eligibility, authorization and launch check. |
+| `lib/customer-checkout-acceptance.ts` | Published PR #271 explicitly binds English in version 5 and its hash. After adoption, add the full translated authorization and merchant statement with the reviewed release metadata; do not relabel existing records. |
+| `QuotePaymentCard` | Existing scope/price/access/language resets and retry controls remain. Published PR #271 sends language on GET as well as POST and rejects missing/mismatched response languages. Keep exact evidence outside DOM dictionary translation. The live payment panel remains closed. |
+| `app/api/stripe/checkout/route.ts` | Published PR #271 rejects absent/invalid language and unavailable Spanish consent before writes or Stripe. After translation adoption, recompute its complete presentation and preserve the current exact evidence write/reread and every eligibility, authorization and launch check. |
 | `customer_agreement_acceptances` | The unique key includes request, quote, agreement key/version and scope version, but not language/hash. Use a reviewed presentation-specific agreement version, within the existing 300-character input bound, or a reviewed schema design. Do not overwrite an English acceptance to save a Spanish one or allow silent `onConflictDoNothing()` reuse. |
 
 Before a release, exercise both warranty branches, literal provider data,
