@@ -106,9 +106,10 @@ async function recoverRefund(stripe: Stripe, execution: Adjustment, payment: Pay
  */
 export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail: string, options: { reconcileOnly?: boolean; retryNotSent?: boolean } = {}) {
   // Status recovery cannot send money. Keep it available for a saved attempt
-  // during a pause; all submissions still require the original release gates.
+  // during a pause; submissions require the separate refund action's live
+  // mode and fresh release approval, even while new bookings stay paused.
   // The Stripe client independently preserves its live-key lock for reads too.
-  if (!options.reconcileOnly && !(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
+  if (!options.reconcileOnly && !(await runtimeMarketplaceActionAllowed("refund", { testOnly: false }))) {
     throw new FullRefundReviewError("Stripe refund execution is not open yet.", 503);
   }
   const db = getDb();
@@ -199,7 +200,7 @@ export async function executeApprovedFullRefund(adjustmentId: string, ownerEmail
   const transfers = await stripe.transfers.list({ transfer_group: payment.transferGroup, limit: 1 });
   requireReview(transfers.data.length === 0, "Stripe already has a provider transfer for this payment. Review recovery separately.");
   // Recheck after the network reads, before reserving any operation.
-  if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) {
+  if (!(await runtimeMarketplaceActionAllowed("refund", { testOnly: false }))) {
     throw new FullRefundReviewError("Stripe refund execution is not open yet.", 503);
   }
   // A confirmed unsent attempt may be explicitly reclaimed only after every

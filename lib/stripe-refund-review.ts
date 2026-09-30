@@ -82,7 +82,7 @@ export async function listRefundReviews() {
 
 export async function getRefundReview(id: string) {
   const facts = await factsFor(id);
-  const enabled = await runtimeMarketplaceActionAllowed("payout", { testOnly: false });
+  const enabled = await runtimeMarketplaceActionAllowed("refund", { testOnly: false });
   const { cancellation: c, job, payment: p, provider, adjustments } = facts;
   const approval = adjustments.find(row => row.id === c.paymentAdjustmentId && row.adjustmentType === "cancellation_refund");
   const execution = p ? adjustments.find(row => row.idempotencyKey === `tuveloz-full-refund-${p.id}`) : null;
@@ -104,7 +104,7 @@ export type RefundReview = Awaited<ReturnType<typeof getRefundReview>>;
 export type RefundReviewQueue = Awaited<ReturnType<typeof listRefundReviews>>;
 
 export async function approveFullRefund(input: { cancellationId: string; reviewToken: string; reason: string }, ownerEmail: string) {
-  if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) throw new FullRefundReviewError("Refund approvals are not open yet.", 503);
+  if (!(await runtimeMarketplaceActionAllowed("refund", { testOnly: false }))) throw new FullRefundReviewError("Refund approvals are not open yet.", 503);
   const db = getDb(), key = approvalKey(input.cancellationId);
   const [existing] = await db.select().from(paymentAdjustments).where(eq(paymentAdjustments.idempotencyKey, key)).limit(1);
   if (existing) {
@@ -123,7 +123,7 @@ export async function approveFullRefund(input: { cancellationId: string; reviewT
   if (blockers.length) throw new FullRefundReviewError(blockers.join(" "));
   const { cancellation: c, job, payment: p, provider } = facts;
   if (!p || !provider) throw new FullRefundReviewError("A settled payment is required.");
-  if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) throw new FullRefundReviewError("Refund approvals are not open yet.", 503);
+  if (!(await runtimeMarketplaceActionAllowed("refund", { testOnly: false }))) throw new FullRefundReviewError("Refund approvals are not open yet.", 503);
   const id = crypto.randomUUID(), now = new Date().toISOString();
   const details = JSON.stringify({ paymentSnapshot: fullRefundPaymentSnapshot(p), cancellationId: c.id,
     reviewToken: input.reviewToken, reviewReason: input.reason, cancellationReason: c.reason,

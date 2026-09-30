@@ -31,8 +31,12 @@ export type MarketplaceAction =
   | "job_start"
   | "scope_change"
   | "completion"
-  | "payout";
+  | "payout"
+  | "refund";
 
+// A booking pause stops transactions and provider payouts. Owner-reviewed full
+// refunds for existing payments have a separate action; they still require live
+// marketplace mode, fresh release approval and the independent Stripe locks.
 const CUSTOMER_JOB_POSTING_PAUSE_ACTIONS: ReadonlySet<MarketplaceAction> = new Set([
   "request",
   "discovery",
@@ -81,6 +85,7 @@ export function marketplacePausedMessage(action: MarketplaceAction) {
     scope_change: "added real work",
     completion: "real job completion",
     payout: "provider payout release",
+    refund: "customer refund submissions",
   };
   return `TUVELOZ is currently in provider-onboarding mode. ${labels[action]} remain disabled until the applicable service and launch controls are approved.`;
 }

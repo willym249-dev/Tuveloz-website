@@ -324,6 +324,15 @@ evidence and the distinction between the completed repair and remaining gates.
 Before calling the refund workflow complete, verify these outcomes with isolated
 records and an approved Stripe test when the transaction path is ready:
 
+**Owner-screen recovery published September 29 in PR #269 (`e2a8466`):** an empty
+successful HTTP reply can no longer claim that approval was saved. Confirmation
+requires a valid approval identifier and its matching saved decision. Incomplete
+list/detail replies retain the prior screen and draft with clear recovery
+guidance. All 885 tests/build, both mobile engines, required release checks,
+twelve live HTTP checks and the authenticated owner list/Refresh control passed.
+No refund rule, policy or launch gate changed; paused initiation and the remaining
+policy decisions are still open. Do not repeat this completed repair.
+
 | Case | Required result |
 | --- | --- |
 | Provider cancels or does not appear; $100 quote + $5 fee was paid | $105 customer refund; $100 provider portion and $5 Customer Service Fee recorded separately |
@@ -333,6 +342,42 @@ records and an approved Stripe test when the transaction path is ready:
 | Provider transfer already occurred | Separately review and track any permitted recovery; do not silently charge the provider the Customer Service Fee |
 | Stripe returns pending or failed, or the callback is delayed | Preserve the accurate status and payout hold; do not label approval as a completed refund |
 | Work has begun or facts are disputed | Route to the applicable reviewed decision process; do not infer a partial-fee rule from this full-refund choice |
+
+### Booking pause and existing full refunds — scoped change accepted September 29
+
+The previous review and execution paths used the `payout` action gate. Therefore,
+`CUSTOMER_JOB_POSTING_PAUSED` blocked a new refund as well as a provider transfer,
+even when the job was already paid. Existing status-only recovery is separate.
+After the narrow recommendation and its preserved safeguards were presented,
+the owner instructed "continue." This accepts the described booking-pause
+change; it does not reopen the settled refund amount decision or authorize a
+real transaction. The implementation is tested locally, not yet deployed.
+
+The narrow change is a separate `refund` action used only by
+`stripe-refund-review.ts` and `stripe-full-refund.ts`. It omits the booking
+pause check but retains live marketplace mode, fresh database-backed release
+approval, the Stripe live-key controls, verified owner access, exact saved
+payment/decision checks and separate submission confirmation. All existing
+eligibility, incident/dispute/transfer holds and duplicate protections remain.
+Unknown submissions still cannot be resent; an explicit confirmed-unsent retry
+must pass all fresh checks. Booking, checkout and payout actions remain blocked.
+
+| State | Result covered by isolated checks |
+| --- | --- |
+| Current onboarding-only release and live-payment locks | No new real refund, booking, checkout or provider payout |
+| Future approved live release with booking pause only | Owner may review and confirm an eligible full refund; new transactions and provider payouts remain blocked |
+| Marketplace mode closed, readiness missing/expired/revoked, or Stripe live access disabled | Refund initiation remains blocked; this is not an exception to a full shutdown |
+
+The isolated refund route/SQL/Stripe tests now exercise the real action gate
+under simulated future-live/paused settings instead of an always-true gate stub.
+They cover missing and revoked readiness, repeated approval/pre-submission
+checks, unchanged booking and payout denial, current onboarding locks and
+existing refund safety cases. The strengthened route tests fail with the old
+payout coupling. All 888 tests and production build, TypeScript and both mobile
+refund browser engines pass. Required publication checks remain separate.
+The completed real Stripe sandbox rehearsals need not be repeated for this
+gate-only change. Refund/cancellation notification prefixes are already
+protective in `email-event-policy.ts`; no email-policy expansion is needed.
 
 ### Exact authorization — addition to the existing itemized acceptance
 

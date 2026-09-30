@@ -134,7 +134,7 @@ try {
         execution = { status: "refund_not_sent_review", stripeRefundId: null };
         await refresh.click();
         const retry = review.getByRole("button", { name: "Review and retry refund", exact: true });
-        await retry.waitFor(); assert.equal(await retry.isDisabled(), true, "a pause still blocks money submission");
+        await retry.waitFor(); assert.equal(await retry.isDisabled(), true, "a closed refund release still blocks money submission");
         enabled = true; await refresh.click(); await retry.click();
         await review.getByRole("group", { name: "Retry this unsent refund?" }).waitFor();
         assert.equal(writes.filter(row => row.path.endsWith("/refunds")).length, 1, "opening retry confirmation sends nothing");
@@ -162,7 +162,7 @@ try {
         malformedQueue = false; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
         await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor({ state: "hidden" });
         assert.equal(writes.length, 5); assert.ok(detailRequests >= 5); assert.deepEqual(errors, []);
-        console.log(`PASS ${browserType.name()}: closed submission gates, paused recovery, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
+        console.log(`PASS ${browserType.name()}: closed submission gates, recovery during release closure, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
       } finally { await context.close(); }
     } finally { await browser.close(); }
   }
