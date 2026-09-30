@@ -37,6 +37,16 @@ and optional DNS hardening remain maintenance or separately reviewed work.
 The still-unset launch-update email postal footer is a distinct delivery setting;
 business Gmail activation and its completed mailbox tests stay complete.
 
+September 30: the owner confirmed customer payment at checkout, with provider
+transfer after completion checks. Do not ask for that timing or the settled
+full-refund amount again. The scoped business-Gmail search for county/broker
+senders returned no matching reply. A local checkout-language repair now binds
+new English consent, rejects missing/mismatched language and prevents Spanish
+checkout from silently using English consent. All 894 tests/build, TypeScript,
+lint (one existing warning) and 36 mobile browser checks passed. This repair is
+not yet published; complete Spanish customer policies/acceptance and policy
+adoption remain separate. See `legal/payment-policy-reconciliation.md`.
+
 The owner answered the specific PR #270 merge/deploy request, and automatic
 approval review accepted the action. The separate refund action is now published
 and independently verified as `c44c1ff` on September 30. The exact boundary and

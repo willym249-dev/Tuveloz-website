@@ -17,6 +17,7 @@ type PaymentSummary = {
 };
 
 type CheckoutAcceptance = {
+  language: SiteLanguage;
   agreementKey: string;
   agreementVersion: string;
   agreementHash: string;
@@ -137,7 +138,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
       setError("Checking this quote took too long. Please try again.");
       setLoading(false);
     }, 20_000);
-    const query = new URLSearchParams({ quoteId });
+    const query = new URLSearchParams({ quoteId, language });
     fetch(`/api/stripe/checkout?${query}`, {
       cache: "no-store",
       signal: controller.signal,
@@ -155,6 +156,11 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
         };
         if (controller.signal.aborted) return;
         if (!response.ok) throw new Error(result.error || "Unable to check payment readiness.");
+        if (result.checkoutAcceptance && result.checkoutAcceptance.language !== language) {
+          throw new Error(language === "es"
+            ? "No pudimos cargar el acuerdo de pago en español. Vuelve a intentarlo."
+            : "We couldn’t load the payment agreement in English. Please try again.");
+        }
         const scope = result.checkoutAcceptance?.scope;
         if (result.checkoutAcceptance && (
           !scope || scope.quoteId !== quoteId || scope.scopeVersion !== scopeVersion
@@ -187,7 +193,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
       controller.abort();
       checkoutRequest.current?.abort();
     };
-  }, [accessToken, quoteId, scopeVersion, priceCents, laborPriceCents,
+  }, [accessToken, language, quoteId, scopeVersion, priceCents, laborPriceCents,
     partsPriceCents, customerFeeRateBps, customerFeeCents, customerTotalCents]);
 
   async function openCheckout() {
@@ -325,7 +331,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
         </p>
       ) : (
         <>
-          {reason && <p className="admin-note">{reason}</p>}
+          {reason && <p className="admin-note" role="status">{reason}</p>}
           {!laborOnlyQuote && (
             <p className="form-error" role="alert">
               Checkout is blocked because the stored quote contains a parts or non-labor amount.
@@ -374,7 +380,7 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
               </dl>
               <p className="admin-note">
                 <strong>Cancellation and refund summary:</strong>{" "}
-                <span data-no-interface-translation translate="no" lang="en">{checkoutAcceptance.cancellationRefundSummary}</span>
+                <span data-no-interface-translation translate="no" lang={checkoutAcceptance.language}>{checkoutAcceptance.cancellationRefundSummary}</span>
               </p>
               <label className="policy-consent payment-policy-consent">
                 <input
@@ -383,10 +389,9 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
                   onChange={(event) => setAcceptedPaymentPolicy(event.target.checked)}
                   type="checkbox"
                 />
-                {/* The server currently releases English authorization only.
-                    Keep its exact bytes, including provider text, out of the
-                    interface dictionary until reviewed language evidence exists. */}
-                <span data-no-interface-translation translate="no" lang="en">
+                {/* The exact server presentation and provider data must stay
+                    outside the interface dictionary, in their recorded language. */}
+                <span data-no-interface-translation translate="no" lang={checkoutAcceptance.language}>
                   {checkoutAcceptance.presentedText}
                 </span>
               </label>

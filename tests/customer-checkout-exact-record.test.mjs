@@ -54,14 +54,22 @@ for (const warranty of ["", "SYNTHETIC garantía: Terms of Use & <test>"]) {
     assert.ok(displayed.includes(warranty || "The provider business offers no workmanship warranty for this job."));
     assert.equal(evidence.scopeSnapshot.workmanshipWarranty, warranty);
     assert.equal(await acceptance.customerCheckoutAgreementHash(input), hash(saved));
-    assert.match(evidence.agreementVersion, /\|checkout:4$/);
+    assert.equal(evidence.language, "en");
+    assert.match(evidence.agreementVersion, /\|checkout:5\|lang:en$/);
+    assert.ok(evidence.agreementVersion.length <= 300);
     // New presentations use a distinct immutable-record key; an older record
     // is never relabeled as if it included the previously omitted statement.
     const legacy = JSON.stringify({ ...evidence,
-      agreementVersion: evidence.agreementVersion.replace(/checkout:4$/, "checkout:3"),
+      agreementVersion: evidence.agreementVersion.replace(/checkout:5\|lang:en$/, "checkout:3"),
       presentedText: displayed.slice(laborStatement.length + 1),
     });
     assert.notEqual(hash(legacy), hash(saved));
+    const previous = { ...evidence,
+      agreementVersion: evidence.agreementVersion.replace(/checkout:5\|lang:en$/, "checkout:4"),
+    };
+    delete previous.language;
+    assert.notEqual(hash(JSON.stringify(previous)), hash(saved));
+    assert.notEqual(hash(JSON.stringify({ ...evidence, language: "es" })), hash(saved));
     assert.equal(JSON.stringify(input), before);
   });
 }

@@ -3,8 +3,11 @@ import { customerPolicyReleaseEvidence } from "./customer-policy-acceptance";
 import { sha256Text } from "./provider-policy-acceptance";
 
 export const CUSTOMER_CHECKOUT_AGREEMENT_KEY = "customer_checkout_authorization";
+// Only English has a complete released customer authorization today. A future
+// translation needs its own reviewed policy evidence and immutable version.
+export const CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE = "en" as const;
 export const CUSTOMER_CHECKOUT_AGREEMENT_VERSION =
-  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:4`;
+  `${CHECKOUT_POLICY_BUNDLE_VERSION}|checkout:5|lang:${CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE}`;
 
 export const CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY =
   "Payment does not authorize added work or a price increase. Cancellation, refund, dispute, and payout handling follows the displayed Payment, Cancellation and Refund Policy and applicable law. TUVELOZ does not certify the repair merely because payment or payout records are reviewed.";
@@ -73,6 +76,7 @@ export function customerCheckoutAgreementEvidenceText(
   return JSON.stringify({
     agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
     agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+    language: CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE,
     acceptanceControl: "affirmative-exact-checkout-authorization-checkbox",
     presentedText: customerCheckoutAcceptanceText(scope),
     policyRelease: customerPolicyReleaseEvidence("checkout"),

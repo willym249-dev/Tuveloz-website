@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Checkout language boundary tested; collection timing confirmed
+
+The owner explicitly chose payment at checkout, with provider transfer after
+completion checks. That choice and the earlier full-refund amount are settled;
+do not ask again. Updated the existing payment-policy reconciliation draft.
+No active policy, hash, reviewer decision, charge strategy or launch lock changed.
+
+Found a distinct consent gap: POST used `language` for Stripe labels while exact
+authorization remained English, and readiness GET did not request a language.
+The local fix requires explicit language, denies unavailable Spanish consent,
+rejects missing/mismatched browser responses, and records English in both the
+new `checkout:5|lang:en` immutable version and hashed evidence. Older records
+stay untouched. Existing authorized payment status remains readable. Provider
+translations are unchanged. This is a boundary repair, not completed Spanish
+customer consent or policy adoption.
+
+All 894 tests and the production build passed, including six behavioral route
+tests with synthetic records: invalid/unavailable languages, current English,
+old/tampered consent, launch lock and authorized status access. All 36 mobile
+Chromium/WebKit scenarios passed, including wrong-language responses, the
+Spanish explanation, fresh acceptance on switching back, literal text/download
+equality and existing timeout/recovery controls. TypeScript passed. Lint has
+only the existing `site-language.tsx:144` warning. Private ignored logs are
+`outputs/checkout-language-{tests,browser,typecheck,lint}-20260930.log`.
+
+The signed-in business Gmail search
+`after:2026/09/27 {from:foundershield.com from:montgomerycountymd.gov}` showed
+no matching messages. No inquiry was resent. No real payment, participant
+record, external message, account setting, paid service or deployment changed.
+This work is local and not yet published; preserve completed PR #270.
+
 ## 2026-09-30 - PR #270 published and independently verified
 
 PR #270's tested head `90d6879` merged as

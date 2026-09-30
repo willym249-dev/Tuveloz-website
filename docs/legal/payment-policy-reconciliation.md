@@ -1,6 +1,6 @@
 # Payment wording and acceptance review
 
-- **Status:** draft; full-refund business rule approved September 28; not an effective policy or launch approval
+- **Status:** draft; full-refund rule approved September 28 and collection timing approved September 30; not an effective policy or launch approval
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-30
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
@@ -21,7 +21,9 @@ linked public reserve ceiling, without inventing a normal payout delay. The
 owner-approved seller-compliance acknowledgment is accepted and PR #259's
 provider alert/update-button repair is published as `b20d524`. Actual
 Stripe-originated delivery and provider inbox receipt remain separate evidence.
-The September 29 scoped business-inbox search found no new broker/county reply.
+The September 30 business-Gmail search for messages after September 27 from
+`foundershield.com` or `montgomerycountymd.gov` returned no matching messages.
+This is a scoped result, not proof about every possible sender or delivery.
 Do not repeat the inquiries, acknowledgment or completed releases.
 
 September 29 accuracy repair, published and verified in PR #268: the checkout checkbox's
@@ -36,6 +38,18 @@ The mobile checkbox/download equality checks and both warranty branches pass.
 Full reviewed English/Spanish customer policy adoption remains below; do not
 describe this narrow repair as completion of that separate work.
 
+September 30 local language-boundary repair (not yet published): readiness GET
+now requests an explicit language, the browser rejects missing/mismatched
+presentation languages, and POST rejects an absent/invalid language or an
+unavailable Spanish authorization before database writes or Stripe access.
+New English evidence records `language: "en"` and uses the separate immutable
+version `checkout:5|lang:en`. Existing records are untouched. Spanish readiness
+shows a Spanish explanation and retains existing payment status; it does not
+substitute English consent. Full reviewed Spanish customer consent remains
+unfinished. All 894 tests/build, TypeScript and 36 mobile Chromium/WebKit cases
+passed; lint has only the existing language-navigation warning. Active policy
+sources, manifests, provider acceptance and all launch locks are unchanged.
+
 | Surface | Verified current behavior | Work still needed |
 | --- | --- | --- |
 | Quote total, hosted Checkout message, payment-result page | PR #256 supplies TUVELOZ LLC payment identification and bilingual result messages. September 27 standalone Stripe test checkouts and actual receipts verify merchant, totals, successful status and a Spanish decline/retry. | Hosted presentation rehearsal complete within its isolated scope. Spanish line-item repair is published through PR #258/release 03f92dd and independently verified September 28; Stripe receipt headings still use English. Production integration, receipt-language propagation and customer consent remain separate. |
@@ -45,7 +59,7 @@ describe this narrow repair as completion of that separate work.
 | Provider Agreement section 11 | Full provider quote is preserved, but transfer/recovery wording is broad. | Reconcile the eventual timing and recovery terms with Stripe's answer; do not invent a maximum delay or automatic recovery right. |
 | Exact checkout authorization | `lib/customer-checkout-acceptance.ts` saves provider identity, price, scope, policies and warranty text. It does not contain the new payment-merchant sentence. | Include the reviewed merchant/timing wording in the exact displayed and saved authorization; version it and test stale-consent rejection. |
 | Spanish policies and evidence | Six existing policies use complete `lib/policy-spanish/` translations rendered by `PolicyPage`, with hashes in `config/policy-spanish-releases.json`. Provider acceptance already records the exact translation and language. `/customer-agreement` and the quote route remain English-only. | Preserve the existing provider system. Review the [complete Customer Agreement translation](customer-agreement-spanish-draft.md) and the customer checkout text below before enabling their language paths. |
-| Customer release integrity | `lib/customer-policy-acceptance.ts` uses the English policy manifest. The checkout authorization has no language field and does not include the existing Spanish release metadata. | Extend the customer evidence path using the existing translation-release approach. Do not duplicate or replace the completed provider implementation. Bilingual result/hosted messages alone do not prove Spanish customer consent. |
+| Customer release integrity | Published `checkout:4` uses English evidence without an explicit language field. The September 30 local `checkout:5` repair binds English and denies missing/mismatched or unavailable languages; it is not yet published. | Adopt complete customer translations and bind their reviewed release metadata before enabling Spanish authorization. Preserve the completed provider implementation. Bilingual result/hosted messages alone do not prove Spanish customer consent. |
 
 The timing finding is an inference from the checkout source plus Stripe's
 [manual-capture documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method),
@@ -100,9 +114,11 @@ as disclaiming Tuveloz's payment responsibilities.
 > verificaciones de pago necesarias. La tarifa se suma a su total y no se
 > descuenta de la cotización del proveedor. Usted compra las piezas por separado.
 
-The reviewer must confirm this timing as the intended product behavior. If a
-different timing is chosen, it needs a separately reviewed implementation; text
-alone cannot turn the existing flow into delayed customer capture.
+On September 30 the owner explicitly selected: "Pay at checkout; provider paid
+after completion checks." That business choice is settled; do not ask again.
+It matches the current collection/transfer sequence. The complete policies
+still need adoption and the required review; this choice does not approve a
+payout deadline, reserve rule, tax treatment or live launch.
 
 ### Processor responsibilities — Payment Policy sections 5 and 8
 
@@ -513,9 +529,9 @@ provider's own warranty or service description silently.
 | --- | --- |
 | `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. Existing provider release metadata and acceptance hashes remain valid; customer additions must not imply provider re-acceptance. |
 | `lib/customer-policy-acceptance.ts` | Supply the customer purpose's exact reviewed language, document URLs and translation metadata. Reject missing, stale or future-dated translations. Keep old evidence readable and unchanged. |
-| `lib/customer-checkout-acceptance.ts` | Generate the entire checkbox text, including labor-only and merchant statements, for one explicit presentation language. Hash that text together with the selected reviewed releases and the exact scope. |
-| `QuotePaymentCard` | Scope/price/access/language reset, matching-response checks, canceled late responses and retry controls were published in PR #257/release 59c7815 and verified September 27. The payment panel remains closed and the readiness GET is still English-only. Future translated acceptance must send the reviewed language on GET as well as POST and keep dynamic evidence outside DOM dictionary translation. |
-| `app/api/stripe/checkout/route.ts` | Recompute the same current presentation server-side, reject a mismatched hash/language, then write and reread exact evidence before contacting Stripe. Preserve all existing eligibility, authorization and launch checks. |
+| `lib/customer-checkout-acceptance.ts` | September 30 local repair explicitly binds English in version 5 and its hash. After adoption, add the full translated authorization and merchant statement with the reviewed release metadata; do not relabel existing records. |
+| `QuotePaymentCard` | Existing scope/price/access/language resets and retry controls remain. September 30 local repair sends language on GET as well as POST and rejects missing/mismatched response languages. Keep exact evidence outside DOM dictionary translation. The live payment panel remains closed. |
+| `app/api/stripe/checkout/route.ts` | September 30 local repair rejects absent/invalid language and unavailable Spanish consent before writes or Stripe. After translation adoption, recompute its complete presentation and preserve the current exact evidence write/reread and every eligibility, authorization and launch check. |
 | `customer_agreement_acceptances` | The unique key includes request, quote, agreement key/version and scope version, but not language/hash. Use a reviewed presentation-specific agreement version, within the existing 300-character input bound, or a reviewed schema design. Do not overwrite an English acceptance to save a Spanish one or allow silent `onConflictDoNothing()` reuse. |
 
 Before a release, exercise both warranty branches, literal provider data,
