@@ -49,7 +49,7 @@ test("the central marketplace mode is default closed except for persisted test f
   assert.match(runtimeAction, /runtimeRealMarketplaceReleaseIsApproved\(\)/);
 });
 
-test("the customer-job pause independently blocks every real marketplace action", async () => {
+test("the customer-job pause blocks transactions and payouts; onboarding also blocks refunds", async () => {
   const {
     customerJobPostingPauseBlocks,
     marketplaceActionAllowed,
@@ -74,11 +74,23 @@ test("the customer-job pause independently blocks every real marketplace action"
       action,
     );
   }
+  assert.equal(customerJobPostingPauseBlocks("refund"), false);
+  assert.equal(marketplaceActionAllowed("refund", { runtimeReleaseApproved: true }), false,
+    "the refund exception cannot open today's onboarding-only marketplace");
   assert.equal(
     marketplaceActionAllowed("checkout", { testOnly: true }),
     true,
     "isolated test fixtures remain available",
   );
+});
+
+test("only reviewed full refunds use the refund gate and never a test override", async () => {
+  for (const path of ["lib/stripe-refund-review.ts", "lib/stripe-full-refund.ts"]) {
+    const code = await source(path);
+    const calls = code.match(/runtimeMarketplaceActionAllowed\([^)]*\)/g);
+    assert.equal(calls.length, path.includes("refund-review") ? 3 : 2);
+    for (const call of calls) assert.equal(call, 'runtimeMarketplaceActionAllowed("refund", { testOnly: false })');
+  }
 });
 
 test("runtime revocation blocks new money but preserves reconciliation and safety cleanup", async () => {

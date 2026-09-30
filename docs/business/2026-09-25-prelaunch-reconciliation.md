@@ -37,13 +37,13 @@ and optional DNS hardening remain maintenance or separately reviewed work.
 The still-unset launch-update email postal footer is a distinct delivery setting;
 business Gmail activation and its completed mailbox tests stay complete.
 
-Next scoped decision, September 29: whether an owner-reviewed full refund for an
-existing payment should remain available during a future booking-only pause.
-The exact proposed boundary and isolated verification plan are in
-`legal/payment-policy-reconciliation.md` under "Booking pause and existing full
-refunds." The owner question is pending. Do not change the gate before the answer,
-repeat the settled refund-amount question, or treat a booking-pause exception as
-permission to bypass onboarding mode, readiness review or Stripe live-key locks.
+September 29 scoped continuation: after the refund-only booking-pause proposal,
+the owner instructed "continue." The separate refund action is implemented and
+tested locally; publication is pending. The exact boundary and isolated proof
+are in `legal/payment-policy-reconciliation.md` under "Booking pause and existing
+full refunds." Do not repeat the settled refund-amount question or treat this
+exception as permission to bypass onboarding mode, readiness review, Stripe
+live-key locks or an individual refund's owner confirmation and eligibility.
 
 The September 28 Stripe Dashboard inspection found the payout-safety destination
 Active but **zero deliveries in its displayed This week history**. Its zero error

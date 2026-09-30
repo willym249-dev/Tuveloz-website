@@ -100,8 +100,12 @@ feature:
 | `STRIPE_LIVE_MODE_ENABLED` | `lib/stripe.ts` | false |
 | `PHONE_SMS_LIVE_MODE_ENABLED` | `lib/phone-auth.ts` | false |
 
-`marketplaceActionAllowed()` requires all of: not paused, `MARKETPLACE_MODE`
-set to `live`, and a fresh launch-readiness approval passed in by the caller.
+`marketplaceActionAllowed()` requires `MARKETPLACE_MODE` set to `live` and a
+fresh launch-readiness approval passed in by the caller. A booking pause blocks
+transactions and provider payouts. The owner-approved `refund` action allows
+reviewed full refunds for existing payments during that pause; it keeps the
+mode, readiness, Stripe live-key and refund eligibility checks. It does not
+permit refunds during onboarding-only mode or a revoked release.
 `testOnly: true` short-circuits the whole check — test records are isolated
 from real providers, customers, alerts, payments, and public profiles, so never
 reach for that flag to make a real path work.

@@ -11,6 +11,26 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - Scoped booking-pause refund change implemented and tested
+
+After the refund-only exception and preserved safeguards were presented, the
+owner instructed "continue." The review and execution paths now use a separate
+`refund` action, which omits only the booking-pause restriction. Live marketplace
+mode, fresh database-backed release approval, Stripe live-key controls, owner
+authentication, exact payment/approval facts and separate confirmation remain.
+Transactions and provider payouts stay pause-blocked. Current onboarding-only,
+customer-pause, Stripe-live and SMS-live defaults are unchanged.
+
+The isolated migrated-SQL/Stripe route tests now run the actual gate with only
+future marketplace mode and readiness simulated. They failed with the prior
+payout coupling and pass after the change, including revoked readiness at the
+last approval/submission recheck. Current default denial, every paused
+transaction action and existing refund/duplicate/hold checks remain covered.
+Production build and all 888 tests, TypeScript and mobile Chromium/WebKit refund
+flows passed locally. No real transaction, credential, email, active policy or
+launch review changed. This is not deployed yet; required PR/production checks
+and exact-release verification follow. Preserve prior PR #269 fixes and proof.
+
 ## 2026-09-29 - Booking-pause refund boundary prepared; owner decision pending
 
 Read-only inspection confirms that full-refund review/execution currently use

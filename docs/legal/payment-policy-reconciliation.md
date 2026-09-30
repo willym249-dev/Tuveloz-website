@@ -343,34 +343,38 @@ policy decisions are still open. Do not repeat this completed repair.
 | Stripe returns pending or failed, or the callback is delayed | Preserve the accurate status and payout hold; do not label approval as a completed refund |
 | Work has begun or facts are disputed | Route to the applicable reviewed decision process; do not infer a partial-fee rule from this full-refund choice |
 
-### Booking pause and existing full refunds — owner decision pending September 29
+### Booking pause and existing full refunds — scoped change accepted September 29
 
-The current review and execution paths use the `payout` action gate. Therefore,
-`CUSTOMER_JOB_POSTING_PAUSED` blocks a new refund as well as a provider transfer,
+The previous review and execution paths used the `payout` action gate. Therefore,
+`CUSTOMER_JOB_POSTING_PAUSED` blocked a new refund as well as a provider transfer,
 even when the job was already paid. Existing status-only recovery is separate.
-The pending owner question asks whether reviewed full refunds should remain
-available during a future booking pause. It does not reopen the settled refund
-amount decision or authorize a real transaction. No code change is made yet.
+After the narrow recommendation and its preserved safeguards were presented,
+the owner instructed "continue." This accepts the described booking-pause
+change; it does not reopen the settled refund amount decision or authorize a
+real transaction. The implementation is tested locally, not yet deployed.
 
-If approved, the narrow change is a separate `refund` action used only by
-`stripe-refund-review.ts` and `stripe-full-refund.ts`. It would omit the booking
-pause check but retain live marketplace mode, fresh database-backed release
+The narrow change is a separate `refund` action used only by
+`stripe-refund-review.ts` and `stripe-full-refund.ts`. It omits the booking
+pause check but retains live marketplace mode, fresh database-backed release
 approval, the Stripe live-key controls, verified owner access, exact saved
 payment/decision checks and separate submission confirmation. All existing
 eligibility, incident/dispute/transfer holds and duplicate protections remain.
 Unknown submissions still cannot be resent; an explicit confirmed-unsent retry
 must pass all fresh checks. Booking, checkout and payout actions remain blocked.
 
-| State | Proposed result if the owner approves |
+| State | Result covered by isolated checks |
 | --- | --- |
 | Current onboarding-only release and live-payment locks | No new real refund, booking, checkout or provider payout |
 | Future approved live release with booking pause only | Owner may review and confirm an eligible full refund; new transactions and provider payouts remain blocked |
 | Marketplace mode closed, readiness missing/expired/revoked, or Stripe live access disabled | Refund initiation remains blocked; this is not an exception to a full shutdown |
 
-Required isolated proof must exercise the real action gate under simulated
-future-live/paused settings, not just an always-true gate stub. Cover missing
-and revoked readiness, the repeated pre-submission check, unchanged booking and
-payout denial, the current onboarding locks and existing refund safety cases.
+The isolated refund route/SQL/Stripe tests now exercise the real action gate
+under simulated future-live/paused settings instead of an always-true gate stub.
+They cover missing and revoked readiness, repeated approval/pre-submission
+checks, unchanged booking and payout denial, current onboarding locks and
+existing refund safety cases. The strengthened route tests fail with the old
+payout coupling. All 888 tests and production build, TypeScript and both mobile
+refund browser engines pass. Required publication checks remain separate.
 The completed real Stripe sandbox rehearsals need not be repeated for this
 gate-only change. Refund/cancellation notification prefixes are already
 protective in `email-event-policy.ts`; no email-policy expansion is needed.

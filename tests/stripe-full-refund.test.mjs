@@ -11,14 +11,16 @@ import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue } from "../lib/stripe-refund-response.ts";
 
 // Real owner JWT verification, route, migrated database and Stripe SDK. Only
-// network responses, Cloudflare bindings and the FUTURE release gate are fixtures.
+// network responses, Cloudflare bindings and FUTURE release settings are fixtures.
+// The refund routes use the actual gate with live mode simulated and bookings
+// still paused. Readiness is fresh per call; today's actual gate stays closed.
 // All participants, credentials and money exist only in this isolated process.
 test("approved full refunds reserve once, include the fee and reconcile uncertain outcomes", async t => {
   const repo = resolve(import.meta.dirname, "..");
   const tempRoot = resolve(tmpdir()), scratch = mkdtempSync(join(tempRoot, "tuveloz-full-refund-"));
   const database = new DatabaseSync(":memory:"), originalFetch = globalThis.fetch;
   const issuer = "https://synthetic-refund.cloudflareaccess.com", email = "owner@example.invalid", audience = "synthetic-refund";
-  const state = { db: null, open: false, beforeWrite: null, beforeExecutionWrite: null, beforeBatch: null, batchBarrier: null, failBatch: false, env: { OWNER_EMAIL: email, TEAM_DOMAIN: issuer,
+  const state = { db: null, open: false, readinessChecks: 0, beforeReadiness: null, beforeWrite: null, beforeExecutionWrite: null, beforeBatch: null, batchBarrier: null, failBatch: false, env: { OWNER_EMAIL: email, TEAM_DOMAIN: issuer,
     OWNER_ACCESS_AUD: audience, STRIPE_SECRET_KEY: "sk_test_synthetic_refund_fixture" } };
   globalThis.__fullRefund = state;
   const keys = await generateKeyPair("RS256");
@@ -33,6 +35,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
   const reset = () => {
     for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "job_cancellations", "provider_job_records", "job_incidents", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
     state.open = true; state.beforeWrite = null; state.beforeExecutionWrite = null; state.env.STRIPE_SECRET_KEY = "sk_test_synthetic_refund_fixture";
+    state.readinessChecks = 0; state.beforeReadiness = null;
     state.beforeBatch = null; state.batchBarrier = null; state.failBatch = false;
     remote = []; transfers = []; posts = []; getCount = 0; postMode = "ok"; nextStatus = "succeeded"; beforePost = null; intentChange = null;
     seed("customer_requests", { id: "job-synthetic", name: "SYNTHETIC CUSTOMER", email: "customer@example.invalid", zip: "20910",
@@ -125,18 +128,32 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       } catch (error) { database.exec("ROLLBACK"); throw error; }
     });
     const bundle = join(scratch, "refund.cjs");
+    const launchSource = readFileSync(join(repo, "lib/launch-status.ts"), "utf8");
+    const closedMode = 'MARKETPLACE_MODE = "onboarding_only"';
+    assert.equal(launchSource.split(closedMode).length, 2, "only the isolated future-mode fixture may replace this default");
     await build({ absWorkingDir: repo, stdin: { contents: `export { POST, GET as refundStatus } from "./app/api/stripe/admin/refunds/route";
       export { GET as review, POST as approve } from "./app/api/stripe/admin/refund-reviews/route";
       export { runtimeMarketplaceActionAllowed as actualLaunchGate } from "./lib/runtime-marketplace-action";
+      export { runtimeMarketplaceActionAllowed as futurePausedLaunchGate } from "future-paused-refund-gate";
       export { recordRefundStatus } from "./lib/stripe-payments"; export { getStripeClient } from "./lib/stripe";`, resolveDir: repo, loader: "ts" },
       bundle: true, platform: "node", format: "cjs", outfile: bundle, target: "node22", logLevel: "silent",
       plugins: [{ name: "isolated-refund-fixtures", setup(builder) {
         builder.onResolve({ filter: /^cloudflare:workers$/ }, () => ({ path: "env", namespace: "fixture" }));
         builder.onResolve({ filter: /(?:^|\/)db$/ }, args => args.path.startsWith(".") ? { path: "db", namespace: "fixture" } : null);
         builder.onResolve({ filter: /runtime-marketplace-action$/ }, args => /lib\/stripe-(full-refund|refund-review)\.ts$/.test(args.importer.replaceAll("\\", "/")) ? { path: "gate", namespace: "fixture" } : null);
-        builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ loader: "js", contents: {
+        builder.onResolve({ filter: /^future-paused-refund-gate$/ }, () => ({ path: "gate", namespace: "fixture" }));
+        builder.onResolve({ filter: /^\.\/launch-status$/ }, args => args.namespace === "fixture" && args.importer === "gate" ? { path: "future-launch", namespace: "fixture" } : null);
+        builder.onResolve({ filter: /^\.\/runtime-launch-readiness$/ }, args => args.namespace === "fixture" && args.importer === "gate" ? { path: "readiness", namespace: "fixture" } : null);
+        builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ loader: "ts", resolveDir: join(repo, "lib"), contents: {
           env: "export const env = globalThis.__fullRefund.env;", db: "export function getDb() { return globalThis.__fullRefund.db; }",
-          gate: "export async function runtimeMarketplaceActionAllowed(action, options) { if (action !== 'payout' || options.testOnly !== false) throw Error('Unsafe gate usage'); return globalThis.__fullRefund.open; }",
+          gate: readFileSync(join(repo, "lib/runtime-marketplace-action.ts"), "utf8"),
+          "future-launch": launchSource.replace(closedMode, 'MARKETPLACE_MODE = "live"'),
+          readiness: `export async function runtimeRealMarketplaceReleaseIsApproved() {
+            const state = globalThis.__fullRefund;
+            state.readinessChecks++;
+            state.beforeReadiness?.(state.readinessChecks);
+            return state.open;
+          }`,
         }[args.path] }));
       } }] });
     const api = createRequire(import.meta.url)(bundle), token = await sign();
@@ -161,6 +178,37 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal(response.headers.get("cache-control"), "no-store");
       return { status: response.status, body: await response.json() };
     };
+    await t.test("a future booking pause permits only reviewed refunds while today's actual release stays closed", async () => {
+      reset();
+      for (const action of ["request", "discovery", "quote", "booking", "appointment", "checkout", "job_start", "scope_change", "completion", "payout"]) {
+        assert.equal(await api.futurePausedLaunchGate(action, { testOnly: false }), false, action);
+      }
+      assert.equal(state.readinessChecks, 0, "paused transaction actions stop before readiness");
+      assert.equal(await api.futurePausedLaunchGate("refund", { testOnly: false }), true);
+      assert.equal(state.readinessChecks, 1);
+      for (const unavailable of [false, undefined, null]) {
+        state.open = unavailable;
+        assert.equal(await api.futurePausedLaunchGate("refund", { testOnly: false }), false);
+      }
+      assert.equal(state.readinessChecks, 4, "refund approval is not cached");
+      assert.equal(await api.actualLaunchGate("refund", { testOnly: false }), false);
+      assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("lost readiness blocks approval and execution at their final rechecks during a booking pause", async () => {
+      pendingReview(); const body = await approveBody();
+      state.readinessChecks = 0;
+      state.beforeReadiness = count => { if (count === 2) state.open = false; };
+      assert.equal((await reviewCall({ method: "POST", body })).status, 503);
+      assert.equal(state.readinessChecks, 2);
+      assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments").get().n, 0);
+      assert.equal(posts.length + getCount, 0);
+      reset();
+      state.beforeReadiness = count => { if (count === 2) state.open = false; };
+      assert.equal((await post()).status, 503);
+      assert.equal(state.readinessChecks, 2);
+      assert.ok(getCount > 0, "readiness is checked again after Stripe reads");
+      assert.equal(posts.length, 0); assert.equal(execution(), undefined);
+    });
     await t.test("review access requires the signed owner; approvals require origin, exact input and open gates", async () => {
       pendingReview(); const body = await approveBody();
       for (const jwt of ["", "forged", await sign({ email: "stranger@example.invalid" })]) {
@@ -281,7 +329,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal((await post()).status, 409); assert.equal(posts.length, 0);
       assert.equal(execution().status, "refund_not_sent_review");
     };
-    await t.test("paused marketplace permits only signed read-only recovery of an existing refund", async () => {
+    await t.test("revoked release permits only signed read-only recovery of an existing refund", async () => {
       reset(); postMode = "lost"; await post(); state.open = false;
       assert.equal((await statusCall("")).status, 403);
       assert.equal((await statusCall()).body.refundSucceeded, true);
@@ -341,7 +389,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal((await post(undefined, token, "https://other.invalid")).status, 403);
       for (const body of ["{", "null", "[]", {}, { adjustmentId: 1 }, { adjustmentId: "decision-synthetic", amount: 10500 },
         { adjustmentId: "decision-synthetic", action: null }, { adjustmentId: "decision-synthetic", action: "resend" }]) assert.equal((await post(body)).status, 400);
-      state.open = false; assert.equal((await post()).status, 503); assert.equal(await api.actualLaunchGate("payout", { testOnly: false }), false);
+      state.open = false; assert.equal((await post()).status, 503); assert.equal(await api.actualLaunchGate("refund", { testOnly: false }), false);
       assert.equal(posts.length + getCount, 0); assert.equal(execution(), undefined);
     });
     await t.test("full payment is sent once and saved separately from the provider's accounting portion", async () => {
