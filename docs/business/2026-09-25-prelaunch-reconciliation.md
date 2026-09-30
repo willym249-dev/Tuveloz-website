@@ -70,6 +70,18 @@ completed test, the refund rehearsals or PR #267 without a new relevant change.
 
 ## Verified in production
 
+**Published in PR #269, September 29:** incomplete refund-list and nested review
+replies now preserve the last good screen and show recovery guidance. Approval
+success requires a valid acknowledgment and matching saved decision; failures
+retain the owner's draft and require a fresh review before another mutation.
+All 885 tests/build, TypeScript, mobile Chromium/WebKit refund checks, both PR
+workflows and all production jobs passed. Twelve independent live HTTP checks
+verified `e2a8466` at 00:32:37 UTC September 30 (September 29 Maryland time),
+including the published code, protected refund APIs and closed checkout. The
+authenticated owner refund list and Refresh control work; the current real
+queue is empty. No real refund, policy adoption or launch switch changed.
+Complete; do not repeat. Existing unfinished launch decisions above remain.
+
 **Published in PR #268, September 29:** checkout exact-record repair
 includes the existing labor-only checkbox sentence in the shared displayed,
 downloaded and hashed text, and separates policy-reference links from the label.
@@ -85,7 +97,9 @@ No active legal policy or launch switch changed. Full Spanish customer consent
 is still awaiting its reviewed release. Scoped business-inbox review found no
 new broker/county reply. Do not repeat the completed release.
 
-- Latest verified production release: PR #268,
+- Latest verified production release: PR #269,
+  `e2a84661a0ab717e53f79e258606371be15d806b`, verified September 29 Maryland time.
+- Prior verified production release: PR #268,
   `3748f7a5f6a72d29859ef51cd586c38410a7e570`, verified September 29; details above.
 - Prior verified production release: PR #267,
   `676e6199cb18a1b6e044fd2d53eef543dd022eaa`, verified September 29.

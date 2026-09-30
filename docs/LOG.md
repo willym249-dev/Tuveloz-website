@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-29 - PR #269 published and independently verified
+
+PR #269 merged tested head `bad6672` as
+`e2a84661a0ab717e53f79e258606371be15d806b`. Both PR workflows
+(`36647748308`, `36647748642`) and all three production jobs in
+`36649186327` passed. This publishes the refund-screen response validation and
+confirmation repair described below, preserving the completed PR #268 work.
+Production build, all 885 tests, TypeScript, lint (one existing navigation
+warning), mobile Chromium/WebKit refund workflows and the full release gates
+passed. No policy, fee, refund eligibility or live-release control changed.
+
+Independent checks at `2026-09-30T00:32:37.807Z` (September 29 Maryland time)
+passed twelve HTTP checks: exact release, healthy application/database/schema,
+the published refund module, public account shells, protected owner refund APIs,
+private participant APIs and closed checkout. The production asset filename
+differs from the local build; its actual `/assets/page-HyzWGMiu.js` reference was
+read from the live owner page and the new validation/recovery text verified.
+The signed-in owner Payments screen and Refresh list control both load the
+actual empty cancellation queue. No Tuveloz page error was captured; an earlier
+Cloudflare sign-in transition message belongs to the vendor's page, not Tuveloz.
+The public status screen independently shows Operational and release
+`e2a84661a0ab`, with accounts/applications open and requests/payments closed.
+
+No real refund, approval, application, email or customer record was created.
+Malformed-response and money-action tests are isolated synthetic proof, not
+production transactions. Private task-output proof:
+`pr269-live-release-20260929.json`, `pr269-live-owner-refunds-20260929.png`,
+and `pr269-live-status-20260929.png`. Complete: do not repeat this release.
+Policy adoption, bilingual customer consent, future paused-refund operation,
+partial/provider recovery and the remaining launch evidence stay unfinished;
+the owner's genuine provider application remains last.
+
 ## 2026-09-29 - Refund screen reply validation prepared and tested
 
 The owner refund screen accepted an empty HTTP-success approval reply and could
@@ -32,7 +64,8 @@ confirm that real route response shapes pass the screen's validator. Initial
 sandbox test resolution was denied by Windows; the full suite passed with
 normal filesystem access. No live refund, customer record, policy or gate changed.
 
-Publication is pending. Keep PR #268 complete. Refund initiation during a future
+Published and verified in PR #269; see the release entry above. Keep PR #268
+complete. Refund initiation during a future
 pause remains a separate reviewed operating rule; this repair does not loosen
 the current payout or live-key gates. Local proof is in the ignored
 `outputs/refund-response-*20260929.log` files and `refund-recovery-webkit.png`.

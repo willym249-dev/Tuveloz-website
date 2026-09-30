@@ -324,6 +324,15 @@ evidence and the distinction between the completed repair and remaining gates.
 Before calling the refund workflow complete, verify these outcomes with isolated
 records and an approved Stripe test when the transaction path is ready:
 
+**Owner-screen recovery published September 29 in PR #269 (`e2a8466`):** an empty
+successful HTTP reply can no longer claim that approval was saved. Confirmation
+requires a valid approval identifier and its matching saved decision. Incomplete
+list/detail replies retain the prior screen and draft with clear recovery
+guidance. All 885 tests/build, both mobile engines, required release checks,
+twelve live HTTP checks and the authenticated owner list/Refresh control passed.
+No refund rule, policy or launch gate changed; paused initiation and the remaining
+policy decisions are still open. Do not repeat this completed repair.
+
 | Case | Required result |
 | --- | --- |
 | Provider cancels or does not appear; $100 quote + $5 fee was paid | $105 customer refund; $100 provider portion and $5 Customer Service Fee recorded separately |
