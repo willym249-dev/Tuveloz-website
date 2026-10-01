@@ -6,6 +6,7 @@ import type { CustomerConsentPresentation } from "../../lib/customer-job-consent
 import type { CustomerPolicyLanguage } from "../../lib/customer-policy-acceptance";
 import { downloadCustomerConsent, validCustomerConsent } from "../../lib/customer-consent-response";
 import { requestAccountResponse } from "../../lib/account-response";
+import { validCustomerRequestSnapshot, validCustomerReview, validQuoteFeedbackReply } from "../../lib/customer-request-response";
 import { CustomerConsentDocuments } from "../components/customer-consent-documents";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
@@ -104,6 +105,12 @@ type CompletionConfirmation = {
   invoiceTotalCents?: number;
 };
 
+const REQUEST_RECOVERY_TRANSLATIONS: Record<string, string> = {
+  "We could not check the request. Your details are still here. Please refresh it again.": "No pudimos comprobar la solicitud. Sus datos siguen aquí. Vuelva a actualizarla.",
+  "We could not confirm the quote change. Check its saved status before trying again.": "No pudimos confirmar el cambio de la cotización. Compruebe si se guardó antes de intentarlo de nuevo.",
+  "We could not confirm whether your review was saved. Your draft is still here. Check its saved status before trying again.": "No pudimos confirmar si se guardó su reseña. Su borrador sigue aquí. Compruebe si se guardó antes de intentarlo de nuevo.",
+};
+
 export default function MyRequestPage() {
   const [selectionLanguage, setSelectionLanguage] = useState<CustomerPolicyLanguage>("en");
   const [refresh, setRefresh] = useState(0);
@@ -123,11 +130,30 @@ export default function MyRequestPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [confirmingReview, setConfirmingReview] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
+  const [feedbackRecoveryId, setFeedbackRecoveryId] = useState("");
+  const [reviewRecovery, setReviewRecovery] = useState(false);
   const [completion, setCompletion] = useState<CompletionConfirmation | null>(null);
   const [completionChecked, setCompletionChecked] = useState(false);
   const [completionBusy, setCompletionBusy] = useState(false);
   const [completionError, setCompletionError] = useState("");
   const acceptedQuote = quotes.find((quote) => quote.status === "accepted");
+  const canUpdateRequest = quotesReady && !decisionNeedsRefresh && !submittingQuoteId && !reviewBusy;
+  const displayedError = selectionLanguage === "es" ? REQUEST_RECOVERY_TRANSLATIONS[error] || error : error;
+
+  function refreshRequest() {
+    if (decisionInFlight.current) return;
+    setQuotesReady(false);
+    setAcceptedSelectionQuoteId("");
+    setRefresh(value => value + 1);
+  }
+
+  function savedStatusRecovery() {
+    return <div data-request-recovery data-manual-language lang={selectionLanguage}>
+      <p className="form-error" role="alert">{displayedError}</p>
+      <button type="button" className="button secondary" disabled={Boolean(submittingQuoteId) || reviewBusy}
+        onClick={refreshRequest}>{selectionLanguage === "es" ? "Comprobar si se guardó" : "Check saved status"}</button>
+    </div>;
+  }
 
   function selectionContext(quote: Quote) {
     return JSON.stringify([accessToken, selectionLanguage, refresh, quote.id,
@@ -162,27 +188,32 @@ export default function MyRequestPage() {
         quotes: Quote[];
         review: Review | null;
       };
-      if (!response.ok || !result.job || !Array.isArray(result.quotes)) throw new Error("Unable to load request. Please refresh and try again.");
+      if (!response.ok || !validCustomerRequestSnapshot(result)
+        || (token && result.accessToken !== token)
+        || (requestId && result.job.id !== requestId)) throw new Error("Unable to load request. Please refresh and try again.");
       setAcceptedSelectionQuoteId("");
       setQuotesReady(true);
       setDecisionNeedsRefresh(false);
+      setFeedbackRecoveryId(""); setReviewRecovery(false);
       setError("");
       setAccessToken(result.accessToken || token);
       setJob(result.job); setQuotes(result.quotes); setReview(result.review);
       const activeToken = result.accessToken || token;
       if (result.job?.status === "completed" && activeToken) {
-        const completionResponse = await fetch(
-          `/api/customer-completion?token=${encodeURIComponent(activeToken)}`,
-        );
-        const completionResult = await completionResponse.json().catch(() => null);
-        if (current && completionResponse.ok && completionResult) {
-          setCompletion(completionResult as CompletionConfirmation);
-        }
+        // A separate confirmation lookup must not invalidate the saved review/quotes.
+        try {
+          const completionResponse = await requestAccountResponse(
+            `/api/customer-completion?token=${encodeURIComponent(activeToken)}`, { signal: controller.signal, cache: "no-store" },
+          );
+          if (current && completionResponse.ok && typeof completionResponse.data.available === "boolean") {
+            setCompletion(completionResponse.data as CompletionConfirmation);
+          }
+        } catch { /* The request snapshot remains usable; completion is a separate control. */ }
       }
     }).catch(() => {
       if (!current) return;
       setQuotesReady(false);
-      setError("Unable to load request. Please refresh and try again.");
+      setError("We could not check the request. Your details are still here. Please refresh it again.");
     });
     return () => { current = false; controller.abort(); };
   }, [selectionLanguage, refresh]);
@@ -278,66 +309,72 @@ export default function MyRequestPage() {
   }
 
   async function declineQuote(quoteId: string, declineReason: string) {
-    setError("");
-    setSubmittingQuoteId(quoteId);
-    const response = await fetch("/api/customer-quotes", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "decline-quote",
-        token: accessToken,
-        quoteId,
-        declineReason,
-      }),
-    });
-    const result = (await response.json()) as { error?: string };
-    setSubmittingQuoteId("");
-    if (!response.ok) return setError(result.error || "Unable to update this quote.");
-    setQuotes((items) => items.map((item) => item.id === quoteId
-      ? { ...item, status: "declined", declineReason }
-      : item));
-    setPendingDeclineId("");
+    await updateQuoteFeedback(quoteId, "decline-quote", declineReason);
   }
 
   async function restoreQuote(quoteId: string) {
+    await updateQuoteFeedback(quoteId, "restore-quote", "");
+  }
+
+  async function updateQuoteFeedback(quoteId: string, action: "decline-quote" | "restore-quote", declineReason: string) {
+    const quote = quotes.find(item => item.id === quoteId);
+    if (!canUpdateRequest || decisionInFlight.current || !accessToken || job?.status !== "approved"
+      || quote?.status !== (action === "decline-quote" ? "submitted" : "declined")) return;
+    decisionInFlight.current = true;
     setError("");
     setSubmittingQuoteId(quoteId);
-    const response = await fetch("/api/customer-quotes", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "restore-quote",
-        token: accessToken,
-        quoteId,
-      }),
-    });
-    const result = (await response.json()) as { error?: string };
-    setSubmittingQuoteId("");
-    if (!response.ok) return setError(result.error || "Unable to restore this quote.");
-    setQuotes((items) => items.map((item) => item.id === quoteId
-      ? { ...item, status: "submitted", declineReason: "" }
-      : item));
+    setAcceptedSelectionQuoteId("");
+    try {
+      const response = await requestAccountResponse("/api/customer-quotes", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action, token: accessToken, quoteId, declineReason }),
+      });
+      if (!response.ok || !validQuoteFeedbackReply(response.data, action, declineReason)) {
+        throw new Error("Quote update could not be confirmed.");
+      }
+      setQuotes(items => items.map(item => item.id === quoteId
+        ? { ...item, status: action === "decline-quote" ? "declined" : "submitted", declineReason }
+        : item));
+      setPendingDeclineId("");
+    } catch {
+      setDecisionNeedsRefresh(true);
+      setFeedbackRecoveryId(quoteId);
+      setError("We could not confirm the quote change. Check its saved status before trying again.");
+    } finally {
+      decisionInFlight.current = false;
+      setSubmittingQuoteId("");
+    }
   }
 
   async function publishReview() {
+    if (!canUpdateRequest || decisionInFlight.current || !confirmingReview || !accessToken || review
+      || job?.status !== "completed" || !Number.isInteger(reviewRating) || reviewRating < 1 || reviewRating > 5
+      || reviewComment.trim().length < 3) return;
+    decisionInFlight.current = true;
+    const submittedRating = reviewRating, submittedComment = reviewComment.trim();
     setError("");
     setReviewBusy(true);
-    const response = await fetch("/api/reviews", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        token: accessToken,
-        rating: reviewRating,
-        comment: reviewComment,
-      }),
-    });
-    const result = (await response.json()) as { error?: string; review?: Review };
-    setReviewBusy(false);
-    if (!response.ok || !result.review) {
-      return setError(result.error || "Unable to publish this review.");
+    try {
+      const response = await requestAccountResponse("/api/reviews", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: accessToken, rating: submittedRating, comment: submittedComment }),
+      });
+      const savedReview = response.data.review;
+      if (!response.ok || response.data.ok !== true || !validCustomerReview(savedReview)
+        || savedReview.rating !== submittedRating || savedReview.comment !== submittedComment
+        || savedReview.providerName !== acceptedQuote?.providerName || savedReview.service !== job.service) {
+        throw new Error("Review could not be confirmed.");
+      }
+      setReview(savedReview);
+    } catch {
+      setDecisionNeedsRefresh(true);
+      setReviewRecovery(true);
+      setError("We could not confirm whether your review was saved. Your draft is still here. Check its saved status before trying again.");
+    } finally {
+      decisionInFlight.current = false;
+      setReviewBusy(false);
+      setConfirmingReview(false);
     }
-    setReview(result.review);
-    setConfirmingReview(false);
   }
 
   if (CUSTOMER_JOB_POSTING_PAUSED && !job?.isTestJob) {
@@ -410,9 +447,9 @@ export default function MyRequestPage() {
       </section>
       <div data-manual-language className="portal-intro customer-consent-tools">
         <label>
-          Quote authorization language / Idioma de la autorización
-          <select aria-label="Quote authorization language / Idioma de la autorización" value={selectionLanguage}
-            disabled={Boolean(submittingQuoteId)} onChange={event => {
+          {selectionLanguage === "es" ? "Autorizaciones y mensajes" : "Authorizations and messages"}
+          <select aria-label="Language for authorizations and messages / Idioma de autorizaciones y mensajes" value={selectionLanguage}
+            disabled={Boolean(submittingQuoteId) || reviewBusy} onChange={event => {
               setSelectionLanguage(event.target.value as CustomerPolicyLanguage);
               setQuotesReady(false);
               setAcceptedSelectionQuoteId("");
@@ -420,11 +457,10 @@ export default function MyRequestPage() {
             <option value="en">English</option><option value="es">Español</option>
           </select>
         </label>
-        <button type="button" className="button secondary" disabled={Boolean(submittingQuoteId)} onClick={() => {
-          setQuotesReady(false); setAcceptedSelectionQuoteId(""); setRefresh(value => value + 1);
-        }}>{selectionLanguage === "es" ? "Actualizar solicitud" : "Refresh request"}</button>
+        <button type="button" className="button secondary" disabled={Boolean(submittingQuoteId) || reviewBusy}
+          onClick={refreshRequest}>{selectionLanguage === "es" ? "Actualizar solicitud" : "Refresh request"}</button>
       </div>
-      {error && <p className="form-error portal-alert" role="alert" data-manual-language>{error}</p>}
+      {error && !feedbackRecoveryId && !reviewRecovery && <p className="form-error portal-alert" role="alert" data-manual-language>{displayedError}</p>}
       {job?.hasIssueImage && (
         <section className="customer-photo-card">
           <span>Photo attached to your request</span>
@@ -519,6 +555,7 @@ export default function MyRequestPage() {
                   : ""}
               </p>
             </details>
+            {feedbackRecoveryId === quote.id && savedStatusRecovery()}
             {quote.status === "accepted" ? (
               <>
                 <div className="portal-success">✓ Quote selected</div>
@@ -545,7 +582,7 @@ export default function MyRequestPage() {
                 {job?.status === "approved" && (
                   <button
                     className="button secondary"
-                    disabled={submittingQuoteId === quote.id}
+                    disabled={!canUpdateRequest}
                     onClick={() => restoreQuote(quote.id)}
                     type="button"
                   >
@@ -624,7 +661,7 @@ export default function MyRequestPage() {
                 <div className="quote-reason-grid">
                   {QUOTE_DECLINE_REASONS.map((reason) => (
                     <button
-                      disabled={submittingQuoteId === quote.id}
+                      disabled={!canUpdateRequest}
                       key={reason.value}
                       onClick={() => declineQuote(quote.id, reason.value)}
                       type="button"
@@ -635,7 +672,7 @@ export default function MyRequestPage() {
                 </div>
                 <button
                   className="button secondary"
-                  disabled={submittingQuoteId === quote.id}
+                  disabled={!canUpdateRequest}
                   onClick={() => declineQuote(quote.id, "")}
                   type="button"
                 >
@@ -671,6 +708,7 @@ export default function MyRequestPage() {
                 )}
                 <button
                   className="quote-pass-link"
+                  disabled={!canUpdateRequest}
                   onClick={() => {
                     setPendingQuoteId("");
                     setPendingDeclineId(quote.id);
@@ -808,6 +846,7 @@ export default function MyRequestPage() {
                       aria-pressed={reviewRating === rating}
                       className={reviewRating >= rating ? "selected" : ""}
                       key={rating}
+                      disabled={reviewBusy}
                       onClick={() => {
                         setReviewRating(rating);
                         setConfirmingReview(false);
@@ -822,6 +861,7 @@ export default function MyRequestPage() {
               <label className="review-comment">
                 Comment
                 <textarea
+                  disabled={reviewBusy}
                   maxLength={800}
                   onChange={(event) => {
                     setReviewComment(event.target.value);
@@ -833,18 +873,26 @@ export default function MyRequestPage() {
                 />
                 <small>{reviewComment.length}/800</small>
               </label>
+              {reviewRecovery && savedStatusRecovery()}
               {confirmingReview ? (
                 <div className="quote-confirm review-confirm">
-                  <strong>Publish this review?</strong>
-                  <p>This will make your {reviewRating}-star rating and comment visible to other customers.</p>
+                  <strong data-manual-language>{job.isTestJob
+                    ? selectionLanguage === "es" ? "¿Guardar esta reseña de prueba?" : "Save this test review?"
+                    : selectionLanguage === "es" ? "¿Publicar esta reseña?" : "Publish this review?"}</strong>
+                  <p data-manual-language>{job.isTestJob
+                    ? selectionLanguage === "es" ? "Esta reseña de prueba será privada y no afectará las calificaciones públicas." : "This test review stays private and will not affect public ratings."
+                    : selectionLanguage === "es" ? `Su calificación de ${reviewRating} estrellas y su comentario serán visibles para otros clientes.` : `Your ${reviewRating}-star rating and comment will be visible to other customers.`}</p>
                   <div>
                     <button
                       className="button primary"
-                      disabled={reviewBusy}
+                      disabled={!canUpdateRequest}
                       onClick={publishReview}
                       type="button"
+                      data-manual-language
                     >
-                      {reviewBusy ? "Publishing…" : "Yes, publish review"}
+                      {reviewBusy ? selectionLanguage === "es" ? "Guardando…" : "Saving…"
+                        : job.isTestJob ? selectionLanguage === "es" ? "Guardar reseña de prueba" : "Save test review"
+                          : selectionLanguage === "es" ? "Sí, publicar reseña" : "Yes, publish review"}
                     </button>
                     <button
                       className="button secondary"
@@ -859,7 +907,7 @@ export default function MyRequestPage() {
               ) : (
                 <button
                   className="button primary review-button"
-                  disabled={reviewRating === 0 || reviewComment.trim().length < 3}
+                  disabled={!canUpdateRequest || reviewRating === 0 || reviewComment.trim().length < 3}
                   onClick={() => setConfirmingReview(true)}
                   type="button"
                 >

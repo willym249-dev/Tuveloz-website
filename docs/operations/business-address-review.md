@@ -2,7 +2,7 @@
 
 - **Status:** public-profile and Stripe support corrections complete; remaining private records explicitly listed
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-26
+- **Last reviewed:** 2026-10-01
 
 Keep completed work separate from records that have not been verified. Do not
 restart the entire address migration or claim every account was updated. Exact
@@ -37,3 +37,24 @@ was rechecked September 26: its October 1, 2026 effective date remains the
 earliest review date for the planned qualifying-CMRA principal-office change.
 The mailbox provider's qualifying status and actual filing still need review;
 an active mailbox account alone does not complete that filing.
+
+## October 1 principal-office checkpoint
+
+The official [Chapter 247 record](https://mgaleg.maryland.gov/mgawebsite/Legislation/Details/HB0308?ys=2026RS)
+was refreshed October 1 and confirms the law is effective today. It permits a
+Maryland address supplied by a USPS-authorized commercial mail receiving agency
+to serve as an LLC's principal office. This source check is complete; it does
+not establish the assigned mailbox operator's qualification or change any record.
+
+The current [SDAT forms directory](https://dat.maryland.gov/Pages/sdatforms.aspx)
+lists the Change Principal Office or Resident Agent resolution and its online
+filing entry. [Corporations and Associations 1-203](https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gca&enactments=false&section=1-203)
+lists a $25 base processing fee for a principal-office address change; the
+actual submission total and any optional service fees have not been inspected.
+No filing, purchase, address disclosure, or resident-agent change was made.
+
+Next: verify the exact assigned Maryland mailbox operator's USPS authorization
+and the permitted account use, then prepare a principal-office-only filing for
+owner review with its displayed total. Keep private addresses outside this
+repository. Preserve all completed public-profile, mailbox, Stripe support and
+Google Payments work above; those updates do not establish an SDAT filing.

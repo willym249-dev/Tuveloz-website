@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-30
+- **Last reviewed:** 2026-10-01
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,76 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-01 - Customer quote and review recovery candidate
+
+The separate decline/restore-quote and review follow-up is implemented on
+`review/customer-quote-review-recovery-20261001`, not published yet. Six mobile
+baseline cases reproduced stuck controls, uncaught network errors and duplicate
+writes before repair. Bounded responses, a synchronous shared write guard and
+validated saved receipts now recover these failures. An uncertain result keeps
+the review draft/rating and requires a read-only saved-status check before any
+deliberate retry; it never automatically repeats the write. Missing/corrupt
+saved review state cannot unlock publishing. A failed secondary completion
+lookup no longer discards otherwise valid quote/review state.
+
+The existing language selector explicitly scopes authorizations and messages;
+new recovery messages and review confirmations support EN/ES. This does not
+claim full translation of the private request page. Private test-review wording
+now describes its actual visibility. No legal text/version, backend route,
+schema, eligibility, launch/payment switch or real record changed.
+
+Validation on the final candidate: production build and **917/917 tests**,
+TypeScript, lint (one existing language-navigation warning), **50/50** new
+Chromium/WebKit mobile recovery scenarios and **26/26** existing mobile consent
+scenarios passed. Actual route tests use migrated SQLite and verify returned
+snapshots after decline/restore. Browser fixtures intercept every API request;
+no real quote, review, message, booking or payment was submitted. The new suite
+is wired into required release verification. Evidence is in ignored
+`outputs/customer-request-recovery-*` logs/reports; publication must be recorded
+separately with the exact release and independent live checks.
+
+## 2026-10-01 - PR #274 published and independently verified
+
+The owner said "continue" after the concrete PR #274 publication request. All
+required PR checks passed on `204f5daba58eeb780dd672c600676c4134cd65b1`:
+Verify Tuveloz `36810874305` (both jobs) and deployment rehearsal `36810874897`.
+PR #274 merged at `2026-10-01T03:59:23Z` as
+`2c455a599207e5f906b668857443ac091ae3299d`. All three jobs in production
+workflow `36813021145` passed. Independent verification at
+`2026-10-01T04:18:49.396Z` passed **33 live HTTP checks**: exact release,
+healthy application/database/schema, bilingual account and policy pages,
+paused request forms, rejected request submissions, private quote reads and
+decisions, protected APIs, and closed checkout. Do not repeat publication,
+request approval again, or describe the prior candidate state as current.
+
+The isolated new-consent evidence remains 914 full regressions and 26 mobile
+browser scenarios. Live request/selection interaction remains deliberately
+closed; the release is not proof of an actual provider or transaction. Git blob
+comparison confirms unchanged launch/payment controls, policy manifest, database
+schema, legacy customer consent and provider acceptance helpers. No real
+application, acceptance, booking, payment or message was created by this work.
+Evidence: task outputs `pr274-merged-release-20261001.json`,
+`pr274-production-release-20261001.json`, `pr274-live-release-20261001.json`,
+`pr274-preserved-boundaries-20261001.json`, and the ignored production watch log.
+
+Also completed the existing October 1 address-law checkpoint using the official
+Chapter 247 page, current SDAT forms directory and statutory filing-fee source.
+The law is effective; the qualifying mailbox operator and actual reviewed
+principal-office-only filing remain unfinished. No filing, purchase or address
+change was made. See operations/business-address-review.md. Existing public and
+Stripe support address corrections remain complete.
+
+The Gmail connector still identifies the personal account and browser inventory
+exposes no connected Chrome or business tabs. No mailbox was searched or email
+sent. This access boundary does not undo completed business-email activation.
+
+Separate source follow-up: decline/restore-quote and publish-review handlers in
+the private request page still use unbounded fetch/JSON awaits without recovery
+guards. Recorded a focused reproduce-first item in OPEN-ITEMS; no production
+failure was observed and this release makes no claim about those untouched
+controls. Existing owner, coverage, tax, processor-delivery and actual-provider
+requirements remain open. The owner's real provider application stays last.
 
 ## 2026-09-30 - Request and provider-selection bilingual consent candidate
 

@@ -1,8 +1,8 @@
 # Payment wording and acceptance review
 
-- **Status:** policies published in PR #272 and checkout in PR #273; request/selection consent locally tested, awaiting publication; launch review remains
+- **Status:** policies published in PR #272, checkout in PR #273, request/selection consent in PR #274; launch review remains
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-30
+- **Last reviewed:** 2026-10-01
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
 
 This is the specific remaining policy work after PR #256, reviewed against
@@ -41,9 +41,9 @@ propagation, settlement, or any outstanding legal/coverage/tax approval.
 Earlier references below to an unfinished implementation describe the published
 PR #271/#272 baseline, not work to repeat after this release.
 
-### Remaining customer-path boundary
+### October 1 request/privacy/provider-selection release - PR #274
 
-**September 30 follow-up candidate:** `lib/customer-job-consent.ts` now supplies
+`lib/customer-job-consent.ts` now supplies
 exact English/Spanish request, privacy and provider-selection evidence with
 new language-specific versions. The routes and browser forms bind those records,
 downloads and translated policy links. Legacy `customer-job-scope.ts` evidence
@@ -54,26 +54,19 @@ are private to the request; full evidence includes its bound identifiers.
 
 Build/914 tests, TypeScript, lint (one existing warning), and 26 mobile browser
 cases passed. The route tests use migrated SQLite and synthetic eligibility,
-not actual service approval or live transactions. This candidate is not yet
-published. The finding below describes the live PR #273 baseline; do not repeat
-the new implementation after it is published. Whole private-workspace translation,
-receipt-language propagation and final legal review remain separate.
+not actual service approval or live transactions. Owner-approved PR #274 is
+published as `2c455a599207e5f906b668857443ac091ae3299d`; required PR checks and
+all three production jobs passed. Thirty-three independent live HTTP checks at
+`2026-10-01T04:18:49.396Z` confirmed the exact healthy release, bilingual pages,
+protected request/quote routes and closed bookings/payments. This implementation
+is complete; do not repeat it or rewrite historical evidence. The old English
+schema-1 helpers remain intentionally unchanged for legacy records.
 
-The September 30 source follow-up confirms that this change is specifically
-quote **checkout** consent. The separate request-scope/privacy evidence and
-provider-quote-selection evidence in `lib/customer-job-scope.ts` still generate
-English-only text and schema-1 policy metadata without an explicit presentation
-language. `CustomerRequestForm` and `app/my-request/page.tsx` append policy links
-inside those checkbox labels; request/selection submissions do not bind the
-chosen site language. Do not call those paths complete bilingual consent or
-silently regenerate historical evidence with the new checkout helper.
-
-Before customer job requests are opened, review those exact texts and bind the
-displayed language, complete translated links and immutable version/hash at
-each of those steps. Preserve old evidence readers and require fresh consent
-after language/scope changes. Existing onboarding locks keep these customer
-job actions closed. This source finding is a remaining implementation boundary,
-not evidence of a failed live payment or a new legal requirement.
+Whole private-workspace translation, separate decline/restore/review error
+recovery, receipt-language propagation and final legal review remain separate.
+The source follow-up for those untouched private controls is recorded in
+OPEN-ITEMS; it is not a demonstrated production incident. Customer job actions
+remain closed behind the existing launch controls.
 
 ## September 30 approved policy publication
 

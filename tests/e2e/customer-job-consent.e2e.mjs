@@ -36,8 +36,8 @@ const terms = page => page.locator('[name="terms-accepted"]');
 const privacy = page => page.locator('[name="privacy-acknowledged"]');
 const quoteCheck = page => page.locator('.quote-confirm input[type="checkbox"]');
 const quoteConfirm = page => page.getByRole("button", { name: /^(Confirm quote|Confirmar cotización)$/ });
-const langSelect = page => page.getByLabel("Quote authorization language / Idioma de la autorización");
-const quote = async language => ({ ...syntheticSelectionScope.quote, id: "synthetic-quote", priceCents: "10000", status: "submitted",
+const langSelect = page => page.getByLabel("Language for authorizations and messages / Idioma de autorizaciones y mensajes");
+const quote = async language => ({ ...syntheticSelectionScope.quote, id: "synthetic-quote", priceCents: "10000", status: "submitted", declineReason: "",
   providerEmail: undefined, ratingAverage: 0, reviewCount: 0, providerWorkLocations: "I travel to customers",
   providerBusinessMunicipality: "Rockville", selectionAcceptance: await syntheticSelectionConsent(language), selectionBlockedReason: "" });
 async function quoteReply(language, changes = {}) {

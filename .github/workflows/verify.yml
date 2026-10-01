@@ -134,6 +134,9 @@ jobs:
       - name: Verify bilingual request and provider-selection consent without live bookings
         run: npm run test:e2e:customer-consent
 
+      - name: Verify customer quote feedback and review recovery without live submissions
+        run: npm run test:e2e:request-recovery
+
       - name: Verify provider onboarding receipts and retry behavior in both languages
         run: npm run test:e2e:onboarding
 

@@ -4,22 +4,36 @@
 - **Customer launch:** closed
 - **Provider applications:** open
 - **Owner provider application:** intentionally last
-- **Last reconciled:** 2026-09-30
+- **Last reconciled:** 2026-10-01
 
 This is the current handoff. It separates published code, observed production
 behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
+## Tested follow-up awaiting release
+
+October 1: decline/restore-quote and review recovery is implemented locally.
+Six baseline mobile failures were reproduced; build/917 tests, 50 new mobile
+recovery scenarios, 26 existing consent scenarios and TypeScript pass. Lint has
+only the existing language-navigation warning. Drafts survive, double clicks
+are guarded and uncertain writes require a read-only status check before retry.
+Finish CI/publication and independent live verification; do not repeat the
+completed implementation. No launch/payment, policy or schema change.
+
 ## Latest completed release
 
-**Prepared follow-up, not live:** branch
-`review/customer-request-selection-consent-20261001` implements exact EN/ES
-request/privacy/provider-selection consent, immutable versions, preserved legacy
-readers, draft/consent resets, safe recovery and phone wrapping. Local production
-build/914 tests, TypeScript, lint (one existing warning) and 26 phone scenarios
-passed. See LOG and the payment review. Required remote checks and publication
-approval remain; no policy-page release, provider record or launch switch changed.
+**PR #274 is published and independently verified** as
+`2c455a599207e5f906b668857443ac091ae3299d`. Exact EN/ES request/privacy/provider
+selection consent now binds displayed, downloaded and saved evidence, preserves
+legacy records, clears stale consent while retaining drafts, recovers failed
+selection replies, and wraps on phones. Build/914 tests, TypeScript, lint (one
+existing warning), 26 mobile scenarios, required PR checks and all three
+production jobs passed. Thirty-three independent HTTP checks at
+`2026-10-01T04:18:49.396Z` verify the exact healthy release, bilingual pages,
+private controls and closed requests/payments. Complete; do not repeat this
+publication. Separate decline/restore/review recovery, real provider evidence
+and launch decisions remain. See LOG, OPEN-ITEMS and the payment review.
 
 PR #273 is published as `152639cdd7c12e2bb218be6a4c95d0b300b370d4`, independently
 verified September 30 (Maryland time). Exact bilingual checkout consent now
@@ -29,9 +43,8 @@ regressions/build, TypeScript, 48 mobile checkout scenarios, required PR checks
 and all three production jobs passed. Twenty-three independent HTTP checks at
 `2026-10-01T02:35:45.175Z` confirm the exact healthy release, bilingual account
 and policy pages, private controls and closed requests/payments. This checkout
-release is complete; do not repeat it. Earlier request-scope/privacy and
-provider-selection consent still needs explicit language-bound evidence before
-customer jobs open; see the existing payment review and OPEN-ITEMS.
+release is complete; do not repeat it. Request-scope/privacy and provider
+selection consent was subsequently completed in PR #274 above.
 
 PR #272 is owner-approved, published as `e6fceca7`, and independently verified
 September 30 (Maryland time). It updates English/Spanish payment policies and
@@ -65,7 +78,7 @@ Code checks cannot approve those gates.
 
 | Work group | What is complete | What still closes the group |
 | --- | --- | --- |
-| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception, PR #272's bilingual policy adoption and PR #273's exact bilingual checkout consent are verified. | Bind exact EN/ES request/privacy/provider-selection consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception, PR #272's bilingual policies, PR #273's exact bilingual checkout consent and PR #274's request/privacy/provider-selection consent are verified. | Resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment and separate private request-control recovery remain distinct from completed consent work. |
 | Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
 | Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
 | Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |
