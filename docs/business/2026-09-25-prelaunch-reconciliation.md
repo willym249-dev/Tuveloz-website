@@ -11,6 +11,17 @@ behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
+## Current work awaiting publication review
+
+September 30: the concrete English/Spanish payment-policy candidate and complete
+Spanish Customer Agreement are prepared locally. Build, 896 regression tests,
+TypeScript and six Chromium/WebKit phone/desktop scenarios pass; remote PR checks
+and owner review remain. Nothing from this candidate is deployed. Shared Terms
+and Payments get new versions, so old provider consent is preserved but cannot
+qualify for those new terms. Exact bilingual customer checkout consent remains
+separate and closed. See `legal/payment-policy-reconciliation.md` for the complete
+change and remaining boundaries. Preserve the published PR #271 repair.
+
 ## Remaining work for the first customer pilot
 
 This is the existing launch scope grouped by who can finish it, not a new

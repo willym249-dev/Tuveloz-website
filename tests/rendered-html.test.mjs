@@ -507,9 +507,9 @@ test("build records policy consent and publishes legal, privacy, payment, and se
   assert.ok(contents.includes("Payment, Cancellation, and Refund Policy"));
   assert.ok(contents.includes("I am 18 or older and agree to the"));
   assert.ok(contents.includes("TUVELOZ LLC"));
-  assert.ok(contents.includes("merchant of record"));
+  assert.ok(contents.includes("LLC, processed by Stripe. Your selected independent provider business performs the vehicle service."));
   assert.ok(contents.includes("Any charge, transfer, or connected-account configuration remains in testing"));
-  assert.ok(contents.includes("technical labels or movement of funds do not by themselves determine who is merchant of record"));
+  assert.ok(contents.includes("Identifying TUVELOZ LLC as the payment recipient does not by itself settle tax treatment, agency status, or every applicable legal duty."));
   assert.ok(layoutSource.includes('metadataBase: new URL("https://tuveloz.com")'));
   assert.ok(layoutSource.includes('manifest: "/manifest.webmanifest"'));
   assert.ok(sitemapSource.includes('path: "/payments"'));

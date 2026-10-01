@@ -1,20 +1,20 @@
 # Spanish Customer Agreement — complete translation draft
 
-- **Status:** draft; not published or registered as an active translation
+- **Status:** integrated release candidate; owner publication review pending; not deployed
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
-- **Source:** `app/customer-agreement/page.tsx` at `299fd4c`
-- **English release:** `customer-agreement-2026-08-06`
-- **Normalized English source SHA-256:** `76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2`
+- **Last reviewed:** 2026-09-30
+- **Source:** `app/customer-agreement/page.tsx` in the September 30 review candidate
+- **English release candidate:** `customer-agreement-2026-09-30`
+- **Normalized English source SHA-256:** `00342995608826e89446d909edf3350866a8d658d027d1ed44b1ca4ad3b80e6d`
 
-This translates the complete existing English agreement. It does not adopt the
-separate proposed payment-policy changes. Those paragraphs must be reconciled
-in both languages through [the payment review](payment-policy-reconciliation.md)
-before a new policy release. Reuse the existing `lib/policy-spanish/` rendering
-and translation-release mechanism; do not replace the completed provider work.
-
-The policy date below translates the English policy's date. September 27 is
-the preparation date of this draft, not a new effective date.
+This complete translation now includes the September 30 English release
+candidate's payment-recipient, collection-timing and full-refund clauses.
+The owner already chose collection timing and the full-refund amount; publication
+of this complete policy update is still pending. It uses the existing
+`lib/policy-spanish/` renderer and does not replace provider acceptance logic.
+See [the payment review](payment-policy-reconciliation.md). The date below belongs
+to the proposed revision, not a claim that it is already published or approved
+for live transactions.
 
 <!-- BEGIN CUSTOMER AGREEMENT TRANSLATION -->
 
@@ -25,7 +25,7 @@ the preparation date of this draft, not a new effective date.
 Borrador para revisión operativa sobre sus decisiones y el acuerdo directo con
 el negocio proveedor que usted elija.
 
-Última actualización: 6 de agosto de 2026
+Última actualización: 30 de septiembre de 2026
 
 ## Información importante sobre el estado actual
 
@@ -118,15 +118,28 @@ ni administra.
 
 ## 7. Precio, pago, cancelación y reembolsos
 
-Los pagos reales de clientes están actualmente desactivados. La configuración
-del producto propone una Tarifa de Servicio al Cliente equivalente al 5% del
-subtotal del proveedor, sujeta al cumplimiento documentado de la ley aplicable
-y a la aprobación final del contador público certificado o asesor fiscal,
-procesador de pagos, aseguradora y responsables operativos. Si se adopta ese
-precio, el subtotal del proveedor, la tarifa por separado y el total deberán
-mostrarse claramente antes de que usted decida si autoriza el pago. La
-[Política de pagos, cancelaciones y reembolsos](/es/payments) explica la
-administración de pagos y las protecciones al cliente propuestas.
+Los pagos reales de clientes están actualmente desactivados. Cuando se habiliten
+los pagos, el pago que haga a través de Tuveloz se realizará a TUVELOZ LLC y será
+procesado por Stripe. El negocio proveedor independiente que usted elija
+realizará el servicio de su vehículo. Para obtener ayuda con un pago o reembolso,
+escriba a [hello@tuveloz.com](mailto:hello@tuveloz.com).
+
+Verá la cotización de mano de obra del proveedor, una Tarifa de Servicio al Cliente por separado equivalente al 5% del subtotal del proveedor y el total antes de pagar. Pagará ese total al
+finalizar el pago. La transferencia al proveedor se realizará después de
+terminar el trabajo y completar las verificaciones de pago necesarias. La tarifa
+se suma a su total y no se descuenta de la cotización del proveedor. Usted compra
+las piezas por separado.
+
+Según la política de cancelación propuesta, un reembolso completo incluye el
+importe de mano de obra del proveedor y la Tarifa de Servicio al Cliente del 5%
+de Tuveloz si el proveedor cancela o no se presenta, o si usted cancela antes de
+que comience el trabajo autorizado. Tuveloz cubre cualquier comisión de
+procesamiento original que Stripe retenga; no se descuenta de ese reembolso.
+
+El uso en producción todavía requiere documentar el cumplimiento de la ley
+aplicable y la revisión final del asesor fiscal, procesador, aseguradora y
+responsables operativos. La [Política de pagos, cancelaciones y reembolsos](/es/payments)
+explica el proceso de pago, los demás casos de cancelación y las protecciones al cliente.
 
 ## 8. Problemas con el servicio
 
@@ -166,18 +179,37 @@ labor-only scope, independent-provider role, explicit no-warranty acknowledgment
 non-waivable rights and onboarding-only state. Translation does not establish
 that the underlying legal positions have received final launch review.
 
-When this complete translation and any paired English payment changes are
-adopted, register its source hash against the exact English source hash, with
-its real release ID and effective date. Add the title lookup, `Customers` eyebrow,
-customer-policy navigation and route/metadata together. Existing checks that
-intentionally classify `/customer-agreement` as English-only must then be
-updated to exercise the complete Spanish page, switching, links and saved
-language. A partial dictionary entry alone is insufficient.
+The September 30 review branch now integrates the complete translation into
+`PolicyPage`, including the title lookup, Clientes eyebrow, customer navigation,
+`/es/customer-agreement` route, search metadata and Spanish Terms link. Its
+English and Spanish source hashes are bound in the release manifests. Those
+manifests describe the candidate deployment, not a completed publication.
 
-The existing Spanish Terms source also explicitly labels its customer-agreement
-link as English. Coordinate that navigation change with its translation release
-and preserve previously accepted provider evidence. Updating a hashed source
-without a reviewed compatibility/re-acceptance plan is not a shortcut.
+The English Terms, Customer Agreement and Payment Policy receive September 30
+versions. Terms and Payments are shared with providers: their prior acceptance
+records are preserved, but do not satisfy the new versions. The historical
+English hashes and browser presentations are retained as dated fixtures;
+regressions reject stale presentations and preserve the four unchanged provider
+policy releases. A provider must expressly accept the new shared versions
+before those acceptances can qualify for later service eligibility.
+
+The new customer translation entry deliberately has no provider acceptance-text
+hash. Publishing the page does not enable Spanish checkout consent. PR #271's
+explicit language checks and closed live-payment controls remain unchanged.
+The exact customer authorization, its translated immutable evidence and the
+remaining launch review still need separate completion.
+
+Current candidate validation: all 896 regression tests, production build and
+TypeScript pass. Six real-component browser scenarios cover Chromium and WebKit
+at 320, 390 and 1280 pixels, full translated text, both switch directions,
+policy link destinations, saved language, no overflow and no page errors.
+Server rendering and navigation are additionally covered by the updated
+existing account-signup CI test; record its result after the PR checks finish.
+Lint retains only the existing language-navigation warning. These tests do not
+establish legal equivalence, final adoption or permission to launch.
+
+Historical September 27 draft evidence follows; it does not describe the newer
+payment clauses or claim a production check of this candidate.
 
 Validation retained privately in `outputs/customer-spanish-draft-validation-20260927.json`:
 eleven sections, fourteen corresponding paragraphs, both policy links, 5% rate

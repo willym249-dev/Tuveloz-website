@@ -41,7 +41,7 @@ test("account language hints work before storage and stay consistent after switc
   assert.deepEqual(client.assigned, []);
   assert.equal(languageClient("/account", "es", false, "?lang=en").getLanguageSnapshot(), "en");
   assert.equal(languageClient("/account", "es", false, "?lang=invalid").getLanguageSnapshot(), "es");
-  assert.equal(languageClient("/customer-agreement", "es", false, "?lang=es").getLanguageSnapshot(), "en");
+  assert.equal(languageClient("/copyright", "es", false, "?lang=es").getLanguageSnapshot(), "en");
 });
 
 test("private privacy language hints preserve data scope and work without browser storage", () => {
@@ -73,8 +73,8 @@ test("explicit Spanish URLs stay Spanish with an English saved preference", () =
   }
 });
 
-test("legal and unknown pages stay English regardless of saved preference", () => {
-  for (const path of ["/customer-agreement", "/es/customer-agreement", "/es/account", "/unknown"]) {
+test("untranslated legal and unknown pages stay English regardless of saved preference", () => {
+  for (const path of ["/copyright", "/es/copyright", "/es/account", "/unknown"]) {
     assert.equal(languageClient(path, "es").getLanguageSnapshot(), "en", path);
   }
 });

@@ -195,7 +195,7 @@ test("the agreements and the Stripe receipt describe the same fee", async () => 
 
   // Customer side: 5% of the provider subtotal, shown before checkout. The
   // substance is what matters and it is unchanged; only the label is pending.
-  assert.match(customerAgreement, /fee equal to 5% of the\s+provider subtotal/);
+  assert.match(customerAgreement, /Service Fee equal to 5% of the\s+provider subtotal/);
   assert.match(payments, /fee equal to 5% of the\s+provider/);
 
   // The line item a customer actually sees on the receipt and the authorization.

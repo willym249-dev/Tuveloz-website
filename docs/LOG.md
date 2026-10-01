@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Complete bilingual customer policy candidate; publication pending
+
+Prepared `review/customer-payment-policies-20260930` from the verified PR #271
+release plus its two retained local handoff commits. No other open PR was found.
+The owner previously chose payment at checkout and a full refund including the
+5% customer fee for provider cancellation/no-show or pre-work customer
+cancellation; these settled choices were not asked again.
+
+Terms, Customer Agreement and Payment Policy now state the payment recipient,
+collection versus provider-transfer timing and the approved refund allocation,
+with matching Spanish wording. The complete customer translation is integrated
+into the existing renderer, switch, policy navigation and metadata. It has all
+11 sections and 17 paragraphs. Three English policy versions and paired Spanish
+source hashes are prepared for September 30. No legal, tax, insurance or launch
+review is claimed by this change.
+
+Provider shared Terms/Payments get new versions; stale browser presentations
+are rejected, dated historical fixtures remain intact, and the other four
+provider policies retain their existing evidence. The new customer translation
+has no provider acceptance hash and does not enable Spanish checkout consent.
+No database writes, credentials, launch locks, payment logic or live charges
+changed. PR #271's checkout-language boundary remains in force.
+
+Validation: production build and all 896 regression tests pass; TypeScript
+passes; lint has only the existing site-language navigation warning. The old
+built-output assertions expected the retired merchant uncertainty wording;
+they now assert the specific payment-recipient explanation. A sandbox-only
+esbuild access error was resolved by rerunning with normal local filesystem
+access. Six actual-component browser scenarios pass in Chromium/WebKit at
+320/390/1280px: complete Spanish text, links, both language-switch directions,
+persisted language, no page errors and no overflow. Existing full-server account
+CI now also checks customer-policy navigation and Spanish metadata/hydration.
+Required remote CI and owner approval of this exact policy publication remain.
+
+Private evidence: `outputs/customer-policy-{tests,regression,typecheck,lint,browser}-20260930.log`
+and `outputs/customer-policy-browser-20260930/`. Update the same legal review and
+prelaunch checklist after remote checks; do not report this candidate as live.
+
 ## 2026-09-30 - PR #271 published and independently verified
 
 PR #271 is live as `61a2e4a65251d60a615f5eb9fe75d082ac0a1e88`. Both required

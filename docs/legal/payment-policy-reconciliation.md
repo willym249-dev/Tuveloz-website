@@ -1,6 +1,6 @@
 # Payment wording and acceptance review
 
-- **Status:** draft; full-refund rule approved September 28 and collection timing approved September 30; not an effective policy or launch approval
+- **Status:** policy release candidate prepared; owner publication review pending; not deployed or a launch approval
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-30
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
@@ -10,6 +10,55 @@ release `299fd4c`, with completed processor/release evidence updated September 2
 It preserves the existing service-provider relationship, 5%
 Customer Service Fee and closed marketplace. Nothing below changes an account,
 accepted agreement, charge, policy release or launch decision.
+
+## September 30 publication candidate
+
+The review branch now contains the concrete updates to Terms sections 3 and 7,
+Customer Agreement section 7, and Payment Policy introduction and sections 3–6
+and 8, together with matching complete Spanish pages. The customer translation
+has all eleven sections; it is integrated into the existing page renderer,
+language switch, navigation and search metadata.
+
+The owner is being asked to review these exact effects before publication:
+
+- Identify the customer payment as made to TUVELOZ LLC through Stripe, while the
+  selected independent provider performs the vehicle service.
+- Distinguish payment at checkout from the later provider transfer after
+  completion and required payment checks. Keep the fee at 5% of the provider
+  subtotal, added to the customer total rather than deducted from the quote.
+- State the already-approved full refund of labor plus the 5% fee for provider
+  cancellation/no-show or customer cancellation before authorized work starts.
+  Tuveloz covers the original processing fee Stripe retains.
+- Keep the other existing baseline cancellation protections and mandatory
+  customer rights. Do not invent final tax treatment, transfer deadlines,
+  reserve levels, partial-refund outcomes or an automatic provider recovery right.
+
+Three English versions and their paired Spanish releases advance to September
+30. The manifest effective timestamp is the candidate preparation time,
+`2026-10-01T00:09:49.679Z` (September 30 in Maryland). These values are scoped to
+the review branch until approved and published; recheck them if adoption changes.
+The four unaffected provider releases remain identical. Because Terms and
+Payments are shared, prior provider acceptances cannot stand in for acceptance
+of the new text. Preserve all old immutable records; request fresh acceptance
+through the existing application/eligibility controls. Historical fixture files
+are retained and tested against the new candidate.
+
+This page translation is not the full customer consent integration. The new
+customer Spanish manifest entry does not claim provider acceptance, and PR
+#271 still refuses Spanish checkout authorization until the complete reviewed
+customer evidence is implemented. No runtime payment flow, refund action,
+launch review record, database record, or production lock is changed here.
+
+Validation: production build, 896 regression tests and TypeScript pass. Six
+Chromium/WebKit scenarios cover 320px, 390px and desktop policy rendering,
+complete translated text, links, both switch directions and saved language,
+with no page errors or horizontal overflow. Lint has only the existing
+language-navigation warning. Required remote checks are still pending.
+
+Stripe's current [merchant documentation](https://docs.stripe.com/connect/merchant-of-record)
+and [refund documentation](https://docs.stripe.com/refunds) were checked on
+September 30. They support the payment-recipient distinction and retained
+processing costs; they do not replace tax, insurance or legal review.
 
 ## Evidence and findings
 
@@ -531,7 +580,7 @@ provider's own warranty or service description silently.
 
 | Existing component | Required customer-side change after text adoption |
 | --- | --- |
-| `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. Existing provider release metadata and acceptance hashes remain valid; customer additions must not imply provider re-acceptance. |
+| `config/policy-spanish-releases.json` and `lib/policy-spanish/` | Reuse complete static translations and English/Spanish source hashes. Register the new customer translation against its actual English revision. The customer-only addition does not itself change provider consent. This candidate also changes shared Terms/Payments: version them, retain historical evidence, and require new acceptance of those two releases; preserve the other four. |
 | `lib/customer-policy-acceptance.ts` | Supply the customer purpose's exact reviewed language, document URLs and translation metadata. Reject missing, stale or future-dated translations. Keep old evidence readable and unchanged. |
 | `lib/customer-checkout-acceptance.ts` | Published PR #271 explicitly binds English in version 5 and its hash. After adoption, add the full translated authorization and merchant statement with the reviewed release metadata; do not relabel existing records. |
 | `QuotePaymentCard` | Existing scope/price/access/language resets and retry controls remain. Published PR #271 sends language on GET as well as POST and rejects missing/mismatched response languages. Keep exact evidence outside DOM dictionary translation. The live payment panel remains closed. |

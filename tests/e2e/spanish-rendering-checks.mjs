@@ -87,7 +87,19 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.waitForURL((url) => url.pathname === "/es/terms");
     await waitForLanguage("es");
     assert.equal(await page.locator("h1").textContent(), "Términos de uso");
-    await page.goto(`${origin}/customer-agreement`, { waitUntil: "domcontentloaded" });
+    await page.getByRole("navigation", { name: "Políticas de Tuveloz" }).getByRole("link", { name: "Clientes", exact: true }).click();
+    await page.waitForURL((url) => url.pathname === "/es/customer-agreement");
+    await waitForLanguage("es");
+    assert.equal(await page.locator("h1").textContent(), "Acuerdo del cliente");
+    assert.equal(await page.locator("[data-spanish-policy] h2").count(), 11);
+    assert.match(await page.locator("[data-spanish-policy]").textContent(), /TUVELOZ LLC/);
+    await page.getByRole("button", { name: "Change the whole page to English", exact: true }).click();
+    await page.waitForURL((url) => url.pathname === "/customer-agreement");
+    await waitForLanguage("en");
+    assert.equal(await page.locator("h1").textContent(), "Customer Agreement");
+    await page.getByRole("button", { name: "Cambiar toda la página a español", exact: true }).click();
+    await waitForLanguage("es");
+    await page.goto(`${origin}/copyright`, { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => document.documentElement.lang === "en");
     assert.equal(await page.locator("[data-language-control]").count(), 0);
 

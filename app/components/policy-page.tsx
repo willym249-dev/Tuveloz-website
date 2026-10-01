@@ -41,14 +41,14 @@ export function PolicyPage({
 
       <article className="policy-page">
         <div className="policy-intro">
-          <span>{spanish ? ({ Legal: "Legal", Providers: "Proveedores", Privacy: "Privacidad", Money: "Pagos", "Providers • Operational review draft v0.11": "Proveedores • Borrador para revisión operativa v0.11" }[eyebrow] ?? eyebrow) : eyebrow}</span>
+          <span>{spanish ? ({ Legal: "Legal", Customers: "Clientes", Providers: "Proveedores", Privacy: "Privacidad", Money: "Pagos", "Providers • Operational review draft v0.11": "Proveedores • Borrador para revisión operativa v0.11" }[eyebrow] ?? eyebrow) : eyebrow}</span>
           <h1>{copy?.title ?? title}</h1>
           <p>{copy?.summary ?? summary}</p>
           <small>{spanish ? "Última actualización: " : "Last updated "}{copy?.updated ?? updated}</small>
         </div>
         <nav className="policy-links" aria-label={spanish ? "Políticas de Tuveloz" : "Tuveloz policies"}>
           <Link href={policyHref("/terms")}>{spanish ? "Términos" : "Terms"}</Link>
-          <Link href="/customer-agreement">{spanish ? "Clientes (en inglés)" : "Customers"}</Link>
+          <Link href={policyHref("/customer-agreement")}>{spanish ? "Clientes" : "Customers"}</Link>
           <Link href={policyHref("/provider-agreement")}>{spanish ? "Proveedores" : "Providers"}</Link>
           <Link href={policyHref("/privacy")}>{spanish ? "Privacidad" : "Privacy"}</Link>
           <Link href={policyHref("/payments")}>{spanish ? "Pagos" : "Payments"}</Link>

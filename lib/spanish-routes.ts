@@ -24,6 +24,7 @@ export const SPANISH_READY_PATHS = [
   "/faq",
   "/safety",
   "/terms",
+  "/customer-agreement",
   "/provider-agreement",
   "/payments",
   "/marketplace-conduct",

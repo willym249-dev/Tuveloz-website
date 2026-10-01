@@ -45,7 +45,7 @@ test("untranslated legal pages and private interfaces stay out of public Spanish
   );
 
   for (const legalPath of [
-    "/customer-agreement",
+    "/copyright",
     "/job-operations",
     "/account",
     "/admin",

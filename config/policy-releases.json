@@ -1,18 +1,18 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-12T02:10:00.000Z",
-    "releaseId": "terms-2026-08-11-r3",
-    "reviewBodyHash": "33a963eb532c7d2bb92f4adb6eb31fa41dcf6de4a2a32df5416428cbc89fd81b",
-    "canonicalBodyHash": "33a963eb532c7d2bb92f4adb6eb31fa41dcf6de4a2a32df5416428cbc89fd81b",
+    "effectiveAt": "2026-10-01T00:09:49.679Z",
+    "releaseId": "terms-2026-09-30",
+    "reviewBodyHash": "102c005d97bb5cb32a1c12f1c0d6c0e1434c3f97ca90e606cd90826147d4839f",
+    "canonicalBodyHash": "102c005d97bb5cb32a1c12f1c0d6c0e1434c3f97ca90e606cd90826147d4839f",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T04:17:11.605Z",
-    "releaseId": "customer-agreement-2026-08-06",
-    "reviewBodyHash": "76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2",
-    "canonicalBodyHash": "76ba8743bc4665b0e2e5acf50be58db1558524483562c88b61e06041953e36d2",
+    "effectiveAt": "2026-10-01T00:09:49.679Z",
+    "releaseId": "customer-agreement-2026-09-30",
+    "reviewBodyHash": "00342995608826e89446d909edf3350866a8d658d027d1ed44b1ca4ad3b80e6d",
+    "canonicalBodyHash": "00342995608826e89446d909edf3350866a8d658d027d1ed44b1ca4ad3b80e6d",
     "sourceFile": "app/customer-agreement/page.tsx"
   },
   "provider_agreement": {
@@ -33,10 +33,10 @@
   },
   "payment_policy": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-12T02:10:00.000Z",
-    "releaseId": "payment-policy-2026-08-11",
-    "reviewBodyHash": "75b70b949b8517897d5e2e23091d6fa2f41128a49a31b436210bd36a4c42b627",
-    "canonicalBodyHash": "75b70b949b8517897d5e2e23091d6fa2f41128a49a31b436210bd36a4c42b627",
+    "effectiveAt": "2026-10-01T00:09:49.679Z",
+    "releaseId": "payment-policy-2026-09-30",
+    "reviewBodyHash": "cb6834d715ae7df2d198750c208ae4a0d35b7298361702a9462fa9a535e5f4aa",
+    "canonicalBodyHash": "cb6834d715ae7df2d198750c208ae4a0d35b7298361702a9462fa9a535e5f4aa",
     "sourceFile": "app/payments/page.tsx"
   },
   "marketplace_conduct": {

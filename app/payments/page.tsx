@@ -6,7 +6,7 @@ export default function PaymentsPage() {
       eyebrow="Money"
       title="Payment, Cancellation, and Refund Policy"
       summary="An operational review draft for proposed pricing, payments, transfers, cancellations, and customer protections."
-      updated="August 4, 2026"
+      updated="September 30, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -17,9 +17,10 @@ export default function PaymentsPage() {
           payment-processor, insurance, security, and implementation review; it
           is not legal or tax advice, proof of compliance, or approval to launch.
           Tuveloz&apos;s owner may elect not to hire private counsel, but every duty
-          imposed by applicable law remains mandatory. This draft does not settle
-          merchant-of-record, tax, funds-flow, refund, chargeback, or reserve
-          responsibilities.
+          imposed by applicable law remains mandatory. This draft describes the
+          intended payment recipient, collection timing, and full-refund rule.
+          Tax treatment, transfer limits, reserves, and the remaining adjustment
+          and recovery rules still need review before launch.
         </p>
       </section>
 
@@ -58,6 +59,12 @@ export default function PaymentsPage() {
       <section>
         <h2>3. Proposed Stripe payment flow</h2>
         <p>
+          When payments open, your payment through Tuveloz will be to TUVELOZ
+          LLC, processed by Stripe. Your selected independent provider business
+          performs the vehicle service. For help with a payment or refund,
+          contact <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+        </p>
+        <p>
           The proposed product uses Stripe-hosted checkout so Tuveloz does not
           receive or store complete card or bank-account numbers. Any charge,
           transfer, or connected-account configuration remains in testing and
@@ -65,11 +72,9 @@ export default function PaymentsPage() {
           accounting model before production use.
         </p>
         <p>
-          A processor&apos;s technical labels or movement of funds do not by
-          themselves determine who is merchant of record, who owes a tax, whether
-          anyone acts as an agent, or which legal duties apply. Those questions
-          must be resolved under applicable law with final CPA or tax-adviser,
-          processor, insurance, and operational review. If payments are
+          Identifying TUVELOZ LLC as the payment recipient does not by itself
+          settle tax treatment, agency status, or every applicable legal duty.
+          Those questions still require documented review. If payments are
           enabled, the selected provider business remains the party that accepts
           and performs the vehicle-service agreement and honors any workmanship
           warranty it expressly offers. Tuveloz does not process payment for parts;
@@ -89,7 +94,11 @@ export default function PaymentsPage() {
           No live checkout authorization is currently available. If production
           checkout is approved, choosing the checkout button will authorize only
           the total displayed with the accepted quote and then-current policy
-          disclosures. A completed payment would be evidence of payment, not
+          disclosures. You pay the provider&apos;s labor quote plus the separate
+          5% Customer Service Fee at checkout. The provider&apos;s transfer happens
+          later, after completion and the required payment checks. The fee is
+          added to your total, not deducted from the provider&apos;s quote.
+          A completed payment would be evidence of payment, not
           proof that service has been completed or that a vehicle is safe to
           operate. Stripe or the card issuer may decline, review, or reverse a
           transaction under its own rules.
@@ -107,9 +116,13 @@ export default function PaymentsPage() {
           complaint, dispute, expired evidence, or inconsistent record.
         </p>
         <p>
-          Final transfer timing, adjustment rights, reserves, and responsibility
-          for processor fees, refunds, disputes, and chargebacks must be approved
-          and stated conspicuously before production. Tuveloz will not describe
+          Final transfer timing, adjustment rights, and reserves must be approved
+          and stated conspicuously before production. Tuveloz is responsible to
+          Stripe for platform refunds, disputes, and related processor costs
+          under this payment configuration. Any recovery from a provider must
+          follow the accepted provider terms, documented facts, processor rules,
+          and applicable law; this draft does not create an automatic recovery
+          right. Tuveloz will not describe
           the proposed process as a bank deposit, trust, or escrow arrangement
           unless that description is accurate under applicable law and the
           processor approves it.
@@ -130,6 +143,13 @@ export default function PaymentsPage() {
           <li>If authorized labor has begun, the refund may exclude the documented value of authorized labor already completed, but only to the extent allowed by law. Tuveloz does not collect or refund separately purchased customer parts.</li>
           <li>A provider may stop work because of an unsafe or unlawful location, missing authorization, or materially inaccurate job information. Any charge or refund will depend on documented authorized work and costs, applicable law, and the records available.</li>
         </ul>
+        <p>
+          A full refund for provider cancellation, provider no-show, or customer
+          cancellation before authorized work starts includes both the
+          provider&apos;s labor amount and Tuveloz&apos;s 5% Customer Service Fee.
+          Tuveloz covers any original Stripe processing fee that Stripe keeps;
+          it is not deducted from that customer refund.
+        </p>
         <p>
           The final process must not limit any cancellation, refund, or other
           remedy that applicable law does not allow the parties to limit.
@@ -160,8 +180,9 @@ export default function PaymentsPage() {
         </p>
         <p>
           A customer keeps the right to contact the card issuer. A chargeback is
-          decided under card-network and issuer rules and may debit the Tuveloz
-          platform balance depending on the final payment configuration. Whether
+          decided under card-network and issuer rules. Under this payment
+          configuration, Stripe debits the Tuveloz platform balance for platform
+          refunds and disputes. Whether
           a provider transfer may be delayed, adjusted, reversed, or recovered
           must follow the final processor agreement, accepted provider terms,
           documented facts, and applicable law; this draft does not create an

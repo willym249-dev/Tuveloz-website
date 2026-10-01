@@ -31,16 +31,20 @@ const spanishReleases = JSON.parse(read("config/policy-spanish-releases.json"));
 const { PROVIDER_ACCEPTANCE_DOCUMENTS: documents, providerAgreementEvidenceText: evidence,
   providerAgreementEvidenceCandidates: candidates } = acceptance;
 
-test("each Spanish policy release pins its complete source, English version and acceptance text", () => {
-  assert.deepEqual(Object.keys(spanishReleases).sort(), documents.map(doc => doc.key).sort());
-  for (const doc of documents) {
-    const release = spanishReleases[doc.key];
+test("each Spanish policy release pins its complete source and English version", () => {
+  assert.deepEqual(Object.keys(spanishReleases).sort(), [...documents.map(doc => doc.key), "customer_agreement"].sort());
+  for (const [key, release] of Object.entries(spanishReleases)) {
+    const doc = { key };
     const source = read(release.sourceFile);
     const english = read(englishReleases[doc.key].sourceFile);
     assert.equal(release.translationBodyHash, hash(source), doc.key);
     assert.equal(release.englishBodyHash, hash(english), doc.key);
-    assert.equal(release.acceptanceTextHash, hash(read("lib/provider-policy-spanish-text.ts")));
-    assert.ok(release.releaseId.endsWith("-es-2026-09-07"));
+    if (key === "customer_agreement") {
+      assert.equal(release.acceptanceTextHash, undefined, "a translated customer page does not claim provider consent");
+    } else {
+      assert.equal(release.acceptanceTextHash, hash(read("lib/provider-policy-spanish-text.ts")));
+    }
+    assert.match(release.releaseId, /-es-\d{4}-\d{2}-\d{2}$/);
     // No omitted section or list item; translations are static, trusted HTML.
     for (const tag of ["h2", "h3", "li"]) {
       assert.equal((source.match(new RegExp(`<${tag}[ >]`, "g")) ?? []).length,
@@ -53,11 +57,30 @@ test("each Spanish policy release pins its complete source, English version and 
   }
 });
 
+test("the complete customer translation preserves paragraphs and routes without enabling checkout consent", () => {
+  const { default: customer } = load("./lib/policy-spanish/customer-agreement");
+  const english = read("app/customer-agreement/page.tsx");
+  assert.equal((customer.html.match(/<section>/g) ?? []).length, 11);
+  assert.equal((customer.html.match(/<p>/g) ?? []).length, (english.match(/<p>/g) ?? []).length);
+  for (const phrase of ["TUVELOZ LLC", "Stripe", "5% del subtotal del proveedor", "antes de que comience el trabajo autorizado", "no se descuenta de ese reembolso"]) {
+    assert.ok(customer.html.includes(phrase), phrase);
+  }
+  for (const href of ["/es/terms", "/es/payments", "mailto:hello@tuveloz.com"]) {
+    assert.ok(customer.html.includes(`href="${href}"`), href);
+  }
+  const { spanishPolicyForTitle } = load("./lib/policy-spanish/index");
+  assert.equal(spanishPolicyForTitle("Customer Agreement"), customer);
+  const { pathHasSpanish, englishPathFor } = load("./lib/spanish-routes");
+  assert.equal(pathHasSpanish("/customer-agreement"), true);
+  assert.equal(englishPathFor("/es/customer-agreement"), "/customer-agreement");
+  assert.equal(load("./lib/customer-checkout-acceptance").CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE, "en");
+});
+
 test("Spanish evidence contains the displayed text and exact translation, while English keeps its existing envelope", async () => {
   for (const doc of documents) {
     const en = evidence(doc);
-    const previousEnglishHashes = JSON.parse(read("tests/fixtures/provider-english-acceptance-hashes.json"));
-    assert.equal(hash(en), previousEnglishHashes[doc.key], "existing English acceptance bytes must stay valid");
+    const currentEnglishHashes = JSON.parse(read("tests/fixtures/provider-english-acceptance-hashes.json"));
+    assert.equal(hash(en), currentEnglishHashes[doc.key], "current release acceptance bytes must match the reviewed fixture");
     const es = evidence(doc, { language: "es" });
     assert.equal(evidence(doc, { language: "Spanish" }), es);
     const parsed = JSON.parse(es);
@@ -79,6 +102,38 @@ test("Spanish evidence contains the displayed text and exact translation, while 
     assert.deepEqual(await candidates(draft), [], "drafts cannot qualify a provider in either language");
     assert.throws(() => evidence({ ...doc, canonicalBodyHash: "a".repeat(64) }, { language: "es" }), /not current/);
     assert.throws(() => evidence(doc, { language: "es", asOf: new Date("2026-09-06") }), /not current/);
+  }
+});
+
+test("new shared policies reject old browser consent without relabeling historical acceptance", async () => {
+  const historicalHashes = JSON.parse(read("tests/fixtures/provider-english-acceptance-hashes-20260907.json"));
+  const historicalPresentations = JSON.parse(read("tests/fixtures/provider-policy-presentations-20260907.json"));
+  const changedKeys = new Set(["terms", "payment_policy"]);
+  for (const locale of ["en", "es"]) {
+    const oldText = historicalPresentations[locale];
+    const oldDocuments = JSON.parse(oldText).documents;
+    const currentDocuments = JSON.parse(acceptance.providerPolicyPresentation(locale)).documents;
+    assert.equal(acceptance.providerPolicyPresentationLanguage(oldText), null);
+    for (const current of currentDocuments) {
+      const old = oldDocuments.find(doc => doc.key === current.key);
+      if (changedKeys.has(current.key)) {
+        assert.notEqual(current.version, old.version);
+        assert.notEqual(current.releaseId, old.releaseId);
+        assert.notEqual(current.canonicalBodyHash, old.canonicalBodyHash);
+        if (locale === "es") assert.notEqual(current.translation.translationBodyHash, old.translation.translationBodyHash);
+      } else {
+        assert.deepEqual(current, old, `${current.key}: unchanged release stays byte-compatible`);
+      }
+    }
+    assert.equal(historicalPresentations[locale], oldText, "historical evidence stays intact");
+  }
+  for (const doc of documents) {
+    const allowed = await candidates(doc);
+    if (changedKeys.has(doc.key)) {
+      assert.ok(allowed.every(item => item.hash !== historicalHashes[doc.key]), "old consent cannot qualify as a new policy acceptance");
+    } else {
+      assert.equal(hash(evidence(doc)), historicalHashes[doc.key]);
+    }
   }
 });
 
