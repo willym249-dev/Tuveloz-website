@@ -11,6 +11,41 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-01 - Provider transfer recovery candidate
+
+Isolated tests reproduced three defects after PR #275: a lost Stripe reply
+could allow a later retry to create another transfer after processor key
+expiry, an incorrect transfer receipt could be saved as success, and a
+late reply could overwrite a newer payment dispute. This candidate reserves
+one permanent execution in the existing payment-adjustment ledger before
+submission, validates the settled charge and exact transfer receipt, and
+preserves newer refund/dispute statuses when recording the money movement.
+The reservation checks current payment, job, quote, scope and hold records
+atomically. No migration or new financial policy is included.
+
+An uncertain attempt can only look up the existing Stripe transfer; it never
+automatically sends a replacement. Missing, conflicting, reversed or changed
+receipts remain under review, including a reservation interrupted before any
+send. The owner screen offers Check transfer status, bounds requests, prevents
+duplicate clicks, validates confirmations and keeps the last valid list after
+a failed refresh. A confirmed Stripe transfer is explicitly distinct from
+arrival in the provider's bank. The existing API still returns canRelease=false.
+
+Validation: build and 932 tests passed, including 15 new migrated-SQL/route
+checks. Twenty-four isolated mobile cases pass on Chromium at 390 pixels and
+WebKit at 320 pixels. TypeScript passes; lint has only the existing
+site-language navigation warning. Test Stripe calls, eligibility and owner
+identity are explicitly synthetic; external network is forbidden in the
+route fixture. This is not live Stripe, bank settlement or real-provider proof.
+Evidence logs are retained in ignored task outputs. Required hosted checks,
+publication and exact live verification remain pending at this entry.
+
+All onboarding, booking, Stripe, SMS, eligibility, legal-version and schema
+controls remain unchanged. No real account, payment, transfer, refund or
+message was created. Partial refunds, provider recovery rights, operating
+transfer terms and genuine launch evidence remain separate; preserve the
+completed PR #275 release and keep the owner's real application last.
+
 ## 2026-10-01 - PR #275 published and independently verified
 
 Continuing the owner's authorized website fixes, PR #275 merged the exact

@@ -71,6 +71,28 @@ private-workspace translation, receipt-language propagation and final legal
 review remain separate. Customer job actions stay closed behind the existing
 launch controls.
 
+## October 1 transfer reliability candidate (not a policy change)
+
+The separate provider-transfer route now has local regression coverage for
+lost replies, late retries, wrong receipts and holds arriving during submission.
+One durable ledger reservation precedes sending; subsequent checks only read
+Stripe and validate the exact amount, source, destination, currency, mode,
+payment metadata and execution. Recording a confirmed transfer preserves a
+newer refund/dispute state. Uncertain or missing results remain under review
+even if no money was sent. The owner screen distinguishes the transfer from
+bank arrival and retains records after failed refreshes.
+
+Build/932 tests and 24 isolated mobile cases pass; hosted checks and publication
+are pending. These are synthetic SDK/eligibility tests, not actual settlement.
+No schema, released agreement, fee allocation, provider recovery right or
+transfer timing promise changed. All live locks and canRelease=false remain.
+
+Stripe's [idempotency documentation](https://docs.stripe.com/api/idempotent_requests)
+allows keys to be removed after at least 24 hours; a permanent local reservation
+therefore remains necessary. [Transfer lookup](https://docs.stripe.com/api/transfers/list)
+and [transfer fields](https://docs.stripe.com/api/transfers/object) were checked
+October 1. These references establish processor behavior, not launch approval.
+
 ## September 30 approved policy publication
 
 The review branch now contains the concrete updates to Terms sections 3 and 7,

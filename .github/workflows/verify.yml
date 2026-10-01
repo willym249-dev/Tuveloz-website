@@ -137,6 +137,9 @@ jobs:
       - name: Verify customer quote feedback and review recovery without live submissions
         run: npm run test:e2e:request-recovery
 
+      - name: Verify provider transfer receipts and read-only recovery without moving money
+        run: npm run test:e2e:transfer-recovery
+
       - name: Verify provider onboarding receipts and retry behavior in both languages
         run: npm run test:e2e:onboarding
 

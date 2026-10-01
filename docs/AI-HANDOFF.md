@@ -128,6 +128,14 @@ the existing prelaunch checklist for remaining technical and business work.
 
 ## Current launch state
 
+The October 1 provider-transfer recovery candidate is locally verified but
+awaits hosted checks/publication. It adds a durable payment-adjustment
+reservation, exact Stripe receipt validation, status-only recovery and owner
+screen interruption handling. Build/932 tests and 24 isolated mobile cases
+pass. See the latest LOG/OPEN-ITEMS before repeating work. No migration or
+launch/payment switch is changed; canRelease remains false. A missing or
+uncertain transfer is held for review, never automatically resent.
+
 **Verify these before relying on them; they are switches that will flip.**
 
 `lib/launch-status.ts` currently sets `MARKETPLACE_MODE = "onboarding_only"`
