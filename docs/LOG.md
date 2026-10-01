@@ -11,6 +11,35 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - PR #272 approved and merged; production verification pending
+
+Owner explicitly approved: "Yes, publish after the checks pass." Both required
+PR workflows passed on `e560e1fcae40d21850493f3e5c8012a5c86c26bc`:
+Verify `36796197378` (account browser and full regression/migration/provider
+signup/Spanish coverage jobs) and deployment rehearsal `36796197673`.
+The complete server/browser test confirms the Spanish policy navigation repair,
+all fifteen translated routes, signup and persisted drafts. Local production
+build/all 896 tests, TypeScript, six Chromium/WebKit policy scenarios and lint
+with its one pre-existing warning also pass on this final implementation.
+
+Merged PR #272 at `2026-10-01T00:44:47Z` as
+`e6fceca7aaf93553e54c3fac25c4828ae8483084`. Normal production workflow
+`36797697298` is queued/running; this is not yet proof that the update is live.
+Do not re-merge or trigger another deploy. The approved scope includes the three
+revised policy versions, complete Spanish customer page and native Spanish
+policy navigation. Live customer bookings/payments and the Spanish checkout
+consent guard remain closed. Fresh consent is required for the revised shared
+policies; old acceptance records are preserved.
+
+Prepared independent post-release checks: task output
+`verify-pr272-release-20260930.mjs` and repo ignored
+`outputs/verify-policy-live-browser-20260930.mjs`. Run only after production
+success against the exact merge SHA. The first checks health, six policy pages,
+accounts and closed/private APIs; the second clicks all Spanish policy navigation
+links and both language directions in Chromium/WebKit without submitting forms.
+Continuity state is in task output `customer-policy-release-state-20260930.json`.
+Record verified live results before reporting publication complete.
+
 ## 2026-09-30 - Complete bilingual customer policy candidate; publication pending
 
 Prepared `review/customer-payment-policies-20260930` from the verified PR #271
