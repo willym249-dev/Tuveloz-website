@@ -62,11 +62,14 @@ protected request/quote routes and closed bookings/payments. This implementation
 is complete; do not repeat it or rewrite historical evidence. The old English
 schema-1 helpers remain intentionally unchanged for legacy records.
 
-Whole private-workspace translation, separate decline/restore/review error
-recovery, receipt-language propagation and final legal review remain separate.
-The source follow-up for those untouched private controls is recorded in
-OPEN-ITEMS; it is not a demonstrated production incident. Customer job actions
-remain closed behind the existing launch controls.
+Separate decline/restore/review recovery is subsequently published and
+independently verified in PR #275 as `86ae047`: 917 tests/build, 76 focused
+mobile scenarios, required PR/production checks and 37 live HTTP checks passed.
+It preserves uncertain drafts, checks saved status before retry and prevents
+rapid duplicate writes. No legal content or acceptance version changed. Whole
+private-workspace translation, receipt-language propagation and final legal
+review remain separate. Customer job actions stay closed behind the existing
+launch controls.
 
 ## September 30 approved policy publication
 

@@ -11,17 +11,21 @@ behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
-## Tested follow-up awaiting release
-
-October 1: decline/restore-quote and review recovery is implemented locally.
-Six baseline mobile failures were reproduced; build/917 tests, 50 new mobile
-recovery scenarios, 26 existing consent scenarios and TypeScript pass. Lint has
-only the existing language-navigation warning. Drafts survive, double clicks
-are guarded and uncertain writes require a read-only status check before retry.
-Finish CI/publication and independent live verification; do not repeat the
-completed implementation. No launch/payment, policy or schema change.
-
 ## Latest completed release
+
+**PR #275 is published and independently verified** as
+`86ae047a6186629b459934c70df28d6abf92a603`. Decline/restore-quote and review
+recovery preserves drafts, guards double clicks and checks saved state before
+retrying uncertain writes. Six baseline mobile failures were reproduced;
+build/917 tests, 50 new mobile recovery cases, 26 consent cases, TypeScript,
+required PR checks and all three production jobs passed. Lint has only the
+existing language-navigation warning. Thirty-seven live HTTP checks at
+`2026-10-01T05:31:11.537Z` confirm the exact healthy release, bilingual pages,
+protected private routes and closed requests/payments. Eleven protected source
+files are unchanged. Complete; do not repeat implementation or publication.
+Real provider, business/reviewer and launch decisions remain below.
+
+## Earlier completed releases
 
 **PR #274 is published and independently verified** as
 `2c455a599207e5f906b668857443ac091ae3299d`. Exact EN/ES request/privacy/provider
@@ -32,8 +36,9 @@ existing warning), 26 mobile scenarios, required PR checks and all three
 production jobs passed. Thirty-three independent HTTP checks at
 `2026-10-01T04:18:49.396Z` verify the exact healthy release, bilingual pages,
 private controls and closed requests/payments. Complete; do not repeat this
-publication. Separate decline/restore/review recovery, real provider evidence
-and launch decisions remain. See LOG, OPEN-ITEMS and the payment review.
+publication. Separate decline/restore/review recovery was subsequently completed
+in PR #275 above. Real provider evidence and launch decisions remain. See LOG,
+OPEN-ITEMS and the payment review.
 
 PR #273 is published as `152639cdd7c12e2bb218be6a4c95d0b300b370d4`, independently
 verified September 30 (Maryland time). Exact bilingual checkout consent now
@@ -78,7 +83,7 @@ Code checks cannot approve those gates.
 
 | Work group | What is complete | What still closes the group |
 | --- | --- | --- |
-| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception, PR #272's bilingual policies, PR #273's exact bilingual checkout consent and PR #274's request/privacy/provider-selection consent are verified. | Resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment and separate private request-control recovery remain distinct from completed consent work. |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception, PR #272's bilingual policies, PR #273's exact bilingual checkout consent, PR #274's request/privacy/provider-selection consent and PR #275's quote/review recovery are verified. | Resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. Receipt-language propagation remains distinct from completed consent and recovery work. |
 | Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
 | Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
 | Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |

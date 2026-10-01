@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-01 - PR #275 published and independently verified
+
+Continuing the owner's authorized website fixes, PR #275 merged the exact
+tested head `617693d9fcbe1d101e5144103c298137cda426cf` at
+`2026-10-01T05:11:30Z` as `86ae047a6186629b459934c70df28d6abf92a603`.
+Required Verify run `36817189778` passed both jobs, including all mobile
+recovery, migration, Spanish and real local signup checks. The separate PR
+deployment rehearsal `36817190076` passed. Eleven protected source files also
+match the prior release at the merged commit, including backend routes, legal
+release metadata, eligibility, schema and launch/payment controls.
+
+All three jobs in production run `36818597435` passed. Independent verification
+at `2026-10-01T05:31:11.537Z` passed **37 live HTTP checks**: exact deployed
+commit, healthy application/database/schema, English/Spanish pages, protected
+quote decisions, unavailable public review submissions and closed customer
+requests/payments. This completes the scoped decline/restore/review recovery
+release. Its isolated evidence is **917 tests/build, 50 new mobile recovery
+cases and 26 existing mobile consent cases**, with TypeScript passing and one
+pre-existing lint warning. Live checks did not create a quote, review, message,
+booking, payment or application; valid private interaction is proved in the
+isolated browser/route fixtures, not through a real transaction.
+
+Task evidence: `pr275-passed-pr-checks-20261001.json`,
+`pr275-merged-release-20261001.json`, `pr275-local-validation-20261001.json`,
+`pr275-preserved-boundaries-20261001.json`, `pr275-production-release-20261001.json`
+and `pr275-live-release-20261001.json`. The earlier candidate below is historical;
+do not repeat implementation, approval or publication. Corrected the recurring
+legal-review row to preserve PR #274's already completed request/selection
+consent. Partial refunds/provider recovery, real delivery/settlement, required
+business/reviewer evidence and genuine provider verification remain separate;
+the owner's real provider application stays last.
+
 ## 2026-10-01 - Customer quote and review recovery candidate
 
 The separate decline/restore-quote and review follow-up is implemented on
