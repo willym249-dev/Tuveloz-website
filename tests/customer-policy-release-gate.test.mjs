@@ -40,13 +40,13 @@ test("real request and quote acceptance routes fail closed on unreleased policie
 
   assert.match(requests, /customerAcceptanceBundleIsReleasedForPurpose\("request_scope"\)/);
   assert.match(requests, /CUSTOMER_POLICY_RELEASE_REQUIRED/);
-  assert.match(quotes, /customerAcceptanceBundleIsReleasedForPurpose\("provider_selection"\)/);
+  assert.match(quotes, /customerPolicyPresentationIsReleased\("provider_selection", language\)/);
   assert.match(quotes, /CUSTOMER_POLICY_RELEASE_REQUIRED/);
   assert.match(checkout, /customerAcceptanceBundleIsReleasedForPurpose\("checkout"\)/);
   assert.match(checkout, /CUSTOMER_POLICY_RELEASE_REQUIRED/);
 
   const releaseGate = quotes.indexOf(
-    'customerAcceptanceBundleIsReleasedForPurpose("provider_selection")',
+    'customerPolicyPresentationIsReleased("provider_selection", language)',
   );
   const bookingEvaluation = quotes.indexOf("await evaluateStageEligibility");
   assert.ok(releaseGate >= 0 && releaseGate < bookingEvaluation);

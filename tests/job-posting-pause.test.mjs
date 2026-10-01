@@ -54,7 +54,7 @@ test("customer signups stay open while new job requests and payments are paused"
   assert.match(postJobPage, /Nothing on this page submits a[\s\S]*request, contacts a provider, books service, or processes a payment/);
   assert.ok(
     postJobPage.indexOf("if (CUSTOMER_JOB_POSTING_PAUSED)")
-      < postJobPage.indexOf("customerRequestAgreementHash()"),
+      < postJobPage.indexOf('customerRequestConsentPresentation("en")'),
   );
   assert.match(homepage, /CUSTOMER_JOB_POSTING_PAUSED \? \(/);
   assert.match(homepage, /Your account is a good place to start\./);

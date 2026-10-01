@@ -11,6 +11,89 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Request and provider-selection bilingual consent candidate
+
+Continued only the separate request/privacy/provider-selection work after the
+completed PR #273 release. Branch `review/customer-request-selection-consent-20261001`
+starts from that deployed commit plus its local verification notes. This is a
+new candidate, not a second checkout release and not a customer launch.
+
+- New explicit EN/ES request-scope, separate privacy and provider-selection
+  presentations bind exact text, scope, released policy URLs/hashes and language
+  to new `request-scope:4`, `request-privacy:3` and `provider-quote-selection:5`
+  versions. The legacy helpers stay unchanged; existing records remain readable
+  without mutation or relabeling. No migration or published policy-page change.
+- Request consent clears after language/field changes, preserving the draft.
+  Selection binds consent to the current request, quote, scope, price, language
+  and evidence hash. Delayed responses cannot replace a newer language. Failed
+  decisions require a read-only status refresh before a fresh approval, with a
+  bounded wait and no automatic repeat booking.
+- Separate native policy links open in another tab. Request receipts and quote
+  authorization downloads retain the exact evidence string and hash. Dynamic
+  names, service identifiers, timestamps and provider warranties stay literal.
+  The private request page offers a clearly labeled authorization-language
+  selector; this does not claim translation of every private-workspace screen.
+- A blank confirmed-credential list no longer implies that no license or
+  insurance is legally required. New EN/ES text states only that this quote
+  shows no confirmed credential. The actual provider eligibility gates remain.
+- Phone testing found long operation identifiers overflowing the consent label;
+  targeted wrapping, readable body typography and language-select contrast fix
+  it without changing the accepted text.
+
+Local verification: production build and **914 tests passed**, TypeScript
+passed, lint has only the existing `site-language.tsx:144` warning, and **26/26
+Chromium/WebKit phone cases passed**. Eleven new module/real-route tests use
+synthetic data and actual migrated SQLite: exact saved/returned consent, stale
+or mismatched language/hash rejection, separate privacy consent, old-reader
+compatibility, changed provider promises and duplicate approval rejection.
+Eligibility is deliberately stubbed in the persistence harness; this is not a
+real provider approval, external credential check or live booking/payment.
+
+Evidence is in ignored `outputs/customer-consent-{suite,focused,routes,browser,
+typecheck,lint}-20261001.log`, `outputs/customer-job-consent-browser.json`, and
+phone layout previews. All marketplace, booking, payment and SMS locks remain
+unchanged. Publication approval and required GitHub release checks remain; do
+not report this candidate live. Remaining launch, coverage, tax and actual
+provider evidence in the reconciliation checklist stays open.
+
+## 2026-09-30 - PR #273 published and independently verified
+
+The owner said "continue" after the concrete publication request and prepared
+PR #273 summary. Continued with that prepared release after all required checks
+passed on `1eaca2896f4ec23c93dfdb45b9c99da075527ce3`: Verify Tuveloz
+`36803681406` (both jobs), and the deployment rehearsal `36803681570`.
+The full verification includes all 903 regressions, migration/build/security
+checks and the required browser suites, including 48 checkout cases. The earlier
+Node 22.13 test-adapter failure is corrected; no application code changed for it.
+
+PR #273 merged at `2026-10-01T02:16:55Z` as
+`152639cdd7c12e2bb218be6a4c95d0b300b370d4`. Automatic production workflow
+`36805092363` completed successfully in all three jobs. Independent verification
+at `2026-10-01T02:35:45.175Z` passed **23 live HTTP checks**: exact release,
+healthy application/database/schema, six EN/ES account/home surfaces, six policy
+pages with canonical URLs and released wording, private APIs, and closed checkout
+for English, Spanish and missing language. No account, application or payment
+was created. Live checkout interaction remains deliberately unavailable; exact
+consent behavior has isolated route/SQLite and 48 browser-scenario evidence.
+No launch/payment lock changed. Do not repeat this merge or deployment.
+
+Evidence: task outputs `pr273-merged-release-20260930.json`,
+`pr273-production-release-20260930.json`, `pr273-live-release-20260930.json`,
+and the repository's ignored final verification/production watch logs.
+The new checkout version is published. This does not mark the whole marketplace
+ready: the separate request-scope/privacy and provider-selection helpers still
+need exact language-bound consent before customer jobs open. That source finding
+and the specific unchanged paths are recorded in the existing payment review
+and OPEN-ITEMS. Keep old records intact; do not repeat the completed provider
+translations, PR #272 policies or PR #273 checkout integration.
+
+The business-mail follow-up could not be refreshed: browser inventory exposes
+only the empty in-app/MCP surfaces, with no connected Chrome tab; the Gmail
+connector profile still identifies the personal account. No inbox was searched,
+no email was sent and no new login was initiated. Prior county/broker inquiries
+and completed business-email setup remain intact; a missing current connection
+does not mean the business mailbox is broken.
+
 ## 2026-09-30 - Bilingual checkout consent implemented and locally verified
 
 Continued from the verified PR #272 release without repeating its publication.

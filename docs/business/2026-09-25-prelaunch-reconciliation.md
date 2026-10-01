@@ -13,6 +13,26 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Latest completed release
 
+**Prepared follow-up, not live:** branch
+`review/customer-request-selection-consent-20261001` implements exact EN/ES
+request/privacy/provider-selection consent, immutable versions, preserved legacy
+readers, draft/consent resets, safe recovery and phone wrapping. Local production
+build/914 tests, TypeScript, lint (one existing warning) and 26 phone scenarios
+passed. See LOG and the payment review. Required remote checks and publication
+approval remain; no policy-page release, provider record or launch switch changed.
+
+PR #273 is published as `152639cdd7c12e2bb218be6a4c95d0b300b370d4`, independently
+verified September 30 (Maryland time). Exact bilingual checkout consent now
+shares the same displayed, downloaded and saved evidence; EN/ES versions
+preserve historical records and bind the published translations. All 903
+regressions/build, TypeScript, 48 mobile checkout scenarios, required PR checks
+and all three production jobs passed. Twenty-three independent HTTP checks at
+`2026-10-01T02:35:45.175Z` confirm the exact healthy release, bilingual account
+and policy pages, private controls and closed requests/payments. This checkout
+release is complete; do not repeat it. Earlier request-scope/privacy and
+provider-selection consent still needs explicit language-bound evidence before
+customer jobs open; see the existing payment review and OPEN-ITEMS.
+
 PR #272 is owner-approved, published as `e6fceca7`, and independently verified
 September 30 (Maryland time). It updates English/Spanish payment policies and
 adds the complete Spanish Customer Agreement with correct navigation. All 896
@@ -22,16 +42,15 @@ live browser checks confirm the exact healthy release, policy pages, working
 Spanish navigation/language switching and closed customer requests/payments.
 The four unaffected provider releases are preserved; changed shared Terms and
 Payments require fresh acceptance without rewriting old records. Exact bilingual
-checkout consent and final launch review remain separate. Do not repeat this
+checkout consent was subsequently completed in PR #273 above; final launch
+review remains separate. Do not repeat this
 release or the completed PR #271 language guard. See the existing legal payment
 review and LOG for exact evidence and remaining work.
 
-The next bilingual checkout consent change is implemented locally on
-`review/bilingual-checkout-consent-20260930`. All 903 regressions/build,
-TypeScript and 48 mobile browser scenarios pass; existing lint warning only.
-It preserves old evidence, binds exact EN/ES releases to separate immutable
-records, and recovers safely from incomplete responses. Publication and
-independent live verification are pending; it does not open customer payments.
+The business-mail follow-up could not be refreshed during the PR #273 release:
+no Chrome tab is connected and the Gmail connector identifies a personal
+account. No inbox was searched or email sent. This access limitation does not
+undo the completed business-mail activation or earlier dated reply checks.
 
 ## Remaining work for the first customer pilot
 
@@ -46,7 +65,7 @@ Code checks cannot approve those gates.
 
 | Work group | What is complete | What still closes the group |
 | --- | --- | --- |
-| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception and PR #272's bilingual policy adoption are verified. | Publish and verify the tested exact English/Spanish checkout consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception, PR #272's bilingual policy adoption and PR #273's exact bilingual checkout consent are verified. | Bind exact EN/ES request/privacy/provider-selection consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
 | Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
 | Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
 | Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |
