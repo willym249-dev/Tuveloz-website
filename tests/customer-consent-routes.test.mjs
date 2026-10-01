@@ -10,6 +10,7 @@ import { checkoutModule } from "./helpers/checkout-evidence.mjs";
 import { consentApi, scopeApi, policyApi, factsApi, providerApi, matchingApi, syntheticRequestScope as scope, syntheticSelectionScope } from "./helpers/customer-job-consent.mjs";
 
 const root = new URL("../", import.meta.url);
+const recovery = checkoutModule("./lib/customer-request-response");
 // Real request/selection routes, evidence, scope reader, all migrations and SQL.
 // Only launch/provider eligibility and external side effects are synthetic here.
 // This proves consent persistence, not provider approval or real marketplace readiness.
@@ -46,7 +47,7 @@ function harness({ open = true, released = true } = {}) {
     externalIdentityAgeVerificationIsCurrent: () => false,
     customerPriceFor: amount => ({ customerFeeRateBps: 500, customerFeeCents: amount * .05, customerTotalCents: amount * 1.05 }),
     evaluateStageEligibility: async () => ({ allowed: true, decisionId: "synthetic-decision" }),
-    QUOTE_DECLINE_REASON_VALUES: new Set(),
+    QUOTE_DECLINE_REASON_VALUES: checkoutModule("./lib/quote-feedback").QUOTE_DECLINE_REASON_VALUES,
     sendAcceptedQuoteAlert: async () => ({ sent: false, reason: "isolated test" }),
   };
   function module(path) {
@@ -135,6 +136,16 @@ for (const language of ["en", "es"]) {
       assert.equal(missing.quotes[0].selectionAcceptance, null);
       const response = await get(language), result = await response.json();
       assert.equal(response.status, 200, JSON.stringify(result));
+      assert.equal(recovery.validCustomerRequestSnapshot(result), true, "real route supplies a complete recovery snapshot");
+      for (const [action, status, declineReason] of [["decline-quote", "declined", "price"], ["restore-quote", "submitted", ""]]) {
+        const changed = await h.quotes.POST(post("customer-quotes", { action, token: saved.accessToken, quoteId: "synthetic-quote", declineReason }));
+        assert.equal(changed.status, 200);
+        assert.equal(recovery.validQuoteFeedbackReply(await changed.json(), action, declineReason), true);
+        const refreshed = await (await get(language)).json();
+        assert.equal(recovery.validCustomerRequestSnapshot(refreshed), true);
+        assert.equal(refreshed.quotes[0].status, status);
+        assert.equal(refreshed.quotes[0].declineReason, declineReason);
+      }
       const consent = result.quotes[0].selectionAcceptance;
       assert.ok(consent, result.quotes[0].selectionBlockedReason);
       const body = { language, action: "accept-quote", quoteId: "synthetic-quote", token: saved.accessToken,

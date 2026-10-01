@@ -116,6 +116,13 @@ do not repeat publication. See the newest LOG entry and OPEN-ITEMS for the
 separate private request-control recovery follow-up and remaining launch
 decisions. All launch/payment locks stay closed.
 
+The separate decline/restore/review recovery follow-up is now a tested local
+candidate on `review/customer-quote-review-recovery-20261001`: build/917 tests,
+50 new mobile recovery cases and 26 existing consent cases pass. It preserves
+drafts and requires a read-only status check after uncertain writes. Do not
+redo the implementation; finish required PR checks and record publication
+separately. No policy, schema or launch/payment control changed.
+
 ## Current launch state
 
 **Verify these before relying on them; they are switches that will flip.**

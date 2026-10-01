@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-01 - Customer quote and review recovery candidate
+
+The separate decline/restore-quote and review follow-up is implemented on
+`review/customer-quote-review-recovery-20261001`, not published yet. Six mobile
+baseline cases reproduced stuck controls, uncaught network errors and duplicate
+writes before repair. Bounded responses, a synchronous shared write guard and
+validated saved receipts now recover these failures. An uncertain result keeps
+the review draft/rating and requires a read-only saved-status check before any
+deliberate retry; it never automatically repeats the write. Missing/corrupt
+saved review state cannot unlock publishing. A failed secondary completion
+lookup no longer discards otherwise valid quote/review state.
+
+The existing language selector explicitly scopes authorizations and messages;
+new recovery messages and review confirmations support EN/ES. This does not
+claim full translation of the private request page. Private test-review wording
+now describes its actual visibility. No legal text/version, backend route,
+schema, eligibility, launch/payment switch or real record changed.
+
+Validation on the final candidate: production build and **917/917 tests**,
+TypeScript, lint (one existing language-navigation warning), **50/50** new
+Chromium/WebKit mobile recovery scenarios and **26/26** existing mobile consent
+scenarios passed. Actual route tests use migrated SQLite and verify returned
+snapshots after decline/restore. Browser fixtures intercept every API request;
+no real quote, review, message, booking or payment was submitted. The new suite
+is wired into required release verification. Evidence is in ignored
+`outputs/customer-request-recovery-*` logs/reports; publication must be recorded
+separately with the exact release and independent live checks.
+
 ## 2026-10-01 - PR #274 published and independently verified
 
 The owner said "continue" after the concrete PR #274 publication request. All

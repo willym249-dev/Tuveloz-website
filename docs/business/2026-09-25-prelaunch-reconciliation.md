@@ -11,6 +11,16 @@ behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
+## Tested follow-up awaiting release
+
+October 1: decline/restore-quote and review recovery is implemented locally.
+Six baseline mobile failures were reproduced; build/917 tests, 50 new mobile
+recovery scenarios, 26 existing consent scenarios and TypeScript pass. Lint has
+only the existing language-navigation warning. Drafts survive, double clicks
+are guarded and uncertain writes require a read-only status check before retry.
+Finish CI/publication and independent live verification; do not repeat the
+completed implementation. No launch/payment, policy or schema change.
+
 ## Latest completed release
 
 **PR #274 is published and independently verified** as
