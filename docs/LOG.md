@@ -11,6 +11,47 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - PR #272 published and independently verified
+
+The owner-approved English/Spanish policy update is live as `e6fceca7aaf93553e54c3fac25c4828ae8483084`.
+Production workflow `36797697298` completed successfully in all three jobs after
+both required PR workflows passed. The exact production release, healthy
+application/database/schema and launch locks were independently checked at
+`2026-10-01T01:06:17.728Z`. Twenty-three HTTP checks passed: six updated
+English/Spanish policy pages and their dates/collection wording/canonical URLs,
+account pages, private API protection and closed checkout in both languages.
+An initial probe used a lowercase sentence fragment against the capitalized
+Spanish Payment Policy. The reviewed source was correct; only the probe's
+case-sensitive comparison changed. No site edit or redeployment was needed.
+
+Twelve additional live Chromium/WebKit checks at `2026-10-01T01:05:36.758Z`
+clicked all five Spanish policy navigation links, checked mobile width, full
+customer section/paragraph counts and canonical URLs, and switched the customer
+page both ways. No page errors or missing Spanish routes occurred. Browser
+requests were read-only. No account, application, email, payment or provider
+record was created by these checks.
+
+The release includes the complete Spanish Customer Agreement, clear payment
+recipient/collection/transfer wording and the owner's full-refund allocation.
+Historical provider acceptances are preserved; revised shared Terms/Payments
+require fresh acceptance. The production site remains onboarding-only with
+customer accounts/provider applications open and customer requests/payments
+closed. Exact bilingual checkout consent remains unfinished; its current
+English-only language guard is deliberately intact. This release does not
+approve tax, coverage, legal duties, service launch or genuine provider evidence.
+
+Evidence: task outputs `pr272-production-release-20260930.json`,
+`pr272-live-release-20260930.json`, `customer-policy-release-state-20260930.json`,
+and repo ignored `outputs/policy-live-browser-20260930.json`. Local build,
+896 regressions, TypeScript and six isolated browser scenarios passed; lint
+retains only the pre-existing language-navigation warning. Do not repeat this
+completed publication or the earlier PR #271 repair.
+
+The available Gmail connector identifies a personal account. Its inbox was
+not searched; this turn did not refresh the business county/insurance replies.
+Use the business account for that separate follow-up. Keep the pending owner
+ownership/contributor clarification and the genuine provider application last.
+
 ## 2026-09-30 - PR #272 approved and merged; production verification pending
 
 Owner explicitly approved: "Yes, publish after the checks pass." Both required

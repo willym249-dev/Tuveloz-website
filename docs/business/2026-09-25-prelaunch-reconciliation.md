@@ -11,16 +11,20 @@ behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
-## Current work awaiting publication review
+## Latest completed release
 
-September 30: the concrete English/Spanish payment-policy candidate and complete
-Spanish Customer Agreement are prepared locally. Build, 896 regression tests,
-TypeScript and six Chromium/WebKit phone/desktop scenarios pass; remote PR checks
-and owner review remain. Nothing from this candidate is deployed. Shared Terms
-and Payments get new versions, so old provider consent is preserved but cannot
-qualify for those new terms. Exact bilingual customer checkout consent remains
-separate and closed. See `legal/payment-policy-reconciliation.md` for the complete
-change and remaining boundaries. Preserve the published PR #271 repair.
+PR #272 is owner-approved, published as `e6fceca7`, and independently verified
+September 30 (Maryland time). It updates English/Spanish payment policies and
+adds the complete Spanish Customer Agreement with correct navigation. All 896
+regressions/build, TypeScript, six local browser scenarios, required PR checks
+and all three production jobs passed. Twenty-three live HTTP checks and twelve
+live browser checks confirm the exact healthy release, policy pages, working
+Spanish navigation/language switching and closed customer requests/payments.
+The four unaffected provider releases are preserved; changed shared Terms and
+Payments require fresh acceptance without rewriting old records. Exact bilingual
+checkout consent and final launch review remain separate. Do not repeat this
+release or the completed PR #271 language guard. See the existing legal payment
+review and LOG for exact evidence and remaining work.
 
 ## Remaining work for the first customer pilot
 
