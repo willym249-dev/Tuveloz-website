@@ -388,6 +388,8 @@ export const spanishText: Record<string, string> = {
   "Unable to save the agreement acceptance.": "No pudimos confirmar que se guardó su aceptación de los acuerdos. Inténtelo de nuevo.",
   "The application agreements have changed. Refresh this page, review the agreements, and request a new code. Your saved details will stay on this device.": "Los acuerdos de la solicitud cambiaron. Actualice esta página, revise los acuerdos y solicite un código nuevo. Sus datos guardados seguirán en este dispositivo.",
   "Terms of Use | Tuveloz": "Términos de uso | Tuveloz",
+  "Customer Agreement | Tuveloz": "Acuerdo del cliente | Tuveloz",
+  "Your choices as a Tuveloz customer and your direct agreement with the provider business you select. An operational review draft; customer requests are not yet open.": "Sus opciones como cliente de Tuveloz y su acuerdo directo con el negocio proveedor que elija. Borrador para revisión operativa; las solicitudes de clientes aún no están disponibles.",
   "Provider Agreement | Tuveloz": "Acuerdo del proveedor | Tuveloz",
   "Payment, Cancellation, and Refund Policy | Tuveloz": "Política de pagos, cancelaciones y reembolsos | Tuveloz",
   "Marketplace Conduct Policy | Tuveloz": "Política de conducta en el mercado | Tuveloz",

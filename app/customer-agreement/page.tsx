@@ -6,7 +6,7 @@ export default function CustomerAgreementPage() {
       eyebrow="Customers"
       title="Customer Agreement"
       summary="An operational review draft about your choices and direct agreement with the provider business you select."
-      updated="August 6, 2026"
+      updated="September 30, 2026"
     >
       <section>
         <h2>Important current status</h2>
@@ -116,15 +116,33 @@ export default function CustomerAgreementPage() {
       <section>
         <h2>7. Price, payment, cancellation, and refunds</h2>
         <p>
-          Real customer payments are currently disabled. The product
-          configuration proposes a customer service fee equal to 5% of the
-          provider subtotal, subject to documented compliance with applicable
-          law and final CPA or tax-adviser, payment-processor, insurance, and
-          operational approval. If that pricing is adopted, the provider
-          subtotal, separate fee, and total must be displayed conspicuously before
-          you choose whether to authorize checkout. The{" "}
+          Real customer payments are currently disabled. When payments open,
+          your payment through Tuveloz will be to TUVELOZ LLC, processed by
+          Stripe. Your selected independent provider business performs the
+          vehicle service. For help with a payment or refund, contact{" "}
+          <a href="mailto:hello@tuveloz.com">hello@tuveloz.com</a>.
+        </p>
+        <p>
+          You will see the provider&apos;s labor quote, a separate Customer
+          Service Fee equal to 5% of the provider subtotal, and the total before
+          paying. You pay that total at
+          checkout. The provider&apos;s transfer happens later, after completion
+          and the required payment checks. The fee is added to your total, not
+          deducted from the provider&apos;s quote. You purchase any parts separately.
+        </p>
+        <p>
+          Under the proposed cancellation policy, a full refund includes the
+          provider&apos;s labor amount and Tuveloz&apos;s 5% Customer Service Fee
+          if the provider cancels or does not show up, or if you cancel before
+          authorized work starts. Tuveloz covers any original Stripe processing
+          fee that Stripe keeps; it is not deducted from that refund.
+        </p>
+        <p>
+          Production use still requires documented compliance with applicable
+          law and final tax-adviser, processor, insurance, and operational review.
+          The{" "}
           <a href="/payments">Payment, Cancellation, and Refund Policy</a> explains
-          the proposed payment administration and customer protections.
+          the payment process, other cancellation cases, and customer protections.
         </p>
       </section>
 

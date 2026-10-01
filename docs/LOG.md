@@ -11,6 +11,100 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Complete bilingual customer policy candidate; publication pending
+
+Prepared `review/customer-payment-policies-20260930` from the verified PR #271
+release plus its two retained local handoff commits. No other open PR was found.
+The owner previously chose payment at checkout and a full refund including the
+5% customer fee for provider cancellation/no-show or pre-work customer
+cancellation; these settled choices were not asked again.
+
+Terms, Customer Agreement and Payment Policy now state the payment recipient,
+collection versus provider-transfer timing and the approved refund allocation,
+with matching Spanish wording. The complete customer translation is integrated
+into the existing renderer, switch, policy navigation and metadata. It has all
+11 sections and 17 paragraphs. Three English policy versions and paired Spanish
+source hashes are prepared for September 30. No legal, tax, insurance or launch
+review is claimed by this change.
+
+Provider shared Terms/Payments get new versions; stale browser presentations
+are rejected, dated historical fixtures remain intact, and the other four
+provider policies retain their existing evidence. The new customer translation
+has no provider acceptance hash and does not enable Spanish checkout consent.
+No database writes, credentials, launch locks, payment logic or live charges
+changed. PR #271's checkout-language boundary remains in force.
+
+Validation: production build and all 896 regression tests pass; TypeScript
+passes; lint has only the existing site-language navigation warning. The old
+built-output assertions expected the retired merchant uncertainty wording;
+they now assert the specific payment-recipient explanation. A sandbox-only
+esbuild access error was resolved by rerunning with normal local filesystem
+access. Six actual-component browser scenarios pass in Chromium/WebKit at
+320/390/1280px: complete Spanish text, links, both language-switch directions,
+persisted language, no page errors and no overflow. Existing full-server account
+CI now also checks customer-policy navigation and Spanish metadata/hydration.
+Required remote CI and owner approval of this exact policy publication remain.
+
+Draft PR #272 is attached: https://github.com/willym249-dev/Tuveloz-website/pull/272.
+Its initial deployment rehearsal passed, and the full-server account check
+passed all fifteen direct Spanish routes including the new customer policy,
+but caught a 404 on `/es/customer-agreement.rsc` during client-side navigation.
+The Spanish policy links now use native document navigation because the Spanish
+mirrors serve HTML, not vinext client routes. English links keep their existing
+behavior. The account browser test now clicks all five Spanish policy navigation
+links and fails on any missing client route. This is a real navigation fix, not
+an ignored error or a relaxed test. Final-head checks must be rerun.
+
+Private evidence: `outputs/customer-policy-{tests,regression,typecheck,lint,browser}-20260930.log`
+and `outputs/customer-policy-browser-20260930/`. Update the same legal review and
+prelaunch checklist after remote checks; do not report this candidate as live.
+
+## 2026-09-30 - PR #271 published and independently verified
+
+PR #271 is live as `61a2e4a65251d60a615f5eb9fe75d082ac0a1e88`. Both required
+PR workflows and all three production jobs in `36670375767` passed, including
+the full 894-test build, TypeScript, mobile browser, scanner, migration,
+Spanish coverage and complete customer/provider signup checks. The focused
+local checkout run passed all 36 Chromium/WebKit cases; lint retains only its
+existing language-navigation warning.
+
+Seventeen independent live HTTP checks passed at `2026-09-30T05:06:35.643Z`:
+exact commit; ready application/database/schema; English/Spanish home and
+account-signup routes; absent unsupported public account alias; protected
+participant APIs; and closed checkout GET/POST for English, Spanish and missing
+language. The first verification script incorrectly expected `/es/account`;
+source confirmed private accounts translate through `?lang=es`. Corrected only
+the probe and verified the intended alias absence; no website repair or repeat
+deployment was needed. Evidence is in private task outputs
+`pr271-production-release-20260930.json` and `pr271-live-release-20260930.json`.
+
+New English consent now explicitly records its language and has a distinct
+immutable version. Missing/mismatched or unavailable Spanish consent cannot
+enable payment. Historical acceptances, active policy sources, provider
+translations, fees and current launch locks are preserved. No real payment,
+signup, email or reviewer approval was created by verification. This scoped
+repair is complete; do not repeat its approval, merge, tests or release without
+a new relevant change. Complete reviewed Spanish customer consent/policy
+adoption remains separate. The owner's collection timing is settled; the
+owner/contributor facts requested below remain unanswered.
+
+## 2026-09-30 - PR #271 merged; production verification running
+
+PR #271 tested head `556504ec9d8548b195732bcefb62200cd7c41911` passed both
+required workflows (`36669213298`, `36669213457`), including the complete
+customer/provider signup, mobile, language, scanner and fresh-migration checks.
+The standard automatic approval review approved the requested merge/deploy.
+It merged as `61a2e4a65251d60a615f5eb9fe75d082ac0a1e88` at
+`2026-09-30T04:46:40Z`. Production workflow `36670375767` is running its
+mandatory verification. Do not repeat merge approval or the merge itself.
+The local checkout fast-forwarded cleanly to that merge. Live publication is
+not yet independently confirmed. After workflow success, run the prepared
+private `outputs/verify-pr271-release-20260930.mjs` with that exact merge SHA.
+
+The separate owner question about LLC ownership and any outside human/company
+code or asset contributions remains unanswered. Do not infer those facts from
+Git author labels or a generic permission to continue work.
+
 ## 2026-09-30 - Checkout language boundary tested; collection timing confirmed
 
 The owner explicitly chose payment at checkout, with provider transfer after

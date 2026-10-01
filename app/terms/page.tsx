@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="August 7, 2026"
+      updated="September 30, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -86,6 +86,13 @@ export default function TermsPage() {
           review a complaint. Nobody may make a promise or sign anything on
           Tuveloz&apos;s behalf.
         </p>
+        <p>
+          Your payment through Tuveloz is to TUVELOZ LLC, processed by Stripe.
+          The provider business performs the vehicle service. This distinction
+          does not remove Tuveloz&apos;s responsibilities for the customer payment,
+          refunds, disputes, or any duty that applicable law does not allow it
+          to disclaim.
+        </p>
       </section>
 
       <section>
@@ -161,9 +168,13 @@ export default function TermsPage() {
       <section>
         <h2>7. Fees</h2>
         <p>
-          Once enabled, Tuveloz plans to charge a 5% fee on completed jobs,
-          added to the provider&apos;s quoted price and shown to the customer
-          before they accept. There&apos;s no fee to browse, post a request, apply
+          When payments open, you will see the provider&apos;s labor quote, a
+          separate 5% Customer Service Fee, and the total before paying. You pay
+          that total at checkout. The provider&apos;s transfer is a later step,
+          after the work is completed and the required payment checks pass.
+          The fee is added to your total, not deducted from the provider&apos;s
+          quote. You purchase any parts separately.
+          There&apos;s no fee to browse, post a request, apply
           as a provider, or send a quote. That 5% figure is Tuveloz&apos;s
           proposed pricing — it still needs final sign-off from a tax
           adviser, the payment processor, and Tuveloz&apos;s insurance broker

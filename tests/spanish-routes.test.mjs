@@ -50,7 +50,7 @@ test("an unreviewed /es path is a 404, never an untranslated page", () => {
 });
 
 test("untranslated legal pages have no Spanish twin", () => {
-  for (const legal of ["/customer-agreement", "/copyright", "/sms-terms"]) {
+  for (const legal of ["/copyright", "/sms-terms"]) {
     assert.ok(!readyPaths.includes(legal), `${legal} must not have a Spanish URL`);
   }
 });

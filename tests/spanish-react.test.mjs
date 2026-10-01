@@ -30,7 +30,7 @@ test("the private account translates without becoming a public Spanish route", (
   assert.equal(spanishPathFor("/account"), null);
   assert.ok(!spanishPagePaths().includes("/es/account"));
   assert.equal(pathHasSpanish("/admin"), false);
-  assert.equal(pathHasSpanish("/customer-agreement"), false);
+  assert.equal(pathHasSpanish("/copyright"), false);
 });
 
 test("private privacy controls translate in place without exposing a public alias", () => {
@@ -109,7 +109,8 @@ test("Spanish navigation uses only reviewed routes and preserves attribution and
   assert.equal(spanishInterfaceHref("/join?ref=local#provider-apply"), "/es/join?ref=local#provider-apply");
   assert.equal(spanishInterfaceHref("/"), "/es");
   assert.equal(spanishInterfaceHref("/terms"), "/es/terms");
-  for (const href of ["/customer-agreement", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
+  assert.equal(spanishInterfaceHref("/customer-agreement"), "/es/customer-agreement");
+  for (const href of ["/copyright", "/es/join", "/api/reviews", "#provider-apply", "https://example.com/join", "//example.com/join"]) {
     assert.equal(spanishInterfaceHref(href), href);
   }
 });

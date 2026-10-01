@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { requestPageMetadata } from "../../lib/request-page-metadata";
 
-export const metadata: Metadata = {
+const englishMetadata: Metadata = {
   title: "Customer Agreement",
   description:
     "Your choices as a Tuveloz customer and your direct agreement with the provider business you select. An operational review draft; customer requests are not yet open.",
@@ -8,6 +9,10 @@ export const metadata: Metadata = {
     canonical: "/customer-agreement",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return requestPageMetadata(englishMetadata);
+}
 
 /**
  * Metadata lives here rather than in page.tsx because that file is pinned to a

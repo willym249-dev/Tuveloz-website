@@ -125,6 +125,9 @@ jobs:
       - name: Verify bilingual payment records without real charges
         run: npm run test:e2e:payment-disclosure
 
+      - name: Verify complete customer policies and language switching in both browsers
+        run: npm run test:e2e:customer-policy
+
       - name: Verify quote consent resets and delayed checkout responses without real charges
         run: npm run test:e2e:quote-checkout
 
