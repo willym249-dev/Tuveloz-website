@@ -3,16 +3,7 @@ import { CustomerLander } from "../components/customer-lander";
 import { InterfaceCopy } from "../components/interface-copy";
 import type { Metadata } from "next";
 import { SiteLink as Link } from "../components/site-link";
-import {
-  CUSTOMER_REQUEST_ACCEPTANCE_TEXT,
-  CUSTOMER_REQUEST_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_AGREEMENT_VERSION,
-  CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT,
-  CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION,
-  customerRequestAgreementHash,
-  customerRequestPrivacyAgreementHash,
-} from "../../lib/customer-job-scope";
+import { customerRequestConsentPresentation } from "../../lib/customer-job-consent";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { CustomerRequestForm } from "../components/customer-request-form";
 import { PublicSiteHeader } from "../components/public-chrome";
@@ -35,9 +26,9 @@ export default async function PostJobPage() {
     return <CustomerLander />;
   }
 
-  const [acceptanceHash, privacyHash] = await Promise.all([
-    customerRequestAgreementHash(),
-    customerRequestPrivacyAgreementHash(),
+  const [en, es] = await Promise.all([
+    customerRequestConsentPresentation("en"),
+    customerRequestConsentPresentation("es"),
   ]);
 
   return (
@@ -60,14 +51,7 @@ export default async function PostJobPage() {
         </div>
 
         <CustomerRequestForm
-          acceptanceKey={CUSTOMER_REQUEST_AGREEMENT_KEY}
-          acceptanceVersion={CUSTOMER_REQUEST_AGREEMENT_VERSION}
-          acceptanceHash={acceptanceHash}
-          acceptanceText={CUSTOMER_REQUEST_ACCEPTANCE_TEXT}
-          privacyKey={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY}
-          privacyVersion={CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION}
-          privacyHash={privacyHash}
-          privacyText={CUSTOMER_REQUEST_PRIVACY_ACKNOWLEDGMENT_TEXT}
+          presentations={{ en, es }}
         />
 
         <div className="hero-actions" style={{ marginTop: 24 }}>

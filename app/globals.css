@@ -9186,6 +9186,42 @@ footer > p,
   text-underline-offset: 2px;
 }
 
+/* Exact service identifiers must wrap without changing the accepted text. */
+.customer-job-consent,
+.quote-confirm > .customer-job-consent {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+}
+
+.customer-job-consent .policy-consent {
+  min-width: 0;
+  width: 100%;
+}
+
+.customer-job-consent .policy-consent > span {
+  color: #d7dfe5;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-transform: none;
+}
+
+.customer-consent-tools label { display: grid; gap: 8px; }
+.customer-consent-tools select {
+  background: #171717;
+  border: 1px solid #80604b;
+  border-radius: 8px;
+  color: #f4e8df;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px;
+}
+.customer-consent-tools .button { margin-top: 12px; }
+
 .provider-form .policy-consent > span {
   color: #d7dfe5;
   font-size: 14px;

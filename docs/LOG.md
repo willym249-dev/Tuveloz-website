@@ -11,6 +11,51 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Request and provider-selection bilingual consent candidate
+
+Continued only the separate request/privacy/provider-selection work after the
+completed PR #273 release. Branch `review/customer-request-selection-consent-20261001`
+starts from that deployed commit plus its local verification notes. This is a
+new candidate, not a second checkout release and not a customer launch.
+
+- New explicit EN/ES request-scope, separate privacy and provider-selection
+  presentations bind exact text, scope, released policy URLs/hashes and language
+  to new `request-scope:4`, `request-privacy:3` and `provider-quote-selection:5`
+  versions. The legacy helpers stay unchanged; existing records remain readable
+  without mutation or relabeling. No migration or published policy-page change.
+- Request consent clears after language/field changes, preserving the draft.
+  Selection binds consent to the current request, quote, scope, price, language
+  and evidence hash. Delayed responses cannot replace a newer language. Failed
+  decisions require a read-only status refresh before a fresh approval, with a
+  bounded wait and no automatic repeat booking.
+- Separate native policy links open in another tab. Request receipts and quote
+  authorization downloads retain the exact evidence string and hash. Dynamic
+  names, service identifiers, timestamps and provider warranties stay literal.
+  The private request page offers a clearly labeled authorization-language
+  selector; this does not claim translation of every private-workspace screen.
+- A blank confirmed-credential list no longer implies that no license or
+  insurance is legally required. New EN/ES text states only that this quote
+  shows no confirmed credential. The actual provider eligibility gates remain.
+- Phone testing found long operation identifiers overflowing the consent label;
+  targeted wrapping, readable body typography and language-select contrast fix
+  it without changing the accepted text.
+
+Local verification: production build and **914 tests passed**, TypeScript
+passed, lint has only the existing `site-language.tsx:144` warning, and **26/26
+Chromium/WebKit phone cases passed**. Eleven new module/real-route tests use
+synthetic data and actual migrated SQLite: exact saved/returned consent, stale
+or mismatched language/hash rejection, separate privacy consent, old-reader
+compatibility, changed provider promises and duplicate approval rejection.
+Eligibility is deliberately stubbed in the persistence harness; this is not a
+real provider approval, external credential check or live booking/payment.
+
+Evidence is in ignored `outputs/customer-consent-{suite,focused,routes,browser,
+typecheck,lint}-20261001.log`, `outputs/customer-job-consent-browser.json`, and
+phone layout previews. All marketplace, booking, payment and SMS locks remain
+unchanged. Publication approval and required GitHub release checks remain; do
+not report this candidate live. Remaining launch, coverage, tax and actual
+provider evidence in the reconciliation checklist stays open.
+
 ## 2026-09-30 - PR #273 published and independently verified
 
 The owner said "continue" after the concrete publication request and prepared

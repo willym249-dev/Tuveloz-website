@@ -9,22 +9,15 @@ import {
 import { decideAutomaticJobRouting } from "../../../lib/automatic-job-routing";
 import {
   CUSTOMER_REQUEST_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_AGREEMENT_VERSION,
   CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION,
   CUSTOMER_REQUEST_SCOPE_VERSION,
   customerAcceptanceDeviceContext,
-  customerRequestAgreementEvidenceText,
-  customerRequestAgreementHash,
-  customerRequestPrivacyAgreementEvidenceText,
-  customerRequestPrivacyAgreementHash,
-  customerRequestScopedAgreementHash,
-  customerRequestScopedPrivacyAgreementHash,
   customerRequestScopeSnapshot,
   normalizeScheduledFor,
   parseExactServiceCodes,
   requestIpAddress,
 } from "../../../lib/customer-job-scope";
+import { customerRequestConsentPresentation } from "../../../lib/customer-job-consent";
 import { sendMarketplaceUpdateEmail } from "../../../lib/email-notifications";
 import {
   deleteJobImage,
@@ -61,7 +54,7 @@ import {
   CUSTOMER_POLICY_BUNDLE_VERSION,
   policyAccepted,
 } from "../../../lib/policies";
-import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../lib/customer-policy-acceptance";
+import { customerAcceptanceBundleIsReleasedForPurpose, customerPolicyPresentationIsReleased } from "../../../lib/customer-policy-acceptance";
 import {
   POLICY_JURISDICTION,
   POLICY_VERSION,
@@ -170,6 +163,7 @@ export async function POST(request: Request) {
         details: formData.get("job-details"),
         rebookToken: formData.get("rebook-token"),
         termsAccepted: formData.get("terms-accepted"),
+        language: formData.get("customer-consent-language"),
         privacyAcknowledged: formData.get("privacy-acknowledged"),
         customerAcceptanceKey: formData.get("customer-acceptance-key"),
         customerAcceptanceVersion: formData.get("customer-acceptance-version"),
@@ -187,6 +181,13 @@ export async function POST(request: Request) {
       body = (await request.json()) as Record<string, unknown>;
     }
 
+    const language = body.language;
+    if (language !== "en" && language !== "es") {
+      return customerValidationError("Choose English or Spanish and review the request agreements.", "CUSTOMER_LANGUAGE_REQUIRED");
+    }
+    if (!customerPolicyPresentationIsReleased("request_scope", language)) {
+      return customerValidationError("The agreements in this language are unavailable. Please try again later.", "CUSTOMER_POLICY_RELEASE_REQUIRED", 503);
+    }
     const name = clean(body.name, 100) || "Not provided";
     const email = clean(body.email, 180).toLowerCase();
     const zip = clean(body.zip, 10);
@@ -398,17 +399,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const [expectedAcceptanceHash, expectedPrivacyHash] = await Promise.all([
-      customerRequestAgreementHash(),
-      customerRequestPrivacyAgreementHash(),
-    ]);
+    const presentation = await customerRequestConsentPresentation(language);
     if (
       clean(body.customerAcceptanceKey, 100) !== CUSTOMER_REQUEST_AGREEMENT_KEY
-      || clean(body.customerAcceptanceVersion, 300) !== CUSTOMER_REQUEST_AGREEMENT_VERSION
-      || clean(body.customerAcceptanceHash, 64).toLowerCase() !== expectedAcceptanceHash
+      || clean(body.customerAcceptanceVersion, 300) !== presentation.request.agreementVersion
+      || clean(body.customerAcceptanceHash, 64).toLowerCase() !== presentation.request.agreementHash
       || clean(body.customerPrivacyKey, 100) !== CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY
-      || clean(body.customerPrivacyVersion, 300) !== CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION
-      || clean(body.customerPrivacyHash, 64).toLowerCase() !== expectedPrivacyHash
+      || clean(body.customerPrivacyVersion, 300) !== presentation.privacy.agreementVersion
+      || clean(body.customerPrivacyHash, 64).toLowerCase() !== presentation.privacy.agreementHash
     ) {
       return customerValidationError(
         "The customer agreements changed while this form was open. Refresh and review them again.",
@@ -565,10 +563,7 @@ export async function POST(request: Request) {
         });
     const acceptanceSessionId = crypto.randomUUID();
     const deviceContext = customerAcceptanceDeviceContext(request);
-    const [scopedAcceptanceHash, scopedPrivacyHash] = await Promise.all([
-      customerRequestScopedAgreementHash(scopeSnapshot),
-      customerRequestScopedPrivacyAgreementHash(scopeSnapshot),
-    ]);
+    const scopedConsent = await customerRequestConsentPresentation(language, scopeSnapshot);
     const db = getDb();
     let requestInserted = false;
     try {
@@ -621,9 +616,9 @@ export async function POST(request: Request) {
         scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
         scopeSnapshot,
         agreementKey: CUSTOMER_REQUEST_AGREEMENT_KEY,
-        agreementVersion: CUSTOMER_REQUEST_AGREEMENT_VERSION,
-        agreementHash: scopedAcceptanceHash,
-        agreementText: customerRequestAgreementEvidenceText(scopeSnapshot),
+        agreementVersion: scopedConsent.request.agreementVersion,
+        agreementHash: scopedConsent.request.agreementHash,
+        agreementText: scopedConsent.request.agreementText,
         acceptedByName: name,
         acceptanceAction: "affirmative-customer-request-scope-checkbox",
         acceptedAt: recordedAt,
@@ -640,9 +635,9 @@ export async function POST(request: Request) {
         scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
         scopeSnapshot,
         agreementKey: CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY,
-        agreementVersion: CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION,
-        agreementHash: scopedPrivacyHash,
-        agreementText: customerRequestPrivacyAgreementEvidenceText(scopeSnapshot),
+        agreementVersion: scopedConsent.privacy.agreementVersion,
+        agreementHash: scopedConsent.privacy.agreementHash,
+        agreementText: scopedConsent.privacy.agreementText,
         acceptedByName: name,
         acceptanceAction: "affirmative-separate-customer-privacy-checkbox",
         acceptedAt: recordedAt,
@@ -728,6 +723,7 @@ export async function POST(request: Request) {
       scopeVersion: CUSTOMER_REQUEST_SCOPE_VERSION,
       automaticallyApproved: Boolean(automaticDecision),
       matchingProviderCount,
+      consent: scopedConsent,
     }, { status: 201, headers: { "cache-control": "no-store" } });
   } catch (error) {
     if (error instanceof ImageValidationError) {

@@ -151,8 +151,8 @@ export function customerPolicyPresentationIsReleased(
     )));
 }
 
-// A new presentation envelope for checkout only. Leave the original evidence
-// helper unchanged so request/selection and historical records are not relabeled.
+// Explicit presentation envelope for new customer consent. Leave the original
+// evidence helper unchanged so historical records are not relabeled.
 export function customerPolicyPresentationEvidence(
   purpose: CustomerAcceptancePurpose,
   language: CustomerPolicyLanguage,

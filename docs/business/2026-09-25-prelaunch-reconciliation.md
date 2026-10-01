@@ -13,6 +13,14 @@ earlier browser observations below are dated evidence, not perpetual guarantees.
 
 ## Latest completed release
 
+**Prepared follow-up, not live:** branch
+`review/customer-request-selection-consent-20261001` implements exact EN/ES
+request/privacy/provider-selection consent, immutable versions, preserved legacy
+readers, draft/consent resets, safe recovery and phone wrapping. Local production
+build/914 tests, TypeScript, lint (one existing warning) and 26 phone scenarios
+passed. See LOG and the payment review. Required remote checks and publication
+approval remain; no policy-page release, provider record or launch switch changed.
+
 PR #273 is published as `152639cdd7c12e2bb218be6a4c95d0b300b370d4`, independently
 verified September 30 (Maryland time). Exact bilingual checkout consent now
 shares the same displayed, downloaded and saved evidence; EN/ES versions

@@ -1,7 +1,12 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- private R2 images must bypass shared optimization caches */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CustomerConsentPresentation } from "../../lib/customer-job-consent";
+import type { CustomerPolicyLanguage } from "../../lib/customer-policy-acceptance";
+import { downloadCustomerConsent, validCustomerConsent } from "../../lib/customer-consent-response";
+import { requestAccountResponse } from "../../lib/account-response";
+import { CustomerConsentDocuments } from "../components/customer-consent-documents";
 import Link from "next/link";
 import { BrandMark } from "../components/tuveloz-icons";
 import { JobAppointmentPanel } from "../components/job-appointment-panel";
@@ -42,7 +47,7 @@ type Quote = {
   providerBusinessMunicipality: string;
   providerBusinessServiceAddress?: string;
   selectionBlockedReason: string;
-  selectionAcceptance: null | {
+  selectionAcceptance: null | CustomerConsentPresentation & {
     agreementKey: string;
     agreementVersion: string;
     agreementHash: string;
@@ -100,6 +105,11 @@ type CompletionConfirmation = {
 };
 
 export default function MyRequestPage() {
+  const [selectionLanguage, setSelectionLanguage] = useState<CustomerPolicyLanguage>("en");
+  const [refresh, setRefresh] = useState(0);
+  const [quotesReady, setQuotesReady] = useState(false);
+  const [decisionNeedsRefresh, setDecisionNeedsRefresh] = useState(false);
+  const decisionInFlight = useRef(false);
   const [job, setJob] = useState<Job | null>(null);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [pendingQuoteId, setPendingQuoteId] = useState("");
@@ -119,7 +129,20 @@ export default function MyRequestPage() {
   const [completionError, setCompletionError] = useState("");
   const acceptedQuote = quotes.find((quote) => quote.status === "accepted");
 
+  function selectionContext(quote: Quote) {
+    return JSON.stringify([accessToken, selectionLanguage, refresh, quote.id,
+      quote.scopeVersion, quote.customerTotalCents, quote.providerName,
+      quote.selectionAcceptance?.agreementHash]);
+  }
+
+  function availableSelection(quote: Quote) {
+    return quotesReady && !decisionNeedsRefresh
+      && validCustomerConsent(quote.selectionAcceptance, selectionLanguage, "customer_provider_quote_selection");
+  }
+
   useEffect(() => {
+    let current = true;
+    const controller = new AbortController();
     const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get("token") ?? "";
     const requestId = searchParams.get("request") ?? "";
@@ -130,15 +153,20 @@ export default function MyRequestPage() {
     const query = token
       ? `token=${encodeURIComponent(token)}`
       : `requestId=${encodeURIComponent(requestId)}`;
-    fetch(`/api/customer-quotes?${query}`).then(async (response) => {
-      const result = await response.json() as {
+    requestAccountResponse(`/api/customer-quotes?${query}&language=${selectionLanguage}`, { signal: controller.signal, cache: "no-store" }).then(async (response) => {
+      if (!current) return;
+      const result = response.data as {
         error?: string;
         accessToken?: string;
         job: Job;
         quotes: Quote[];
         review: Review | null;
       };
-      if (!response.ok) throw new Error(result.error);
+      if (!response.ok || !result.job || !Array.isArray(result.quotes)) throw new Error("Unable to load request. Please refresh and try again.");
+      setAcceptedSelectionQuoteId("");
+      setQuotesReady(true);
+      setDecisionNeedsRefresh(false);
+      setError("");
       setAccessToken(result.accessToken || token);
       setJob(result.job); setQuotes(result.quotes); setReview(result.review);
       const activeToken = result.accessToken || token;
@@ -147,12 +175,17 @@ export default function MyRequestPage() {
           `/api/customer-completion?token=${encodeURIComponent(activeToken)}`,
         );
         const completionResult = await completionResponse.json().catch(() => null);
-        if (completionResponse.ok && completionResult) {
+        if (current && completionResponse.ok && completionResult) {
           setCompletion(completionResult as CompletionConfirmation);
         }
       }
-    }).catch((reason) => setError(reason.message || "Unable to load request."));
-  }, []);
+    }).catch(() => {
+      if (!current) return;
+      setQuotesReady(false);
+      setError("Unable to load request. Please refresh and try again.");
+    });
+    return () => { current = false; controller.abort(); };
+  }, [selectionLanguage, refresh]);
 
   async function submitCompletionConfirmation() {
     if (!completion?.available || !completionChecked || !accessToken) return;
@@ -192,41 +225,56 @@ export default function MyRequestPage() {
   async function accept(quoteId: string) {
     const selectedQuote = quotes.find((quote) => quote.id === quoteId);
     if (
-      !selectedQuote?.selectionAcceptance
-      || acceptedSelectionQuoteId !== quoteId
+      !selectedQuote?.selectionAcceptance || !availableSelection(selectedQuote)
+      || acceptedSelectionQuoteId !== selectionContext(selectedQuote) || decisionInFlight.current
     ) {
       setError("Review and accept the exact provider, performing person, scope, schedule, and price first.");
       return;
     }
     setError("");
     setSubmittingQuoteId(quoteId);
-    const response = await fetch("/api/customer-quotes", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        action: "accept-quote",
-        token: accessToken,
-        quoteId,
-        selectionAccepted: true,
-        selectionAgreementKey: selectedQuote.selectionAcceptance.agreementKey,
-        selectionAgreementVersion: selectedQuote.selectionAcceptance.agreementVersion,
-        selectionAgreementHash: selectedQuote.selectionAcceptance.agreementHash,
-      }),
-    });
-    const result = (await response.json()) as { error?: string; providerEmail?: string };
-    setSubmittingQuoteId("");
-    if (!response.ok) return setError(result.error || "Unable to accept this quote.");
-    setQuotes((items) => items.map((item) => ({
-      ...item,
-      status: item.id === quoteId
-        ? "accepted"
-        : item.status === "submitted"
-          ? "not selected"
-          : item.status,
-      providerEmail: item.id === quoteId ? result.providerEmail : item.providerEmail,
-    })));
-    setJob((current) => current ? { ...current, status: "quote accepted" } : current);
-    setPendingQuoteId("");
-    setAcceptedSelectionQuoteId("");
+    decisionInFlight.current = true;
+    try {
+      const response = await requestAccountResponse("/api/customer-quotes", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "accept-quote",
+          token: accessToken,
+          quoteId,
+          selectionAccepted: true,
+          language: selectionLanguage,
+          selectionAgreementKey: selectedQuote.selectionAcceptance.agreementKey,
+          selectionAgreementVersion: selectedQuote.selectionAcceptance.agreementVersion,
+          selectionAgreementHash: selectedQuote.selectionAcceptance.agreementHash,
+        }),
+      });
+      const result = response.data;
+      if (!response.ok || result.ok !== true || typeof result.customerAcceptanceId !== "string"
+        || !result.customerAcceptanceId || typeof result.providerEmail !== "string") {
+        throw new Error("Unable to confirm this quote decision.");
+      }
+      const providerEmail = result.providerEmail;
+      setQuotes((items) => items.map((item) => ({
+        ...item,
+        status: item.id === quoteId
+          ? "accepted"
+          : item.status === "submitted"
+            ? "not selected"
+            : item.status,
+        providerEmail: item.id === quoteId ? providerEmail : item.providerEmail,
+      })));
+      setJob((current) => current ? { ...current, status: "quote accepted" } : current);
+      setPendingQuoteId("");
+    } catch {
+      setDecisionNeedsRefresh(true);
+      setError(selectionLanguage === "es"
+        ? "No pudimos confirmar la decisión. Actualice la solicitud para ver si se guardó antes de volver a elegir un proveedor."
+        : "We could not confirm the decision. Refresh the request to check whether it was saved before choosing a provider again.");
+    } finally {
+      decisionInFlight.current = false;
+      setSubmittingQuoteId("");
+      setAcceptedSelectionQuoteId("");
+    }
   }
 
   async function declineQuote(quoteId: string, declineReason: string) {
@@ -360,7 +408,23 @@ export default function MyRequestPage() {
         )}
         {job?.isTestJob && <span className="test-badge">TEST JOB · NO REAL SERVICE</span>}
       </section>
-      {error && <p className="form-error portal-alert">{error}</p>}
+      <div data-manual-language className="portal-intro customer-consent-tools">
+        <label>
+          Quote authorization language / Idioma de la autorización
+          <select aria-label="Quote authorization language / Idioma de la autorización" value={selectionLanguage}
+            disabled={Boolean(submittingQuoteId)} onChange={event => {
+              setSelectionLanguage(event.target.value as CustomerPolicyLanguage);
+              setQuotesReady(false);
+              setAcceptedSelectionQuoteId("");
+            }}>
+            <option value="en">English</option><option value="es">Español</option>
+          </select>
+        </label>
+        <button type="button" className="button secondary" disabled={Boolean(submittingQuoteId)} onClick={() => {
+          setQuotesReady(false); setAcceptedSelectionQuoteId(""); setRefresh(value => value + 1);
+        }}>{selectionLanguage === "es" ? "Actualizar solicitud" : "Refresh request"}</button>
+      </div>
+      {error && <p className="form-error portal-alert" role="alert" data-manual-language>{error}</p>}
       {job?.hasIssueImage && (
         <section className="customer-photo-card">
           <span>Photo attached to your request</span>
@@ -493,27 +557,32 @@ export default function MyRequestPage() {
               <p className="admin-note">Another quote was selected.</p>
             ) : pendingQuoteId === quote.id ? (
               <div className="quote-confirm" role="group" aria-label={`Confirm ${quote.providerName} quote`}>
-                <strong>Authorize this exact provider and quote?</strong>
-                <p>
-                  {quote.providerName} · Customer total ${(Number(quote.customerTotalCents) / 100).toFixed(2)},
-                  including the 5% Customer Service Fee
+                <strong data-manual-language lang={selectionLanguage}>{selectionLanguage === "es"
+                  ? "¿Autoriza a este proveedor y esta cotización?" : "Authorize this exact provider and quote?"}</strong>
+                <p data-manual-language lang={selectionLanguage}>
+                  {quote.providerName} · {selectionLanguage === "es" ? "Total del cliente" : "Customer total"} ${(Number(quote.customerTotalCents) / 100).toFixed(2)}, {selectionLanguage === "es"
+                    ? "incluida la tarifa de servicio al cliente del 5%" : "including the 5% Customer Service Fee"}
                 </p>
-                {quote.selectionAcceptance ? (
+                {availableSelection(quote) && quote.selectionAcceptance ? (
+                  <div className="customer-job-consent" data-manual-language lang={selectionLanguage}>
+                  <CustomerConsentDocuments consent={quote.selectionAcceptance} />
                   <label className="policy-consent">
                     <input
-                      checked={acceptedSelectionQuoteId === quote.id}
+                      checked={acceptedSelectionQuoteId === selectionContext(quote)}
+                      disabled={Boolean(submittingQuoteId)}
                       onChange={(event) => setAcceptedSelectionQuoteId(
-                        event.target.checked ? quote.id : "",
+                        event.target.checked ? selectionContext(quote) : "",
                       )}
                       type="checkbox"
                     />
                     <span>
-                      {quote.selectionAcceptance.presentedText}{" "}
-                      <Link href="/terms">Terms</Link>{" · "}
-                      <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
-                      <Link href="/payments">Payment Policy</Link>
+                      {quote.selectionAcceptance.presentedText}
                     </span>
                   </label>
+                  <button className="button secondary" type="button" onClick={() => downloadCustomerConsent(
+                    quote.selectionAcceptance, `tuveloz-provider-authorization-${quote.id}.json`,
+                  )}>{selectionLanguage === "es" ? "Descargar autorización" : "Download authorization"}</button>
+                  </div>
                 ) : (
                   <p className="form-error" role="alert">
                     {quote.selectionBlockedReason || "This quote is missing its exact authorization record."}
@@ -524,12 +593,15 @@ export default function MyRequestPage() {
                     className="button primary"
                     disabled={
                       submittingQuoteId === quote.id
-                      || !quote.selectionAcceptance
-                      || acceptedSelectionQuoteId !== quote.id
+                      || !availableSelection(quote)
+                      || acceptedSelectionQuoteId !== selectionContext(quote)
                     }
                     onClick={() => accept(quote.id)}
+                    data-manual-language lang={selectionLanguage}
                   >
-                    {submittingQuoteId === quote.id ? "Confirming…" : "Confirm quote"}
+                    {selectionLanguage === "es"
+                      ? submittingQuoteId === quote.id ? "Confirmando…" : "Confirmar cotización"
+                      : submittingQuoteId === quote.id ? "Confirming…" : "Confirm quote"}
                   </button>
                   <button
                     className="button secondary"
@@ -539,8 +611,9 @@ export default function MyRequestPage() {
                       setAcceptedSelectionQuoteId("");
                     }}
                     type="button"
+                    data-manual-language lang={selectionLanguage}
                   >
-                    Go back
+                    {selectionLanguage === "es" ? "Volver" : "Go back"}
                   </button>
                 </div>
               </div>
@@ -581,7 +654,7 @@ export default function MyRequestPage() {
               <div className="quote-decision-actions">
                 <button
                   className="button primary"
-                  disabled={!quote.selectionAcceptance}
+                  disabled={!availableSelection(quote) || Boolean(submittingQuoteId)}
                   onClick={() => {
                     setPendingDeclineId("");
                     setAcceptedSelectionQuoteId("");
@@ -591,7 +664,7 @@ export default function MyRequestPage() {
                 >
                   Choose provider
                 </button>
-                {!quote.selectionAcceptance && (
+                {!availableSelection(quote) && (
                   <small className="form-error">
                     {quote.selectionBlockedReason || "Exact quote authorization is unavailable."}
                   </small>

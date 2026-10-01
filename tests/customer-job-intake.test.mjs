@@ -80,10 +80,10 @@ test("new real requests fail before data reads and require immutable exact-scope
   assert.match(route, /const scopeSnapshot = automaticDecision[\s\S]*\? customerRequestScopeSnapshot/);
   assert.match(route, /CUSTOMER_REQUEST_AGREEMENT_KEY/);
   assert.match(route, /CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY/);
-  assert.match(route, /agreementText: customerRequestAgreementEvidenceText\(scopeSnapshot\)/);
-  assert.match(route, /agreementText: customerRequestPrivacyAgreementEvidenceText\(scopeSnapshot\)/);
-  assert.match(route, /customerRequestScopedAgreementHash\(scopeSnapshot\)/);
-  assert.match(route, /customerRequestScopedPrivacyAgreementHash\(scopeSnapshot\)/);
+  assert.match(route, /agreementText: scopedConsent\.request\.agreementText/);
+  assert.match(route, /agreementText: scopedConsent\.privacy\.agreementText/);
+  assert.match(route, /customerRequestConsentPresentation\(language, scopeSnapshot\)/);
+  assert.match(route, /agreementHash: scopedConsent\.privacy\.agreementHash/);
   assert.match(route, /acceptanceAction: "affirmative-customer-request-scope-checkbox"/);
   assert.match(route, /acceptanceAction: "affirmative-separate-customer-privacy-checkbox"/);
   assert.doesNotMatch(route, /CUSTOMER_JOB_SERVICE_OPTIONS|ALLOWED_SERVICES/);
@@ -178,5 +178,5 @@ test("customers must check the server-generated provider and quote acceptance", 
   assert.match(page, /selectionAgreementHash/);
   assert.match(page, /quote\.selectionAcceptance\.presentedText/);
   assert.match(page, /Authorize this exact provider and quote/);
-  assert.match(page, /disabled=\{!quote\.selectionAcceptance\}/);
+  assert.match(page, /disabled=\{!availableSelection\(quote\)/);
 });

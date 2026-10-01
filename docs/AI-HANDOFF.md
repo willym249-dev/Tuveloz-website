@@ -108,9 +108,11 @@ authorization, policy links and translation-release metadata to separate
 stored in the immutable record. Missing or stale presentations fail closed;
 historical customer/provider evidence stays intact. PR #273 is published and
 independently verified as `152639cd`; PR #272's policy-page release is also
-complete. Separate request-scope/privacy and provider-selection consent still
-needs an explicit language binding before customer jobs open. See the newest
-LOG entry for evidence. All launch/payment locks stay closed.
+complete. Separate request-scope/privacy and provider-selection consent is now
+implemented and locally tested on `review/customer-request-selection-consent-20261001`,
+with new language-specific versions and preserved legacy readers. It is a
+publication candidate, not live. See the newest LOG entry for evidence and
+remaining approval/checks. All launch/payment locks stay closed.
 
 ## Current launch state
 

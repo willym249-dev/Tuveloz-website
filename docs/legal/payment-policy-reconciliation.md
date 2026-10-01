@@ -1,6 +1,6 @@
 # Payment wording and acceptance review
 
-- **Status:** policies published in PR #272 and bilingual checkout consent in PR #273; separate request/selection consent and launch review remain
+- **Status:** policies published in PR #272 and checkout in PR #273; request/selection consent locally tested, awaiting publication; launch review remains
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-30
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
@@ -42,6 +42,22 @@ Earlier references below to an unfinished implementation describe the published
 PR #271/#272 baseline, not work to repeat after this release.
 
 ### Remaining customer-path boundary
+
+**September 30 follow-up candidate:** `lib/customer-job-consent.ts` now supplies
+exact English/Spanish request, privacy and provider-selection evidence with
+new language-specific versions. The routes and browser forms bind those records,
+downloads and translated policy links. Legacy `customer-job-scope.ts` evidence
+helpers remain unchanged and are still validated by the scope reader. Blank
+confirmed-credential labels now mean only that none is shown, never that no
+license/insurance requirement exists. Request receipt and selection downloads
+are private to the request; full evidence includes its bound identifiers.
+
+Build/914 tests, TypeScript, lint (one existing warning), and 26 mobile browser
+cases passed. The route tests use migrated SQLite and synthetic eligibility,
+not actual service approval or live transactions. This candidate is not yet
+published. The finding below describes the live PR #273 baseline; do not repeat
+the new implementation after it is published. Whole private-workspace translation,
+receipt-language propagation and final legal review remain separate.
 
 The September 30 source follow-up confirms that this change is specifically
 quote **checkout** consent. The separate request-scope/privacy evidence and

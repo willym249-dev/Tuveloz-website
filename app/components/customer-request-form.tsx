@@ -1,7 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import Link from "next/link";
+import { FormEvent, useMemo, useRef, useState } from "react";
+import { requestAccountResponse } from "../../lib/account-response";
+import type { CustomerRequestConsent } from "../../lib/customer-job-consent";
+import { downloadCustomerConsent, validCustomerConsent } from "../../lib/customer-consent-response";
+import { CustomerConsentDocuments } from "./customer-consent-documents";
+import { useSiteLanguage } from "./site-language";
 import { track } from "../../lib/analytics";
 import {
   JOB_SAFETY_ATTESTATION_OPTIONS,
@@ -88,17 +92,16 @@ const MANUAL_REVIEW_HINT =
   + "service above and just describe the problem — our team will review it by hand.";
 
 type CustomerRequestFormProps = {
-  acceptanceKey: string;
-  acceptanceVersion: string;
-  acceptanceHash: string;
-  acceptanceText: string;
-  privacyKey: string;
-  privacyVersion: string;
-  privacyHash: string;
-  privacyText: string;
+  presentations: { en: CustomerRequestConsent; es: CustomerRequestConsent };
 };
 
 export function CustomerRequestForm(props: CustomerRequestFormProps) {
+  const { language } = useSiteLanguage();
+  const consent = props.presentations[language];
+  const [consentRevision, setConsentRevision] = useState(0);
+  const consentKey = `${language}|${consent.request.agreementHash}|${consent.privacy.agreementHash}|${consentRevision}`;
+  const [receipt, setReceipt] = useState<CustomerRequestConsent | null>(null);
+  const submissionInFlight = useRef(false);
   const selectableServices = useMemo(() => servicesForCustomerSelection(), []);
 
   const [serviceCode, setServiceCode] = useState<string>(NOT_SURE_VALUE);
@@ -111,7 +114,8 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
   const [highVoltageStatus, setHighVoltageStatus] = useState("");
   const [requestError, setRequestError] = useState("");
   const [requestBusy, setRequestBusy] = useState(false);
-  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [confirmingContext, setConfirmingContext] = useState("");
+  const confirmingSubmit = confirmingContext === consentKey;
   const [requestSent, setRequestSent] = useState(false);
   const [requestToken, setRequestToken] = useState("");
   const [matchedProviderCount, setMatchedProviderCount] = useState<number | null>(null);
@@ -160,7 +164,7 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
     setExclusionsConfirmed(false);
     setCheckedAttestations([]);
     setLocationChoice("");
-    setConfirmingSubmit(false);
+    setConfirmingContext("");
     setRequestError("");
   }
 
@@ -221,6 +225,7 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submissionInFlight.current) return;
     const form = event.currentTarget;
     const formData = new FormData(form);
 
@@ -229,29 +234,42 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
     const factsError = serviceFactsError(formData);
     if (factsError) {
       setRequestError(factsError);
-      setConfirmingSubmit(false);
+      setConfirmingContext("");
       return;
     }
 
     if (!confirmingSubmit) {
       setRequestError("");
-      setConfirmingSubmit(true);
+      setConfirmingContext(consentKey);
       return;
     }
 
     setRequestBusy(true);
+    submissionInFlight.current = true;
     setRequestError("");
     try {
-      const response = await fetch("/api/requests", { method: "POST", body: formData });
-      const result = (await response.json()) as {
+      const response = await requestAccountResponse("/api/requests", { method: "POST", body: formData }).catch(() => {
+        throw new Error(language === "es"
+          ? "No pudimos confirmar que se guardó la solicitud. Revise su cuenta de cliente antes de enviarla otra vez."
+          : "We could not confirm the saved request. Check your customer account before submitting again.");
+      });
+      const result = response.data as {
         error?: string;
         accessToken?: string;
         automaticallyApproved?: boolean;
         matchingProviderCount?: number;
+        ok?: boolean;
+        consent?: CustomerRequestConsent;
       };
       if (!response.ok) throw new Error(result.error || "Please try again.");
+      if (result.ok !== true || typeof result.accessToken !== "string" || !result.accessToken
+        || !validCustomerConsent(result.consent?.request, language, "customer_request_scope")
+        || !validCustomerConsent(result.consent?.privacy, language, "customer_request_privacy_acknowledgment")) {
+        throw new Error("We could not confirm the saved request. Check your customer account before submitting again.");
+      }
+      setReceipt(result.consent!);
       form.reset();
-      setConfirmingSubmit(false);
+      setConfirmingContext("");
       setRequestToken(result.accessToken ?? "");
       setMatchedProviderCount(
         result.automaticallyApproved ? result.matchingProviderCount ?? 0 : null,
@@ -263,9 +281,11 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
       setRequestSent(true);
       track("customer_request_posted");
     } catch (error) {
-      setConfirmingSubmit(false);
+      setConfirmingContext("");
+      setConsentRevision(value => value + 1);
       setRequestError(error instanceof Error ? error.message : "Please try again.");
     } finally {
+      submissionInFlight.current = false;
       setRequestBusy(false);
     }
   }
@@ -285,7 +305,11 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
             Track my request
           </a>
         )}
-        <button type="button" onClick={() => setRequestSent(false)}>
+        {receipt && <button type="button" data-manual-language lang={receipt.request.language}
+          onClick={() => downloadCustomerConsent(receipt, "tuveloz-request-consent.json")}>
+          {receipt.request.language === "es" ? "Descargar mi aceptación" : "Download my acceptance"}
+        </button>}
+        <button type="button" onClick={() => { setRequestSent(false); setReceipt(null); }}>
           Post another request
         </button>
       </div>
@@ -293,7 +317,14 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
   }
 
   return (
-    <form className="lead-form" onSubmit={handleSubmit} style={{ marginTop: 24 }}>
+    <form className="lead-form" onSubmit={handleSubmit} style={{ marginTop: 24 }}
+      onChangeCapture={event => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement || target instanceof HTMLTextAreaElement)) return;
+        if (["terms-accepted", "privacy-acknowledged", "remember-email-consent", "marketing-consent"].includes(target.name)) return;
+        setConsentRevision(value => value + 1);
+        setConfirmingContext("");
+      }}>
       <LocationDatalists />
       <input name="jurisdiction" type="hidden" value={POLICY_JURISDICTION} />
       <input name="launch-area" type="hidden" value={CURRENT_LAUNCH_AREA} />
@@ -670,28 +701,30 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
         </small>
       </label>
 
-      <input name="customer-acceptance-key" type="hidden" value={props.acceptanceKey} />
-      <input name="customer-acceptance-version" type="hidden" value={props.acceptanceVersion} />
-      <input name="customer-acceptance-hash" type="hidden" value={props.acceptanceHash} />
+      <div className="customer-job-consent" key={consentKey} data-manual-language lang={language}>
+      <input name="customer-consent-language" type="hidden" value={language} />
+      <input name="customer-acceptance-key" type="hidden" value={consent.request.agreementKey} />
+      <input name="customer-acceptance-version" type="hidden" value={consent.request.agreementVersion} />
+      <input name="customer-acceptance-hash" type="hidden" value={consent.request.agreementHash} />
+      <CustomerConsentDocuments consent={consent.request} />
       <label className="policy-consent">
         <input name="terms-accepted" required type="checkbox" value="yes" />
         <span>
-          {props.acceptanceText}{" "}
-          <Link href="/terms">Terms of Use</Link>{" · "}
-          <Link href="/customer-agreement">Customer Agreement</Link>
+          {consent.request.presentedText}
         </span>
       </label>
 
-      <input name="customer-privacy-key" type="hidden" value={props.privacyKey} />
-      <input name="customer-privacy-version" type="hidden" value={props.privacyVersion} />
-      <input name="customer-privacy-hash" type="hidden" value={props.privacyHash} />
+      <input name="customer-privacy-key" type="hidden" value={consent.privacy.agreementKey} />
+      <input name="customer-privacy-version" type="hidden" value={consent.privacy.agreementVersion} />
+      <input name="customer-privacy-hash" type="hidden" value={consent.privacy.agreementHash} />
+      <CustomerConsentDocuments consent={consent.privacy} privacy />
       <label className="policy-consent">
         <input name="privacy-acknowledged" required type="checkbox" value="yes" />
         <span>
-          {props.privacyText}{" "}
-          <Link href="/privacy">Privacy Policy</Link>
+          {consent.privacy.presentedText}
         </span>
       </label>
+      </div>
 
       <label className="policy-consent optional-consent">
         <input name="remember-email-consent" type="checkbox" value="yes" />
@@ -710,7 +743,7 @@ export function CustomerRequestForm(props: CustomerRequestFormProps) {
           confirmStyle="primary"
           confirmType="submit"
           message="Posting your request shares it with eligible providers so they can quote. No job, provider contact, booking, or payment is created until you accept a quote."
-          onBack={() => setConfirmingSubmit(false)}
+          onBack={() => setConfirmingContext("")}
           title="Post this request?"
         />
       ) : (

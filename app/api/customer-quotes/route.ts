@@ -22,27 +22,20 @@ import { externalIdentityAgeVerificationIsCurrent } from "../../../lib/provider-
 import { sendAcceptedQuoteAlert } from "../../../lib/provider-alerts";
 import {
   CUSTOMER_PROVIDER_SELECTION_AGREEMENT_KEY,
-  CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION,
-  CUSTOMER_REQUEST_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_AGREEMENT_VERSION,
-  CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY,
-  CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION,
   CUSTOMER_REQUEST_SCOPE_VERSION,
   customerAcceptanceDeviceContext,
-  customerProviderSelectionAcceptanceText,
-  customerProviderSelectionAgreementEvidenceText,
-  customerProviderSelectionAgreementHash,
   customerQuoteSelectionScopeSnapshot,
-  customerRequestAgreementEvidenceText,
-  customerRequestPrivacyAgreementEvidenceText,
-  customerRequestScopedAgreementHash,
-  customerRequestScopedPrivacyAgreementHash,
   customerRequestScopeSnapshot,
   parseExactServiceCodes,
   requestIpAddress,
   type CustomerRequestScope,
   type CustomerQuoteSelectionScope,
 } from "../../../lib/customer-job-scope";
+import {
+  acceptedCustomerRequestConsent,
+  customerConsentPresentation,
+  customerSelectionConsentEvidence,
+} from "../../../lib/customer-job-consent";
 import { loadCurrentAcceptedCustomerRequestScope } from "../../../lib/job-scope-records";
 import { customerPriceFor } from "../../../lib/customer-fee";
 import {
@@ -55,7 +48,7 @@ import {
 } from "../../../lib/launch-status";
 import { runtimeMarketplaceActionAllowed } from "../../../lib/runtime-marketplace-action";
 import { policyAccepted } from "../../../lib/policies";
-import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../lib/customer-policy-acceptance";
+import { customerPolicyPresentationIsReleased, type CustomerPolicyLanguage } from "../../../lib/customer-policy-acceptance";
 import { POLICY_VERSION } from "../../../lib/provider-policy";
 import { QUOTE_DECLINE_REASON_VALUES } from "../../../lib/quote-feedback";
 import { isSameOriginRequest } from "../../../lib/request-security";
@@ -307,6 +300,7 @@ function selectionScopeFor(
 }
 
 async function selectionPresentation(
+  language: CustomerPolicyLanguage | null,
   job: typeof customerRequests.$inferSelect,
   acceptedRequestScope: CustomerRequestScope | null,
   quote: typeof providerQuotes.$inferSelect,
@@ -317,6 +311,9 @@ async function selectionPresentation(
   yearsExperience: string,
   performingPersonVerified: boolean,
 ) {
+  if (!language || !customerPolicyPresentationIsReleased("provider_selection", language)) {
+    return { selectionAcceptance: null, selectionBlockedReason: "Choose an available authorization language to review this quote." };
+  }
   const result = selectionScopeFor(
     job,
     acceptedRequestScope,
@@ -334,10 +331,7 @@ async function selectionPresentation(
   return {
     selectionBlockedReason: "",
     selectionAcceptance: {
-      agreementKey: CUSTOMER_PROVIDER_SELECTION_AGREEMENT_KEY,
-      agreementVersion: CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION,
-      agreementHash: await customerProviderSelectionAgreementHash(result.scope),
-      presentedText: customerProviderSelectionAcceptanceText(result.scope),
+      ...await customerConsentPresentation(customerSelectionConsentEvidence(result.scope, language)),
       scopeVersion: result.scope.quote.scopeVersion,
       performingPersonDisplay: result.scope.quote.performingPersonDisplay,
       scheduledFor: result.scope.quote.scheduledFor,
@@ -348,6 +342,8 @@ async function selectionPresentation(
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
+  const chosenLanguage = searchParams.get("language");
+  const language = chosenLanguage === "en" || chosenLanguage === "es" ? chosenLanguage : null;
   const token = searchParams.get("token") ?? "";
   const requestId = searchParams.get("requestId") ?? "";
   let job: typeof customerRequests.$inferSelect | undefined;
@@ -477,6 +473,7 @@ export async function GET(request: Request) {
       )
       : false;
     const presentation = await selectionPresentation(
+      language,
       job,
       acceptedRequestScope,
       quote,
@@ -506,8 +503,8 @@ export async function GET(request: Request) {
         : undefined,
       providerEmail: quote.status === "accepted" ? quote.providerEmail : undefined,
       ...presentation,
-      // Internal person identifiers stay server-side; customers receive the
-      // exact human-readable disclosure embedded in selectionAcceptance.
+      // Person identifiers are not standalone contact details. They remain
+      // bound inside this customer's private, downloadable consent evidence.
       performingPersonId: undefined,
       supervisorPersonId: undefined,
       authorizationDecisionId: undefined,
@@ -550,34 +547,12 @@ async function requestAcceptanceIsCurrent(
   scope: CustomerQuoteSelectionScope["request"],
 ) {
   const scopeSnapshot = customerRequestScopeSnapshot(scope);
-  const [requestHash, privacyHash, acceptances] = await Promise.all([
-    customerRequestScopedAgreementHash(scopeSnapshot),
-    customerRequestScopedPrivacyAgreementHash(scopeSnapshot),
-    getDb().select().from(customerAgreementAcceptances).where(and(
+  const acceptances = await getDb().select().from(customerAgreementAcceptances).where(and(
       eq(customerAgreementAcceptances.requestId, job.id),
       eq(customerAgreementAcceptances.quoteId, ""),
       eq(customerAgreementAcceptances.scopeVersion, CUSTOMER_REQUEST_SCOPE_VERSION),
-    )),
-  ]);
-  const requestAcceptance = acceptances.find((acceptance) => (
-    acceptance.customerEmail === job.email
-    && acceptance.agreementKey === CUSTOMER_REQUEST_AGREEMENT_KEY
-    && acceptance.agreementVersion === CUSTOMER_REQUEST_AGREEMENT_VERSION
-    && acceptance.agreementHash === requestHash
-    && acceptance.agreementText === customerRequestAgreementEvidenceText(scopeSnapshot)
-    && acceptance.scopeSnapshot === scopeSnapshot
-    && Boolean(acceptance.acceptedAt)
-  ));
-  const privacyAcceptance = acceptances.find((acceptance) => (
-    acceptance.customerEmail === job.email
-    && acceptance.agreementKey === CUSTOMER_REQUEST_PRIVACY_AGREEMENT_KEY
-    && acceptance.agreementVersion === CUSTOMER_REQUEST_PRIVACY_AGREEMENT_VERSION
-    && acceptance.agreementHash === privacyHash
-    && acceptance.agreementText === customerRequestPrivacyAgreementEvidenceText(scopeSnapshot)
-    && acceptance.scopeSnapshot === scopeSnapshot
-    && Boolean(acceptance.acceptedAt)
-  ));
-  return Boolean(requestAcceptance && privacyAcceptance);
+    ));
+  return acceptedCustomerRequestConsent(acceptances, scopeSnapshot, job.email);
 }
 
 export async function POST(request: Request) {
@@ -596,6 +571,7 @@ export async function POST(request: Request) {
     selectionAgreementKey?: string;
     selectionAgreementVersion?: string;
     selectionAgreementHash?: string;
+    language?: unknown;
   };
   const action = body.action ?? "accept-quote";
   const [job] = await getDb().select().from(customerRequests)
@@ -660,7 +636,11 @@ export async function POST(request: Request) {
   if (action !== "accept-quote") {
     return noStoreJson({ error: "Unknown quote action." }, 400);
   }
-  if (!customerAcceptanceBundleIsReleasedForPurpose("provider_selection")) {
+  const language = body.language;
+  if (language !== "en" && language !== "es") {
+    return noStoreJson({ error: "Choose English or Spanish and review the quote authorization.", code: "CUSTOMER_LANGUAGE_REQUIRED" }, 400);
+  }
+  if (!customerPolicyPresentationIsReleased("provider_selection", language)) {
     return noStoreJson({
       error: "Quote acceptance remains closed until every required customer and payment policy has an active, effective, hash-verified release.",
       code: "CUSTOMER_POLICY_RELEASE_REQUIRED",
@@ -740,12 +720,14 @@ export async function POST(request: Request) {
     }, 409);
   }
 
-  const expectedSelectionHash = await customerProviderSelectionAgreementHash(selection.scope);
+  const selectionConsent = await customerConsentPresentation(customerSelectionConsentEvidence(selection.scope, language));
+  const expectedSelectionHash = selectionConsent.agreementHash;
   if (
     !policyAccepted(body.selectionAccepted)
     || body.selectionAgreementKey !== CUSTOMER_PROVIDER_SELECTION_AGREEMENT_KEY
-    || body.selectionAgreementVersion !== CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION
-    || body.selectionAgreementHash?.toLowerCase() !== expectedSelectionHash
+    || body.selectionAgreementVersion !== selectionConsent.agreementVersion
+    || typeof body.selectionAgreementHash !== "string"
+    || body.selectionAgreementHash.toLowerCase() !== expectedSelectionHash
   ) {
     return noStoreJson({
       error: "Review and affirmatively accept the exact provider, performing person, scope, schedule, quote, fee, and total shown.",
@@ -827,9 +809,9 @@ export async function POST(request: Request) {
           scopeVersion: selection.scope.quote.scopeVersion,
           scopeSnapshot: selectionSnapshot,
           agreementKey: CUSTOMER_PROVIDER_SELECTION_AGREEMENT_KEY,
-          agreementVersion: CUSTOMER_PROVIDER_SELECTION_AGREEMENT_VERSION,
+          agreementVersion: selectionConsent.agreementVersion,
           agreementHash: expectedSelectionHash,
-          agreementText: customerProviderSelectionAgreementEvidenceText(selection.scope),
+          agreementText: selectionConsent.agreementText,
           acceptedByName: job.name,
           acceptanceAction: "affirmative-provider-quote-selection-checkbox",
           acceptedAt,
