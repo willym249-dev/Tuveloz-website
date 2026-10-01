@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
+import { DatabaseSync } from "node:sqlite";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { eq, and, desc } from "drizzle-orm";
+import * as schema from "../db/schema.ts";
 
 const root = new URL("../", import.meta.url);
 const modules = new Map();
@@ -27,12 +31,22 @@ const policies = pureModule("./lib/policies");
 
 // Execute the unchanged route, with synthetic read-only records and no network
 // clients. These fixtures exercise the language boundary, not provider approval.
-function harness({ open = true, payment = null, signedIn = false } = {}) {
-  const schema = Object.fromEntries([
-    "customerAgreementAcceptances", "customerRequests", "jobAuthorizationSnapshots",
-    "jobScopeVersions", "providerApplications", "providerEvidenceSubmissions",
-    "providerQuotes", "stripePayments",
-  ].map(name => [name, new Proxy({ name }, { get: (target, key) => target[key] ?? `${name}.${String(key)}` })]));
+function harness({ open = true, payment = null, signedIn = false, presentationAvailable = true, recordAcceptance = false } = {}) {
+  const sqlite = recordAcceptance ? new DatabaseSync(":memory:") : null;
+  if (sqlite) {
+    const migration = readFileSync(new URL("drizzle/0038_integrated_launch_controls.sql", root), "utf8");
+    for (const statement of migration.split("--> statement-breakpoint")) {
+      if (statement.includes("`customer_agreement_acceptances`")) sqlite.exec(statement);
+    }
+  }
+  const acceptanceDb = sqlite ? drizzle(async (sql, params, method) => {
+    const statement = sqlite.prepare(sql);
+    // CI supports Node 22.13, which does not have setReturnArrays. These
+    // acceptance-only queries have unique columns and need no join aliases.
+    if (method === "run") { statement.run(...params); return { rows: [] }; }
+    return { rows: method === "get" ? Object.values(statement.get(...params) ?? {})
+      : statement.all(...params).map(row => Object.values(row)) };
+  }) : null;
   const calls = { reads: 0, stripe: 0, writes: 0 };
   const selection = {
     quoteId: "synthetic-quote", requestId: "synthetic-request", scopeVersion: 1,
@@ -43,6 +57,7 @@ function harness({ open = true, payment = null, signedIn = false } = {}) {
     providerAmount: "10000", customerFeeCents: "500", customerTotalCents: "10500",
     quoteAuthorizationDecisionId: "synthetic-decision", assignmentVersion: 1,
     partsSource: "customer", quoteScheduledFor: "2026-10-01T12:00:00Z", requestScheduledFor: "2026-10-01T12:00:00Z",
+    customerName: "Synthetic Customer", providerName: "Synthetic Provider",
   };
   const scope = {
     version: 1, serviceCodes: '["SYNTHETIC-SERVICE"]', scheduledFor: "2026-10-01T12:00:00Z",
@@ -52,12 +67,20 @@ function harness({ open = true, payment = null, signedIn = false } = {}) {
       otherAmountCents: 0, totalAmountCents: 10000, customerFeeRateBps: 500,
       customerFeeCents: 500, customerTotalCents: 10500 }),
   };
+  // Stop after the real immutable write/reread with an already-paid synthetic
+  // payment. No Stripe session, email, provider record or external call exists.
+  if (recordAcceptance) payment = { id: "synthetic-paid", status: "paid_pending_completion",
+    providerAmountCents: 10000, applicationFeeCents: 500, customerTotalCents: 10500,
+    scopeVersion: 1, scopeAuthorizationDecisionId: "synthetic-decision", authorizedPriceSnapshot: scope.priceBreakdown };
   const db = {
     select() {
       calls.reads++;
       let table;
       const query = {
-        from(value) { table = value; return query; },
+        from(value) {
+          if (value === schema.customerAgreementAcceptances && acceptanceDb) return acceptanceDb.select().from(value);
+          table = value; return query;
+        },
         innerJoin() { return query; }, where() { return query; },
         orderBy() { return query; }, limit() { return query; },
         then(resolve) {
@@ -73,12 +96,16 @@ function harness({ open = true, payment = null, signedIn = false } = {}) {
       };
       return query;
     },
-    insert() { calls.writes++; throw new Error("Unexpected database write"); },
+    insert(table) {
+      calls.writes++;
+      if (table === schema.customerAgreementAcceptances && acceptanceDb) return acceptanceDb.insert(table);
+      throw new Error("Unexpected database write");
+    },
     update() { calls.writes++; throw new Error("Unexpected database write"); },
   };
   const bindings = {
     ...schema, ...acceptance, ...policy, ...policies,
-    eq: () => null, and: () => null, desc: () => null,
+    eq, and, desc,
     getDb: () => db, isSameOriginRequest: () => true,
     getAccountSession: async () => signedIn ? { role: "customer", email: selection.customerEmail } : null,
     runtimeMarketplaceActionAllowed: async () => open,
@@ -94,8 +121,12 @@ function harness({ open = true, payment = null, signedIn = false } = {}) {
     siteUrlFor: () => "https://tuveloz.com",
     isLaborOnlyPartsSource: () => true, jobScopeFactsFromScopeDetails: () => ({}),
     // Stop after real exact-consent validation. Nothing can create a session.
-    activeJobOperationHoldReasons: async () => ["Synthetic deliberate stop after acceptance validation"],
-    stripeErrorResponse: () => Response.json({ code: "UNEXPECTED_STRIPE_PATH" }, { status: 500 }),
+    activeJobOperationHoldReasons: async () => recordAcceptance ? [] : ["Synthetic deliberate stop after acceptance validation"],
+    customerPolicyPresentationIsReleased: (...args) => presentationAvailable && policy.customerPolicyPresentationIsReleased(...args),
+    evaluateStageEligibility: async () => ({ allowed: true, decisionId: "synthetic-decision", validThrough: "2999-01-01" }),
+    hostedCustomerServiceFeeText: () => ({ name: "Synthetic fee" }),
+    requestIpAddress: () => "127.0.0.1", customerAcceptanceDeviceContext: () => "Synthetic local test",
+    stripeErrorResponse: error => { throw error; },
   };
   const source = readFileSync(new URL("app/api/stripe/checkout/route.ts", root), "utf8");
   const compiled = ts.transpileModule(source, {
@@ -103,7 +134,7 @@ function harness({ open = true, payment = null, signedIn = false } = {}) {
   }).outputText;
   const exports = {};
   new Function("exports", "require", compiled)(exports, () => bindings);
-  return { ...exports, calls };
+  return { ...exports, calls, sqlite };
 }
 const get = (query, token = "synthetic-token") => new Request(
   `https://tuveloz.com/api/stripe/checkout?${query}`,
@@ -113,13 +144,13 @@ const post = (language, overrides = {}) => new Request("https://tuveloz.com/api/
   method: "POST", headers: { "content-type": "application/json", origin: "https://tuveloz.com" },
   body: JSON.stringify({ quoteId: "synthetic-quote", token: "synthetic-token", policyAccepted: true,
     language, checkoutAgreementKey: acceptance.CUSTOMER_CHECKOUT_AGREEMENT_KEY,
-    checkoutAgreementVersion: acceptance.CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+    checkoutAgreementVersion: acceptance.customerCheckoutAgreementVersion("en"),
     checkoutAgreementHash: "synthetic-existing-English-hash", ...overrides }),
 });
 
-test("Spanish readiness never substitutes English consent and preserves existing payment status", async () => {
+test("unavailable translations never substitute English consent and preserve existing payment status", async () => {
   for (const payment of [null, { id: "synthetic-paid", status: "paid_pending_completion" }]) {
-    const route = harness({ payment });
+    const route = harness({ payment, presentationAvailable: false });
     const response = await route.GET(get("quoteId=synthetic-quote&language=es"));
     const body = await response.json();
     assert.equal(response.status, 200);
@@ -127,34 +158,36 @@ test("Spanish readiness never substitutes English consent and preserves existing
     assert.equal(body.checkoutAllowed, false);
     assert.equal(body.checkoutAcceptance, null);
     assert.equal(body.code, "CHECKOUT_LANGUAGE_UNAVAILABLE");
-    assert.match(body.reason, /El pago en español aún no está disponible/);
+    assert.match(body.reason, /acuerdos de pago vigentes en español/);
     assert.deepEqual(body.payment, payment);
     assert.equal(route.calls.stripe, 0);
     assert.equal(route.calls.writes, 0);
   }
 });
 
-test("English readiness identifies the exact saved language and immutable agreement version", async () => {
+for (const language of ["en", "es"]) test(`${language} readiness identifies the exact saved language, policy release and immutable agreement version`, async () => {
   const route = harness();
-  const response = await route.GET(get("quoteId=synthetic-quote&language=en"));
+  const response = await route.GET(get(`quoteId=synthetic-quote&language=${language}`));
   const body = await response.json();
   assert.equal(body.checkoutAllowed, true);
-  assert.equal(body.checkoutAcceptance.language, "en");
-  assert.equal(body.checkoutAcceptance.agreementVersion, acceptance.CUSTOMER_CHECKOUT_AGREEMENT_VERSION);
+  assert.equal(body.checkoutAcceptance.language, language);
+  assert.equal(body.checkoutAcceptance.agreementVersion, acceptance.customerCheckoutAgreementVersion(language));
   assert.equal(body.checkoutAcceptance.agreementHash,
-    await acceptance.customerCheckoutAgreementHash(body.checkoutAcceptance.scope));
+    await acceptance.customerCheckoutAgreementHash(body.checkoutAcceptance.scope, language));
   assert.equal(body.checkoutAcceptance.presentedText,
-    JSON.parse(acceptance.customerCheckoutAgreementEvidenceText(body.checkoutAcceptance.scope)).presentedText);
+    JSON.parse(acceptance.customerCheckoutAgreementEvidenceText(body.checkoutAcceptance.scope, language)).presentedText);
+  assert.equal(body.checkoutAcceptance.agreementText, acceptance.customerCheckoutAgreementEvidenceText(body.checkoutAcceptance.scope, language));
+  assert.deepEqual(body.checkoutAcceptance.policyRelease, JSON.parse(body.checkoutAcceptance.agreementText).policyRelease);
   assert.equal(route.calls.writes, 0);
 });
 
-test("missing, invalid and unavailable POST languages cannot create acceptance or contact Stripe", async () => {
-  for (const language of [undefined, null, "", "EN", "fr", " en ", {}, ["en"], "es"]) {
+test("missing and invalid POST languages cannot create acceptance or contact Stripe", async () => {
+  for (const language of [undefined, null, "", "EN", "fr", " en ", {}, ["en"]]) {
     const route = harness();
     const response = await route.POST(post(language));
-    assert.equal(response.status, language === "es" ? 409 : 400, String(language));
+    assert.equal(response.status, 400, String(language));
     const body = await response.json();
-    assert.equal(body.code, language === "es" ? "CHECKOUT_LANGUAGE_UNAVAILABLE" : "CHECKOUT_LANGUAGE_REQUIRED");
+    assert.equal(body.code, "CHECKOUT_LANGUAGE_REQUIRED");
     assert.equal(body.checkoutAllowed, false);
     assert.equal(response.headers.get("cache-control"), "private, no-store");
     assert.deepEqual(route.calls, { reads: 0, stripe: 0, writes: 0 });
@@ -170,22 +203,23 @@ test("readiness requires explicit language and still authenticates before disclo
   assert.equal(route.calls.stripe, 0);
 });
 
-test("previous and tampered language evidence is rejected before acceptance writes", async () => {
+for (const language of ["en", "es"]) test(`${language} rejects previous and tampered evidence before acceptance writes`, async () => {
   const route = harness();
-  const { checkoutAcceptance: current } = await (await route.GET(get("quoteId=synthetic-quote&language=en"))).json();
+  const { checkoutAcceptance: current } = await (await route.GET(get(`quoteId=synthetic-quote&language=${language}`))).json();
   const expected = { checkoutAgreementKey: current.agreementKey,
     checkoutAgreementVersion: current.agreementVersion, checkoutAgreementHash: current.agreementHash };
-  const currentResponse = await route.POST(post("en", expected));
+  const currentResponse = await route.POST(post(language, expected));
   assert.equal((await currentResponse.json()).code, "CHECKOUT_OPERATIONAL_HOLD",
-    "the current English evidence must pass validation and reach the deliberate later hold");
-  const evidence = JSON.parse(acceptance.customerCheckoutAgreementEvidenceText(current.scope));
+    "current evidence must pass validation and reach the deliberate later hold");
+  const evidence = JSON.parse(current.agreementText);
   const hash = pureModule("./lib/provider-policy-acceptance").sha256Text;
   for (const invalid of [
-    { checkoutAgreementVersion: current.agreementVersion.replace("checkout:5|lang:en", "checkout:4") },
-    { checkoutAgreementHash: await hash(JSON.stringify({ ...evidence, language: "es" })) },
-    { checkoutAgreementVersion: current.agreementVersion.replace("lang:en", "lang:es") },
+    { checkoutAgreementVersion: current.agreementVersion.replace(/checkout:6\|lang:..$/, "checkout:5|lang:en") },
+    { checkoutAgreementHash: await hash(JSON.stringify({ ...evidence, language: language === "en" ? "es" : "en" })) },
+    { checkoutAgreementVersion: acceptance.customerCheckoutAgreementVersion(language === "en" ? "es" : "en") },
+    { checkoutAgreementHash: await acceptance.customerCheckoutAgreementHash({ ...current.scope, workmanshipWarranty: "changed" }, language) },
   ]) {
-    const response = await route.POST(post("en", { ...expected, ...invalid }));
+    const response = await route.POST(post(language, { ...expected, ...invalid }));
     assert.equal(response.status, 409);
     assert.equal((await response.json()).code, "CHECKOUT_ACCEPTANCE_REFRESH_REQUIRED");
   }
@@ -207,4 +241,56 @@ test("launch locks remain ahead of language checks, while authorized payment-sta
   assert.equal(unauthorized.status, 404);
   assert.equal(route.calls.stripe, 0);
   assert.equal(route.calls.writes, 0);
+});
+
+test("unavailable presentation blocks POST before writes or Stripe access", async () => {
+  for (const language of ["en", "es"]) {
+    const route = harness({ presentationAvailable: false });
+    const response = await route.POST(post(language));
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).code, "CHECKOUT_LANGUAGE_UNAVAILABLE");
+    assert.deepEqual(route.calls, { reads: 0, stripe: 0, writes: 0 });
+  }
+});
+
+test("both languages persist and reread independently under the actual SQLite unique key", async () => {
+  const route = harness({ recordAcceptance: true });
+  try {
+    const history = JSON.parse(readFileSync(new URL("tests/fixtures/customer-checkout-v5-en.json", root), "utf8"));
+    route.sqlite.prepare(`INSERT INTO customer_agreement_acceptances
+      (id, customer_email, request_id, quote_id, scope_version, scope_snapshot,
+       agreement_key, agreement_version, agreement_hash, agreement_text, accepted_by_name, accepted_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run("synthetic-legacy", "customer@example.invalid", "synthetic-request", "synthetic-quote", 1,
+        history.scopeSnapshot, history.agreementKey, history.agreementVersion, history.agreementHash,
+        history.agreementText, "Synthetic Customer", "2026-09-30T00:00:00Z", "2026-09-30T00:00:00Z");
+    const before = route.sqlite.prepare("SELECT * FROM customer_agreement_acceptances WHERE id=?").get("synthetic-legacy");
+    const records = {};
+    for (const language of ["en", "es", "en", "es"]) {
+      const { checkoutAcceptance: current } = await (await route.GET(get(`quoteId=synthetic-quote&language=${language}`))).json();
+      const response = await route.POST(post(language, { checkoutAgreementVersion: current.agreementVersion,
+        checkoutAgreementHash: current.agreementHash }));
+      assert.equal(response.status, 409);
+      assert.equal((await response.json()).error, "This accepted quote has already been paid.", "stop only after exact acceptance is saved and reread");
+      const stored = route.sqlite.prepare("SELECT * FROM customer_agreement_acceptances WHERE agreement_version=?").get(current.agreementVersion);
+      assert.equal(stored.agreement_text, current.agreementText);
+      assert.equal(stored.agreement_hash, current.agreementHash);
+      assert.equal(JSON.parse(stored.agreement_text).presentedText, current.presentedText);
+      assert.equal(JSON.parse(stored.agreement_text).language, language);
+      if (records[language]) assert.deepEqual(stored, records[language], "retry must not overwrite identity, timestamp or evidence");
+      records[language] = stored;
+    }
+    assert.notEqual(records.en.id, records.es.id);
+    assert.equal(route.sqlite.prepare("SELECT count(*) AS n FROM customer_agreement_acceptances").get().n, 3);
+    assert.deepEqual(route.sqlite.prepare("SELECT * FROM customer_agreement_acceptances WHERE id=?").get("synthetic-legacy"), before);
+
+    // An existing unique key with different evidence is rejected, not silently
+    // accepted by onConflictDoNothing or overwritten to make a test pass.
+    route.sqlite.prepare("UPDATE customer_agreement_acceptances SET agreement_text=? WHERE id=?").run("SYNTHETIC corrupted record", records.es.id);
+    const response = await route.POST(post("es", { checkoutAgreementVersion: records.es.agreement_version,
+      checkoutAgreementHash: records.es.agreement_hash }));
+    assert.equal((await response.json()).code, "CHECKOUT_ACCEPTANCE_RECORD_FAILED");
+    assert.equal(route.sqlite.prepare("SELECT agreement_text FROM customer_agreement_acceptances WHERE id=?").get(records.es.id).agreement_text,
+      "SYNTHETIC corrupted record");
+  } finally { route.sqlite.close(); }
 });

@@ -11,6 +11,122 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Bilingual checkout consent implemented and locally verified
+
+Continued from the verified PR #272 release without repeating its publication.
+Remote main remains `e6fceca7`; no open PR or concurrent change was found. The
+new branch `review/bilingual-checkout-consent-20260930` preserves the two local
+release-record commits and adds exact customer checkout consent in English and
+Spanish. Nothing from this branch is deployed yet.
+
+New `checkout:6|lang:en` / `checkout:6|lang:es` evidence uses the published policy
+bundle, exact translated URLs/titles and Spanish release IDs, dates and paired
+hashes. Missing/stale/future translations fail closed. The approved merchant
+sentence is included in both complete authorizations. Provider names, IDs,
+scope, amounts and warranty text stay literal. The checkbox, download and stored
+evidence agree; the download now includes the full stored evidence string/hash.
+Policy links preserve the quote in a separate tab. A partial/stale response
+shows a retry instead of crashing the card or enabling payment.
+
+Validation: production build and all **903 tests pass**; **48 mobile Chromium/
+WebKit scenarios pass**, including both warranty branches in both languages,
+exact accessible checkbox text/download/hash/POST equality, translated links,
+in-flight language changes, malformed presentation recovery and existing timeout
+and retry safeguards. TypeScript passes; lint has only its existing navigation
+warning. The real checkout route's acceptance insert/reread executes against
+the actual SQLite migration and unique index: EN/ES records coexist, retries
+preserve IDs/timestamps/evidence, a frozen published-v5 fixture remains intact,
+and a conflicting record is rejected without overwrite. All data are synthetic;
+the database test stops on an already-paid synthetic record before any Stripe
+session operation. No external payment, account, email or provider record exists.
+
+Evidence: ignored `outputs/bilingual-checkout-{tests,browser,typecheck,lint}-20260930.log`;
+tracked `tests/fixtures/customer-checkout-v5-en.json` identifies its published
+source commit. A test-fixture initialization ordering error was corrected before
+the successful suite. GitHub's first rehearsal then caught a test-only Node
+version difference: its pinned 22.13 runtime lacks `setReturnArrays`, available
+in local Node 24. The acceptance test now uses the repository's compatible
+object-to-array adapter and rethrows unexpected fixture errors for clear
+diagnostics. Application code did not change for this correction. Required
+checks must pass on the corrected PR #273 head before publication.
+
+Next: required GitHub checks, owner publication approval for the new exact
+authorization version, then normal deployment and independent verification.
+The published policy pages/provider acceptance logic and all launch/live-payment
+locks are unchanged. Full-refund allocation and payment timing are settled;
+do not ask them again. Remaining launch reviews, genuine provider evidence,
+receipt-language experiment and production settlement are still separate.
+
+## 2026-09-30 - PR #272 published and independently verified
+
+The owner-approved English/Spanish policy update is live as `e6fceca7aaf93553e54c3fac25c4828ae8483084`.
+Production workflow `36797697298` completed successfully in all three jobs after
+both required PR workflows passed. The exact production release, healthy
+application/database/schema and launch locks were independently checked at
+`2026-10-01T01:06:17.728Z`. Twenty-three HTTP checks passed: six updated
+English/Spanish policy pages and their dates/collection wording/canonical URLs,
+account pages, private API protection and closed checkout in both languages.
+An initial probe used a lowercase sentence fragment against the capitalized
+Spanish Payment Policy. The reviewed source was correct; only the probe's
+case-sensitive comparison changed. No site edit or redeployment was needed.
+
+Twelve additional live Chromium/WebKit checks at `2026-10-01T01:05:36.758Z`
+clicked all five Spanish policy navigation links, checked mobile width, full
+customer section/paragraph counts and canonical URLs, and switched the customer
+page both ways. No page errors or missing Spanish routes occurred. Browser
+requests were read-only. No account, application, email, payment or provider
+record was created by these checks.
+
+The release includes the complete Spanish Customer Agreement, clear payment
+recipient/collection/transfer wording and the owner's full-refund allocation.
+Historical provider acceptances are preserved; revised shared Terms/Payments
+require fresh acceptance. The production site remains onboarding-only with
+customer accounts/provider applications open and customer requests/payments
+closed. Exact bilingual checkout consent remains unfinished; its current
+English-only language guard is deliberately intact. This release does not
+approve tax, coverage, legal duties, service launch or genuine provider evidence.
+
+Evidence: task outputs `pr272-production-release-20260930.json`,
+`pr272-live-release-20260930.json`, `customer-policy-release-state-20260930.json`,
+and repo ignored `outputs/policy-live-browser-20260930.json`. Local build,
+896 regressions, TypeScript and six isolated browser scenarios passed; lint
+retains only the pre-existing language-navigation warning. Do not repeat this
+completed publication or the earlier PR #271 repair.
+
+The available Gmail connector identifies a personal account. Its inbox was
+not searched; this turn did not refresh the business county/insurance replies.
+Use the business account for that separate follow-up. Keep the pending owner
+ownership/contributor clarification and the genuine provider application last.
+
+## 2026-09-30 - PR #272 approved and merged; production verification pending
+
+Owner explicitly approved: "Yes, publish after the checks pass." Both required
+PR workflows passed on `e560e1fcae40d21850493f3e5c8012a5c86c26bc`:
+Verify `36796197378` (account browser and full regression/migration/provider
+signup/Spanish coverage jobs) and deployment rehearsal `36796197673`.
+The complete server/browser test confirms the Spanish policy navigation repair,
+all fifteen translated routes, signup and persisted drafts. Local production
+build/all 896 tests, TypeScript, six Chromium/WebKit policy scenarios and lint
+with its one pre-existing warning also pass on this final implementation.
+
+Merged PR #272 at `2026-10-01T00:44:47Z` as
+`e6fceca7aaf93553e54c3fac25c4828ae8483084`. Normal production workflow
+`36797697298` is queued/running; this is not yet proof that the update is live.
+Do not re-merge or trigger another deploy. The approved scope includes the three
+revised policy versions, complete Spanish customer page and native Spanish
+policy navigation. Live customer bookings/payments and the Spanish checkout
+consent guard remain closed. Fresh consent is required for the revised shared
+policies; old acceptance records are preserved.
+
+Prepared independent post-release checks: task output
+`verify-pr272-release-20260930.mjs` and repo ignored
+`outputs/verify-policy-live-browser-20260930.mjs`. Run only after production
+success against the exact merge SHA. The first checks health, six policy pages,
+accounts and closed/private APIs; the second clicks all Spanish policy navigation
+links and both language directions in Chromium/WebKit without submitting forms.
+Continuity state is in task output `customer-policy-release-state-20260930.json`.
+Record verified live results before reporting publication complete.
+
 ## 2026-09-30 - Complete bilingual customer policy candidate; publication pending
 
 Prepared `review/customer-payment-policies-20260930` from the verified PR #271

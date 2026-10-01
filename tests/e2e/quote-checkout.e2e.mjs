@@ -5,6 +5,9 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, webkit } from "playwright";
 import { build } from "vite";
+import { checkoutModule, syntheticCheckoutAcceptance } from "../helpers/checkout-evidence.mjs";
+
+const policy = checkoutModule("./lib/customer-policy-acceptance");
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const built = await build({ root, configFile: false, envFile: false, logLevel: "error",
@@ -38,6 +41,8 @@ const acceptance = (scopeVersion = 1, overrides = {}) => ({
   language: "en",
   agreementKey: "synthetic-authorization", agreementVersion: "synthetic:1",
   agreementHash: `synthetic-hash-${scopeVersion}`, presentedText: `SYNTHETIC consent for scope ${scopeVersion}.`,
+  agreementText: "SYNTHETIC test record",
+  policyRelease: policy.customerPolicyPresentationEvidence("checkout", "en"),
   cancellationRefundSummary: "SYNTHETIC refund summary; not an actual agreement.",
   scope: { quoteId: "synthetic-quote-a", scopeVersion, providerLegalName: "SYNTHETIC provider A",
     serviceCodes: ["SYNTHETIC-SERVICE"], scheduledFor: "2026-10-01T12:00:00Z",
@@ -45,7 +50,10 @@ const acceptance = (scopeVersion = 1, overrides = {}) => ({
     laborAmountCents: 10000, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0,
     providerAmountCents: 10000, customerFeeRateBps: 500, customerFeeCents: 500, customerTotalCents: 10500, ...overrides },
 });
-const ready = (record = acceptance()) => ({ checkoutAllowed: true, payment: null, checkoutAcceptance: record });
+const ready = (record = acceptance()) => ({ checkoutAllowed: true, payment: null,
+  checkoutAcceptance: record ? { ...record,
+    policyRelease: policy.customerPolicyPresentationEvidence("checkout", record.language === "es" ? "es" : "en"),
+  } : null });
 const card = page => page.locator(".quote-payment-card");
 const pay = page => card(page).getByRole("button", { name: /with Stripe|Opening Stripe|Continue secure checkout/ });
 const consent = page => card(page).getByRole("checkbox");
@@ -83,8 +91,8 @@ try {
           else await pending[index].fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
         }
         try {
-          // A language-enabled route lets us test context changes without
-          // claiming the real quote route has a released Spanish agreement.
+          // The production launch lock remains closed. All API replies and
+          // navigation destinations here are synthetic loopback fixtures.
           await page.goto(`${origin}/account${closed ? "?closed=1" : ""}`);
           await card(page).waitFor();
           if (!closed) await waitForRequest(0);
@@ -190,6 +198,22 @@ try {
         await page.getByRole("button", { name: "Change language", exact: true }).click();
         await next(2, ready()); await settled(page);
         assert.equal(await consent(page).isChecked(), false); assert.equal(await pay(page).isDisabled(), true);
+      });
+
+      await run("incomplete-or-mismatched-policy-presentation-recovers-without-crashing", async ({ page, next, requests }) => {
+        for (const [index, change] of [
+          { policyRelease: undefined },
+          { agreementText: undefined },
+          { policyRelease: policy.customerPolicyPresentationEvidence("checkout", "es") },
+        ].entries()) {
+          await next(index, { checkoutAllowed: true, payment: null, checkoutAcceptance: { ...acceptance(), ...change } });
+          await page.getByRole("alert").filter({ hasText: "payment agreement in English" }).waitFor();
+          assert.equal(await consent(page).count(), 0); assert.equal(await pay(page).isDisabled(), true);
+          await page.getByRole("button", { name: "Check quote again", exact: true }).click();
+        }
+        await next(3, ready()); await settled(page);
+        assert.equal(await consent(page).isChecked(), false);
+        assert.equal(requests.filter(request => request.method === "POST").length, 0);
       });
 
       await run("stalled-readiness-times-out-and-recovers", async ({ page, next, waitForRequest }) => {
@@ -355,6 +379,63 @@ try {
         await page.getByRole("heading", { name: "No payment is due through Tuveloz." }).waitFor();
         assert.equal(await consent(page).count(), 0); assert.equal(requests.length, 0);
       }, { closed: true });
+
+      for (const language of ["en", "es"]) for (const warranty of ["", "SYNTHETIC garantía: Terms of Use & <test>"]) {
+        await run(`released-${language}-${warranty ? "warranty" : "no-warranty"}-checkbox-download-and-post-match`, async ({ page, next, requests }) => {
+          let index = 0;
+          if (language === "es") {
+            await next(index++, ready()); await settled(page); await consent(page).check();
+            await page.getByRole("button", { name: "Change language", exact: true }).click();
+          }
+          const record = await syntheticCheckoutAcceptance(language, { quoteId: "synthetic-quote-a", workmanshipWarranty: warranty });
+          await next(index++, ready(record)); await settled(page);
+          const label = card(page).locator(".payment-policy-consent");
+          assert.equal(await label.innerText(), record.presentedText);
+          assert.equal(await consent(page).isChecked(), false);
+          assert.equal(await pay(page).isDisabled(), true);
+          for (const document of record.policyRelease.documents) {
+            const link = card(page).getByRole("link", { name: document.title, exact: true });
+            assert.equal(await link.getAttribute("href"), document.href);
+            assert.equal(await link.getAttribute("target"), "_blank", "reading a policy must preserve the quote");
+          }
+          const downloading = page.waitForEvent("download");
+          await card(page).getByRole("button", { name: language === "es" ? "Descargar esta autorización exacta" : "Download this exact authorization", exact: true }).click();
+          const download = await downloading;
+          let content = ""; for await (const chunk of await download.createReadStream()) content += chunk.toString();
+          const downloaded = JSON.parse(content);
+          assert.deepEqual(downloaded, { quoteId: "synthetic-quote-a", ...record });
+          const saved = JSON.parse(downloaded.agreementText);
+          assert.equal(saved.presentedText, await label.innerText());
+          assert.equal(saved.scopeSnapshot.workmanshipWarranty, warranty);
+          assert.equal(saved.scopeSnapshot.providerLegalName, record.scope.providerLegalName);
+          assert.equal(await checkoutModule("./lib/provider-policy-acceptance").sha256Text(downloaded.agreementText), downloaded.agreementHash);
+          assert.equal(await consent(page).isChecked(), false);
+          await consent(page).check(); await pay(page).click();
+          await next(index, { error: "Synthetic stop before Stripe" }, 503);
+          assert.equal(requests[index].body.language, language);
+          assert.equal(requests[index].body.checkoutAgreementVersion, record.agreementVersion);
+          assert.equal(requests[index].body.checkoutAgreementHash, record.agreementHash);
+          await page.getByRole("alert").waitFor();
+          assert.equal(await consent(page).count(), 0);
+        });
+      }
+
+      await run("language-changes-ignore-stale-readiness-and-checkout-redirects", async ({ page, next, waitForRequest }) => {
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await waitForRequest(1);
+        const spanish = await syntheticCheckoutAcceptance("es", { quoteId: "synthetic-quote-a" });
+        await next(1, ready(spanish)); await settled(page);
+        await next(0, ready());
+        assert.equal(await card(page).locator(".payment-policy-consent").innerText(), spanish.presentedText);
+        await consent(page).check(); await pay(page).click(); await waitForRequest(2);
+        await page.getByRole("button", { name: "Change language", exact: true }).click();
+        await next(3, ready()); await settled(page);
+        await next(2, { url: `${origin}/should-not-open` });
+        await page.waitForTimeout(100);
+        assert.equal(new URL(page.url()).pathname, "/account");
+        assert.equal(await consent(page).isChecked(), false);
+        assert.equal(await page.evaluate(() => sessionStorage.getItem("tuveloz:checkout-status-token")), null);
+      });
     } finally { await browser.close(); }
   }
 } finally { await new Promise(done => server.close(done)); }

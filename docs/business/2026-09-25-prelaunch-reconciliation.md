@@ -11,16 +11,27 @@ behavior, services awaiting activation, and real-world evidence that code cannot
 create. Follow-up verification used GitHub's deployment and monitor results;
 earlier browser observations below are dated evidence, not perpetual guarantees.
 
-## Current work awaiting publication review
+## Latest completed release
 
-September 30: the concrete English/Spanish payment-policy candidate and complete
-Spanish Customer Agreement are prepared locally. Build, 896 regression tests,
-TypeScript and six Chromium/WebKit phone/desktop scenarios pass; remote PR checks
-and owner review remain. Nothing from this candidate is deployed. Shared Terms
-and Payments get new versions, so old provider consent is preserved but cannot
-qualify for those new terms. Exact bilingual customer checkout consent remains
-separate and closed. See `legal/payment-policy-reconciliation.md` for the complete
-change and remaining boundaries. Preserve the published PR #271 repair.
+PR #272 is owner-approved, published as `e6fceca7`, and independently verified
+September 30 (Maryland time). It updates English/Spanish payment policies and
+adds the complete Spanish Customer Agreement with correct navigation. All 896
+regressions/build, TypeScript, six local browser scenarios, required PR checks
+and all three production jobs passed. Twenty-three live HTTP checks and twelve
+live browser checks confirm the exact healthy release, policy pages, working
+Spanish navigation/language switching and closed customer requests/payments.
+The four unaffected provider releases are preserved; changed shared Terms and
+Payments require fresh acceptance without rewriting old records. Exact bilingual
+checkout consent and final launch review remain separate. Do not repeat this
+release or the completed PR #271 language guard. See the existing legal payment
+review and LOG for exact evidence and remaining work.
+
+The next bilingual checkout consent change is implemented locally on
+`review/bilingual-checkout-consent-20260930`. All 903 regressions/build,
+TypeScript and 48 mobile browser scenarios pass; existing lint warning only.
+It preserves old evidence, binds exact EN/ES releases to separate immutable
+records, and recovers safely from incomplete responses. Publication and
+independent live verification are pending; it does not open customer payments.
 
 ## Remaining work for the first customer pilot
 
@@ -35,7 +46,7 @@ Code checks cannot approve those gates.
 
 | Work group | What is complete | What still closes the group |
 | --- | --- | --- |
-| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair and PR #270's scoped booking-pause refund exception are verified. | Finish reviewed policy adoption and exact English/Spanish customer consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
+| Payment, refund and customer consent | Stripe's model approval/acknowledgment, hosted checkout presentation, both full-$105 sandbox refunds, PR #264 recovery repair, PR #270's scoped booking-pause refund exception and PR #272's bilingual policy adoption are verified. | Publish and verify the tested exact English/Spanish checkout consent; resolve partial/provider recovery; verify production Stripe delivery and eventual settlement. The receipt-language experiment remains separate from the completed Spanish checkout labels. |
 | Business, service, insurance and tax decisions | Public entity/domain/vendor checks, provider requirement inventory, and the already-sent county/broker inquiries are recorded. | Owner authority/contribution records, applicable county/service answers, an actual platform/provider coverage decision, and tax/ledger review. Do not resend answered or pending inquiries or treat a generic approval as service-specific clearance. |
 | Privacy, security and operational response | Scanner, backup/recovery, private upload/access and incident-hold tests are recorded. | Complete the required source/reviewer decisions, identify an incident fallback, and prove actual incident/provider-reminder inbox delivery. Routine proof renewal is maintenance, not a reason to rerun completed setup. |
 | Genuine provider verification | Application, document upload and isolated Identity integration tests are recorded. | A truthful applicant completes matching ID/selfie, service-specific issuer/registry/insurance checks and payout readiness. Keep the owner's application last; owner-only testing cannot stand in for a real service provider. |

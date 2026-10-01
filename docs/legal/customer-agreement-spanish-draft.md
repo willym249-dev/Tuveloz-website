@@ -1,19 +1,17 @@
-# Spanish Customer Agreement — complete translation draft
+# Spanish Customer Agreement — published operational draft
 
-- **Status:** integrated release candidate; owner publication review pending; not deployed
+- **Status:** owner-approved translation published in PR #272; underlying operational draft and launch review remain
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-30
-- **Source:** `app/customer-agreement/page.tsx` in the September 30 review candidate
-- **English release candidate:** `customer-agreement-2026-09-30`
+- **Source:** `app/customer-agreement/page.tsx` in the September 30 published release
+- **English release:** `customer-agreement-2026-09-30`
 - **Normalized English source SHA-256:** `00342995608826e89446d909edf3350866a8d658d027d1ed44b1ca4ad3b80e6d`
 
-This complete translation now includes the September 30 English release
-candidate's payment-recipient, collection-timing and full-refund clauses.
-The owner already chose collection timing and the full-refund amount; publication
-of this complete policy update is still pending. It uses the existing
+This complete translation includes the September 30 payment-recipient,
+collection-timing and full-refund clauses. The owner approved publication and
+PR #272 is independently verified live. It uses the existing
 `lib/policy-spanish/` renderer and does not replace provider acceptance logic.
-See [the payment review](payment-policy-reconciliation.md). The date below belongs
-to the proposed revision, not a claim that it is already published or approved
+See [the payment review](payment-policy-reconciliation.md). The date below identifies the published revision. It does not grant approval
 for live transactions.
 
 <!-- BEGIN CUSTOMER AGREEMENT TRANSLATION -->
@@ -182,8 +180,8 @@ that the underlying legal positions have received final launch review.
 The September 30 review branch now integrates the complete translation into
 `PolicyPage`, including the title lookup, Clientes eyebrow, customer navigation,
 `/es/customer-agreement` route, search metadata and Spanish Terms link. Its
-English and Spanish source hashes are bound in the release manifests. Those
-manifests describe the candidate deployment, not a completed publication.
+English and Spanish source hashes are bound in the release manifests. The owner approved publication and PR #272 is now deployed as `e6fceca7`.
+Production workflow `36797697298` and independent live HTTP/browser checks passed.
 
 The English Terms, Customer Agreement and Payment Policy receive September 30
 versions. Terms and Payments are shared with providers: their prior acceptance
@@ -199,17 +197,18 @@ explicit language checks and closed live-payment controls remain unchanged.
 The exact customer authorization, its translated immutable evidence and the
 remaining launch review still need separate completion.
 
-Current candidate validation: all 896 regression tests, production build and
+Published release validation: all 896 regression tests, production build and
 TypeScript pass. Six real-component browser scenarios cover Chromium and WebKit
 at 320, 390 and 1280 pixels, full translated text, both switch directions,
 policy link destinations, saved language, no overflow and no page errors.
-Server rendering and navigation are additionally covered by the updated
-existing account-signup CI test; record its result after the PR checks finish.
+Server rendering, navigation, signup and saved drafts also passed the existing
+full-server account CI test. After deployment, 23 HTTP checks and 12 live browser
+checks verified the exact release, policy wording, navigation and closed payments.
 Lint retains only the existing language-navigation warning. These tests do not
 establish legal equivalence, final adoption or permission to launch.
 
 Historical September 27 draft evidence follows; it does not describe the newer
-payment clauses or claim a production check of this candidate.
+payment clauses or replace the current production checks recorded above.
 
 Validation retained privately in `outputs/customer-spanish-draft-validation-20260927.json`:
 eleven sections, fourteen corresponding paragraphs, both policy links, 5% rate

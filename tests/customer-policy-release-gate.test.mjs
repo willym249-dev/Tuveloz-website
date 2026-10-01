@@ -75,7 +75,7 @@ test("checkout displays and stores one exact server-generated authorization", as
   assert.match(acceptance, /otherAmountCents/);
   assert.match(acceptance, /customerFeeCents/);
   assert.match(acceptance, /customerTotalCents/);
-  assert.match(acceptance, /customerPolicyReleaseEvidence\("checkout"\)/);
+  assert.match(acceptance, /customerPolicyPresentationEvidence\("checkout", language\)/);
   assert.match(acceptance, /TUVELOZ does not certify the repair/);
 
   assert.match(route, /checkoutAgreementKey/);

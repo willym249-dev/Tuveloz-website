@@ -102,6 +102,14 @@ Service, Customer Agreement, Provider Agreement, Privacy Notice, Payment
 Policy, Marketplace Conduct, and the Provisional Provider Policy — each a page
 under `app/`.
 
+The September 30 bilingual checkout candidate binds the exact English/Spanish
+authorization, policy links and translation-release metadata to separate
+`checkout:6` acceptance versions. Its download includes the same evidence string
+stored in the immutable record. Missing or stale presentations fail closed;
+historical customer/provider evidence stays intact. This candidate is not yet
+published; PR #272's policy-page release is already live. See the newest LOG
+entry for checks and publication status. All launch/payment locks stay closed.
+
 ## Current launch state
 
 **Verify these before relying on them; they are switches that will flip.**
