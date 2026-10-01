@@ -87,9 +87,13 @@ export async function assertSpanishRendering(browser, origin, log) {
     await page.waitForURL((url) => url.pathname === "/es/terms");
     await waitForLanguage("es");
     assert.equal(await page.locator("h1").textContent(), "Términos de uso");
-    await page.getByRole("navigation", { name: "Políticas de Tuveloz" }).getByRole("link", { name: "Clientes", exact: true }).click();
-    await page.waitForURL((url) => url.pathname === "/es/customer-agreement");
-    await waitForLanguage("es");
+    for (const policy of ["payments", "privacy", "provider-agreement", "terms", "customer-agreement"]) {
+      await page.getByRole("navigation", { name: "Políticas de Tuveloz" }).locator(`a[href="/es/${policy}"]`).click();
+      await page.waitForURL((url) => url.pathname === `/es/${policy}`);
+      await waitForLanguage("es");
+      await page.locator("[data-spanish-policy]").waitFor();
+      assert.deepEqual(errors, [], `${policy}: policy navigation must not request missing client routes`);
+    }
     assert.equal(await page.locator("h1").textContent(), "Acuerdo del cliente");
     assert.equal(await page.locator("[data-spanish-policy] h2").count(), 11);
     assert.match(await page.locator("[data-spanish-policy]").textContent(), /TUVELOZ LLC/);

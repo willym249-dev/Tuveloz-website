@@ -45,6 +45,16 @@ persisted language, no page errors and no overflow. Existing full-server account
 CI now also checks customer-policy navigation and Spanish metadata/hydration.
 Required remote CI and owner approval of this exact policy publication remain.
 
+Draft PR #272 is attached: https://github.com/willym249-dev/Tuveloz-website/pull/272.
+Its initial deployment rehearsal passed, and the full-server account check
+passed all fifteen direct Spanish routes including the new customer policy,
+but caught a 404 on `/es/customer-agreement.rsc` during client-side navigation.
+The Spanish policy links now use native document navigation because the Spanish
+mirrors serve HTML, not vinext client routes. English links keep their existing
+behavior. The account browser test now clicks all five Spanish policy navigation
+links and fails on any missing client route. This is a real navigation fix, not
+an ignored error or a relaxed test. Final-head checks must be rerun.
+
 Private evidence: `outputs/customer-policy-{tests,regression,typecheck,lint,browser}-20260930.log`
 and `outputs/customer-policy-browser-20260930/`. Update the same legal review and
 prelaunch checklist after remote checks; do not report this candidate as live.
