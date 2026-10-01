@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ConfirmAction } from "./confirm-action";
+import { requestAccountResponse } from "../../lib/account-response";
+import { validStripePayments, validStripeTransferConfirmation } from "../../lib/stripe-payment-response";
 
 type AdminPayment = {
   id: string;
@@ -18,6 +20,7 @@ type AdminPayment = {
   status: string;
   jobStatus: string | null;
   transferId: string | null;
+  transferAttemptStatus: string | null;
   canRelease: boolean;
   paidAt: string;
   releasedAt: string;
@@ -50,81 +53,62 @@ export function StripePaymentAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [ready, setReady] = useState(false);
+  const [uncertain, setUncertain] = useState<Set<string>>(() => new Set());
+  const inFlight = useRef(false);
 
-  const loadPayments = useCallback(async () => {
+  const loadPayments = useCallback(async (signal?: AbortSignal) => {
+    setReady(false); setLoading(true); setPendingId("");
     try {
-      const response = await fetch("/api/stripe/admin/payments", { cache: "no-store" });
-      const result = await response.json() as {
-        payments?: AdminPayment[];
-        error?: string;
-      };
-      if (!response.ok) throw new Error(result.error || "Unable to load Stripe payments.");
-      setPayments(result.payments ?? []);
+      const response = await requestAccountResponse("/api/stripe/admin/payments", { cache: "no-store", signal });
+      if (signal?.aborted) return;
+      if (!response.ok || !validStripePayments(response.data.payments)) throw new Error("Unable to refresh payment records. The last saved view is still here.");
+      setPayments(response.data.payments as AdminPayment[]);
+      setReady(true);
       setError("");
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Unable to load Stripe payments.");
+    } catch {
+      if (signal?.aborted) return;
+      setError("Unable to refresh payment records. The last saved view is still here.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let active = true;
-    fetch("/api/stripe/admin/payments", { cache: "no-store" })
-      .then(async (response) => {
-        const result = await response.json() as {
-          payments?: AdminPayment[];
-          error?: string;
-        };
-        if (!response.ok) {
-          throw new Error(result.error || "Unable to load Stripe payments.");
-        }
-        if (active) {
-          setPayments(result.payments ?? []);
-          setError("");
-        }
-      })
-      .catch((failure: unknown) => {
-        if (active) {
-          setError(
-            failure instanceof Error
-              ? failure.message
-              : "Unable to load Stripe payments.",
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    const controller = new AbortController();
+    void Promise.resolve().then(() => { if (!controller.signal.aborted) return loadPayments(controller.signal); });
+    return () => controller.abort();
+  }, [loadPayments]);
 
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  async function release(paymentId: string) {
+  async function release(paymentId: string, statusOnly = false) {
+    if (inFlight.current || loading || (!statusOnly && (!ready || uncertain.has(paymentId)))) return;
+    inFlight.current = true;
     setBusyId(paymentId);
     setError("");
     setMessage("");
+    let failureMessage = "We could not confirm this transfer. Check its saved status before taking another action.";
     try {
-      const response = await fetch("/api/stripe/admin/payments", {
+      const response = await requestAccountResponse("/api/stripe/admin/payments", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ paymentId }),
+        body: JSON.stringify({ paymentId, action: statusOnly ? "check_transfer" : "release" }),
       });
-      const result = await response.json() as {
-        transferId?: string;
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(result.error || "Unable to release this provider payment.");
+      if (!response.ok || !validStripeTransferConfirmation(response.data, paymentId)) {
+        if (typeof response.data.error === "string" && response.data.error.trim()) failureMessage = response.data.error;
+        throw new Error(failureMessage);
       }
-      setMessage(`Provider transfer released${result.transferId ? ` (${result.transferId})` : ""}.`);
+      setUncertain(current => { const next = new Set(current); next.delete(paymentId); return next; });
+      setMessage(response.data.transferReviewRequired
+        ? "Stripe confirmed the transfer, but this payment still has a hold and needs review."
+        : "Stripe confirmed the provider transfer. Arrival in the provider’s bank is not confirmed here.");
       setPendingId("");
       await loadPayments();
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Unable to release this provider payment.");
+    } catch {
+      setUncertain(current => new Set(current).add(paymentId));
+      setPendingId("");
+      setError(failureMessage);
     } finally {
+      inFlight.current = false;
       setBusyId("");
     }
   }
@@ -134,8 +118,8 @@ export function StripePaymentAdmin() {
       <h2>Stripe payments</h2>
       <p className="admin-section-copy">
         Storefront products use immediate Destination Charges. Accepted job
-        quotes use a separate transfer that becomes releasable only after the
-        provider marks the job completed.
+        quotes require completion, customer confirmation, and payment checks
+        before the owner can release a separate provider transfer.
       </p>
       <p className="admin-note">
         Keep live processing disabled until Tuveloz&apos;s adult legal owner has
@@ -149,10 +133,12 @@ export function StripePaymentAdmin() {
       </p>
       {message && <p className="portal-success" role="status">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      {loading ? (
+      <button type="button" className="button secondary" disabled={loading || Boolean(busyId)}
+        onClick={() => { if (!inFlight.current) void loadPayments(); }}>Refresh payments</button>
+      {loading && payments.length === 0 ? (
         <p className="admin-note">Loading Stripe payment records…</p>
       ) : payments.length === 0 ? (
-        <p className="admin-note">No Stripe Checkout sessions have been created yet.</p>
+        !error && <p className="admin-note">No Stripe Checkout sessions have been created yet.</p>
       ) : (
         <div className="admin-grid">
           {payments.map((payment) => (
@@ -233,6 +219,15 @@ export function StripePaymentAdmin() {
                 </p>
               )}
 
+              {(payment.transferAttemptStatus || payment.transferId || uncertain.has(payment.id)) && (
+                <div>
+                  <p>{payment.transferAttemptStatus === "transfer_recorded" && !uncertain.has(payment.id)
+                    ? "A transfer has been recorded with Stripe."
+                    : "Check the saved transfer status. This will not send another payment."}</p>
+                  <button type="button" className="button secondary" disabled={Boolean(busyId) || loading}
+                    onClick={() => release(payment.id, true)}>{busyId === payment.id ? "Checking…" : "Check transfer status"}</button>
+                </div>
+              )}
               {pendingId === payment.id ? (
                 <ConfirmAction
                   busy={busyId === payment.id}
@@ -242,9 +237,10 @@ export function StripePaymentAdmin() {
                   onConfirm={() => release(payment.id)}
                   title="Release this completed-job payment?"
                 />
-              ) : payment.canRelease ? (
+              ) : payment.canRelease && !payment.transferAttemptStatus && !payment.transferId && !uncertain.has(payment.id) ? (
                 <button
                   className="button primary"
+                  disabled={!ready || loading || Boolean(busyId)}
                   onClick={() => setPendingId(payment.id)}
                   type="button"
                 >

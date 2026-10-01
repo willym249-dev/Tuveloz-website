@@ -116,14 +116,25 @@ do not repeat publication. See the newest LOG entry and OPEN-ITEMS for the
 separate private request-control recovery follow-up and remaining launch
 decisions. All launch/payment locks stay closed.
 
-The separate decline/restore/review recovery follow-up is now a tested local
-candidate on `review/customer-quote-review-recovery-20261001`: build/917 tests,
-50 new mobile recovery cases and 26 existing consent cases pass. It preserves
-drafts and requires a read-only status check after uncertain writes. Do not
-redo the implementation; finish required PR checks and record publication
-separately. No policy, schema or launch/payment control changed.
+The separate decline/restore/review recovery is published and independently
+verified in PR #275 as `86ae047a6186629b459934c70df28d6abf92a603`. Build/917 tests,
+50 new mobile recovery cases, 26 existing consent cases, required PR checks and
+all three production jobs passed. Thirty-seven live HTTP checks confirm the
+exact healthy release and closed bookings/payments. Drafts survive uncertain
+writes, rapid clicks send one request, and a read-only saved-status check
+precedes retry. No policy, schema, backend route or launch/payment control
+changed. Do not repeat implementation or publication; see LOG for evidence and
+the existing prelaunch checklist for remaining technical and business work.
 
 ## Current launch state
+
+The October 1 provider-transfer recovery candidate is locally verified but
+awaits hosted checks/publication. It adds a durable payment-adjustment
+reservation, exact Stripe receipt validation, status-only recovery and owner
+screen interruption handling. Build/932 tests and 24 isolated mobile cases
+pass. See the latest LOG/OPEN-ITEMS before repeating work. No migration or
+launch/payment switch is changed; canRelease remains false. A missing or
+uncertain transfer is held for review, never automatically resent.
 
 **Verify these before relying on them; they are switches that will flip.**
 

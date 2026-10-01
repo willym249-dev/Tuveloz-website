@@ -24,6 +24,7 @@ import {
 import {
   getStripeClient,
   retrieveRecipientAccountStatus,
+  stripeLiveModeEnabled,
   stripeErrorResponse,
 } from "../../../../../lib/stripe";
 import {
@@ -38,6 +39,8 @@ import {
   jobAuthorizationDecisionMatchesContext,
 } from "../../../../../lib/job-operations";
 import { connectedAccountPayoutSafety } from "../../../../../lib/stripe-connected-account-snapshots";
+import { recordProviderTransfer, recoverProviderTransfer, requireTransferPayment, reserveProviderTransfer,
+  savedTransferAttempt, TransferReviewError } from "../../../../../lib/stripe-transfer-recovery";
 import {
   CUSTOMER_COMPLETION_AGREEMENT_KEY,
   CUSTOMER_COMPLETION_AGREEMENT_VERSION,
@@ -103,7 +106,11 @@ export async function GET(request: Request) {
     lastExternalAccountStatus:
       stripeConnectedAccountSnapshots.lastExternalAccountStatus,
     createdAt: stripePayments.createdAt,
+    transferAttemptStatus: paymentAdjustments.status,
   }).from(stripePayments)
+    .leftJoin(paymentAdjustments, and(eq(paymentAdjustments.paymentId, stripePayments.id),
+      eq(paymentAdjustments.adjustmentType, "stripe_provider_transfer"),
+      eq(paymentAdjustments.idempotencyKey, sql`'tuveloz-release-' || ${stripePayments.id}`)))
     .leftJoin(
       providerApplications,
       eq(providerApplications.id, stripePayments.providerApplicationId),
@@ -154,7 +161,14 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Cross-origin transfer release is not allowed." }, { status: 403 });
   }
-  const body = (await request.json()) as { paymentId?: unknown };
+  let body: { paymentId?: unknown; action?: unknown };
+  try { body = await request.json(); } catch {
+    return Response.json({ error: "Choose a payment and an explicit action." }, { status: 400, headers: { "cache-control": "no-store" } });
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)
+    || (body.action !== undefined && body.action !== "check_transfer" && body.action !== "release")) {
+    return Response.json({ error: "Unknown payment action." }, { status: 400, headers: { "cache-control": "no-store" } });
+  }
   const paymentId = typeof body.paymentId === "string"
     ? body.paymentId.trim().slice(0, 120)
     : "";
@@ -168,13 +182,16 @@ export async function POST(request: Request) {
   if (!payment) {
     return Response.json({ error: "Payment record not found." }, { status: 404 });
   }
-  if (payment.transferId || payment.status === "released") {
-    return Response.json({
-      ok: true,
-      alreadyReleased: true,
-      transferId: payment.transferId,
-      releasedAt: payment.releasedAt,
-    });
+  try {
+    requireTransferPayment(payment);
+    const attempt = await savedTransferAttempt(payment);
+    if (attempt || payment.transferId || payment.status === "released" || body.action === "check_transfer") {
+      const recovered = await recoverProviderTransfer(getStripeClient(), payment, getAuthenticatedEmail(request), attempt);
+      return Response.json(recovered, { status: recovered.ok ? 200 : 202, headers: { "cache-control": "no-store" } });
+    }
+  } catch (error) {
+    if (error instanceof TransferReviewError) return Response.json({ error: error.message }, { status: 409, headers: { "cache-control": "no-store" } });
+    return stripeErrorResponse(error, "Unable to check the provider transfer. No replacement transfer was sent.");
   }
   if (
     payment.settlementStrategy !== "separate_transfer"
@@ -220,7 +237,7 @@ export async function POST(request: Request) {
       { status: 409 },
     );
   }
-  if (payment.refundAmountCents > 0 || payment.disputeStatus) {
+  if (payment.refundAmountCents > 0 || payment.refundStatus || payment.disputeStatus) {
     return Response.json(
       { error: "A refunded or disputed payment cannot be released." },
       { status: 409 },
@@ -382,10 +399,21 @@ export async function POST(request: Request) {
       : null;
     const chargeId = charge?.id ?? "";
     if (
-      paymentIntent.status !== "succeeded"
+      paymentIntent.id !== payment.paymentIntentId
+      || paymentIntent.status !== "succeeded"
+      || paymentIntent.amount !== payment.customerTotalCents
       || paymentIntent.amount_received !== payment.customerTotalCents
+      || paymentIntent.currency !== payment.currency
+      || paymentIntent.livemode !== stripeLiveModeEnabled()
+      || paymentIntent.transfer_group !== payment.transferGroup
+      || paymentIntent.transfer_data
       || !charge
-      || !chargeId
+      || chargeId !== payment.chargeId
+      || (typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id) !== payment.paymentIntentId
+      || !charge.paid || !charge.captured || charge.status !== "succeeded"
+      || charge.amount !== payment.customerTotalCents || charge.amount_captured !== payment.customerTotalCents
+      || charge.currency !== payment.currency || charge.livemode !== paymentIntent.livemode
+      || charge.transfer || charge.transfer_data
       || charge.refunded
       || charge.amount_refunded > 0
       || charge.disputed
@@ -397,12 +425,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Recover an older transfer whose local write was lost, even if it predates
+    // the durable reservation. Never depend on Stripe retaining a key forever.
+    const priorTransfers = await stripeClient.transfers.list({ transfer_group: payment.transferGroup!, limit: 1 });
+    if (priorTransfers.data.length || priorTransfers.has_more) {
+      const recovered = await recoverProviderTransfer(stripeClient, payment, getAuthenticatedEmail(request));
+      return Response.json(recovered, { status: recovered.ok ? 200 : 202, headers: { "cache-control": "no-store" } });
+    }
     // source_transaction ties the transfer to the customer's successful charge.
-    // The idempotency key prevents two owner clicks from paying twice.
+    // The local reservation is permanent; uncertain attempts become read-only.
     const releaseDecision = await runtimeRealMarketplaceReleaseDecision();
     if (!releaseDecision.approved) {
       return marketplacePausedResponse();
     }
+    const attempt = await reserveProviderTransfer(payment, getAuthenticatedEmail(request), stageDecision.result.decisionId);
+    if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) return marketplacePausedResponse();
     const transfer = await stripeClient.transfers.create(
       {
         amount: payment.providerAmountCents,
@@ -411,6 +448,7 @@ export async function POST(request: Request) {
         source_transaction: chargeId,
         transfer_group: payment.transferGroup ?? undefined,
         metadata: {
+          tuveloz_transfer_execution_id: attempt.id,
           tuveloz_payment_record_id: payment.id,
           tuveloz_request_id: payment.requestId,
           ...(payment.quoteId ? { tuveloz_quote_id: payment.quoteId } : {}),
@@ -426,15 +464,7 @@ export async function POST(request: Request) {
       },
     );
 
-    const releasedAt = new Date().toISOString();
-    await getDb().update(stripePayments).set({
-      chargeId,
-      transferId: transfer.id,
-      status: "released",
-      releasedAt,
-      releasedBy: getAuthenticatedEmail(request),
-      updatedAt: releasedAt,
-    }).where(eq(stripePayments.id, payment.id));
+    const confirmed = await recordProviderTransfer(payment, transfer, getAuthenticatedEmail(request), attempt);
     await appendJobLifecycleEvent({
       requestId: payment.requestId,
       quoteId: payment.quoteId || "",
@@ -454,12 +484,9 @@ export async function POST(request: Request) {
       },
     });
 
-    return Response.json({
-      ok: true,
-      transferId: transfer.id,
-      releasedAt,
-    });
+    return Response.json(confirmed, { headers: { "cache-control": "no-store" } });
   } catch (error) {
+    if (error instanceof TransferReviewError) return Response.json({ error: error.message }, { status: 409, headers: { "cache-control": "no-store" } });
     return stripeErrorResponse(error, "Unable to release the provider transfer.");
   }
 }

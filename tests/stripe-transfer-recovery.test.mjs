@@ -1,0 +1,229 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { createRequire } from "node:module";
+import { DatabaseSync } from "node:sqlite";
+import test from "node:test";
+import { build } from "esbuild";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { checkoutModule } from "./helpers/checkout-evidence.mjs";
+const { validStripePayments } = checkoutModule("./lib/stripe-payment-response");
+
+// Real route and migrated SQL; future eligibility and Stripe are isolated fixtures.
+// The fake processor deliberately does not retain expired idempotency keys.
+test("provider transfers recover without repeating uncertain money movement", async t => {
+  const root = resolve(import.meta.dirname, ".."), temp = resolve(tmpdir());
+  const scratch = mkdtempSync(join(temp, "tuveloz-transfer-recovery-"));
+  const originalFetch = globalThis.fetch;
+  let database, transfers = [], calls = [], loseReply = false, corruptReply = false;
+  let beforeCreate, beforeIntent, beforeSave, beforeList;
+  const context = { quoteId: "quote-synthetic", scopeVersion: 1, providerEmail: "provider@example.invalid" };
+  const state = { db: null, open: true, owner: true, context, stripe: null };
+  globalThis.__transferRecovery = state;
+  const intent = () => ({ id: "pi_synthetic", status: "succeeded", amount: 10500, amount_received: 10500,
+    currency: "usd", livemode: false, transfer_group: "tuveloz_payment-synthetic", transfer_data: null,
+    metadata: { tuveloz_payment_record_id: "payment-synthetic" }, latest_charge: {
+      id: "ch_synthetic", payment_intent: "pi_synthetic", paid: true, captured: true, status: "succeeded",
+      amount: 10500, amount_captured: 10500, currency: "usd", livemode: false,
+      refunded: false, amount_refunded: 0, disputed: false, transfer: null, transfer_data: null,
+    } });
+  state.stripe = {
+    paymentIntents: { retrieve: async () => { beforeIntent?.(); return intent(); } },
+    transfers: {
+      list: async args => { assert.equal(args.transfer_group, "tuveloz_payment-synthetic"); await beforeList?.(); return { data: transfers, has_more: false }; },
+      retrieve: async id => { const match = transfers.find(item => item.id === id); assert.ok(match); return match; },
+      create: async (params, options) => {
+        calls.push({ params, options }); await beforeCreate?.();
+        const transfer = { id: `tr_synthetic_${calls.length}`, object: "transfer", ...params,
+          created: 1800000000, livemode: false, reversed: false, amount_reversed: 0 };
+        transfers.push(transfer);
+        if (loseReply) throw Error("SYNTHETIC lost reply after transfer");
+        return corruptReply ? { ...transfer, destination: "acct_wrong" } : transfer;
+      },
+    },
+  };
+  const seed = (table, values) => {
+    const fields = database.prepare(`PRAGMA table_info(${table})`).all();
+    const required = Object.fromEntries(fields.filter(col => col.notnull && col.dflt_value === null && !(col.name in values))
+      .map(col => [col.name, col.type === "INTEGER" ? 0 : ""]));
+    const row = { ...required, ...values }, keys = Object.keys(row);
+    database.prepare(`INSERT INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`).run(...Object.values(row));
+  };
+  const reset = () => {
+    database?.close(); database = new DatabaseSync(":memory:");
+    for (const entry of JSON.parse(readFileSync(join(root, "drizzle/meta/_journal.json"), "utf8")).entries) {
+      for (const sql of readFileSync(join(root, "drizzle", `${entry.tag}.sql`), "utf8").split("--> statement-breakpoint")) if (sql.trim()) database.exec(sql);
+    }
+    state.db = drizzle((sql, params, method) => {
+      assert.ok(params.length <= 100, "D1 parameter limit");
+      if (beforeSave && sql.startsWith('update "stripe_payments"')) { const hook = beforeSave; beforeSave = null; hook(); }
+      if (method === "run") { database.prepare(sql).run(...params); return { rows: [] }; }
+      database.exec("PRAGMA short_column_names=OFF; PRAGMA full_column_names=ON;");
+      try { const statement = database.prepare(sql); return { rows: method === "get" ? Object.values(statement.get(...params) ?? {}) : statement.all(...params).map(row => Object.values(row)) }; }
+      finally { database.exec("PRAGMA short_column_names=ON; PRAGMA full_column_names=OFF;"); }
+    });
+    state.open = true; state.owner = true; transfers = []; calls = []; loseReply = false; corruptReply = false;
+    beforeCreate = beforeIntent = beforeSave = beforeList = null;
+    seed("customer_requests", { id: "job-synthetic", status: "completed", is_test_job: "no",
+      parts_source: "No parts needed — labor only", parts_preference: "No preference", labor_only_parts_acknowledged_at: "2026-10-01T00:00:00Z" });
+    seed("provider_applications", { id: "provider-synthetic", email: context.providerEmail, is_test_provider: "no", stripe_account_id: "acct_synthetic" });
+    seed("provider_quotes", { id: context.quoteId, request_id: "job-synthetic", provider_name: "SYNTHETIC PROVIDER",
+      provider_email: context.providerEmail, scope_version: 1, status: "accepted", price_cents: "10000", labor_price_cents: "10000",
+      parts_price_cents: "0", part_type: "No parts needed", labor_only_parts_confirmed_at: "2026-10-01T00:00:00Z" });
+    seed("repair_authorization_records", { id: "authorization-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
+      provider_id: "provider-synthetic", provider_email: context.providerEmail, scope_version: 1, status: "signed",
+      customer_signature_at: "2026-10-01T00:00:00Z", document_hash: "SYNTHETIC AUTHORIZATION ONLY" });
+    seed("stripe_payments", { id: "payment-synthetic", payment_type: "quote", request_id: "job-synthetic", quote_id: context.quoteId,
+      scope_version: 1, scope_authorization_decision_id: "scope-synthetic", authorized_price_snapshot: '{"laborAmountCents":10000}',
+      provider_application_id: "provider-synthetic", connected_account_id: "acct_synthetic", currency: "usd", provider_amount_cents: 10000,
+      application_fee_cents: 500, customer_total_cents: 10500, settlement_strategy: "separate_transfer", payment_intent_id: "pi_synthetic",
+      charge_id: "ch_synthetic", transfer_group: "tuveloz_payment-synthetic", status: "paid_pending_completion", paid_at: "2026-10-01T00:00:00Z" });
+    seed("job_scope_versions", { id: "scope-synthetic", request_id: "job-synthetic", quote_id: context.quoteId, version: 1,
+      authorization_decision_id: "scope-synthetic", price_breakdown: '{"laborAmountCents":10000}' });
+    seed("provider_job_records", { id: "work-synthetic", request_id: "job-synthetic", provider_email: context.providerEmail,
+      work_status: "completed", job_start_decision_id: "start-synthetic", completion_decision_id: "completion-synthetic" });
+    const invoiceFields = Object.fromEntries(`provider_business_name provider_business_address provider_business_phone county_registration_number
+      customer_name customer_address vehicle_year vehicle_make_model vehicle_tag customer_instructions provider_diagnosis labor_billing_method
+      labor_disclosure provider_representative_name provider_representative_title provider_signed_at warranty_work_statement warranty_terms
+      manufacturer_notice responsibility_notice document_hash customer_signature_at customer_copy_delivered_at provider_copy_retained_at`
+      .split(/\s+/).filter(Boolean).map(name => [name, "SYNTHETIC FIXTURE ONLY"]));
+    seed("provider_invoices", { ...invoiceFields, id: "invoice-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
+      provider_id: "provider-synthetic", authorization_record_id: "authorization-synthetic", scope_version: 1, status: "draft",
+      labor_amount_cents: 10000, total_amount_cents: 10000, mechanic_identifiers: '["SYNTHETIC"]', document_snapshot: '{"synthetic":true}' });
+    seed("provider_invoice_items", { id: "item-synthetic", invoice_id: "invoice-synthetic", line_type: "labor", description: "SYNTHETIC LABOR", unit_amount_cents: 10000, line_amount_cents: 10000 });
+    database.exec("UPDATE provider_invoices SET status='final' WHERE id='invoice-synthetic'");
+    seed("customer_agreement_acceptances", { id: "confirmation-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
+      scope_version: 1, agreement_key: "customer_completion_confirmation", agreement_version: "completion-confirmation:1" });
+  };
+  try {
+    globalThis.fetch = async () => { throw Error("External network is forbidden in this fixture"); };
+    const routePath = join(root, "app/api/stripe/admin/payments/route.ts").replaceAll("\\", "/");
+    await build({ entryPoints: [routePath], bundle: true, platform: "node", format: "cjs", target: "node22",
+      outfile: join(scratch, "route.cjs"), logLevel: "silent", plugins: [{ name: "transfer-fixture", setup(builder) {
+        builder.onResolve({ filter: /^cloudflare:workers$/ }, () => ({ path: "env", namespace: "fixture" }));
+        builder.onResolve({ filter: /(?:^|\/)db$/ }, args => args.path.startsWith(".") ? { path: "db", namespace: "fixture" } : null);
+        for (const dependency of ["owner-auth", "stripe", "runtime-marketplace-action", "runtime-launch-readiness", "stripe-connected-account-snapshots"]) {
+          builder.onResolve({ filter: new RegExp(`(?:^|/)${dependency}$`) }, () => ({ path: dependency, namespace: "fixture" }));
+        }
+        builder.onResolve({ filter: /job-operations$/ }, args => args.importer.replaceAll("\\", "/") === routePath ? { path: "operations", namespace: "fixture" } : null);
+        builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ loader: "ts", resolveDir: root, contents: {
+          env: "export const env = {};", db: "export const getDb=()=>globalThis.__transferRecovery.db;",
+          "owner-auth": 'export const isVerifiedOwnerRequest=async()=>globalThis.__transferRecovery.owner; export const getAuthenticatedEmail=()=>"owner@example.invalid";',
+          stripe: 'export const getStripeClient=()=>globalThis.__transferRecovery.stripe; export const stripeLiveModeEnabled=()=>false; export const retrieveRecipientAccountStatus=async()=>({readyToReceivePayments:true}); export const stripeErrorResponse=(e)=>Response.json({error:e.message},{status:502});',
+          "runtime-marketplace-action": "export const runtimeMarketplaceActionAllowed=async()=>globalThis.__transferRecovery.open;",
+          "runtime-launch-readiness": 'export const runtimeRealMarketplaceReleaseDecision=async()=>({approved:globalThis.__transferRecovery.open,providerOnboardingDecisionIds:["synthetic"],transactionPilotDecisionIds:["synthetic"],checkedAt:"2026-10-01T00:00:00Z"});',
+          "stripe-connected-account-snapshots": 'export const connectedAccountPayoutSafety=async()=>({allowed:true,reasons:[]});',
+          operations: 'export {assessPayoutReadiness} from "./lib/job-operations"; export const evaluateAssignedJobStage=async()=>({allowed:true,context:globalThis.__transferRecovery.context,result:{decisionId:"payout-synthetic"}}); export const jobAuthorizationDecisionMatchesContext=async()=>true; export const appendJobLifecycleEvent=async()=>{};',
+        }[args.path] }));
+      } }] });
+    const api = createRequire(import.meta.url)(join(scratch, "route.cjs"));
+    const post = async (action, origin = "https://tuveloz.invalid") => {
+      const response = await api.POST(new Request("https://tuveloz.invalid/api/stripe/admin/payments", { method: "POST",
+        headers: { origin, "content-type": "application/json" }, body: JSON.stringify({ paymentId: "payment-synthetic", ...(action ? { action } : {}) }) }));
+      return { status: response.status, body: await response.json() };
+    };
+    const payment = () => database.prepare("SELECT * FROM stripe_payments WHERE id='payment-synthetic'").get();
+    await t.test("late retry after a lost transfer reply does not send a second transfer", async () => {
+      reset(); loseReply = true; const first = await post(); assert.notEqual(first.body.ok, true); assert.equal(calls.length, 1);
+      loseReply = false; const recovered = await post();
+      assert.equal(calls.length, 1, "never recreate after processor idempotency retention ends");
+      assert.equal(recovered.body.ok, true); assert.equal(payment().transfer_id, "tr_synthetic_1");
+    });
+    await t.test("a malformed transfer receipt never claims release", async () => {
+      reset(); corruptReply = true; const response = await post();
+      assert.notEqual(response.body.ok, true); assert.equal(payment().transfer_id, null);
+    });
+    await t.test("a concurrent dispute remains held when the transfer reply arrives", async () => {
+      reset(); beforeCreate = () => database.exec("UPDATE stripe_payments SET status='disputed',dispute_status='needs_response'");
+      await post(); assert.equal(payment().status, "disputed");
+    });
+    await t.test("a successful release sends only the provider amount and a durable operation reference", async () => {
+      reset(); const response = await post(); assert.equal(response.body.transferConfirmed, true);
+      assert.equal(response.body.paymentId, "payment-synthetic"); assert.equal(calls.length, 1);
+      assert.equal(calls[0].params.amount, 10000); assert.equal(calls[0].options.idempotencyKey, "tuveloz-release-payment-synthetic");
+      const saved = database.prepare("SELECT * FROM payment_adjustments WHERE adjustment_type='stripe_provider_transfer'").get();
+      assert.equal(saved.status, "transfer_recorded"); assert.equal(calls[0].params.metadata.tuveloz_transfer_execution_id, saved.id);
+      assert.equal(saved.provider_impact_cents, 0, "execution is not a second accounting adjustment");
+      assert.equal((await post()).body.transferConfirmed, true); assert.equal(calls.length, 1);
+    });
+    await t.test("an explicit status check never initiates a transfer and an unknown attempt stays read-only", async () => {
+      reset(); assert.equal((await post("check_transfer")).body.transferConfirmed, false); assert.equal(calls.length, 0);
+      loseReply = true; await post(); transfers = []; loseReply = false;
+      database.exec("UPDATE payment_adjustments SET created_at='2020-01-01'");
+      for (const action of [undefined, "check_transfer", "release"]) {
+        assert.equal((await post(action)).body.transferConfirmed, false); assert.equal(calls.length, 1);
+      }
+    });
+    await t.test("owner, origin and release gates stop sending; closed release still permits recovery", async () => {
+      reset(); state.owner = false; assert.equal((await post()).status, 403);
+      state.owner = true; assert.equal((await post(undefined, "https://other.invalid")).status, 403);
+      state.open = false; assert.equal((await post()).status, 503); assert.equal(calls.length, 0);
+      state.open = true; loseReply = true; await post(); state.open = false;
+      assert.equal((await post("check_transfer")).body.transferConfirmed, true); assert.equal(calls.length, 1);
+    });
+    await t.test("concurrent clicks reserve one operation before the first Stripe reply", async () => {
+      reset(); let started, finish;
+      const entered = new Promise(resolve => { started = resolve; }); const resume = new Promise(resolve => { finish = resolve; });
+      beforeCreate = async () => { started(); await resume; };
+      const first = post(); await entered;
+      const second = await post(); assert.notEqual(second.body.ok, true); assert.equal(calls.length, 1);
+      finish(); assert.equal((await first).body.transferConfirmed, true);
+      assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments WHERE adjustment_type='stripe_provider_transfer'").get().n, 1);
+    });
+    await t.test("a local receipt-write failure can recover without sending again", async () => {
+      reset(); beforeSave = () => { throw Error("SYNTHETIC receipt storage failure"); };
+      assert.notEqual((await post()).body.ok, true); assert.equal(calls.length, 1);
+      assert.equal((await post("check_transfer")).body.transferConfirmed, true); assert.equal(calls.length, 1);
+    });
+    await t.test("legacy transfers without a local reservation are found before any new send", async () => {
+      reset(); await post(); const legacy = { ...transfers[0], metadata: { ...transfers[0].metadata } };
+      delete legacy.metadata.tuveloz_transfer_execution_id; reset(); transfers = [legacy];
+      assert.equal((await post()).body.transferConfirmed, true); assert.equal(calls.length, 0);
+    });
+    await t.test("wrong, reversed or duplicated processor records cannot confirm a transfer", async () => {
+      for (const change of [x => x.amount++, x => x.currency = "eur", x => x.destination = "acct_other",
+        x => x.source_transaction = "ch_other", x => x.transfer_group = "other", x => x.livemode = true,
+        x => x.metadata.tuveloz_payment_record_id = "other", x => x.metadata.tuveloz_transfer_execution_id = "other",
+        x => x.amount_reversed = 1, x => x.reversed = true]) {
+        reset(); loseReply = true; await post(); change(transfers[0]); loseReply = false;
+        assert.equal((await post()).status, 409); assert.equal(calls.length, 1); assert.equal(payment().transfer_id, null);
+      }
+      reset(); loseReply = true; await post(); transfers.push({ ...transfers[0], id: "tr_other" });
+      assert.equal((await post()).status, 409); assert.equal(calls.length, 1);
+    });
+    await t.test("a payment hold or changed quote during verification prevents reservation and sending", async () => {
+      for (const sql of ["UPDATE stripe_payments SET status='disputed',dispute_status='needs_response'",
+        "UPDATE stripe_payments SET refund_status='pending'", "UPDATE provider_quotes SET scope_version=2"]) {
+        reset(); beforeIntent = () => database.exec(sql); assert.equal((await post()).status, 409); assert.equal(calls.length, 0);
+      }
+    });
+    await t.test("changed payment identity cannot adopt the original transfer or resend it", async () => {
+      reset(); loseReply = true; await post(); database.exec("UPDATE stripe_payments SET connected_account_id='acct_other'");
+      assert.equal((await post()).status, 409); assert.equal(calls.length, 1); assert.equal(payment().transfer_id, null);
+    });
+    await t.test("two requests that passed the initial reads still reserve and send once", async () => {
+      reset(); let arrive = 0, release;
+      const barrier = new Promise(resolve => { release = resolve; });
+      beforeList = async () => { if (++arrive === 2) release(); await barrier; };
+      const replies = await Promise.all([post(), post()]);
+      assert.ok(replies.some(reply => reply.body.transferConfirmed)); assert.equal(calls.length, 1);
+    });
+    await t.test("payment-list recovery markers are valid and never enable release controls", async () => {
+      reset();
+      const list = async () => {
+        const response = await api.GET(new Request("https://tuveloz.invalid/api/stripe/admin/payments"));
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        const data = await response.json(); assert.equal(validStripePayments(data.payments), true);
+        assert.equal(data.payments[0].canRelease, false); return data.payments[0];
+      };
+      assert.equal((await list()).transferAttemptStatus, null);
+      loseReply = true; await post(); assert.equal((await list()).transferAttemptStatus, "transfer_submission_unconfirmed");
+      await post("check_transfer"); assert.equal((await list()).transferAttemptStatus, "transfer_recorded");
+    });
+  } finally {
+    globalThis.fetch = originalFetch; database?.close(); delete globalThis.__transferRecovery;
+    assert.ok(scratch.startsWith(temp + (process.platform === "win32" ? "\\" : "/")));
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
