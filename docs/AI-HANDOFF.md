@@ -109,10 +109,12 @@ stored in the immutable record. Missing or stale presentations fail closed;
 historical customer/provider evidence stays intact. PR #273 is published and
 independently verified as `152639cd`; PR #272's policy-page release is also
 complete. Separate request-scope/privacy and provider-selection consent is now
-implemented and locally tested on `review/customer-request-selection-consent-20261001`,
-with new language-specific versions and preserved legacy readers. It is a
-publication candidate, not live. See the newest LOG entry for evidence and
-remaining approval/checks. All launch/payment locks stay closed.
+published in PR #274 as `2c455a5`, with new EN/ES versions and preserved legacy
+readers. All 914 tests, 26 isolated mobile scenarios, required PR/production
+checks and 33 independent live HTTP checks passed. This release is complete;
+do not repeat publication. See the newest LOG entry and OPEN-ITEMS for the
+separate private request-control recovery follow-up and remaining launch
+decisions. All launch/payment locks stay closed.
 
 ## Current launch state
 
