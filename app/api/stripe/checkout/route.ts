@@ -20,9 +20,8 @@ import { hostedPaymentDisclosure } from "../../../../lib/payment-merchant";
 import { isLaborOnlyPartsSource } from "../../../../lib/service-matching";
 import {
   CUSTOMER_CHECKOUT_AGREEMENT_KEY,
-  CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
-  CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE,
-  CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
+  customerCheckoutAgreementVersion,
+  customerCheckoutCancellationRefundSummary,
   customerCheckoutAcceptanceText,
   customerCheckoutAgreementEvidenceText,
   customerCheckoutAgreementHash,
@@ -33,7 +32,12 @@ import {
   customerAcceptanceDeviceContext,
   requestIpAddress,
 } from "../../../../lib/customer-job-scope";
-import { customerAcceptanceBundleIsReleasedForPurpose } from "../../../../lib/customer-policy-acceptance";
+import {
+  customerAcceptanceBundleIsReleasedForPurpose,
+  customerPolicyPresentationIsReleased,
+  customerPolicyPresentationEvidence,
+  type CustomerPolicyLanguage,
+} from "../../../../lib/customer-policy-acceptance";
 import {
   getStripeClient,
   retrieveRecipientAccountStatus,
@@ -74,10 +78,12 @@ function checkoutLanguageProblem(language: unknown) {
       error: "Choose English or Spanish before continuing to payment.",
     };
   }
-  if (language !== CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE) {
+  if (!customerPolicyPresentationIsReleased("checkout", language)) {
     return {
       code: "CHECKOUT_LANGUAGE_UNAVAILABLE",
-      error: "El pago en español aún no está disponible. Si necesitas ayuda, escribe a hello@tuveloz.com.",
+      error: language === "es"
+        ? "No pudimos cargar los acuerdos de pago vigentes en español. Vuelve a revisar la cotización o escribe a hello@tuveloz.com."
+        : "We couldn’t load the current payment agreements in English. Check your quote again or contact hello@tuveloz.com.",
     };
   }
   return null;
@@ -337,7 +343,7 @@ async function checkoutAcceptanceScopeFor(
   };
 }
 
-async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection) {
+async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection, language: CustomerPolicyLanguage) {
   const [scopeRecord] = await getDb().select({
     version: jobScopeVersions.version,
     serviceCodes: jobScopeVersions.serviceCodes,
@@ -354,11 +360,13 @@ async function currentCheckoutAcceptance(selection: AcceptedQuoteSelection) {
   if (!scope) return null;
   return {
     agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
-    agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
-    language: CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE,
-    agreementHash: await customerCheckoutAgreementHash(scope),
-    presentedText: customerCheckoutAcceptanceText(scope),
-    cancellationRefundSummary: CUSTOMER_CHECKOUT_CANCELLATION_REFUND_SUMMARY,
+    agreementVersion: customerCheckoutAgreementVersion(language),
+    language,
+    agreementHash: await customerCheckoutAgreementHash(scope, language),
+    agreementText: customerCheckoutAgreementEvidenceText(scope, language),
+    policyRelease: customerPolicyPresentationEvidence("checkout", language),
+    presentedText: customerCheckoutAcceptanceText(scope, language),
+    cancellationRefundSummary: customerCheckoutCancellationRefundSummary(language),
     scope,
   };
 }
@@ -458,7 +466,9 @@ export async function GET(request: Request) {
       payment: publicPaymentSummary(await latestQuotePayment(quoteId)),
     }, { headers: PRIVATE_NO_STORE_HEADERS });
   }
-  const checkoutAcceptance = await currentCheckoutAcceptance(selection);
+  const checkoutAcceptance = await currentCheckoutAcceptance(
+    selection, searchParams.get("language") as CustomerPolicyLanguage,
+  );
   if (!checkoutAcceptance) {
     return Response.json({
       checkoutAllowed: false,
@@ -551,6 +561,7 @@ export async function POST(request: Request) {
       headers: PRIVATE_NO_STORE_HEADERS,
     });
   }
+  const checkoutLanguage = body.language as CustomerPolicyLanguage;
   if (!policyAccepted(body.policyAccepted)) {
     return Response.json(
       { error: "You must be 18 or older and accept the Terms, Customer Agreement, and Payment Policy before checkout." },
@@ -797,11 +808,11 @@ export async function POST(request: Request) {
         }, { status: 409, headers: { "cache-control": "no-store" } });
       }
       const expectedCheckoutAgreementHash = await customerCheckoutAgreementHash(
-        checkoutAcceptanceScope,
+        checkoutAcceptanceScope, checkoutLanguage,
       );
       if (
         clean(body.checkoutAgreementKey, 100) !== CUSTOMER_CHECKOUT_AGREEMENT_KEY
-        || clean(body.checkoutAgreementVersion, 300) !== CUSTOMER_CHECKOUT_AGREEMENT_VERSION
+        || clean(body.checkoutAgreementVersion, 300) !== customerCheckoutAgreementVersion(checkoutLanguage)
         || clean(body.checkoutAgreementHash, 64).toLowerCase()
           !== expectedCheckoutAgreementHash
       ) {
@@ -910,13 +921,13 @@ export async function POST(request: Request) {
       ];
 
       const checkoutAgreementText = customerCheckoutAgreementEvidenceText(
-        checkoutAcceptanceScope,
+        checkoutAcceptanceScope, checkoutLanguage,
       );
       const checkoutAgreementHash = await customerCheckoutAgreementHash(
-        checkoutAcceptanceScope,
+        checkoutAcceptanceScope, checkoutLanguage,
       );
       const checkoutScopeSnapshot = customerCheckoutScopeSnapshot(
-        checkoutAcceptanceScope,
+        checkoutAcceptanceScope, checkoutLanguage,
       );
       const acceptanceAccountSession = await getAccountSession(request);
       const acceptanceSessionId = acceptanceAccountSession?.role === "customer"
@@ -932,7 +943,7 @@ export async function POST(request: Request) {
         scopeVersion: checkoutAcceptanceScope.scopeVersion,
         scopeSnapshot: checkoutScopeSnapshot,
         agreementKey: CUSTOMER_CHECKOUT_AGREEMENT_KEY,
-        agreementVersion: CUSTOMER_CHECKOUT_AGREEMENT_VERSION,
+        agreementVersion: customerCheckoutAgreementVersion(checkoutLanguage),
         agreementHash: checkoutAgreementHash,
         agreementText: checkoutAgreementText,
         acceptedByName: checkoutAcceptedByName,
@@ -950,7 +961,7 @@ export async function POST(request: Request) {
           eq(customerAgreementAcceptances.quoteId, selection.quoteId),
           eq(customerAgreementAcceptances.scopeVersion, checkoutAcceptanceScope.scopeVersion),
           eq(customerAgreementAcceptances.agreementKey, CUSTOMER_CHECKOUT_AGREEMENT_KEY),
-          eq(customerAgreementAcceptances.agreementVersion, CUSTOMER_CHECKOUT_AGREEMENT_VERSION),
+          eq(customerAgreementAcceptances.agreementVersion, customerCheckoutAgreementVersion(checkoutLanguage)),
         ))
         .limit(1);
       if (

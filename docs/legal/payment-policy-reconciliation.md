@@ -1,6 +1,6 @@
 # Payment wording and acceptance review
 
-- **Status:** owner-approved policies published in PR #272; exact bilingual customer consent and launch review remain
+- **Status:** owner-approved policies published in PR #272; bilingual checkout consent implemented locally, publication and launch review remain
 - **Owner:** hello@tuveloz.com
 - **Last reviewed:** 2026-09-30
 - **Applies to:** proposed labor-only quote checkout, Montgomery County launch
@@ -11,7 +11,33 @@ It preserves the existing service-provider relationship, 5%
 Customer Service Fee and closed marketplace. The policy release is recorded below. No existing acceptance record, charge
 or launch decision was changed.
 
-## September 30 approved publication
+## September 30 bilingual checkout implementation — not published
+
+The next scoped change implements the complete Spanish authorization below and
+the matching English merchant sentence. It reuses PR #272's published policies;
+no legal page, policy release, provider acceptance, or launch switch is edited.
+New consent uses `checkout:6|lang:en` or `checkout:6|lang:es`, with the existing
+policy bundle prefix. Language-specific immutable keys preserve historical
+records. The customer presentation records each released document's language,
+title and URL, and the Spanish release identifier, effective date, English hash
+and translation hash. Missing, stale or future translations fail closed.
+
+The checkbox and downloaded authorization contain the exact server text. The
+download also includes the full evidence string and hash used by the immutable
+database record. Reading linked policies opens a separate tab to preserve the
+quote. Language changes and failed, stale or incomplete responses clear consent;
+they cannot reuse an earlier checkout redirect. Provider-supplied names and
+warranties remain literal in both languages.
+
+Validation evidence is recorded in LOG. Publication approval remains separate:
+this advances the exact authorization version and makes reviewed Spanish
+authorization available only behind all existing closed launch/payment gates.
+It does not establish a real provider, a live transaction, receipt-language
+propagation, settlement, or any outstanding legal/coverage/tax approval.
+Earlier references below to an unfinished implementation describe the published
+PR #271/#272 baseline, not work to repeat on this branch.
+
+## September 30 approved policy publication
 
 The review branch now contains the concrete updates to Terms sections 3 and 7,
 Customer Agreement section 7, and Payment Policy introduction and sections 3–6

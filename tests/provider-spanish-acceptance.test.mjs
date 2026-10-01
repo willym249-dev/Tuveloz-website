@@ -57,7 +57,7 @@ test("each Spanish policy release pins its complete source and English version",
   }
 });
 
-test("the complete customer translation preserves paragraphs and routes without enabling checkout consent", () => {
+test("the complete customer translation preserves paragraphs and routes independently of launch approval", () => {
   const { default: customer } = load("./lib/policy-spanish/customer-agreement");
   const english = read("app/customer-agreement/page.tsx");
   assert.equal((customer.html.match(/<section>/g) ?? []).length, 11);
@@ -73,7 +73,7 @@ test("the complete customer translation preserves paragraphs and routes without 
   const { pathHasSpanish, englishPathFor } = load("./lib/spanish-routes");
   assert.equal(pathHasSpanish("/customer-agreement"), true);
   assert.equal(englishPathFor("/es/customer-agreement"), "/customer-agreement");
-  assert.equal(load("./lib/customer-checkout-acceptance").CUSTOMER_CHECKOUT_PRESENTATION_LANGUAGE, "en");
+  assert.equal(load("./lib/launch-status").CUSTOMER_JOB_POSTING_PAUSED, true);
 });
 
 test("Spanish evidence contains the displayed text and exact translation, while English keeps its existing envelope", async () => {

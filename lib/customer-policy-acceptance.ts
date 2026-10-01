@@ -5,6 +5,7 @@ import {
   TERMS_VERSION,
 } from "./policies";
 import { policyDocumentRelease } from "./policy-release-manifest";
+import spanishReleases from "../config/policy-spanish-releases.json";
 
 export const CUSTOMER_POLICY_RELEASE_SCHEMA_VERSION = "1";
 
@@ -109,5 +110,74 @@ export function customerPolicyReleaseEvidence(
       releaseId: document.releaseId,
       canonicalBodyHash: document.canonicalBodyHash,
     })),
+  };
+}
+
+export type CustomerPolicyLanguage = "en" | "es";
+
+const SPANISH_TITLES = {
+  terms: "Términos de uso",
+  customer_agreement: "Acuerdo del cliente",
+  privacy: "Política de privacidad",
+  payment_policy: "Política de pagos, cancelaciones y reembolsos",
+} as const;
+
+export function customerPolicyTranslationIsCurrent(
+  document: CustomerAcceptanceDocument,
+  translation: unknown,
+  asOf = new Date(),
+) {
+  if (!translation || typeof translation !== "object") return false;
+  const value = translation as Record<string, unknown>;
+  return customerAcceptanceDocumentIsReleased(document, asOf)
+    && value.englishBodyHash === document.canonicalBodyHash
+    && typeof value.translationBodyHash === "string"
+    && SHA256_HEX.test(value.translationBodyHash)
+    && typeof value.releaseId === "string" && Boolean(value.releaseId.trim())
+    && typeof value.effectiveAt === "string"
+    && Number.isFinite(Date.parse(value.effectiveAt))
+    && Date.parse(value.effectiveAt) <= asOf.getTime();
+}
+
+export function customerPolicyPresentationIsReleased(
+  purpose: CustomerAcceptancePurpose,
+  language: CustomerPolicyLanguage,
+  asOf = new Date(),
+) {
+  return (language === "en" || language === "es")
+    && customerAcceptanceBundleIsReleasedForPurpose(purpose, asOf)
+    && (language === "en" || customerAcceptanceDocumentsForPurpose(purpose).every(document => (
+      customerPolicyTranslationIsCurrent(document, spanishReleases[document.key], asOf)
+    )));
+}
+
+// A new presentation envelope for checkout only. Leave the original evidence
+// helper unchanged so request/selection and historical records are not relabeled.
+export function customerPolicyPresentationEvidence(
+  purpose: CustomerAcceptancePurpose,
+  language: CustomerPolicyLanguage,
+) {
+  if (!customerPolicyPresentationIsReleased(purpose, language)) {
+    throw new Error("Customer policy presentation is not current.");
+  }
+  const original = customerPolicyReleaseEvidence(purpose);
+  return {
+    ...original,
+    schemaVersion: "2",
+    language,
+    documents: original.documents.map(document => {
+      const translation = spanishReleases[document.key];
+      return {
+        ...document,
+        title: language === "es" ? SPANISH_TITLES[document.key] : document.title,
+        href: language === "es" ? `/es${document.href}` : document.href,
+        ...(language === "es" ? { translation: {
+          releaseId: translation.releaseId,
+          effectiveAt: translation.effectiveAt,
+          englishBodyHash: translation.englishBodyHash,
+          translationBodyHash: translation.translationBodyHash,
+        } } : {}),
+      };
+    }),
   };
 }

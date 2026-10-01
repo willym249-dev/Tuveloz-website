@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "../../lib/launch-status";
 import { PAYMENT_MERCHANT_DISCLOSURE } from "../../lib/payment-merchant";
+import type { customerPolicyPresentationEvidence } from "../../lib/customer-policy-acceptance";
 import { useSiteLanguage, type SiteLanguage } from "./site-language";
 
 type PaymentSummary = {
@@ -21,6 +22,8 @@ type CheckoutAcceptance = {
   agreementKey: string;
   agreementVersion: string;
   agreementHash: string;
+  agreementText: string;
+  policyRelease: ReturnType<typeof customerPolicyPresentationEvidence>;
   presentedText: string;
   cancellationRefundSummary: string;
   scope: {
@@ -156,7 +159,13 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
         };
         if (controller.signal.aborted) return;
         if (!response.ok) throw new Error(result.error || "Unable to check payment readiness.");
-        if (result.checkoutAcceptance && result.checkoutAcceptance.language !== language) {
+        if (result.checkoutAcceptance && (
+          result.checkoutAcceptance.language !== language
+          || result.checkoutAcceptance.policyRelease?.language !== language
+          || !Array.isArray(result.checkoutAcceptance.policyRelease?.documents)
+          || result.checkoutAcceptance.policyRelease.documents.length !== 3
+          || !result.checkoutAcceptance.agreementText
+        )) {
           throw new Error(language === "es"
             ? "No pudimos cargar el acuerdo de pago en español. Vuelve a intentarlo."
             : "We couldn’t load the payment agreement in English. Please try again.");
@@ -395,13 +404,17 @@ function QuoteCheckout({ accessToken, quote, language, onRetry }: QuotePaymentCa
                   {checkoutAcceptance.presentedText}
                 </span>
               </label>
-              <p className="admin-note">
-                <Link href="/terms">Terms of Use</Link>{" · "}
-                <Link href="/customer-agreement">Customer Agreement</Link>{" · "}
-                <Link href="/payments">Payment, Cancellation and Refund Policy</Link>
+              <p className="admin-note" data-manual-language lang={checkoutAcceptance.language}>
+                {checkoutAcceptance.policyRelease.documents.map((document, index) => (
+                  <span key={document.key}>
+                    {index > 0 && " · "}
+                    {/* Native navigation also serves the complete Spanish legal pages. */}
+                    <a href={document.href} target="_blank" rel="noopener noreferrer">{document.title}</a>
+                  </span>
+                ))}
               </p>
-              <button className="button secondary" onClick={downloadAcceptance} type="button">
-                Download this exact authorization
+              <button className="button secondary" onClick={downloadAcceptance} type="button" data-manual-language lang={language}>
+                {language === "es" ? "Descargar esta autorización exacta" : "Download this exact authorization"}
               </button>
             </>
           ) : (

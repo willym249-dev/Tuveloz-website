@@ -11,6 +11,47 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - Bilingual checkout consent implemented and locally verified
+
+Continued from the verified PR #272 release without repeating its publication.
+Remote main remains `e6fceca7`; no open PR or concurrent change was found. The
+new branch `review/bilingual-checkout-consent-20260930` preserves the two local
+release-record commits and adds exact customer checkout consent in English and
+Spanish. Nothing from this branch is deployed yet.
+
+New `checkout:6|lang:en` / `checkout:6|lang:es` evidence uses the published policy
+bundle, exact translated URLs/titles and Spanish release IDs, dates and paired
+hashes. Missing/stale/future translations fail closed. The approved merchant
+sentence is included in both complete authorizations. Provider names, IDs,
+scope, amounts and warranty text stay literal. The checkbox, download and stored
+evidence agree; the download now includes the full stored evidence string/hash.
+Policy links preserve the quote in a separate tab. A partial/stale response
+shows a retry instead of crashing the card or enabling payment.
+
+Validation: production build and all **903 tests pass**; **48 mobile Chromium/
+WebKit scenarios pass**, including both warranty branches in both languages,
+exact accessible checkbox text/download/hash/POST equality, translated links,
+in-flight language changes, malformed presentation recovery and existing timeout
+and retry safeguards. TypeScript passes; lint has only its existing navigation
+warning. The real checkout route's acceptance insert/reread executes against
+the actual SQLite migration and unique index: EN/ES records coexist, retries
+preserve IDs/timestamps/evidence, a frozen published-v5 fixture remains intact,
+and a conflicting record is rejected without overwrite. All data are synthetic;
+the database test stops on an already-paid synthetic record before any Stripe
+session operation. No external payment, account, email or provider record exists.
+
+Evidence: ignored `outputs/bilingual-checkout-{tests,browser,typecheck,lint}-20260930.log`;
+tracked `tests/fixtures/customer-checkout-v5-en.json` identifies its published
+source commit. A test-fixture initialization ordering error was corrected before
+the successful suite. No production error or failed deployment occurred.
+
+Next: required GitHub checks, owner publication approval for the new exact
+authorization version, then normal deployment and independent verification.
+The published policy pages/provider acceptance logic and all launch/live-payment
+locks are unchanged. Full-refund allocation and payment timing are settled;
+do not ask them again. Remaining launch reviews, genuine provider evidence,
+receipt-language experiment and production settlement are still separate.
+
 ## 2026-09-30 - PR #272 published and independently verified
 
 The owner-approved English/Spanish policy update is live as `e6fceca7aaf93553e54c3fac25c4828ae8483084`.
