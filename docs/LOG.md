@@ -43,7 +43,12 @@ session operation. No external payment, account, email or provider record exists
 Evidence: ignored `outputs/bilingual-checkout-{tests,browser,typecheck,lint}-20260930.log`;
 tracked `tests/fixtures/customer-checkout-v5-en.json` identifies its published
 source commit. A test-fixture initialization ordering error was corrected before
-the successful suite. No production error or failed deployment occurred.
+the successful suite. GitHub's first rehearsal then caught a test-only Node
+version difference: its pinned 22.13 runtime lacks `setReturnArrays`, available
+in local Node 24. The acceptance test now uses the repository's compatible
+object-to-array adapter and rethrows unexpected fixture errors for clear
+diagnostics. Application code did not change for this correction. Required
+checks must pass on the corrected PR #273 head before publication.
 
 Next: required GitHub checks, owner publication approval for the new exact
 authorization version, then normal deployment and independent verification.

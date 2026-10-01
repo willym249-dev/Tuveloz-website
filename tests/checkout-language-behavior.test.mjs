@@ -41,8 +41,11 @@ function harness({ open = true, payment = null, signedIn = false, presentationAv
   }
   const acceptanceDb = sqlite ? drizzle(async (sql, params, method) => {
     const statement = sqlite.prepare(sql);
-    statement.setReturnArrays(true);
-    return { rows: method === "run" ? (statement.run(...params), []) : statement.all(...params) };
+    // CI supports Node 22.13, which does not have setReturnArrays. These
+    // acceptance-only queries have unique columns and need no join aliases.
+    if (method === "run") { statement.run(...params); return { rows: [] }; }
+    return { rows: method === "get" ? Object.values(statement.get(...params) ?? {})
+      : statement.all(...params).map(row => Object.values(row)) };
   }) : null;
   const calls = { reads: 0, stripe: 0, writes: 0 };
   const selection = {
@@ -123,7 +126,7 @@ function harness({ open = true, payment = null, signedIn = false, presentationAv
     evaluateStageEligibility: async () => ({ allowed: true, decisionId: "synthetic-decision", validThrough: "2999-01-01" }),
     hostedCustomerServiceFeeText: () => ({ name: "Synthetic fee" }),
     requestIpAddress: () => "127.0.0.1", customerAcceptanceDeviceContext: () => "Synthetic local test",
-    stripeErrorResponse: () => Response.json({ code: "UNEXPECTED_STRIPE_PATH" }, { status: 500 }),
+    stripeErrorResponse: error => { throw error; },
   };
   const source = readFileSync(new URL("app/api/stripe/checkout/route.ts", root), "utf8");
   const compiled = ts.transpileModule(source, {
