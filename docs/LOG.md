@@ -11,6 +11,44 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-09-30 - PR #273 published and independently verified
+
+The owner said "continue" after the concrete publication request and prepared
+PR #273 summary. Continued with that prepared release after all required checks
+passed on `1eaca2896f4ec23c93dfdb45b9c99da075527ce3`: Verify Tuveloz
+`36803681406` (both jobs), and the deployment rehearsal `36803681570`.
+The full verification includes all 903 regressions, migration/build/security
+checks and the required browser suites, including 48 checkout cases. The earlier
+Node 22.13 test-adapter failure is corrected; no application code changed for it.
+
+PR #273 merged at `2026-10-01T02:16:55Z` as
+`152639cdd7c12e2bb218be6a4c95d0b300b370d4`. Automatic production workflow
+`36805092363` completed successfully in all three jobs. Independent verification
+at `2026-10-01T02:35:45.175Z` passed **23 live HTTP checks**: exact release,
+healthy application/database/schema, six EN/ES account/home surfaces, six policy
+pages with canonical URLs and released wording, private APIs, and closed checkout
+for English, Spanish and missing language. No account, application or payment
+was created. Live checkout interaction remains deliberately unavailable; exact
+consent behavior has isolated route/SQLite and 48 browser-scenario evidence.
+No launch/payment lock changed. Do not repeat this merge or deployment.
+
+Evidence: task outputs `pr273-merged-release-20260930.json`,
+`pr273-production-release-20260930.json`, `pr273-live-release-20260930.json`,
+and the repository's ignored final verification/production watch logs.
+The new checkout version is published. This does not mark the whole marketplace
+ready: the separate request-scope/privacy and provider-selection helpers still
+need exact language-bound consent before customer jobs open. That source finding
+and the specific unchanged paths are recorded in the existing payment review
+and OPEN-ITEMS. Keep old records intact; do not repeat the completed provider
+translations, PR #272 policies or PR #273 checkout integration.
+
+The business-mail follow-up could not be refreshed: browser inventory exposes
+only the empty in-app/MCP surfaces, with no connected Chrome tab; the Gmail
+connector profile still identifies the personal account. No inbox was searched,
+no email was sent and no new login was initiated. Prior county/broker inquiries
+and completed business-email setup remain intact; a missing current connection
+does not mean the business mailbox is broken.
+
 ## 2026-09-30 - Bilingual checkout consent implemented and locally verified
 
 Continued from the verified PR #272 release without repeating its publication.
