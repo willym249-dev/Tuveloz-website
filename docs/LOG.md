@@ -11,6 +11,40 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-02 - Receipt language preparation repair
+
+Source review found that Checkout received the selected `locale` while Stripe
+Customers had no corresponding `preferred_locales`. Stripe's current
+[customer localization guidance](https://docs.stripe.com/billing/customer#localization)
+documents that separate email/PDF setting. The local repair sets and confirms
+that preference before creating a new Checkout Session.
+
+Signed-in customers retain the existing verified account mapping and saved-card
+option. Guest/token-only payments use a separate payment-scoped Customer and
+never look up saved cards by email or write an account mapping. Stable customer
+creation parameters and a payment-scoped idempotency key permit retry after an
+interrupted preference update. Every new mutation checks the existing runtime
+checkout gates; a final recheck still precedes opening Checkout. Failure or a
+mismatched Stripe response prevents session creation. No fee, policy, migration,
+package, invoice creation feature or launch-control setting changed.
+
+The actual customer-preparation/session-creation route segment reproduced the
+missing preference for English/Spanish account and guest flows before repair.
+Sixteen isolated behavior cases now pass, including guest isolation, retries,
+update failures and a pause arriving during preparation. The complete local
+production build and all 948 tests pass; TypeScript and lint pass with one
+unchanged language-navigation warning. Earlier sandbox esbuild access errors
+were resolved with approved normal filesystem access, not a code workaround.
+The existing saved-card source assertion now follows the new receipt binding.
+
+This proves request preparation with synthetic clients, not actual Stripe
+receipt rendering or inbox delivery. Hosted receipt-language confirmation is
+still required. Existing open sessions retain their original presentation;
+the repair does not resend receipts or rewrite historical payments. Required
+GitHub checks and publication remain pending at this entry. Prior local
+refund/mailbox notes are preserved on `review/payment-case-proposal-20261001`;
+they are not included in this repair branch.
+
 ## 2026-10-01 - Verification runner mirror repair candidate
 
 PR #276 is already published as `2e19545`. Its first production verification

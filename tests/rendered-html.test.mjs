@@ -890,7 +890,8 @@ test("customer payment methods use Stripe-hosted setup without storing card secr
   assert.ok(checkoutSource.includes("getOrCreateStripeCustomer"));
   assert.ok(checkoutSource.includes("saved_payment_method_options"));
   assert.ok(checkoutSource.includes('payment_method_save: "enabled"'));
-  assert.ok(checkoutSource.includes("customer: stripeCustomerId"));
+  assert.ok(checkoutSource.includes("accountCustomerId: stripeCustomerId"));
+  assert.ok(checkoutSource.includes("customer: receiptCustomerId"));
   assert.ok(customerHelperSource.includes("idempotencyKey"));
   assert.ok(customerHelperSource.includes("stripeCustomerIdForEmail"));
   assert.ok(schemaSource.includes("export const stripeCustomers = sqliteTable"));

@@ -45,6 +45,7 @@ import {
   stripeErrorResponse,
 } from "../../../../lib/stripe";
 import { getOrCreateStripeCustomer } from "../../../../lib/stripe-customers";
+import { prepareCheckoutReceiptCustomer } from "../../../../lib/stripe-checkout-receipts";
 import { publicPaymentSummary } from "../../../../lib/stripe-payments";
 import {
   CHECKOUT_POLICY_BUNDLE_VERSION,
@@ -1190,6 +1191,15 @@ export async function POST(request: Request) {
       nowSeconds + (24 * 60 * 60),
     );
 
+    const receiptCustomerId = await prepareCheckoutReceiptCustomer(stripeClient, {
+      accountCustomerId: stripeCustomerId,
+      customerEmail,
+      paymentId,
+      language: checkoutLanguage,
+    });
+    if (!(await runtimeMarketplaceActionAllowed("checkout"))) {
+      return marketplacePausedResponse();
+    }
     const checkoutSession = await stripeClient.checkout.sessions.create(
       {
         line_items: lineItems,
@@ -1199,14 +1209,14 @@ export async function POST(request: Request) {
         mode: "payment",
         expires_at: checkoutExpiresAt,
         payment_method_types: ["card"],
+        customer: receiptCustomerId,
         ...(stripeCustomerId
           ? {
-              customer: stripeCustomerId,
               saved_payment_method_options: {
                 payment_method_save: "enabled" as const,
               },
             }
-          : { customer_email: customerEmail }),
+          : {}),
         success_url: `${rootUrl}/success?session_id={CHECKOUT_SESSION_ID}&lang=${body.language === "es" ? "es" : "en"}`,
         cancel_url: `${rootUrl}/success?canceled=1&lang=${body.language === "es" ? "es" : "en"}`,
       },
