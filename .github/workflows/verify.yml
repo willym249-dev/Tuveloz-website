@@ -45,6 +45,17 @@ jobs:
           node-version: 22.13.0
           cache: npm
 
+      # The Azure mirror stalled package downloads for nearly eight minutes
+      # in run 36883790261. Keep Ubuntu's suites, keyring and signature checks;
+      # change only the mirror on this disposable runner, before apt is used.
+      - name: Use Ubuntu primary archive for browser dependencies
+        run: |
+          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+            if [ -f "$source" ]; then
+              sudo sed -Ei 's@https?://azure[.]archive[.]ubuntu[.]com/ubuntu([/[:space:]]|$)@https://archive.ubuntu.com/ubuntu\1@g' "$source"
+            fi
+          done
+
       - name: Install dependencies and Chromium
         run: |
           npm ci
@@ -75,6 +86,15 @@ jobs:
 
       - name: Check dependencies for high and critical security advisories
         run: npm run security:check
+
+      # Match the isolated account job without changing repositories or trust.
+      - name: Use Ubuntu primary archive for browser dependencies
+        run: |
+          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+            if [ -f "$source" ]; then
+              sudo sed -Ei 's@https?://azure[.]archive[.]ubuntu[.]com/ubuntu([/[:space:]]|$)@https://archive.ubuntu.com/ubuntu\1@g' "$source"
+            fi
+          done
 
       - name: Install browsers for Spanish coverage and document uploads
         run: npx playwright install --with-deps chromium webkit
