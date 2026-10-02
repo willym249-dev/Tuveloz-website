@@ -11,6 +11,29 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-01 - Verification runner mirror repair candidate
+
+PR #276 is already published as `2e19545`. Its first production verification
+attempt exhausted the 25-minute limit after browser dependency installation
+took 8 minutes 24 seconds. The public log shows repeated Azure Ubuntu mirror
+retries: apt fetched 125 MB in 7 minutes 50 seconds; browser binaries then
+downloaded in roughly 13 seconds. A same-commit retry completed the release.
+
+This candidate changes only the disposable verification runners' exact Azure
+Ubuntu mirror URL to the primary HTTPS Ubuntu archive. Suites, components,
+signing keyrings, other package sources, job names, permissions, timeouts and
+all prior checks remain unchanged. No production deployment logic, website,
+policy, launch control or package version changes. Ubuntu's
+[package guidance](https://ubuntu.com/server/docs/package-management/) documents
+the primary archive and its [integrity guidance](https://documentation.ubuntu.com/security/software-integrity/archive-verification/)
+describes the retained archive-signature verification.
+
+Local YAML comparison preserves all 44 prior steps exactly. GNU sed fixtures
+verify exact-host replacement, preservation of security/signing sources and
+unrelated hosts, and idempotence; Bash syntax and diff checks pass. Hosted
+installation and the complete GitHub checks remain pending at this entry.
+No speed guarantee or additional package/cache is introduced.
+
 ## 2026-10-01 - Provider transfer recovery candidate
 
 Isolated tests reproduced three defects after PR #275: a lost Stripe reply
