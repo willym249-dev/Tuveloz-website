@@ -11,6 +11,38 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Pinned build dependency depth protection
+
+PR #279's security gate found GHSA-vfj7-8cjw-p6xm in the transitive build/lint
+dependency braces 3.0.3. The npm registry still has no patched release. Added
+a private local copy from the integrity-verified 3.0.3 archive with only the
+six runtime-file changes proposed in upstream PR #72 at immutable commit
+d0d575e55e74a4e0218e5248fafb79efc3e54ebb. That proposal is not merged or
+maintainer-released; Tuveloz maintains this temporary copy. Original version
+and MIT license remain. Source provenance and replacement instructions live
+in vendor/braces/TUVELOZ-PATCH.md; no other dependency changed.
+
+The patch caps parser and direct-AST recursion at 100. A bounded-stack run of
+the original package reproduced compile/expand stack exhaustion; the patched
+copy rejects deep inputs before recursion, while ordinary matching and allowed
+boundary patterns pass. The root override routes all installed consumers to
+the checked-in source. npm audit does not inspect local package source, so the
+existing security command now requires pinned hashes, consumer resolution,
+lock constraints and six executable regression groups before the unchanged
+high-severity audit. No advisory ignore or reduced threshold was added.
+
+A fresh independent npm ci succeeded. Production build and all 961 tests,
+security checks, TypeScript and lint pass locally (one existing site-language
+warning). An initial relative-link install failed and was replaced by the
+root dependency reference before the clean successful install. The original
+worktree's dependency directory was preserved. Required GitHub checks and
+production verification are still pending at this entry. This changes build
+dependencies and the already documented cancellation rehearsal repair only;
+no real transaction, schema, policy or launch/payment switch changed.
+
+Review the upstream replacement again by October 17; do not remove the local
+source checks until a reviewed official replacement passes the full suite.
+
 ## 2026-10-03 - Atomic cancellation rehearsal decisions
 
 Reproduced two defects in the persisted-test cancellation route: a competing
