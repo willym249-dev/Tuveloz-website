@@ -1,6 +1,6 @@
 # Local braces security patch
 
-This is the MIT-licensed `braces@3.0.3` source with the six runtime-file changes
+This is the MIT-licensed `braces@3.0.3` source with the five runtime-file changes
 proposed in [upstream PR #72](https://github.com/micromatch/braces/pull/72),
 commit `d0d575e55e74a4e0218e5248fafb79efc3e54ebb`. That proposal is **not merged
 or released by the maintainer** as of October 3, 2026. This private local copy

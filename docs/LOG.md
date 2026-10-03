@@ -11,6 +11,14 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Dependency patch file-count clarification
+
+The provenance comparison confirms five changed runtime library files plus
+separate package metadata changes. The prior entry's count of six runtime
+files was incorrect. index.js, lib/utils.js and LICENSE are unchanged from the
+verified npm archive. The patch README and PR description now use the verified
+count; implementation and tests are unchanged.
+
 ## 2026-10-03 - Explicit private fork identity for the dependency patch
 
 The first hosted run passed all six patch integrity/behavior groups, but npm
