@@ -11,6 +11,24 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Explicit private fork identity for the dependency patch
+
+The first hosted run passed all six patch integrity/behavior groups, but npm
+10.9.2 still flagged the unchanged upstream name/version; local npm 12 had
+omitted that local package. Both audits use package metadata, not source
+analysis. Corrected the private copy's identity to
+@tuveloz/braces@3.0.3-tuveloz.1 and its repository links. The original API alias,
+authors, MIT license, upstream archive/version and exact runtime patch remain;
+the provenance hash explicitly records the metadata change. This is a local
+fork, not an official upstream fixed release or an advisory suppression.
+
+Downloaded the exact official npm 10.9.2 into the private test-output folder
+without replacing the machine's npm. A fresh independent install, all six
+source/resolution/behavior checks and its unchanged high-severity audit pass.
+Unrelated lockfile metadata rewrites were excluded. The earlier 961-test/build
+result covers the identical runtime code; required GitHub application checks
+will validate the final fork metadata before merge and deployment.
+
 ## 2026-10-03 - Pinned build dependency depth protection
 
 PR #279's security gate found GHSA-vfj7-8cjw-p6xm in the transitive build/lint

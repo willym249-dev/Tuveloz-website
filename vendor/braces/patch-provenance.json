@@ -14,7 +14,7 @@
     },
     "package.json": {
       "upstreamSha256": "56f08b888a4f30dc7cf8a7dbb36ffe92b737912ba36abe9d069d32167c957ac7",
-      "patchedSha256": "9e522650264ca3d5bc8680a311426747dcd1894b3746be7a58f140e885f19f57"
+      "patchedSha256": "3691d377e55474fdc265d39d55b7f308d95e4abbad8ed9b463f60f3a358e3cdd"
     },
     "lib/compile.js": {
       "upstreamSha256": "dc98f22eee3d511785d92a00758d5f0d48efed5f5813bdecc2de430c529b5c9f",
@@ -40,5 +40,9 @@
       "upstreamSha256": "b5a7596aa67730412b3c029ef09e84e6b67b8e445cffd35d1d295549c89066c7",
       "patchedSha256": "b5a7596aa67730412b3c029ef09e84e6b67b8e445cffd35d1d295549c89066c7"
     }
+  },
+  "localPackage": {
+    "name": "@tuveloz/braces",
+    "version": "3.0.3-tuveloz.1"
   }
 }

@@ -21,7 +21,7 @@ test("braces local patch retains its reviewed source, license and private proven
   assert.deepEqual(Object.keys(manifest.files).sort(), actual);
   for (const [path, hashes] of Object.entries(manifest.files)) assert.equal(sha(join(vendor, path)), hashes.patchedSha256, path);
   const pkg = read(join(vendor, "package.json"));
-  assert.equal(pkg.name, "braces"); assert.equal(pkg.version, "3.0.3"); assert.equal(pkg.private, true);
+  assert.equal(pkg.name, "@tuveloz/braces"); assert.equal(pkg.version, "3.0.3-tuveloz.1"); assert.equal(pkg.private, true);
   assert.equal(pkg.scripts, undefined); assert.equal(pkg.devDependencies, undefined);
 });
 
@@ -45,7 +45,8 @@ test("every installed braces consumer resolves the pinned local patch", () => {
     assert.equal(realpathSync(consumer.resolve("braces")), target, path);
   }
   assert.ok(copies > 0 && consumers > 0, "the replacement must actually be in use");
-  assert.equal(lock.packages["vendor/braces"].version, "3.0.3");
+  assert.equal(lock.packages["vendor/braces"].name, "@tuveloz/braces");
+  assert.equal(lock.packages["vendor/braces"].version, "3.0.3-tuveloz.1");
 });
 
 test("deep brace and parenthesis patterns are rejected before stack exhaustion", () => {
