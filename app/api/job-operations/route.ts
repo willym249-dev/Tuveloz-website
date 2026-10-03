@@ -22,6 +22,7 @@ import {
 } from "../../../lib/account-auth";
 import { customerPriceFor } from "../../../lib/customer-fee";
 import { testRefundAllocation, testRefundCents, type TestRefundPrice } from "../../../lib/test-refund-allocation";
+import { saveTestCancellationDecision } from "../../../lib/test-cancellation-decision";
 import {
   CUSTOMER_COMPLETION_AGREEMENT_KEY,
   CUSTOMER_COMPLETION_AGREEMENT_VERSION,
@@ -1829,8 +1830,14 @@ export async function POST(request: Request) {
     if (!OPEN_CANCELLATION_STATUSES.includes(cancellation.status)) {
       return response({ error: "This cancellation was already decided." }, 409);
     }
+    const [[quote], changes] = await Promise.all([
+      db.select().from(providerQuotes).where(eq(providerQuotes.id, context.quoteId)).limit(1),
+      db.select().from(jobChangeOrders).where(and(eq(jobChangeOrders.requestId, requestId),
+        eq(jobChangeOrders.quoteId, context.quoteId), eq(jobChangeOrders.status, "authorized")))
+        .orderBy(desc(jobChangeOrders.proposedScopeVersion)).limit(1),
+    ]);
     const priceSnapshot = await authorizedTestRefundPrice(context);
-    if (!priceSnapshot) return response({ error: "The saved customer price needs review before a test cancellation decision." }, 409);
+    if (!priceSnapshot || !quote) return response({ error: "The saved customer price needs review before a test cancellation decision." }, 409);
     if (
       !["approve", "deny"].includes(decision)
       || decisionReason.length < 5
@@ -1843,58 +1850,14 @@ export async function POST(request: Request) {
     const allocation = decision === "approve"
       ? testRefundAllocation(priceSnapshot, proposedRefundCents, body.customerFeeRefundCents) : null;
     if (decision === "approve" && !allocation) return response({ error: "Full refunds must include the entire Customer Service Fee. For a partial test refund, record the fee amount explicitly within the saved price." }, 400);
-    let adjustmentId = "";
-    if (decision === "approve" && proposedRefundCents > 0) {
-      adjustmentId = crypto.randomUUID();
-      await db.insert(paymentAdjustments).values({
-        id: adjustmentId,
-        requestId,
-        quoteId: context.quoteId,
-        adjustmentType: "cancellation_refund",
-        amountCents: proposedRefundCents,
-        status: "approved_test_only",
-        reasonCode: cancellation.cancellationType,
-        details: JSON.stringify({ cancellationId, priceSnapshot, allocation, testOnly: true, stripeExecutionAllowed: false }),
-        requestedByRole: "owner",
-        requestedById: actor.email,
-        requestedAt: now,
-        decidedBy: actor.email,
-        decidedAt: now,
-        providerImpactCents: -(allocation?.providerRefundCents ?? 0),
-        customerImpactCents: proposedRefundCents,
-        idempotencyKey: await sha256JobOperationText(`test-cancellation-refund:${cancellationId}`),
-        createdAt: now,
-        updatedAt: now,
-      });
+    try {
+      const saved = await saveTestCancellationDecision({ context, cancellation, quote, changes, priceSnapshot, allocation,
+        decision: decision as "approve" | "deny", decisionReason, proposedRefundCents, retainedAmountCents, ownerEmail: actor.email, now });
+      if (!saved) return response({ error: "The cancellation or job changed. Refresh its saved records before deciding again." }, 409);
+    } catch {
+      return response({ error: "The cancellation decision could not be confirmed. Refresh its saved records before trying again." }, 503);
     }
     const nextStatus = decision === "approve" ? "approved_test_only" : "denied";
-    await db.update(jobCancellations).set({
-      status: nextStatus,
-      proposedRefundCents,
-      retainedAmountCents,
-      decisionBy: actor.email,
-      decisionAt: now,
-      decisionReason,
-      paymentAdjustmentId: adjustmentId,
-      updatedAt: now,
-    }).where(eq(jobCancellations.id, cancellation.id));
-    if (decision === "approve") {
-      await db.update(customerRequests).set({ status: "cancelled" })
-        .where(eq(customerRequests.id, requestId));
-    }
-    await appendJobLifecycleEvent({
-      requestId,
-      quoteId: context.quoteId,
-      providerId: context.providerId,
-      actorRole: "owner",
-      actorId: actor.email,
-      eventType: decision === "approve" ? "test_cancellation_approved" : "cancellation_denied",
-      fromStatus: context.requestStatus,
-      toStatus: decision === "approve" ? "cancelled" : context.requestStatus,
-      scopeVersion: context.scopeVersion,
-      reasonCode: cancellation.cancellationType,
-      details: { cancellationId, proposedRefundCents, retainedAmountCents, priceSnapshot, allocation, stripeExecutionAllowed: false },
-    });
     return response({ ok: true, status: nextStatus, stripeRefundCreated: false });
   }
 
