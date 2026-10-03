@@ -23,6 +23,7 @@ import {
 import { customerPriceFor } from "../../../lib/customer-fee";
 import { testRefundAllocation, testRefundCents, type TestRefundPrice } from "../../../lib/test-refund-allocation";
 import { saveTestCancellationDecision } from "../../../lib/test-cancellation-decision";
+import { saveTestRefundDecision, saveTestRefundRequest } from "../../../lib/test-refund-records";
 import {
   CUSTOMER_COMPLETION_AGREEMENT_KEY,
   CUSTOMER_COMPLETION_AGREEMENT_VERSION,
@@ -543,35 +544,25 @@ async function authorizedJobTotal(context: AssignedJobOperationContext) {
 
 // Simulation uses the accepted quote/scope price, never a client amount or a
 // newly chosen rate. Invoice/payout totals above remain provider subtotals.
-async function authorizedTestRefundPrice(context: AssignedJobOperationContext): Promise<TestRefundPrice | null> {
-  const [change] = await getDb().select({
-    priceBreakdown: jobChangeOrders.priceBreakdown,
-    scopeVersion: jobChangeOrders.proposedScopeVersion,
-  }).from(jobChangeOrders).where(and(
-    eq(jobChangeOrders.requestId, context.requestId),
-    eq(jobChangeOrders.quoteId, context.quoteId),
-    eq(jobChangeOrders.status, "authorized"),
-  )).orderBy(desc(jobChangeOrders.proposedScopeVersion)).limit(1);
+function testRefundPriceFromSource(
+  context: AssignedJobOperationContext,
+  quote: typeof providerQuotes.$inferSelect | undefined,
+  change: typeof jobChangeOrders.$inferSelect | undefined,
+): TestRefundPrice | null {
+  if (!quote || quote.id !== context.quoteId || quote.requestId !== context.requestId || quote.status !== "accepted") return null;
   let price: CompletePriceBreakdown | null;
   if (change) {
-    if (change.scopeVersion !== context.scopeVersion) return null;
+    if (change.proposedScopeVersion !== context.scopeVersion) return null;
     price = completePriceBreakdown(change.priceBreakdown);
   } else {
     if (context.scopeVersion !== 1) return null;
-    const [quote] = await getDb().select({
-      totalAmountCents: providerQuotes.priceCents,
-      laborAmountCents: providerQuotes.laborPriceCents,
-      partsAmountCents: providerQuotes.partsPriceCents,
-      customerFeeRateBps: providerQuotes.customerFeeRateBps,
-      customerFeeCents: providerQuotes.customerFeeCents,
-      customerTotalCents: providerQuotes.customerTotalCents,
-    }).from(providerQuotes).where(and(
-      eq(providerQuotes.id, context.quoteId),
-      eq(providerQuotes.requestId, context.requestId),
-      eq(providerQuotes.status, "accepted"),
-    )).limit(1);
-    if (!quote || Object.values(quote).some(value => testRefundCents(value) === null)) return null;
-    price = completePriceBreakdown(JSON.stringify({ ...quote, taxAmountCents: 0, otherAmountCents: 0 }));
+    const amounts = {
+      totalAmountCents: quote.priceCents, laborAmountCents: quote.laborPriceCents,
+      partsAmountCents: quote.partsPriceCents, customerFeeRateBps: quote.customerFeeRateBps,
+      customerFeeCents: quote.customerFeeCents, customerTotalCents: quote.customerTotalCents,
+    };
+    if (Object.values(amounts).some(value => testRefundCents(value) === null)) return null;
+    price = completePriceBreakdown(JSON.stringify({ ...amounts, taxAmountCents: 0, otherAmountCents: 0 }));
   }
   if (!price || !Number.isSafeInteger(price.customerTotalCents)) return null;
   return {
@@ -582,6 +573,19 @@ async function authorizedTestRefundPrice(context: AssignedJobOperationContext): 
     scopeVersion: context.scopeVersion,
     quoteId: context.quoteId,
   };
+}
+
+async function testRefundSource(context: AssignedJobOperationContext) {
+  const db = getDb();
+  const [[quote], changes] = await Promise.all([
+    db.select().from(providerQuotes).where(eq(providerQuotes.id, context.quoteId)).limit(1),
+    db.select().from(jobChangeOrders).where(and(eq(jobChangeOrders.requestId, context.requestId),
+      eq(jobChangeOrders.quoteId, context.quoteId), eq(jobChangeOrders.status, "authorized")))
+      .orderBy(desc(jobChangeOrders.proposedScopeVersion)).limit(1),
+  ]);
+  // The exact captured rows used to calculate the amount are also checked by
+  // the save transaction. Do not read a second, potentially different price.
+  return { quote, changes, price: testRefundPriceFromSource(context, quote, changes[0]) };
 }
 
 async function openOperationalBlocks(requestId: string) {
@@ -1645,8 +1649,8 @@ export async function POST(request: Request) {
     const amountCents = testRefundCents(body.amountCents);
     const reasonCode = clean(body.reasonCode, 60);
     const explanation = clean(body.explanation, 1800);
-    const priceSnapshot = await authorizedTestRefundPrice(context);
-    if (!priceSnapshot) return response({ error: "The saved customer price needs review before a test refund can be recorded." }, 409);
+    const { quote, changes, price: priceSnapshot } = await testRefundSource(context);
+    if (!priceSnapshot || !quote) return response({ error: "The saved customer price needs review before a test refund can be recorded." }, 409);
     const allowedReasons = [
       "cancellation",
       "provider_no_show",
@@ -1673,35 +1677,19 @@ export async function POST(request: Request) {
       .limit(1);
     if (duplicate) return response({ ok: true, adjustmentId: duplicate.id, duplicate: true });
     const adjustmentId = crypto.randomUUID();
-    await db.insert(paymentAdjustments).values({
-      id: adjustmentId,
-      requestId,
-      quoteId: context.quoteId,
-      adjustmentType: "refund_request",
-      amountCents,
-      status: "requested",
-      reasonCode,
-      details: JSON.stringify({ explanation, priceSnapshot, testOnly: true, stripeExecutionAllowed: false }),
-      requestedByRole: actor.role,
-      requestedById: actor.email,
-      requestedAt: now,
-      idempotencyKey,
-      createdAt: now,
-      updatedAt: now,
-    });
-    await appendJobLifecycleEvent({
-      requestId,
-      quoteId: context.quoteId,
-      providerId: context.providerId,
-      actorRole: actor.role,
-      actorId: actor.email,
-      eventType: "refund_requested",
-      fromStatus: context.requestStatus,
-      toStatus: context.requestStatus,
-      scopeVersion: context.scopeVersion,
-      reasonCode,
-      details: { adjustmentId, amountCents, stripeExecutionAllowed: false },
-    });
+    try {
+      const saved = await saveTestRefundRequest({ context, quote, changes, id: adjustmentId, amountCents,
+        reasonCode, explanation, priceSnapshot, idempotencyKey, actorRole: actor.role as "customer" | "provider",
+        actorEmail: actor.email, now });
+      if (!saved) {
+        const [existing] = await db.select({ id: paymentAdjustments.id }).from(paymentAdjustments)
+          .where(eq(paymentAdjustments.idempotencyKey, idempotencyKey)).limit(1);
+        if (existing) return response({ ok: true, adjustmentId: existing.id, duplicate: true });
+        return response({ error: "The job or saved price changed. Refresh its records before requesting a refund review." }, 409);
+      }
+    } catch {
+      return response({ error: "The refund request could not be confirmed. Refresh its saved records before trying again." }, 503);
+    }
     return response({ ok: true, adjustmentId, status: "requested" }, 201);
   }
 
@@ -1760,12 +1748,16 @@ export async function POST(request: Request) {
     if (!["approve", "deny"].includes(decision) || decisionReason.length < 5) {
       return response({ error: "Choose approve or deny and record a reason." }, 400);
     }
-    if (adjustment.paymentId || adjustment.stripeRefundId) {
+    if (adjustment.quoteId !== context.quoteId) {
+      return response({ error: "This refund request belongs to an earlier quote. Review the current assignment first." }, 409);
+    }
+    if (adjustment.paymentId || adjustment.stripeRefundId || adjustment.stripeDisputeId || adjustment.transferReversalId) {
       return response({ error: "This test-only workflow cannot modify a Stripe payment." }, 409);
     }
+    const { quote, changes, price: currentPrice } = await testRefundSource(context);
+    if (!quote) return response({ error: "The saved job assignment needs review before deciding this test refund." }, 409);
     let allocation: ReturnType<typeof testRefundAllocation> = null;
     if (decision === "approve") {
-      const currentPrice = await authorizedTestRefundPrice(context);
       const savedPrice = parseJsonRecord(adjustment.details).priceSnapshot;
       if (!currentPrice || !savedPrice || typeof savedPrice !== "object"
         || Object.entries(currentPrice).some(([key, value]) => (
@@ -1777,38 +1769,13 @@ export async function POST(request: Request) {
       if (!allocation) return response({ error: "Full refunds must include the entire Customer Service Fee. For a partial test refund, record the fee amount explicitly within the saved price." }, 400);
     }
     const nextStatus = decision === "approve" ? "approved_test_only" : "denied";
-    const decided = await db.update(paymentAdjustments).set({
-      status: nextStatus,
-      details: JSON.stringify({
-        priorDetails: adjustment.details,
-        decisionReason,
-        allocation,
-        testOnly: true,
-        stripeExecutionAllowed: false,
-      }),
-      decidedBy: actor.email,
-      decidedAt: now,
-      providerImpactCents: allocation ? -allocation.providerRefundCents : 0,
-      customerImpactCents: allocation?.customerRefundCents ?? 0,
-      updatedAt: now,
-    }).where(and(
-      eq(paymentAdjustments.id, adjustment.id),
-      eq(paymentAdjustments.status, "requested"),
-    )).returning({ id: paymentAdjustments.id });
-    if (!decided.length) return response({ error: "This refund request was already decided." }, 409);
-    await appendJobLifecycleEvent({
-      requestId,
-      quoteId: context.quoteId,
-      providerId: context.providerId,
-      actorRole: "owner",
-      actorId: actor.email,
-      eventType: decision === "approve" ? "test_refund_approved_no_execution" : "refund_denied",
-      fromStatus: context.requestStatus,
-      toStatus: context.requestStatus,
-      scopeVersion: context.scopeVersion,
-      reasonCode: adjustment.reasonCode,
-      details: { adjustmentId, amountCents: adjustment.amountCents, allocation, stripeExecutionAllowed: false },
-    });
+    try {
+      const saved = await saveTestRefundDecision({ context, quote, changes, adjustment, allocation,
+        decision: decision as "approve" | "deny", decisionReason, ownerEmail: actor.email, now });
+      if (!saved) return response({ error: "The refund request or job changed. Refresh its saved records before deciding again." }, 409);
+    } catch {
+      return response({ error: "The refund decision could not be confirmed. Refresh its saved records before trying again." }, 503);
+    }
     return response({ ok: true, status: nextStatus, stripeRefundCreated: false });
   }
 
@@ -1830,13 +1797,7 @@ export async function POST(request: Request) {
     if (!OPEN_CANCELLATION_STATUSES.includes(cancellation.status)) {
       return response({ error: "This cancellation was already decided." }, 409);
     }
-    const [[quote], changes] = await Promise.all([
-      db.select().from(providerQuotes).where(eq(providerQuotes.id, context.quoteId)).limit(1),
-      db.select().from(jobChangeOrders).where(and(eq(jobChangeOrders.requestId, requestId),
-        eq(jobChangeOrders.quoteId, context.quoteId), eq(jobChangeOrders.status, "authorized")))
-        .orderBy(desc(jobChangeOrders.proposedScopeVersion)).limit(1),
-    ]);
-    const priceSnapshot = await authorizedTestRefundPrice(context);
+    const { quote, changes, price: priceSnapshot } = await testRefundSource(context);
     if (!priceSnapshot || !quote) return response({ error: "The saved customer price needs review before a test cancellation decision." }, 409);
     if (
       !["approve", "deny"].includes(decision)
