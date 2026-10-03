@@ -41,6 +41,7 @@ export async function saveTestCancellationDecision(input: {
   const [history] = await db.select({ count: sql<number>`count(*)` }).from(jobLifecycleEvents)
     .where(eq(jobLifecycleEvents.requestId, c.requestId));
   const adjustmentId = decision === "approve" && proposedRefundCents > 0 ? crypto.randomUUID() : "";
+  const adjustmentKey = await sha256JobOperationText(`test-cancellation-refund:${cancellation.id}`);
   const nextStatus = decision === "approve" ? "approved_test_only" : "denied";
   const event = await prepareJobLifecycleEvent({
     requestId: c.requestId, quoteId: c.quoteId, providerId: c.providerId,
@@ -69,7 +70,7 @@ export async function saveTestCancellationDecision(input: {
     ...changes.map(change => exists(db.select({ id: jobChangeOrders.id }).from(jobChangeOrders).where(and(
       eq(jobChangeOrders.id, change.id), unchanged(jobChangeOrders, change))))),
     sql`not exists (select 1 from stripe_payments where request_id = ${c.requestId})`,
-    sql`not exists (select 1 from payment_adjustments where idempotency_key = ${await sha256JobOperationText(`test-cancellation-refund:${cancellation.id}`)})`,
+    sql`not exists (select 1 from payment_adjustments where idempotency_key = ${adjustmentKey})`,
     sql`(select count(*) from job_lifecycle_events where request_id = ${c.requestId}) = ${history.count}`,
     sql`coalesce((select event_hash from job_lifecycle_events where request_id = ${c.requestId} order by occurred_at desc limit 1), '') = ${event.previousEventHash}`,
   )).limit(1)).returning({ id: jobLifecycleEvents.id });
@@ -87,7 +88,7 @@ export async function saveTestCancellationDecision(input: {
     requestedByRole: "owner", requestedById: ownerEmail, requestedAt: now, decidedBy: ownerEmail, decidedAt: now,
     providerImpactCents: -(allocation?.providerRefundCents ?? 0), customerImpactCents: proposedRefundCents,
     stripeRefundId: "", stripeDisputeId: "", transferReversalId: "",
-    idempotencyKey: await sha256JobOperationText(`test-cancellation-refund:${cancellation.id}`), createdAt: now, updatedAt: now,
+    idempotencyKey: adjustmentKey, createdAt: now, updatedAt: now,
   };
   const saveAdjustment = db.insert(paymentAdjustments).select(db.select(literals(values))
     .from(jobLifecycleEvents).where(eq(jobLifecycleEvents.id, event.id)).limit(1));

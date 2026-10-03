@@ -63,12 +63,13 @@ test("test refunds include the saved fee without assigning it to the provider", 
       // Inject competing committed work before this batch's transaction.
       if (state.beforeWrite) { const change = state.beforeWrite; state.beforeWrite = null; change(); }
       database.exec("BEGIN");
+      let committed = false;
       try {
         const result = queries.map(query => querySql(query.sql, query.params, query.method));
-        database.exec("COMMIT");
+        database.exec("COMMIT"); committed = true;
         if (state.loseBatchResponse) { state.loseBatchResponse = false; throw Error("Synthetic lost committed response"); }
         return result;
-      } catch (error) { if (database.isTransaction) database.exec("ROLLBACK"); throw error; }
+      } catch (error) { if (!committed) database.exec("ROLLBACK"); throw error; }
     });
     const bundle = join(scratch, "route.cjs");
     await build({ absWorkingDir: repo, entryPoints: ["app/api/job-operations/route.ts"], bundle: true,
@@ -234,6 +235,31 @@ test("test refunds include the saved fee without assigning it to the provider", 
           database.exec("UPDATE provider_applications SET is_test_provider='yes' WHERE id='synthetic-provider'");
           database.prepare("DELETE FROM stripe_payments WHERE id=?").run(`${id}-payment`);
         }
+      }
+    });
+    await t.test("cancellations bind the latest authorized price and preserve incident holds", async () => {
+      const price = amount => JSON.stringify({ laborAmountCents: amount, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0,
+        totalAmountCents: amount, customerFeeRateBps: 500, customerFeeCents: amount / 20, customerTotalCents: amount * 1.05 });
+      for (const stale of [false, true]) {
+        const id = `scope-cancel-${stale}`; seedCancellation(id);
+        database.prepare("UPDATE provider_quotes SET scope_version=3 WHERE request_id=?").run(id);
+        for (const version of [2, 3]) seed("job_change_orders", { id: `${id}-change-${version}`, request_id: id, quote_id: `${id}-quote`,
+          prior_scope_version: version - 1, proposed_scope_version: version, price_breakdown: price(version * 10000),
+          status: "authorized", reason: "Synthetic changed scope", requested_by_provider_id: "synthetic-provider", customer_authorized_at: now });
+        seed("job_incidents", { id: `${id}-incident`, request_id: id, quote_id: `${id}-quote`, reporter_role: "customer",
+          reporter_email: "customer@example.invalid", incident_type: "other", severity: "low", occurred_at: now,
+          summary: "Synthetic retained hold", hold_payments: "yes" });
+        const held = database.prepare("SELECT * FROM job_incidents WHERE id=?").get(`${id}-incident`);
+        if (stale) state.beforeWrite = () => database.prepare("UPDATE job_change_orders SET price_breakdown=? WHERE id=?").run(price(40000), `${id}-change-3`);
+        const result = await post(id, { ...cancellationPayload(id), proposedRefundCents: 31500 }, "owner");
+        assert.equal(result.status, stale ? 409 : 200, JSON.stringify(result.body));
+        const saved = cancellationState(id);
+        assert.equal(saved.adjustments.length, stale ? 0 : 1); assert.equal(saved.events.length, stale ? 0 : 1);
+        if (!stale) {
+          const allocation = JSON.parse(saved.adjustments[0].details).allocation;
+          assert.equal(allocation.customerFeeRefundCents, 1500); assert.equal(allocation.providerRefundCents, 30000);
+        }
+        assert.deepEqual(database.prepare("SELECT * FROM job_incidents WHERE id=?").get(`${id}-incident`), held);
       }
     });
     await t.test("partial allocation is explicit and cannot overdraw either portion", async () => {

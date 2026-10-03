@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Atomic cancellation rehearsal decisions
+
+Reproduced two defects in the persisted-test cancellation route: a competing
+decision could be overwritten, and failure between separate writes could leave
+an orphan refund adjustment. The decision, test adjustment, job status and
+lifecycle audit now share one conditional D1 batch. Its unique event claim
+requires unchanged cancellation/quote/authorized-price history, assignment,
+test flags and audit history, and rejects any Stripe payment on the job.
+Conflicts save nothing; write failures roll back the batch. An uncertain
+response instructs the owner to refresh saved records before trying again.
+
+Seven added regression groups exercise real migrated SQLite and the actual
+route with fixture authentication: competing decisions, every write failure,
+lost committed responses, simultaneous approval/denial, zero-refund/denial,
+changed price/assignment/test flags, latest authorized prices and retained
+incident holds. Both original defects failed before the fix. Local production
+build and all 955 tests pass, as do TypeScript and lint (one pre-existing warning
+in unchanged site-language.tsx). A sandbox directory-access error and a test
+fixture column typo were corrected before the final passing run.
+
+This is test-accounting consistency only: no real refund, partial-refund rule,
+provider recovery, active policy, schema, account, credential or launch switch
+changed. Prepared on an isolated branch from released 7bd07ce; unpublished
+business notes and proportional-refund preparation are excluded. Publishing
+under the owner's standing instruction to publish fixes and continue; PR and
+production verification still pending at this entry.
+
 ## 2026-10-02 - Receipt language preparation repair
 
 Source review found that Checkout received the selected `locale` while Stripe
