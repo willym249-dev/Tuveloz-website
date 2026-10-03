@@ -11,6 +11,35 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Atomic refund rehearsal requests and decisions
+
+Reproduced three failures in the separate test-refund workflow: an initial
+request survived a failed audit write, an approval survived a failed audit
+write, and a request amount changed during review could receive the stale
+allocation. Requests and decisions now save with their audit event in one
+conditional D1 batch. The commit rechecks the captured adjustment, quote,
+latest authorized price, assignment, test flags and audit history, and rejects
+Stripe payment bindings. Conflicts save nothing; interrupted batches roll back.
+Uncertain responses direct the user to refresh saved records before retrying.
+
+Price calculations and commit comparisons use the same captured source rows,
+including the existing cancellation rehearsal. Eleven new regression groups
+exercise actual migrated SQLite and the route with synthetic authentication:
+both write failures, forced simultaneous requests/decisions, lost committed
+responses and safe retries, changed evidence/assignment/test flags, current
+change-order prices, Stripe bindings and preserved incident holds. The focused
+file passes 27 tests. The production build and all 972 tests pass locally;
+TypeScript, lint (one existing site-language warning), and the dependency
+source checks/high-severity audit also pass. Independent source review found
+no remaining actionable issue after the insert-select correction.
+An insert-select field mismatch found in the first focused run was corrected
+before these passing results. Hosted release checks remain pending here.
+
+This repair adds no real refund execution, partial-refund policy, provider
+recovery, schema change or launch setting. Existing fee allocation rules are
+unchanged. It starts from released PR #279; unpublished business notes and
+proportional-refund preparation remain outside the release branch.
+
 ## 2026-10-03 - Dependency patch file-count clarification
 
 The provenance comparison confirms five changed runtime library files plus

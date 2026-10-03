@@ -16,7 +16,7 @@ test("test refunds include the saved fee without assigning it to the provider", 
   const scratch = mkdtempSync(join(tempRoot, "tuveloz-test-refund-"));
   const database = new DatabaseSync(":memory:");
   const originalFetch = globalThis.fetch;
-  const state = { db: null, role: "customer", email: "customer@example.invalid", env: {}, beforeWrite: null, failWrite: "" };
+  const state = { db: null, role: "customer", email: "customer@example.invalid", env: {}, beforeWrite: null, failWrite: "", failWriteHits: 0 };
   globalThis.__testRefundReview = state;
   let networkCalls = 0;
   const seed = (table, values) => {
@@ -49,7 +49,9 @@ test("test refunds include the saved fee without assigning it to the provider", 
       if (/^(insert|update)/i.test(query) && state.beforeWrite) {
         const change = state.beforeWrite; state.beforeWrite = null; change();
       }
-      if (state.failWrite && query.startsWith(state.failWrite)) throw Error("Synthetic write failure");
+      if (state.failWrite && query.startsWith(state.failWrite)) {
+        state.failWriteHits++; throw Error("Synthetic write failure");
+      }
       if (method === "run") { database.prepare(query).run(...params); return { rows: [] }; }
       database.exec("PRAGMA short_column_names=OFF; PRAGMA full_column_names=ON;");
       try {
@@ -107,6 +109,244 @@ test("test refunds include the saved fee without assigning it to the provider", 
     const decide = (id, adjustmentId, extra = {}) => post(id, {
       action: "decide-refund", adjustmentId, decision: "approve", decisionReason: "SYNTHETIC: full cancellation refund reviewed.", ...extra,
     }, "owner");
+    const refundState = id => ({
+      adjustments: database.prepare("SELECT * FROM payment_adjustments WHERE request_id=? ORDER BY id").all(id),
+      events: database.prepare("SELECT * FROM job_lifecycle_events WHERE request_id=? ORDER BY id").all(id),
+      job: database.prepare("SELECT * FROM customer_requests WHERE id=?").get(id),
+    });
+    await t.test("a failed initial refund-request audit cannot leave an orphan request", async () => {
+      for (const [index, target] of ['insert into "job_lifecycle_events"', 'insert into "payment_adjustments"'].entries()) {
+        const id = `refund-request-audit-rollback-${index}`; seedJob(id);
+        const before = refundState(id), priorFailures = state.failWriteHits; state.failWrite = target;
+        try {
+          const result = await request(id, 4200).catch(() => ({ status: 503 }));
+          assert.ok(result.status >= 500);
+          assert.equal(state.failWriteHits, priorFailures + 1, `The injected ${target} failure must be reached`);
+          assert.deepEqual(refundState(id), before, "The initial refund request and its audit must roll back together");
+        } finally { state.failWrite = ""; }
+      }
+    });
+    await t.test("simultaneous identical refund requests and later retries save one request and audit", { timeout: 10000 }, async () => {
+      const id = "refund-request-concurrent"; seedJob(id); let release; let arrivals = 0;
+      const barrier = new Promise(done => { release = done; });
+      state.batchBarrier = () => { if (++arrivals === 2) release(); return barrier; };
+      try {
+        const replies = await Promise.all([request(id, 4200), request(id, 4200)]);
+        assert.equal(arrivals, 2, "Both requests must reach the competing write boundary");
+        assert.deepEqual(replies.map(item => item.status).sort(), [200, 201]);
+        assert.equal(replies[0].body.adjustmentId, replies[1].body.adjustmentId);
+        assert.equal(replies.filter(item => item.body.duplicate === true).length, 1);
+        const saved = refundState(id);
+        assert.equal(saved.adjustments.length, 1); assert.equal(saved.events.length, 1);
+        assert.equal(saved.adjustments[0].status, "requested");
+        assert.equal(saved.adjustments[0].customer_impact_cents, 0);
+        assert.equal(saved.adjustments[0].provider_impact_cents, 0);
+        state.batchBarrier = null;
+        const retry = await request(id, 4200);
+        assert.equal(retry.status, 200); assert.equal(retry.body.duplicate, true);
+        assert.equal(retry.body.adjustmentId, saved.adjustments[0].id);
+        assert.deepEqual(refundState(id), saved);
+      } finally { state.batchBarrier = null; }
+    });
+    await t.test("a lost initial request response retains one readable request and an idempotent retry", async () => {
+      const id = "refund-request-lost-response"; seedJob(id); state.loseBatchResponse = true;
+      try {
+        assert.equal((await request(id, 4200)).status, 503);
+        const saved = refundState(id);
+        assert.equal(saved.adjustments.length, 1); assert.equal(saved.events.length, 1);
+        assert.equal(saved.adjustments[0].status, "requested");
+        const loaded = await api.GET(new Request(`https://tuveloz.invalid/api/job-operations?requestId=${id}`));
+        assert.equal(loaded.status, 200);
+        const listed = (await loaded.json()).paymentAdjustments.find(item => item.id === saved.adjustments[0].id);
+        assert.equal(listed.status, "requested"); assert.equal(listed.amountCents, 4200);
+        const retry = await request(id, 4200);
+        assert.equal(retry.status, 200); assert.equal(retry.body.duplicate, true);
+        assert.equal(retry.body.adjustmentId, saved.adjustments[0].id);
+        assert.deepEqual(refundState(id), saved);
+      } finally { state.loseBatchResponse = false; }
+    });
+    await t.test("new refund requests cannot commit against changed price, assignment, test flags or a Stripe payment", async () => {
+      const changes = [
+        id => database.prepare("UPDATE provider_quotes SET customer_total_cents='20000' WHERE request_id=?").run(id),
+        id => database.prepare("UPDATE customer_requests SET assignment_version=assignment_version+1 WHERE id=?").run(id),
+        id => database.prepare("UPDATE customer_requests SET is_test_job='no' WHERE id=?").run(id),
+        () => database.exec("UPDATE provider_applications SET is_test_provider='no' WHERE id='synthetic-provider'"),
+        id => seed("stripe_payments", { id: `${id}-payment`, request_id: id, quote_id: `${id}-quote`, checkout_session_id: `${id}-checkout`,
+          payment_type: "quote", status: "created", product_name: "SYNTHETIC", provider_application_id: "synthetic-provider",
+          connected_account_id: "acct_synthetic", provider_amount_cents: 10000, application_fee_cents: 500,
+          customer_total_cents: 10500, settlement_strategy: "separate_transfer" }),
+      ];
+      for (const [index, change] of changes.entries()) {
+        const id = `refund-request-stale-${index}`; seedJob(id); let changed;
+        state.beforeWrite = () => { change(id); changed = refundState(id); };
+        try {
+          assert.equal((await request(id, 4200)).status, 409, id);
+          assert.deepEqual(refundState(id), changed, id);
+        } finally {
+          state.beforeWrite = null;
+          database.exec("UPDATE provider_applications SET is_test_provider='yes' WHERE id='synthetic-provider'");
+          database.prepare("DELETE FROM stripe_payments WHERE id=?").run(`${id}-payment`);
+        }
+      }
+    });
+    await t.test("a failed refund audit cannot leave its approval or allocation committed", async () => {
+      for (const decision of ["approve", "deny"]) {
+        for (const [index, target] of ['insert into "job_lifecycle_events"', 'update "payment_adjustments"'].entries()) {
+          const id = `refund-audit-rollback-${decision}-${index}`; seedJob(id);
+          const requested = await request(id, 4200); assert.equal(requested.status, 201);
+          const before = refundState(id), priorFailures = state.failWriteHits; state.failWrite = target;
+          try {
+            const result = await decide(id, requested.body.adjustmentId, { decision, customerFeeRefundCents: 200 })
+              .catch(() => ({ status: 503 }));
+            assert.ok(result.status >= 500);
+            assert.equal(state.failWriteHits, priorFailures + 1, `The injected ${target} failure must be reached`);
+            assert.deepEqual(refundState(id), before, "The refund decision and its audit must roll back together");
+          } finally { state.failWrite = ""; }
+        }
+      }
+    });
+    await t.test("a changed refund amount and evidence cannot receive a stale approved allocation", async () => {
+      const id = "refund-stale-evidence"; seedJob(id);
+      const requested = await request(id, 4200); assert.equal(requested.status, 201);
+      let changed;
+      state.beforeWrite = () => {
+        const row = adjustment(requested.body.adjustmentId);
+        const details = { ...JSON.parse(row.details), explanation: "SYNTHETIC: corrected request after review" };
+        database.prepare("UPDATE payment_adjustments SET amount_cents=6300,details=? WHERE id=?")
+          .run(JSON.stringify(details), row.id);
+        changed = refundState(id);
+      };
+      try {
+        assert.equal((await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 })).status, 409);
+        assert.deepEqual(refundState(id), changed, "Stale approval must preserve the newer request without adding an audit");
+      } finally { state.beforeWrite = null; }
+    });
+    await t.test("competing refund approval and denial commit exactly one decision and audit", { timeout: 10000 }, async () => {
+      const id = "refund-concurrent"; seedJob(id);
+      const requested = await request(id, 4200); assert.equal(requested.status, 201);
+      const before = refundState(id); let release; let arrivals = 0;
+      const barrier = new Promise(done => { release = done; });
+      state.batchBarrier = () => { if (++arrivals === 2) release(); return barrier; };
+      try {
+        const replies = await Promise.all([
+          decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 }),
+          decide(id, requested.body.adjustmentId, { decision: "deny" }),
+        ]);
+        assert.equal(arrivals, 2, "Both decisions must reach the competing write boundary");
+        assert.deepEqual(replies.map(item => item.status).sort(), [200, 409]);
+        const saved = refundState(id), row = saved.adjustments[0];
+        const approved = row.status === "approved_test_only";
+        assert.ok(approved || row.status === "denied");
+        assert.equal(saved.adjustments.length, 1);
+        assert.equal(saved.events.length, before.events.length + 1);
+        const event = saved.events.find(item => !before.events.some(prior => prior.id === item.id));
+        assert.equal(event.event_type, approved ? "test_refund_approved_no_execution" : "refund_denied");
+        assert.equal(row.customer_impact_cents, approved ? 4200 : 0);
+        assert.equal(row.provider_impact_cents, approved ? -4000 : 0);
+        assert.equal(row.decided_by, "owner@example.invalid");
+        assert.deepEqual(JSON.parse(event.details).allocation, JSON.parse(row.details).allocation);
+        assert.deepEqual(saved.job, before.job);
+      } finally { state.batchBarrier = null; }
+    });
+    await t.test("a lost refund decision response is recovered by reading without repeating its allocation or audit", async () => {
+      const id = "refund-lost-response"; seedJob(id);
+      const requested = await request(id, 4200); assert.equal(requested.status, 201);
+      const before = refundState(id); state.loseBatchResponse = true;
+      try {
+        assert.equal((await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 })).status, 503);
+        const saved = refundState(id);
+        assert.equal(saved.adjustments.length, 1);
+        assert.equal(saved.adjustments[0].status, "approved_test_only");
+        assert.equal(saved.events.length, before.events.length + 1);
+        const loaded = await api.GET(new Request(`https://tuveloz.invalid/api/job-operations?requestId=${id}`));
+        assert.equal(loaded.status, 200);
+        const listed = (await loaded.json()).paymentAdjustments.find(item => item.id === requested.body.adjustmentId);
+        assert.equal(listed.status, "approved_test_only");
+        assert.equal(listed.refundAllocation.providerRefundCents, 4000);
+        assert.equal(listed.refundAllocation.customerFeeRefundCents, 200);
+        assert.equal((await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 })).status, 409);
+        assert.deepEqual(refundState(id), saved);
+      } finally { state.loseBatchResponse = false; }
+    });
+    await t.test("changed refund price, assignment, test flags and audit history stop the entire decision", async () => {
+      const changes = [
+        id => database.prepare("UPDATE provider_quotes SET customer_total_cents='20000' WHERE request_id=?").run(id),
+        id => database.prepare("UPDATE provider_quotes SET status='declined' WHERE request_id=?").run(id),
+        id => database.prepare("UPDATE customer_requests SET assignment_version=assignment_version+1 WHERE id=?").run(id),
+        id => database.prepare("UPDATE customer_requests SET email='changed@example.invalid' WHERE id=?").run(id),
+        id => database.prepare("UPDATE customer_requests SET is_test_job='no' WHERE id=?").run(id),
+        () => database.exec("UPDATE provider_applications SET is_test_provider='no' WHERE id='synthetic-provider'"),
+        id => seed("job_lifecycle_events", { id: `${id}-other-event`, request_id: id, actor_role: "owner", actor_id: "owner@example.invalid",
+          event_type: "synthetic_concurrent_event", event_hash: `${id}-hash`, occurred_at: "2099-01-01T00:00:00Z" }),
+      ];
+      for (const [index, change] of changes.entries()) {
+        const id = `refund-stale-context-${index}`; seedJob(id);
+        const requested = await request(id, 4200); assert.equal(requested.status, 201); let changed;
+        state.beforeWrite = () => { change(id); changed = refundState(id); };
+        try {
+          assert.equal((await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 })).status, 409, id);
+          assert.deepEqual(refundState(id), changed, id);
+        } finally {
+          state.beforeWrite = null;
+          database.exec("UPDATE provider_applications SET is_test_provider='yes' WHERE id='synthetic-provider'");
+        }
+      }
+    });
+    await t.test("refund approval rechecks the authorized change-order price and preserves incident holds", async () => {
+      const price = amount => JSON.stringify({ laborAmountCents: amount, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0,
+        totalAmountCents: amount, customerFeeRateBps: 500, customerFeeCents: amount / 20, customerTotalCents: amount * 1.05 });
+      for (const stale of [false, true]) {
+        const id = `refund-scope-${stale}`; seedJob(id, { scope_version: 2 });
+        seed("job_change_orders", { id: `${id}-change`, request_id: id, quote_id: `${id}-quote`, prior_scope_version: 1,
+          proposed_scope_version: 2, price_breakdown: price(20000), status: "authorized", reason: "Synthetic changed scope",
+          requested_by_provider_id: "synthetic-provider", customer_authorized_at: now });
+        seed("job_incidents", { id: `${id}-incident`, request_id: id, quote_id: `${id}-quote`, reporter_role: "customer",
+          reporter_email: "customer@example.invalid", incident_type: "other", severity: "low", occurred_at: now,
+          summary: "Synthetic retained hold", hold_payments: "yes" });
+        const held = database.prepare("SELECT * FROM job_incidents WHERE id=?").get(`${id}-incident`);
+        const requested = await request(id, 4200); assert.equal(requested.status, 201);
+        const before = refundState(id);
+        if (stale) state.beforeWrite = () => database.prepare("UPDATE job_change_orders SET price_breakdown=? WHERE id=?")
+          .run(price(30000), `${id}-change`);
+        try {
+          const result = await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 });
+          assert.equal(result.status, stale ? 409 : 200, JSON.stringify(result.body));
+          if (stale) assert.deepEqual(refundState(id), before);
+          else {
+            assert.equal(result.body.stripeRefundCreated, false);
+            assert.equal(adjustment(requested.body.adjustmentId).provider_impact_cents, -4000);
+            assert.equal(refundState(id).events.length, before.events.length + 1);
+          }
+          assert.deepEqual(database.prepare("SELECT * FROM job_incidents WHERE id=?").get(`${id}-incident`), held);
+        } finally { state.beforeWrite = null; }
+      }
+    });
+    await t.test("unexpected Stripe bindings block refund decisions before review and at commit", async () => {
+      const fields = ["payment_id", "stripe_refund_id", "stripe_dispute_id", "transfer_reversal_id"];
+      for (const timing of ["before", "during"]) {
+        for (const field of [...fields, "payment_record"]) {
+          const id = `refund-binding-${timing}-${field}`; seedJob(id);
+          const requested = await request(id, 4200); assert.equal(requested.status, 201); let changed;
+          const bind = () => {
+            if (field === "payment_record") {
+              seed("stripe_payments", { id: `${id}-payment`, request_id: id, quote_id: `${id}-quote`, checkout_session_id: `${id}-checkout`,
+                payment_type: "quote", status: "created", product_name: "SYNTHETIC", provider_application_id: "synthetic-provider",
+                connected_account_id: "acct_synthetic", provider_amount_cents: 10000, application_fee_cents: 500,
+                customer_total_cents: 10500, settlement_strategy: "separate_transfer" });
+            } else database.prepare(`UPDATE payment_adjustments SET ${field}=? WHERE id=?`).run(`synthetic-${field}`, requested.body.adjustmentId);
+            changed = refundState(id);
+          };
+          if (timing === "before") bind(); else state.beforeWrite = bind;
+          try {
+            assert.equal((await decide(id, requested.body.adjustmentId, { customerFeeRefundCents: 200 })).status, 409, id);
+            assert.deepEqual(refundState(id), changed, id);
+          } finally {
+            state.beforeWrite = null;
+            database.prepare("DELETE FROM stripe_payments WHERE id=?").run(`${id}-payment`);
+          }
+        }
+      }
+    });
     await t.test("full $105 request and approval return $100 provider plus $5 fee, without money movement", async () => {
       seedJob("full"); const result = await request("full"); assert.equal(result.status, 201, JSON.stringify(result.body));
       const requested = adjustment(result.body.adjustmentId);
