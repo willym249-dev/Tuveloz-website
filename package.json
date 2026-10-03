@@ -13,7 +13,7 @@
     "test": "npm run build && node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "wrangler types --strict-vars=false && tsc --noEmit --incremental false",
-    "security:check": "npm audit --audit-level=high",
+    "security:check": "node --test tests/braces-security.test.mjs && npm audit --audit-level=high",
     "ai": "node --experimental-strip-types scripts/ai-council.ts",
     "ai:run": "node --experimental-strip-types scripts/ai-council.ts --run",
     "ai:check": "node scripts/ai-selfcheck.mjs",
@@ -68,6 +68,7 @@
     "stripe": "^22.3.2"
   },
   "devDependencies": {
+    "braces": "file:vendor/braces",
     "@cloudflare/vite-plugin": "1.54.4",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
@@ -91,6 +92,7 @@
   "type": "module",
   "displayName": "Tuveloz",
   "overrides": {
+    "braces": "$braces",
     "undici": "7.29.1",
     "postcss": "8.5.25",
     "sharp": "0.35.4",

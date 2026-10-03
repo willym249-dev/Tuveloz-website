@@ -11,6 +11,91 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Dependency patch file-count clarification
+
+The provenance comparison confirms five changed runtime library files plus
+separate package metadata changes. The prior entry's count of six runtime
+files was incorrect. index.js, lib/utils.js and LICENSE are unchanged from the
+verified npm archive. The patch README and PR description now use the verified
+count; implementation and tests are unchanged.
+
+## 2026-10-03 - Explicit private fork identity for the dependency patch
+
+The first hosted run passed all six patch integrity/behavior groups, but npm
+10.9.2 still flagged the unchanged upstream name/version; local npm 12 had
+omitted that local package. Both audits use package metadata, not source
+analysis. Corrected the private copy's identity to
+@tuveloz/braces@3.0.3-tuveloz.1 and its repository links. The original API alias,
+authors, MIT license, upstream archive/version and exact runtime patch remain;
+the provenance hash explicitly records the metadata change. This is a local
+fork, not an official upstream fixed release or an advisory suppression.
+
+Downloaded the exact official npm 10.9.2 into the private test-output folder
+without replacing the machine's npm. A fresh independent install, all six
+source/resolution/behavior checks and its unchanged high-severity audit pass.
+Unrelated lockfile metadata rewrites were excluded. The earlier 961-test/build
+result covers the identical runtime code; required GitHub application checks
+will validate the final fork metadata before merge and deployment.
+
+## 2026-10-03 - Pinned build dependency depth protection
+
+PR #279's security gate found GHSA-vfj7-8cjw-p6xm in the transitive build/lint
+dependency braces 3.0.3. The npm registry still has no patched release. Added
+a private local copy from the integrity-verified 3.0.3 archive with only the
+six runtime-file changes proposed in upstream PR #72 at immutable commit
+d0d575e55e74a4e0218e5248fafb79efc3e54ebb. That proposal is not merged or
+maintainer-released; Tuveloz maintains this temporary copy. Original version
+and MIT license remain. Source provenance and replacement instructions live
+in vendor/braces/TUVELOZ-PATCH.md; no other dependency changed.
+
+The patch caps parser and direct-AST recursion at 100. A bounded-stack run of
+the original package reproduced compile/expand stack exhaustion; the patched
+copy rejects deep inputs before recursion, while ordinary matching and allowed
+boundary patterns pass. The root override routes all installed consumers to
+the checked-in source. npm audit does not inspect local package source, so the
+existing security command now requires pinned hashes, consumer resolution,
+lock constraints and six executable regression groups before the unchanged
+high-severity audit. No advisory ignore or reduced threshold was added.
+
+A fresh independent npm ci succeeded. Production build and all 961 tests,
+security checks, TypeScript and lint pass locally (one existing site-language
+warning). An initial relative-link install failed and was replaced by the
+root dependency reference before the clean successful install. The original
+worktree's dependency directory was preserved. Required GitHub checks and
+production verification are still pending at this entry. This changes build
+dependencies and the already documented cancellation rehearsal repair only;
+no real transaction, schema, policy or launch/payment switch changed.
+
+Review the upstream replacement again by October 17; do not remove the local
+source checks until a reviewed official replacement passes the full suite.
+
+## 2026-10-03 - Atomic cancellation rehearsal decisions
+
+Reproduced two defects in the persisted-test cancellation route: a competing
+decision could be overwritten, and failure between separate writes could leave
+an orphan refund adjustment. The decision, test adjustment, job status and
+lifecycle audit now share one conditional D1 batch. Its unique event claim
+requires unchanged cancellation/quote/authorized-price history, assignment,
+test flags and audit history, and rejects any Stripe payment on the job.
+Conflicts save nothing; write failures roll back the batch. An uncertain
+response instructs the owner to refresh saved records before trying again.
+
+Seven added regression groups exercise real migrated SQLite and the actual
+route with fixture authentication: competing decisions, every write failure,
+lost committed responses, simultaneous approval/denial, zero-refund/denial,
+changed price/assignment/test flags, latest authorized prices and retained
+incident holds. Both original defects failed before the fix. Local production
+build and all 955 tests pass, as do TypeScript and lint (one pre-existing warning
+in unchanged site-language.tsx). A sandbox directory-access error and a test
+fixture column typo were corrected before the final passing run.
+
+This is test-accounting consistency only: no real refund, partial-refund rule,
+provider recovery, active policy, schema, account, credential or launch switch
+changed. Prepared on an isolated branch from released 7bd07ce; unpublished
+business notes and proportional-refund preparation are excluded. Publishing
+under the owner's standing instruction to publish fixes and continue; PR and
+production verification still pending at this entry.
+
 ## 2026-10-02 - Receipt language preparation repair
 
 Source review found that Checkout received the selected `locale` while Stripe

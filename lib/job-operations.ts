@@ -447,7 +447,7 @@ async function sha256(value: string) {
     .join("");
 }
 
-export async function appendJobLifecycleEvent(input: {
+export type JobLifecycleEventInput = {
   requestId: string;
   quoteId?: string;
   providerId?: string;
@@ -460,7 +460,11 @@ export async function appendJobLifecycleEvent(input: {
   authorizationSnapshotId?: string;
   reasonCode?: string;
   details?: Record<string, unknown>;
-}) {
+};
+
+// Preparation is separate so a caller can commit the event with its state
+// change in one D1 batch. Existing callers keep the append wrapper below.
+export async function prepareJobLifecycleEvent(input: JobLifecycleEventInput) {
   const [previous] = await getDb().select({
     eventHash: jobLifecycleEvents.eventHash,
   }).from(jobLifecycleEvents)
@@ -479,7 +483,7 @@ export async function appendJobLifecycleEvent(input: {
     previousEventHash,
     rulesVersion: JOB_OPERATIONS_RULES_VERSION,
   }));
-  await getDb().insert(jobLifecycleEvents).values({
+  return {
     id: eventId,
     requestId: input.requestId,
     quoteId: input.quoteId ?? "",
@@ -497,8 +501,13 @@ export async function appendJobLifecycleEvent(input: {
     eventHash,
     occurredAt,
     createdAt: occurredAt,
-  });
-  return { eventId, eventHash, occurredAt };
+  };
+}
+
+export async function appendJobLifecycleEvent(input: JobLifecycleEventInput) {
+  const event = await prepareJobLifecycleEvent(input);
+  await getDb().insert(jobLifecycleEvents).values(event);
+  return { eventId: event.id, eventHash: event.eventHash, occurredAt: event.occurredAt };
 }
 
 export async function sha256JobOperationText(value: string) {
