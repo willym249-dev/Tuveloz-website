@@ -11,6 +11,28 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-03 - Read-only evidence in cancellation refund review
+
+The owner screen now expands the work, incident hold, saved payment/transfer,
+and adjustment records already read for its current cancellation. Original
+labor, customer fee and total labels no longer imply that an undecided or
+blocked case has an approved full refund. The evidence section is collapsed
+initially, separates decisions from confirmed movement, and retains the last
+valid view while blocking approval after malformed responses.
+
+The response projection omits raw notes, contacts and processor payloads.
+Signed-owner route tests use query-only SQLite and verify no database writes
+or Stripe calls, unchanged holds and refusal of blocked approvals. Review
+eligibility, mutation paths, schema, policies and launch controls are unchanged.
+This is a review aid, not provider recovery or partial-refund execution.
+
+Validation: build and 977 tests passed, TypeScript passed, lint has only the
+existing language-navigation warning, and npm audit found zero vulnerabilities.
+Chromium/WebKit synthetic phone checks passed, including 320px wrapping,
+keyboard disclosure, malformed-evidence recovery and unchanged submission
+controls. Independent code review found no actionable issue. No real provider,
+payment, refund, recovery, notice or public policy was created by these tests.
+
 ## 2026-10-03 - Atomic refund rehearsal requests and decisions
 
 Reproduced three failures in the separate test-refund workflow: an initial

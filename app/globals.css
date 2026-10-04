@@ -13263,3 +13263,8 @@ footer > p,
 .stripe-refund-review .refund-review-confirm input { flex: 0 0 auto; width: 1.25rem; height: 1.25rem; margin-top: .15rem; }
 .stripe-refund-review .admin-card-top { flex-wrap: wrap; gap: .75rem; }
 .stripe-refund-review button:disabled { opacity: .55; cursor: not-allowed; }
+.refund-evidence { margin: 1rem 0; border: 1px solid #444; border-radius: .65rem; padding: .85rem 1rem; }
+.refund-evidence summary { cursor: pointer; font-weight: 700; }
+.refund-evidence summary:focus-visible { outline: 2px solid var(--orange); outline-offset: 4px; }
+.refund-evidence h4 { margin: 1.25rem 0 .5rem; }
+.refund-evidence li + li { margin-top: 1rem; }

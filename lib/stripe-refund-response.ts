@@ -11,8 +11,26 @@ function strings(value: Record<string, unknown>, keys: string[]) {
 function id(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
+function integer(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value);
+}
 function cents(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+  return integer(value) && value >= 0;
+}
+function evidence(value: unknown): value is RefundReview["evidence"] {
+  if (!record(value) || !Array.isArray(value.workRecords)
+    || !value.workRecords.every(row => record(row) && id(row.id) && id(row.workStatus)
+      && strings(row, ["jobStartDecisionId", "completionDecisionId"])
+      && cents(row.trackedSeconds) && cents(row.billableMinutes))
+    || !Array.isArray(value.incidentHoldIds) || !value.incidentHoldIds.every(id)
+    || !Array.isArray(value.adjustments)
+    || !value.adjustments.every(row => record(row) && id(row.id) && id(row.adjustmentType)
+      && id(row.status) && id(row.currency) && cents(row.amountCents)
+      && integer(row.providerImpactCents) && integer(row.customerImpactCents)
+      && strings(row, ["stripeRefundId", "transferReversalId", "requestedAt", "decidedAt"]))) return false;
+  const payment = value.payment;
+  return payment === null || (record(payment) && cents(payment.scopeVersion) && cents(payment.refundAmountCents)
+    && strings(payment, ["scopeAuthorizationDecisionId", "transferId", "releasedAt", "refundStatus", "disputeStatus", "lastRefundId"]));
 }
 
 export function isRefundReviewQueue(value: unknown): value is RefundReviewQueue {
@@ -28,6 +46,7 @@ export function isRefundReview(value: unknown, cancellationId: string): value is
     || typeof value.enabled !== "boolean" || typeof value.providerTravelStarted !== "boolean" || typeof value.workRecorded !== "boolean"
     || !Array.isArray(value.blockers) || !value.blockers.every(item => typeof item === "string")) return false;
   const payment = value.payment, approval = value.approval, execution = value.execution;
+  if (!evidence(value.evidence) || (payment === null) !== (value.evidence.payment === null)) return false;
   if (payment !== null && (!record(payment) || !id(payment.id)
     || !strings(payment, ["stripePaymentIntentId", "currency", "paidAt", "status"])
     || !cents(payment.providerAmountCents) || !cents(payment.customerFeeCents) || !cents(payment.customerTotalCents)
