@@ -552,7 +552,7 @@ export default function LaunchReadinessPage() {
                       {stageContext.map((gate) => (
                         <article className="admin-card" id={`technical-${gate.key}`} key={gate.key}>
                           <div className="admin-card-top">
-                            <span>{gate.passed ? "staged safeguard active" : "live-stage context"}</span>
+                            <span>{gate.passed ? "staged safeguard active" : "configuration context"}</span>
                             <time>informational</time>
                           </div>
                           <h3>{gate.title}</h3>

@@ -316,7 +316,7 @@ async function readinessPayload() {
       stage: "provider_onboarding",
       passed: runtimeCheckPassed("email_delivery"),
       detail: emailDeliveryConfigured
-        ? "The server reports an email API key and sender address. A real delivery test is still required."
+        ? "The server reports an email API key and sender address. This configuration check does not verify inbox delivery; review delivery evidence separately."
         : "RESEND_API_KEY and RESEND_FROM_EMAIL must be configured.",
     },
     {
@@ -425,7 +425,7 @@ async function readinessPayload() {
     },
     {
       key: "stripe_sandbox_first",
-      title: "Stripe is sandboxed until final approval",
+      title: "Stripe mode and live-payment permission",
       stage: "transaction_pilot",
       contextOnly: true,
       passed: stripeConfigured && stripeMode === "test" && !liveStripeAllowed,

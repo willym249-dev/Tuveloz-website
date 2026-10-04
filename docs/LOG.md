@@ -11,6 +11,19 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-04 - Clarify owner readiness configuration labels
+
+The owner readiness page described live Stripe configuration as sandboxed
+and declared inbox delivery testing unfinished even though its email check
+only reads configuration. Use a neutral Stripe mode/permission heading and
+configuration-context badge, and explain that delivery evidence is reviewed
+separately. The configuration predicates, evidence requirements, owner access
+and every launch/payment control are unchanged.
+
+Nine existing owner-workplan and integrated-review checks passed. This is a
+wording-only correction; publication is recorded separately. No new test,
+provider record, financial operation or policy version was introduced.
+
 ## 2026-10-04 - Read-only owner refund estimate
 
 Reuse the existing proportional refund calculator inside a collapsed section
