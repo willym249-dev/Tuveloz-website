@@ -26,6 +26,129 @@ const server = createServer((request, response) => {
 });
 await new Promise(done => server.listen(0, "127.0.0.1", done));
 const origin = `http://127.0.0.1:${server.address().port}`;
+async function checkReadOnlyEstimate(browser, browserType) {
+  const context = await browser.newContext({ viewport: { width: 320, height: 844 }, locale: "en-US" });
+  const page = await context.newPage(), errors = [], writes = [];
+  page.on("pageerror", error => errors.push(error.message));
+  let reads = 0, failDetails = false, malformedList = false, heldResolve = null;
+  const makeReview = (id = "estimate-cancel") => ({
+    cancellationId: id, requestId: "estimate-job", cancellationType: id === "estimate-other" ? "customer_no_show" : "customer_cancel",
+    reason: "Synthetic customer stopped work.", requestedAt: "2026-10-04T10:00:00Z", customerName: "SYNTHETIC ESTIMATE CUSTOMER",
+    providerName: "SYNTHETIC ESTIMATE PROVIDER", jobStatus: "paused", providerTravelStarted: true, workRecorded: true,
+    enabled: false, blockers: ["Recorded work needs a separate evidence review."], reviewToken: "c".repeat(64),
+    estimateEligibility: { available: true, blockers: [] }, approval: null, execution: null,
+    payment: { id: "estimate-payment", stripePaymentIntentId: "pi_estimate", currency: "usd", status: "paid_pending_completion",
+      providerAmountCents: 10000, customerFeeCents: 500, customerTotalCents: 10500, paidAt: "2026-10-04T09:00:00Z" },
+    evidence: {
+      scope: { state: "matched", amountMatchesPayment: true, record: { id: "estimate-scope", scopeVersion: 1,
+        authorizationDecisionId: "estimate-authorization", customerAuthorizedAt: "2026-10-04T08:00:00Z", serviceCodes: ["oil_change"],
+        price: { laborAmountCents: 10000, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0, totalAmountCents: 10000,
+          customerFeeRateBps: 500, customerFeeCents: 500, customerTotalCents: 10500 } } },
+      invoice: { state: "missing", amountMatchesPayment: null, record: null },
+      payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "estimate-authorization", transferId: "", releasedAt: "",
+        refundAmountCents: 0, refundStatus: "", disputeStatus: "", lastRefundId: "" },
+      workRecords: [{ id: "estimate-work", workStatus: "paused", jobStartDecisionId: "estimate-start", completionDecisionId: "", trackedSeconds: 0, billableMinutes: 0 }],
+      incidentHoldIds: [], adjustments: [],
+    },
+  });
+  let current = makeReview();
+  const holdNextDetail = () => new Promise(resolve => { heldResolve = resolve; });
+  await context.route("**/*", async route => {
+    const request = route.request(), url = new URL(request.url());
+    assert.equal(url.origin, origin, "estimates must never contact a real service");
+    if (!url.pathname.startsWith("/api/")) return route.continue();
+    if (request.method() !== "GET") { writes.push(request.url()); return route.fulfill({ status: 500, json: { error: "Unexpected write" } }); }
+    reads++;
+    assert.equal(url.pathname, "/api/stripe/admin/refund-reviews", "estimates must not call a calculation or Stripe endpoint");
+    if (!url.searchParams.has("cancellationId")) return route.fulfill({ json: malformedList ? {} : { hasMore: false,
+      cases: ["estimate-cancel", "estimate-other"].map(id => ({ id, requestId: "estimate-job", customerName: "SYNTHETIC ESTIMATE CUSTOMER",
+        cancellationType: id === "estimate-other" ? "customer_no_show" : "customer_cancel", status: "submitted", requestedAt: "2026-10-04T10:00:00Z" })) } });
+    if (failDetails) return route.abort("failed");
+    const body = structuredClone({ ...current, cancellationId: url.searchParams.get("cancellationId") });
+    if (heldResolve) {
+      const resolveHeld = heldResolve; heldResolve = null;
+      return new Promise(done => resolveHeld({ respond: async () => { await route.fulfill({ json: body }); done(); } }));
+    }
+    return route.fulfill({ json: body });
+  });
+  try {
+    await page.goto(origin + "/refund-review");
+    const choose = page.getByLabel("Choose a cancellation"), review = page.getByRole("article", { name: "Cancellation refund review" });
+    const refresh = review.getByRole("button", { name: "Refresh saved review", exact: true });
+    const estimate = review.locator("details.refund-estimate"), input = estimate.getByLabel("Proposed labor refund (USD)");
+    const calculate = estimate.getByRole("button", { name: "Calculate estimate", exact: true });
+    const result = estimate.getByRole("status", { name: "Refund estimate", exact: true });
+    const openEstimate = async () => { if (await estimate.getAttribute("open") === null) await estimate.locator("summary").click(); };
+    const calculateForty = async () => { await openEstimate(); await input.fill("40"); await calculate.click(); await result.getByText("$42.00", { exact: true }).waitFor(); };
+
+    // The slower initial read cannot replace a newer explicit refresh.
+    const initialHeld = holdNextDetail(); await choose.selectOption("estimate-cancel"); const initial = await initialHeld;
+    current = makeReview(); current.customerName = "REFRESHED SYNTHETIC CUSTOMER";
+    current.estimateEligibility = { available: false, blockers: ["New evidence needs review."] };
+    await refresh.click(); await review.getByText("REFRESHED SYNTHETIC CUSTOMER", { exact: true }).waitFor();
+    const oldResponse = page.waitForResponse(response => response.url().includes("cancellationId=estimate-cancel"));
+    await initial.respond(); await (await oldResponse).finished();
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await review.getByText("REFRESHED SYNTHETIC CUSTOMER", { exact: true }).count(), 1, "a late initial response must not restore old eligibility");
+    await openEstimate(); assert.equal(await calculate.isDisabled(), true);
+
+    current = makeReview(); await refresh.click(); await review.getByText("SYNTHETIC ESTIMATE CUSTOMER", { exact: true }).waitFor();
+    assert.equal(await estimate.getAttribute("open"), null, "the estimator starts collapsed");
+    await estimate.locator("summary").focus(); await page.keyboard.press("Enter");
+    await estimate.getByText("Estimate from saved records. Pending evidence review.", { exact: true }).waitFor();
+    const beforeCalculation = reads;
+    await calculateForty();
+    for (const amount of ["$40.00", "$2.00", "$42.00"]) assert.equal(await result.getByText(amount, { exact: true }).count(), 1);
+    assert.equal(reads, beforeCalculation, "calculating uses the saved snapshot without any API request");
+    assert.equal(await review.getByRole("button", { name: "Save refund approval", exact: true }).isDisabled(), true);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "estimate fits a 320px phone");
+    if (process.env.TUVELOZ_REFUND_SCREENSHOT_DIR) await page.screenshot({ path: resolve(process.env.TUVELOZ_REFUND_SCREENSHOT_DIR, `refund-estimate-${browserType.name()}.png`), fullPage: true });
+    await input.fill("0.29"); assert.equal(await result.count(), 0, "editing the proposal clears the estimate");
+    await input.press("Enter"); await result.getByText("$0.30", { exact: true }).waitFor();
+    for (const bad of ["", "0", "-1", "1.001", "1e2", "40,00", "$40", "100.01"]) {
+      await input.fill(bad); await calculate.click(); await estimate.getByRole("alert").waitFor();
+      assert.equal(await input.getAttribute("aria-invalid"), "true"); assert.equal(await result.count(), 0, bad);
+    }
+    await calculateForty();
+    const refreshHeld = holdNextDetail(); await refresh.click(); const pending = await refreshHeld;
+    assert.equal(await result.count(), 0, "refresh clears the estimate before its response arrives");
+    await openEstimate(); assert.equal(await calculate.isDisabled(), true);
+    await pending.respond(); await refresh.waitFor({ state: "visible" }); await calculateForty();
+
+    failDetails = true; await refresh.click(); await review.getByRole("alert").waitFor(); await openEstimate();
+    assert.equal(await result.count(), 0); assert.equal(await calculate.isDisabled(), true, "a failed refresh cannot estimate from the last good snapshot");
+    assert.equal(await review.getByText("SYNTHETIC ESTIMATE CUSTOMER", { exact: true }).count(), 1);
+    failDetails = false;
+    for (const corrupt of [value => { delete value.estimateEligibility; }, value => { value.estimateEligibility.available = "true"; },
+      value => { value.evidence.incidentHoldIds = ["synthetic-hold"]; }]) {
+      current = makeReview(); corrupt(current); await refresh.click();
+      await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
+      await openEstimate(); assert.equal(await calculate.isDisabled(), true); assert.equal(await result.count(), 0);
+    }
+    current = makeReview(); await refresh.click(); await refresh.waitFor({ state: "visible" }); await calculateForty();
+    current = makeReview(); current.reviewToken = "d".repeat(64);
+    current.estimateEligibility = { available: false, blockers: ["A saved adjustment requires separate review."] };
+    await refresh.click(); await refresh.waitFor({ state: "visible" }); await openEstimate();
+    await estimate.getByText("A saved adjustment requires separate review.", { exact: true }).waitFor();
+    assert.equal(await calculate.isDisabled(), true); assert.equal(await result.count(), 0);
+    current = makeReview(); await refresh.click(); await refresh.waitFor({ state: "visible" }); await calculateForty();
+
+    // List refresh invalidates the case estimate even though its last good details remain visible.
+    malformedList = true; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+    await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor();
+    await openEstimate(); assert.equal(await calculate.isDisabled(), true); assert.equal(await result.count(), 0);
+    malformedList = false; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
+    await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor({ state: "hidden" });
+    await openEstimate(); assert.equal(await calculate.isDisabled(), true, "a list refresh cannot bless old case details");
+    await refresh.click(); await refresh.waitFor({ state: "visible" }); await calculateForty();
+    current = makeReview("estimate-other"); await choose.selectOption("estimate-other");
+    await review.getByText("Customer did not arrive · Request estimate-job", { exact: true }).waitFor(); await openEstimate();
+    assert.equal(await input.inputValue(), ""); assert.equal(await result.count(), 0, "case changes clear estimates");
+    await calculateForty();
+    assert.equal(writes.length, 0, "all estimates and recovery remain read-only"); assert.deepEqual(errors, []);
+    console.log(`PASS ${browserType.name()}: read-only refund estimate, exact cents, invalid amount rejection, 320px layout, no API calculation or writes, refreshed/malformed/stale/case invalidation, delayed initial GET ordering`);
+  } finally { await context.close(); }
+}
 try {
   for (const browserType of [chromium, webkit]) {
     const browser = await browserType.launch({ headless: true });
@@ -44,6 +167,7 @@ try {
         reason: "Synthetic provider did not arrive.", requestedAt: "2026-09-28T10:00:00Z", customerName: "SYNTHETIC CUSTOMER",
         providerName: "SYNTHETIC PROVIDER", jobStatus: approved ? "cancelled" : "assigned", providerTravelStarted: false, workRecorded: false,
         enabled, blockers: detailedEvidence ? ["An incident still has a payment hold. Resolve that review first."] : [], reviewToken: revision,
+        estimateEligibility: { available: false, blockers: ["Provider cancellations use the full-refund rule."] },
         payment: { id: "synthetic-payment", stripePaymentIntentId: "pi_synthetic", currency: "usd", providerAmountCents: 10000, customerFeeCents: 500, customerTotalCents: 10500,
           paidAt: "2026-09-28T09:00:00Z", status: execution && execution.status !== "refund_not_sent_review" ? "refund_status_review" : "paid_pending_completion" },
         approval: approved ? { id: "synthetic-approval", status: "approved", decidedAt: "2026-09-28T11:00:00Z", reason: "Synthetic owner review.", amountCents: 10500 } : null,
@@ -112,7 +236,7 @@ try {
         const check = review.getByRole("checkbox");
         const refresh = review.getByRole("button", { name: "Refresh saved review", exact: true });
         assert.equal(await save.isDisabled(), true); assert.equal(writes.length, 0);
-        const evidence = review.locator("details.refund-evidence");
+        const evidence = review.locator("details.refund-evidence:not(.refund-estimate)");
         const evidenceToggle = evidence.locator("summary");
         assert.equal(await evidence.getAttribute("open"), null, "evidence starts collapsed to keep the review simple");
         await evidenceToggle.focus(); await page.keyboard.press("Enter");
@@ -240,6 +364,7 @@ try {
         assert.equal(writes.length, 5); assert.ok(detailRequests >= 5); assert.deepEqual(errors, []);
         console.log(`PASS ${browserType.name()}: read-only evidence and retained malformed refresh, 320px evidence layout, closed submission gates, recovery during release closure, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
       } finally { await context.close(); }
+      await checkReadOnlyEstimate(browser, browserType);
     } finally { await browser.close(); }
   }
 } finally { await new Promise(done => server.close(done)); }

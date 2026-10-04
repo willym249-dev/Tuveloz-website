@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-01
+- **Last reviewed:** 2026-10-04
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,34 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-04 - Read-only owner refund estimate
+
+Reuse the existing proportional refund calculator inside a collapsed section
+of the owner review. The owner enters a hypothetical labor amount; the result
+separates labor, the matching Customer Service Fee return and the customer
+total. The estimate does not decide the justified amount, confirm Stripe funds,
+save an approval, send a refund or recover money from a provider.
+
+Only undecided customer cancellations/no-shows with matching paid labor-only
+scope and recorded authorized work may be estimated. Prior adjustments,
+refunds, transfers, disputes, holds and uncertain records block this limited
+calculation. Provider cancellations and before-work cases retain the full
+refund rule. Direct payment-ID history is included even when a saved row's
+request/quote references disagree. Quote and start evidence remain private.
+
+The initial detail request can no longer replace a newer explicit refresh:
+request generations discard delayed successes and failures. Estimates clear
+on input, case, snapshot or refresh changes, and stay disabled after failures.
+
+Build, all 1,029 tests, TypeScript, targeted zero-warning ESLint and actual
+Chromium/WebKit phone checks passed, including 320px layout, exact $40 + $2
+calculation, delayed responses, malformed refreshes and no calculation writes
+or network requests. Signed-owner/migrated-database integration checks prove
+GET does not write or call Stripe and partial-amount POSTs stay rejected.
+Independent review found no remaining issue after the loading-race repair.
+The existing full-refund workflow, policies and launch locks are preserved.
+This validation is local; publication is recorded separately.
 
 ## 2026-10-04 - Keep reversed provider transfers visibly under review
 

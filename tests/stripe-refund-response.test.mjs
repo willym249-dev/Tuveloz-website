@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue } from "../lib/stripe-refund-response.ts";
+import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue, refundEstimateLaborCents } from "../lib/stripe-refund-response.ts";
 
 const review = () => ({
   cancellationId: "synthetic-cancel", requestId: "synthetic-job", cancellationType: "provider_cancel",
   reason: "Synthetic cancellation", requestedAt: "2026-09-29T10:00:00Z", customerName: "Synthetic customer",
   providerName: "Synthetic provider", jobStatus: "assigned", reviewToken: "a".repeat(64),
   enabled: false, providerTravelStarted: false, workRecorded: false, blockers: [],
+  estimateEligibility: { available: false, blockers: ["The full-refund rule applies before work starts."] },
   payment: { id: "synthetic-payment", stripePaymentIntentId: "pi_synthetic", currency: "usd",
     paidAt: "2026-09-29T09:00:00Z", status: "paid_pending_completion",
     providerAmountCents: 10000, customerFeeCents: 500, customerTotalCents: 10500 },
@@ -40,6 +41,97 @@ const scopedReview = () => {
   } };
   return value;
 };
+const estimateReview = () => {
+  const value = scopedReview();
+  value.cancellationType = "customer_cancel"; value.workRecorded = true; value.jobStatus = "in progress";
+  value.blockers = ["Recorded work needs a separate evidence review."];
+  value.estimateEligibility = { available: true, blockers: [] };
+  value.evidence.workRecords = [{ id: "work-synthetic", workStatus: "in progress", jobStartDecisionId: "start-synthetic",
+    completionDecisionId: "", trackedSeconds: 0, billableMinutes: 0 }];
+  return value;
+};
+
+test("estimate availability is mandatory, consistent, and separate from the closed approval gate", () => {
+  assert.equal(isRefundReview(estimateReview(), "synthetic-cancel"), true);
+  for (const bad of [undefined, null, [], {}, { available: "true", blockers: [] },
+    { available: true, blockers: ["Hold"] }, { available: false, blockers: [] },
+    { available: false, blockers: [null] }, { available: false, blockers: [""] }, { available: true, blockers: null }]) {
+    const value = estimateReview(); value.estimateEligibility = bad;
+    assert.equal(isRefundReview(value, "synthetic-cancel"), false, JSON.stringify(bad));
+  }
+  for (const status of ["in progress", "paused", "completed", "stop work", "waiting for customer authorization"]) {
+    const value = estimateReview(); value.cancellationType = "customer_no_show"; value.evidence.workRecords[0].workStatus = status;
+    assert.equal(isRefundReview(value, "synthetic-cancel"), true, status);
+  }
+  const missing = estimateReview(); missing.evidence.invoice = { state: "missing", record: null, amountMatchesPayment: null };
+  assert.equal(isRefundReview(missing, "synthetic-cancel"), true);
+  const draft = estimateReview(); draft.evidence.invoice.record.status = "draft"; draft.evidence.invoice.record.issuedAt = "";
+  assert.equal(isRefundReview(draft, "synthetic-cancel"), true);
+  const tiny = estimateReview(); Object.assign(tiny.payment, { providerAmountCents: 1, customerFeeCents: 0, customerTotalCents: 1 });
+  Object.assign(tiny.evidence.scope.record.price, { laborAmountCents: 1, totalAmountCents: 1, customerFeeCents: 0, customerTotalCents: 1 });
+  Object.assign(tiny.evidence.invoice.record, { laborAmountCents: 1, totalAmountCents: 1 });
+  assert.equal(isRefundReview(tiny, "synthetic-cancel"), true, "a tiny rounded-zero fee is valid");
+});
+
+test("available estimates cannot contradict visible work, holds, decisions, or payment history", () => {
+  const changes = [
+    value => { value.cancellationType = "provider_cancel"; }, value => { value.cancellationType = "provider_no_show"; },
+    value => { value.workRecorded = false; }, value => { value.evidence.workRecords = []; },
+    value => { value.evidence.workRecords.push({ ...value.evidence.workRecords[0], id: "other" }); },
+    value => { value.evidence.workRecords[0].jobStartDecisionId = ""; },
+    value => { value.evidence.workRecords[0].workStatus = "not started"; }, value => { value.blockers = []; },
+    value => { value.evidence.incidentHoldIds = ["incident"]; },
+    value => { value.evidence.adjustments = evidenceReview().evidence.adjustments; },
+    value => { value.approval = { id: "approval", status: "approved", decidedAt: "", reason: "review", amountCents: 10500 }; },
+    value => { value.execution = { status: "refund_pending", stripeRefundId: null }; },
+    value => { value.payment.currency = "eur"; }, value => { value.payment.status = "released"; },
+    value => { value.payment.stripePaymentIntentId = ""; }, value => { value.payment.paidAt = "invalid"; },
+    value => { value.evidence.scope.record.customerAuthorizedAt = "invalid"; },
+    ...["transferId", "releasedAt", "refundStatus", "disputeStatus", "lastRefundId"].map(field => value => { value.evidence.payment[field] = "recorded"; }),
+    value => { value.evidence.payment.refundAmountCents = 1; },
+  ];
+  for (const change of changes) {
+    const value = estimateReview(); change(value);
+    assert.equal(isRefundReview(value, "synthetic-cancel"), false, change.toString());
+    value.estimateEligibility = { available: false, blockers: ["Saved records need review."] };
+    assert.equal(isRefundReview(value, "synthetic-cancel"), true, "blocked saved evidence remains readable");
+  }
+});
+
+test("available estimates require the original matched labor-only scope and any invoice to agree", () => {
+  const changes = [
+    value => { value.evidence.scope = { state: "missing", record: null, amountMatchesPayment: null }; },
+    value => { value.evidence.scope.amountMatchesPayment = false; },
+    value => { value.evidence.invoice.amountMatchesPayment = false; },
+    ...["malformed", "mismatched", "unavailable"].map(state => value => { value.evidence.invoice = { state, record: null, amountMatchesPayment: null }; }),
+    value => { value.evidence.invoice.record.serviceCodes = ["different_work"]; },
+    value => { value.evidence.scope.record.price.customerFeeRateBps = 400; },
+    value => { Object.assign(value.payment, { customerFeeCents: 501, customerTotalCents: 10501 });
+      Object.assign(value.evidence.scope.record.price, { customerFeeCents: 501, customerTotalCents: 10501 }); },
+    ...["partsAmountCents", "taxAmountCents", "otherAmountCents"].map(field => value => {
+      value.evidence.scope.record.price[field] = 100; value.evidence.scope.record.price.laborAmountCents = 9900;
+      value.evidence.invoice.record[field] = 100; value.evidence.invoice.record.laborAmountCents = 9900;
+    }),
+  ];
+  for (const change of changes) {
+    const value = estimateReview(); change(value);
+    assert.equal(isRefundReview(value, "synthetic-cancel"), false, change.toString());
+  }
+});
+
+test("proposed USD labor parses exact cents and rejects invalid or over-original amounts", () => {
+  for (const [text, expected] of [["40", 4000], ["40.0", 4000], [" 40.00 ", 4000], ["0.29", 29], ["0.01", 1], ["100.00", 10000]]) {
+    assert.equal(refundEstimateLaborCents(text, 10000), expected, text);
+  }
+  assert.equal(refundEstimateLaborCents("90071992547409.91", Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER);
+  assert.equal(refundEstimateLaborCents("90071992547409.92", Number.MAX_SAFE_INTEGER), null);
+  for (const text of [undefined, null, 40, "", " ", "0", "-1", "+1", "1e2", "0.001", ".50", "40.", "40,00", "$40", "NaN", "Infinity", "100.01", "9".repeat(21)]) {
+    assert.equal(refundEstimateLaborCents(text, 10000), null, String(text));
+  }
+  for (const maximum of [0, -1, 100.5, Infinity, NaN, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(refundEstimateLaborCents("0.01", maximum), null);
+  }
+});
 
 test("refund screen accepts complete closed and status-only records without opening any gate", () => {
   assert.equal(isRefundReview(review(), "synthetic-cancel"), true);
