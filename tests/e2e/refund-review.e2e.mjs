@@ -37,6 +37,9 @@ try {
       let rejectApproval = false, loseSend = false, malformed = false, malformedQueue = false, malformedApproval = false;
       let brokenDetails = false, recoveryMissing = false, revision = "a".repeat(64), detailRequests = 0;
       let detailedEvidence = false, malformedEvidence = false;
+      let scopeState = "matched", invoiceState = "matched", draftInvoice = false, differingInvoice = false, malformedScopeReply = false;
+      let misleadingAmountReply = false;
+      const providerAmounts = { laborAmountCents: 10000, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0, totalAmountCents: 10000 };
       const snapshot = () => ({ cancellationId: "synthetic-cancel", requestId: "synthetic-job", cancellationType: "provider_no_show",
         reason: "Synthetic provider did not arrive.", requestedAt: "2026-09-28T10:00:00Z", customerName: "SYNTHETIC CUSTOMER",
         providerName: "SYNTHETIC PROVIDER", jobStatus: approved ? "cancelled" : "assigned", providerTravelStarted: false, workRecorded: false,
@@ -46,6 +49,19 @@ try {
         approval: approved ? { id: "synthetic-approval", status: "approved", decidedAt: "2026-09-28T11:00:00Z", reason: "Synthetic owner review.", amountCents: 10500 } : null,
         execution,
         evidence: {
+          scope: !detailedEvidence || scopeState !== "matched" ? { state: detailedEvidence ? scopeState : "missing", record: null, amountMatchesPayment: null } : {
+            state: "matched", amountMatchesPayment: true, record: { id: "synthetic-scope-record", scopeVersion: 1,
+              authorizationDecisionId: "synthetic-scope", serviceCodes: ["battery_replacement"], customerAuthorizedAt: "2026-09-28T08:00:00Z",
+              price: { ...providerAmounts, customerFeeRateBps: 500, customerFeeCents: 500, customerTotalCents: malformedScopeReply ? "10500" : 10500,
+                ...(misleadingAmountReply ? { laborAmountCents: 20000, totalAmountCents: 20000, customerFeeCents: 1000, customerTotalCents: 21000 } : {}) } },
+          },
+          invoice: !detailedEvidence || invoiceState !== "matched" ? { state: detailedEvidence ? invoiceState : "missing", record: null, amountMatchesPayment: null } : {
+            state: "matched", amountMatchesPayment: !differingInvoice, record: { id: "synthetic-invoice", invoiceNumber: "TEST-" + "long".repeat(35),
+              scopeVersion: 1, status: draftInvoice ? "draft" : "final", serviceCodes: ["battery_replacement"], ...providerAmounts,
+              ...(differingInvoice ? { laborAmountCents: 12000, totalAmountCents: 12000 } : {}),
+              issuedAt: draftInvoice ? "" : "2026-09-28T09:30:00Z", workSummary: '<img src=x onerror="alert(1)"> Synthetic summary, displayed as text.',
+            },
+          },
           workRecords: detailedEvidence ? [{ id: "synthetic-work", workStatus: "paused", jobStartDecisionId: "synthetic-start", completionDecisionId: "", trackedSeconds: 1200, billableMinutes: 20 }] : [],
           incidentHoldIds: detailedEvidence ? ["synthetic-incident-hold"] : [],
           payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "synthetic-scope", transferId: detailedEvidence ? "tr_synthetic_" + "long".repeat(35) : "", releasedAt: detailedEvidence ? "2026-09-28T09:30:00Z" : "", refundAmountCents: detailedEvidence ? 4200 : 0, refundStatus: detailedEvidence ? "pending" : "", disputeStatus: detailedEvidence ? "under_review" : "", lastRefundId: detailedEvidence ? "re_synthetic_partial" : "" },
@@ -101,16 +117,46 @@ try {
         assert.equal(await evidence.getAttribute("open"), null, "evidence starts collapsed to keep the review simple");
         await evidenceToggle.focus(); await page.keyboard.press("Enter");
         await evidence.getByText("No work record is saved. Confirm what happened with the customer and provider.", { exact: true }).waitFor();
+        await evidence.getByText("No agreed-work record is saved for this payment’s scope version.", { exact: true }).waitFor();
+        await evidence.getByText("No provider invoice is saved for this payment’s scope version.", { exact: true }).waitFor();
         assert.equal(writes.length, 0, "opening saved evidence cannot approve or refund");
         detailedEvidence = true; enabled = true; await refresh.click();
         await evidence.getByText(/Provider transfer recorded:/).waitFor();
         await evidence.getByText(/Recorded refund amount: \$42.00. Refund status: pending/).waitFor();
         await evidence.getByText(/Recorded provider adjustment: -\$40.00/).waitFor();
         await evidence.getByText(/Incident payment hold:/).waitFor();
+        await evidence.getByText("Final invoice", { exact: true }).waitFor();
+        await evidence.getByText("These saved amounts match the payment’s approved price.", { exact: true }).waitFor();
+        await evidence.getByText("The invoice amounts match the provider amounts approved for this payment.", { exact: true }).waitFor();
+        await evidence.getByText(/Synthetic summary, displayed as text/).waitFor();
+        assert.equal(await evidence.locator("img").count(), 0, "provider summary must render as text, never HTML");
         assert.equal(await save.isDisabled(), true, "displaying evidence must not clear a payment hold");
         await page.setViewportSize({ width: 320, height: 844 });
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "long evidence references must fit a narrow phone");
         if (process.env.TUVELOZ_REFUND_SCREENSHOT_DIR) await page.screenshot({ path: resolve(process.env.TUVELOZ_REFUND_SCREENSHOT_DIR, `refund-evidence-${browserType.name()}.png`), fullPage: true });
+        draftInvoice = true; differingInvoice = true; await refresh.click();
+        await evidence.getByText("Draft invoice — not final", { exact: true }).waitFor();
+        await evidence.getByText(/Issued: not yet issued/).waitFor();
+        await evidence.getByText("The invoice amounts differ from the provider amounts approved for this payment. Review the source records.", { exact: true }).waitFor();
+        malformedScopeReply = true; await refresh.click();
+        await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
+        await evidence.getByText("Draft invoice — not final", { exact: true }).waitFor();
+        assert.equal(await save.isDisabled(), true, "an invalid scope response preserves the last review but cannot be approved");
+        malformedScopeReply = false; misleadingAmountReply = true; await refresh.click();
+        await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
+        assert.equal(await evidence.getByText("$200.00", { exact: true }).count(), 0, "a false match claim cannot replace saved evidence");
+        assert.equal(await save.isDisabled(), true);
+        misleadingAmountReply = false;
+        for (const state of ["mismatched", "malformed", "unavailable", "missing"]) {
+          scopeState = state; invoiceState = state; await refresh.click();
+          const agreedWork = evidence.getByRole("region", { name: "Agreed work for this payment", exact: true });
+          const invoiceRecord = evidence.getByRole("region", { name: "Provider invoice for this payment", exact: true });
+          const expected = { mismatched: /does not belong to this payment/, malformed: /incomplete or invalid details/,
+            unavailable: /single payment with a valid scope reference/, missing: /No .* is saved for this payment/ }[state];
+          await agreedWork.getByText(expected).waitFor(); await invoiceRecord.getByText(expected).waitFor();
+          assert.equal(await invoiceRecord.getByText(/Synthetic summary/).count(), 0, "unmatched records must not expose invoice details");
+        }
+        scopeState = "matched"; invoiceState = "matched"; draftInvoice = false; differingInvoice = false;
         malformedEvidence = true; await refresh.click();
         await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
         await evidence.getByText(/Recorded refund amount: \$42.00. Refund status: pending/).waitFor();

@@ -17,6 +17,34 @@ function integer(value: unknown): value is number {
 function cents(value: unknown): value is number {
   return integer(value) && value >= 0;
 }
+function serviceCodes(value: unknown): value is string[] {
+  return Array.isArray(value) && value.length > 0 && value.every(id)
+    && new Set(value).size === value.length;
+}
+function itemizedAmount(value: unknown): value is Record<string, number> {
+  if (!record(value)) return false;
+  const keys = ["laborAmountCents", "partsAmountCents", "taxAmountCents", "otherAmountCents", "totalAmountCents"];
+  return keys.every(key => cents(value[key]))
+    && (value.laborAmountCents as number) + (value.partsAmountCents as number)
+      + (value.taxAmountCents as number) + (value.otherAmountCents as number) === value.totalAmountCents;
+}
+function scopeOrInvoice(value: unknown, kind: "scope" | "invoice") {
+  if (!record(value)) return false;
+  if (["missing", "mismatched", "malformed", "unavailable"].includes(value.state as string)) {
+    return value.record === null && value.amountMatchesPayment === null;
+  }
+  if (value.state !== "matched" || typeof value.amountMatchesPayment !== "boolean" || !record(value.record)) return false;
+  const row = value.record;
+  if (!id(row.id) || !integer(row.scopeVersion) || row.scopeVersion <= 0 || !serviceCodes(row.serviceCodes)) return false;
+  if (kind === "scope") {
+    const price = row.price;
+    return id(row.authorizationDecisionId) && id(row.customerAuthorizedAt) && itemizedAmount(price)
+      && cents(price.customerFeeRateBps) && cents(price.customerFeeCents) && cents(price.customerTotalCents)
+      && price.totalAmountCents + price.customerFeeCents === price.customerTotalCents;
+  }
+  return id(row.invoiceNumber) && (row.status === "draft" || row.status === "final") && itemizedAmount(row)
+    && strings(row, ["issuedAt", "workSummary"]) && (row.status !== "final" || id(row.issuedAt));
+}
 function evidence(value: unknown): value is RefundReview["evidence"] {
   if (!record(value) || !Array.isArray(value.workRecords)
     || !value.workRecords.every(row => record(row) && id(row.id) && id(row.workStatus)
@@ -28,9 +56,16 @@ function evidence(value: unknown): value is RefundReview["evidence"] {
       && id(row.status) && id(row.currency) && cents(row.amountCents)
       && integer(row.providerImpactCents) && integer(row.customerImpactCents)
       && strings(row, ["stripeRefundId", "transferReversalId", "requestedAt", "decidedAt"]))) return false;
+  if (!scopeOrInvoice(value.scope, "scope") || !scopeOrInvoice(value.invoice, "invoice")) return false;
   const payment = value.payment;
-  return payment === null || (record(payment) && cents(payment.scopeVersion) && cents(payment.refundAmountCents)
-    && strings(payment, ["scopeAuthorizationDecisionId", "transferId", "releasedAt", "refundStatus", "disputeStatus", "lastRefundId"]));
+  if (payment === null) return (value.scope as Record<string, unknown>).state === "unavailable"
+    && (value.invoice as Record<string, unknown>).state === "unavailable";
+  if (!record(payment) || !cents(payment.scopeVersion) || !cents(payment.refundAmountCents)
+    || !strings(payment, ["scopeAuthorizationDecisionId", "transferId", "releasedAt", "refundStatus", "disputeStatus", "lastRefundId"])) return false;
+  const scope = (value.scope as Record<string, unknown>).record;
+  const invoice = (value.invoice as Record<string, unknown>).record;
+  return (!record(scope) || (scope.scopeVersion === payment.scopeVersion && scope.authorizationDecisionId === payment.scopeAuthorizationDecisionId))
+    && (!record(invoice) || invoice.scopeVersion === payment.scopeVersion);
 }
 
 export function isRefundReviewQueue(value: unknown): value is RefundReviewQueue {
@@ -51,6 +86,20 @@ export function isRefundReview(value: unknown, cancellationId: string): value is
     || !strings(payment, ["stripePaymentIntentId", "currency", "paidAt", "status"])
     || !cents(payment.providerAmountCents) || !cents(payment.customerFeeCents) || !cents(payment.customerTotalCents)
     || payment.providerAmountCents + payment.customerFeeCents !== payment.customerTotalCents)) return false;
+  if (record(payment)) {
+    const { scope, invoice } = value.evidence;
+    // The server can find a difference in the hidden paid snapshot even when
+    // these totals agree. But a true match can never contradict visible totals.
+    if (scope.record && scope.amountMatchesPayment
+      && (scope.record.price.totalAmountCents !== payment.providerAmountCents
+        || scope.record.price.customerFeeCents !== payment.customerFeeCents
+        || scope.record.price.customerTotalCents !== payment.customerTotalCents)) return false;
+    if (invoice.record && invoice.amountMatchesPayment && invoice.record.totalAmountCents !== payment.providerAmountCents) return false;
+    const scopeRecord = scope.record, invoiceRecord = invoice.record;
+    if (scopeRecord && invoiceRecord && scope.amountMatchesPayment && invoice.amountMatchesPayment
+      && (["laborAmountCents", "partsAmountCents", "taxAmountCents", "otherAmountCents"] as const)
+        .some(key => scopeRecord.price[key] !== invoiceRecord[key])) return false;
+  }
   if (approval !== null && (!record(approval) || !id(approval.id)
     || !strings(approval, ["status", "decidedAt", "reason"]) || !cents(approval.amountCents))) return false;
   if (execution !== null && (!record(execution) || !id(execution.status)
