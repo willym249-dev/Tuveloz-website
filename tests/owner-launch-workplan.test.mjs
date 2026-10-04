@@ -30,7 +30,7 @@ test("owner readiness is derived from the canonical fail-closed runtime decision
   assert.match(page, /Why payments and payouts are blocked/);
   assert.match(page, /gate\.stage === stage && !gate\.contextOnly/);
   assert.match(page, /Stage-context cards are informational only/);
-  assert.match(page, /live-stage context/);
+  assert.match(page, /configuration context/);
   assert.match(page, /Responsible:/);
   assert.match(page, /Next action:/);
 });
