@@ -39,7 +39,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
   const now = new Date().toISOString();
   let remote, transfers, posts, getCount, postMode, nextStatus, beforePost, intentChange;
   const reset = () => {
-    for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "job_cancellations", "provider_job_records", "job_incidents", "job_scope_versions", "provider_invoices", "provider_invoice_items", "repair_authorization_records", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
+    for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "provider_quotes", "job_authorization_snapshots", "job_cancellations", "provider_job_records", "job_incidents", "job_scope_versions", "provider_invoices", "provider_invoice_items", "repair_authorization_records", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
     state.open = true; state.beforeWrite = null; state.beforeExecutionWrite = null; state.env.STRIPE_SECRET_KEY = "sk_test_synthetic_refund_fixture";
     state.readinessChecks = 0; state.beforeReadiness = null;
     state.beforeBatch = null; state.batchBarrier = null; state.failBatch = false;
@@ -179,7 +179,7 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
     const addIncident = () => seed("job_incidents", { id: "incident-synthetic", request_id: "job-synthetic", reporter_role: "customer",
       reporter_email: "customer@example.invalid", incident_type: "synthetic", severity: "review", summary: "SYNTHETIC ONLY", occurred_at: now });
     const evidencePrice = (labor = 10000) => ({ laborAmountCents: labor, partsAmountCents: 0, taxAmountCents: 0,
-      otherAmountCents: 0, totalAmountCents: labor, customerFeeRateBps: 500, customerFeeCents: labor / 20, customerTotalCents: labor * 1.05 });
+      otherAmountCents: 0, totalAmountCents: labor, customerFeeRateBps: 500, customerFeeCents: Math.round(labor / 20), customerTotalCents: labor + Math.round(labor / 20) });
     const scopeRow = (changes = {}) => ({ id: "paid-scope", request_id: "job-synthetic", quote_id: "quote-synthetic", version: 1,
       service_codes: '["photo_documentation_only"]', jurisdiction: "US-MD-MontgomeryCounty", price_breakdown: JSON.stringify(evidencePrice()),
       scope_details: '{"private":"PRIVATE SCOPE DETAILS"}', created_by_provider_id: "provider-synthetic", customer_authorized_at: now,
@@ -190,8 +190,29 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       parts_description: "PRIVATE PARTS DESCRIPTION", warranty_terms: "PRIVATE WARRANTY TERMS", status: "draft", issued_at: "", ...changes });
     const paidScopePrice = () => database.prepare("UPDATE stripe_payments SET authorized_price_snapshot=?").run(JSON.stringify(evidencePrice()));
     const seedScopeInvoice = () => { paidScopePrice(); seed("job_scope_versions", scopeRow()); seed("provider_invoices", invoiceRow()); };
-    const finalizeInvoice = (issuedAt = now) => {
+    const estimateFixture = ({ invoice = false, labor = 10000 } = {}) => {
+      pendingReview(); const price = evidencePrice(labor);
+      database.exec("UPDATE job_cancellations SET cancellation_type='customer_cancel'; UPDATE provider_applications SET stripe_account_id='acct_synthetic'; UPDATE customer_requests SET assigned_person_id='person-synthetic',assignment_version=1;");
+      database.prepare("UPDATE stripe_payments SET authorized_price_snapshot=?,provider_amount_cents=?,application_fee_cents=?,customer_total_cents=?")
+        .run(JSON.stringify(price), labor, price.customerFeeCents, price.customerTotalCents);
+      seed("job_scope_versions", scopeRow({ price_breakdown: JSON.stringify(price) }));
+      seed("provider_quotes", { id: "quote-synthetic", request_id: "job-synthetic", provider_name: "SYNTHETIC PROVIDER",
+        provider_email: "provider@example.invalid", scope_version: 1, status: "accepted", service_codes: '["photo_documentation_only"]',
+        price_cents: String(labor), labor_price_cents: String(labor), parts_price_cents: "0", customer_fee_rate_bps: 500,
+        customer_fee_cents: String(price.customerFeeCents), customer_total_cents: String(price.customerTotalCents),
+        labor_only_parts_confirmed_at: now, part_type: "No parts needed", message: "PRIVATE QUOTE MESSAGE" });
       seed("repair_authorization_records", { id: "repair-authorization-synthetic", request_id: "job-synthetic", quote_id: "quote-synthetic",
+        provider_id: "provider-synthetic", provider_email: "provider@example.invalid", scope_version: 1, status: "signed",
+        customer_signature_at: now, document_hash: "SYNTHETIC AUTHORIZATION ONLY" });
+      seed("provider_job_records", { id: "work-synthetic", request_id: "job-synthetic", provider_email: "provider@example.invalid",
+        job_start_decision_id: "start-synthetic", work_status: "paused", tracked_seconds: 0, billable_minutes: 0 });
+      seed("job_authorization_snapshots", { id: "start-synthetic", request_id: "job-synthetic", quote_id: "quote-synthetic",
+        stage: "job_start", scope_version: 1, assignment_version: 1, provider_id: "provider-synthetic", performing_person_id: "person-synthetic",
+        decision: "allow", service_codes: '["photo_documentation_only"]', decided_at: now, job_control_profile: '{"private":"PRIVATE START EVIDENCE"}' });
+      if (invoice) seed("provider_invoices", invoiceRow({ labor_amount_cents: labor, total_amount_cents: labor }));
+    };
+    const finalizeInvoice = (issuedAt = now) => {
+      if (!database.prepare("SELECT id FROM repair_authorization_records WHERE id='repair-authorization-synthetic'").get()) seed("repair_authorization_records", { id: "repair-authorization-synthetic", request_id: "job-synthetic", quote_id: "quote-synthetic",
         provider_id: "provider-synthetic", provider_email: "provider@example.invalid", scope_version: 1, status: "signed",
         customer_signature_at: now, document_hash: "SYNTHETIC AUTHORIZATION ONLY" });
       seed("provider_invoice_items", { id: "invoice-item-synthetic", invoice_id: "paid-invoice", line_type: "labor",
@@ -319,9 +340,9 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
           incidentHoldIds: ["incident-synthetic"],
           payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "scope-synthetic", transferId: "tr_synthetic", releasedAt: now,
             refundAmountCents: 4200, refundStatus: "pending", disputeStatus: "needs_response", lastRefundId: "re_synthetic" },
-          adjustments: [{ id: "prior-synthetic", adjustmentType: "refund_request", status: "refund_pending", amountCents: 4200,
+          adjustments: ["other-quote-adjustment", "prior-synthetic"].map(id => ({ id, adjustmentType: "refund_request", status: "refund_pending", amountCents: 4200,
             currency: "usd", providerImpactCents: -4000, customerImpactCents: 4200, stripeRefundId: "re_synthetic",
-            transferReversalId: "trr_synthetic", requestedAt: now, decidedAt: now }],
+            transferReversalId: "trr_synthetic", requestedAt: now, decidedAt: now })),
         });
         assert.equal((await reviewCall()).body.reviewToken, view.reviewToken, "Reading evidence cannot change the reviewed facts");
       } finally { database.exec("PRAGMA query_only=OFF"); }
@@ -418,6 +439,162 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal(compared.evidence.invoice.record.status, "draft"); assert.equal(compared.evidence.invoice.record.issuedAt, "");
       assert.deepEqual(compared.blockers, [], "amount differences are evidence, not automatic refund rules");
       assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("signed owner gets a read-only estimate basis after recorded work, including missing or matching invoices", async () => {
+      for (const type of ["customer_cancel", "customer_no_show"]) for (const invoice of ["missing", "draft", "final"]) {
+        estimateFixture({ invoice: invoice !== "missing" });
+        if (invoice === "final") finalizeInvoice();
+        database.prepare("UPDATE job_cancellations SET cancellation_type=?").run(type);
+        state.open = false;
+        const before = database.prepare("SELECT total_changes() n").get().n;
+        database.exec("PRAGMA query_only=ON");
+        try {
+          const response = await reviewCall(); assert.equal(response.status, 200);
+          assert.deepEqual(response.body.estimateEligibility, { available: true, blockers: [] }, `${type}: ${invoice}`);
+          assert.equal(response.body.enabled, false, "hypothetical arithmetic never opens approval gates");
+          assert.equal(isRefundReview(response.body, "cancellation-synthetic"), true);
+          assert.equal(response.body.evidence.workRecords[0].trackedSeconds, 0, "dollars are never inferred from tracked time");
+          assert.ok(response.body.blockers.length > 0, "recorded work still blocks the existing full-refund approval");
+          assert.ok(!JSON.stringify(response.body).includes("PRIVATE"));
+          assert.equal((await reviewCall()).body.reviewToken, response.body.reviewToken);
+        } finally { database.exec("PRAGMA query_only=OFF"); }
+        assert.equal(database.prepare("SELECT total_changes() n").get().n, before);
+        assert.equal(posts.length + getCount, 0, "the estimate basis never contacts Stripe");
+      }
+      for (const labor of [1, 9, 10, 11]) {
+        estimateFixture({ labor });
+        const view = (await reviewCall()).body;
+        assert.deepEqual(view.estimateEligibility, { available: true, blockers: [] });
+        assert.equal(view.payment.customerFeeCents, Math.round(labor / 20), "saved 5% fee uses existing half-up cents");
+      }
+    });
+    await t.test("provider cancellations and all before-work cases retain full-refund review instead of proportional estimates", async () => {
+      for (const type of ["provider_cancel", "provider_no_show"]) {
+        estimateFixture(); database.prepare("UPDATE job_cancellations SET cancellation_type=?").run(type);
+        const view = (await reviewCall()).body;
+        assert.equal(view.estimateEligibility.available, false);
+        assert.ok(view.estimateEligibility.blockers.some(reason => /full-refund/.test(reason)));
+      }
+      for (const type of ["provider_cancel", "provider_no_show", "customer_cancel", "customer_no_show"]) {
+        estimateFixture(); database.prepare("UPDATE job_cancellations SET cancellation_type=?").run(type);
+        database.exec("DELETE FROM provider_job_records; DELETE FROM job_authorization_snapshots;");
+        const view = (await reviewCall()).body;
+        assert.equal(view.estimateEligibility.available, false);
+        assert.ok(view.estimateEligibility.blockers.some(reason => /Before-work/.test(reason)));
+        if (type !== "customer_no_show") assert.deepEqual(view.blockers, [], "full-refund eligibility is unchanged");
+      }
+      assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("estimate eligibility rejects mismatched work, saved decisions and incomplete payment facts", async () => {
+      const changes = [
+        "DELETE FROM provider_job_records", "DELETE FROM job_authorization_snapshots", "UPDATE provider_job_records SET job_start_decision_id=''",
+        "UPDATE provider_job_records SET work_status='scheduled'", "UPDATE provider_job_records SET provider_email='other@example.invalid'",
+        "UPDATE provider_job_records SET tracked_seconds=-1", "UPDATE provider_job_records SET billable_minutes=0.5",
+        "UPDATE job_authorization_snapshots SET decision='deny'", "UPDATE job_authorization_snapshots SET stage='completion'",
+        "UPDATE job_authorization_snapshots SET provider_id='other-provider'", "UPDATE job_authorization_snapshots SET request_id='other-job'",
+        "UPDATE job_authorization_snapshots SET quote_id='other-quote'", "UPDATE job_authorization_snapshots SET scope_version=2",
+        "UPDATE job_authorization_snapshots SET performing_person_id='other-person'", "UPDATE job_authorization_snapshots SET assignment_version=2",
+        "UPDATE job_authorization_snapshots SET service_codes='[\"battery_replacement\"]'",
+        "UPDATE job_cancellations SET decision_by='owner@example.invalid'", "UPDATE job_cancellations SET decision_reason='saved reason'",
+        "UPDATE job_cancellations SET status='approved'", "UPDATE job_cancellations SET payment_adjustment_id='prior-decision'",
+        "UPDATE job_cancellations SET retained_amount_cents=1",
+        "UPDATE job_cancellations SET proposed_refund_cents=1", "UPDATE job_cancellations SET work_performed_cents=-1",
+        "DELETE FROM provider_quotes", "UPDATE provider_quotes SET request_id='other-job'", "UPDATE provider_quotes SET provider_email='other@example.invalid'",
+        "UPDATE provider_quotes SET scope_version=2", "UPDATE provider_quotes SET status='submitted'", "UPDATE provider_quotes SET customer_fee_cents='499'",
+        "UPDATE provider_quotes SET labor_price_cents='10000oops'", "UPDATE provider_quotes SET service_codes='[\"battery_replacement\"]'",
+        "UPDATE provider_applications SET stripe_account_id='acct_other'", "UPDATE provider_applications SET is_test_provider='unknown'",
+        "UPDATE stripe_payments SET status='refund_pending'", "UPDATE stripe_payments SET settlement_strategy='destination_charge'",
+        "UPDATE stripe_payments SET currency='eur'", "UPDATE stripe_payments SET paid_at='not-a-date'", "UPDATE stripe_payments SET payment_intent_id=''",
+        "UPDATE stripe_payments SET transfer_id='tr_original'", "UPDATE stripe_payments SET released_at='2026-10-01'",
+        "UPDATE stripe_payments SET released_by='owner@example.invalid'", "UPDATE stripe_payments SET refund_amount_cents=1",
+        "UPDATE stripe_payments SET refund_status='failed'", "UPDATE stripe_payments SET refunded_at='2026-10-01'",
+        "UPDATE stripe_payments SET refund_updated_at='2026-10-01'", "UPDATE stripe_payments SET refund_failure_reason='failure'",
+        "UPDATE stripe_payments SET last_refund_id='re_prior'", "UPDATE stripe_payments SET last_refund_event_created=1",
+        "UPDATE stripe_payments SET last_refund_event_id='evt_prior'", "UPDATE stripe_payments SET dispute_status='won'",
+        "UPDATE stripe_payments SET dispute_updated_at='2026-10-01'", "UPDATE stripe_payments SET last_dispute_id='dp_prior'",
+        "UPDATE stripe_payments SET last_dispute_event_created=1", "UPDATE stripe_payments SET last_dispute_event_id='evt_prior'",
+        "DELETE FROM job_scope_versions", "UPDATE job_scope_versions SET customer_authorized_at=''",
+        "UPDATE job_scope_versions SET authorization_decision_id='other-decision'", "UPDATE job_scope_versions SET price_breakdown='{}'",
+      ];
+      for (const change of changes) {
+        estimateFixture(); database.exec(change);
+        const response = await reviewCall(); assert.equal(response.status, 200, change);
+        assert.equal(response.body.estimateEligibility.available, false, change);
+        assert.ok(response.body.estimateEligibility.blockers.length > 0, change);
+        assert.equal(posts.length + getCount, 0);
+      }
+      estimateFixture(); addIncident(); assert.equal((await reviewCall()).body.estimateEligibility.available, false);
+      estimateFixture(); seed("provider_job_records", { id: "other-work", request_id: "job-synthetic", provider_email: "other@example.invalid" });
+      assert.equal((await reviewCall()).body.estimateEligibility.available, false, "another provider's work cannot qualify the payment");
+    });
+    await t.test("estimate basis excludes non-labor prices, differing fees and every inconsistent existing invoice", async () => {
+      for (const extra of ["partsAmountCents", "taxAmountCents", "otherAmountCents", "customerFeeRateBps"]) {
+        estimateFixture();
+        const price = { ...evidencePrice(), ...(extra === "customerFeeRateBps" ? { customerFeeRateBps: 400, customerFeeCents: 400, customerTotalCents: 10400 }
+          : { laborAmountCents: 9999, [extra]: 1 }) };
+        database.prepare("UPDATE stripe_payments SET authorized_price_snapshot=?,application_fee_cents=?,customer_total_cents=?")
+          .run(JSON.stringify(price), price.customerFeeCents, price.customerTotalCents);
+        database.prepare("UPDATE job_scope_versions SET price_breakdown=?").run(JSON.stringify(price));
+        database.prepare("UPDATE provider_quotes SET customer_fee_rate_bps=?,customer_fee_cents=?,customer_total_cents=?")
+          .run(price.customerFeeRateBps, String(price.customerFeeCents), String(price.customerTotalCents));
+        assert.equal((await reviewCall()).body.estimateEligibility.available, false, extra);
+      }
+      for (const change of [
+        () => database.exec("UPDATE provider_invoices SET quote_id='other-quote'"),
+        () => database.exec("UPDATE provider_invoices SET provider_id='other-provider'"),
+        () => database.exec("UPDATE provider_invoices SET status='unknown'"),
+        () => database.exec("UPDATE provider_invoices SET invoice_number=''"),
+        () => database.exec("UPDATE provider_invoices SET labor_amount_cents=9000,total_amount_cents=9000"),
+        () => database.exec("UPDATE provider_invoices SET service_codes='[\"battery_replacement\"]'"),
+        () => database.exec("UPDATE provider_invoices SET issued_at='unexpected-draft-issue-date'"),
+      ]) {
+        estimateFixture({ invoice: true }); change();
+        const view = (await reviewCall()).body;
+        assert.equal(view.estimateEligibility.available, false, String(change));
+        assert.ok(view.estimateEligibility.blockers.some(reason => /invoice/i.test(reason)));
+        assert.equal(posts.length + getCount, 0);
+      }
+    });
+    await t.test("direct payment history blocks estimates even with mismatched request or quote and ambiguous paid candidates", async () => {
+      for (const ambiguous of [false, true]) {
+        estimateFixture();
+        if (ambiguous) for (const name of ["second", "third"]) seed("stripe_payments", { ...row(), id: `${name}-payment`, checkout_session_id: `cs_${name}`,
+          payment_intent_id: `pi_${name}`, charge_id: `ch_${name}` });
+        seed("payment_adjustments", { id: "direct-history", payment_id: ambiguous ? "third-payment" : "payment-synthetic",
+          request_id: "other-job", quote_id: "other-quote", adjustment_type: "stripe_transfer_reversal_review", amount_cents: 0,
+          status: "review_required", idempotency_key: "direct-history", details: "PRIVATE HISTORY DETAILS" });
+        const view = (await reviewCall()).body;
+        assert.equal(view.estimateEligibility.available, false);
+        assert.ok(view.estimateEligibility.blockers.some(reason => /adjustment history/.test(reason)));
+        assert.equal(view.evidence.adjustments[0].id, "direct-history");
+        assert.ok(view.blockers.some(reason => /already has an adjustment/.test(reason)), "existing full-refund blocker sees direct history too");
+        assert.ok(!JSON.stringify(view).includes("PRIVATE"));
+        assert.equal(posts.length + getCount, 0);
+      }
+    });
+    await t.test("estimate facts invalidate review tokens and proposed partial amounts never reach approval or execution", async () => {
+      for (const change of ["UPDATE provider_quotes SET message='new saved quote fact'", "UPDATE job_authorization_snapshots SET job_control_profile='{}'"]) {
+        estimateFixture(); const before = (await reviewCall()).body;
+        database.exec(change); const after = (await reviewCall()).body;
+        assert.notEqual(after.reviewToken, before.reviewToken, change);
+      }
+      estimateFixture(); const view = (await reviewCall()).body;
+      const body = { cancellationId: view.cancellationId, reviewToken: view.reviewToken, reason: "SYNTHETIC estimate remains hypothetical", confirmed: true };
+      const before = database.prepare("SELECT total_changes() n").get().n;
+      for (const extra of [{ amount: 5250 }, { proposedRefundCents: 5250 }, { providerRefundCents: 5000 }, { estimate: { providerRefundCents: 5000 } }]) {
+        assert.equal((await reviewCall({ method: "POST", body: { ...body, ...extra } })).status, 400);
+        assert.equal((await post({ adjustmentId: "nonexistent", ...extra })).status, 400);
+      }
+      assert.equal((await reviewCall({ method: "POST", body })).status, 409, "omitting amounts cannot turn recorded work into a full-refund approval");
+      assert.equal(database.prepare("SELECT total_changes() n").get().n, before); assert.equal(posts.length + getCount, 0);
+      for (const duringBatch of [false, true]) {
+        pendingReview(); const body = await approveBody();
+        const change = () => seed("provider_quotes", { id: "quote-synthetic", request_id: "job-synthetic", provider_name: "SYNTHETIC", provider_email: "provider@example.invalid",
+          price_cents: "10000", labor_price_cents: "10000", labor_only_parts_confirmed_at: now, part_type: "No parts needed" });
+        if (duringBatch) state.beforeBatch = change; else change();
+        assert.equal((await reviewCall({ method: "POST", body })).status, 409, "a newly added quote also invalidates full-approval snapshot guards");
+        assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments").get().n, 0);
+      }
     });
     await t.test("scope and invoice snapshot changes require fresh review before and during atomic approval", async () => {
       const cases = [

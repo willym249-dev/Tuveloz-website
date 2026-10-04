@@ -68,6 +68,46 @@ function evidence(value: unknown): value is RefundReview["evidence"] {
     && (!record(invoice) || invoice.scopeVersion === payment.scopeVersion);
 }
 
+function validEstimateEligibility(value: Record<string, unknown>, saved: RefundReview["evidence"]) {
+  const eligibility = value.estimateEligibility;
+  if (!record(eligibility) || typeof eligibility.available !== "boolean"
+    || !Array.isArray(eligibility.blockers) || !eligibility.blockers.every(id)
+    || eligibility.available !== (eligibility.blockers.length === 0)) return false;
+  if (!eligibility.available) return true;
+  const payment = value.payment, scope = saved.scope.record, invoice = saved.invoice.record;
+  if (!record(payment) || !saved.payment || !scope || saved.scope.state !== "matched" || !saved.scope.amountMatchesPayment
+    || !["customer_cancel", "customer_no_show"].includes(value.cancellationType as string)
+    || value.workRecorded !== true || saved.workRecords.length !== 1 || !id(saved.workRecords[0].jobStartDecisionId)
+    || !["in progress", "paused", "completed", "stop work", "waiting for customer authorization"].includes(saved.workRecords[0].workStatus)
+    || value.approval !== null || value.execution !== null || !(value.blockers as unknown[]).length
+    || saved.incidentHoldIds.length || saved.adjustments.length
+    || payment.currency !== "usd" || payment.status !== "paid_pending_completion"
+    || !cents(payment.providerAmountCents) || payment.providerAmountCents === 0
+    || !id(payment.stripePaymentIntentId) || !Number.isFinite(Date.parse(payment.paidAt as string))
+    || !Number.isFinite(Date.parse(scope.customerAuthorizedAt))
+    || saved.payment.refundAmountCents !== 0
+    || [saved.payment.transferId, saved.payment.releasedAt, saved.payment.refundStatus,
+      saved.payment.disputeStatus, saved.payment.lastRefundId].some(Boolean)) return false;
+  const price = scope.price;
+  if (price.laborAmountCents !== payment.providerAmountCents || price.partsAmountCents !== 0
+    || price.taxAmountCents !== 0 || price.otherAmountCents !== 0 || price.customerFeeRateBps !== 500
+    || BigInt(price.customerFeeCents) !== (BigInt(price.laborAmountCents) * BigInt(500) + BigInt(5000)) / BigInt(10000)) return false;
+  return saved.invoice.state === "missing" || (saved.invoice.state === "matched" && saved.invoice.amountMatchesPayment === true
+    && invoice !== null && invoice.laborAmountCents === price.laborAmountCents && invoice.partsAmountCents === 0
+    && invoice.taxAmountCents === 0 && invoice.otherAmountCents === 0
+    && invoice.serviceCodes.length === scope.serviceCodes.length && invoice.serviceCodes.every(code => scope.serviceCodes.includes(code)));
+}
+
+/** Parse a proposed USD labor amount without multiplying floating decimals. */
+export function refundEstimateLaborCents(value: unknown, maximumCents: number): number | null {
+  if (typeof value !== "string" || !cents(maximumCents) || maximumCents === 0) return null;
+  const text = value.trim();
+  if (text.length > 20 || !/^\d+(?:\.\d{1,2})?$/.test(text)) return null;
+  const [whole, fraction = ""] = text.split(".");
+  const amount = BigInt(whole) * BigInt(100) + BigInt(fraction.padEnd(2, "0"));
+  return amount > BigInt(0) && amount <= BigInt(maximumCents) ? Number(amount) : null;
+}
+
 export function isRefundReviewQueue(value: unknown): value is RefundReviewQueue {
   return record(value) && typeof value.hasMore === "boolean" && Array.isArray(value.cases)
     && value.cases.every(item => record(item) && id(item.id)
@@ -104,7 +144,7 @@ export function isRefundReview(value: unknown, cancellationId: string): value is
     || !strings(approval, ["status", "decidedAt", "reason"]) || !cents(approval.amountCents))) return false;
   if (execution !== null && (!record(execution) || !id(execution.status)
     || !(execution.stripeRefundId === null || id(execution.stripeRefundId)))) return false;
-  return true;
+  return validEstimateEligibility(value, value.evidence);
 }
 
 export function isRefundApprovalConfirmation(value: unknown): value is { adjustmentId: string; refundSent: false } {

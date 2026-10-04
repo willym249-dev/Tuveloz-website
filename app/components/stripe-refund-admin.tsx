@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { RefundReview, RefundReviewQueue } from "../../lib/stripe-refund-review";
-import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue } from "../../lib/stripe-refund-response";
+import { isRefundApprovalConfirmation, isRefundReview, isRefundReviewQueue, refundEstimateLaborCents } from "../../lib/stripe-refund-response";
+import { calculateProportionalRefund, type RefundAmounts } from "../../lib/proportional-refund-calculation";
 import { ConfirmAction } from "./confirm-action";
 
 const labels: Record<string, string> = { customer_cancel: "Customer cancellation", provider_cancel: "Provider cancellation", provider_no_show: "Provider did not arrive", customer_no_show: "Customer did not arrive" };
@@ -119,7 +120,53 @@ function RefundEvidence({ review }: { review: RefundReview }) {
   </details>;
 }
 
-function RefundCase({ id }: { id: string }) {
+function RefundEstimate({ review, stale }: { review: RefundReview; stale: boolean }) {
+  const [amount, setAmount] = useState("");
+  const [result, setResult] = useState<RefundAmounts | null>(null);
+  const [error, setError] = useState("");
+  const available = !stale && review.estimateEligibility.available && review.payment !== null;
+  const inputId = `refund-estimate-labor-${review.cancellationId}`;
+  function estimate(event: FormEvent) {
+    event.preventDefault(); setResult(null); setError("");
+    if (!available || !review.payment) return;
+    const labor = refundEstimateLaborCents(amount, review.payment.providerAmountCents);
+    if (labor === null) {
+      setError(`Enter a labor amount above $0.00 and no more than ${money(review.payment.providerAmountCents)}, with up to two decimal places.`);
+      return;
+    }
+    const calculation = calculateProportionalRefund({
+      payment: { ...review.payment, paymentId: review.payment.id },
+      operationId: `estimate-${review.cancellationId}-${review.reviewToken}`,
+      providerRefundCents: labor, history: [],
+    });
+    if (!calculation.ok) { setError("These saved records cannot support an estimate. Refresh the saved review."); return; }
+    setResult(calculation.allocation);
+  }
+  return <details className="refund-evidence refund-estimate">
+    <summary>Estimate a refund</summary>
+    <p className="admin-note">Estimate from saved records. Pending evidence review.</p>
+    <p className="admin-note">No decision is saved and no payment is sent. Stripe funds and recovery from the provider are not confirmed here.</p>
+    {stale ? <p>Refresh the saved review before estimating.</p> : !review.estimateEligibility.available
+      ? <ul>{review.estimateEligibility.blockers.map((item, index) => <li key={index}>{item}</li>)}</ul> : null}
+    <form onSubmit={estimate}>
+      <label htmlFor={inputId}>Proposed labor refund (USD)</label>
+      <input id={inputId} type="text" inputMode="decimal" autoComplete="off" maxLength={20} value={amount}
+        aria-invalid={Boolean(error)} aria-describedby={error ? `${inputId}-error` : undefined} disabled={!available}
+        onChange={event => { setAmount(event.target.value); setResult(null); setError(""); }} />
+      {error && <p id={`${inputId}-error`} className="form-error" role="alert">{error}</p>}
+      <button className="button secondary" type="submit" disabled={!available}>Calculate estimate</button>
+    </form>
+    {result && available && <section aria-label="Refund estimate" role="status">
+      <dl className="quote-breakdown compact">
+        <div><dt>Proposed labor refund</dt><dd>{money(result.providerRefundCents)}</dd></div>
+        <div><dt>Matching Customer Service Fee refund</dt><dd>{money(result.customerFeeRefundCents)}</dd></div>
+        <div className="total"><dt>Estimated customer refund</dt><dd>{money(result.customerRefundCents)}</dd></div>
+      </dl>
+    </section>}
+  </details>;
+}
+
+function RefundCase({ id, listRevision, listError }: { id: string; listRevision: number; listError: boolean }) {
   const [review, setReview] = useState<RefundReview | null>(null);
   const [reason, setReason] = useState("");
   const [confirmed, setConfirmed] = useState(false);
@@ -129,7 +176,10 @@ function RefundCase({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [recoveryNote, setRecoveryNote] = useState("");
+  const [estimateRevision, setEstimateRevision] = useState(0);
+  const [estimateListRevision, setEstimateListRevision] = useState(listRevision);
   const lock = useRef(false);
+  const reviewGeneration = useRef(0);
   const lifetime = useRef<AbortController | null>(null);
   const load = useCallback(async (signal: AbortSignal) => {
     const data = await requestJson<RefundReview>(`/api/stripe/admin/refund-reviews?cancellationId=${encodeURIComponent(id)}`, {}, signal);
@@ -138,14 +188,17 @@ function RefundCase({ id }: { id: string }) {
   }, [id]);
   useEffect(() => {
     const controller = new AbortController(); lifetime.current = controller;
-    load(controller.signal).then(data => { if (!controller.signal.aborted) { setReview(data); setStale(false); } })
-      .catch(failure => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : "Unable to load the refund review."); });
+    const generation = ++reviewGeneration.current;
+    load(controller.signal).then(data => { if (!controller.signal.aborted && generation === reviewGeneration.current) { setReview(data); setStale(false); } })
+      .catch(failure => { if (!controller.signal.aborted && generation === reviewGeneration.current) setError(failure instanceof Error ? failure.message : "Unable to load the refund review."); });
     return () => controller.abort();
   }, [load]);
   async function run(action: "refresh" | "approve" | "send" | "check") {
     if (lock.current || !lifetime.current || lifetime.current.signal.aborted) return;
     const signal = lifetime.current.signal;
+    ++reviewGeneration.current;
     lock.current = true; setBusy(true); setError(""); setMessage(""); setRecoveryNote("");
+    setEstimateRevision(value => value + 1);
     setStale(true); setConfirmed(false); setConfirmSend(false);
     try {
       let approvedId: string | null = null;
@@ -170,7 +223,7 @@ function RefundCase({ id }: { id: string }) {
         throw new Error("The approval could not be confirmed. Refresh the saved review before taking another action.");
       }
       if (!signal.aborted) {
-        setReview(data); setStale(false);
+        setReview(data); setStale(false); setEstimateListRevision(listRevision);
         if (approvedId && !data.execution) setMessage("Approval saved. No refund has been sent to Stripe.");
       }
     } catch (failure) {
@@ -203,6 +256,8 @@ function RefundCase({ id }: { id: string }) {
       <p className="admin-note">The full refund includes the Customer Service Fee. Tuveloz covers any original Stripe processing fees that are not returned.</p>
       {!review.enabled && <p className="admin-note">New refund approvals and submissions are closed. You can still review saved records and check an existing refund status.</p>}
       <RefundEvidence review={review} />
+      <RefundEstimate key={`${review.reviewToken}:${estimateRevision}:${listRevision}`} review={review}
+        stale={stale || busy || listError || estimateListRevision !== listRevision} />
       {!review.approval && review.blockers.length > 0 && <ul>{review.blockers.map(item => <li key={item}>{item}</li>)}</ul>}
       {!review.approval && <form onSubmit={event => { event.preventDefault(); void run("approve"); }}>
         <label htmlFor={`refund-reason-${id}`}>Reason for approving this refund</label>
@@ -251,6 +306,6 @@ export function StripeRefundAdmin() {
       </select>
       {queue.hasMore && <p className="admin-note">Showing up to 100 cancellations, with undecided cases first. Other cases need a separate record search.</p>}
     </>}
-    {selected && <RefundCase key={selected} id={selected} />}
+    {selected && <RefundCase key={selected} id={selected} listRevision={reload} listError={Boolean(error)} />}
   </section>;
 }
