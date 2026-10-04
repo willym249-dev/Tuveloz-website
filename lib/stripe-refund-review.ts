@@ -94,6 +94,21 @@ export async function getRefundReview(id: string) {
     payment: p ? { id: p.id, stripePaymentIntentId: p.paymentIntentId, currency: p.currency, paidAt: p.paidAt, status: p.status,
       providerAmountCents: p.providerAmountCents, customerFeeCents: p.applicationFeeCents,
       customerTotalCents: p.customerTotalCents } : null,
+    // An explicit read-only projection of the same facts used for this review.
+    // Raw notes, contacts, documents and processor payloads remain private.
+    evidence: {
+      workRecords: facts.work.map(row => ({ id: row.id, workStatus: row.workStatus,
+        jobStartDecisionId: row.jobStartDecisionId, completionDecisionId: row.completionDecisionId,
+        trackedSeconds: row.trackedSeconds, billableMinutes: row.billableMinutes })),
+      incidentHoldIds: facts.incidents.map(row => row.id),
+      payment: p ? { scopeVersion: p.scopeVersion, scopeAuthorizationDecisionId: p.scopeAuthorizationDecisionId,
+        transferId: p.transferId ?? "", releasedAt: p.releasedAt, refundAmountCents: p.refundAmountCents,
+        refundStatus: p.refundStatus, disputeStatus: p.disputeStatus, lastRefundId: p.lastRefundId } : null,
+      adjustments: adjustments.map(row => ({ id: row.id, adjustmentType: row.adjustmentType, status: row.status,
+        amountCents: row.amountCents, currency: row.currency, providerImpactCents: row.providerImpactCents,
+        customerImpactCents: row.customerImpactCents, stripeRefundId: row.stripeRefundId,
+        transferReversalId: row.transferReversalId, requestedAt: row.requestedAt, decidedAt: row.decidedAt })),
+    },
     enabled, blockers: blockersFor(facts), reviewToken: await digest(facts),
     approval: approval ? { id: approval.id, status: approval.status, decidedAt: approval.decidedAt,
       reason: c.decisionReason, amountCents: approval.amountCents } : null,

@@ -36,14 +36,21 @@ try {
       const writes = []; let statusReads = 0, enabled = false, approved = false, execution = null, expired = false;
       let rejectApproval = false, loseSend = false, malformed = false, malformedQueue = false, malformedApproval = false;
       let brokenDetails = false, recoveryMissing = false, revision = "a".repeat(64), detailRequests = 0;
+      let detailedEvidence = false, malformedEvidence = false;
       const snapshot = () => ({ cancellationId: "synthetic-cancel", requestId: "synthetic-job", cancellationType: "provider_no_show",
         reason: "Synthetic provider did not arrive.", requestedAt: "2026-09-28T10:00:00Z", customerName: "SYNTHETIC CUSTOMER",
         providerName: "SYNTHETIC PROVIDER", jobStatus: approved ? "cancelled" : "assigned", providerTravelStarted: false, workRecorded: false,
-        enabled, blockers: [], reviewToken: revision,
+        enabled, blockers: detailedEvidence ? ["An incident still has a payment hold. Resolve that review first."] : [], reviewToken: revision,
         payment: { id: "synthetic-payment", stripePaymentIntentId: "pi_synthetic", currency: "usd", providerAmountCents: 10000, customerFeeCents: 500, customerTotalCents: 10500,
           paidAt: "2026-09-28T09:00:00Z", status: execution && execution.status !== "refund_not_sent_review" ? "refund_status_review" : "paid_pending_completion" },
         approval: approved ? { id: "synthetic-approval", status: "approved", decidedAt: "2026-09-28T11:00:00Z", reason: "Synthetic owner review.", amountCents: 10500 } : null,
         execution,
+        evidence: {
+          workRecords: detailedEvidence ? [{ id: "synthetic-work", workStatus: "paused", jobStartDecisionId: "synthetic-start", completionDecisionId: "", trackedSeconds: 1200, billableMinutes: 20 }] : [],
+          incidentHoldIds: detailedEvidence ? ["synthetic-incident-hold"] : [],
+          payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "synthetic-scope", transferId: detailedEvidence ? "tr_synthetic_" + "long".repeat(35) : "", releasedAt: detailedEvidence ? "2026-09-28T09:30:00Z" : "", refundAmountCents: detailedEvidence ? 4200 : 0, refundStatus: detailedEvidence ? "pending" : "", disputeStatus: detailedEvidence ? "under_review" : "", lastRefundId: detailedEvidence ? "re_synthetic_partial" : "" },
+          adjustments: detailedEvidence ? [{ id: "synthetic-prior-adjustment", adjustmentType: "partial_refund_review", status: "pending", amountCents: malformedEvidence ? -4200 : 4200, currency: "usd", providerImpactCents: -4000, customerImpactCents: 4200, stripeRefundId: "re_synthetic_partial", transferReversalId: "trr_synthetic", requestedAt: "2026-09-28T10:00:00Z", decidedAt: "" }] : [],
+        },
       });
       await context.route("**/*", async route => {
         const request = route.request(), url = new URL(request.url());
@@ -89,6 +96,29 @@ try {
         const check = review.getByRole("checkbox");
         const refresh = review.getByRole("button", { name: "Refresh saved review", exact: true });
         assert.equal(await save.isDisabled(), true); assert.equal(writes.length, 0);
+        const evidence = review.locator("details.refund-evidence");
+        const evidenceToggle = evidence.locator("summary");
+        assert.equal(await evidence.getAttribute("open"), null, "evidence starts collapsed to keep the review simple");
+        await evidenceToggle.focus(); await page.keyboard.press("Enter");
+        await evidence.getByText("No work record is saved. Confirm what happened with the customer and provider.", { exact: true }).waitFor();
+        assert.equal(writes.length, 0, "opening saved evidence cannot approve or refund");
+        detailedEvidence = true; enabled = true; await refresh.click();
+        await evidence.getByText(/Provider transfer recorded:/).waitFor();
+        await evidence.getByText(/Recorded refund amount: \$42.00. Refund status: pending/).waitFor();
+        await evidence.getByText(/Recorded provider adjustment: -\$40.00/).waitFor();
+        await evidence.getByText(/Incident payment hold:/).waitFor();
+        assert.equal(await save.isDisabled(), true, "displaying evidence must not clear a payment hold");
+        await page.setViewportSize({ width: 320, height: 844 });
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, "long evidence references must fit a narrow phone");
+        if (process.env.TUVELOZ_REFUND_SCREENSHOT_DIR) await page.screenshot({ path: resolve(process.env.TUVELOZ_REFUND_SCREENSHOT_DIR, `refund-evidence-${browserType.name()}.png`), fullPage: true });
+        malformedEvidence = true; await refresh.click();
+        await review.getByText("The saved review could not be read. Refresh before approving anything.", { exact: true }).waitFor();
+        await evidence.getByText(/Recorded refund amount: \$42.00. Refund status: pending/).waitFor();
+        assert.equal(await save.isDisabled(), true, "malformed evidence must preserve the last record and block approval");
+        assert.equal(writes.length, 0, "evidence viewing and malformed refreshes must not write");
+        detailedEvidence = false; malformedEvidence = false; await refresh.click();
+        await evidence.getByText("No adjustment is saved for this quote.", { exact: true }).waitFor();
+        await evidenceToggle.click(); await page.setViewportSize({ width: 390, height: 844 });
         enabled = true; await refresh.click(); await check.waitFor({ state: "visible" });
         await reason.fill("Synthetic owner confirms no work started.");
         assert.equal(await save.isDisabled(), true, "a reason without confirmation cannot approve");
@@ -111,7 +141,7 @@ try {
         const send = review.getByRole("button", { name: "Send refund to Stripe", exact: true });
         await send.click();
         await review.getByRole("group", { name: "Send this refund?" }).waitFor();
-        assert.match(await review.getByRole("group").textContent(), /\$105\.00/);
+        assert.match(await review.getByRole("group", { name: "Send this refund?" }).textContent(), /\$105\.00/);
         assert.equal(writes.length, 3, "opening the confirmation must not send money");
         await review.getByRole("button", { name: "Go back", exact: true }).click(); assert.equal(writes.length, 3);
         await send.click(); loseSend = true;
@@ -162,7 +192,7 @@ try {
         malformedQueue = false; await page.getByRole("button", { name: "Refresh list", exact: true }).click();
         await page.getByText("Unable to read the refund review list. Refresh the list to try again.", { exact: true }).waitFor({ state: "hidden" });
         assert.equal(writes.length, 5); assert.ok(detailRequests >= 5); assert.deepEqual(errors, []);
-        console.log(`PASS ${browserType.name()}: closed submission gates, recovery during release closure, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
+        console.log(`PASS ${browserType.name()}: read-only evidence and retained malformed refresh, 320px evidence layout, closed submission gates, recovery during release closure, explicit retry, exact amounts, valid approval confirmation, malformed nested review/list recovery, retained selection and draft, sign-in recovery, mobile layout`);
       } finally { await context.close(); }
     } finally { await browser.close(); }
   }

@@ -28,6 +28,44 @@ async function requestJson<T>(url: string, init: RequestInit = {}, signal?: Abor
   return data as T;
 }
 
+function RefundEvidence({ review }: { review: RefundReview }) {
+  const { evidence } = review;
+  return <details className="refund-evidence">
+    <summary>Review work and payment records</summary>
+    <p className="admin-note">These are saved Tuveloz records. Review the agreed work and both parties’ evidence before deciding an amount. Recorded time alone does not establish what the customer owes.</p>
+    <h4>Work recorded for this job</h4>
+    {!evidence.workRecords.length ? <p>No work record is saved. Confirm what happened with the customer and provider.</p> : <ul>
+      {evidence.workRecords.map(row => <li key={row.id}>
+        <p><strong>{row.workStatus.replaceAll("_", " ")}</strong> · Record <code>{row.id}</code></p>
+        <p>Start authorization: {row.jobStartDecisionId || "not recorded"}. Completion authorization: {row.completionDecisionId || "not recorded"}.</p>
+        <p>Recorded time: {row.trackedSeconds} seconds · Recorded billable minutes: {row.billableMinutes}.</p>
+      </li>)}
+    </ul>}
+    <h4>Payment and recovery</h4>
+    {evidence.payment ? <>
+      <p>Recorded scope version: {evidence.payment.scopeVersion || "not recorded"}. Authorization: {evidence.payment.scopeAuthorizationDecisionId || "not recorded"}.</p>
+      <p>{evidence.payment.transferId ? <>Provider transfer recorded: <code>{evidence.payment.transferId}</code>. This does not confirm arrival in the provider’s bank.</> : "No provider transfer ID is saved. Confirm any uncertain transfer before sending a refund."}</p>
+      {evidence.payment.releasedAt && <p>Recorded release time: {evidence.payment.releasedAt}.</p>}
+      <p>Recorded refund amount: {money(evidence.payment.refundAmountCents, review.payment?.currency)}. Refund status: {evidence.payment.refundStatus.replaceAll("_", " ") || "not recorded"}.</p>
+      {evidence.payment.lastRefundId && <p>Last refund reference: <code>{evidence.payment.lastRefundId}</code>.</p>}
+      <p>Dispute status: {evidence.payment.disputeStatus.replaceAll("_", " ") || "not recorded"}.</p>
+    </> : <p>A single paid payment could not be identified. Resolve that before calculating a refund.</p>}
+    {evidence.incidentHoldIds.length > 0 ? <p><strong>Incident payment hold:</strong> {evidence.incidentHoldIds.join(", ")}. Keep the hold in place until its review is resolved.</p> : <p>No incident payment hold is recorded for this job.</p>}
+    <h4>Existing adjustment records</h4>
+    {!evidence.adjustments.length ? <p>No adjustment is saved for this quote.</p> : <>
+      <p className="admin-note">An approval and its payment attempt can describe the same refund. Do not add these rows together or treat an approval as money returned.</p>
+      <ul>{evidence.adjustments.map(row => <li key={row.id}>
+        <p><strong>{row.adjustmentType.replaceAll("_", " ")}</strong> · {row.status.replaceAll("_", " ")} · <code>{row.id}</code></p>
+        <p>Recorded amount: {money(row.amountCents, row.currency)}. Recorded provider adjustment: {money(row.providerImpactCents, row.currency)}. Recorded customer adjustment: {money(row.customerImpactCents, row.currency)}.</p>
+        <p>Requested: {row.requestedAt || "not recorded"}. Decided: {row.decidedAt || "not recorded"}.</p>
+        {row.stripeRefundId && <p>Refund reference: <code>{row.stripeRefundId}</code>.</p>}
+        {row.transferReversalId && <p>Transfer reversal reference: <code>{row.transferReversalId}</code>. Verify its status and amount before relying on recovery.</p>}
+      </li>)}</ul>
+    </>}
+    <p className="admin-note">Viewing these records does not refund a payment or recover money from a provider.</p>
+  </details>;
+}
+
 function RefundCase({ id }: { id: string }) {
   const [review, setReview] = useState<RefundReview | null>(null);
   const [reason, setReason] = useState("");
@@ -104,13 +142,14 @@ function RefundCase({ id }: { id: string }) {
       <p><strong>Reported reason:</strong> {review.reason}</p>
       <p>Job status: {review.jobStatus.replaceAll("_", " ")}. {review.providerTravelStarted ? "Provider travel was reported." : "No provider travel reported."}</p>
       {review.payment && <dl className="quote-breakdown compact">
-        <div><dt>Provider amount to return</dt><dd>{money(review.payment.providerAmountCents, review.payment.currency)}</dd></div>
-        <div><dt>Customer Service Fee to return</dt><dd>{money(review.payment.customerFeeCents, review.payment.currency)}</dd></div>
-        <div className="total"><dt>Full customer refund</dt><dd>{money(review.payment.customerTotalCents, review.payment.currency)}</dd></div>
+        <div><dt>Original provider labor charge</dt><dd>{money(review.payment.providerAmountCents, review.payment.currency)}</dd></div>
+        <div><dt>Original Customer Service Fee</dt><dd>{money(review.payment.customerFeeCents, review.payment.currency)}</dd></div>
+        <div className="total"><dt>Original customer payment</dt><dd>{money(review.payment.customerTotalCents, review.payment.currency)}</dd></div>
       </dl>}
       {review.payment && <p className="admin-note">Payment {review.payment.id} · Paid {new Date(review.payment.paidAt).toLocaleString()}</p>}
       <p className="admin-note">The full refund includes the Customer Service Fee. Tuveloz covers any original Stripe processing fees that are not returned.</p>
       {!review.enabled && <p className="admin-note">New refund approvals and submissions are closed. You can still review saved records and check an existing refund status.</p>}
+      <RefundEvidence review={review} />
       {!review.approval && review.blockers.length > 0 && <ul>{review.blockers.map(item => <li key={item}>{item}</li>)}</ul>}
       {!review.approval && <form onSubmit={event => { event.preventDefault(); void run("approve"); }}>
         <label htmlFor={`refund-reason-${id}`}>Reason for approving this refund</label>

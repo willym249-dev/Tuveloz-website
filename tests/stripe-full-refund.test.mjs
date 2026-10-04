@@ -251,6 +251,76 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       assert.equal((await post({ adjustmentId: decision.id })).body.refundSucceeded, true, "the saved approval must actually feed the existing executor");
       assert.equal(posts.length, 1); assert.equal((await reviewCall()).body.execution.status, "refund_succeeded");
     });
+    await t.test("review evidence exposes only saved work, hold and adjustment facts without database or Stripe writes", async () => {
+      pendingReview();
+      seed("provider_job_records", { id: "work-synthetic", request_id: "job-synthetic", provider_email: "private-worker@example.invalid",
+        work_status: "paused", job_start_decision_id: "start-synthetic", completion_decision_id: "",
+        tracked_seconds: 601, billable_minutes: 11, work_notes: "PRIVATE WORK NOTES", parts_notes: "PRIVATE PARTS NOTES" });
+      addIncident();
+      seed("job_incidents", { id: "no-hold-synthetic", request_id: "job-synthetic", reporter_role: "customer",
+        reporter_email: "private-reporter@example.invalid", incident_type: "synthetic", severity: "review", summary: "PRIVATE INCIDENT", occurred_at: now, hold_payments: "no" });
+      seed("job_incidents", { id: "other-job-hold", request_id: "other-job", reporter_role: "customer",
+        reporter_email: "other@example.invalid", incident_type: "synthetic", severity: "review", summary: "OTHER PRIVATE INCIDENT", occurred_at: now });
+      database.prepare("UPDATE stripe_payments SET transfer_id=?,released_at=?,refund_amount_cents=4200,refund_status='pending',dispute_status='needs_response',last_refund_id=?")
+        .run("tr_synthetic", now, "re_synthetic");
+      const adjustment = { id: "prior-synthetic", payment_id: "payment-synthetic", request_id: "job-synthetic", quote_id: "quote-synthetic",
+        adjustment_type: "refund_request", amount_cents: 4200, currency: "usd", status: "refund_pending", reason_code: "synthetic",
+        details: '{"private":"PRIVATE ADJUSTMENT DETAILS"}', requested_by_role: "owner", requested_by_id: "private-owner@example.invalid",
+        requested_at: now, decided_by: "private-owner@example.invalid", decided_at: now, provider_impact_cents: -4000,
+        customer_impact_cents: 4200, stripe_refund_id: "re_synthetic", transfer_reversal_id: "trr_synthetic", idempotency_key: "synthetic-prior-adjustment" };
+      seed("payment_adjustments", adjustment);
+      seed("payment_adjustments", { ...adjustment, id: "other-quote-adjustment", quote_id: "other-quote", idempotency_key: "other-quote-adjustment" });
+      state.open = false;
+      const beforeChanges = database.prepare("SELECT total_changes() n").get().n;
+      const beforePayment = row(), beforeAdjustment = database.prepare("SELECT * FROM payment_adjustments WHERE id='prior-synthetic'").get();
+      let view;
+      database.exec("PRAGMA query_only=ON");
+      try {
+        const result = await reviewCall(); assert.equal(result.status, 200, JSON.stringify(result.body)); view = result.body;
+        assert.equal(isRefundReview(view, "cancellation-synthetic"), true);
+        assert.equal(view.enabled, false);
+        assert.deepEqual(view.evidence, {
+          workRecords: [{ id: "work-synthetic", workStatus: "paused", jobStartDecisionId: "start-synthetic",
+            completionDecisionId: "", trackedSeconds: 601, billableMinutes: 11 }],
+          incidentHoldIds: ["incident-synthetic"],
+          payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "scope-synthetic", transferId: "tr_synthetic", releasedAt: now,
+            refundAmountCents: 4200, refundStatus: "pending", disputeStatus: "needs_response", lastRefundId: "re_synthetic" },
+          adjustments: [{ id: "prior-synthetic", adjustmentType: "refund_request", status: "refund_pending", amountCents: 4200,
+            currency: "usd", providerImpactCents: -4000, customerImpactCents: 4200, stripeRefundId: "re_synthetic",
+            transferReversalId: "trr_synthetic", requestedAt: now, decidedAt: now }],
+        });
+        assert.equal((await reviewCall()).body.reviewToken, view.reviewToken, "Reading evidence cannot change the reviewed facts");
+      } finally { database.exec("PRAGMA query_only=OFF"); }
+      assert.equal(database.prepare("SELECT total_changes() n").get().n, beforeChanges);
+      assert.deepEqual(row(), beforePayment);
+      assert.deepEqual(database.prepare("SELECT * FROM payment_adjustments WHERE id='prior-synthetic'").get(), beforeAdjustment);
+      assert.equal(posts.length + getCount, 0, "Viewing evidence cannot contact Stripe");
+      assert.ok(view.blockers.some(item => item.startsWith("Work, parts")));
+      assert.ok(view.blockers.some(item => item.startsWith("An incident")));
+      assert.ok(view.blockers.some(item => item.startsWith("A transfer, refund, dispute")));
+      assert.ok(view.blockers.some(item => item.startsWith("This payment already has an adjustment")));
+      state.open = true;
+      assert.equal((await reviewCall({ method: "POST", body: { cancellationId: view.cancellationId, reviewToken: view.reviewToken,
+        reason: "SYNTHETIC: evidence remains blocked.", confirmed: true } })).status, 409);
+      assert.equal(database.prepare("SELECT total_changes() n").get().n, beforeChanges);
+      assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("unpaid or ambiguous payment evidence stays null without hiding the existing review blocker", async () => {
+      for (const ambiguous of [false, true]) {
+        pendingReview();
+        if (ambiguous) seed("stripe_payments", { ...row(), id: "second-payment", checkout_session_id: "cs_second",
+          payment_intent_id: "pi_second", charge_id: "ch_second" });
+        else database.exec("UPDATE stripe_payments SET paid_at=''");
+        const before = database.prepare("SELECT total_changes() n").get().n;
+        const result = await reviewCall(); assert.equal(result.status, 200);
+        assert.equal(isRefundReview(result.body, "cancellation-synthetic"), true);
+        assert.equal(result.body.payment, null);
+        assert.deepEqual(result.body.evidence, { workRecords: [], incidentHoldIds: [], payment: null, adjustments: [] });
+        assert.ok(result.body.blockers.some(item => item.startsWith("A single settled payment")));
+        assert.equal(database.prepare("SELECT total_changes() n").get().n, before);
+        assert.equal(posts.length + getCount, 0);
+      }
+    });
     await t.test("stale, ambiguous, unsafe and started-work reviews cannot be approved", async () => {
       const changes = [
         "UPDATE stripe_payments SET customer_total_cents=10600", "UPDATE stripe_payments SET transfer_id='tr_sent'",
