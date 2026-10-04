@@ -1,9 +1,10 @@
 import { and, asc, desc, eq, exists, getTableColumns, inArray, ne, sql } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import { getDb } from "../db";
-import { customerRequests, jobCancellations, jobIncidents, paymentAdjustments, providerApplications, providerJobRecords, stripePayments } from "../db/schema";
+import { customerRequests, jobCancellations, jobIncidents, jobScopeVersions, paymentAdjustments, providerApplications, providerInvoices, providerJobRecords, stripePayments } from "../db/schema";
 import { fullRefundPaymentSnapshot, FullRefundReviewError } from "./stripe-full-refund";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
+import { refundScopeEvidence } from "./stripe-refund-scope-evidence";
 
 const pendingStatuses = ["submitted", "under_review"];
 const approvalKey = (id: string) => `tuveloz-cancellation-approval-${id}`;
@@ -40,7 +41,15 @@ async function factsFor(id: string) {
   const payment = payments.length === 1 ? payments[0] : null;
   const [provider] = payment ? await db.select().from(providerApplications).where(eq(providerApplications.id, payment.providerApplicationId)).limit(1) : [];
   if (provider?.isTestProvider === "yes") throw new FullRefundReviewError("Simulation records use the test console.", 404);
-  return { cancellation, job, payments, payment, provider: provider ?? null, work, incidents, adjustments };
+  // Inspect the paid version, including mismatched rows so missing/mismatched
+  // evidence is explicit. Never substitute the current job's newer scope.
+  const [scopes, invoices] = payment ? await Promise.all([
+    db.select().from(jobScopeVersions).where(and(eq(jobScopeVersions.requestId, cancellation.requestId),
+      eq(jobScopeVersions.version, payment.scopeVersion))).orderBy(asc(jobScopeVersions.id)).limit(2),
+    db.select().from(providerInvoices).where(and(eq(providerInvoices.requestId, cancellation.requestId),
+      eq(providerInvoices.scopeVersion, payment.scopeVersion))).orderBy(asc(providerInvoices.id)).limit(2),
+  ]) : [[], []];
+  return { cancellation, job, payments, payment, provider: provider ?? null, work, incidents, adjustments, scopes, invoices };
 }
 
 function blockersFor(facts: Awaited<ReturnType<typeof factsFor>>) {
@@ -97,6 +106,7 @@ export async function getRefundReview(id: string) {
     // An explicit read-only projection of the same facts used for this review.
     // Raw notes, contacts, documents and processor payloads remain private.
     evidence: {
+      ...refundScopeEvidence(p, facts.scopes, facts.invoices),
       workRecords: facts.work.map(row => ({ id: row.id, workStatus: row.workStatus,
         jobStartDecisionId: row.jobStartDecisionId, completionDecisionId: row.completionDecisionId,
         trackedSeconds: row.trackedSeconds, billableMinutes: row.billableMinutes })),
@@ -161,6 +171,15 @@ export async function approveFullRefund(input: { cancellationId: string; reviewT
     exists(db.select({ id: customerRequests.id }).from(customerRequests).where(and(eq(customerRequests.id, job.id), unchanged(customerRequests, job)))),
     exists(db.select({ id: stripePayments.id }).from(stripePayments).where(and(eq(stripePayments.id, p.id), unchanged(stripePayments, p)))),
     exists(db.select({ id: providerApplications.id }).from(providerApplications).where(and(eq(providerApplications.id, provider.id), unchanged(providerApplications, provider)))),
+    // Read-only evidence changes invalidate approval, including a row inserted
+    // after a review displayed "missing". These are snapshot guards, not new
+    // invoice/scope eligibility rules.
+    sql`(select count(*) from job_scope_versions where request_id = ${c.requestId} and version = ${p.scopeVersion}) = ${facts.scopes.length}`,
+    ...facts.scopes.map(row => exists(db.select({ id: jobScopeVersions.id }).from(jobScopeVersions)
+      .where(and(eq(jobScopeVersions.id, row.id), unchanged(jobScopeVersions, row))))),
+    sql`(select count(*) from provider_invoices where request_id = ${c.requestId} and scope_version = ${p.scopeVersion}) = ${facts.invoices.length}`,
+    ...facts.invoices.map(row => exists(db.select({ id: providerInvoices.id }).from(providerInvoices)
+      .where(and(eq(providerInvoices.id, row.id), unchanged(providerInvoices, row))))),
     sql`(select count(*) from stripe_payments where request_id = ${c.requestId} and quote_id = ${c.quoteId} and paid_at <> '') = 1`,
     sql`not exists (select 1 from payment_adjustments where payment_id = ${p.id} or (request_id = ${c.requestId} and quote_id = ${c.quoteId}))`,
     sql`not exists (select 1 from job_incidents where request_id = ${c.requestId} and hold_payments = 'yes')`,

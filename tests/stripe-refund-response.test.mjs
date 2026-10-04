@@ -11,6 +11,8 @@ const review = () => ({
     paidAt: "2026-09-29T09:00:00Z", status: "paid_pending_completion",
     providerAmountCents: 10000, customerFeeCents: 500, customerTotalCents: 10500 },
   evidence: { workRecords: [], incidentHoldIds: [], adjustments: [],
+    scope: { state: "missing", record: null, amountMatchesPayment: null },
+    invoice: { state: "missing", record: null, amountMatchesPayment: null },
     payment: { scopeVersion: 1, scopeAuthorizationDecisionId: "scope-synthetic", transferId: "", releasedAt: "",
       refundAmountCents: 0, refundStatus: "", disputeStatus: "", lastRefundId: "" } },
   approval: null, execution: null,
@@ -25,16 +27,93 @@ const evidenceReview = () => {
     stripeRefundId: "", transferReversalId: "", requestedAt: "2026-09-29T10:00:00Z", decidedAt: "" });
   return value;
 };
+const scopedReview = () => {
+  const value = review();
+  const amounts = { laborAmountCents: 10000, partsAmountCents: 0, taxAmountCents: 0, otherAmountCents: 0, totalAmountCents: 10000 };
+  value.evidence.scope = { state: "matched", amountMatchesPayment: true, record: {
+    id: "scope-record", scopeVersion: 1, authorizationDecisionId: "scope-synthetic", serviceCodes: ["oil_change"],
+    customerAuthorizedAt: "2026-09-29T08:00:00Z", price: { ...amounts, customerFeeRateBps: 500, customerFeeCents: 500, customerTotalCents: 10500 },
+  } };
+  value.evidence.invoice = { state: "matched", amountMatchesPayment: true, record: {
+    id: "invoice-record", invoiceNumber: "TEST-1", scopeVersion: 1, status: "final", serviceCodes: ["oil_change"],
+    ...amounts, issuedAt: "2026-09-29T08:00:00Z", workSummary: "Synthetic invoice summary.",
+  } };
+  return value;
+};
 
 test("refund screen accepts complete closed and status-only records without opening any gate", () => {
   assert.equal(isRefundReview(review(), "synthetic-cancel"), true);
   const missingPayment = review(); missingPayment.payment = null; missingPayment.evidence.payment = null;
+  missingPayment.evidence.scope.state = "unavailable"; missingPayment.evidence.invoice.state = "unavailable";
   missingPayment.blockers = ["Payment needs review."];
   assert.equal(isRefundReview(missingPayment, "synthetic-cancel"), true);
   assert.equal(isRefundReview({ ...review(), approval: { id: "synthetic-approval", status: "approved",
     decidedAt: "2026-09-29T11:00:00Z", reason: "Synthetic review", amountCents: 10500 },
     execution: { status: "refund_submission_unconfirmed", stripeRefundId: null } }, "synthetic-cancel"), true);
   assert.equal(isRefundReview(review(), "different-cancellation"), false);
+});
+
+test("scope and invoice states preserve missing records and distinguish draft and amount differences", () => {
+  const value = scopedReview();
+  assert.equal(isRefundReview(value, "synthetic-cancel"), true);
+  value.evidence.invoice.record.status = "draft"; value.evidence.invoice.record.issuedAt = "";
+  value.evidence.invoice.amountMatchesPayment = false; value.evidence.scope.amountMatchesPayment = false;
+  assert.equal(isRefundReview(value, "synthetic-cancel"), true);
+  for (const state of ["missing", "mismatched", "malformed", "unavailable"]) {
+    for (const field of ["scope", "invoice"]) {
+      const next = scopedReview(); next.evidence[field] = { state, record: null, amountMatchesPayment: null };
+      assert.equal(isRefundReview(next, "synthetic-cancel"), true, `${field}:${state}`);
+    }
+  }
+});
+
+test("inconsistent scope and invoice replies cannot replace the prior safe review", () => {
+  for (const field of ["scope", "invoice"]) {
+    for (const bad of [undefined, null, {}, { state: "matched", record: null, amountMatchesPayment: true },
+      { state: "missing", record: scopedReview().evidence[field].record, amountMatchesPayment: null },
+      { state: "missing", record: null, amountMatchesPayment: true },
+      { ...scopedReview().evidence[field], amountMatchesPayment: "true" }]) {
+      const value = scopedReview(); value.evidence[field] = bad;
+      assert.equal(isRefundReview(value, "synthetic-cancel"), false, field);
+    }
+    for (const change of [{ scopeVersion: 2 }, { serviceCodes: [] }, { serviceCodes: ["oil_change", "oil_change"] },
+      { serviceCodes: [null] }, { serviceCodes: "oil_change" }, { id: "" }]) {
+      const value = scopedReview(); Object.assign(value.evidence[field].record, change);
+      assert.equal(isRefundReview(value, "synthetic-cancel"), false, `${field}:${JSON.stringify(change)}`);
+    }
+  }
+  for (const change of [{ authorizationDecisionId: "different" }, { customerAuthorizedAt: null }, { price: {} },
+    { price: { ...scopedReview().evidence.scope.record.price, customerTotalCents: 10000 } }]) {
+    const value = scopedReview(); Object.assign(value.evidence.scope.record, change);
+    assert.equal(isRefundReview(value, "synthetic-cancel"), false);
+  }
+  for (const change of [{ issuedAt: "" }, { status: "issued" }, { invoiceNumber: null }, { workSummary: {} },
+    { totalAmountCents: 9999 }, { laborAmountCents: "10000" }, { partsAmountCents: -1 }]) {
+    const value = scopedReview(); Object.assign(value.evidence.invoice.record, change);
+    assert.equal(isRefundReview(value, "synthetic-cancel"), false);
+  }
+});
+
+test("a match claim cannot contradict the displayed original payment totals", () => {
+  const scope = scopedReview();
+  Object.assign(scope.evidence.scope.record.price, { laborAmountCents: 20000, totalAmountCents: 20000,
+    customerFeeCents: 1000, customerTotalCents: 21000 });
+  assert.equal(isRefundReview(scope, "synthetic-cancel"), false);
+  scope.evidence.scope.amountMatchesPayment = false;
+  assert.equal(isRefundReview(scope, "synthetic-cancel"), true);
+  const invoice = scopedReview();
+  Object.assign(invoice.evidence.invoice.record, { laborAmountCents: 20000, totalAmountCents: 20000 });
+  assert.equal(isRefundReview(invoice, "synthetic-cancel"), false);
+  invoice.evidence.invoice.amountMatchesPayment = false;
+  assert.equal(isRefundReview(invoice, "synthetic-cancel"), true);
+  const differingFee = scopedReview();
+  Object.assign(differingFee.evidence.scope.record.price, { customerFeeCents: 1000, customerTotalCents: 11000 });
+  assert.equal(isRefundReview(differingFee, "synthetic-cancel"), false);
+  const contradictoryBreakdown = scopedReview();
+  Object.assign(contradictoryBreakdown.evidence.invoice.record, { laborAmountCents: 9000, partsAmountCents: 1000 });
+  assert.equal(isRefundReview(contradictoryBreakdown, "synthetic-cancel"), false);
+  contradictoryBreakdown.evidence.invoice.amountMatchesPayment = false;
+  assert.equal(isRefundReview(contradictoryBreakdown, "synthetic-cancel"), true);
 });
 
 test("read-only evidence accepts signed impacts and incomplete blocked-payment facts without implying approval", () => {

@@ -11,6 +11,30 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-04 - Compare paid scope and provider invoice in refund review
+
+The collapsed owner evidence section now shows the saved scope attached to the
+original payment and the same provider's invoice for that version. It does not
+substitute a newer scope or another provider's record. Missing, mismatched,
+malformed and unavailable evidence is explicit; draft/final invoices remain
+distinct. Valid records show service codes, itemized prices and a plain-text
+work summary. Equal saved amounts do not establish completed work or a refund
+entitlement. Contradictory amount-match claims cannot replace the last valid
+view or permit approval.
+
+These read facts are included in the review token and atomic approval recheck,
+including a row inserted after the review showed it missing. Changes require
+fresh review. Existing authentication, no-store responses, eligibility rules,
+payment submission confirmations and launch locks are preserved. No schema,
+processor call, policy deadline or provider-recovery execution is added.
+
+Prepared source passed 40 focused signed-owner/SQL/response tests, TypeScript,
+targeted zero-warning lint, full build, phone checks in Chromium/WebKit (down
+to 320px), and independent review. Source/test files are carried unchanged into
+this focused release branch; the separate unused recovery calculator stays
+outside this change. Full required release checks and live verification remain
+separate from this local evidence.
+
 ## 2026-10-03 - Read-only evidence in cancellation refund review
 
 The owner screen now expands the work, incident hold, saved payment/transfer,

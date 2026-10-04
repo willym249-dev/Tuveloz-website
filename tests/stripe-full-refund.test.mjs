@@ -27,13 +27,19 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
   const jwk = { ...await exportJWK(keys.publicKey), kid: "synthetic", alg: "RS256", use: "sig" };
   const sign = (claims = {}) => new SignJWT({ email, ...claims }).setProtectedHeader({ alg: "RS256", kid: "synthetic" })
     .setIssuer(issuer).setAudience(audience).setIssuedAt().setExpirationTime("10m").sign(keys.privateKey);
-  const seed = (table, values) => database.prepare(`INSERT INTO ${table} (${Object.keys(values).join(",")}) VALUES (${Object.keys(values).map(() => "?").join(",")})`).run(...Object.values(values));
+  const seed = (table, values) => {
+    const required = Object.fromEntries(database.prepare(`PRAGMA table_info(${table})`).all()
+      .filter(column => column.notnull && column.dflt_value === null && !(column.name in values))
+      .map(column => [column.name, column.type === "INTEGER" ? 0 : ""]));
+    const row = { ...required, ...values };
+    return database.prepare(`INSERT INTO ${table} (${Object.keys(row).join(",")}) VALUES (${Object.keys(row).map(() => "?").join(",")})`).run(...Object.values(row));
+  };
   const row = () => database.prepare("SELECT * FROM stripe_payments WHERE id='payment-synthetic'").get();
   const execution = () => database.prepare("SELECT * FROM payment_adjustments WHERE adjustment_type='stripe_full_refund'").get();
   const now = new Date().toISOString();
   let remote, transfers, posts, getCount, postMode, nextStatus, beforePost, intentChange;
   const reset = () => {
-    for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "job_cancellations", "provider_job_records", "job_incidents", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
+    for (const table of ["stripe_payments", "payment_adjustments", "customer_requests", "provider_applications", "job_cancellations", "provider_job_records", "job_incidents", "job_scope_versions", "provider_invoices", "provider_invoice_items", "repair_authorization_records", "email_notification_outbox", "account_notifications"]) database.exec(`DELETE FROM ${table}`);
     state.open = true; state.beforeWrite = null; state.beforeExecutionWrite = null; state.env.STRIPE_SECRET_KEY = "sk_test_synthetic_refund_fixture";
     state.readinessChecks = 0; state.beforeReadiness = null;
     state.beforeBatch = null; state.batchBarrier = null; state.failBatch = false;
@@ -172,6 +178,32 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
       reason: "SYNTHETIC: no work started; full refund approved.", confirmed: true });
     const addIncident = () => seed("job_incidents", { id: "incident-synthetic", request_id: "job-synthetic", reporter_role: "customer",
       reporter_email: "customer@example.invalid", incident_type: "synthetic", severity: "review", summary: "SYNTHETIC ONLY", occurred_at: now });
+    const evidencePrice = (labor = 10000) => ({ laborAmountCents: labor, partsAmountCents: 0, taxAmountCents: 0,
+      otherAmountCents: 0, totalAmountCents: labor, customerFeeRateBps: 500, customerFeeCents: labor / 20, customerTotalCents: labor * 1.05 });
+    const scopeRow = (changes = {}) => ({ id: "paid-scope", request_id: "job-synthetic", quote_id: "quote-synthetic", version: 1,
+      service_codes: '["photo_documentation_only"]', jurisdiction: "US-MD-MontgomeryCounty", price_breakdown: JSON.stringify(evidencePrice()),
+      scope_details: '{"private":"PRIVATE SCOPE DETAILS"}', created_by_provider_id: "provider-synthetic", customer_authorized_at: now,
+      authorization_decision_id: "scope-synthetic", ...changes });
+    const invoiceRow = (changes = {}) => ({ id: "paid-invoice", request_id: "job-synthetic", quote_id: "quote-synthetic",
+      provider_id: "provider-synthetic", invoice_number: "SYNTHETIC-INVOICE-1", scope_version: 1, service_codes: '["photo_documentation_only"]',
+      labor_amount_cents: 10000, total_amount_cents: 10000, work_summary: "SYNTHETIC provider summary, not verified work.",
+      parts_description: "PRIVATE PARTS DESCRIPTION", warranty_terms: "PRIVATE WARRANTY TERMS", status: "draft", issued_at: "", ...changes });
+    const paidScopePrice = () => database.prepare("UPDATE stripe_payments SET authorized_price_snapshot=?").run(JSON.stringify(evidencePrice()));
+    const seedScopeInvoice = () => { paidScopePrice(); seed("job_scope_versions", scopeRow()); seed("provider_invoices", invoiceRow()); };
+    const finalizeInvoice = (issuedAt = now) => {
+      seed("repair_authorization_records", { id: "repair-authorization-synthetic", request_id: "job-synthetic", quote_id: "quote-synthetic",
+        provider_id: "provider-synthetic", provider_email: "provider@example.invalid", scope_version: 1, status: "signed",
+        customer_signature_at: now, document_hash: "SYNTHETIC AUTHORIZATION ONLY" });
+      seed("provider_invoice_items", { id: "invoice-item-synthetic", invoice_id: "paid-invoice", line_type: "labor",
+        description: "SYNTHETIC labor line", unit_amount_cents: 10000, line_amount_cents: 10000 });
+      const fields = Object.fromEntries(`provider_business_name provider_business_address provider_business_phone county_registration_number
+        customer_name customer_address vehicle_year vehicle_make_model vehicle_tag customer_instructions provider_diagnosis labor_billing_method
+        labor_disclosure provider_representative_name provider_representative_title provider_signed_at warranty_work_statement
+        manufacturer_notice responsibility_notice document_hash`.split(/\s+/).filter(Boolean).map(key => [key, "PRIVATE SYNTHETIC FIXTURE"]));
+      const values = { ...fields, authorization_record_id: "repair-authorization-synthetic", mechanic_identifiers: '["SYNTHETIC"]',
+        document_snapshot: '{"private":"PRIVATE SYNTHETIC SNAPSHOT"}', status: "final", issued_at: issuedAt };
+      database.prepare(`UPDATE provider_invoices SET ${Object.keys(values).map(key => `${key}=?`).join(",")} WHERE id='paid-invoice'`).run(...Object.values(values));
+    };
     const post = async (body = { adjustmentId: "decision-synthetic" }, jwt = token, origin = "https://tuveloz.invalid") => {
       const response = await api.POST(new Request("https://tuveloz.invalid/api/stripe/admin/refunds", { method: "POST",
         headers: { origin, "content-type": "application/json", ...(jwt ? { "cf-access-jwt-assertion": jwt } : {}) }, body: typeof body === "string" ? body : JSON.stringify(body) }));
@@ -280,6 +312,8 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
         assert.equal(isRefundReview(view, "cancellation-synthetic"), true);
         assert.equal(view.enabled, false);
         assert.deepEqual(view.evidence, {
+          scope: { state: "missing", record: null, amountMatchesPayment: null },
+          invoice: { state: "missing", record: null, amountMatchesPayment: null },
           workRecords: [{ id: "work-synthetic", workStatus: "paused", jobStartDecisionId: "start-synthetic",
             completionDecisionId: "", trackedSeconds: 601, billableMinutes: 11 }],
           incidentHoldIds: ["incident-synthetic"],
@@ -315,11 +349,103 @@ test("approved full refunds reserve once, include the fee and reconcile uncertai
         const result = await reviewCall(); assert.equal(result.status, 200);
         assert.equal(isRefundReview(result.body, "cancellation-synthetic"), true);
         assert.equal(result.body.payment, null);
-        assert.deepEqual(result.body.evidence, { workRecords: [], incidentHoldIds: [], payment: null, adjustments: [] });
+        assert.deepEqual(result.body.evidence, { workRecords: [], incidentHoldIds: [], payment: null, adjustments: [],
+          scope: { state: "unavailable", record: null, amountMatchesPayment: null },
+          invoice: { state: "unavailable", record: null, amountMatchesPayment: null } });
         assert.ok(result.body.blockers.some(item => item.startsWith("A single settled payment")));
         assert.equal(database.prepare("SELECT total_changes() n").get().n, before);
         assert.equal(posts.length + getCount, 0);
       }
+    });
+    await t.test("signed owner reads the paid scope and same-provider invoice without replacing them with newer records", async () => {
+      pendingReview(); seedScopeInvoice(); finalizeInvoice();
+      seed("job_scope_versions", scopeRow({ id: "newer-scope", version: 2, authorization_decision_id: "newer-authorization",
+        price_breakdown: JSON.stringify(evidencePrice(20000)), service_codes: '["battery_replacement"]' }));
+      seed("provider_invoices", invoiceRow({ id: "newer-invoice", scope_version: 2, invoice_number: "PRIVATE-NEWER-INVOICE",
+        labor_amount_cents: 20000, total_amount_cents: 20000, work_summary: "PRIVATE NEWER WORK" }));
+      seed("job_scope_versions", scopeRow({ id: "other-job-scope", request_id: "other-job" }));
+      seed("provider_invoices", invoiceRow({ id: "other-job-invoice", request_id: "other-job", invoice_number: "PRIVATE-OTHER-INVOICE" }));
+      const before = database.prepare("SELECT total_changes() n").get().n;
+      database.exec("PRAGMA query_only=ON");
+      try {
+        const result = await reviewCall(); assert.equal(result.status, 200);
+        assert.equal(isRefundReview(result.body, "cancellation-synthetic"), true);
+        assert.deepEqual(result.body.evidence.scope, { state: "matched", amountMatchesPayment: true,
+          record: { id: "paid-scope", scopeVersion: 1, authorizationDecisionId: "scope-synthetic",
+            serviceCodes: ["photo_documentation_only"], customerAuthorizedAt: now, price: evidencePrice() } });
+        assert.deepEqual(result.body.evidence.invoice, { state: "matched", amountMatchesPayment: true,
+          record: { id: "paid-invoice", invoiceNumber: "SYNTHETIC-INVOICE-1", scopeVersion: 1, status: "final",
+            serviceCodes: ["photo_documentation_only"], laborAmountCents: 10000, partsAmountCents: 0, taxAmountCents: 0,
+            otherAmountCents: 0, totalAmountCents: 10000, issuedAt: now, workSummary: "SYNTHETIC provider summary, not verified work." } });
+        assert.ok(!JSON.stringify(result.body).includes("PRIVATE"), "raw details and unrelated versions stay private");
+        assert.deepEqual(result.body.blockers, [], "comparison evidence adds no new eligibility rule");
+      } finally { database.exec("PRAGMA query_only=OFF"); }
+      assert.equal(database.prepare("SELECT total_changes() n").get().n, before);
+      assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("scope and invoice failures are explicit, suppress mismatched details and retain draft/amount distinctions", async () => {
+      pendingReview(); paidScopePrice();
+      for (const section of ["scope", "invoice"]) assert.deepEqual((await reviewCall()).body.evidence[section],
+        { state: "missing", record: null, amountMatchesPayment: null });
+      const cases = [
+        ["scope", "mismatched", () => seed("job_scope_versions", scopeRow({ quote_id: "other-quote" }))],
+        ["scope", "mismatched", () => seed("job_scope_versions", scopeRow({ authorization_decision_id: "other-authorization" }))],
+        ["scope", "mismatched", () => seed("job_scope_versions", scopeRow({ created_by_provider_id: "other-provider" }))],
+        ["scope", "malformed", () => seed("job_scope_versions", scopeRow({ price_breakdown: "{broken" }))],
+        ["scope", "malformed", () => seed("job_scope_versions", scopeRow({ service_codes: '["UNKNOWN PRIVATE SERVICE"]' }))],
+        ["scope", "malformed", () => seed("job_scope_versions", scopeRow({ customer_authorized_at: "" }))],
+        ["scope", "malformed", () => seed("job_scope_versions", scopeRow({ price_breakdown: JSON.stringify({ ...evidencePrice(), laborAmountCents: "10000" }) }))],
+        ["scope", "malformed", () => { seed("job_scope_versions", scopeRow()); database.exec("UPDATE stripe_payments SET authorized_price_snapshot='{}'"); }],
+        ["invoice", "mismatched", () => seed("provider_invoices", invoiceRow({ quote_id: "other-quote" }))],
+        ["invoice", "mismatched", () => seed("provider_invoices", invoiceRow({ provider_id: "other-provider" }))],
+        ["invoice", "malformed", () => seed("provider_invoices", invoiceRow({ labor_amount_cents: -1, total_amount_cents: -1 }))],
+        ["invoice", "malformed", () => seed("provider_invoices", invoiceRow({ labor_amount_cents: 0.5, total_amount_cents: 0.5 }))],
+        ["invoice", "malformed", () => seed("provider_invoices", invoiceRow({ service_codes: '{}' }))],
+        ["invoice", "malformed", () => seed("provider_invoices", invoiceRow({ status: "unknown" }))],
+        ["invoice", "malformed", () => { seed("provider_invoices", invoiceRow()); finalizeInvoice(""); }],
+      ];
+      for (const [section, expected, change] of cases) {
+        pendingReview(); paidScopePrice(); change(); const view = (await reviewCall()).body;
+        assert.deepEqual(view.evidence[section], { state: expected, record: null, amountMatchesPayment: null }, change.toString());
+        assert.ok(!JSON.stringify(view).includes("PRIVATE"));
+      }
+      pendingReview(); seedScopeInvoice();
+      database.prepare("UPDATE job_scope_versions SET price_breakdown=?").run(JSON.stringify(evidencePrice(12000)));
+      database.exec("UPDATE provider_invoices SET labor_amount_cents=11000,total_amount_cents=11000,status='draft',issued_at=''");
+      const compared = (await reviewCall()).body;
+      assert.equal(compared.evidence.scope.state, "matched"); assert.equal(compared.evidence.scope.amountMatchesPayment, false);
+      assert.equal(compared.evidence.invoice.state, "matched"); assert.equal(compared.evidence.invoice.amountMatchesPayment, false);
+      assert.equal(compared.evidence.invoice.record.status, "draft"); assert.equal(compared.evidence.invoice.record.issuedAt, "");
+      assert.deepEqual(compared.blockers, [], "amount differences are evidence, not automatic refund rules");
+      assert.equal(posts.length + getCount, 0);
+    });
+    await t.test("scope and invoice snapshot changes require fresh review before and during atomic approval", async () => {
+      const cases = [
+        [false, () => seed("job_scope_versions", scopeRow())],
+        [false, () => seed("provider_invoices", invoiceRow())],
+        [true, () => database.exec("UPDATE job_scope_versions SET quote_id='other-quote'")],
+        [true, () => database.exec("UPDATE job_scope_versions SET scope_details='{}'")],
+        [true, () => database.exec("UPDATE job_scope_versions SET version=2")],
+        [true, () => database.exec("DELETE FROM job_scope_versions")],
+        [true, () => database.exec("UPDATE provider_invoices SET provider_id='other-provider'")],
+        [true, () => database.exec("UPDATE provider_invoices SET work_summary='SYNTHETIC revised invoice evidence'")],
+        [true, () => database.exec("UPDATE provider_invoices SET scope_version=2")],
+        [true, () => database.exec("DELETE FROM provider_invoices")],
+      ];
+      for (const duringBatch of [false, true]) for (const [existing, change] of cases) {
+        pendingReview(); paidScopePrice(); if (existing) seedScopeInvoice();
+        const body = await approveBody();
+        if (duringBatch) state.beforeBatch = change; else change();
+        const reply = await reviewCall({ method: "POST", body });
+        assert.equal(reply.status, 409, `${duringBatch}: ${change.toString()} ${JSON.stringify(reply.body)}`);
+        assert.equal(database.prepare("SELECT count(*) n FROM payment_adjustments").get().n, 0);
+        assert.equal(database.prepare("SELECT status FROM job_cancellations").get().status, "submitted");
+        assert.equal(database.prepare("SELECT status FROM customer_requests").get().status, "assigned");
+        assert.equal(posts.length + getCount, 0);
+      }
+      pendingReview(); seedScopeInvoice(); const current = await approveBody();
+      assert.equal((await reviewCall({ method: "POST", body: current })).status, 200, "unchanged matched evidence remains approvable");
+      assert.equal(posts.length + getCount, 0);
     });
     await t.test("stale, ambiguous, unsafe and started-work reviews cannot be approved", async () => {
       const changes = [

@@ -28,11 +28,64 @@ async function requestJson<T>(url: string, init: RequestInit = {}, signal?: Abor
   return data as T;
 }
 
+function MissingRecord({ kind, state }: { kind: "scope" | "invoice"; state: string }) {
+  const subject = kind === "scope" ? "agreed-work record" : "provider invoice";
+  const messages: Record<string, string> = {
+    unavailable: `A single payment with a valid scope reference is needed to find its ${subject}.`,
+    missing: `No ${subject} is saved for this payment’s scope version.`,
+    mismatched: `The saved ${subject} does not belong to this payment’s quote, authorization or provider. Its details are withheld until the records are reconciled.`,
+    malformed: `The saved ${subject} has incomplete or invalid details. Review the source record before relying on it.`,
+  };
+  return <p>{messages[state] ?? "This record could not be read. Refresh the review."}</p>;
+}
+
+function ItemizedAmount({ price, currency }: { price: {
+  laborAmountCents: number; partsAmountCents: number; taxAmountCents: number;
+  otherAmountCents: number; totalAmountCents: number;
+}; currency: string }) {
+  return <dl className="quote-breakdown compact">
+    <div><dt>Labor</dt><dd>{money(price.laborAmountCents, currency)}</dd></div>
+    <div><dt>Parts</dt><dd>{money(price.partsAmountCents, currency)}</dd></div>
+    <div><dt>Tax</dt><dd>{money(price.taxAmountCents, currency)}</dd></div>
+    <div><dt>Other charges</dt><dd>{money(price.otherAmountCents, currency)}</dd></div>
+    <div className="total"><dt>Provider total</dt><dd>{money(price.totalAmountCents, currency)}</dd></div>
+  </dl>;
+}
+
+function PaidScopeEvidence({ review }: { review: RefundReview }) {
+  const { scope, invoice } = review.evidence;
+  const currency = review.payment?.currency ?? "usd";
+  return <>
+    <section aria-label="Agreed work for this payment">
+      <h4>Agreed work for this payment</h4>
+      {scope.record ? <>
+        <p>Scope version {scope.record.scopeVersion} · Customer authorization recorded: {scope.record.customerAuthorizedAt}.</p>
+        <p>Service codes: {scope.record.serviceCodes.join(", ")}.</p>
+        <ItemizedAmount price={scope.record.price} currency={currency} />
+        <p>Customer Service Fee: {money(scope.record.price.customerFeeCents, currency)}. Customer total: {money(scope.record.price.customerTotalCents, currency)}.</p>
+        <p>{scope.amountMatchesPayment ? "These saved amounts match the payment’s approved price." : "These saved amounts differ from the payment’s approved price. Review the source records."}</p>
+      </> : <MissingRecord kind="scope" state={scope.state} />}
+    </section>
+    <section aria-label="Provider invoice for this payment">
+      <h4>Provider invoice for this payment</h4>
+      {invoice.record ? <>
+        <p><strong>{invoice.record.status === "final" ? "Final invoice" : "Draft invoice — not final"}</strong> · <code>{invoice.record.invoiceNumber}</code> · Scope version {invoice.record.scopeVersion}.</p>
+        <p>Issued: {invoice.record.issuedAt || "not yet issued"}. Service codes: {invoice.record.serviceCodes.join(", ")}.</p>
+        <p>Provider’s work summary: {invoice.record.workSummary || "not recorded"}</p>
+        <ItemizedAmount price={invoice.record} currency={currency} />
+        <p>{invoice.amountMatchesPayment ? "The invoice amounts match the provider amounts approved for this payment." : "The invoice amounts differ from the provider amounts approved for this payment. Review the source records."}</p>
+      </> : <MissingRecord kind="invoice" state={invoice.state} />}
+    </section>
+    <p className="admin-note">This comparison uses the scope version attached to this payment. Matching amounts do not confirm that the work was completed or decide a refund.</p>
+  </>;
+}
+
 function RefundEvidence({ review }: { review: RefundReview }) {
   const { evidence } = review;
   return <details className="refund-evidence">
     <summary>Review work and payment records</summary>
     <p className="admin-note">These are saved Tuveloz records. Review the agreed work and both parties’ evidence before deciding an amount. Recorded time alone does not establish what the customer owes.</p>
+    <PaidScopeEvidence review={review} />
     <h4>Work recorded for this job</h4>
     {!evidence.workRecords.length ? <p>No work record is saved. Confirm what happened with the customer and provider.</p> : <ul>
       {evidence.workRecords.map(row => <li key={row.id}>
