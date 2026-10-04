@@ -11,6 +11,22 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-04 - Check signed invoice evidence before reserving a provider transfer
+
+The payment route could request a Stripe transfer before the database's final-
+invoice release trigger checked the customer signature and delivered/retained
+copies. Read those existing migrated fields, validate the exact invoice and
+payment binding before processor access, and atomically match/capture the
+reviewed invoice when reserving a new transfer. The existing database trigger
+remains a backstop; uncertain and legacy transfers retain their recovery path.
+
+Migrated-SQL regressions reproduced transfer-before-rejection on the old code.
+All 35 focused cases now pass, including missing evidence, mismatched invoice
+bindings, stale snapshots and existing lost-reply/idempotency behavior. The
+build, all 1,040 tests, TypeScript, targeted lint and independent review pass.
+No new policy, deadline, signature substitute, schema migration, financial
+operation or launch setting is included. Publication is recorded separately.
+
 ## 2026-10-04 - Clarify owner readiness configuration labels
 
 The owner readiness page described live Stripe configuration as sandboxed
