@@ -51,7 +51,7 @@ test("provider transfers recover without repeating uncertain money movement", as
     const row = { ...required, ...values }, keys = Object.keys(row);
     database.prepare(`INSERT INTO ${table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")})`).run(...Object.values(row));
   };
-  const reset = () => {
+  const reset = (invoiceOverrides = {}) => {
     database?.close(); database = new DatabaseSync(":memory:");
     for (const entry of JSON.parse(readFileSync(join(root, "drizzle/meta/_journal.json"), "utf8")).entries) {
       for (const sql of readFileSync(join(root, "drizzle", `${entry.tag}.sql`), "utf8").split("--> statement-breakpoint")) if (sql.trim()) database.exec(sql);
@@ -102,9 +102,20 @@ test("provider transfers recover without repeating uncertain money movement", as
       labor_disclosure provider_representative_name provider_representative_title provider_signed_at warranty_work_statement warranty_terms
       manufacturer_notice responsibility_notice document_hash customer_signature_at customer_copy_delivered_at provider_copy_retained_at`
       .split(/\s+/).filter(Boolean).map(name => [name, "SYNTHETIC FIXTURE ONLY"]));
-    seed("provider_invoices", { ...invoiceFields, id: "invoice-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
+    const invoice = { ...invoiceFields, id: "invoice-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
       provider_id: "provider-synthetic", authorization_record_id: "authorization-synthetic", scope_version: 1, status: "draft",
-      labor_amount_cents: 10000, total_amount_cents: 10000, mechanic_identifiers: '["SYNTHETIC"]', document_snapshot: '{"synthetic":true}' });
+      labor_amount_cents: 10000, total_amount_cents: 10000, mechanic_identifiers: '["SYNTHETIC"]', document_snapshot: '{"synthetic":true}', ...invoiceOverrides };
+    if (invoice.quote_id !== context.quoteId || invoice.provider_id !== "provider-synthetic" || invoice.scope_version !== 1) {
+      // A different saved invoice is final for its own authorization, not for this
+      // paid context. Seed that history after the original work record; all real
+      // finalization, invoice immutability and payment-release triggers stay on.
+      database.exec("DELETE FROM repair_authorization_records WHERE id='authorization-synthetic'");
+      seed("repair_authorization_records", { id: invoice.authorization_record_id, request_id: invoice.request_id,
+        quote_id: invoice.quote_id, provider_id: invoice.provider_id, provider_email: context.providerEmail,
+        scope_version: invoice.scope_version, status: "signed", customer_signature_at: "2026-10-01T00:00:00Z",
+        document_hash: "SYNTHETIC OTHER AUTHORIZATION ONLY" });
+    }
+    seed("provider_invoices", invoice);
     seed("provider_invoice_items", { id: "item-synthetic", invoice_id: "invoice-synthetic", line_type: "labor", description: "SYNTHETIC LABOR", unit_amount_cents: 10000, line_amount_cents: 10000 });
     database.exec("UPDATE provider_invoices SET status='final' WHERE id='invoice-synthetic'");
     seed("customer_agreement_acceptances", { id: "confirmation-synthetic", request_id: "job-synthetic", quote_id: context.quoteId,
@@ -169,7 +180,79 @@ test("provider transfers recover without repeating uncertain money movement", as
       const saved = database.prepare("SELECT * FROM payment_adjustments WHERE adjustment_type='stripe_provider_transfer'").get();
       assert.equal(saved.status, "transfer_recorded"); assert.equal(calls[0].params.metadata.tuveloz_transfer_execution_id, saved.id);
       assert.equal(saved.provider_impact_cents, 0, "execution is not a second accounting adjustment");
+      assert.deepEqual(JSON.parse(saved.details).invoice, { id: "invoice-synthetic", requestId: "job-synthetic",
+        quoteId: context.quoteId, providerId: "provider-synthetic", scopeVersion: 1, status: "final", totalAmountCents: 10000,
+        documentHash: "SYNTHETIC FIXTURE ONLY", customerSignatureAt: "SYNTHETIC FIXTURE ONLY",
+        customerCopyDeliveredAt: "SYNTHETIC FIXTURE ONLY", providerCopyRetainedAt: "SYNTHETIC FIXTURE ONLY" });
       assert.equal((await post()).body.transferConfirmed, true); assert.equal(calls.length, 1);
+    });
+    const invoiceRequiredFields = ["customer_signature_at", "customer_copy_delivered_at", "provider_copy_retained_at", "document_hash"];
+    const invoiceMismatchCases = [
+      ...invoiceRequiredFields.map(field => [field, { [field]: field === "document_hash" ? "  " : "" }]),
+      ["quote identity", { quote_id: "other-quote" }],
+      ["provider identity", { provider_id: "other-provider" }],
+      ["scope identity", { scope_version: 2 }],
+    ];
+    const assertInvoiceBlockedBeforeTransfer = async label => {
+      const result = await post();
+      const reserved = database.prepare("SELECT count(*) n FROM payment_adjustments WHERE adjustment_type='stripe_provider_transfer'").get().n;
+      const actual = { status: result.status, transfers: calls.length, reservations: reserved, transferId: payment().transfer_id };
+      assert.deepEqual(actual, { status: 409, transfers: 0, reservations: 0, transferId: null },
+        `${label}: invoice failure must precede both the transfer and its reservation; response=${JSON.stringify(result.body)}`);
+      assert.equal(payment().status, "paid_pending_completion");
+    };
+    for (const [label, values] of invoiceMismatchCases) {
+      await t.test(`invoice preflight rejects missing or mismatched ${label} before reserving or sending`, async () => {
+        reset(values);
+        await assertInvoiceBlockedBeforeTransfer(label);
+      });
+    }
+    for (const [label, change] of [
+      ["invoice identity", "id='replacement-invoice'"],
+      ["final status", "status='draft'"],
+    ]) {
+      await t.test(`invoice preflight rechecks ${label} changed during processor verification before reservation`, async () => {
+        reset(); let changed = false;
+        beforeIntent = () => { changed = true; database.exec(`UPDATE provider_invoices SET ${change} WHERE id='invoice-synthetic'`); };
+        await assertInvoiceBlockedBeforeTransfer(label);
+        assert.equal(changed, true, "the race must occur after initial invoice review");
+      });
+    }
+    await t.test("a changed hash on a re-finalized invoice cannot reuse the reviewed snapshot", async () => {
+      reset(); let changed = false;
+      beforeIntent = () => {
+        database.exec("UPDATE provider_invoices SET status='draft' WHERE id='invoice-synthetic'");
+        database.exec("UPDATE provider_invoices SET document_hash='SYNTHETIC CHANGED HASH' WHERE id='invoice-synthetic'");
+        database.exec("UPDATE provider_invoices SET status='final' WHERE id='invoice-synthetic'");
+        changed = true;
+      };
+      await assertInvoiceBlockedBeforeTransfer("changed hash");
+      assert.equal(changed, true, "the real database allowed re-finalization before reservation");
+    });
+    await t.test("sealed invoice evidence cannot change during processor verification", async () => {
+      for (const [label, change] of [
+        ...invoiceRequiredFields.map(field => [field, `${field}=''`]),
+        ["request identity", "request_id='other-job'"],
+        ["quote identity", "quote_id='other-quote'"],
+        ["provider identity", "provider_id='other-provider'"],
+        ["scope identity", "scope_version=2"],
+        ["changed document hash", "document_hash='SYNTHETIC CHANGED HASH'"],
+        ["changed customer signature", "customer_signature_at='SYNTHETIC CHANGED SIGNATURE'"],
+        ["changed copy delivery", "customer_copy_delivered_at='SYNTHETIC CHANGED DELIVERY'"],
+        ["changed provider retention", "provider_copy_retained_at='SYNTHETIC CHANGED RETENTION'"],
+        ["authorized amount", "labor_amount_cents=10001,total_amount_cents=10001"],
+      ]) {
+        reset(); let attempted = false;
+        const before = database.prepare("SELECT * FROM provider_invoices WHERE id='invoice-synthetic'").get();
+        beforeIntent = () => {
+          attempted = true;
+          assert.throws(() => database.exec(`UPDATE provider_invoices SET ${change} WHERE id='invoice-synthetic'`), /immutable/, label);
+        };
+        assert.equal((await post()).body.transferConfirmed, true, label);
+        assert.equal(attempted, true, label);
+        assert.deepEqual(database.prepare("SELECT * FROM provider_invoices WHERE id='invoice-synthetic'").get(), before, label);
+        assert.equal(calls.length, 1, "only the unchanged, valid signed invoice can proceed");
+      }
     });
     await t.test("an explicit status check never initiates a transfer and an unknown attempt stays read-only", async () => {
       reset(); assert.equal((await post("check_transfer")).body.transferConfirmed, false); assert.equal(calls.length, 0);

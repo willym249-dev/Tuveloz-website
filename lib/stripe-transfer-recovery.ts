@@ -1,11 +1,18 @@
 import type Stripe from "stripe";
 import { and, eq, or, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { paymentAdjustments, stripePayments } from "../db/schema";
+import { paymentAdjustments, providerInvoices, stripePayments } from "../db/schema";
 import { stripeLiveModeEnabled } from "./stripe";
 
 type Payment = typeof stripePayments.$inferSelect;
 type Attempt = typeof paymentAdjustments.$inferSelect;
+type TransferInvoice = Pick<typeof providerInvoices.$inferSelect,
+  "id" | "requestId" | "quoteId" | "providerId" | "scopeVersion" | "status" | "totalAmountCents"> & {
+    documentHash: string;
+    customerSignatureAt: string;
+    customerCopyDeliveredAt: string;
+    providerCopyRetainedAt: string;
+  };
 export class TransferReviewError extends Error {}
 export const transferAttemptKey = (id: string) => `tuveloz-release-${id}`;
 export const transferReversalReviewKey = (id: string) => `tuveloz-transfer-reversal-${id}`;
@@ -43,6 +50,25 @@ export function requireTransferPayment(payment: Payment) {
     && payment.scopeVersion > 0 && payment.scopeAuthorizationDecisionId && payment.authorizedPriceSnapshot !== "{}",
   "This transfer needs a complete, settled payment and its approved amount.");
 }
+function invoiceSnapshot(invoice: TransferInvoice) {
+  return { id: invoice.id, requestId: invoice.requestId, quoteId: invoice.quoteId,
+    providerId: invoice.providerId, scopeVersion: invoice.scopeVersion, status: invoice.status,
+    totalAmountCents: invoice.totalAmountCents, documentHash: invoice.documentHash,
+    customerSignatureAt: invoice.customerSignatureAt, customerCopyDeliveredAt: invoice.customerCopyDeliveredAt,
+    providerCopyRetainedAt: invoice.providerCopyRetainedAt };
+}
+
+/** Check the existing invoice release gate before asking Stripe to move money. */
+export function requireTransferInvoice(payment: Payment, invoice: TransferInvoice | undefined): asserts invoice is TransferInvoice {
+  requireMatch(invoice && invoice.id && invoice.requestId === payment.requestId
+    && invoice.quoteId === payment.quoteId && invoice.providerId === payment.providerApplicationId
+    && invoice.scopeVersion === payment.scopeVersion && invoice.status === "final"
+    && Number.isSafeInteger(invoice.totalAmountCents) && invoice.totalAmountCents === payment.providerAmountCents
+    && [invoice.documentHash, invoice.customerSignatureAt, invoice.customerCopyDeliveredAt, invoice.providerCopyRetainedAt]
+      .every(value => typeof value === "string" && value.trim().length > 0),
+  "Before sending payment, the final invoice must match this job, provider and amount, with the customer's signature, delivered customer copy and retained provider copy.");
+}
+
 export async function savedTransferAttempt(payment: Payment) {
   const [attempt] = await getDb().select().from(paymentAdjustments)
     .where(eq(paymentAdjustments.idempotencyKey, transferAttemptKey(payment.id))).limit(1);
@@ -58,7 +84,9 @@ export async function savedTransferAttempt(payment: Payment) {
 }
 
 /** A permanent reservation survives lost replies, local write failures and Stripe key expiry. */
-export async function reserveProviderTransfer(payment: Payment, owner: string, decisionId: string) {
+export async function reserveProviderTransfer(payment: Payment, owner: string, decisionId: string, invoice: TransferInvoice) {
+  requireTransferInvoice(payment, invoice);
+  const reviewedInvoice = invoiceSnapshot(invoice);
   const now = new Date().toISOString(), id = crypto.randomUUID();
   const db = getDb();
   const [attempt] = await db.insert(paymentAdjustments).select(db.select({
@@ -67,7 +95,7 @@ export async function reserveProviderTransfer(payment: Payment, owner: string, d
     adjustmentType: sql<string>`'stripe_provider_transfer'`.as("adjustment_type"),
     amountCents: sql<number>`${payment.providerAmountCents}`.as("amount_cents"), currency: sql<string>`${payment.currency}`.as("currency"),
     status: sql<string>`'transfer_submission_unconfirmed'`.as("status"), reasonCode: sql<string>`'owner_completion_release'`.as("reason_code"),
-    details: sql<string>`${JSON.stringify({ payment: snapshot(payment), authorizationDecisionId: decisionId })}`.as("details"),
+    details: sql<string>`${JSON.stringify({ payment: snapshot(payment), authorizationDecisionId: decisionId, invoice: reviewedInvoice })}`.as("details"),
     requestedByRole: sql<string>`'owner'`.as("requested_by_role"), requestedById: sql<string>`${owner}`.as("requested_by_id"),
     requestedAt: sql<string>`${now}`.as("requested_at"), decidedBy: sql<string>`${owner}`.as("decided_by"), decidedAt: sql<string>`${now}`.as("decided_at"),
     providerImpactCents: sql<number>`0`.as("provider_impact_cents"), customerImpactCents: sql<number>`0`.as("customer_impact_cents"),
@@ -80,6 +108,13 @@ export async function reserveProviderTransfer(payment: Payment, owner: string, d
     sql`exists (select 1 from customer_requests where id = ${payment.requestId} and status = 'completed' and is_test_job = 'no')`,
     sql`exists (select 1 from provider_quotes where id = ${payment.quoteId} and request_id = ${payment.requestId}
       and scope_version = ${payment.scopeVersion} and status = 'accepted')`,
+    // The reservation binds the reviewed invoice before the external transfer.
+    // The post-transfer database trigger is a backstop, not permission to send.
+    sql`exists (select 1 from provider_invoices invoice where invoice.id = ${invoice.id}
+      and json_array(invoice.id, invoice.request_id, invoice.quote_id, invoice.provider_id,
+        invoice.scope_version, invoice.status, invoice.total_amount_cents, invoice.document_hash,
+        invoice.customer_signature_at, invoice.customer_copy_delivered_at, invoice.provider_copy_retained_at)
+        = ${JSON.stringify(Object.values(reviewedInvoice))})`,
     sql`not exists (select 1 from job_change_orders where request_id = ${payment.requestId} and status = 'pending_customer')`,
     sql`not exists (select 1 from job_incidents where request_id = ${payment.requestId} and (hold_payments = 'yes' or status in ('open','under_review','insurer_review')))`,
     sql`not exists (select 1 from job_cancellations where request_id = ${payment.requestId} and status in ('submitted','under_review'))`,

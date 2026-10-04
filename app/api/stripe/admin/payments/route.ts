@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
 import { getDb } from "../../../../../db";
 import {
   accountCredentials,
@@ -39,7 +39,7 @@ import {
   jobAuthorizationDecisionMatchesContext,
 } from "../../../../../lib/job-operations";
 import { connectedAccountPayoutSafety } from "../../../../../lib/stripe-connected-account-snapshots";
-import { recordProviderTransfer, recoverProviderTransfer, requireTransferPayment, reserveProviderTransfer,
+import { recordProviderTransfer, recoverProviderTransfer, requireTransferInvoice, requireTransferPayment, reserveProviderTransfer,
   savedTransferAttempt, TransferReviewError } from "../../../../../lib/stripe-transfer-recovery";
 import {
   CUSTOMER_COMPLETION_AGREEMENT_KEY,
@@ -301,7 +301,13 @@ export async function POST(request: Request) {
       eq(providerJobRecords.requestId, payment.requestId),
       eq(providerJobRecords.providerEmail, context.providerEmail),
     )).limit(1);
-  const [finalInvoice] = await db.select().from(providerInvoices)
+  const [finalInvoice] = await db.select({
+    ...getTableColumns(providerInvoices),
+    documentHash: sql<string>`provider_invoices.document_hash`,
+    customerSignatureAt: sql<string>`provider_invoices.customer_signature_at`,
+    customerCopyDeliveredAt: sql<string>`provider_invoices.customer_copy_delivered_at`,
+    providerCopyRetainedAt: sql<string>`provider_invoices.provider_copy_retained_at`,
+  }).from(providerInvoices)
     .where(and(
       eq(providerInvoices.requestId, payment.requestId),
       eq(providerInvoices.scopeVersion, context.scopeVersion),
@@ -383,6 +389,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    requireTransferInvoice(payment, finalInvoice);
     const stripeClient = getStripeClient();
     const accountStatus = await retrieveRecipientAccountStatus(
       stripeClient,
@@ -446,7 +453,7 @@ export async function POST(request: Request) {
     if (!releaseDecision.approved) {
       return marketplacePausedResponse();
     }
-    const attempt = await reserveProviderTransfer(payment, getAuthenticatedEmail(request), stageDecision.result.decisionId);
+    const attempt = await reserveProviderTransfer(payment, getAuthenticatedEmail(request), stageDecision.result.decisionId, finalInvoice);
     if (!(await runtimeMarketplaceActionAllowed("payout", { testOnly: false }))) return marketplacePausedResponse();
     const transfer = await stripeClient.transfers.create(
       {
