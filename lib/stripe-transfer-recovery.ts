@@ -8,6 +8,7 @@ type Payment = typeof stripePayments.$inferSelect;
 type Attempt = typeof paymentAdjustments.$inferSelect;
 export class TransferReviewError extends Error {}
 export const transferAttemptKey = (id: string) => `tuveloz-release-${id}`;
+export const transferReversalReviewKey = (id: string) => `tuveloz-transfer-reversal-${id}`;
 
 function requireMatch(value: unknown, message: string): asserts value {
   if (!value) throw new TransferReviewError(message);
@@ -90,8 +91,10 @@ export async function reserveProviderTransfer(payment: Payment, owner: string, d
   return attempt;
 }
 
-export async function recordProviderTransfer(payment: Payment, transfer: Stripe.Transfer, owner: string, attempt?: Attempt) {
+function requireMatchingTransfer(payment: Payment, transfer: Stripe.Transfer, attempt?: Attempt) {
+  requireTransferPayment(payment);
   requireMatch(typeof transfer.id === "string" && transfer.id.startsWith("tr_") && transfer.object === "transfer"
+    && (!payment.transferId || payment.transferId === transfer.id)
     && transfer.amount === payment.providerAmountCents && transfer.currency === payment.currency
     && objectId(transfer.destination) === payment.connectedAccountId && objectId(transfer.source_transaction) === payment.chargeId
     && transfer.transfer_group === payment.transferGroup && transfer.livemode === stripeLiveModeEnabled()
@@ -99,16 +102,101 @@ export async function recordProviderTransfer(payment: Payment, transfer: Stripe.
     && transfer.metadata?.tuveloz_request_id === payment.requestId && transfer.metadata?.tuveloz_quote_id === payment.quoteId
     && (!attempt || transfer.metadata?.tuveloz_transfer_execution_id === attempt.id)
     && Number.isSafeInteger(transfer.created) && transfer.created > 0
-    && transfer.reversed === false && transfer.amount_reversed === 0,
-  "Stripe's transfer does not match this payment, or it has been reversed. Keep it under review.");
+    && Number.isFinite(new Date(transfer.created * 1000).getTime())
+    && Number.isSafeInteger(transfer.amount_reversed) && transfer.amount_reversed >= 0
+    && transfer.amount_reversed <= transfer.amount
+    && transfer.reversed === (transfer.amount_reversed === transfer.amount),
+  "Stripe's transfer does not match this payment. Keep it under review.");
+}
+
+/** Sticky review evidence only, never a refund, recovery ledger or collection instruction. */
+async function recordTransferReversalReview(payment: Payment, transfer: Stripe.Transfer, attempt?: Attempt) {
+  requireMatchingTransfer(payment, transfer, attempt);
+  requireMatch(transfer.amount_reversed > 0, "Stripe has not confirmed a transfer reversal.");
+  const db = getDb(), now = new Date().toISOString();
+  const key = transferReversalReviewKey(payment.id);
+  const details = JSON.stringify({ payment: snapshot(payment), transferId: transfer.id,
+    observation: "full_or_partial_reversal", accountingEntry: false, collectionAuthorized: false });
+  const [prior] = await db.select().from(paymentAdjustments).where(eq(paymentAdjustments.idempotencyKey, key)).limit(1);
+  requireMatch(!prior || (prior.adjustmentType === "stripe_transfer_reversal_review"
+    && prior.paymentId === payment.id && prior.requestId === payment.requestId && prior.quoteId === payment.quoteId
+    && prior.details === details && prior.amountCents === 0 && prior.providerImpactCents === 0
+    && prior.customerImpactCents === 0 && prior.currency === payment.currency && prior.status === "review_required"),
+  "The saved transfer-reversal review does not match this payment. Keep it under review.");
+  const binding = and(samePayment(payment), eq(stripePayments.paymentType, "quote"),
+    eq(stripePayments.settlementStrategy, "separate_transfer"), eq(stripePayments.paidAt, payment.paidAt),
+    or(sql`coalesce(${stripePayments.transferId}, '') = ''`, eq(stripePayments.transferId, transfer.id)));
+  // Supply every column in schema order. The conditional insert and payment
+  // update share one D1 transaction; an interrupted write cannot lose the hold.
+  const marker = db.insert(paymentAdjustments).select(db.select({
+    id: sql<string>`${crypto.randomUUID()}`.as("id"), paymentId: sql<string>`${payment.id}`.as("payment_id"),
+    requestId: sql<string>`${payment.requestId!}`.as("request_id"), quoteId: sql<string>`${payment.quoteId!}`.as("quote_id"),
+    adjustmentType: sql<string>`'stripe_transfer_reversal_review'`.as("adjustment_type"),
+    amountCents: sql<number>`0`.as("amount_cents"), currency: sql<string>`${payment.currency}`.as("currency"),
+    status: sql<string>`'review_required'`.as("status"), reasonCode: sql<string>`'processor_transfer_reversed'`.as("reason_code"),
+    details: sql<string>`${details}`.as("details"), requestedByRole: sql<string>`'system'`.as("requested_by_role"),
+    requestedById: sql<string>`'stripe_reconciliation'`.as("requested_by_id"), requestedAt: sql<string>`${now}`.as("requested_at"),
+    decidedBy: sql<string>`''`.as("decided_by"), decidedAt: sql<string>`''`.as("decided_at"),
+    providerImpactCents: sql<number>`0`.as("provider_impact_cents"), customerImpactCents: sql<number>`0`.as("customer_impact_cents"),
+    stripeRefundId: sql<string>`''`.as("stripe_refund_id"), stripeDisputeId: sql<string>`''`.as("stripe_dispute_id"),
+    transferReversalId: sql<string>`''`.as("transfer_reversal_id"), idempotencyKey: sql<string>`${key}`.as("idempotency_key"),
+    createdAt: sql<string>`${now}`.as("created_at"), updatedAt: sql<string>`${now}`.as("updated_at"),
+  }).from(stripePayments).where(binding)).onConflictDoNothing();
+  const update = db.update(stripePayments).set({ transferId: transfer.id,
+    releasedAt: sql`case when ${stripePayments.releasedAt} = '' then ${new Date(transfer.created * 1000).toISOString()}
+      else ${stripePayments.releasedAt} end`, updatedAt: now,
+  }).where(and(binding, sql`exists (select 1 from payment_adjustments where idempotency_key = ${key}
+    and adjustment_type = 'stripe_transfer_reversal_review' and payment_id = ${payment.id} and details = ${details}
+    and amount_cents = 0 and provider_impact_cents = 0 and customer_impact_cents = 0 and status = 'review_required')`))
+    .returning({ id: stripePayments.id });
+  const [, saved] = await db.batch([marker, update] as const);
+  requireMatch(saved.length === 1, "The payment changed while recording the reversal. Refresh its review; do not send another transfer.");
+}
+
+/** Signed platform event: re-read Stripe, then apply only the exact job transfer. */
+export async function recordReversedProviderTransfer(stripe: Stripe, eventTransfer: Stripe.Transfer,
+  eventLivemode: boolean, connectedAccountId: string) {
+  requireMatch(!connectedAccountId && eventLivemode === stripeLiveModeEnabled(),
+    "This transfer notification belongs to another Stripe account or payment mode.");
+  requireMatch(typeof eventTransfer.id === "string" && eventTransfer.id.startsWith("tr_"), "Invalid transfer notification.");
+  const transfer = await stripe.transfers.retrieve(eventTransfer.id);
+  requireMatch(transfer.id === eventTransfer.id, "Stripe returned an unexpected transfer reference.");
+  const paymentId = transfer.metadata?.tuveloz_payment_record_id;
+  const payments = await getDb().select().from(stripePayments).where(or(eq(stripePayments.transferId, transfer.id),
+    paymentId ? eq(stripePayments.id, paymentId) : undefined)).limit(2);
+  if (!payments.length && !paymentId) return; // An unrelated platform transfer is not a Tuveloz job.
+  requireMatch(payments.length <= 1, "This Stripe transfer matches conflicting payment records. Keep it under review.");
+  const payment = payments[0];
+  requireMatch(payment, "The transfer's Tuveloz payment is not available yet. Retry reconciliation.");
+  const attempt = await savedTransferAttempt(payment);
+  requireMatchingTransfer(payment, transfer, attempt);
+  if (!payment.transferId) {
+    const group = await stripe.transfers.list({ transfer_group: payment.transferGroup!, limit: 2 });
+    requireMatch(!group.has_more && group.data.length === 1 && group.data[0].id === transfer.id,
+      "The original transfer is not unambiguous. Keep this payment under review.");
+  }
+  await recordTransferReversalReview(payment, transfer, attempt);
+}
+
+export async function recordProviderTransfer(payment: Payment, transfer: Stripe.Transfer, owner: string, attempt?: Attempt) {
+  requireMatchingTransfer(payment, transfer, attempt);
+  if (transfer.amount_reversed > 0) {
+    await recordTransferReversalReview(payment, transfer, attempt);
+    throw new TransferReviewError("Stripe reports a full or partial reversal of this provider transfer. The payment is saved for review; no replacement transfer was sent.");
+  }
+  const [reversalReview] = await getDb().select({ id: paymentAdjustments.id }).from(paymentAdjustments)
+    .where(eq(paymentAdjustments.idempotencyKey, transferReversalReviewKey(payment.id))).limit(1);
+  requireMatch(!reversalReview, "This transfer has a saved reversal warning. Review Stripe before taking another payment action.");
   const releasedAt = new Date(transfer.created * 1000).toISOString();
   // Recording a money movement must never clear a newer refund, dispute or other hold.
   const [saved] = await getDb().update(stripePayments).set({ transferId: transfer.id,
     status: sql`case when ${stripePayments.status} in ('paid_pending_completion','ready_for_release','released')
       and ${stripePayments.refundAmountCents} = 0 and ${stripePayments.refundStatus} = '' and ${stripePayments.disputeStatus} = ''
+      and not exists (select 1 from payment_adjustments where idempotency_key = ${transferReversalReviewKey(payment.id)})
       then 'released' else ${stripePayments.status} end`,
     releasedAt, releasedBy: attempt?.requestedById || payment.releasedBy || owner, updatedAt: new Date().toISOString(),
-  }).where(and(samePayment(payment), or(sql`coalesce(${stripePayments.transferId}, '') = ''`, eq(stripePayments.transferId, transfer.id))))
+  }).where(and(samePayment(payment), or(sql`coalesce(${stripePayments.transferId}, '') = ''`, eq(stripePayments.transferId, transfer.id)),
+    sql`not exists (select 1 from payment_adjustments where idempotency_key = ${transferReversalReviewKey(payment.id)})`))
     .returning();
   requireMatch(saved, "The transfer exists in Stripe, but its local payment needs review. Do not send it again.");
   if (attempt) await getDb().update(paymentAdjustments).set({ status: "transfer_recorded", updatedAt: new Date().toISOString() })

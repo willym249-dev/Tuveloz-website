@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-04 - Keep reversed provider transfers visibly under review
+
+A matching transfer that Stripe later reversed could remain displayed as
+released. The owner status check now saves a permanent, zero-impact review
+marker for a verified full or partial reversal. The signed payment webhook
+also handles `transfer.reversed` by reading Stripe's current transfer and
+checking the exact original job, payment, account, charge, amount, currency,
+mode and execution reference. Missing local records remain retryable;
+conflicting records cannot be adopted. No refund or reversal is initiated.
+
+The marker and original transfer reference are saved in one conditional D1
+batch. Duplicate observations produce one marker; interrupted writes retry
+safely. Historical release, refund, dispute and reservation records remain
+intact. Later stale success responses cannot clear the warning or confirm
+another transfer. Owner refreshes display the warning independently of later
+refund/dispute status changes; failed or malformed responses preserve the
+last good view and disable actions. This is review evidence, not a complete
+recovery ledger, provider debt decision or collection authorization.
+
+Local validation: 1,001 tests, TypeScript, targeted zero-warning lint, full
+application build, and 52 Chromium/WebKit phone cases passed. Independent
+backend review found no actionable issue. No schema, payment policy, timing
+rule, live key gate or marketplace launch setting changed. Required release
+checks and live verification are separate. The existing Stripe destination
+must include `transfer.reversed` before automatic delivery can be claimed;
+previously ignored receipts require the owner status-check fallback.
+
 ## 2026-10-04 - Compare paid scope and provider invoice in refund review
 
 The collapsed owner evidence section now shows the saved scope attached to the

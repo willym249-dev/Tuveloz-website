@@ -107,6 +107,8 @@ export async function GET(request: Request) {
       stripeConnectedAccountSnapshots.lastExternalAccountStatus,
     createdAt: stripePayments.createdAt,
     transferAttemptStatus: paymentAdjustments.status,
+    transferReversalReviewRequired: sql<number>`exists (select 1 from payment_adjustments reversal_review
+      where reversal_review.idempotency_key = 'tuveloz-transfer-reversal-' || ${stripePayments.id})`,
   }).from(stripePayments)
     .leftJoin(paymentAdjustments, and(eq(paymentAdjustments.paymentId, stripePayments.id),
       eq(paymentAdjustments.adjustmentType, "stripe_provider_transfer"),
@@ -142,13 +144,19 @@ export async function GET(request: Request) {
       const { customerAccountEmail, ...safePayment } = payment;
       return {
         ...safePayment,
+        transferReversalReviewRequired: Boolean(payment.transferReversalReviewRequired),
+        // Preserve historical release/refund/dispute facts in storage. The
+        // independent warning must override a stale success presentation.
+        status: payment.transferReversalReviewRequired
+          && ["released", "ready_for_release", "paid_pending_completion"].includes(payment.status)
+          ? "transfer_reversed_review" : payment.status,
         customerHasAccount: Boolean(customerAccountEmail),
         // Completion is only one prerequisite. The POST release endpoint is
         // the authority for eligibility, invoice, incident, cancellation,
         // refund, dispute, reserve, and timer checks.
         canRelease: false,
         releaseReviewRequired: payment.settlementStrategy === "separate_transfer"
-          && payment.status === "paid_pending_completion",
+          && payment.status === "paid_pending_completion" && !payment.transferReversalReviewRequired,
       };
     }),
   }, { headers: { "cache-control": "no-store" } });

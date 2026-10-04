@@ -17,7 +17,8 @@ test("provider transfers recover without repeating uncertain money movement", as
   const scratch = mkdtempSync(join(temp, "tuveloz-transfer-recovery-"));
   const originalFetch = globalThis.fetch;
   let database, transfers = [], calls = [], loseReply = false, corruptReply = false;
-  let beforeCreate, beforeIntent, beforeSave, beforeList;
+  let beforeCreate, beforeIntent, beforeSave, beforeList, beforeBatch, batchBarrier, failBatch = false;
+  let transferReads = 0;
   const context = { quoteId: "quote-synthetic", scopeVersion: 1, providerEmail: "provider@example.invalid" };
   const state = { db: null, open: true, owner: true, context, stripe: null };
   globalThis.__transferRecovery = state;
@@ -32,7 +33,7 @@ test("provider transfers recover without repeating uncertain money movement", as
     paymentIntents: { retrieve: async () => { beforeIntent?.(); return intent(); } },
     transfers: {
       list: async args => { assert.equal(args.transfer_group, "tuveloz_payment-synthetic"); await beforeList?.(); return { data: transfers, has_more: false }; },
-      retrieve: async id => { const match = transfers.find(item => item.id === id); assert.ok(match); return match; },
+      retrieve: async id => { transferReads++; const match = transfers.find(item => item.id === id); assert.ok(match); return match; },
       create: async (params, options) => {
         calls.push({ params, options }); await beforeCreate?.();
         const transfer = { id: `tr_synthetic_${calls.length}`, object: "transfer", ...params,
@@ -55,16 +56,29 @@ test("provider transfers recover without repeating uncertain money movement", as
     for (const entry of JSON.parse(readFileSync(join(root, "drizzle/meta/_journal.json"), "utf8")).entries) {
       for (const sql of readFileSync(join(root, "drizzle", `${entry.tag}.sql`), "utf8").split("--> statement-breakpoint")) if (sql.trim()) database.exec(sql);
     }
-    state.db = drizzle((sql, params, method) => {
+    const querySql = (sql, params, method) => {
       assert.ok(params.length <= 100, "D1 parameter limit");
       if (beforeSave && sql.startsWith('update "stripe_payments"')) { const hook = beforeSave; beforeSave = null; hook(); }
       if (method === "run") { database.prepare(sql).run(...params); return { rows: [] }; }
       database.exec("PRAGMA short_column_names=OFF; PRAGMA full_column_names=ON;");
       try { const statement = database.prepare(sql); return { rows: method === "get" ? Object.values(statement.get(...params) ?? {}) : statement.all(...params).map(row => Object.values(row)) }; }
       finally { database.exec("PRAGMA short_column_names=ON; PRAGMA full_column_names=OFF;"); }
+    };
+    state.db = drizzle(querySql, async queries => {
+      await batchBarrier?.();
+      const hook = beforeBatch; beforeBatch = null; hook?.();
+      database.exec("BEGIN");
+      try {
+        const result = queries.map((query, index) => {
+          if (failBatch && index === 1) throw Error("SYNTHETIC reversal receipt storage failure");
+          return querySql(query.sql, query.params, query.method);
+        });
+        database.exec("COMMIT"); return result;
+      } catch (error) { database.exec("ROLLBACK"); throw error; }
     });
     state.open = true; state.owner = true; transfers = []; calls = []; loseReply = false; corruptReply = false;
-    beforeCreate = beforeIntent = beforeSave = beforeList = null;
+    beforeCreate = beforeIntent = beforeSave = beforeList = beforeBatch = batchBarrier = null;
+    failBatch = false; transferReads = 0;
     seed("customer_requests", { id: "job-synthetic", status: "completed", is_test_job: "no",
       parts_source: "No parts needed — labor only", parts_preference: "No preference", labor_only_parts_acknowledged_at: "2026-10-01T00:00:00Z" });
     seed("provider_applications", { id: "provider-synthetic", email: context.providerEmail, is_test_provider: "no", stripe_account_id: "acct_synthetic" });
@@ -124,6 +138,16 @@ test("provider transfers recover without repeating uncertain money movement", as
       return { status: response.status, body: await response.json() };
     };
     const payment = () => database.prepare("SELECT * FROM stripe_payments WHERE id='payment-synthetic'").get();
+    const markers = () => database.prepare("SELECT * FROM payment_adjustments WHERE adjustment_type='stripe_transfer_reversal_review'").all();
+    const list = async () => {
+      const response = await api.GET(new Request("https://tuveloz.invalid/api/stripe/admin/payments"));
+      assert.equal(response.status, 200); assert.equal(response.headers.get("cache-control"), "no-store");
+      const data = await response.json(); assert.equal(validStripePayments(data.payments), true);
+      assert.equal(data.payments[0].canRelease, false);
+      assert.equal(typeof data.payments[0].transferReversalReviewRequired, "boolean");
+      return data.payments[0];
+    };
+    const reverse = (amount = 1000) => Object.assign(transfers[0], { amount_reversed: amount, reversed: amount === 10000 });
     await t.test("late retry after a lost transfer reply does not send a second transfer", async () => {
       reset(); loseReply = true; const first = await post(); assert.notEqual(first.body.ok, true); assert.equal(calls.length, 1);
       loseReply = false; const recovered = await post();
@@ -181,16 +205,152 @@ test("provider transfers recover without repeating uncertain money movement", as
       delete legacy.metadata.tuveloz_transfer_execution_id; reset(); transfers = [legacy];
       assert.equal((await post()).body.transferConfirmed, true); assert.equal(calls.length, 0);
     });
-    await t.test("wrong, reversed or duplicated processor records cannot confirm a transfer", async () => {
+    await t.test("wrong, malformed or duplicated processor records cannot confirm a transfer", async () => {
       for (const change of [x => x.amount++, x => x.currency = "eur", x => x.destination = "acct_other",
         x => x.source_transaction = "ch_other", x => x.transfer_group = "other", x => x.livemode = true,
         x => x.metadata.tuveloz_payment_record_id = "other", x => x.metadata.tuveloz_transfer_execution_id = "other",
-        x => x.amount_reversed = 1, x => x.reversed = true]) {
+        x => x.reversed = true]) {
         reset(); loseReply = true; await post(); change(transfers[0]); loseReply = false;
         assert.equal((await post()).status, 409); assert.equal(calls.length, 1); assert.equal(payment().transfer_id, null);
       }
       reset(); loseReply = true; await post(); transfers.push({ ...transfers[0], id: "tr_other" });
       assert.equal((await post()).status, 409); assert.equal(calls.length, 1);
+    });
+    await t.test("a recorded provider transfer becomes a zero-impact review after partial or full reversal", async () => {
+      for (const amount of [1, 4500, 10000]) {
+        reset(); assert.equal((await post()).body.transferConfirmed, true);
+        const before = payment(); reverse(amount);
+        const response = await post("check_transfer");
+        assert.equal(response.status, 409); assert.notEqual(response.body.transferConfirmed, true);
+        assert.match(response.body.error, /reversal|reversed/i);
+        const saved = payment();
+        assert.equal(saved.status, before.status, "historical payment status remains independent of the review marker");
+        for (const key of ["transfer_id", "released_at", "released_by", "provider_amount_cents", "application_fee_cents", "customer_total_cents",
+          "refund_amount_cents", "refund_status", "last_refund_id", "refunded_at", "dispute_status"]) {
+          assert.ok(Object.hasOwn(saved, key), key); assert.equal(saved[key], before[key], key);
+        }
+        assert.equal(calls.length, 1, "a reversal never sends a replacement transfer");
+        assert.equal(markers().length, 1);
+        const marker = markers()[0];
+        assert.equal(marker.payment_id, "payment-synthetic"); assert.equal(marker.request_id, "job-synthetic");
+        assert.equal(marker.quote_id, "quote-synthetic"); assert.equal(marker.status, "review_required");
+        for (const key of ["amount_cents", "provider_impact_cents", "customer_impact_cents"]) assert.equal(marker[key], 0, key);
+        for (const key of ["stripe_refund_id", "stripe_dispute_id", "transfer_reversal_id", "decided_by", "decided_at"]) assert.equal(marker[key], "", key);
+        const details = JSON.parse(marker.details);
+        assert.equal(details.transferId, before.transfer_id); assert.equal(details.payment.id, before.id);
+        assert.equal(details.accountingEntry, false); assert.equal(details.collectionAuthorized, false);
+        const beforeListWrites = database.prepare("SELECT total_changes() count").get().count, reads = transferReads;
+        const listed = await list();
+        assert.equal(listed.transferReversalReviewRequired, true);
+        assert.equal(listed.status, "transfer_reversed_review"); assert.equal(listed.transferId, before.transfer_id);
+        assert.equal(database.prepare("SELECT total_changes() count").get().count, beforeListWrites, "GET must not write");
+        assert.equal(transferReads, reads, "GET uses saved evidence without contacting Stripe");
+      }
+    });
+    await t.test("a reversed transfer after a lost reply records its original ID and keeps the reservation", async () => {
+      reset(); loseReply = true; await post(); loseReply = false;
+      assert.equal(payment().transfer_id, null);
+      const attempt = database.prepare("SELECT * FROM payment_adjustments WHERE adjustment_type='stripe_provider_transfer'").get();
+      reverse(2500);
+      assert.equal((await post("check_transfer")).status, 409);
+      assert.equal(payment().transfer_id, "tr_synthetic_1"); assert.equal(payment().status, "paid_pending_completion");
+      assert.ok(payment().released_at); assert.equal(markers().length, 1);
+      assert.deepEqual(database.prepare("SELECT * FROM payment_adjustments WHERE id=?").get(attempt.id), attempt);
+      assert.equal((await list()).transferReversalReviewRequired, true);
+      for (const action of [undefined, "check_transfer", "release"]) {
+        assert.notEqual((await post(action)).body.transferConfirmed, true);
+        assert.equal(calls.length, 1); assert.equal(markers().length, 1);
+      }
+    });
+    await t.test("concurrent reversal checks create one marker and preserve the original transfer", async () => {
+      reset(); await post(); reverse();
+      let arrivals = 0, release;
+      const barrier = new Promise(resolve => { release = resolve; });
+      batchBarrier = async () => { if (++arrivals === 2) release(); await barrier; };
+      const responses = await Promise.all([post("check_transfer"), post("check_transfer")]);
+      assert.deepEqual(responses.map(response => response.status), [409, 409]);
+      assert.equal(markers().length, 1); assert.equal(payment().transfer_id, "tr_synthetic_1");
+      assert.equal(payment().status, "released"); assert.equal(calls.length, 1);
+    });
+    await t.test("a failed reversal batch rolls back both marker and adoption, then recovers without another send", async () => {
+      reset(); loseReply = true; await post(); loseReply = false; reverse();
+      const before = payment(); failBatch = true;
+      assert.equal((await post("check_transfer")).status, 502);
+      assert.deepEqual(payment(), before); assert.equal(markers().length, 0);
+      failBatch = false;
+      assert.equal((await post("check_transfer")).status, 409);
+      assert.equal(payment().transfer_id, "tr_synthetic_1"); assert.equal(markers().length, 1); assert.equal(calls.length, 1);
+    });
+    await t.test("changed payment binding before the reversal transaction cannot create a marker or adopt a transfer", async () => {
+      reset(); loseReply = true; await post(); loseReply = false; reverse();
+      beforeBatch = () => database.exec("UPDATE stripe_payments SET connected_account_id='acct_changed'");
+      assert.equal((await post("check_transfer")).status, 409);
+      assert.equal(payment().connected_account_id, "acct_changed"); assert.equal(payment().transfer_id, null);
+      assert.equal(payment().status, "paid_pending_completion"); assert.equal(markers().length, 0); assert.equal(calls.length, 1);
+    });
+    await t.test("a reversal marker arriving after the initial check prevents an atomic stale success", async () => {
+      reset(); await post(); reverse(); assert.equal((await post("check_transfer")).status, 409);
+      const marker = markers()[0];
+      // Replay the exact valid observation as a second writer between the stale read and its UPDATE.
+      database.prepare("DELETE FROM payment_adjustments WHERE id=?").run(marker.id);
+      reverse(0); beforeSave = () => seed("payment_adjustments", marker);
+      const response = await post("check_transfer");
+      assert.equal(response.status, 409); assert.notEqual(response.body.transferConfirmed, true);
+      assert.deepEqual(markers(), [marker]); assert.equal(calls.length, 1);
+      assert.equal((await list()).transferReversalReviewRequired, true);
+    });
+    await t.test("a hold arriving before reversal recording keeps its financial state and its review marker", async () => {
+      reset(); await post(); reverse();
+      beforeBatch = () => database.exec("UPDATE stripe_payments SET status='refunded',refund_amount_cents=10500,refund_status='succeeded',last_refund_id='re_other',dispute_status='needs_response'");
+      assert.equal((await post("check_transfer")).status, 409);
+      const saved = payment();
+      assert.equal(saved.status, "refunded"); assert.equal(saved.refund_amount_cents, 10500);
+      assert.equal(saved.refund_status, "succeeded"); assert.equal(saved.last_refund_id, "re_other");
+      assert.equal(saved.dispute_status, "needs_response"); assert.equal(markers().length, 1);
+      const listed = await list();
+      assert.equal(listed.status, "refunded"); assert.equal(listed.transferReversalReviewRequired, true);
+    });
+    await t.test("a positive reversal with unsafe amounts or mismatched identity cannot create review evidence", async () => {
+      const changes = [
+        x => x.amount_reversed = -1, x => x.amount_reversed = 10001, x => x.amount_reversed = 0.5,
+        x => x.amount_reversed = "1000", x => x.amount_reversed = NaN, x => x.amount_reversed = Infinity,
+        x => x.amount_reversed = Number.MAX_SAFE_INTEGER + 1, x => x.amount_reversed = undefined,
+        x => x.reversed = true, x => x.reversed = "false", x => x.reversed = undefined,
+        x => x.amount_reversed = 10000, x => x.amount = 10500, x => x.livemode = true,
+        x => x.destination = "acct_other", x => x.source_transaction = "ch_other", x => x.transfer_group = "other",
+        x => x.currency = "eur", x => x.object = "charge", x => x.created = Number.MAX_SAFE_INTEGER,
+        x => x.metadata.tuveloz_payment_record_id = "other", x => x.metadata.tuveloz_request_id = "other",
+        x => x.metadata.tuveloz_quote_id = "other", x => x.metadata.tuveloz_transfer_execution_id = "other",
+      ];
+      for (const change of changes) {
+        reset(); await post(); const before = payment(); reverse(); change(transfers[0]);
+        assert.equal((await post("check_transfer")).status, 409, String(change));
+        assert.deepEqual(payment(), before, String(change)); assert.equal(markers().length, 0); assert.equal(calls.length, 1);
+      }
+    });
+    await t.test("reversal review survives later zero snapshots and independent refund or dispute statuses", async () => {
+      for (const [status, refund, dispute] of [
+        ["released", "", ""], ["refund_pending", "pending", ""], ["refunded", "succeeded", ""],
+        ["disputed", "", "needs_response"], ["launch_shutdown_hold", "", ""],
+      ]) {
+        reset(); await post();
+        database.prepare("UPDATE stripe_payments SET status=?,refund_status=?,dispute_status=?,refund_amount_cents=?")
+          .run(status, refund, dispute, refund === "succeeded" ? 10500 : 0);
+        reverse(); assert.equal((await post("check_transfer")).status, 409);
+        assert.equal(payment().status, status);
+        assert.equal(payment().refund_status, refund); assert.equal(payment().dispute_status, dispute);
+        const marker = markers()[0];
+        // Other reconciliation writers own payment.status; the independent review must remain visible.
+        database.prepare("UPDATE stripe_payments SET status=?").run(status);
+        reverse(0);
+        const listed = await list();
+        assert.equal(listed.transferReversalReviewRequired, true);
+        assert.equal(listed.status, status === "released" ? "transfer_reversed_review" : status);
+        const response = await post("check_transfer");
+        assert.equal(response.status, 409); assert.notEqual(response.body.transferConfirmed, true);
+        assert.equal((await list()).transferReversalReviewRequired, true);
+        assert.deepEqual(markers(), [marker]); assert.equal(calls.length, 1);
+      }
     });
     await t.test("a payment hold or changed quote during verification prevents reservation and sending", async () => {
       for (const sql of ["UPDATE stripe_payments SET status='disputed',dispute_status='needs_response'",
@@ -211,15 +371,12 @@ test("provider transfers recover without repeating uncertain money movement", as
     });
     await t.test("payment-list recovery markers are valid and never enable release controls", async () => {
       reset();
-      const list = async () => {
-        const response = await api.GET(new Request("https://tuveloz.invalid/api/stripe/admin/payments"));
-        assert.equal(response.headers.get("cache-control"), "no-store");
-        const data = await response.json(); assert.equal(validStripePayments(data.payments), true);
-        assert.equal(data.payments[0].canRelease, false); return data.payments[0];
-      };
+      assert.equal((await list()).transferReversalReviewRequired, false);
       assert.equal((await list()).transferAttemptStatus, null);
       loseReply = true; await post(); assert.equal((await list()).transferAttemptStatus, "transfer_submission_unconfirmed");
+      assert.equal((await list()).transferReversalReviewRequired, false);
       await post("check_transfer"); assert.equal((await list()).transferAttemptStatus, "transfer_recorded");
+      assert.equal((await list()).transferReversalReviewRequired, false);
     });
   } finally {
     globalThis.fetch = originalFetch; database?.close(); delete globalThis.__transferRecovery;

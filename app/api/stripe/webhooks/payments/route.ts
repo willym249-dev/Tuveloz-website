@@ -19,6 +19,7 @@ import {
   failStripeWebhookEvent,
   type StripeWebhookClaim,
 } from "../../../../../lib/stripe-webhook-events";
+import { recordReversedProviderTransfer } from "../../../../../lib/stripe-transfer-recovery";
 
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
@@ -69,6 +70,9 @@ export async function POST(request: Request) {
 
     let handled = true;
     switch (event.type) {
+      case "transfer.reversed":
+        await recordReversedProviderTransfer(stripeClient, event.data.object, event.livemode, stripeObjectId(event.account));
+        break;
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
         await recordPaidCheckoutSession(stripeClient, event.data.object);
