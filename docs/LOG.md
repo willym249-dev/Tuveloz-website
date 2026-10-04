@@ -11,6 +11,27 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-04 - Recover provider checklists and clear completed certificate drafts
+
+Incomplete successful checklist responses could crash the provider page or leave
+it loading indefinitely. Validate the displayed record structure, bound reads,
+and offer an English/Spanish retry that preserves the last readable checklist
+and typed drafts. Ignore superseded reads and refresh current state after a
+confirmed agreement update so a delayed response cannot replace newer evidence.
+Failed follow-up reads preserve confirmed write receipts.
+
+A completed application's optional certificate list and opt-in also survived
+starting another application. Clear both only after confirmed submission so a
+second applicant does not inherit the first applicant's certificate details.
+
+The old behavior was reproduced in local Chromium and WebKit fixtures. Browser
+regressions cover both languages, malformed and stalled responses, retries,
+draft preservation, delayed reads, and success followed by a new applicant.
+The provider-form suite passes 40 cases and checklist suite passes 120 cases.
+Full build and all 1,040 tests pass; independent source review is clean after
+correcting the concurrent-update ordering. No policy, eligibility, API write,
+payment, schema or launch-setting change. Publication is recorded separately.
+
 ## 2026-10-04 - Check signed invoice evidence before reserving a provider transfer
 
 The payment route could request a Stripe transfer before the database's final-

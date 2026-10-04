@@ -30,6 +30,8 @@ const js = bundle.output.find(asset => asset.type === "chunk").fileName;
 const css = bundle.output.find(asset => asset.fileName.endsWith(".css")).fileName;
 if (outputDir) writeFileSync(resolve(outputDir, "fixture.js"), assets.get(`/${js}`));
 const challenges = [];
+const applications = [];
+let applicationReceiptExpected = false;
 const unexpectedRequests = [];
 const server = createServer(async (request, response) => {
   const path = request.url.split("?")[0];
@@ -46,6 +48,15 @@ const server = createServer(async (request, response) => {
     challenges.push(JSON.parse(Buffer.concat(chunks).toString()));
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify({ ok: true, challengeId: "synthetic-email-challenge" }));
+    return;
+  }
+  if (path === "/api/providers" && request.method === "POST" && applicationReceiptExpected) {
+    applicationReceiptExpected = false;
+    const chunks = [];
+    for await (const chunk of request) chunks.push(chunk);
+    applications.push(JSON.parse(Buffer.concat(chunks).toString()));
+    response.writeHead(202, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: true, onboardingUrl: "/provider-onboarding" }));
     return;
   }
   if (assets.has(path)) {
@@ -102,9 +113,9 @@ async function chooseService(page, code) {
   if (!await input.isVisible()) await page.locator(".service-group").filter({ has: input }).locator(":scope > summary").click();
   await input.check();
 }
-async function freshDetails(page) {
+async function freshDetails(page, fields = baseDraft.fields) {
   await chooseService(page, "battery_replacement");
-  await page.locator('[name="provider-email"]').fill(baseDraft.fields["provider-email"]);
+  await page.locator('[name="provider-email"]').fill(fields["provider-email"]);
   await next(page).click();
   await confirmChecklist(page);
   await next(page).click();
@@ -112,11 +123,11 @@ async function freshDetails(page) {
   // frame. Wait for that handoff before the browser starts typing, otherwise
   // WebKit can insert text into the step container instead of the input.
   await page.waitForFunction(() => document.activeElement?.matches('[data-signup-step="3"]'));
-  for (const [name, value] of Object.entries(baseDraft.fields)) {
+  for (const [name, value] of Object.entries(fields)) {
     if (name !== "provider-email") await page.locator(`[name="${name}"]`).fill(value);
   }
   await page.locator('[name="provider-work-location"]').first().check();
-  for (const [name, value] of Object.entries(baseDraft.fields)) assert.equal(await page.locator(`[name="${name}"]`).inputValue(), value, `${name} was entered`);
+  for (const [name, value] of Object.entries(fields)) assert.equal(await page.locator(`[name="${name}"]`).inputValue(), value, `${name} was entered`);
 }
 async function fitsPhone(page) {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "form must fit a phone without horizontal scrolling");
@@ -185,6 +196,7 @@ try {
             result.status = "failed";
             result.error = error.stack ?? error.message;
           } finally {
+            applicationReceiptExpected = false;
             if (outputDir && (result.status === "failed" || ["resume", "changed-services"].includes(name))) {
               await page.screenshot({ path: resolve(outputDir, `${browserType.name()}-${language}-${name}.png`), fullPage: true });
             }
@@ -194,6 +206,40 @@ try {
           console.log(`${result.status.toUpperCase()} ${result.browser} ${language} ${name}${result.error ? `: ${result.error}` : ""}`);
           assert.deepEqual(errors, [], "fixture must render without browser errors");
         }
+        await run("new-application-clears-certificates", null, async page => {
+          const applicationCount = applications.length;
+          await freshDetails(page);
+          await page.locator(".optional-cert-details > summary").click();
+          await page.getByRole("switch").click();
+          await page.locator(".optional-cert-row input").first().fill("Synthetic first-applicant certificate");
+          await page.locator(".optional-cert-row input").nth(1).fill("FIRST-APPLICANT-123");
+          await checkFinalAcknowledgments(page);
+          await page.getByRole("button", { name: /^(Email me a code|Enviarme un código)\s*→$/ }).click();
+          const verificationCode = page.locator('[name="provider-verification-code"]');
+          applicationReceiptExpected = true;
+          await verificationCode.fill("123456"); await verificationCode.press("Enter");
+          await page.locator(".provider-success").waitFor();
+          assert.equal(applications.length, applicationCount + 1);
+          assert.equal(applications.at(-1).email, baseDraft.fields["provider-email"]);
+          assert.equal(applications.at(-1).optionalCertificates[0].credentialIdentifier, "FIRST-APPLICANT-123");
+          assert.equal(await page.evaluate(key => localStorage.getItem(key), draftKey), null);
+
+          await page.getByRole("button", { name: /^(Start another verification|Iniciar otra verificación)$/ }).click();
+          const nextFields = { ...baseDraft.fields, "provider-email": "second-applicant@example.invalid", "performing-person-first-name": "Second" };
+          await freshDetails(page, nextFields);
+          assert.equal(await page.locator(".optional-cert-details").getAttribute("open"), null,
+            "the second applicant can skip the collapsed optional section");
+          const saved = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), draftKey);
+          await checkFinalAcknowledgments(page);
+          await page.getByRole("button", { name: /^(Email me a code|Enviarme un código)\s*→$/ }).click();
+          await verificationCode.waitFor();
+          const nextChallenge = challenges.at(-1);
+          assert.equal(nextChallenge.email, nextFields["provider-email"]);
+          assert.deepEqual(nextChallenge.optionalCertificates, [], "a new application must not submit the first applicant's certificates");
+          assert.deepEqual(saved.optionalCertificates, [], "completed certificates must not become another applicant's saved draft");
+          assert.equal(saved.showOptionalCertificates, false, "the next applicant must opt in to certificates afresh");
+          assert.equal(applications.length, applicationCount + 1, "requesting the second code does not submit another application");
+        });
         await run("certificate-draft-and-label", { ...baseDraft, selectedProviderServices: ["photo_documentation_only"] }, async page => {
           const certificateDetails = page.locator(".optional-cert-details > summary");
           if (await certificateDetails.count()) await certificateDetails.click();
@@ -323,7 +369,7 @@ try {
       await browser.close();
     }
   }
-  assert.deepEqual(unexpectedRequests, [], "no application or other unexpected mutation was sent");
+  assert.deepEqual(unexpectedRequests, [], "no unexpected mutation was sent");
 } finally {
   await new Promise(done => server.close(done));
   if (outputDir) writeFileSync(resolve(outputDir, "report.json"), JSON.stringify(report, null, 2));
