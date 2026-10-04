@@ -127,6 +127,7 @@ standard snapshot events with V2 thin events:
    - `checkout.session.async_payment_failed`
    - `checkout.session.expired`
    - `charge.refunded`
+   - `transfer.reversed` (platform job transfers; includes partial reversals)
    - `charge.refund.updated`
    - `refund.created`
    - `refund.failed`
@@ -136,6 +137,12 @@ standard snapshot events with V2 thin events:
    - `charge.dispute.closed`
    - `charge.dispute.funds_reinstated`
    - `charge.dispute.funds_withdrawn`
+   Transfer-reversal notifications record a permanent owner-review warning;
+   they do not issue a refund, establish provider debt, or authorize collection.
+   Confirm this event is selected on the existing payment destination before
+   relying on automatic delivery. Previously ignored event receipts are not
+   replayed automatically; use the owner's **Check transfer status** control
+   to reconcile those transfers without sending another payment.
 2. A standard snapshot webhook at
    `https://YOUR-DOMAIN/api/stripe/webhooks/identity` for:
    - `identity.verification_session.created`
@@ -273,7 +280,7 @@ For local testing, run separate Stripe CLI listeners:
 
 ```bash
 stripe listen \
-  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,charge.refund.updated,refund.created,refund.failed,refund.updated,charge.dispute.created,charge.dispute.updated,charge.dispute.closed,charge.dispute.funds_reinstated,charge.dispute.funds_withdrawn' \
+  --events 'checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,charge.refund.updated,refund.created,refund.failed,refund.updated,charge.dispute.created,charge.dispute.updated,charge.dispute.closed,charge.dispute.funds_reinstated,charge.dispute.funds_withdrawn,transfer.reversed' \
   --forward-to http://localhost:3000/api/stripe/webhooks/payments
 
 stripe listen \

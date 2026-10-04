@@ -11,6 +11,7 @@ export function validStripePayments(value: unknown): boolean {
     && ["providerName", "customerDisplayName", "jobStatus", "transferId", "connectedAccountSnapshotId", "transferAttemptStatus", "lastPayoutStatus", "lastExternalAccountStatus", "payoutHoldReason", "externalAccountHoldReason"]
       .every(key => payment[key] === null || typeof payment[key] === "string")
     && typeof payment.canRelease === "boolean" && typeof payment.customerHasAccount === "boolean"
+    && typeof payment.transferReversalReviewRequired === "boolean"
     && cents(payment.providerAmountCents) && cents(payment.applicationFeeCents) && cents(payment.customerTotalCents)
     && payment.providerAmountCents + payment.applicationFeeCents === payment.customerTotalCents
     && cents(payment.refundAmountCents));

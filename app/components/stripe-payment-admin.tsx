@@ -21,6 +21,7 @@ type AdminPayment = {
   jobStatus: string | null;
   transferId: string | null;
   transferAttemptStatus: string | null;
+  transferReversalReviewRequired: boolean;
   canRelease: boolean;
   paidAt: string;
   releasedAt: string;
@@ -58,17 +59,20 @@ export function StripePaymentAdmin() {
   const inFlight = useRef(false);
 
   const loadPayments = useCallback(async (signal?: AbortSignal) => {
-    setReady(false); setLoading(true); setPendingId("");
+    setReady(false); setLoading(true); setPendingId(""); setMessage("");
     try {
       const response = await requestAccountResponse("/api/stripe/admin/payments", { cache: "no-store", signal });
-      if (signal?.aborted) return;
+      if (signal?.aborted) return null;
       if (!response.ok || !validStripePayments(response.data.payments)) throw new Error("Unable to refresh payment records. The last saved view is still here.");
-      setPayments(response.data.payments as AdminPayment[]);
+      const refreshed = response.data.payments as AdminPayment[];
+      setPayments(refreshed);
       setReady(true);
       setError("");
+      return refreshed;
     } catch {
-      if (signal?.aborted) return;
+      if (signal?.aborted) return null;
       setError("Unable to refresh payment records. The last saved view is still here.");
+      return null;
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
@@ -81,7 +85,9 @@ export function StripePaymentAdmin() {
   }, [loadPayments]);
 
   async function release(paymentId: string, statusOnly = false) {
-    if (inFlight.current || loading || (!statusOnly && (!ready || uncertain.has(paymentId)))) return;
+    const payment = payments.find(item => item.id === paymentId);
+    if (inFlight.current || loading || !ready || !payment
+      || (!statusOnly && (payment.transferReversalReviewRequired || uncertain.has(paymentId)))) return;
     inFlight.current = true;
     setBusyId(paymentId);
     setError("");
@@ -98,14 +104,20 @@ export function StripePaymentAdmin() {
         throw new Error(failureMessage);
       }
       setUncertain(current => { const next = new Set(current); next.delete(paymentId); return next; });
-      setMessage(response.data.transferReviewRequired
-        ? "Stripe confirmed the transfer, but this payment still has a hold and needs review."
-        : "Stripe confirmed the provider transfer. Arrival in the provider’s bank is not confirmed here.");
       setPendingId("");
-      await loadPayments();
+      const refreshed = await loadPayments();
+      const updatedPayment = refreshed?.find(item => item.id === paymentId);
+      if (updatedPayment && !updatedPayment.transferReversalReviewRequired) {
+        setMessage(response.data.transferReviewRequired
+          ? "Stripe confirmed the transfer, but this payment still has a hold and needs review."
+          : "Stripe confirmed the provider transfer. Arrival in the provider’s bank is not confirmed here.");
+      }
     } catch {
       setUncertain(current => new Set(current).add(paymentId));
       setPendingId("");
+      if (statusOnly && !await loadPayments()) {
+        failureMessage += " Unable to refresh payment records. The last saved view is still here.";
+      }
       setError(failureMessage);
     } finally {
       inFlight.current = false;
@@ -144,7 +156,7 @@ export function StripePaymentAdmin() {
           {payments.map((payment) => (
             <article className="admin-card stripe-payment-card" key={payment.id}>
               <div className="admin-card-top">
-                <span>{payment.status.replaceAll("_", " ")}</span>
+                <span>{payment.transferReversalReviewRequired ? "Transfer reversal needs review" : payment.status.replaceAll("_", " ")}</span>
                 <time>{payment.createdAt}</time>
               </div>
               <h3>{payment.productName}</h3>
@@ -175,6 +187,12 @@ export function StripePaymentAdmin() {
                   : "Owner-released separate transfer"}
               </p>
               {payment.transferId && <p>Transfer: {payment.transferId}</p>}
+              {payment.transferReversalReviewRequired && (
+                <p className="form-error" role="alert">
+                  Stripe reports a full or partial reversal of this provider transfer. Review it in Stripe.
+                  Customer refunds are tracked separately.
+                </p>
+              )}
               {payment.refundAmountCents > 0 && (
                 <p>
                   Refunded: {dollars(payment.refundAmountCents)}
@@ -219,16 +237,16 @@ export function StripePaymentAdmin() {
                 </p>
               )}
 
-              {(payment.transferAttemptStatus || payment.transferId || uncertain.has(payment.id)) && (
+              {(payment.transferAttemptStatus || payment.transferId || payment.transferReversalReviewRequired || uncertain.has(payment.id)) && (
                 <div>
-                  <p>{payment.transferAttemptStatus === "transfer_recorded" && !uncertain.has(payment.id)
+                  <p>{payment.transferAttemptStatus === "transfer_recorded" && !payment.transferReversalReviewRequired && !uncertain.has(payment.id)
                     ? "A transfer has been recorded with Stripe."
                     : "Check the saved transfer status. This will not send another payment."}</p>
-                  <button type="button" className="button secondary" disabled={Boolean(busyId) || loading}
+                  <button type="button" className="button secondary" disabled={!ready || Boolean(busyId) || loading}
                     onClick={() => release(payment.id, true)}>{busyId === payment.id ? "Checking…" : "Check transfer status"}</button>
                 </div>
               )}
-              {pendingId === payment.id ? (
+              {pendingId === payment.id && !payment.transferReversalReviewRequired ? (
                 <ConfirmAction
                   busy={busyId === payment.id}
                   confirmLabel="Confirm provider transfer"
@@ -237,7 +255,7 @@ export function StripePaymentAdmin() {
                   onConfirm={() => release(payment.id)}
                   title="Release this completed-job payment?"
                 />
-              ) : payment.canRelease && !payment.transferAttemptStatus && !payment.transferId && !uncertain.has(payment.id) ? (
+              ) : payment.canRelease && !payment.transferReversalReviewRequired && !payment.transferAttemptStatus && !payment.transferId && !uncertain.has(payment.id) ? (
                 <button
                   className="button primary"
                   disabled={!ready || loading || Boolean(busyId)}
@@ -248,7 +266,11 @@ export function StripePaymentAdmin() {
                 </button>
               ) : (
                 <small className="admin-link-note">
-                  {payment.status === "released" || payment.status === "paid_and_transferred"
+                  {payment.transferReversalReviewRequired
+                    ? "Transfer reversal needs review in Stripe. Provider release is unavailable."
+                    : uncertain.has(payment.id)
+                    ? "Transfer status is unconfirmed. Check its saved status before another action."
+                    : payment.status === "released" || payment.status === "paid_and_transferred"
                     ? "No release action is needed."
                     : "Waiting for successful payment and job completion."}
                 </small>
