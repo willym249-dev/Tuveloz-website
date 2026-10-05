@@ -1,414 +1,192 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandMark } from "../components/tuveloz-icons";
+import { formLineItems, type Translate } from "./line-items";
+import { RepairWorkspace, type Action, type Label, type RepairData } from "./record-workspace";
+import { hasReceipt, object, readRepairData } from "./response";
 
-type LineItem = {
-  lineType: string;
-  description: string;
-  partNumber: string;
-  partCondition: string;
-  quantity: number;
-  unitAmountCents: number;
-  lineAmountCents: number;
-  laborMinutes: number;
-  mechanicIdentifier: string;
-};
-
-type Authorization = Record<string, unknown> & {
-  id: string;
-  status: string;
-  documentHash: string;
-  customerSignatureAt: string;
-  lineItems: LineItem[];
-};
-
-type Invoice = Record<string, unknown> & {
-  id: string;
-  invoiceNumber: string;
-  status: string;
-  documentHash: string;
-  customerSignatureAt: string;
-  customerCopyDeliveredAt: string;
-  lineItems: LineItem[];
-};
-
-type RepairJob = {
-  requestId: string;
-  requestStatus: string;
-  vehicle: string;
-  service: string;
-  serviceCodes: string;
-  jurisdiction: string;
-  municipality: string;
-  serviceAddress: string;
-  customerName: string;
-  customerEmail: string;
-  quoteId: string;
-  quotePriceCents: string;
-  scopeVersion: number;
-  providerId: string;
-  providerName: string;
-  providerEmail: string;
-  providerBusinessAddress: string;
-  authorization: Authorization | null;
-  invoice: Invoice | null;
-};
-
-type RepairData = {
-  testOnly: true;
-  realJobsEnabled: false;
-  role: "customer" | "provider";
-  email: string;
-  version: string;
-  legalNotices: {
-    customerRightsHeading: string;
-    customerRightsText: string;
-    writtenEstimateStandard: string;
-    manufacturerNotice: string;
-    responsibilityNotice: string;
-    electronicSignatureNotice: string;
-  };
-  jobs: RepairJob[];
-};
-
-const sampleLines = JSON.stringify([
-  {
-    lineType: "labor",
-    description: "Describe the exact authorized labor",
-    partNumber: "",
-    partCondition: "not_applicable",
-    quantity: 1,
-    unitAmountCents: 10000,
-    lineAmountCents: 10000,
-    laborMinutes: 60,
-    mechanicIdentifier: "TECH-1"
-  }
-], null, 2);
-
-function money(value: unknown) {
-  const cents = Number(value);
-  return Number.isFinite(cents)
-    ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
-    : "Not recorded";
+function formValues(form: FormData): Record<string, unknown> {
+  const values: Record<string, unknown> = {};
+  form.forEach((value, key) => { if (!key.startsWith("line.") && key !== "lineCount") values[key] = String(value).trim(); });
+  for (const key of ["providerCertified", "signatureAccepted", "copyReceived"]) values[key] = form.get(key) === "on";
+  for (const key of ["odometerReading", "estimateFeeCents", "surchargeCents"]) if (form.has(key)) values[key] = Number(form.get(key));
+  if (form.has("mechanicIdentifiers")) values.mechanicIdentifiers = String(form.get("mechanicIdentifiers")).split(",").map(value => value.trim()).filter(Boolean);
+  return values;
 }
-
-function when(value: unknown) {
-  const date = new Date(String(value || ""));
-  return Number.isFinite(date.getTime()) ? date.toLocaleString() : "Not recorded";
-}
-
-function text(value: unknown) {
-  return String(value ?? "");
-}
-
-function LineItems({ items }: { items: LineItem[] }) {
-  if (!items.length) return <p>No itemized lines saved.</p>;
-  return (
-    <div className="repair-record-table-wrap">
-      <table className="repair-record-table">
-        <thead><tr><th>Type</th><th>Description</th><th>Part</th><th>Condition</th><th>Qty</th><th>Amount</th><th>Mechanic</th></tr></thead>
-        <tbody>{items.map((item, index) => (
-          <tr key={`${item.description}-${index}`}>
-            <td>{item.lineType}</td>
-            <td>{item.description}</td>
-            <td>{item.partNumber || "—"}</td>
-            <td>{item.partCondition}</td>
-            <td>{item.quantity}</td>
-            <td>{money(item.lineAmountCents)}</td>
-            <td>{item.mechanicIdentifier || "—"}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>
-  );
-}
-
-function Field({ label, name, defaultValue = "", type = "text", required = true }: {
-  label: string;
-  name: string;
-  defaultValue?: string | number;
-  type?: string;
-  required?: boolean;
-}) {
-  return <label>{label}<input defaultValue={defaultValue} name={name} required={required} type={type} /></label>;
-}
-
-function selectedSubmitValue(event: FormEvent<HTMLFormElement>) {
-  const submitter = (event.nativeEvent as SubmitEvent).submitter;
-  return submitter instanceof HTMLButtonElement ? submitter.value : "draft";
-}
+function sameAccount(a: RepairData, b: RepairData) { return a.role === b.role && a.email.toLowerCase() === b.email.toLowerCase(); }
 
 export default function RepairRecordsPage() {
   const [data, setData] = useState<RepairData | null>(null);
   const [selectedId, setSelectedId] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [spanish, setSpanish] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [needsCheck, setNeedsCheck] = useState(false);
+  const [signInNeeded, setSignInNeeded] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<Label | null>(null);
+  const [notice, setNotice] = useState<Label | null>(null);
+  const currentAccount = useRef<RepairData | null>(null);
+  const readRequest = useRef<AbortController | null>(null);
+  const desiredId = useRef("");
+  const busyRef = useRef(false);
+  const shell = useRef<HTMLElement | null>(null);
+  const t: Translate = (en, es) => spanish ? es : en;
 
-  async function load() {
-    setError("");
-    const response = await fetch("/api/repair-records", { cache: "no-store" });
-    const result = await response.json().catch(() => ({})) as RepairData & { error?: string };
-    if (!response.ok) throw new Error(result.error || "Unable to load repair records.");
-    setData(result);
-    setSelectedId((current) => current || result.jobs[0]?.requestId || "");
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      load().catch((reason) => setError(reason instanceof Error ? reason.message : "Unable to load repair records."));
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const job = useMemo(
-    () => data?.jobs.find((item) => item.requestId === selectedId) ?? null,
-    [data, selectedId],
-  );
-
-  async function post(action: string, values: Record<string, unknown>) {
-    setBusy(true);
-    setError("");
-    setNotice("");
+  const load = useCallback(async () => {
+    readRequest.current?.abort();
+    const controller = new AbortController();
+    readRequest.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    setLoading(true); setLoadFailed(false);
     try {
-      const response = await fetch("/api/repair-records", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action, requestId: selectedId, ...values }),
-      });
-      const result = await response.json().catch(() => ({})) as RepairData & { error?: string; status?: string };
-      if (!response.ok) throw new Error(result.error || "The repair record was not saved.");
-      setData(result);
-      setNotice(`Saved: ${result.status || "repair record updated"}.`);
+      const query = desiredId.current ? `?requestId=${encodeURIComponent(desiredId.current)}` : "";
+      const response = await fetch(`/api/repair-records${query}`, { cache: "no-store", signal: controller.signal });
+      if (readRequest.current !== controller) return false;
+      if (response.status === 401 || response.status === 403) {
+        setSignInNeeded(true); setData(null); currentAccount.current = null;
+        throw new Error("Sign in required");
+      }
+      if (!response.ok) throw new Error("Read failed");
+      const result = await readRepairData(await response.json());
+      if (readRequest.current !== controller) return false;
+      if (controller.signal.aborted) throw new Error("Read timed out");
+      if (currentAccount.current && !sameAccount(currentAccount.current, result)) {
+        setData(null); currentAccount.current = null; setSignInNeeded(true);
+        throw new Error("Account changed");
+      }
+      currentAccount.current = result; setData(result);
+      setSelectedId(current => current || desiredId.current || result.jobs[0]?.requestId || "");
+      setNeedsCheck(false); setSignInNeeded(false);
       return true;
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "The repair record was not saved.");
+    } catch {
+      if (readRequest.current === controller) setLoadFailed(true);
       return false;
     } finally {
-      setBusy(false);
+      window.clearTimeout(timeout);
+      if (readRequest.current === controller) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    desiredId.current = query.get("requestId")?.trim() || "";
+    const timer = window.setTimeout(() => {
+      let saved = "en";
+      try { saved = localStorage.getItem("tuveloz-language") || "en"; } catch { /* The page works when storage is unavailable. */ }
+      const language = query.get("lang");
+      setSpanish(language === "es" || (language !== "en" && saved === "es"));
+      void load();
+    }, 0);
+    return () => { window.clearTimeout(timer); readRequest.current?.abort(); readRequest.current = null; };
+  }, [load]);
+
+  const job = data?.jobs.find(item => item.requestId === selectedId);
+  const blocked = busy || loading || loadFailed || needsCheck || signInNeeded;
+  async function post(action: Action, values: Record<string, unknown>) {
+    if (!data || !job || blocked || busyRef.current) return;
+    const authorizationAction = action === "save-authorization" || action === "sign-authorization";
+    if (!(authorizationAction ? job.authorizationWritesAllowed : job.invoiceWritesAllowed)) return;
+    const record = authorizationAction ? job.authorization : job.invoice;
+    const saving = action === "save-authorization" || action === "save-invoice";
+    const payload = { ...values, action, requestId: job.requestId, expectedQuoteId: job.quoteId, expectedScopeVersion: job.scopeVersion,
+      expectedRecordId: record?.id || "", ...(saving ? { expectedUpdatedAt: record?.updatedAt || "" } : { expectedDocumentHash: record?.documentHash || "" }) };
+    busyRef.current = true; setBusy(true); setError(null); setNotice(null);
+    readRequest.current?.abort(); readRequest.current = null;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    try {
+      const response = await fetch("/api/repair-records", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), signal: controller.signal });
+      if (!response.ok) {
+        if (response.status === 400) {
+          setError(["Review the required fields, amounts and certification. Your entries are still here.", "Revise los campos obligatorios, los importes y la certificación. Sus datos siguen aquí."]); return;
+        }
+        setNeedsCheck(true);
+        if (response.status === 409) setError(["This job or document changed. Load the latest saved record before continuing.", "Este trabajo o documento cambió. Cargue el último documento guardado antes de continuar."]);
+        else if (response.status === 503) {
+          const result: unknown = await response.json();
+          if (!object(result) || result.code !== "REPAIR_RECORD_WRITES_PAUSED") throw new Error("Save not confirmed");
+          setError(["Changes are paused for this job. You can still read your saved copies. Reload to check availability.", "Los cambios están pausados para este trabajo. Puede seguir leyendo sus copias guardadas. Vuelva a cargar para consultar la disponibilidad."]);
+        }
+        else if (response.status === 401 || response.status === 403) {
+          setSignInNeeded(true); setData(null); currentAccount.current = null;
+          setError(["Sign in to the account that owns this job to continue.", "Inicie sesión en la cuenta a la que pertenece este trabajo para continuar."]);
+        } else throw new Error("Save not confirmed");
+        return;
+      }
+      const result: unknown = await response.json();
+      if (!hasReceipt(result, job, action, payload)) throw new Error("Unverified receipt");
+      window.clearTimeout(timeout);
+      setNotice(action === "sign-invoice" || action === "receive-invoice-copy"
+        ? ["Your invoice action was recorded. Job completion is separate; no payment was released.", "Su acción sobre la factura quedó registrada. La finalización del trabajo es independiente; no se liberó ningún pago."]
+        : action === "sign-authorization" ? ["Your signature was recorded for this exact authorization.", "Su firma quedó registrada para esta autorización exacta."]
+          : ["Your document was saved.", "Su documento se guardó."]);
+      setNeedsCheck(true);
+      // A confirmed write stays confirmed even when its response snapshot or the
+      // next read fails. Only a fresh validated read enables another action.
+      desiredId.current = job.requestId;
+      if (!(await load())) setNotice(["Your action was recorded, but the latest copy could not be loaded. Reload before continuing.", "Su acción quedó registrada, pero no se pudo cargar la última copia. Vuelva a cargar antes de continuar."]);
+    } catch {
+      setNeedsCheck(true);
+      setError(["We could not confirm the save. Your entries are still here. Load the saved record before trying again.", "No pudimos confirmar que se guardó. Sus datos siguen aquí. Cargue el documento guardado antes de volver a intentarlo."]);
+    } finally {
+      window.clearTimeout(timeout); busyRef.current = false; setBusy(false);
     }
   }
 
-  function valuesFromForm(form: HTMLFormElement) {
-    const formData = new FormData(form);
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of formData.entries()) {
-      if (key === "providerCertified" || key === "signatureAccepted") {
-        result[key] = true;
-      } else if (["odometerReading", "estimateFeeCents", "surchargeCents"].includes(key)) {
-        result[key] = Number(String(value));
-      } else if (key === "mechanicIdentifiers") {
-        result[key] = String(value).split(",").map((item) => item.trim()).filter(Boolean);
-      } else {
-        result[key] = String(value).trim();
+  function submit(event: FormEvent<HTMLFormElement>, action: Action) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget), values = formValues(form);
+    if (action === "save-authorization" || action === "save-invoice") {
+      const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+      values.status = submitter?.value || "draft";
+      const items = formLineItems(form);
+      const expected = action === "save-invoice" ? job?.authorization?.totalAmountCents : Number(job?.quotePriceCents);
+      if (!items || items.reduce((sum, item) => sum + item.lineAmountCents, 0) !== expected) {
+        setError(["Complete each item and make the total match the agreed provider amount. Your entries are still here.", "Complete cada concepto y haga que el total coincida con el importe acordado del proveedor. Sus datos siguen aquí."]); return;
+      }
+      values.lineItems = items;
+      if (values.estimatedCompletionAt) {
+        const date = new Date(String(values.estimatedCompletionAt));
+        if (!Number.isFinite(date.getTime())) { setError(["Enter a valid completion date and time.", "Ingrese una fecha y hora de finalización válidas."]); return; }
+        values.estimatedCompletionAt = date.toISOString();
+      }
+      if (values.status !== "draft" && values.providerCertified !== true) {
+        setError(["Read and select the provider certification before presenting or issuing this document.", "Lea y marque la certificación del proveedor antes de presentar o emitir este documento."]); return;
       }
     }
-    return result;
+    void post(action, values);
   }
 
-  async function submitAuthorization(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const values = valuesFromForm(event.currentTarget);
-    values.status = selectedSubmitValue(event);
-    try {
-      values.lineItems = JSON.parse(String(values.lineItems || "[]"));
-    } catch {
-      return setError("The itemized estimate lines must be valid JSON.");
-    }
-    await post("save-authorization", values);
+  function changeLanguage() {
+    setSpanish(value => !value);
+    shell.current?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach(input => { input.checked = false; });
   }
-
-  async function submitInvoice(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const values = valuesFromForm(event.currentTarget);
-    values.status = selectedSubmitValue(event);
-    try {
-      values.lineItems = JSON.parse(String(values.lineItems || "[]"));
-    } catch {
-      return setError("The itemized invoice lines must be valid JSON.");
-    }
-    await post("save-invoice", values);
-  }
-
-  async function submitSignature(event: FormEvent<HTMLFormElement>, action: "sign-authorization" | "sign-invoice") {
-    event.preventDefault();
-    await post(action, valuesFromForm(event.currentTarget));
-  }
-
-  return (
-    <main className="admin-shell repair-record-shell">
-      <header className="admin-header">
-        <Link className="brand" href="/"><BrandMark /><span>Tuveloz</span></Link>
-        <div><span>Private repair records</span><Link href="/job-operations">Job operations</Link><Link href="/account">Account</Link></div>
-      </header>
-
-      <section className="admin-intro">
-        <span className="kicker">Written estimate · authorization · itemized provider invoice</span>
-        <h1>Maryland repair-document test workflow</h1>
-        <p>
-          This workspace records an exact provider estimate, customer authorization,
-          itemized final provider invoice, electronic signatures, customer copy, and
-          provider retained copy. It is restricted to isolated test jobs. It cannot
-          create a real job, charge a customer, release payment, or activate a provider.
-        </p>
-        {error && <p className="form-error" role="alert">{error}</p>}
-        {notice && <p className="portal-success" role="status">{notice}</p>}
-      </section>
-
-      {!data && !error && <p className="admin-note">Loading repair records…</p>}
-      {data && (
-        <>
-          <section className="admin-section">
-            <h2>Select an isolated test job</h2>
-            {data.jobs.length === 0 ? <p>No accepted isolated test job is available for this account.</p> : (
-              <label>Job<select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-                {data.jobs.map((item) => <option key={item.requestId} value={item.requestId}>{item.vehicle} · {item.service} · {item.requestStatus}</option>)}
-              </select></label>
-            )}
-          </section>
-
-          {job && data.role === "provider" && (
-            <>
-              <section className="admin-section">
-                <h2>1. Provider written estimate and repair authorization</h2>
-                <p>Save a draft first. Presenting the record freezes its contents so the customer can review and sign the exact version.</p>
-                <form className="repair-record-form" onSubmit={submitAuthorization}>
-                  <div className="repair-record-grid">
-                    <Field label="Provider business name" name="providerBusinessName" defaultValue={text(job.authorization?.providerBusinessName || job.providerName)} />
-                    <Field label="Provider business address" name="providerBusinessAddress" defaultValue={text(job.authorization?.providerBusinessAddress || job.providerBusinessAddress)} />
-                    <Field label="Provider business phone" name="providerBusinessPhone" defaultValue={text(job.authorization?.providerBusinessPhone)} />
-                    <Field label="Montgomery County registration number" name="countyRegistrationNumber" defaultValue={text(job.authorization?.countyRegistrationNumber)} />
-                    <Field label="Customer name" name="customerName" defaultValue={text(job.authorization?.customerName || job.customerName)} />
-                    <Field label="Customer address" name="customerAddress" defaultValue={text(job.authorization?.customerAddress || job.serviceAddress)} />
-                    <Field label="Vehicle year" name="vehicleYear" defaultValue={text(job.authorization?.vehicleYear)} />
-                    <Field label="Vehicle make and model" name="vehicleMakeModel" defaultValue={text(job.authorization?.vehicleMakeModel || job.vehicle)} />
-                    <Field label="Vehicle tag" name="vehicleTag" defaultValue={text(job.authorization?.vehicleTag)} />
-                    <Field label="VIN (optional)" name="vehicleVin" defaultValue={text(job.authorization?.vehicleVin)} required={false} />
-                    <Field label="Odometer reading" name="odometerReading" defaultValue={Number(job.authorization?.odometerReading || 0)} type="number" />
-                    <label>Labor billing method<select defaultValue={text(job.authorization?.laborBillingMethod || "")} name="laborBillingMethod" required>
-                      <option disabled value="">Choose one</option><option value="clock_hour">Clock hour</option><option value="flat_rate_manual">Industry flat-rate manual</option><option value="other_flat_rate">Other disclosed flat-rate measure</option>
-                    </select></label>
-                    <Field label="Estimated completion date/time" name="estimatedCompletionAt" defaultValue={text(job.authorization?.estimatedCompletionAt).slice(0, 16)} type="datetime-local" required={false} />
-                    <input name="estimateFeeCents" type="hidden" value="0" />
-                    <input name="surchargeCents" type="hidden" value="0" />
-                    <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.authorization?.providerRepresentativeName)} />
-                    <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.authorization?.providerRepresentativeTitle)} />
-                  </div>
-                  <label>Customer instructions or description of symptoms<textarea defaultValue={text(job.authorization?.customerInstructions)} name="customerInstructions" required rows={4} /></label>
-                  <label>Provider diagnosis<textarea defaultValue={text(job.authorization?.providerDiagnosis)} name="providerDiagnosis" required rows={4} /></label>
-                  <label>Complete labor billing disclosure<textarea defaultValue={text(job.authorization?.laborDisclosure)} name="laborDisclosure" required rows={3} /></label>
-                  <label>Completion disclosure when a date cannot be determined<textarea defaultValue={text(job.authorization?.completionDisclosure)} name="completionDisclosure" rows={2} /></label>
-                  <input name="surchargeDescription" type="hidden" value="" />
-                  <p className="admin-note">Tuveloz repair records are labor only. Optional customer-supplied-part lines must show a zero amount; separate fees, surcharges, parts, tax, sublet, and other charges are blocked.</p>
-                  <label>Replaced-parts handling<select defaultValue={text(job.authorization?.replacedPartsChoice || "return")} name="replacedPartsChoice" required>
-                    <option value="return">Return replaced parts to customer</option><option value="customer_declined">Customer expressly declined return</option><option value="warranty_return">Part must be returned under warranty</option><option value="not_applicable">No replaced parts</option>
-                  </select></label>
-                  <label>Labor lines and optional customer-supplied-part descriptions (JSON; part amounts must be 0)<textarea defaultValue={job.authorization?.lineItems?.length ? JSON.stringify(job.authorization.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
-                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify the provider information and itemized estimate are accurate. This checkbox is required when presenting the record.</span></label>
-                  <div className="repair-record-actions">
-                    <button disabled={busy} name="status" type="submit" value="draft">Save draft</button>
-                    <button disabled={busy} name="status" type="submit" value="presented">Present exact record to customer</button>
-                  </div>
-                </form>
-              </section>
-
-              <section className="admin-section">
-                <h2>2. Provider final invoice</h2>
-                <p>The customer must sign the authorization first. The final invoice cannot issue until the test job is completed and its itemized provider total matches the signed authorization.</p>
-                <form className="repair-record-form" onSubmit={submitInvoice}>
-                  <label>All work performed, including warranty work<textarea defaultValue={text(job.invoice?.workSummary)} name="workSummary" required rows={5} /></label>
-                  <label>Warranty work statement<textarea defaultValue={text(job.invoice?.warrantyWorkStatement)} name="warrantyWorkStatement" required rows={3} /></label>
-                  <label>Warranty provider<select defaultValue={text(job.invoice?.warrantyProvider || "")} name="warrantyProvider" required>
-                    <option disabled value="">Choose one</option><option value="provider_business">Provider business express warranty</option><option value="manufacturer">Manufacturer or supplier warranty</option><option value="none_offered">No provider express warranty offered</option>
-                  </select></label>
-                  <label>Specific warranty terms and limitations<textarea defaultValue={text(job.invoice?.warrantyTerms)} name="warrantyTerms" required rows={4} /></label>
-                  <label>Final replaced-parts result<select defaultValue={text(job.invoice?.returnedPartsChoice || "returned")} name="returnedPartsChoice" required>
-                    <option value="returned">Returned to customer</option><option value="customer_declined">Customer expressly declined return</option><option value="warranty_return">Returned under warranty requirement</option><option value="not_applicable">No replaced parts</option>
-                  </select></label>
-                  <Field label="Mechanic names, initials, or numbers (comma-separated)" name="mechanicIdentifiers" defaultValue={(() => { try { return JSON.parse(text(job.invoice?.mechanicIdentifiers || "[]")).join(", "); } catch { return ""; } })()} />
-                  <Field label="Provider representative name" name="providerRepresentativeName" defaultValue={text(job.invoice?.providerRepresentativeName)} />
-                  <Field label="Provider representative title" name="providerRepresentativeTitle" defaultValue={text(job.invoice?.providerRepresentativeTitle)} />
-                  <label>Final labor lines and optional customer-supplied-part descriptions (JSON; part amounts must be 0)<textarea defaultValue={job.invoice?.lineItems?.length ? JSON.stringify(job.invoice.lineItems, null, 2) : sampleLines} name="lineItems" required rows={18} /></label>
-                  <label className="job-operation-check"><input name="providerCertified" type="checkbox" /><span>I certify that the labor performed and any customer-supplied parts identified at a zero Tuveloz amount were necessary for the work described on this invoice. I also certify that the vehicle was tested when needed and the work was performed satisfactorily. Required for final invoice.</span></label>
-                  <div className="repair-record-actions">
-                    <button disabled={busy} name="status" type="submit" value="draft">Save invoice draft</button>
-                    <button disabled={busy} name="status" type="submit" value="final">Issue immutable final provider invoice</button>
-                  </div>
-                </form>
-              </section>
-            </>
-          )}
-
-          {job && data.role === "customer" && (
-            <>
-              <section className="admin-section repair-print-document">
-                <h2>Provider written estimate and repair authorization</h2>
-                {!job.authorization ? <p>The provider has not prepared the authorization.</p> : (
-                  <>
-                    <p><strong>Status:</strong> {job.authorization.status}</p>
-                    <p><strong>Provider:</strong> {text(job.authorization.providerBusinessName)} · Registration {text(job.authorization.countyRegistrationNumber)}</p>
-                    <p><strong>Vehicle:</strong> {text(job.authorization.vehicleYear)} {text(job.authorization.vehicleMakeModel)} · Tag {text(job.authorization.vehicleTag)} · Odometer {text(job.authorization.odometerReading)}</p>
-                    <p><strong>Your instructions:</strong> {text(job.authorization.customerInstructions)}</p>
-                    <p><strong>Provider diagnosis:</strong> {text(job.authorization.providerDiagnosis)}</p>
-                    <p><strong>Estimated completion:</strong> {when(job.authorization.estimatedCompletionAt)} {text(job.authorization.completionDisclosure)}</p>
-                    <LineItems items={job.authorization.lineItems} />
-                    <p><strong>Authorized provider total:</strong> {money(job.authorization.totalAmountCents)}</p>
-                    <div className="repair-legal-notice"><strong>{data.legalNotices.manufacturerNotice.split("\n")[0]}</strong><p>{data.legalNotices.manufacturerNotice.split("\n").slice(1).join(" ")}</p></div>
-                    <div className="repair-legal-notice"><p>{data.legalNotices.responsibilityNotice}</p></div>
-                    <div className="repair-customer-rights">
-                      <h3>{data.legalNotices.customerRightsHeading}</h3>
-                      <p>{data.legalNotices.customerRightsText}</p>
-                    </div>
-                    {job.authorization.status === "presented" && (
-                      <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-authorization")}>
-                        <p>{data.legalNotices.electronicSignatureNotice}</p>
-                        <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this authorization electronically and receive and retain the exact electronic record through my secure Tuveloz account. I reviewed the complete written labor estimate, Customer&apos;s Rights section, notices, itemized scope, any customer-supplied-part descriptions, labor charge, and provider identity. I authorize only this exact stored record and no parts charge.</span></label>
-                        <button disabled={busy} type="submit">Sign and authorize this exact record</button>
-                      </form>
-                    )}
-                    {job.authorization.customerSignatureAt && <p className="portal-success">Signed {when(job.authorization.customerSignatureAt)}. Record hash: {job.authorization.documentHash}</p>}
-                  </>
-                )}
-              </section>
-
-              <section className="admin-section repair-print-document">
-                <h2>Final provider invoice</h2>
-                {!job.invoice ? <p>No provider invoice has been issued.</p> : (
-                  <>
-                    <p><strong>Invoice:</strong> {job.invoice.invoiceNumber} · {job.invoice.status}</p>
-                    <p><strong>Provider:</strong> {text(job.invoice.providerBusinessName)} · Registration {text(job.invoice.countyRegistrationNumber)}</p>
-                    <p><strong>Customer:</strong> {text(job.invoice.customerName)} · {text(job.invoice.customerAddress)}</p>
-                    <p><strong>Vehicle:</strong> {text(job.invoice.vehicleYear)} {text(job.invoice.vehicleMakeModel)} · Tag {text(job.invoice.vehicleTag)} · Odometer {text(job.invoice.odometerReading)}</p>
-                    <p><strong>Customer instructions:</strong> {text(job.invoice.customerInstructions)}</p>
-                    <p><strong>Provider diagnosis:</strong> {text(job.invoice.providerDiagnosis)}</p>
-                    <p><strong>Work performed:</strong> {text(job.invoice.workSummary)}</p>
-                    <LineItems items={job.invoice.lineItems} />
-                    <p><strong>Provider total:</strong> {money(job.invoice.totalAmountCents)}</p>
-                    <p><strong>Mechanics:</strong> {text(job.invoice.mechanicIdentifiers)}</p>
-                    <p><strong>Warranty:</strong> {text(job.invoice.warrantyTerms)}</p>
-                    <p><strong>Replaced parts:</strong> {text(job.invoice.returnedPartsChoice)}</p>
-                    <div className="repair-legal-notice"><strong>{data.legalNotices.manufacturerNotice.split("\n")[0]}</strong><p>{data.legalNotices.manufacturerNotice.split("\n").slice(1).join(" ")}</p></div>
-                    <div className="repair-legal-notice"><p>{data.legalNotices.responsibilityNotice}</p></div>
-                    {job.invoice.status === "final" && !job.invoice.customerSignatureAt && (
-                      <form className="repair-signature-form" onSubmit={(event) => submitSignature(event, "sign-invoice")}>
-                        <p>{data.legalNotices.electronicSignatureNotice}</p>
-                        <Field label="Type your full name" name="acceptedByName" />
-                        <label className="job-operation-check"><input name="signatureAccepted" required type="checkbox" /><span>I separately agree to conduct this invoice-signature and copy-delivery transaction electronically and receive and retain the exact electronic record through my secure Tuveloz account. I sign this exact provider invoice to record receipt. This does not waive a complaint, warranty claim, refund right, or any other non-waivable right.</span></label>
-                        <button disabled={busy} type="submit">Sign invoice and receive secure copy</button>
-                      </form>
-                    )}
-                    {job.invoice.customerSignatureAt && <p className="portal-success">Signed and delivered through the secure account on {when(job.invoice.customerCopyDeliveredAt)}. Provider retained copy recorded. Payment was not automatically released.</p>}
-                    <button className="button secondary" onClick={() => window.print()} type="button">Print or save this secure copy</button>
-                  </>
-                )}
-              </section>
-            </>
-          )}
-        </>
-      )}
-    </main>
-  );
+  return <main className="repair-record-shell" ref={shell} lang={spanish ? "es" : "en"} data-manual-language>
+    <header className="repair-record-header"><Link href="/" aria-label="Tuveloz" prefetch={false}><BrandMark /><span>Tuveloz</span></Link><nav>
+      <Link href={`/account?role=${data?.role || "customer"}`} prefetch={false}>{t("My account", "Mi cuenta")}</Link>
+      <button type="button" data-language-control aria-label={spanish ? "Switch to English" : "Cambiar a español"} disabled={busy} onClick={changeLanguage}>{spanish ? "English" : "Español"}</button>
+    </nav></header>
+    <section className="repair-record-intro"><h1>{t("Your repair records", "Sus documentos de reparación")}</h1>
+      <p>{t("Review the written estimate, authorization and invoice for your job. You can read and save your copies without signing them.", "Revise el presupuesto escrito, la autorización y la factura de su trabajo. Puede leer y guardar sus copias sin firmarlas.")}</p>
+      {data && <p className="repair-account-note">{t("Signed in as", "Sesión iniciada como")} {data.email} · {data.role === "provider" ? t("Provider account", "Cuenta de proveedor") : t("Customer account", "Cuenta de cliente")}</p>}
+    </section>
+    <div className="repair-feedback" aria-busy={loading || busy}>
+      {error && <p className="form-error" role="alert">{t(...error)}</p>}{notice && <p className="form-success" role="status">{t(...notice)}</p>}
+      {signInNeeded && <p><Link href="/account" prefetch={false}>{t("Sign in to your account", "Inicie sesión en su cuenta")}</Link></p>}
+      {(loadFailed || needsCheck) && <div className="repair-read-warning" role="alert"><p>{data ? t("We need a fresh copy before you continue. Any documents below are the last version loaded; your unsaved entries are preserved.", "Necesitamos una copia actualizada antes de continuar. Los documentos de abajo son la última versión cargada; sus datos sin guardar se conservan.") : t("We could not load your repair records. Please try again.", "No pudimos cargar sus documentos de reparación. Inténtelo de nuevo.")}</p>
+        {data?.role === "provider" && job && (!job.authorization || job.authorization.status === "draft" || (job.authorization.status === "signed" && (!job.invoice || job.invoice.status === "draft"))) && <p>{t("If the saved draft changed, reloading replaces this form with the latest saved draft.", "Si el borrador guardado cambió, al volver a cargar se reemplaza este formulario por el último borrador guardado.")}</p>}
+        <button className="button secondary" type="button" disabled={loading || busy} onClick={() => { setError(null); void load(); }}>{t("Try loading again", "Intentar cargar de nuevo")}</button></div>}
+      {loading && <p role="status">{t("Loading your saved records…", "Cargando sus documentos guardados…")}</p>}
+      {busy && <p role="status">{t("Recording your action and checking the latest copy…", "Registrando su acción y consultando la última copia…")}</p>}
+    </div>
+    {data && <section className="repair-job-selector"><label htmlFor="repair-job-select">{t("Job", "Trabajo")}</label><select id="repair-job-select" value={selectedId} disabled={busy} onChange={event => { setSelectedId(event.target.value); desiredId.current = event.target.value; setNotice(null); setError(null); }}>
+      {selectedId && !job && <option value={selectedId}>{t("Requested job unavailable", "Trabajo solicitado no disponible")}</option>}
+      {!data.jobs.length && !selectedId && <option value="">{t("No jobs available", "No hay trabajos disponibles")}</option>}
+      {data.jobs.map(item => <option key={item.requestId} value={item.requestId}>{item.vehicle} · {item.service}{item.isTest ? t(" (test)", " (prueba)") : ""}</option>)}
+    </select>{!job && <p role={selectedId ? "alert" : "status"}>{selectedId ? t("The requested job is not available in this account. No other job has been selected for you.", "El trabajo solicitado no está disponible en esta cuenta. No se seleccionó ningún otro trabajo por usted.") : t("Your accepted jobs will appear here when their repair records are available.", "Sus trabajos aceptados aparecerán aquí cuando sus documentos estén disponibles.")}</p>}</section>}
+    {data && job && <RepairWorkspace key={`${data.email}:${job.requestId}:${job.quoteId}:${job.scopeVersion}`} {...{ data, job, t, spanish, blocked, submit }} />}
+  </main>;
 }

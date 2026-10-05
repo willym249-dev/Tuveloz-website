@@ -1,126 +1,31 @@
-.repair-record-shell .repair-record-form,
-.repair-record-shell .repair-signature-form {
-  display: grid;
-  gap: 1rem;
-}
-
-.repair-record-shell .repair-record-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 1rem;
-}
-
-.repair-record-shell label {
-  display: grid;
-  gap: 0.4rem;
-  font-weight: 700;
-}
-
-.repair-record-shell input,
-.repair-record-shell select,
-.repair-record-shell textarea {
-  width: 100%;
-  border: 1px solid rgba(7, 24, 45, 0.25);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  font: inherit;
-}
-
-.repair-record-table-wrap {
-  overflow-x: auto;
-  margin: 1rem 0;
-}
-
-.repair-record-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 52rem;
-}
-
-.repair-record-table th,
-.repair-record-table td {
-  border: 1px solid rgba(7, 24, 45, 0.2);
-  padding: 0.7rem;
-  text-align: left;
-  vertical-align: top;
-}
-
-.repair-record-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.repair-record-actions button,
-.repair-signature-form button {
-  min-height: 2.8rem;
-  border-radius: 999px;
-  padding: 0.75rem 1rem;
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.repair-legal-notice {
-  margin: 1rem 0;
-  border: 1px solid rgba(7, 24, 45, 0.35);
-  padding: 1rem;
-  background: rgba(7, 24, 45, 0.04);
-}
-
-.repair-customer-rights {
-  margin: 1.5rem 0 0;
-  border: 4px solid currentColor;
-  padding: 1.25rem;
-  background: white;
-  color: #07182d;
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
-.repair-customer-rights h3 {
-  margin: 0 0 0.75rem;
-  font-size: 1.4rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.repair-customer-rights p {
-  margin: 0;
-  line-height: 1.65;
-}
-
-.repair-signature-form {
-  margin: 0;
-  border: 4px solid currentColor;
-  border-top: 0;
-  padding: 1.25rem;
-  background: white;
-  color: #07182d;
-}
-
-.repair-signature-form .job-operation-check {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  gap: 0.75rem;
-}
-
-.repair-signature-form .job-operation-check input {
-  width: auto;
-  margin-top: 0.2rem;
-}
-
-@media print {
-  .repair-record-shell > :not(.repair-print-document),
-  .repair-print-document form,
-  .repair-print-document button {
-    display: none !important;
-  }
-
-  .repair-print-document {
-    box-shadow: none !important;
-    border: 0 !important;
-    break-inside: avoid;
-  }
-}
+body:has(.repair-record-shell){background:#faf8f4}
+.repair-record-shell{max-width:1100px;min-height:100vh;margin:0 auto;padding:24px 28px 70px;background:#faf8f4;color:#183344;color-scheme:light;line-height:1.6;overflow-wrap:anywhere}
+.repair-record-shell *{box-sizing:border-box;min-width:0}
+.repair-record-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:22px;border-bottom:1px solid #dce3e7}
+.repair-record-header>a{display:flex;align-items:center;gap:9px;flex-shrink:0;font-size:1.3rem;white-space:nowrap}.repair-record-header svg{max-width:100%;height:auto}
+.repair-record-header nav{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.repair-record-header a{color:#17384d;font-weight:700;text-decoration:none}
+.repair-record-header button{border:1px solid #bbccd5;border-radius:22px;background:#fff;color:#17384d;padding:9px 14px;font:inherit;cursor:pointer}
+.repair-record-intro{padding:38px 0 22px;max-width:780px}.repair-eyebrow{display:block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:750;color:#866137}
+.repair-record-shell h1{font-size:clamp(2rem,5vw,3rem);line-height:1.14;margin:12px 0 18px;letter-spacing:-.03em}.repair-record-shell h2{font-size:1.45rem;line-height:1.3;margin:8px 0 14px}.repair-record-shell h3{font-size:1.1rem;margin:0 0 10px}
+.repair-record-shell p{margin:10px 0}.repair-account-note,.repair-help{font-size:.88rem;color:#536a77}.repair-account-note{margin-top:22px!important}
+.repair-job-selector,.repair-workflow-summary,.repair-edit-section,.repair-print-document{background:#fff;border:1px solid #dce3e7;border-radius:18px;padding:26px;margin:22px 0;box-shadow:0 5px 18px #19394c05}
+.repair-job-selector{background:#f6f8f8}.repair-job-selector>label{display:block;font-weight:750;margin-bottom:7px}.repair-workflow-summary{background:#f7f4ed;border-color:#e5dccb}
+.repair-workflow-summary ol{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.repair-workflow-summary li{padding:15px;border:1px solid #e0d8cb;background:#fff9;border-radius:10px}.repair-workflow-summary li span{display:block;font-size:.88rem;color:#536a77}
+.repair-separate-step,.repair-paused{font-size:.93rem}.repair-paused{padding-top:14px;border-top:1px solid #ded3be}
+.repair-record-form fieldset,.repair-signature-form fieldset{border:0;padding:0;margin:20px 0 0}.repair-record-form legend,.repair-signature-form legend{font-size:1rem;font-weight:750;margin-bottom:18px;padding:0}
+.repair-record-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.repair-record-shell label{font-size:.91rem;font-weight:650;color:#304756;display:block;margin-bottom:17px}.repair-record-shell input:not([type=checkbox]):not([type=hidden]),.repair-record-shell textarea,.repair-record-shell select{display:block;width:100%;margin-top:6px;border:1px solid #bccbd3;border-radius:9px;background:white;color:#19394c;padding:11px 12px;font:inherit;font-weight:400;line-height:1.4;min-height:46px}
+.repair-record-shell textarea{resize:vertical}.repair-record-shell select{max-width:100%}.repair-record-shell input:focus-visible,.repair-record-shell textarea:focus-visible,.repair-record-shell select:focus-visible,.repair-record-shell button:focus-visible,.repair-record-shell a:focus-visible{outline:3px solid #cb891e;outline-offset:3px}
+.repair-record-shell input:disabled,.repair-record-shell textarea:disabled,.repair-record-shell select:disabled{background:#f2f4f5;color:#5d6f7a}.repair-record-shell button:disabled{opacity:.55;cursor:not-allowed}
+.repair-record-shell .repair-check{display:flex;gap:12px;align-items:flex-start;font-weight:400;line-height:1.6;margin:18px 0}.repair-check input{width:20px;height:20px;min-width:20px;flex-shrink:0;margin:4px 0 0;accent-color:#174c60}
+.repair-record-actions,.repair-document-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:22px}.repair-record-shell .button{border:1px solid #b9cbd4;border-radius:10px;padding:12px 18px;min-height:46px;font-size:.92rem;font-weight:700;line-height:1.4;white-space:normal;cursor:pointer;text-align:center;box-shadow:none}
+.repair-record-shell .button.primary{background:#17475c;color:#fff;border-color:#17475c}.repair-record-shell .button.secondary{background:#fff;color:#234a5e}.repair-record-shell .repair-text-button{border:0;background:none;padding:9px;color:#864422;text-decoration:underline;cursor:pointer;font:inherit}
+.repair-line-editor{margin:26px 0}.repair-record-form .repair-line-card{border:1px solid #d7e0e5;border-radius:12px;padding:18px;margin:18px 0;background:#fafbfb}.repair-record-form .repair-line-card legend{background:#fafbfb;padding:0 7px;margin-bottom:0}.repair-line-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.repair-total{padding:18px;background:#edf4f5;border-radius:10px;display:grid;gap:5px;margin:18px 0}
+.repair-document-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:24px}.repair-status{font-size:.8rem;font-weight:700;padding:6px 11px;border-radius:15px;background:#edf3f4;max-width:230px}
+.repair-document-details,.repair-signature-status{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:22px 0}.repair-document-details>div,.repair-signature-status>div{break-inside:avoid}.repair-record-shell dt{font-size:.78rem;font-weight:650;color:#5b6e79}.repair-record-shell dd{margin:4px 0 0;white-space:pre-wrap}.repair-totals{grid-template-columns:repeat(3,1fr);padding:18px 0;border-top:1px solid #d7e0e5;border-bottom:1px solid #d7e0e5}
+.repair-saved-lines{list-style:none;margin:20px 0;padding:0}.repair-saved-lines>li{border:1px solid #dce3e7;border-radius:10px;padding:18px;margin:12px 0;break-inside:avoid}.repair-saved-lines>li>div span{display:block;font-size:.8rem;color:#61717c}.repair-saved-lines dl{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0 0}
+.repair-legal-notice,.repair-customer-rights{padding:18px;border:1px solid #dadfe2;border-radius:10px;margin:16px 0;font-size:.9rem;white-space:pre-wrap}.repair-customer-rights{background:#faf7f0;border-color:#ded2b9}.repair-signature-form{border-top:1px solid #d5dfe4;padding:0 0 20px}.repair-signature-form fieldset>p{font-size:.9rem}.repair-signature-status{padding-top:15px;border-top:1px solid #d5dfe4}
+.repair-saved-consent,.repair-record-reference{font-size:.8rem;color:#60717c;margin:18px 0}.repair-record-reference p{font-family:ui-monospace,monospace;font-size:.75rem}.repair-record-shell summary{cursor:pointer;font-weight:650}.repair-feedback:empty{display:none}.repair-read-warning,.repair-feedback .form-error,.repair-feedback .form-success{padding:17px;border-radius:10px;margin:12px 0;border:1px solid #ddc69b;background:#fcf7ea;color:#65461e}.repair-feedback .form-error{background:#fff1ed;border-color:#dcb8a8;color:#803f26}.repair-feedback .form-success{background:#edf6f1;border-color:#bcd8c8;color:#285841}
+.repair-authorization-document .repair-customer-rights{border:4px solid currentColor;border-radius:0;margin-bottom:0}.repair-authorization-document .repair-signature-form{border:4px solid currentColor;border-top:0;padding:0 18px 18px;margin-top:0}
+@media(max-width:620px){.repair-record-shell{padding:16px 16px 50px}.repair-record-header{gap:12px}.repair-record-header>a{width:auto;font-size:1.1rem}.repair-record-header nav{gap:10px;font-size:.82rem}.repair-record-header button{padding:8px 10px}.repair-record-intro{padding:28px 0 14px}.repair-job-selector,.repair-workflow-summary,.repair-edit-section,.repair-print-document{padding:19px 16px;margin:18px 0;border-radius:13px}.repair-record-grid,.repair-document-details,.repair-signature-status,.repair-workflow-summary ol{grid-template-columns:1fr}.repair-document-heading{display:block}.repair-status{display:inline-block}.repair-totals,.repair-saved-lines dl{grid-template-columns:1fr 1fr}.repair-record-actions{align-items:stretch}.repair-record-actions>.button{flex:1 1 190px}.repair-document-actions>.button,.repair-signature-form .button{width:100%}.repair-record-form .repair-line-card{padding:14px}.repair-record-shell input:not([type=checkbox]):not([type=hidden]),.repair-record-shell textarea,.repair-record-shell select{font-size:16px}.repair-record-shell h2{font-size:1.3rem}}
+@media print{body{background:#fff!important;color:#000!important}.repair-record-shell{max-width:none;min-height:0;margin:0;padding:0;background:#fff;color:#000}.repair-record-header,.repair-record-intro,.repair-feedback,.repair-job-selector,.repair-workflow-summary,.repair-edit-section,.repair-print-document form,.repair-document-actions{display:none!important}.repair-print-document{border:0;border-radius:0;box-shadow:none;padding:0;margin:0 0 30px;break-before:page}.repair-print-document:first-of-type{break-before:auto}.repair-document-details,.repair-signature-status{grid-template-columns:1fr 1fr}.repair-print-document details>*{display:block!important}.repair-record-shell details::details-content{display:block!important;content-visibility:visible}.repair-document-heading{display:block}.repair-record-reference{display:block!important}.repair-record-shell h2,.repair-record-shell h3{break-after:avoid}.repair-customer-rights,.repair-legal-notice{background:#fff;color:#000}.repair-saved-consent{color:#000}}

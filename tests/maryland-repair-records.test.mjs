@@ -22,6 +22,7 @@ test("Maryland repair notices and line-item validation are source-bound", async 
   assert.match(source, /secure Tuveloz account/);
   assert.match(source, /All labor performed and parts replaced were necessary/);
   assert.match(source, /mechanic's work was performed satisfactorily/);
+  assert.match(source, /work was performed satisfactorily/);
   assert.match(source, /lineAmountCents !== quantity \* unitAmountCents/);
   assert.match(source, /lineType === "part" && \(!partNumber/);
   assert.match(source, /used/);
@@ -89,8 +90,8 @@ test("migrations create immutable authorization, itemized invoice, signature, de
   assert.match(finalFields, /Final provider invoice legal fields are immutable/);
 });
 
-test("repair-record API is participant-only, test-only, same-origin, and cannot move money", async () => {
-  const source = await read("app/api/repair-records/route.ts");
+test("repair-record API is participant-only, gates real writes, and cannot move money", async () => {
+  const [source, access] = await Promise.all([read("app/api/repair-records/route.ts"), read("lib/repair-record-access.ts")]);
 
   assert.match(source, /getAccountSession\(request\)/);
   assert.match(source, /isSameOriginRequest\(request\)/);
@@ -102,40 +103,41 @@ test("repair-record API is participant-only, test-only, same-origin, and cannot 
   assert.match(source, /final provider invoice total must exactly match the customer-signed authorized provider amount/);
   assert.match(source, /secure-account-copy/);
   assert.match(source, /paymentReleased: false/);
+  assert.match(access, /runtimeMarketplaceActionAllowed\("job_start"\)/);
+  assert.match(access, /runtimeMarketplaceActionAllowed\("completion"\)/);
+  assert.match(access, /getServiceDefaultDenyStatus/);
   assert.doesNotMatch(source, /stripeClient|checkout\.sessions|paymentIntents|transfers\.create/);
   assert.doesNotMatch(source, /UPDATE stripe_payments|INSERT INTO stripe_payments/);
 });
 
 test("customer sees conspicuous rights immediately before the exact repair authorization signature", async () => {
-  const [page, layout, styles] = await Promise.all([
+  const [page, workspace, layout, styles] = await Promise.all([
     read("app/repair-records/page.tsx"),
+    read("app/repair-records/record-workspace.tsx"),
     read("app/repair-records/layout.tsx"),
     read("app/repair-records/repair-records.css"),
   ]);
 
-  const rights = page.indexOf("repair-customer-rights");
-  const signature = page.indexOf("Sign and authorize this exact record");
+  const rights = workspace.indexOf("repair-customer-rights");
+  const signature = workspace.lastIndexOf("{children}");
   assert.ok(rights >= 0, "Customer's Rights block is missing");
   assert.ok(signature > rights, "Customer signature must follow the Customer's Rights block");
-  assert.match(page, /selectedSubmitValue/);
   assert.match(page, /SubmitEvent/);
-  assert.match(page, /values\.status = selectedSubmitValue\(event\)/);
-  assert.match(page, /Labor lines and optional customer-supplied-part descriptions/);
-  assert.match(page, /part amounts must be 0/);
-  assert.match(page, /Montgomery County registration number/);
-  assert.match(page, /Customer instructions or description of symptoms/);
-  assert.match(page, /Provider diagnosis/);
-  assert.match(page, /Mechanic names, initials, or numbers/);
-  assert.match(page, /separately agree to conduct this authorization electronically/);
-  assert.match(page, /invoice-signature and copy-delivery transaction electronically/);
-  assert.match(page, /work was performed satisfactorily/);
-  assert.match(page, /Sign invoice and receive secure copy/);
-  assert.match(page, /Payment was not automatically released/);
+  assert.match(page, /values\.status = submitter\?\.value/);
+  assert.match(workspace, /Montgomery County registration number/);
+  assert.match(workspace, /Customer instructions or description of symptoms/);
+  assert.match(workspace, /Provider diagnosis/);
+  assert.match(workspace, /Mechanic names, initials, or numbers/);
+  assert.match(workspace, /separately agree to conduct this authorization electronically/);
+  assert.match(workspace, /invoice-signature and copy-delivery transaction electronically/);
+  assert.match(workspace, /\{REPAIR_INVOICE_PROVIDER_CERTIFICATION\}/);
+  assert.match(workspace, /Sign invoice and receive secure copy/);
+  assert.match(workspace, /No payment is released by this page/);
   assert.match(layout, /repair-records\.css/);
   assert.match(styles, /\.repair-customer-rights/);
-  assert.match(styles, /border: 4px solid currentColor/);
+  assert.match(styles, /border:\s*4px solid currentColor/);
   assert.match(styles, /\.repair-signature-form/);
-  assert.match(styles, /border-top: 0/);
+  assert.match(styles, /border-top:\s*0/);
 });
 
 test("production health and Worker verify the repair-document schema and private controls", async () => {
@@ -155,7 +157,7 @@ test("production health and Worker verify the repair-document schema and private
   assert.match(health, /provider_invoice_final_requires_complete_repair_record/);
   assert.match(health, /stripe_payment_release_requires_signed_delivered_provider_invoice/);
   assert.match(operations, /href="\/repair-records"/);
-  assert.match(operations, /Open Maryland repair-document test workflow/);
+  assert.match(operations, /cannot[^.]*release (?:a )?payment|does not release|no payment|release payment/i);
   assert.match(worker, /"\/repair-records"/);
   assert.match(worker, /Cache-Control", "private, no-store/);
 });

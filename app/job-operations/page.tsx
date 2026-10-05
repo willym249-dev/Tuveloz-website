@@ -24,13 +24,12 @@ export default function JobOperationsPage() {
       <section>
         <h2>Maryland authorization and provider invoice records</h2>
         <p>
-          The separate repair-record workspace tests the provider written estimate,
-          the Customer&apos;s Rights block immediately before customer signature,
-          separately approved changes, the itemized final provider invoice,
-          provider and customer signatures, delivery of the customer copy, and
-          retention of the provider copy.
+          Review the provider&apos;s written estimate and itemized final invoice
+          in the repair-record workspace. Customers and providers can keep their
+          signed copies there. Real-job changes remain subject to launch and
+          service checks; reading a saved copy does not release a payment.
         </p>
-        <p><Link className="button secondary" href="/repair-records">Open Maryland repair-document test workflow</Link></p>
+        <p><Link className="button secondary" href="/repair-records">Review estimate and invoice</Link></p>
       </section>
 
       <JobOperationsConsole />

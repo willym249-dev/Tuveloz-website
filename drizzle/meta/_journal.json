@@ -484,6 +484,13 @@
       "when": 1788906900000,
       "tag": "0068_provider_document_pending_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "6",
+      "when": 1791169200000,
+      "tag": "0069_signed_invoice_copy_receipt",
+      "breakpoints": true
     }
   ]
 }
