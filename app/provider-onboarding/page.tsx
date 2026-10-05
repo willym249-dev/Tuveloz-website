@@ -16,6 +16,8 @@ import { BrandMark } from "../components/tuveloz-icons";
 import { EvidenceUpload } from "../components/provider-evidence-upload";
 import { OwnerSupportForm } from "../components/owner-support-form";
 import { spanishInterfaceTree } from "../../lib/spanish-react";
+import { validProviderOnboardingSnapshot } from "../../lib/provider-onboarding-response";
+import { useSiteLanguage } from "../components/site-language";
 
 type EvidenceSubmission = {
   id: string;
@@ -318,15 +320,19 @@ function DataRightsRequestForm({ onSubmitted, preferredLanguage }: {
 }
 
 export default function ProviderOnboardingPage() {
+  const { language: siteLanguage } = useSiteLanguage();
   const [applicationHelpOpen, setApplicationHelpOpen] = useState(false);
   const [data, setData] = useState<OnboardingResponse | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const loadRequest = useRef<AbortController | null>(null);
   const [agreementBusy, setAgreementBusy] = useState(false);
   const [identityBusy, setIdentityBusy] = useState(false);
   const identityPollCount = useRef(0);
   const [languageOverride, setLanguageOverride] = useState<"en" | "es" | null>(null);
-  const language = languageOverride ?? (data?.provider.preferredLanguage === "Spanish" ? "es" : "en");
+  const language = languageOverride ?? (data ? (data.provider.preferredLanguage === "Spanish" ? "es" : "en") : siteLanguage);
   const preferredLanguage = language === "es" ? "Spanish" : "English";
   const identityCopy = identityConsentCopy(language);
   const identityForm = useRef<HTMLFormElement>(null);
@@ -340,23 +346,43 @@ export default function ProviderOnboardingPage() {
   }
 
   const load = useCallback(async () => {
-    const response = await fetch("/api/provider-onboarding", { cache: "no-store" });
-    const result = await response.json().catch(() => ({})) as OnboardingResponse;
-    if (response.status === 401) {
-      window.location.replace("/account?role=provider");
-      return;
+    loadRequest.current?.abort();
+    const controller = new AbortController();
+    loadRequest.current = controller;
+    setLoading(true);
+    const timer = window.setTimeout(() => controller.abort(), 20000);
+    try {
+      const response = await fetch("/api/provider-onboarding", { cache: "no-store", signal: controller.signal });
+      if (loadRequest.current !== controller) return false;
+      if (response.status === 401) {
+        window.location.replace("/account?role=provider");
+        return false;
+      }
+      const result: unknown = await response.json();
+      if (loadRequest.current !== controller || controller.signal.aborted) return false;
+      if (!response.ok || !validProviderOnboardingSnapshot(result)) throw new Error("Invalid checklist response");
+      setData(result as OnboardingResponse);
+      setLoadError("");
+      setError("");
+      return true;
+    } catch {
+      if (loadRequest.current === controller) {
+        setLoadError("We couldn't load your checklist. Please try again.");
+      }
+      return false;
+    } finally {
+      window.clearTimeout(timer);
+      if (loadRequest.current === controller) {
+        loadRequest.current = null;
+        setLoading(false);
+      }
     }
-    if (!response.ok) throw new Error(result.error || "Unable to load provider onboarding.");
-    setData(result);
-    setError("");
   }, []);
 
   async function refreshAfterSubmission(message: string) {
     setError("");
     setNotice(message);
-    try {
-      await load();
-    } catch {
+    if (!await load()) {
       // The write is confirmed. A failed read must not invite a duplicate request.
       setNotice("Your request was received. Refresh the page to see its status.");
     }
@@ -368,7 +394,11 @@ export default function ProviderOnboardingPage() {
         reason instanceof Error ? reason.message : "Unable to load provider onboarding.",
       ));
     }, 0);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      loadRequest.current?.abort();
+      loadRequest.current = null;
+    };
   }, [load]);
 
   useEffect(() => {
@@ -430,8 +460,9 @@ export default function ProviderOnboardingPage() {
         window.location.assign(destination.toString());
         return;
       }
-      await load();
-      setNotice("Identity status refreshed. Job access remains controlled by every other launch gate.");
+      if (await load()) {
+        setNotice("Identity status refreshed. Job access remains controlled by every other launch gate.");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to start identity verification.");
     } finally {
@@ -461,9 +492,14 @@ export default function ProviderOnboardingPage() {
       });
       const result = await response.json().catch(() => ({})) as OnboardingResponse;
       if (!response.ok || result.ok !== true) throw new Error(result.error || "Unable to save the agreement acceptance.");
+      if (!validProviderOnboardingSnapshot(result)) {
+        setLoadError("We couldn't load your checklist. Please try again.");
+        throw new Error("We couldn't confirm the agreement update. Refresh your checklist before trying again.");
+      }
       form.reset();
-      setData(result);
-      setNotice("Current agreement versions accepted and recorded.");
+      // Fetch current state after confirmation: another form may have saved
+      // evidence since the agreement response snapshot was prepared.
+      await refreshAfterSubmission("Current agreement versions accepted and recorded.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save the agreement acceptance.");
     } finally {
@@ -521,10 +557,18 @@ export default function ProviderOnboardingPage() {
           </details>
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}
+        {loadError && <div className="form-error" role="alert">
+          <p>{loadError}</p>
+          {data && <p>The checklist below is the last version we loaded.</p>}
+          <button className="button secondary" type="button" disabled={loading}
+            onClick={() => { identityPollCount.current = 0; void load(); }}>
+            {loading ? "Loading your onboarding checklist…" : "Try loading again"}
+          </button>
+        </div>}
         {notice && <p className="portal-success" role="status">
           {notice}
         </p>}
-        {!data && !error && <p className="admin-note">Loading your onboarding checklist…</p>}
+        {!data && !error && !loadError && <p className="admin-note" role="status">Loading your onboarding checklist…</p>}
         {data && (
           <div className="account-grid">
             {applicationNeedsHelp && (
@@ -697,6 +741,7 @@ export default function ProviderOnboardingPage() {
                     </form>
                     <button
                       className="button secondary"
+                      disabled={loading}
                       onClick={() => {
                         identityPollCount.current = 0;
                         void load().catch((reason) => setError(
@@ -795,7 +840,9 @@ export default function ProviderOnboardingPage() {
                                     ? requirement.submission.id
                                     : ""
                                 }
-                                onUploaded={load}
+                                onUploaded={async () => {
+                                  if (!await load()) throw new Error("Checklist refresh unavailable");
+                                }}
                               />
                             ) : (
                               <p>

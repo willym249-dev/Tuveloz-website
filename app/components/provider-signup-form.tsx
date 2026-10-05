@@ -860,6 +860,8 @@ export function ProviderSignupForm() {
       setPendingApplicationPayload(null);
       setSelectedProviderServices([]);
       setSelectedProviderWorkLocations([]);
+      setOptionalCertificates([]);
+      setShowOptionalCertificates(false);
       setProviderAssessment(emptyProviderSelfAssessment);
       setLegalConfirmed(false);
       setStep(1);

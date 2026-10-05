@@ -38,7 +38,8 @@ export const SPANISH_PREFIX = "/es";
 export function pathHasSpanish(pathname: string) {
   // Private account interfaces translate in place. They must not gain a
   // public /es alias, sitemap entry, or changed cache behavior.
-  return SPANISH_READY_PATHS.includes(pathname) || pathname === "/account" || pathname === "/privacy-center" || pathname === "/success";
+  return SPANISH_READY_PATHS.includes(pathname)
+    || ["/account", "/privacy-center", "/success", "/provider-onboarding"].includes(pathname);
 }
 
 /**

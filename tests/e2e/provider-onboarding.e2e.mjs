@@ -155,6 +155,169 @@ async function checkApplicationRecovery(browser) {
   }
 }
 
+async function checkChecklistReadRecovery(browser) {
+  for (const spanish of [false, true]) for (const scenario of [
+    "empty-object", "null-body", "bad-json", "services-object", "requirements-object", "http-error", "network-error", "stalled",
+    "bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot",
+  ]) {
+    const page = await browser.newPage({ viewport: { width: 320, height: 740 } });
+    const state = fixture(), errors = [], posts = [], external = [], unexpectedApi = [];
+    state.provider.preferredLanguage = spanish ? "Spanish" : "English";
+    if (["bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario)) {
+      state.identityVerification = { ...state.identityVerification, status: "not_started", complete: false, configuredForThisProvider: true };
+    }
+    let getCount = 0, pendingGet, pendingFreshGet, pendingPost, signalPending, signalFresh, signalPost, agreementConfirmed = false;
+    const pendingStarted = new Promise(done => { signalPending = done; });
+    const freshStarted = new Promise(done => { signalFresh = done; });
+    const postStarted = new Promise(done => { signalPost = done; });
+    const caseName = `${browser.browserType().name()}-${spanish ? "es" : "en"}-checklist-${scenario}`;
+    page.on("pageerror", error => errors.push(error.message));
+    await page.addInitScript(language => localStorage.setItem("tuveloz-language", language), spanish ? "es" : "en");
+    if (scenario === "stalled") await page.clock.install();
+    if (scenario === "stale-read-after-agreement") {
+      // A response body may finish after cancellation. Keep this synthetic old
+      // read deliverable so the test verifies stale-result rejection as well.
+      await page.addInitScript(() => {
+        const original = window.fetch;
+        window.fetch = (input, options) => {
+          if (input === "/api/provider-onboarding" && (!options?.method || options.method === "GET")) {
+            const rest = { ...options }; delete rest.signal;
+            return original(input, rest);
+          }
+          return original(input, options);
+        };
+      });
+    }
+    await page.route("**/*", route => {
+      const request = route.request(), url = new URL(request.url());
+      if (url.origin !== origin) { external.push(request.url()); return route.abort(); }
+      if (!url.pathname.startsWith("/api/")) return route.continue();
+      if (url.pathname === "/api/account" && request.method() === "GET") return route.fulfill(json(200, { user: null }));
+      if (url.pathname !== "/api/provider-onboarding") {
+        unexpectedApi.push({ method: request.method(), path: url.pathname }); return route.abort();
+      }
+      if (request.method() !== "GET") {
+        const payload = request.postDataJSON(); posts.push(payload);
+        assert.ok(["stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario));
+        assert.equal(payload.action, "accept-current-agreements");
+        agreementConfirmed = true;
+        if (scenario === "older-agreement-snapshot") { pendingPost = route; signalPost(); return; }
+        return route.fulfill(json(200, { ...state, ok: true, allAgreementsAcknowledgedForApplicationReview: true }));
+      }
+      getCount++;
+      if ((scenario === "stalled" && getCount === 1) || (scenario === "stale-read-after-agreement" && getCount === 2)) {
+        pendingGet = route; signalPending(); return;
+      }
+      if (scenario === "stale-read-after-agreement" && getCount === 3) {
+        pendingFreshGet = route; signalFresh(); return;
+      }
+      const failingRead = scenario === "bad-refresh" ? getCount === 2 : getCount === 1;
+      if (!failingRead || ["bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario) && getCount === 1) {
+        return route.fulfill(json(200, { ...state, allAgreementsAcknowledgedForApplicationReview: agreementConfirmed,
+          ...(scenario === "older-agreement-snapshot" && getCount > 1 ? { services: [{ ...state.services[0], label: "Fresh upload evidence" }] } : {}) }));
+      }
+      if (scenario === "network-error") return route.abort();
+      if (scenario === "http-error") return route.fulfill(json(503, { error: "SYNTHETIC INTERNAL ERROR: must not be rendered" }));
+      if (scenario === "bad-json") return route.fulfill({ status: 200, contentType: "application/json", body: "{not valid JSON" });
+      const body = scenario === "empty-object" ? {} : scenario === "null-body" ? null
+        : scenario === "requirements-object" ? { ...state, services: [{ ...state.services[0], requirements: {} }] }
+          : { ...state, services: {} };
+      return route.fulfill(json(200, body));
+    });
+    try {
+      await page.goto(`${origin}/provider-onboarding${spanish ? "?spanish" : ""}`);
+      const retry = page.getByRole("button", { name: spanish ? "Volver a cargar" : "Try loading again", exact: true });
+      const refresh = page.getByRole("button", { name: spanish ? "Actualizar estado" : "Refresh status", exact: true });
+      if (["bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario)) {
+        await page.locator(".provider-service-status-card").waitFor();
+        await page.locator('[name="signerName"]').fill("Synthetic draft signer");
+        await page.locator('[name="details"]').fill("Synthetic privacy draft stays on this device.");
+        if (scenario !== "older-agreement-snapshot") await refresh.click();
+      }
+      if (scenario === "older-agreement-snapshot") {
+        const { button } = await prepare(page, "agreements");
+        await button.click(); await postStarted;
+        await refresh.click();
+        await page.getByRole("heading", { name: "Fresh upload evidence", exact: true }).waitFor();
+        const freshResponse = page.waitForResponse(response => response.url() === origin + "/api/provider-onboarding" && response.request().method() === "GET");
+        await pendingPost.fulfill(json(200, { ...state, ok: true, allAgreementsAcknowledgedForApplicationReview: true })); pendingPost = null;
+        await (await freshResponse).finished();
+        await page.getByRole("status").filter({ hasText: receipt.agreements }).waitFor();
+        assert.equal(await page.getByRole("heading", { name: "Fresh upload evidence", exact: true }).count(), 1,
+          "an older agreement response cannot replace newer checklist evidence");
+        assert.equal(await page.getByRole("heading", { name: "Example service", exact: true }).count(), 0);
+        await page.locator('[name="signerName"]').waitFor({ state: "detached" });
+        assert.equal(await page.locator('[name="signerName"]').count(), 0);
+        assert.equal(await page.locator('[name="details"]').inputValue(), "Synthetic privacy draft stays on this device.");
+        assert.equal(await page.getByRole("alert").count(), 0);
+        assert.equal(posts.length, 1); assert.equal(getCount, 3);
+      } else if (scenario === "stale-read-after-agreement") {
+        await pendingStarted;
+        const { button } = await prepare(page, "agreements");
+        await button.click();
+        await page.getByRole("status").filter({ hasText: receipt.agreements }).waitFor();
+        await freshStarted;
+        // The receipt confirms the write before its fresh checklist read applies.
+        // Hold that read to make the distinction deterministic, then wait for the
+        // actual accepted state before delivering the older response below.
+        const freshResponse = page.waitForResponse(response => response.url() === origin + "/api/provider-onboarding" && response.request().method() === "GET");
+        await pendingFreshGet.fulfill(json(200, { ...state, allAgreementsAcknowledgedForApplicationReview: true })); pendingFreshGet = null;
+        await (await freshResponse).finished();
+        await page.locator('[name="signerName"]').waitFor({ state: "detached" });
+        assert.equal(await page.locator('[name="signerName"]').count(), 0);
+        const staleResponse = page.waitForResponse(response => response.url() === origin + "/api/provider-onboarding" && response.request().method() === "GET");
+        await pendingGet.fulfill(json(200, state)); pendingGet = null;
+        await (await staleResponse).finished();
+        await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+        assert.equal(await page.locator('[name="signerName"]').count(), 0, "an older read cannot reopen already accepted agreements");
+        assert.equal(await page.locator('[name="details"]').inputValue(), "Synthetic privacy draft stays on this device.");
+        assert.equal(await page.getByRole("alert").count(), 0);
+        assert.equal(posts.length, 1);
+        assert.equal(getCount, 3, "confirmed agreement reads its latest saved state");
+      } else {
+        if (scenario === "stalled") { await pendingStarted; await page.clock.fastForward(21000); }
+        await retry.waitFor({ timeout: 4000 });
+        const alert = page.getByRole("alert");
+        assert.match(await alert.textContent(), spanish ? /No pudimos cargar los pasos de su solicitud/ : /We couldn't load your checklist/);
+        assert.doesNotMatch(await page.locator("body").textContent(), /SYNTHETIC INTERNAL ERROR/);
+        assert.equal(await retry.isEnabled(), true);
+        if (scenario === "bad-refresh") {
+          assert.equal(await page.locator(".provider-service-status-card").count(), 1, "keep the prior checklist available");
+          assert.match(await alert.textContent(), spanish ? /última versión/ : /last version/);
+          assert.equal(await page.locator('[name="signerName"]').inputValue(), "Synthetic draft signer");
+          assert.equal(await page.locator('[name="details"]').inputValue(), "Synthetic privacy draft stays on this device.");
+        } else {
+          assert.equal(await page.locator(".provider-service-status-card").count(), 0);
+          assert.equal(await page.locator('button[type="submit"]').count(), 0, "bad reads cannot expose evidence or identity submission controls");
+        }
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+        if (outputDir && scenario === "empty-object") {
+          await page.setViewportSize({ width: 390, height: 844 });
+          await page.screenshot({ path: resolve(outputDir, `${caseName}.png`), fullPage: true });
+          await page.setViewportSize({ width: 320, height: 740 });
+        }
+        await retry.click();
+        await page.locator(".provider-service-status-card").waitFor();
+        await page.waitForFunction(() => !document.querySelector('[role="alert"]'));
+        assert.equal(getCount, scenario === "bad-refresh" ? 3 : 2);
+        if (scenario === "bad-refresh") assert.equal(await page.locator('[name="signerName"]').inputValue(), "Synthetic draft signer");
+        assert.equal(posts.length, 0, "retry is read-only");
+      }
+      assert.deepEqual(errors, []);
+      assert.deepEqual(external, []);
+      assert.deepEqual(unexpectedApi, [], "no hidden upload, identity, support or other API action may run");
+      report.cases.push({ name: caseName, status: "passed" });
+      console.log(`PASS ${caseName}`);
+    } catch (error) {
+      console.error(`FAIL ${caseName}: ${error.message}; page errors: ${JSON.stringify(errors)}; interface: ${JSON.stringify(await page.evaluate(() => ({ language: document.querySelector("main")?.lang, preference: localStorage.getItem("tuveloz-language"), alerts: [...document.querySelectorAll('[role="alert"]')].map(element => element.textContent) })))}`);
+      throw error;
+    } finally {
+      await pendingGet?.abort().catch(() => {}); await pendingFreshGet?.abort().catch(() => {});
+      await pendingPost?.abort().catch(() => {}); await page.close();
+    }
+  }
+}
+
 async function checkFullPage(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   let state = fixture();
@@ -185,18 +348,18 @@ async function checkFullPage(browser) {
       state.services = catalog.services.map((service, i) => ({
         ...service, statusLabel: "✕ Not available for customer jobs", reason: responseCopy.reason,
         requirements: service.requirements.map((doc, j) => ({
-          ...doc, uploadAllowed: i === 0 && j === 0,
+          ...doc, requiresExpiration: doc.requiresExpiration === true, uploadAllowed: i === 0 && j === 0,
           status: ["missing", "under_review", "needs_correction", "rejected", "expired", "accepted"][j % 6],
           submission: j % 6 === 0 && j > 0 ? null : {
             id: `document-${i}-${j}`, status: "accepted", submittedAt: "2030-01-01", expiresAt: "2030-12-31",
-            reviewNotes: "Pending", downloadAllowed: j % 2 === 0,
+            reviewNotes: "Pending", downloadAllowed: j % 2 === 0, scanStatus: "clean",
             scanLabel: ["Clean — private download allowed", "Pending — quarantined and blocked", "Scanning — quarantined and blocked", "Threat detected — blocked", "Scan failed — blocked pending a new clean result", "Scan error — blocked pending a new clean result"][j % 6],
             expirationStatus: "current", expirationLabel: j % 3 === 0 ? "Expires on 2030-12-31 (1 day remaining)" : j % 3 === 1 ? "Expired on 2030-01-01; the dependent service stays blocked" : "Expires on 2030-12-31",
             reminderLabel: j % 2 ? "Next email reminder scheduled for 2030-12-30" : "Last expiration reminder sent 2030-12-01",
           },
         })),
       }));
-      state.appeals = [{ id: "appeal", evidenceId: "document-0-0", status: "under_review", submittedAt: "2030-01-01", dueAt: "2030-02-01", statement: "Pending", resolutionNotes: "Pending" }];
+      state.appeals = [{ id: "appeal", evidenceId: "document-0-0", requestType: "evidence_review", status: "under_review", submittedAt: "2030-01-01", dueAt: "2030-02-01", statement: "Pending", resolvedAt: "", resolutionNotes: "Pending" }];
       state.dataRightsRequests = [{ id: "privacy", requestType: "deletion", status: "completed", submittedAt: "2030-01-01", dueAt: "2030-02-01", completedAt: "2030-01-20", legalHold: "yes", responseNotes: "Pending" }];
       state.identityVerification = {
         ...state.identityVerification, configuredForThisProvider: true,
@@ -286,6 +449,8 @@ try {
   for (const browserType of [chromium, webkit]) {
     const browser = await browserType.launch({ headless: true });
     try {
+      await checkChecklistReadRecovery(browser);
+      if (process.env.ONBOARDING_TEST_READ_RECOVERY_ONLY === "1") continue;
       await checkApplicationRecovery(browser);
       if (process.env.ONBOARDING_TEST_RECOVERY_ONLY === "1") continue;
       await checkFullPage(browser);
@@ -308,7 +473,7 @@ try {
             if (outcome === "unconfirmed") return route.fulfill(json(200, {}));
             confirmed = true;
             if (kind === "agreements") state = { ...state, allAgreementsAcknowledgedForApplicationReview: true };
-            if (kind === "appeal") state = { ...state, appeals: [{ id: "test-appeal", evidenceId: "test-evidence", status: "submitted", submittedAt: "2030-01-01" }] };
+            if (kind === "appeal") state = { ...state, appeals: [{ id: "test-appeal", evidenceId: "test-evidence", requestType: "evidence_review", status: "submitted", statement: entered.appeal, submittedAt: "2030-01-01", dueAt: "", resolvedAt: "", resolutionNotes: "" }] };
             return route.fulfill(json(200, { ok: true, ...state }));
           });
           try {
@@ -333,9 +498,15 @@ try {
             } else {
               await page.getByRole("status").filter({ hasText: outcome === "refresh-fails" ? /Refresh the page|Actualice la página/ : receipt[kind] }).waitFor({ timeout: 4000 });
               if (spanish) assert.match(await page.locator('.account-main > .portal-success').textContent(), outcome === "refresh-fails" ? /Recibimos su solicitud/ : kind === "appeal" ? /Apelación enviada/ : kind === "privacy" ? /Solicitud de privacidad enviada/ : /Versiones actuales/);
-              assert.equal(await page.locator('[role="alert"]').count(), 0, "confirmed write must not become a failure");
+              if (outcome === "refresh-fails") {
+                assert.equal(await page.getByRole("button", { name: spanish ? "Volver a cargar" : "Try loading again", exact: true }).count(), 1,
+                  "a confirmed write keeps its receipt while the failed read offers a read-only retry");
+              } else assert.equal(await page.locator('[role="alert"]').count(), 0, "confirmed write must not become a failure");
               if (kind === "privacy" || outcome === "refresh-fails") assert.equal(await page.locator(field[kind]).inputValue(), "");
-              if (kind === "agreements") assert.equal(await page.locator(field[kind]).count(), 0);
+              if (kind === "agreements") {
+                await page.locator(field[kind]).waitFor({ state: "detached" });
+                assert.equal(await page.locator(field[kind]).count(), 0);
+              }
             }
             assert.equal(posts.length, 1, "one submission only");
             assert.deepEqual(errors, []);
