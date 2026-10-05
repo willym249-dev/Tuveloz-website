@@ -8,6 +8,8 @@ import {
   MARYLAND_REPAIR_RECORDS_VERSION,
   MONTGOMERY_COUNTY_WRITTEN_ESTIMATE_STANDARD,
   REPAIR_FACILITY_RESPONSIBILITY_NOTICE,
+  REPAIR_AUTHORIZATION_PROVIDER_CERTIFICATION,
+  REPAIR_INVOICE_PROVIDER_CERTIFICATION,
   parseRepairLineItems,
   repairLineItemTotals,
   sha256RepairRecord,
@@ -15,6 +17,7 @@ import {
   type RepairLineItem,
 } from "../../../lib/maryland-repair-records";
 import { isSameOriginRequest } from "../../../lib/request-security";
+import { realRepairRecordGates, repairRecordAccess, repairRecordProviderReady } from "../../../lib/repair-record-access";
 
 const NO_STORE_HEADERS = { "cache-control": "private, no-store" };
 const MAX_TEXT_AMOUNT = 10_000_000;
@@ -34,7 +37,9 @@ type ParticipantJob = {
   customerEmail: string;
   quoteId: string;
   quotePriceCents: string;
+  quoteServiceCodes: string;
   scopeVersion: number;
+  assignmentVersion: number;
   providerId: string;
   providerName: string;
   providerEmail: string;
@@ -228,7 +233,7 @@ function validFutureOrCurrentDate(value: unknown) {
   return new Date(time).toISOString();
 }
 
-async function participantJobs(role: AccountRole, email: string) {
+async function participantJobs(role: AccountRole, email: string, requestId = "") {
   const roleClause = role === "provider"
     ? "lower(quote.provider_email) = lower(?)"
     : "lower(request.email) = lower(?)";
@@ -245,7 +250,9 @@ async function participantJobs(role: AccountRole, email: string) {
             lower(request.email) AS customerEmail,
             quote.id AS quoteId,
             quote.price_cents AS quotePriceCents,
+            quote.service_codes AS quoteServiceCodes,
             quote.scope_version AS scopeVersion,
+            request.assignment_version AS assignmentVersion,
             provider.id AS providerId,
             provider.name AS providerName,
             lower(provider.email) AS providerEmail,
@@ -259,18 +266,124 @@ async function participantJobs(role: AccountRole, email: string) {
        INNER JOIN provider_applications provider
          ON lower(provider.email) = lower(quote.provider_email)
       WHERE ${roleClause}
-        AND request.is_test_job = 'yes'
-        AND provider.is_test_provider = 'yes'
-        AND request.status NOT IN ('cancelled','canceled')
+        AND (? = '' OR request.id = ?)
+        AND ((request.is_test_job = 'yes' AND provider.is_test_provider = 'yes')
+          OR (request.is_test_job = 'no' AND provider.is_test_provider = 'no'))
+        AND (SELECT count(*) FROM provider_quotes accepted
+          WHERE accepted.request_id = request.id AND accepted.status = 'accepted') = 1
       ORDER BY datetime(request.created_at) DESC
       LIMIT 50`,
-  ).bind(email).all<ParticipantJob>();
+  ).bind(email, requestId, requestId).all<ParticipantJob>();
   return result.results ?? [];
 }
 
 async function participantJob(requestId: string, role: AccountRole, email: string) {
-  const jobs = await participantJobs(role, email);
+  const jobs = await participantJobs(role, email, requestId);
   return jobs.find((job) => job.requestId === requestId) ?? null;
+}
+
+class RepairRecordError extends Error {
+  constructor(message: string, readonly status = 409, readonly code = "REPAIR_RECORD_STALE") { super(message); }
+}
+
+async function writableJob(role: AccountRole, email: string, payload: Record<string, unknown>, invoice: boolean) {
+  if (typeof payload.expectedQuoteId !== "string" || !payload.expectedQuoteId
+    || !Number.isSafeInteger(payload.expectedScopeVersion)) {
+    throw new RepairRecordError("Refresh and submit the exact displayed quote and scope.", 400);
+  }
+  const job = await participantJob(clean(payload.requestId, 80), role, email);
+  if (!job) throw new RepairRecordError("This job does not belong to this account and job type.", 404);
+  if (job.quoteId !== payload.expectedQuoteId || job.scopeVersion !== payload.expectedScopeVersion) {
+    throw new RepairRecordError("The accepted job scope changed. Refresh and review it again.");
+  }
+  await requireWriteAccess(job, invoice);
+  return job;
+}
+
+async function requireWriteAccess(job: ParticipantJob, invoice: boolean) {
+  const access = repairRecordAccess(job, await realRepairRecordGates());
+  if (!(invoice ? access.invoiceWritesAllowed : access.authorizationWritesAllowed)) {
+    throw new RepairRecordError(access.writeBlockReason || "This repair-record action is paused.", 503, "REPAIR_RECORD_WRITES_PAUSED");
+  }
+  if (!(await repairRecordProviderReady(job, invoice))) {
+    throw new RepairRecordError("The selected provider's current service, assignment or evidence does not permit this record action.", 409, "REPAIR_RECORD_PROVIDER_NOT_READY");
+  }
+}
+
+function expectDocument(payload: Record<string, unknown>, record: AuthorizationRecord | InvoiceRecord) {
+  if (!clean(payload.expectedRecordId, 80) || !clean(payload.expectedDocumentHash, 128)) {
+    throw new RepairRecordError("Submit the exact document displayed for review.", 400);
+  }
+  if (payload.expectedRecordId !== record.id || payload.expectedDocumentHash !== record.documentHash) {
+    throw new RepairRecordError("The displayed document changed. Refresh and review the exact record again.");
+  }
+}
+
+function expectDraft(payload: Record<string, unknown>, record: AuthorizationRecord | InvoiceRecord | null) {
+  if (typeof payload.expectedRecordId !== "string" || typeof payload.expectedUpdatedAt !== "string") {
+    throw new RepairRecordError("Submit the displayed draft identity and revision.", 400);
+  }
+  if (payload.expectedRecordId !== (record?.id ?? "") || payload.expectedUpdatedAt !== (record?.updatedAt ?? "")) {
+    throw new RepairRecordError("This draft changed in another request. Refresh before replacing any saved work.");
+  }
+}
+
+function nextRecordTime(prior = "") {
+  const previous = Date.parse(prior);
+  return new Date(Math.max(Date.now(), Number.isFinite(previous) ? previous + 1 : 0)).toISOString();
+}
+
+type RecordGuard = { table: "repair_authorization_records" | "provider_invoices"; row: AuthorizationRecord | InvoiceRecord | null };
+
+// D1 batches execute in one transaction. A failed snapshot assertion aborts
+// the entire batch, including the acceptance and all line-item mutations.
+// This SELECT has no side effects when the captured source is still current.
+function snapshotAssertion(condition: string, bindings: (string | number)[]) {
+  return env.DB.prepare(`SELECT json_extract(CASE WHEN ${condition} THEN 'true' ELSE 'REPAIR_RECORD_STALE' END, '$')`).bind(...bindings);
+}
+
+async function guardedBatch(job: ParticipantJob, invoice: boolean, records: RecordGuard[], statements: ReturnType<typeof env.DB.prepare>[]) {
+  await requireWriteAccess(job, invoice);
+  const jobGuard = snapshotAssertion(`EXISTS (
+    SELECT 1 FROM customer_requests request
+    JOIN provider_quotes quote ON quote.request_id = request.id AND quote.status = 'accepted'
+    JOIN provider_applications provider ON lower(provider.email) = lower(quote.provider_email)
+    WHERE request.id = ? AND quote.id = ? AND provider.id = ?
+      AND json_array(request.status, lower(request.email), request.is_test_job, request.assignment_version,
+        request.service_codes, request.jurisdiction, quote.scope_version, quote.price_cents,
+        quote.service_codes, lower(provider.email), provider.is_test_provider)
+        = ?
+      AND (SELECT count(*) FROM provider_quotes accepted WHERE accepted.request_id = request.id AND accepted.status = 'accepted') = 1
+  )`, [job.requestId, job.quoteId, job.providerId, JSON.stringify([
+    job.requestStatus, job.customerEmail, job.isTestJob, job.assignmentVersion,
+    job.serviceCodes, job.jurisdiction, job.scopeVersion, job.quotePriceCents,
+    job.quoteServiceCodes, job.providerEmail, job.isTestProvider,
+  ])]);
+  const guards = records.map(({ table, row }) => {
+    if (!row) return snapshotAssertion(`NOT EXISTS (SELECT 1 FROM ${table} WHERE request_id = ? AND scope_version = ?)`, [job.requestId, job.scopeVersion]);
+    const entries = Object.entries(row);
+    const columns = entries.map(([name]) => name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`));
+    return snapshotAssertion(`EXISTS (SELECT 1 FROM ${table} WHERE id = ? AND json_array(${columns.join(",")}) = ?)`,
+      [row.id, JSON.stringify(entries.map(([, value]) => value))]);
+  });
+  const itemGuards = records.flatMap(({ table, row }) => {
+    if (!row?.documentHash) return [];
+    const snapshot = JSON.parse(row.documentSnapshot) as { lineItems: RepairLineItem[] };
+    const itemTable = table === "provider_invoices" ? "provider_invoice_items" : "repair_authorization_items";
+    const parentColumn = table === "provider_invoices" ? "invoice_id" : "authorization_id";
+    return [snapshotAssertion(`(SELECT coalesce(json_group_array(json(item)), '[]') FROM (
+      SELECT json_array(line_type, description, part_number, part_condition, quantity, unit_amount_cents,
+        line_amount_cents, labor_minutes, mechanic_identifier) AS item
+      FROM ${itemTable} WHERE ${parentColumn} = ? ORDER BY sort_order ASC, created_at ASC
+    )) = ?`, [row.id, JSON.stringify(snapshot.lineItems.map((item) => [item.lineType, item.description, item.partNumber,
+      item.partCondition, item.quantity, item.unitAmountCents, item.lineAmountCents, item.laborMinutes, item.mechanicIdentifier]))])];
+  });
+  try {
+    return await env.DB.batch([jobGuard, ...guards, ...itemGuards, ...statements]);
+  } catch (error) {
+    if (String(error).includes("malformed JSON")) throw new RepairRecordError("The job or document changed while saving. Refresh and review the current record.");
+    throw error;
+  }
 }
 
 async function authorizationFor(job: ParticipantJob) {
@@ -330,9 +443,9 @@ async function authorizationFor(job: ParticipantJob) {
             created_at AS createdAt,
             updated_at AS updatedAt
        FROM repair_authorization_records
-      WHERE request_id = ? AND scope_version = ?
+      WHERE request_id = ? AND scope_version = ? AND quote_id = ? AND provider_id = ?
       LIMIT 1`,
-  ).bind(job.requestId, job.scopeVersion).first<AuthorizationRecord>();
+  ).bind(job.requestId, job.scopeVersion, job.quoteId, job.providerId).first<AuthorizationRecord>();
 }
 
 async function authorizationItems(authorizationId: string) {
@@ -416,9 +529,9 @@ async function invoiceFor(job: ParticipantJob) {
             created_at AS createdAt,
             updated_at AS updatedAt
        FROM provider_invoices
-      WHERE request_id = ? AND scope_version = ?
+      WHERE request_id = ? AND scope_version = ? AND quote_id = ? AND provider_id = ?
       LIMIT 1`,
-  ).bind(job.requestId, job.scopeVersion).first<InvoiceRecord>();
+  ).bind(job.requestId, job.scopeVersion, job.quoteId, job.providerId).first<InvoiceRecord>();
 }
 
 async function invoiceItems(invoiceId: string) {
@@ -442,7 +555,7 @@ async function invoiceItems(invoiceId: string) {
   return result.results ?? [];
 }
 
-async function recordData(job: ParticipantJob) {
+async function recordData(job: ParticipantJob, gates: Awaited<ReturnType<typeof realRepairRecordGates>>) {
   const authorization = await authorizationFor(job);
   const invoice = await invoiceFor(job);
   const [authorizationLineItems, invoiceLineItems] = await Promise.all([
@@ -451,6 +564,7 @@ async function recordData(job: ParticipantJob) {
   ]);
   return {
     ...job,
+    ...repairRecordAccess(job, gates),
     authorization: authorization
       ? { ...authorization, lineItems: authorizationLineItems }
       : null,
@@ -460,11 +574,12 @@ async function recordData(job: ParticipantJob) {
   };
 }
 
-async function responseData(role: AccountRole, email: string) {
-  const jobs = await participantJobs(role, email);
+async function responseData(role: AccountRole, email: string, requestId = "") {
+  const jobs = await participantJobs(role, email, requestId);
+  const gates = await realRepairRecordGates();
   return {
-    testOnly: true,
-    realJobsEnabled: false,
+    testOnly: jobs.length > 0 && jobs.every((job) => job.isTestJob === "yes" && job.isTestProvider === "yes"),
+    realJobsEnabled: gates.authorization && gates.invoice,
     role,
     email,
     version: MARYLAND_REPAIR_RECORDS_VERSION,
@@ -476,8 +591,20 @@ async function responseData(role: AccountRole, email: string) {
       responsibilityNotice: REPAIR_FACILITY_RESPONSIBILITY_NOTICE,
       electronicSignatureNotice: ELECTRONIC_SIGNATURE_NOTICE,
     },
-    jobs: await Promise.all(jobs.map(recordData)),
+    jobs: await Promise.all(jobs.map((job) => recordData(job, gates))),
   };
+}
+
+async function savedResponse(role: AccountRole, email: string, receipt: {
+  requestId: string; recordId: string; documentHash: string; action: string; status: string; alreadySigned?: boolean;
+}) {
+  // A failed follow-up read does not undo a committed write. Keep the exact
+  // receipt separate so clients can preserve confirmation and refresh safely.
+  try {
+    return response({ ...(await responseData(role, email, receipt.requestId)), ...receipt, ok: true, paymentReleased: false });
+  } catch {
+    return response({ ...receipt, ok: true, paymentReleased: false, snapshotRefreshRequired: true });
+  }
 }
 
 function authorizationSnapshot(input: {
@@ -504,6 +631,7 @@ function authorizationSnapshot(input: {
     manufacturerNotice: MANUFACTURER_SPECIAL_POLICY_NOTICE,
     responsibilityNotice: REPAIR_FACILITY_RESPONSIBILITY_NOTICE,
     providerSignedAt: input.providerSignedAt,
+    providerCertification: input.providerSignedAt ? REPAIR_AUTHORIZATION_PROVIDER_CERTIFICATION : "",
   };
 }
 
@@ -514,11 +642,10 @@ async function saveAuthorization(
   payload: Record<string, unknown>,
 ) {
   if (role !== "provider") return response({ error: "Only the selected provider can prepare the repair authorization." }, 403);
-  const requestId = clean(payload.requestId, 80);
-  const job = await participantJob(requestId, role, email);
-  if (!job) return response({ error: "This isolated test job is not assigned to this provider." }, 404);
+  const job = await writableJob(role, email, payload, false);
 
   const existing = await authorizationFor(job);
+  expectDraft(payload, existing);
   if (existing && existing.status !== "draft") {
     return response({ error: "A presented or signed authorization is immutable. Use a separately customer-approved change order for later changes." }, 409);
   }
@@ -593,7 +720,7 @@ async function saveAuthorization(
     }, 400);
   }
 
-  const now = new Date().toISOString();
+  const now = nextRecordTime(existing?.updatedAt);
   const providerSignedAt = status === "presented" ? now : "";
   const fields = {
     providerEmail: cleanEmail(job.providerEmail),
@@ -715,8 +842,8 @@ async function saveAuthorization(
       item.laborMinutes, item.mechanicIdentifier, index, now,
     ));
   });
-  await env.DB.batch(statements);
-  return response({ ok: true, id, status, documentHash, ...(await responseData(role, email)) });
+  await guardedBatch(job, false, [{ table: "repair_authorization_records", row: existing }], statements);
+  return savedResponse(role, email, { requestId: job.requestId, recordId: id, action: "save-authorization", status, documentHash });
 }
 
 async function signAuthorization(
@@ -726,27 +853,24 @@ async function signAuthorization(
   payload: Record<string, unknown>,
 ) {
   if (role !== "customer") return response({ error: "Only the customer can sign the repair authorization." }, 403);
-  const requestId = clean(payload.requestId, 80);
-  const job = await participantJob(requestId, role, email);
-  if (!job) return response({ error: "This isolated test job does not belong to this customer." }, 404);
+  const job = await writableJob(role, email, payload, false);
   const authorization = await authorizationFor(job);
-  if (!authorization || authorization.status !== "presented") {
+  if (!authorization || !["presented", "signed"].includes(authorization.status)) {
     return response({ error: "A provider-presented repair authorization is required before signing." }, 409);
   }
   const acceptedByName = clean(payload.acceptedByName, 180);
   if (acceptedByName.length < 2 || payload.signatureAccepted !== true) {
     return response({ error: "Type your name and affirmatively sign the exact written estimate and authorization." }, 400);
   }
-  const calculatedHash = await sha256RepairRecord(authorization.documentSnapshot);
-  if (!authorization.documentHash || calculatedHash !== authorization.documentHash) {
-    return response({ error: "The presented authorization could not be verified as unchanged." }, 409);
-  }
+  expectDocument(payload, authorization);
+  await verifyDocument(job, authorization);
+  if (authorization.customerSignatureAt) return signedRetry(role, email, job, authorization, "sign-authorization", acceptedByName);
   const session = await getAccountSession(request);
   if (!session) return response({ error: "Your signed-in session is required." }, 401);
   const now = new Date().toISOString();
   const signatureAction = "typed-name-and-affirmative-repair-authorization-checkbox";
   const agreementText = `${authorization.documentSnapshot}\n${ELECTRONIC_SIGNATURE_NOTICE}`;
-  await env.DB.batch([
+  try { await guardedBatch(job, false, [{ table: "repair_authorization_records", row: authorization }], [
     env.DB.prepare(
       `INSERT INTO customer_agreement_acceptances (
          id, customer_email, request_id, quote_id, scope_version, scope_snapshot,
@@ -771,8 +895,16 @@ async function signAuthorization(
       acceptedByName, signatureAction, now, requestIp(request), session.id,
       deviceContext(request), now, authorization.id, authorization.documentHash,
     ),
-  ]);
-  return response({ ok: true, status: "signed", ...(await responseData(role, email)) });
+  ]); } catch (error) {
+    if (error instanceof RepairRecordError && error.status === 409) {
+      const current = await authorizationFor(job);
+      if (current?.id === authorization.id && current.documentHash === authorization.documentHash && current.customerSignatureAt) {
+        return signedRetry(role, email, job, current, "sign-authorization", acceptedByName);
+      }
+    }
+    throw error;
+  }
+  return savedResponse(role, email, { requestId: job.requestId, recordId: authorization.id, documentHash: authorization.documentHash, action: "sign-authorization", status: "signed" });
 }
 
 function invoiceSnapshot(input: {
@@ -799,6 +931,7 @@ function invoiceSnapshot(input: {
     manufacturerNotice: MANUFACTURER_SPECIAL_POLICY_NOTICE,
     responsibilityNotice: REPAIR_FACILITY_RESPONSIBILITY_NOTICE,
     issuedAt: input.issuedAt,
+    providerCertification: input.issuedAt ? REPAIR_INVOICE_PROVIDER_CERTIFICATION : "",
   };
 }
 
@@ -809,14 +942,17 @@ async function saveInvoice(
   payload: Record<string, unknown>,
 ) {
   if (role !== "provider") return response({ error: "Only the selected provider can prepare the provider invoice." }, 403);
-  const requestId = clean(payload.requestId, 80);
-  const job = await participantJob(requestId, role, email);
-  if (!job) return response({ error: "This isolated test job is not assigned to this provider." }, 404);
+  const job = await writableJob(role, email, payload, true);
   const authorization = await authorizationFor(job);
   if (!authorization || authorization.status !== "signed") {
     return response({ error: "The customer's signed repair authorization is required before a final invoice can issue." }, 409);
   }
+  await verifyDocument(job, authorization);
+  if (!(await signatureAcceptance(job, authorization, "maryland_repair_authorization"))) {
+    throw new RepairRecordError("The signed repair authorization has no matching customer acceptance evidence.");
+  }
   const existing = await invoiceFor(job);
+  expectDraft(payload, existing);
   if (existing?.status === "final") {
     return response({ error: "A final invoice is immutable. Later issues must use the incident, dispute, or correction process." }, 409);
   }
@@ -859,7 +995,7 @@ async function saveInvoice(
     return response({ error: "Record the authorized job as completed before issuing the final invoice." }, 409);
   }
 
-  const now = new Date().toISOString();
+  const now = nextRecordTime(existing?.updatedAt);
   const invoiceId = existing?.id ?? crypto.randomUUID();
   const invoiceNumber = existing?.invoiceNumber
     || `TVZ-${job.requestId.replace(/[^A-Za-z0-9]/g, "").slice(-10).toUpperCase()}-${job.scopeVersion}`;
@@ -1003,8 +1139,91 @@ async function saveInvoice(
         WHERE id = ? AND status = 'draft'`,
     ).bind(now, now, snapshot, documentHash, now, invoiceId));
   }
-  await env.DB.batch(statements);
-  return response({ ok: true, invoiceId, invoiceNumber, status, documentHash, ...(await responseData(role, email)) });
+  await guardedBatch(job, true, [
+    { table: "repair_authorization_records", row: authorization },
+    { table: "provider_invoices", row: existing },
+  ], [signatureEvidenceAssertion(job, authorization, "maryland_repair_authorization"), ...statements]);
+  return savedResponse(role, email, { requestId: job.requestId, recordId: invoiceId, documentHash, action: "save-invoice", status });
+}
+
+async function verifyDocument(job: ParticipantJob, record: AuthorizationRecord | InvoiceRecord) {
+  if (!record.documentHash || await sha256RepairRecord(record.documentSnapshot) !== record.documentHash) {
+    throw new RepairRecordError("The stored document could not be verified as unchanged.");
+  }
+  let snapshot: Record<string, unknown>;
+  try { snapshot = JSON.parse(record.documentSnapshot); } catch { throw new RepairRecordError("The document snapshot is invalid."); }
+  if (!snapshot || snapshot.requestId !== job.requestId || snapshot.quoteId !== job.quoteId
+    || snapshot.providerId !== job.providerId || snapshot.scopeVersion !== job.scopeVersion
+    || snapshot.totalAmountCents !== record.totalAmountCents) {
+    throw new RepairRecordError("The document does not match the current accepted job and scope.");
+  }
+  const isInvoice = "invoiceNumber" in record;
+  if (snapshot.documentType !== (isInvoice ? "provider_final_repair_invoice" : "repair_authorization_and_written_estimate")
+    || snapshot.version !== MARYLAND_REPAIR_RECORDS_VERSION) throw new RepairRecordError("The document type or version is invalid.");
+  for (const [key, value] of Object.entries(record)) {
+    if (!(key in snapshot)) continue;
+    const displayed = key === "serviceCodes" || key === "mechanicIdentifiers" ? JSON.parse(String(value)) : value;
+    if (stableRepairRecordJson(displayed) !== stableRepairRecordJson(snapshot[key])) {
+      throw new RepairRecordError("The displayed document fields differ from its signed snapshot.");
+    }
+  }
+  const storedItems = isInvoice ? await invoiceItems(record.id) : await authorizationItems(record.id);
+  const items = parseRepairLineItems(storedItems);
+  const snapshotItems = parseRepairLineItems(snapshot.lineItems);
+  if (!items || !snapshotItems || stableRepairRecordJson(items) !== stableRepairRecordJson(snapshotItems)) {
+    throw new RepairRecordError("The displayed itemized work differs from the exact document snapshot.");
+  }
+}
+
+function signatureEvidence(job: ParticipantJob, record: AuthorizationRecord | InvoiceRecord, key: string) {
+  return {
+    condition: `(SELECT count(*) FROM customer_agreement_acceptances
+      WHERE request_id = ? AND quote_id = ? AND scope_version = ? AND lower(customer_email) = ?
+        AND agreement_key = ? AND agreement_version = ? AND agreement_hash = ? AND scope_snapshot = ? AND agreement_text = ?
+        AND accepted_by_name = ? AND acceptance_action = ? AND accepted_at = ?
+        AND session_id = ? AND ip_address = ? AND device_context = ?) = 1`,
+    bindings: [job.requestId, job.quoteId, job.scopeVersion, job.customerEmail, key, MARYLAND_REPAIR_RECORDS_VERSION,
+      record.documentHash, record.documentSnapshot, `${record.documentSnapshot}\n${ELECTRONIC_SIGNATURE_NOTICE}`, record.customerSignatureName, record.customerSignatureAction,
+      record.customerSignatureAt, record.customerSignatureSessionId, record.customerSignatureIp, record.customerSignatureDevice],
+  };
+}
+
+async function signatureAcceptance(job: ParticipantJob, record: AuthorizationRecord | InvoiceRecord, key: string) {
+  if (!record.customerSignatureAt || !record.customerSignatureName || !record.customerSignatureSessionId) return false;
+  const evidence = signatureEvidence(job, record, key);
+  const row = await env.DB.prepare(`SELECT ${evidence.condition} AS matched`).bind(...evidence.bindings).first<{ matched: number }>();
+  return row?.matched === 1;
+}
+
+function signatureEvidenceAssertion(job: ParticipantJob, record: AuthorizationRecord | InvoiceRecord, key: string) {
+  const evidence = signatureEvidence(job, record, key);
+  return snapshotAssertion(evidence.condition, evidence.bindings);
+}
+
+async function signedRetry(role: AccountRole, email: string, job: ParticipantJob, record: AuthorizationRecord | InvoiceRecord,
+  action: "sign-authorization" | "sign-invoice", acceptedByName: string) {
+  const currentJob = await participantJob(job.requestId, role, email);
+  if (!currentJob || stableRepairRecordJson(currentJob) !== stableRepairRecordJson(job)) {
+    throw new RepairRecordError("The accepted job changed. Refresh before relying on this signature receipt.");
+  }
+  await requireWriteAccess(currentJob, action === "sign-invoice");
+  const currentRecord = action === "sign-invoice" ? await invoiceFor(currentJob) : await authorizationFor(currentJob);
+  if (!currentRecord || currentRecord.id !== record.id || currentRecord.documentHash !== record.documentHash) {
+    throw new RepairRecordError("The signed record changed. Refresh and review the saved document.");
+  }
+  record = currentRecord;
+  await verifyDocument(currentJob, record);
+  const key = action === "sign-invoice" ? "provider_final_invoice_signature" : "maryland_repair_authorization";
+  if (record.customerSignatureName !== acceptedByName || !(await signatureAcceptance(job, record, key))) {
+    throw new RepairRecordError("This document already has a different or unverified signature. Refresh and review the saved record.");
+  }
+  return savedResponse(role, email, { requestId: job.requestId, recordId: record.id, documentHash: record.documentHash,
+    action, status: "signed", alreadySigned: true });
+}
+
+function validExistingCopyDestination(invoice: InvoiceRecord, email: string) {
+  return (!invoice.customerCopyDeliveryMethod || invoice.customerCopyDeliveryMethod === "secure-account-copy")
+    && (!invoice.customerCopyDeliveredTo || cleanEmail(invoice.customerCopyDeliveredTo) === email);
 }
 
 async function signInvoice(
@@ -1014,26 +1233,23 @@ async function signInvoice(
   payload: Record<string, unknown>,
 ) {
   if (role !== "customer") return response({ error: "Only the customer can sign the provider's final invoice." }, 403);
-  const requestId = clean(payload.requestId, 80);
-  const job = await participantJob(requestId, role, email);
-  if (!job) return response({ error: "This isolated test job does not belong to this customer." }, 404);
+  const job = await writableJob(role, email, payload, true);
   const invoice = await invoiceFor(job);
   if (!invoice || invoice.status !== "final") return response({ error: "A final provider invoice is required before signing." }, 409);
-  if (invoice.customerSignatureAt) return response({ error: "This final invoice was already signed and delivered." }, 409);
   const acceptedByName = clean(payload.acceptedByName, 180);
   if (acceptedByName.length < 2 || payload.signatureAccepted !== true) {
     return response({ error: "Type your name and affirmatively sign the exact final provider invoice." }, 400);
   }
-  const calculatedHash = await sha256RepairRecord(invoice.documentSnapshot);
-  if (!invoice.documentHash || calculatedHash !== invoice.documentHash) {
-    return response({ error: "The final provider invoice could not be verified as unchanged." }, 409);
-  }
+  expectDocument(payload, invoice);
+  await verifyDocument(job, invoice);
+  if (invoice.customerSignatureAt) return signedRetry(role, email, job, invoice, "sign-invoice", acceptedByName);
+  if (!validExistingCopyDestination(invoice, email)) throw new RepairRecordError("The existing copy destination requires review; it cannot be replaced by signing.");
   const session = await getAccountSession(request);
   if (!session) return response({ error: "Your signed-in session is required." }, 401);
   const now = new Date().toISOString();
   const signatureAction = "typed-name-and-affirmative-final-invoice-checkbox";
   const agreementText = `${invoice.documentSnapshot}\n${ELECTRONIC_SIGNATURE_NOTICE}`;
-  await env.DB.batch([
+  try { await guardedBatch(job, true, [{ table: "provider_invoices", row: invoice }], [
     env.DB.prepare(
       `INSERT INTO customer_agreement_acceptances (
          id, customer_email, request_id, quote_id, scope_version, scope_snapshot,
@@ -1052,23 +1268,59 @@ async function signInvoice(
           SET customer_signature_name = ?, customer_signature_action = ?,
               customer_signature_at = ?, customer_signature_ip = ?,
               customer_signature_session_id = ?, customer_signature_device = ?,
-              customer_viewed_at = ?, customer_copy_delivery_method = 'secure-account-copy',
-              customer_copy_delivered_to = ?, customer_copy_delivered_at = ?,
-              provider_copy_retained_at = ?, updated_at = ?
+              customer_viewed_at = CASE WHEN customer_viewed_at = '' THEN ? ELSE customer_viewed_at END,
+              customer_copy_delivery_method = CASE WHEN customer_copy_delivery_method = '' THEN 'secure-account-copy' ELSE customer_copy_delivery_method END,
+              customer_copy_delivered_to = CASE WHEN customer_copy_delivered_to = '' THEN ? ELSE customer_copy_delivered_to END,
+              customer_copy_delivered_at = CASE WHEN customer_copy_delivered_at = '' THEN ? ELSE customer_copy_delivered_at END,
+              provider_copy_retained_at = CASE WHEN provider_copy_retained_at = '' THEN ? ELSE provider_copy_retained_at END, updated_at = ?
         WHERE id = ? AND status = 'final' AND customer_signature_at = '' AND document_hash = ?`,
     ).bind(
       acceptedByName, signatureAction, now, requestIp(request), session.id,
       deviceContext(request), now, cleanEmail(email), now, now, now,
       invoice.id, invoice.documentHash,
     ),
-  ]);
-  return response({
-    ok: true,
-    status: "signed-and-delivered",
-    deliveryMethod: "secure-account-copy",
-    paymentReleased: false,
-    ...(await responseData(role, email)),
-  });
+  ]); } catch (error) {
+    if (error instanceof RepairRecordError && error.status === 409) {
+      const current = await invoiceFor(job);
+      if (current?.id === invoice.id && current.documentHash === invoice.documentHash && current.customerSignatureAt) {
+        return signedRetry(role, email, job, current, "sign-invoice", acceptedByName);
+      }
+    }
+    throw error;
+  }
+  return savedResponse(role, email, { requestId: job.requestId, recordId: invoice.id, documentHash: invoice.documentHash,
+    action: "sign-invoice", status: "signed-and-delivered" });
+}
+
+async function receiveInvoiceCopy(role: AccountRole, email: string, payload: Record<string, unknown>) {
+  if (role !== "customer") return response({ error: "Only the customer can acknowledge receiving their invoice copy." }, 403);
+  const job = await writableJob(role, email, payload, true);
+  const invoice = await invoiceFor(job);
+  if (!invoice || invoice.status !== "final") throw new RepairRecordError("A final invoice is required.");
+  expectDocument(payload, invoice);
+  if (payload.copyReceived !== true) throw new RepairRecordError("Confirm that you received and can retain this exact secure-account copy.", 400);
+  await verifyDocument(job, invoice);
+  if (!(await signatureAcceptance(job, invoice, "provider_final_invoice_signature"))) {
+    throw new RepairRecordError("Copy recovery requires the existing genuine signature and its matching acceptance. This action cannot sign an invoice.");
+  }
+  if (!validExistingCopyDestination(invoice, email)) throw new RepairRecordError("The existing copy destination requires review and cannot be overwritten.");
+  if (!invoice.customerCopyDeliveryMethod || !invoice.customerCopyDeliveredTo || !invoice.customerCopyDeliveredAt || !invoice.providerCopyRetainedAt) {
+    const now = new Date().toISOString();
+    await guardedBatch(job, true, [{ table: "provider_invoices", row: invoice }], [
+      signatureEvidenceAssertion(job, invoice, "provider_final_invoice_signature"),
+      env.DB.prepare(`UPDATE provider_invoices
+        SET customer_copy_delivery_method = CASE WHEN customer_copy_delivery_method = '' THEN 'secure-account-copy' ELSE customer_copy_delivery_method END,
+            customer_copy_delivered_to = CASE WHEN customer_copy_delivered_to = '' THEN ? ELSE customer_copy_delivered_to END,
+            customer_copy_delivered_at = CASE WHEN customer_copy_delivered_at = '' THEN ? ELSE customer_copy_delivered_at END,
+            provider_copy_retained_at = CASE WHEN provider_copy_retained_at = '' THEN ? ELSE provider_copy_retained_at END,
+            customer_viewed_at = CASE WHEN customer_viewed_at = '' THEN ? ELSE customer_viewed_at END,
+            updated_at = ?
+        WHERE id = ? AND document_hash = ? AND customer_signature_at <> ''`)
+        .bind(email, now, now, now, now, invoice.id, invoice.documentHash),
+    ]);
+  }
+  return savedResponse(role, email, { requestId: job.requestId, recordId: invoice.id, documentHash: invoice.documentHash,
+    action: "receive-invoice-copy", status: "copy-received" });
 }
 
 export async function GET(request: Request) {
@@ -1076,7 +1328,7 @@ export async function GET(request: Request) {
   if (!session || (session.role !== "customer" && session.role !== "provider")) {
     return response({ error: "Sign in to a customer or provider account." }, 401);
   }
-  return response(await responseData(session.role, cleanEmail(session.email)));
+  return response(await responseData(session.role, cleanEmail(session.email), clean(new URL(request.url).searchParams.get("requestId"), 80)));
 }
 
 export async function POST(request: Request) {
@@ -1105,9 +1357,11 @@ export async function POST(request: Request) {
     if (action === "sign-invoice") {
       return await signInvoice(request, role, email, payload);
     }
+    if (action === "receive-invoice-copy") return await receiveInvoiceCopy(role, email, payload);
     return response({ error: "Unsupported repair-record action." }, 400);
   } catch (error) {
+    if (error instanceof RepairRecordError) return response({ error: error.message, code: error.code, snapshotRefreshRequired: true }, error.status);
     console.error("Unable to save Maryland repair record", error);
-    return response({ error: "The repair record could not be saved. No authorization, invoice, signature, payment, or payout was changed." }, 500);
+    return response({ error: "The repair-record result could not be confirmed. Refresh the saved records before retrying. This action does not move money.", snapshotRefreshRequired: true }, 503);
   }
 }

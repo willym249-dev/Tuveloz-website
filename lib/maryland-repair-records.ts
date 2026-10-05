@@ -32,6 +32,14 @@ export const REPAIRS_NEEDED_AND_PERFORMED_STATEMENT =
 export const PROVIDER_TEST_DRIVE_CERTIFICATION =
   "I certify that this vehicle has been tested or test driven when needed and that the mechanic's work was performed satisfactorily.";
 
+// Preserve the existing provider checkbox wording in newly frozen documents.
+// Older snapshots did not store this text and must not be retroactively changed.
+export const REPAIR_AUTHORIZATION_PROVIDER_CERTIFICATION =
+  "I certify the provider information and itemized estimate are accurate. This checkbox is required when presenting the record.";
+
+export const REPAIR_INVOICE_PROVIDER_CERTIFICATION =
+  "I certify that the labor performed and any customer-supplied parts identified at a zero Tuveloz amount were necessary for the work described on this invoice. I also certify that the vehicle was tested when needed and the work was performed satisfactorily. Required for final invoice.";
+
 export type RepairLineType = "labor" | "part" | "sublet" | "other" | "tax";
 export type RepairPartCondition =
   | "new"

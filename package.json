@@ -45,6 +45,7 @@
     "test:e2e:incident-owner": "node tests/e2e/incident-owner-ui.e2e.mjs",
     "test:e2e:refund-review": "node tests/e2e/refund-review.e2e.mjs",
     "test:e2e:job-evidence": "node tests/e2e/job-evidence.e2e.mjs",
+    "test:e2e:repair-records": "node tests/e2e/repair-records.e2e.mjs",
     "test:e2e:notifications": "node tests/e2e/notifications.e2e.mjs",
     "test:e2e:privacy": "node tests/e2e/privacy-center.e2e.mjs",
     "test:e2e:payment-disclosure": "node tests/e2e/payment-disclosure.e2e.mjs",

@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-04
+- **Last reviewed:** 2026-10-05
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,33 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-05 - Bind repair records to the reviewed job and document
+
+The repair-record workspace previously handled only test jobs and let a
+signature request omit the identity and hash of the document displayed to the
+customer. Its provider forms also required editing raw line-item JSON. Connect
+the workspace to accepted jobs, use ordinary itemized fields, and bind each
+save or signature to the reviewed quote, scope and document. Real writes still
+require the existing launch, service and current provider-readiness checks.
+Saved participant copies remain readable while new actions are paused.
+
+Guard document and acceptance writes together against concurrent changes. A
+customer may explicitly acknowledge a missing secure-account copy only for an
+unchanged invoice with a matching existing signature acceptance; original
+signature and nonblank delivery evidence remain immutable. No record action
+charges, refunds or releases money, changes policy consent text, or opens the
+marketplace. New frozen records retain the existing provider certification
+wording; older signed records and hashes are preserved.
+
+Validation: the production build, all 1,053 tests, TypeScript and lint pass
+(one pre-existing navigation lint warning remains). The new browser suite
+passes 68 cases across English/Spanish in Chromium/WebKit at a 320px phone
+width. Migrated-SQL tests exercise real authentication, ownership, stale
+drafts, concurrent signatures, rollback, missing signature evidence, copy
+recovery and zero financial or external-network activity. Independent review
+is clear after fixing draft revision resets, consent/evidence validation and
+uncertain-save messaging. Publication is recorded separately.
 
 ## 2026-10-04 - Recover provider checklists and clear completed certificate drafts
 

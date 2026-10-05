@@ -56,6 +56,8 @@ const REQUIRED_GUARDED_TRIGGERS = [
   "repair_authorization_signed_immutable",
   "provider_invoice_final_core_immutable",
   "provider_invoice_final_legal_fields_immutable",
+  "provider_invoice_signed_immutable",
+  "provider_invoice_copy_repair_requires_signature_evidence",
   "provider_job_insert_requires_signed_repair_authorization",
   "provider_job_update_requires_signed_repair_authorization",
   "provider_invoice_final_requires_complete_repair_record",

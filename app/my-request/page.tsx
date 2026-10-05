@@ -9,6 +9,7 @@ import { requestAccountResponse } from "../../lib/account-response";
 import { validCustomerRequestSnapshot, validCustomerReview, validQuoteFeedbackReply } from "../../lib/customer-request-response";
 import { CustomerConsentDocuments } from "../components/customer-consent-documents";
 import Link from "next/link";
+import { RepairRecordsLink } from "../components/repair-records-link";
 import { BrandMark } from "../components/tuveloz-icons";
 import { JobAppointmentPanel } from "../components/job-appointment-panel";
 import { JobInspectionPanel } from "../components/job-inspection-panel";
@@ -461,6 +462,14 @@ export default function MyRequestPage() {
           onClick={refreshRequest}>{selectionLanguage === "es" ? "Actualizar solicitud" : "Refresh request"}</button>
       </div>
       {error && !feedbackRecoveryId && !reviewRecovery && <p className="form-error portal-alert" role="alert" data-manual-language>{displayedError}</p>}
+      {job && acceptedQuote && (
+        <section className="portal-intro" data-manual-language lang={selectionLanguage}>
+          <RepairRecordsLink requestId={job.id} language={selectionLanguage} />
+          <p>{selectionLanguage === "es"
+            ? "Puede revisar y guardar los documentos de este trabajo sin firmarlos. Firmar la factura no libera un pago."
+            : "You can review and save this job’s documents without signing them. Signing the invoice does not release a payment."}</p>
+        </section>
+      )}
       {job?.hasIssueImage && (
         <section className="customer-photo-card">
           <span>Photo attached to your request</span>

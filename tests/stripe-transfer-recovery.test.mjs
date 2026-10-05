@@ -246,7 +246,10 @@ test("provider transfers recover without repeating uncertain money movement", as
         const before = database.prepare("SELECT * FROM provider_invoices WHERE id='invoice-synthetic'").get();
         beforeIntent = () => {
           attempted = true;
-          assert.throws(() => database.exec(`UPDATE provider_invoices SET ${change} WHERE id='invoice-synthetic'`), /immutable/, label);
+          // Either overlapping trigger may reject a delivery-field mutation;
+          // the complete invoice must remain identical before any transfer.
+          assert.throws(() => database.exec(`UPDATE provider_invoices SET ${change} WHERE id='invoice-synthetic'`),
+            /immutable|matching original customer signature evidence/, label);
         };
         assert.equal((await post()).body.transferConfirmed, true, label);
         assert.equal(attempted, true, label);

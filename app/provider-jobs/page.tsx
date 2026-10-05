@@ -13,6 +13,7 @@ import { SiteLanguageButton } from "../components/site-language";
 import { StripeConnectPanel } from "../components/stripe-connect-panel";
 import { BrandMark, TuvelozIcon } from "../components/tuveloz-icons";
 import { ReferralPanel } from "../components/referral-panel";
+import { RepairRecordsLink } from "../components/repair-records-link";
 import {
   parseCustomerServiceLocations,
   parseJobServices,
@@ -771,6 +772,7 @@ export default function ProviderJobsPage() {
                       <div className="total"><dt>Provider labor subtotal</dt><dd>${(Number(job.priceCents) / 100).toFixed(2)}</dd></div>
                     </dl>
                     <blockquote>{job.details}</blockquote>
+                    <RepairRecordsLink requestId={job.id} />
                     {job.hasIssueImage && (
                       <figure className="job-photo">
                         <figcaption>Customer issue photo</figcaption>
@@ -1128,6 +1130,7 @@ export default function ProviderJobsPage() {
                   </div>
                   {job.workNotes && <p><strong>Work notes:</strong> {job.workNotes}</p>}
                   {job.partsNotes && <p><strong>Parts notes:</strong> {job.partsNotes}</p>}
+                  <RepairRecordsLink requestId={job.id} />
                   {job.hasCompletionImage && (
                     <figure className="job-photo">
                       <figcaption>Completion photo</figcaption>
@@ -1169,6 +1172,7 @@ export default function ProviderJobsPage() {
           <div className="portal-section-heading">
             <div><span className="kicker">Job records</span><h2>Invoices</h2></div>
             <p>Invoices issued for your completed jobs.</p>
+            <RepairRecordsLink />
           </div>
           {invoicesError && <p className="form-error" role="alert">{invoicesError}</p>}
           {invoicesLoading ? (
