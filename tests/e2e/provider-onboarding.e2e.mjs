@@ -166,8 +166,9 @@ async function checkChecklistReadRecovery(browser) {
     if (["bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario)) {
       state.identityVerification = { ...state.identityVerification, status: "not_started", complete: false, configuredForThisProvider: true };
     }
-    let getCount = 0, pendingGet, pendingPost, signalPending, signalPost, agreementConfirmed = false;
+    let getCount = 0, pendingGet, pendingFreshGet, pendingPost, signalPending, signalFresh, signalPost, agreementConfirmed = false;
     const pendingStarted = new Promise(done => { signalPending = done; });
+    const freshStarted = new Promise(done => { signalFresh = done; });
     const postStarted = new Promise(done => { signalPost = done; });
     const caseName = `${browser.browserType().name()}-${spanish ? "es" : "en"}-checklist-${scenario}`;
     page.on("pageerror", error => errors.push(error.message));
@@ -207,6 +208,9 @@ async function checkChecklistReadRecovery(browser) {
       if ((scenario === "stalled" && getCount === 1) || (scenario === "stale-read-after-agreement" && getCount === 2)) {
         pendingGet = route; signalPending(); return;
       }
+      if (scenario === "stale-read-after-agreement" && getCount === 3) {
+        pendingFreshGet = route; signalFresh(); return;
+      }
       const failingRead = scenario === "bad-refresh" ? getCount === 2 : getCount === 1;
       if (!failingRead || ["bad-refresh", "stale-read-after-agreement", "older-agreement-snapshot"].includes(scenario) && getCount === 1) {
         return route.fulfill(json(200, { ...state, allAgreementsAcknowledgedForApplicationReview: agreementConfirmed,
@@ -242,6 +246,7 @@ async function checkChecklistReadRecovery(browser) {
         assert.equal(await page.getByRole("heading", { name: "Fresh upload evidence", exact: true }).count(), 1,
           "an older agreement response cannot replace newer checklist evidence");
         assert.equal(await page.getByRole("heading", { name: "Example service", exact: true }).count(), 0);
+        await page.locator('[name="signerName"]').waitFor({ state: "detached" });
         assert.equal(await page.locator('[name="signerName"]').count(), 0);
         assert.equal(await page.locator('[name="details"]').inputValue(), "Synthetic privacy draft stays on this device.");
         assert.equal(await page.getByRole("alert").count(), 0);
@@ -251,6 +256,14 @@ async function checkChecklistReadRecovery(browser) {
         const { button } = await prepare(page, "agreements");
         await button.click();
         await page.getByRole("status").filter({ hasText: receipt.agreements }).waitFor();
+        await freshStarted;
+        // The receipt confirms the write before its fresh checklist read applies.
+        // Hold that read to make the distinction deterministic, then wait for the
+        // actual accepted state before delivering the older response below.
+        const freshResponse = page.waitForResponse(response => response.url() === origin + "/api/provider-onboarding" && response.request().method() === "GET");
+        await pendingFreshGet.fulfill(json(200, { ...state, allAgreementsAcknowledgedForApplicationReview: true })); pendingFreshGet = null;
+        await (await freshResponse).finished();
+        await page.locator('[name="signerName"]').waitFor({ state: "detached" });
         assert.equal(await page.locator('[name="signerName"]').count(), 0);
         const staleResponse = page.waitForResponse(response => response.url() === origin + "/api/provider-onboarding" && response.request().method() === "GET");
         await pendingGet.fulfill(json(200, state)); pendingGet = null;
@@ -298,7 +311,10 @@ async function checkChecklistReadRecovery(browser) {
     } catch (error) {
       console.error(`FAIL ${caseName}: ${error.message}; page errors: ${JSON.stringify(errors)}; interface: ${JSON.stringify(await page.evaluate(() => ({ language: document.querySelector("main")?.lang, preference: localStorage.getItem("tuveloz-language"), alerts: [...document.querySelectorAll('[role="alert"]')].map(element => element.textContent) })))}`);
       throw error;
-    } finally { await pendingGet?.abort().catch(() => {}); await pendingPost?.abort().catch(() => {}); await page.close(); }
+    } finally {
+      await pendingGet?.abort().catch(() => {}); await pendingFreshGet?.abort().catch(() => {});
+      await pendingPost?.abort().catch(() => {}); await page.close();
+    }
   }
 }
 
@@ -487,7 +503,10 @@ try {
                   "a confirmed write keeps its receipt while the failed read offers a read-only retry");
               } else assert.equal(await page.locator('[role="alert"]').count(), 0, "confirmed write must not become a failure");
               if (kind === "privacy" || outcome === "refresh-fails") assert.equal(await page.locator(field[kind]).inputValue(), "");
-              if (kind === "agreements") assert.equal(await page.locator(field[kind]).count(), 0);
+              if (kind === "agreements") {
+                await page.locator(field[kind]).waitFor({ state: "detached" });
+                assert.equal(await page.locator(field[kind]).count(), 0);
+              }
             }
             assert.equal(posts.length, 1, "one submission only");
             assert.deepEqual(errors, []);
