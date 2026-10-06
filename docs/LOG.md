@@ -11,6 +11,23 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-06 - Make invoice receipt browser verification deterministic
+
+PR #290's production check exposed an ambiguous status locator while the
+confirmed invoice receipt and two loading notices coexisted. The fixture now
+holds the saved-copy refresh to reproduce that exact transition. The old
+locator failed all four English/Spanish Chromium/WebKit cases. The corrected
+locator requires the exact invoice success notice, then a settled refresh and
+removal of the signing form. It retains exact receipt/document checks, blocks
+duplicate signature submission, confirms one write and two reads, and requires
+the confirmation to remain without an error after the refresh.
+
+All 68 repair-record browser cases passed after correction. Targeted ESLint,
+JavaScript syntax and diff checks passed. Only the browser test and this log
+changed; application code, policies, account settings and launch locks did not.
+Evidence is retained privately in task outputs/repair-receipt-status-20261006.
+This work does not complete the separate tax process or launch reviews.
+
 ## 2026-10-05 - Patch the source-map dependency blocking verification
 
 The required dependency audit for draft PR #290 identified

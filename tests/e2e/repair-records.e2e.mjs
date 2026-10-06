@@ -117,19 +117,43 @@ try {
           } finally { await context.close(); }
         }
         await run("exact-invoice-signature-one-request", async api => {
-          const { page } = api; let pending;
-          api.handler = (route, request) => request.method() === "GET" ? route.fulfill(json(api.state)) : new Promise(resolve => { pending = () => {
-            const payload = api.posts[0], record = api.state.jobs[0].invoice;
-            Object.assign(record, { customerSignatureAt: instant, customerSignatureName: payload.acceptedByName, customerCopyDeliveredAt: instant, providerCopyRetainedAt: instant, customerCopyDeliveryMethod: "secure-account-copy", customerCopyDeliveredTo: api.state.email });
-            resolve(route.fulfill(json({ ...api.state, ok: true, action: "sign-invoice", requestId: "job-a", recordId: record.id, documentHash: record.documentHash, status: "signed-and-delivered", paymentReleased: false })));
-          }; });
+          const { page } = api; let pending, releaseRefresh;
+          const refreshReady = new Promise(resolve => { releaseRefresh = resolve; });
+          api.handler = async (route, request) => {
+            if (request.method() === "GET") {
+              if (api.gets > 1) await refreshReady;
+              return route.fulfill(json(api.state));
+            }
+            return new Promise(resolve => { pending = () => {
+              const payload = api.posts[0], record = api.state.jobs[0].invoice;
+              Object.assign(record, { customerSignatureAt: instant, customerSignatureName: payload.acceptedByName, customerCopyDeliveredAt: instant, providerCopyRetainedAt: instant, customerCopyDeliveryMethod: "secure-account-copy", customerCopyDeliveredTo: api.state.email });
+              resolve(route.fulfill(json({ ...api.state, ok: true, action: "sign-invoice", requestId: "job-a", recordId: record.id, documentHash: record.documentHash, status: "signed-and-delivered", paymentReleased: false })));
+            }; });
+          };
           await api.goto(); await form(page, "sign-invoice").waitFor();
           const signature = await signFields(page); await signature.locator('button[type="submit"]').click();
           assert.equal(await signature.locator('button[type="submit"]').isDisabled(), true);
           await signature.locator('button[type="submit"]').evaluate(button => button.click());
           assert.equal(api.posts.length, 1);
           assert.deepEqual(api.posts[0], { action: "sign-invoice", requestId: "job-a", expectedQuoteId: "job-a-quote", expectedScopeVersion: 1, expectedRecordId: "invoice-a", expectedDocumentHash: api.state.jobs[0].invoice.documentHash, acceptedByName: "SYNTHETIC SIGNER", signatureAccepted: true, providerCertified: false, copyReceived: false });
-          pending(); await page.getByRole("status").waitFor(); await form(page, "sign-invoice").waitFor({ state: "detached" });
+          try {
+            pending();
+            // Hold the fresh read so the receipt and loading statuses coexist.
+            await page.getByText(spanish ? "Cargando sus documentos guardados…" : "Loading your saved records…", { exact: true }).waitFor();
+            const success = page.getByRole("status").and(page.getByText(spanish
+              ? "Su acción sobre la factura quedó registrada. La finalización del trabajo es independiente; no se liberó ningún pago."
+              : "Your invoice action was recorded. Job completion is separate; no payment was released.", { exact: true }));
+            await success.waitFor();
+            assert.equal(await page.getByRole("status").count(), 3);
+            assert.equal(await signature.locator('button[type="submit"]').isDisabled(), true);
+            releaseRefresh();
+            await page.locator('.repair-feedback[aria-busy="false"]').waitFor();
+            await form(page, "sign-invoice").waitFor({ state: "detached" });
+            assert.equal(await success.isVisible(), true, "confirmed receipt remains after the saved-copy refresh");
+            assert.equal(api.posts.length, 1, "receipt refresh must not resubmit the signature");
+            assert.equal(api.gets, 2, "one initial read and one fresh saved-copy read");
+            assert.equal(await page.getByRole("alert").count(), 0);
+          } finally { releaseRefresh(); }
           if (outputDir && !spanish && engine === chromium) await page.screenshot({ path: resolve(outputDir, "signed-invoice-320px.png"), fullPage: true });
         });
         await run("job-switch-clears-signer-and-consent", async api => {
