@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-05
+- **Last reviewed:** 2026-10-06
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,43 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-06 - Preserve launch-email spacing after pauses and delivery outages
+
+During PR #293 verification, the required security audit identified the newly
+listed Sharp/librsvg advisory
+[GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
+Updated only the existing Sharp override from 0.35.4 to the maintainer's 0.35.5
+patch and its platform packages; no Cloudflare tooling downgrade or forced
+audit fix. Native loading reports librsvg 2.63.2. The security check now reports
+zero vulnerabilities, and the full build/all 1,080 tests and typecheck passed
+again with the patched dependency. The release still requires GitHub checks;
+no failed security gate was bypassed and no production deployment occurred
+while it was failing.
+
+Reproduced three overdue launch emails across three simulated cron ticks in
+30 minutes. Queue selection and outbox delivery now share a receipt-based
+spacing check: the second email waits at least seven days after service
+acceptance of the welcome, and the third waits at least 23 days after acceptance
+of the second. Nominal consent-based due dates still apply. Pending, failed,
+missing, malformed, legacy and superseded receipts cannot unlock a follow-up.
+This uses existing outbox history without changing consent, cursors or schema.
+
+The check runs before batch limits and again before transport. Already queued
+follow-ups therefore wait without consuming attempts or blocking security mail.
+The receipt is email-service acceptance, not proof of inbox delivery. Corrected
+setup guidance so a registered-agent address is not automatically treated as a
+qualifying commercial-email address; linked the FTC guidance in DEPLOYMENT.md.
+
+Validation: the new regression failed against the previous source (three sends
+instead of one) and passed after the repair. Nine added runtime scenarios cover
+normal and delayed 0/7/30-day timing, exact boundaries, outages, old queued mail,
+invalid receipts, batch fairness, a pre-transport recheck and renewed consent/
+opt-out. The focused suite passed 42 tests. Full build/all 1,080 tests, the
+repository typecheck and lint passed (zero errors, one pre-existing language
+navigation warning). All email transports in the new scenarios are local
+fixtures. No live email, subscriber write, configuration change or activation.
+Publication is separate; existing postal, booking and payment controls remain.
 
 ## 2026-10-06 - Launch-update queue reliability and consent isolation
 

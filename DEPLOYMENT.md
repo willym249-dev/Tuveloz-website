@@ -74,8 +74,15 @@ Update the non-secret placeholders under `vars` in `wrangler.jsonc`:
   US commercial email must identify the sender by physical address, so this is
   required before the first marketing send. While it is empty the launch-update
   sequence sends nothing at all and logs the reason, rather than mailing
-  without it. Prefer a PO box or registered agent address over a home address:
-  it is printed in every marketing email and cannot be recalled once sent.
+  without it. Use a current street address, a USPS-registered PO box, or a
+  private mailbox registered with a CMRA operating under USPS regulations.
+  Confirm that Tuveloz is authorized to receive mail there; a registered-agent
+  address is not automatically suitable. The address is visible to recipients.
+  See the [FTC commercial-email guidance](https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business).
+  Before enabling, review current consent and the outbox. Follow-ups wait at
+  least 7 days after service acceptance of the welcome, then at least 23 days
+  after acceptance of the second email. Missing or failed acceptance does not
+  start that wait. Do not reset original consent or mark unsent steps as sent.
 
 Save a random authentication secret of at least 32 characters and the Resend
 key as Cloudflare secrets:

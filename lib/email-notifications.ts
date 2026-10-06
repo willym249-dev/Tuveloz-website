@@ -18,6 +18,7 @@ import { CUSTOMER_JOB_POSTING_PAUSED } from "./launch-status";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 import { resendEmailsUrl } from "./resend-endpoint";
 import { LAUNCH_UPDATE_SEQUENCE, launchUpdateEventKey, launchUpdateEventPrefix } from "./launch-updates";
+import { launchUpdateStepDueSql } from "./launch-update-schedule";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -143,14 +144,17 @@ async function raiseDeliveryExhaustedIncident(eventKey: string, error: unknown) 
  */
 function currentMarketingConsent() {
   if (!runtimeEnv().LAUNCH_UPDATES_POSTAL_ADDRESS?.trim()) return sql`0`;
+  const now = new Date();
   return exists(getDb().select({ email: launchUpdateSubscribers.email })
     .from(launchUpdateSubscribers).where(and(
       eq(launchUpdateSubscribers.email, emailNotificationOutbox.recipientEmail),
       eq(launchUpdateSubscribers.unsubscribedAt, ""),
       sql`length(trim(${launchUpdateSubscribers.consentText})) > 0`,
       sql`length(trim(${launchUpdateSubscribers.consentVersion})) > 0`,
-      or(...LAUNCH_UPDATE_SEQUENCE.map(step => eq(emailNotificationOutbox.eventKey,
-        sql`${launchUpdateEventPrefix(step.step)} || ${launchUpdateSubscribers.consentedAt} || ':' || ${launchUpdateSubscribers.email}`,
+      or(...LAUNCH_UPDATE_SEQUENCE.map(step => and(
+        eq(emailNotificationOutbox.eventKey,
+          sql`${launchUpdateEventPrefix(step.step)} || ${launchUpdateSubscribers.consentedAt} || ':' || ${launchUpdateSubscribers.email}`),
+        launchUpdateStepDueSql(step, now),
       ))),
     )));
 }

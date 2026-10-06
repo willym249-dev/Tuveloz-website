@@ -3,6 +3,7 @@ import { and, asc, eq, or, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { launchUpdateSubscribers } from "../db/schema";
 import { sendLaunchUpdateEmail } from "./email-notifications";
+import { launchUpdateStepDueSql } from "./launch-update-schedule";
 import {
   LAUNCH_UPDATE_SEQUENCE,
   marketingFooter,
@@ -27,9 +28,9 @@ export function unsubscribeUrl(token: string) {
  * Queue every sequence step that has come due. Called from the scheduled
  * worker alongside the other periodic tasks.
  *
- * One step per subscriber per run: if someone has been waiting on two steps,
- * they get the earlier one now and the later one on the next tick rather than
- * two emails landing together.
+ * One step per subscriber per run. Follow-ups also wait for the previous
+ * message's confirmed service acceptance plus the intended interval, so an
+ * old signup cannot receive its overdue sequence on consecutive cron ticks.
  *
  * The postal address required on commercial email is read from configuration.
  * When it is unset nothing is sent at all — an email that cannot identify its
@@ -56,7 +57,7 @@ export async function processDueLaunchUpdates(limit = 50) {
       sql`length(trim(${launchUpdateSubscribers.consentVersion})) > 0`,
       or(...LAUNCH_UPDATE_SEQUENCE.map((step, index) => and(
         eq(launchUpdateSubscribers.lastStepSent, index ? LAUNCH_UPDATE_SEQUENCE[index - 1].step : -1),
-        sql`julianday(${launchUpdateSubscribers.consentedAt}) <= julianday(${now.toISOString()}) - ${step.afterDays}`,
+        launchUpdateStepDueSql(step, now),
       ))),
     ))
     .orderBy(asc(launchUpdateSubscribers.consentedAt), asc(launchUpdateSubscribers.email))

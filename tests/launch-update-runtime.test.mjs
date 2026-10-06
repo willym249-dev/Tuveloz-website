@@ -16,7 +16,11 @@ test("launch updates survive interruptions and respect current consent", async t
   const database = new DatabaseSync(":memory:");
   const originalFetch = globalThis.fetch, originalError = console.error;
   const outbound = [], errors = [];
+  const initialTime = Date.parse("2026-10-06T12:00:00.000Z");
+  t.mock.timers.enable({ apis: ["Date"], now: initialTime });
+  const advance = days => t.mock.timers.setTime(Date.now() + days * 86_400_000);
   const state = { db: null, failInsertFor: "", failCursor: false, beforeCursor: null,
+    afterCandidateSelection: null,
     failTransport: false, missingReceipt: false, env: {
       SITE_URL: "https://tuveloz.invalid", LAUNCH_UPDATES_POSTAL_ADDRESS: "SYNTHETIC MAILBOX - LOCAL TEST ONLY",
       RESEND_API_KEY: "synthetic-no-credential", RESEND_FROM_EMAIL: "Tuveloz <sender@example.invalid>",
@@ -35,10 +39,22 @@ test("launch updates survive interruptions and respect current consent", async t
   };
   const cursor = email => database.prepare("SELECT last_step_sent FROM launch_update_subscribers WHERE email=?").get(email).last_step_sent;
   const mail = () => database.prepare("SELECT * FROM email_notification_outbox ORDER BY created_at,id").all();
+  const seedStep = (email, step, changes = {}) => {
+    const consent = database.prepare("SELECT consented_at FROM launch_update_subscribers WHERE email=?").get(email).consented_at;
+    const values = { id: crypto.randomUUID(), event_key: `launch-updates:v2:${step}:${consent}:${email}`,
+      recipient_email: email, subject: `Synthetic step ${step}`, text_body: "LOCAL TEST ONLY",
+      status: "pending", sent_at: "", created_at: ago(60), ...changes };
+    const columns = Object.keys(values);
+    database.prepare(`INSERT INTO email_notification_outbox (${columns.join(",")}) VALUES (${columns.map(() => "?").join(",")})`)
+      .run(...Object.values(values));
+    return values.id;
+  };
   const reset = () => {
+    t.mock.timers.setTime(initialTime);
     database.exec("DELETE FROM email_notification_outbox; DELETE FROM launch_update_subscribers;");
     outbound.length = 0; errors.length = 0;
     state.failInsertFor = ""; state.failCursor = false; state.beforeCursor = null;
+    state.afterCandidateSelection = null;
     state.failTransport = false; state.missingReceipt = false;
     state.env.LAUNCH_UPDATES_POSTAL_ADDRESS = "SYNTHETIC MAILBOX - LOCAL TEST ONLY";
   };
@@ -67,8 +83,12 @@ test("launch updates survive interruptions and respect current consent", async t
       database.exec("PRAGMA short_column_names=OFF; PRAGMA full_column_names=ON;");
       try {
         const statement = database.prepare(query);
-        return { rows: method === "get" ? Object.values(statement.get(...params) ?? {})
-          : statement.all(...params).map(row => Object.values(row)) };
+        const rows = method === "get" ? Object.values(statement.get(...params) ?? {})
+          : statement.all(...params).map(row => Object.values(row));
+        if (state.afterCandidateSelection && query.startsWith('select "event_key" from "email_notification_outbox"')) {
+          const change = state.afterCandidateSelection; state.afterCandidateSelection = null; change();
+        }
+        return { rows };
       } finally { database.exec("PRAGMA short_column_names=ON; PRAGMA full_column_names=OFF;"); }
     });
     const bundle = join(scratch, "launch.cjs");
@@ -83,6 +103,126 @@ test("launch updates survive interruptions and respect current consent", async t
           ? "export const env = globalThis.__launchUpdateRuntime.env;" : "export function getDb() { return globalThis.__launchUpdateRuntime.db; }" }));
       } }] });
     const api = createRequire(import.meta.url)(bundle);
+
+    await t.test("a long-disabled list cannot catch up on consecutive cron ticks", async () => {
+      reset(); const email = subscriber("delayed-activation", 60);
+      const consent = database.prepare("SELECT consented_at FROM launch_update_subscribers WHERE email=?").get(email).consented_at;
+      await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      assert.equal(outbound.length, 1);
+      advance(15 / 1440);
+      await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      advance(15 / 1440);
+      await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      assert.equal(outbound.length, 1, "overdue follow-ups must not burst after activation");
+      assert.equal(cursor(email), 0); assert.equal(mail().length, 1);
+      assert.equal(database.prepare("SELECT consented_at FROM launch_update_subscribers WHERE email=?").get(email).consented_at, consent);
+    });
+
+    for (const initialAge of [0, 60]) {
+      await t.test(`normal spacing survives an initial delay of ${initialAge} days`, async () => {
+        reset(); const email = subscriber(`spacing-${initialAge}`, initialAge);
+        const tick = async () => { await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20); };
+        await tick(); assert.equal(outbound.length, 1);
+        t.mock.timers.setTime(initialTime + 7 * 86_400_000 - 1);
+        await tick(); assert.equal(outbound.length, 1, "wait the full seven days");
+        t.mock.timers.setTime(initialTime + 7 * 86_400_000);
+        await tick(); assert.equal(outbound.length, 2); assert.equal(cursor(email), 1);
+        t.mock.timers.setTime(initialTime + 30 * 86_400_000 - 1);
+        await tick(); assert.equal(outbound.length, 2, "wait the full 23 days after the second email");
+        t.mock.timers.setTime(initialTime + 30 * 86_400_000);
+        await tick(); assert.equal(outbound.length, 3); assert.equal(cursor(email), 2);
+        advance(100); await tick(); assert.equal(outbound.length, 3);
+      });
+    }
+    await t.test("a prolonged transport outage starts the wait only after confirmed acceptance", async () => {
+      reset(); const email = subscriber("transport-delay", 60); state.failTransport = true;
+      await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      advance(40); await api.processDueLaunchUpdates();
+      assert.equal(cursor(email), 0); assert.equal(mail().length, 1);
+      state.failTransport = false; await api.flushPendingEmailNotifications(20);
+      const acceptedAt = Date.now();
+      await api.processDueLaunchUpdates(); assert.equal(mail().length, 1);
+      t.mock.timers.setTime(acceptedAt + 7 * 86_400_000);
+      await api.processDueLaunchUpdates(); state.missingReceipt = true;
+      await api.flushPendingEmailNotifications(20);
+      advance(40); await api.processDueLaunchUpdates();
+      assert.equal(cursor(email), 1); assert.equal(mail().length, 2, "unconfirmed second email cannot unlock the third");
+      state.missingReceipt = false; await api.flushPendingEmailNotifications(20);
+      await api.processDueLaunchUpdates(); assert.equal(mail().length, 2);
+      advance(23); await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      assert.equal(mail().length, 3); assert.ok(mail().every(row => row.status === "sent"));
+    });
+    await t.test("already queued follow-ups wait for acceptance and cannot block security mail", async () => {
+      reset(); const email = subscriber("queued-backlog", 60, { last_step_sent: 2 });
+      seedStep(email, 0); seedStep(email, 1); seedStep(email, 2);
+      database.prepare("INSERT INTO email_notification_outbox (id,event_key,recipient_email,subject,text_body,created_at) VALUES (?,?,?,?,?,?)")
+        .run("security", "security:account_created:spacing", "owner@example.invalid", "Account alert", "LOCAL TEST ONLY", ago(1));
+      await api.flushPendingEmailNotifications(20);
+      assert.deepEqual(outbound.map(row => row.body.subject), ["Synthetic step 0", "Account alert"]);
+      assert.ok(mail().filter(row => row.status !== "sent").every(row => row.attempts === 0));
+      advance(7); await api.flushPendingEmailNotifications(1);
+      assert.equal(outbound.at(-1).body.subject, "Synthetic step 1");
+      advance(23); await api.flushPendingEmailNotifications(1);
+      assert.equal(outbound.at(-1).body.subject, "Synthetic step 2");
+      assert.ok(mail().every(row => row.status === "sent"));
+    });
+    await t.test("missing, invalid, failed, legacy or superseded receipts never unlock follow-ups", async () => {
+      for (const variant of ["missing", "blank", "invalid", "before-consent", "future", "failed", "legacy", "old-consent", "wrong-recipient"]) {
+        reset(); const email = subscriber(`receipt-${variant}`, 60, { last_step_sent: 0 });
+        const changes = { status: "sent", sent_at: ago(40) };
+        if (variant === "blank") changes.sent_at = "";
+        if (variant === "invalid") changes.sent_at = "invalid";
+        if (variant === "before-consent") changes.sent_at = ago(90);
+        if (variant === "future") changes.sent_at = ago(-1);
+        if (variant === "failed") changes.status = "failed";
+        if (variant === "legacy") changes.event_key = `launch-updates:0:${email}`;
+        if (variant === "old-consent") changes.event_key = `launch-updates:v2:0:${ago(90)}:${email}`;
+        if (variant === "wrong-recipient") changes.recipient_email = "another@example.invalid";
+        if (variant !== "missing") seedStep(email, 0, changes);
+        const priorCount = mail().length;
+        await api.processDueLaunchUpdates();
+        assert.equal(mail().length, priorCount, variant); assert.equal(cursor(email), 0, variant);
+        const pendingId = seedStep(email, 1);
+        state.env.RESEND_API_KEY = ""; // No successful prior acceptance can be created by this flush.
+        await api.flushPendingEmailNotifications(20);
+        state.env.RESEND_API_KEY = "synthetic-no-credential";
+        assert.equal(outbound.length, 0, variant);
+        const pending = mail().find(row => row.id === pendingId);
+        assert.equal(pending.status, "pending", variant); assert.equal(pending.attempts, 0, variant);
+      }
+    });
+    await t.test("old subscribers waiting on spacing do not starve a new welcome", async () => {
+      reset(); const waiting = subscriber("waiting-receipt", 60, { last_step_sent: 0 });
+      seedStep(waiting, 0, { status: "sent", sent_at: ago(1) });
+      const due = subscriber("fresh-welcome", 1);
+      await api.processDueLaunchUpdates(1); await api.flushPendingEmailNotifications(1);
+      assert.deepEqual(outbound.map(row => row.body.to[0]), [due]);
+      assert.equal(cursor(waiting), 0);
+    });
+    await t.test("spacing is rechecked after the retry batch has been selected", async () => {
+      reset(); const email = subscriber("recheck", 60, { last_step_sent: 1 });
+      const receiptId = seedStep(email, 0, { status: "sent", sent_at: ago(10) });
+      const followupId = seedStep(email, 1);
+      let changed = false;
+      state.afterCandidateSelection = () => {
+        changed = true;
+        database.prepare("UPDATE email_notification_outbox SET sent_at=? WHERE id=?").run(ago(0), receiptId);
+      };
+      await api.flushPendingEmailNotifications(20);
+      assert.ok(changed, "fixture must change the receipt after batch selection");
+      assert.equal(outbound.length, 0);
+      assert.equal(mail().find(row => row.id === followupId).attempts, 0);
+    });
+    await t.test("fresh consent and opt-out keep their boundaries for delayed follow-ups", async () => {
+      reset(); const email = subscriber("renewed-spacing", 90, { last_step_sent: 1 });
+      seedStep(email, 0, { status: "sent", sent_at: ago(60) }); seedStep(email, 1);
+      database.prepare("UPDATE launch_update_subscribers SET consented_at=?,last_step_sent=-1 WHERE email=?").run(ago(1), email);
+      await api.processDueLaunchUpdates(); await api.flushPendingEmailNotifications(20);
+      assert.equal(outbound.length, 1); assert.match(outbound[0].body.subject, /launch list/);
+      advance(7); await api.processDueLaunchUpdates();
+      database.prepare("UPDATE launch_update_subscribers SET unsubscribed_at=? WHERE email=?").run(ago(0), email);
+      await api.flushPendingEmailNotifications(20); assert.equal(outbound.length, 1);
+    });
 
     await t.test("missing postal address keeps the entire sequence inactive", async () => {
       reset(); const email = subscriber("no-address"); state.env.LAUNCH_UPDATES_POSTAL_ADDRESS = "";
@@ -209,6 +349,7 @@ test("launch updates survive interruptions and respect current consent", async t
       assert.equal(outbound.length, count);
     });
   } finally {
+    t.mock.timers.reset();
     globalThis.fetch = originalFetch; console.error = originalError;
     delete globalThis.__launchUpdateRuntime; database.close();
     assert.equal(dirname(scratch), resolve(tmpdir())); rmSync(scratch, { recursive: true, force: true });
