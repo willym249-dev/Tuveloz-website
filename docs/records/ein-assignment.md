@@ -1,8 +1,8 @@
 # EIN assignment
 
-- **Status:** blank — awaiting the owner
+- **Status:** public reference only — private company records are maintained separately
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-08-16
+- **Last reviewed:** 2026-10-05 (tax-workflow wording review)
 
 The federal tax identity the business files, pays, and reports under.
 
@@ -19,18 +19,45 @@ The federal tax identity the business files, pays, and reports under.
 
 ## What it covers
 
-Filing and paying federal tax, and the information reporting the marketplace
-will have to do once money moves: 1099 issuance to providers, and the W-9
-collection that precedes it. The requirement is not optional and does not scale
-with size.
+The EIN identifies the business for applicable federal tax filings and related
+records. Separate review must determine the marketplace's information-reporting
+obligations, responsible filer, applicable forms and required collection process
+before paid launch. Possessing an EIN does not resolve those questions or prove
+that tax-information collection and filing are configured.
 
 ## What depends on it
 
 - `entity_authority_domain_and_code` — the business-records part
 - `cpa_tax_mor_and_transaction_map` — the CPA cannot approve who reports what
   without the entity's tax identity settled
-- Provider onboarding: W-9 collection is already visible in the signup flow, and
-  1099 issuance follows from it
+- Provider onboarding explains that required tax and payout setup comes before
+  receiving payments. The initial application does not collect a W-9. This
+  explanation is not evidence of configured collection, certification or filing.
+
+## Tax setup before paid launch
+
+The Provider Agreement and signup explanation must describe the same timing in
+English and Spanish. Neither should imply that an initial application already
+collects tax forms or that filing happens automatically.
+
+`lib/stripe-provider.ts` creates an Accounts v2 recipient account with an Express
+dashboard and requests the `stripe_transfers` capability. That payment setup
+alone does not establish a tax-reporting process. Stripe's
+[setup guide](https://docs.stripe.com/connect/get-started-tax-reporting) describes
+separate decisions about form type, calculation, filer, payer details and
+delivery; its [Accounts v2 guide](https://docs.stripe.com/connect/accounts-v2)
+also distinguishes configurations from capabilities and documents compatibility
+with v1 endpoints for features not directly supported by v2.
+
+Before paid launch, the tax review must establish the responsible filer and
+applicable forms, secure collection and certification method, reporting totals,
+electronic-delivery consent or paper delivery, filing and corrections, and any
+costs. The [IRS third-party-filer FAQ](https://www.irs.gov/newsroom/form-1099-k-faqs-third-party-filers-of-form-1099-k)
+explains that reporting depends on the payment arrangement. These references
+are not a determination of Tuveloz's filing obligations, and passing sandbox
+payments does not close the tax-review gate. Do not collect tax identifiers
+through chat or the provider-document upload, or enable a paid service without
+the owner's approval.
 
 ## Reminder
 

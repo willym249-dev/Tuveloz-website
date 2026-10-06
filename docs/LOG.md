@@ -11,6 +11,58 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-05 - Patch the source-map dependency blocking verification
+
+The required dependency audit for draft PR #290 identified
+`GHSA-68fv-2mgg-jv7q` in the existing `source-map-js` 1.2.1 dependency.
+Update only that lockfile entry to the upstream 1.2.2 security release,
+within the ranges already required by PostCSS and Tailwind. Package manifests,
+other resolved dependencies and the reviewed local `braces` patch are unchanged.
+The fix addresses denial of service from malicious indexed source maps; it
+does not change Tuveloz's policy text, payment behavior or launch settings.
+
+Validation after the patch: dependency audit reports zero vulnerabilities,
+all six existing dependency-patch checks pass, production build and all 1,056
+tests pass, TypeScript passes, and lint reports only the existing navigation
+warning. The draft still requires passing GitHub checks and approval of the
+exact Provider Agreement revision before publication.
+
+Sources: [upstream security release](https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2)
+and [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+
+## 2026-10-05 - Align provider tax setup with the initial application
+
+The Provider Agreement incorrectly required a W-9 at signup, while the
+application has no tax-form upload and says tax details come later. Update
+section 12 and its Spanish translation to require accurate tax information
+and required setup before receiving payments. Explain in both signup languages
+that no tax-form upload is needed with this application. Keep the provider's
+own tax responsibility and Tuveloz's applicable reporting obligations, without
+selecting a tax form or claiming that Stripe automatically files it.
+
+Prepare Provider Agreement version `2026-10-05.1` with a distinct release ID,
+matching English/Spanish hashes and current consent fixtures. Preserve the
+earlier October 5 fixtures and verify that old consent cannot stand in for
+acceptance of this revision; all other policy documents remain byte-compatible.
+No Stripe capability, collection workflow, application field, payment behavior,
+fee, database schema or launch setting changes. Correct the public EIN record's
+unsupported claim that W-9 collection was already built; company originals
+remain private and the tax review remains open.
+
+Validation: production build and all 1,056 tests pass, including the new
+historical-acceptance case. TypeScript passes; lint has no errors and one
+existing navigation warning. Local 390px browser checks cover the actual
+signup checklist and agreement in both languages, English/Spanish switches
+in both directions, no horizontal overflow and no console errors. Used only
+a reserved example.com address and advanced to the checklist; no application,
+email, tax information or payment was submitted. This is a prepared candidate;
+approval and publication of the exact revision remain pending.
+
+The local preview used an unmigrated D1 database, whose background email-outbox
+query reported a missing table; no message was sent. The browser checks above
+verify rendered copy and navigation only. Full automated tests passed
+separately; the preview is not a backend or email-delivery rehearsal.
+
 ## 2026-10-05 - Reconcile provider document requirements in both policy languages
 
 Terms section 4 and Provider Agreement section 9 incorrectly promised that

@@ -221,8 +221,10 @@ export default function ProviderAgreementPage() {
       <section>
         <h2>12. Taxes</h2>
         <p>
-          You&apos;ll provide a completed W-9 when you sign up, and Tuveloz will
-          issue a 1099 for applicable annual earnings.
+          Provide accurate tax information and complete the required tax and
+          payout setup before receiving payments. You remain responsible for
+          taxes on your earnings. Tuveloz will arrange any information reporting
+          and tax forms it is legally required to provide.
         </p>
       </section>
 
