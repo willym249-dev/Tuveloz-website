@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-05 - Patch the source-map dependency blocking verification
+
+The required dependency audit for draft PR #290 identified
+`GHSA-68fv-2mgg-jv7q` in the existing `source-map-js` 1.2.1 dependency.
+Update only that lockfile entry to the upstream 1.2.2 security release,
+within the ranges already required by PostCSS and Tailwind. Package manifests,
+other resolved dependencies and the reviewed local `braces` patch are unchanged.
+The fix addresses denial of service from malicious indexed source maps; it
+does not change Tuveloz's policy text, payment behavior or launch settings.
+
+Validation after the patch: dependency audit reports zero vulnerabilities,
+all six existing dependency-patch checks pass, production build and all 1,056
+tests pass, TypeScript passes, and lint reports only the existing navigation
+warning. The draft still requires passing GitHub checks and approval of the
+exact Provider Agreement revision before publication.
+
+Sources: [upstream security release](https://github.com/7rulnik/source-map-js/releases/tag/v1.2.2)
+and [reviewed advisory](https://github.com/advisories/GHSA-68fv-2mgg-jv7q).
+
 ## 2026-10-05 - Align provider tax setup with the initial application
 
 The Provider Agreement incorrectly required a W-9 at signup, while the
