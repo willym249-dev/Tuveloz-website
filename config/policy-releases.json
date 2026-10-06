@@ -17,10 +17,10 @@
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-10-06T00:00:39.000Z",
-    "releaseId": "provider-agreement-2026-10-05",
-    "reviewBodyHash": "81e59a0b7e6cb4e45da60e741301b18163f6d02c5876438c84dc6ad69d2aa3fa",
-    "canonicalBodyHash": "81e59a0b7e6cb4e45da60e741301b18163f6d02c5876438c84dc6ad69d2aa3fa",
+    "effectiveAt": "2026-10-06T01:20:18.507Z",
+    "releaseId": "provider-agreement-tax-setup-2026-10-05",
+    "reviewBodyHash": "a13c9775102f04d19ef3c191284b2ce2fddb9fad3a4381ae38c5001a96e6edaa",
+    "canonicalBodyHash": "a13c9775102f04d19ef3c191284b2ce2fddb9fad3a4381ae38c5001a96e6edaa",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {

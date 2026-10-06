@@ -1211,8 +1211,8 @@ export function ProviderSignupForm() {
             </summary>
             <p className="hint">
               {providerFormIsSpanish
-                ? "Antes de su primer pago, completará sus datos fiscales y de cobro, incluido el Formulario W-9 del IRS requerido. Tuveloz emite un 1099 por las ganancias anuales aplicables."
-                : "You'll set up tax and payout details before your first payout, including the required IRS Form W-9. Tuveloz issues a 1099 for applicable annual earnings."}
+                ? "No necesita subir formularios fiscales con esta solicitud. Antes de recibir pagos, completará la configuración fiscal y de cobro requerida."
+                : "You don't need to upload tax forms with this application. Before you can receive payments, you'll complete the required tax and payout setup."}
             </p>
           </details>
           {hasVisibleLegalRequirements && (
