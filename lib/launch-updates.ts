@@ -109,6 +109,8 @@ export function launchUpdateEventKey(step: number, consentedAt: string, email: s
   return `${launchUpdateEventPrefix(step)}${consentedAt}:${email}`;
 }
 
+// Nominal consent-based step selection. Production queueing and transport also
+// enforce receipt-based spacing through launchUpdateStepDueSql.
 export function nextDueStep(options: {
   lastStepSent: number;
   consentedAt: string;

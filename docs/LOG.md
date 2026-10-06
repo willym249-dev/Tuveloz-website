@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-05
+- **Last reviewed:** 2026-10-06
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,32 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-06 - Preserve launch-email spacing after pauses and delivery outages
+
+Reproduced three overdue launch emails across three simulated cron ticks in
+30 minutes. Queue selection and outbox delivery now share a receipt-based
+spacing check: the second email waits at least seven days after service
+acceptance of the welcome, and the third waits at least 23 days after acceptance
+of the second. Nominal consent-based due dates still apply. Pending, failed,
+missing, malformed, legacy and superseded receipts cannot unlock a follow-up.
+This uses existing outbox history without changing consent, cursors or schema.
+
+The check runs before batch limits and again before transport. Already queued
+follow-ups therefore wait without consuming attempts or blocking security mail.
+The receipt is email-service acceptance, not proof of inbox delivery. Corrected
+setup guidance so a registered-agent address is not automatically treated as a
+qualifying commercial-email address; linked the FTC guidance in DEPLOYMENT.md.
+
+Validation: the new regression failed against the previous source (three sends
+instead of one) and passed after the repair. Nine added runtime scenarios cover
+normal and delayed 0/7/30-day timing, exact boundaries, outages, old queued mail,
+invalid receipts, batch fairness, a pre-transport recheck and renewed consent/
+opt-out. The focused suite passed 42 tests. Full build/all 1,080 tests, the
+repository typecheck and lint passed (zero errors, one pre-existing language
+navigation warning). All email transports in the new scenarios are local
+fixtures. No live email, subscriber write, configuration change or activation.
+Publication is separate; existing postal, booking and payment controls remain.
 
 ## 2026-10-06 - Launch-update queue reliability and consent isolation
 

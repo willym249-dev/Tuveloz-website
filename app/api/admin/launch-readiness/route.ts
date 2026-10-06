@@ -580,7 +580,7 @@ async function readinessPayload() {
       ? "A postal address is configured, so launch-update email can send."
       : "LAUNCH_UPDATES_POSTAL_ADDRESS is unset, so every launch-update email is suppressed and subscribers who asked to hear about launch receive nothing.",
     responsibleRole: "TUVELOZ owner + deployment operator",
-    nextAction: "Set LAUNCH_UPDATES_POSTAL_ADDRESS to the physical mailing address printed in launch-update email; a registered-agent address is acceptable.",
+    nextAction: "Confirm a valid mailing address Tuveloz is authorized to use: a current street address, USPS-registered PO box, or private mailbox registered with a qualifying CMRA. Review consent and email timing before setting LAUNCH_UPDATES_POSTAL_ADDRESS; recipients will see this address.",
     actionHref: "#next-steps",
   };
   const jobBlockers = [
