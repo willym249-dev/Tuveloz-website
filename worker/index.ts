@@ -147,10 +147,10 @@ const worker = {
       scheduledTask("superseded Stripe Identity session cleanup", () => (
         cleanupSupersededStripeIdentitySessions(5)
       )),
-      // Queue due launch updates before the flush, so a step that comes due
-      // this tick goes out on this tick rather than waiting fifteen minutes.
-      scheduledTask("launch update sequence", () => processDueLaunchUpdates(50)),
       scheduledTask("email notification delivery", async () => {
+        // Actually await queueing before the flush. Sibling scheduled tasks
+        // run concurrently, so listing one first does not establish ordering.
+        await scheduledTask("launch update sequence", () => processDueLaunchUpdates(50));
         // Recover a report saved just before an interrupted enqueue, then let
         // the existing outbox enforce quarantine, receipts and retry limits.
         await scheduledTask("incident owner alert recovery", () => recoverIncidentOwnerAlerts());

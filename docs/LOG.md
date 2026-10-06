@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-06 - Launch-update queue reliability and consent isolation
+
+Reproduced lost sequence steps after a failed outbox save, new welcomes blocked
+by older not-yet-due subscribers, stale cursor writes, and old pending mail
+revived by a later signup. Queueing now saves a unique consent/step message
+before conditionally advancing the same subscriber snapshot. Due filtering
+happens before the batch limit. Retry selection and final delivery both require
+current consent; legacy unbound messages remain preserved but suppressed.
+The Worker now awaits queueing before flushing. Long delivery keys are hashed
+to fit Resend's 256-character limit; existing valid keys remain unchanged.
+
+Simplified the English and Spanish sequence wording without changing opt-in
+wording, the 0/7/30-day schedule, or the customer fee/provider-price rules.
+Build and all 1,071 tests passed, including 14 new local runtime scenarios covering
+database interruptions, concurrency, renewed consent, opt-out, retry receipts,
+batch starvation and long keys. TypeScript passed. Lint had no errors and the
+existing language-navigation warning. Test email transport was intercepted;
+only synthetic subscribers and a migrated in-memory database were used.
+
+This is prepared local source, not a published or activated email sequence.
+Postal-address configuration, bookings and payment locks remain unchanged.
+Before enabling launch emails, separately verify the current opt-in audience,
+usable mailing address, cadence/backlog and any legacy outbox delivery history.
+No cursor rewind or automatic resend of historical mail is authorized here.
+
 ## 2026-10-06 - Make invoice receipt browser verification deterministic
 
 PR #290's production check exposed an ambiguous status locator while the

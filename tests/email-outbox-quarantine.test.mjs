@@ -115,7 +115,9 @@ test("unknown outbox events fail closed and delivery checks happen before attemp
   );
   assert.match(emailNotifications, /PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS/);
   assert.match(emailNotifications, /TRANSACTION_EMAIL_EVENT_SQL_PATTERNS/);
-  assert.match(emailNotifications, /MARKETING_EMAIL_EVENT_SQL_PATTERNS/);
+  // Marketing candidates need persisted current consent, not a broad prefix.
+  assert.match(emailNotifications, /currentMarketingConsent\(\)/);
+  assert.doesNotMatch(emailNotifications, /MARKETING_EMAIL_EVENT_SQL_PATTERNS/);
   assert.match(emailNotifications, /CUSTOMER_JOB_POSTING_PAUSED/);
   assert.match(emailNotifications, /runtimeMarketplaceActionAllowed/);
 });

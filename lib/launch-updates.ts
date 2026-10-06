@@ -44,38 +44,34 @@ export const LAUNCH_UPDATE_SEQUENCE: readonly LaunchUpdateStep[] = [
     subject: "You're on the Tuveloz launch list",
     subjectEs: "Está en la lista de lanzamiento de Tuveloz",
     body: [
-      "Thanks for signing up. Here's exactly what you've signed up for, so there are no surprises.",
-      "Tuveloz is a local marketplace for vehicle services in Montgomery County, Maryland. You'll describe what your vehicle needs, local independent providers will send you real quotes, and you'll choose the one that works. No phone tag, no guessing at prices.",
-      "Customer requests and payments are not available today. Right now we're accepting provider applications and checking the requirements for each service. We won't open customer requests until the marketplace is ready.",
-      "You'll hear from us a handful of times before launch, and then once when it actually opens. That's it. No weekly newsletter.",
-      "If you'd rather not get these, the unsubscribe link at the bottom works immediately.",
+      "Thanks for joining Tuveloz's launch list.",
+      "Tuveloz will help neighbors in Montgomery County, Maryland, find independent vehicle-service providers, compare quotes, and choose a provider.",
+      "Customer requests and payments are not available yet. Provider applications are open while we prepare for launch.",
+      "We'll send a few updates and let you know when customer requests open. You can unsubscribe at any time using the link below.",
     ],
     bodyEs: [
-      "Gracias por inscribirse. Esto es exactamente lo que recibirá, para que no haya sorpresas.",
-      "Tuveloz es un mercado local de servicios vehiculares en el Condado de Montgomery, Maryland. Usted describe lo que necesita su vehículo, proveedores independientes locales le envían cotizaciones reales, y usted elige la que le conviene. Sin llamadas interminables y sin adivinar precios.",
-      "Las solicitudes y los pagos de clientes no están disponibles hoy. Por ahora aceptamos solicitudes de proveedores y revisamos los requisitos de cada servicio. No abriremos las solicitudes de clientes hasta que el mercado esté listo.",
-      "Recibirá unos pocos correos antes del lanzamiento, y uno más cuando realmente abra. Nada más. No es un boletín semanal.",
-      "Si prefiere no recibirlos, el enlace para cancelar la suscripción al final funciona de inmediato.",
+      "Gracias por inscribirse para recibir noticias del lanzamiento de Tuveloz.",
+      "Tuveloz ayudará a los vecinos del condado de Montgomery, Maryland, a encontrar proveedores independientes de servicios para vehículos, comparar cotizaciones y elegir un proveedor.",
+      "Las solicitudes y los pagos de clientes aún no están disponibles. Los proveedores ya pueden solicitar su incorporación mientras preparamos el lanzamiento.",
+      "Le enviaremos algunas novedades y le avisaremos cuando se abran las solicitudes de clientes. Puede cancelar la suscripción en cualquier momento con el enlace al final del correo.",
     ],
   },
   {
     step: 1,
     afterDays: 7,
-    subject: "Why Tuveloz starts with providers, not customers",
-    subjectEs: "Por qué Tuveloz empieza con los proveedores, no con los clientes",
+    subject: "Local vehicle-service businesses can now apply to Tuveloz",
+    subjectEs: "Los negocios locales de servicios para vehículos ya pueden solicitar su incorporación a Tuveloz",
     body: [
-      "A quick note on why the customer side isn't open yet.",
-      "It would be easy to switch it on and hope providers show up. That's how you end up posting a job and hearing nothing for three days — the failure mode of every marketplace that launched empty.",
-      "So the order is deliberate: accept and review local independent providers first, then open to customers. Applicants choose the services they want to offer and receive a checklist for those choices.",
-      "When customer requests open, Tuveloz will send each request only to providers eligible for that service and area. Each provider will decide whether to send a quote.",
-      "Know a good independent mechanic or detailer? Sending them to tuveloz.com/join genuinely moves this forward — it's free for them, they set their own prices, and they keep 100% of what they quote.",
+      "We're preparing for launch by welcoming local vehicle-service businesses.",
+      "Providers choose which services to offer and receive a checklist for those services. Each service must complete its required review before it can be offered through Tuveloz.",
+      "Customer requests and payments are still closed. Once requests open, eligible providers in the area can choose whether to send a quote.",
+      "Know a mechanic or detailer who may be interested? They can apply at https://tuveloz.com/join. Applying is free. Providers set their own prices and keep 100% of their quoted price.",
     ],
     bodyEs: [
-      "Una nota breve sobre por qué el lado del cliente todavía no está abierto.",
-      "Sería fácil activarlo y esperar que aparezcan proveedores. Así es como uno termina publicando un trabajo y sin recibir respuesta por tres días — la forma en que fracasan los mercados que abren vacíos.",
-      "Por eso el orden es intencional: primero aceptar y revisar proveedores independientes locales, después abrir a los clientes. Los solicitantes eligen los servicios que quieren ofrecer y reciben una lista de requisitos para esas opciones.",
-      "Cuando abran las solicitudes de clientes, Tuveloz enviará cada solicitud solo a proveedores autorizados para ese servicio y esa zona. Cada proveedor decidirá si envía una cotización.",
-      "¿Conoce a un buen mecánico o detallista independiente? Enviarlo a tuveloz.com/join realmente ayuda — es gratis para él, pone sus propios precios y se queda con el 100% de lo que cotiza.",
+      "Estamos preparando el lanzamiento e invitamos a los negocios locales de servicios para vehículos a participar.",
+      "Los proveedores eligen los servicios que quieren ofrecer y reciben una lista de requisitos para esos servicios. Cada servicio debe completar la revisión correspondiente antes de ofrecerse a través de Tuveloz.",
+      "Las solicitudes y los pagos de clientes siguen cerrados. Cuando se abran las solicitudes, los proveedores que cumplan los requisitos para el servicio y la zona podrán decidir si envían una cotización.",
+      "¿Conoce a un mecánico o especialista en limpieza y detallado de vehículos que pueda estar interesado? Puede solicitar su incorporación en https://tuveloz.com/join. La solicitud es gratuita. Los proveedores fijan sus propios precios y conservan el 100% de lo que cotizan.",
     ],
   },
   {
@@ -84,13 +80,13 @@ export const LAUNCH_UPDATE_SEQUENCE: readonly LaunchUpdateStep[] = [
     subject: "Tuveloz: where things stand",
     subjectEs: "Tuveloz: cómo va todo",
     body: [
-      "A short progress note, because a list you never hear from is just a list you eventually unsubscribe from.",
+      "Here's a brief update on Tuveloz.",
       "Provider applications remain open. Each applicant receives a checklist based on the services they choose, and no service is activated until its required review is complete.",
       "Customer requests and payments are still not open. When they are, you'll get one clear email saying so.",
       "You can always check the current status at tuveloz.com.",
     ],
     bodyEs: [
-      "Una nota breve de avance, porque una lista de la que nunca recibe noticias es una lista que termina cancelando.",
+      "Queremos compartir una breve actualización sobre Tuveloz.",
       "Las solicitudes de proveedores siguen abiertas. Cada solicitante recibe una lista de requisitos según los servicios que elija, y ningún servicio se activa hasta completar la revisión correspondiente.",
       "Las solicitudes y los pagos de clientes siguen sin estar abiertos. Cuando lo estén, recibirá un correo claro avisándole.",
       "Siempre puede ver el estado actual en tuveloz.com.",
@@ -100,6 +96,17 @@ export const LAUNCH_UPDATE_SEQUENCE: readonly LaunchUpdateStep[] = [
 
 export function launchUpdateStep(step: number): LaunchUpdateStep | undefined {
   return LAUNCH_UPDATE_SEQUENCE.find((entry) => entry.step === step);
+}
+
+// Bind queued mail to the consent that created it. A returning subscriber
+// gets a new sequence without reviving pending mail from an earlier opt-in.
+// Keep unsubscribe tokens out of event keys and preserve existing opt-out URLs.
+export function launchUpdateEventPrefix(step: number) {
+  return `launch-updates:v2:${step}:`;
+}
+
+export function launchUpdateEventKey(step: number, consentedAt: string, email: string) {
+  return `${launchUpdateEventPrefix(step)}${consentedAt}:${email}`;
 }
 
 export function nextDueStep(options: {

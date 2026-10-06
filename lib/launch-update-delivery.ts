@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, asc, eq, lt } from "drizzle-orm";
+import { and, asc, eq, or, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { launchUpdateSubscribers } from "../db/schema";
 import { sendLaunchUpdateEmail } from "./email-notifications";
@@ -23,11 +23,6 @@ export function unsubscribeUrl(token: string) {
   return `${siteUrl()}/api/launch-updates/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
-const LAST_STEP = LAUNCH_UPDATE_SEQUENCE.reduce(
-  (highest, entry) => Math.max(highest, entry.step),
-  -1,
-);
-
 /**
  * Queue every sequence step that has come due. Called from the scheduled
  * worker alongside the other periodic tasks.
@@ -48,20 +43,28 @@ export async function processDueLaunchUpdates(limit = 50) {
       "Launch update emails are not configured: LAUNCH_UPDATES_POSTAL_ADDRESS is unset. "
       + "Commercial email must carry a physical mailing address, so nothing was sent.",
     );
-    return { sent: 0, skipped: 0, blocked: "missing_postal_address" as const };
+    return { queued: 0, skipped: 0, failed: 0, blocked: "missing_postal_address" as const };
   }
-  const safeLimit = Math.max(1, Math.min(200, Math.floor(limit)));
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, Math.floor(limit))) : 50;
   const now = new Date();
+  // Apply due-date eligibility before limiting the batch. Otherwise older
+  // subscribers waiting for their next step can strand newer welcome emails.
   const candidates = await getDb().select().from(launchUpdateSubscribers)
     .where(and(
       eq(launchUpdateSubscribers.unsubscribedAt, ""),
-      lt(launchUpdateSubscribers.lastStepSent, LAST_STEP),
+      sql`length(trim(${launchUpdateSubscribers.consentText})) > 0`,
+      sql`length(trim(${launchUpdateSubscribers.consentVersion})) > 0`,
+      or(...LAUNCH_UPDATE_SEQUENCE.map((step, index) => and(
+        eq(launchUpdateSubscribers.lastStepSent, index ? LAUNCH_UPDATE_SEQUENCE[index - 1].step : -1),
+        sql`julianday(${launchUpdateSubscribers.consentedAt}) <= julianday(${now.toISOString()}) - ${step.afterDays}`,
+      ))),
     ))
-    .orderBy(asc(launchUpdateSubscribers.consentedAt))
+    .orderBy(asc(launchUpdateSubscribers.consentedAt), asc(launchUpdateSubscribers.email))
     .limit(safeLimit);
 
-  let sent = 0;
+  let queued = 0;
   let skipped = 0;
+  let failed = 0;
   for (const subscriber of candidates) {
     const step = nextDueStep({
       lastStepSent: subscriber.lastStepSent,
@@ -82,20 +85,35 @@ export async function processDueLaunchUpdates(limit = 50) {
         spanish,
       }),
     ];
-    // Advance the cursor BEFORE queueing. If the queue call throws, the worst
-    // case is a step that never sends; the other order risks re-sending the
-    // same step on every subsequent run.
-    await getDb().update(launchUpdateSubscribers).set({
-      lastStepSent: step.step,
-      lastStepSentAt: now.toISOString(),
-    }).where(eq(launchUpdateSubscribers.email, subscriber.email));
-    await sendLaunchUpdateEmail({
-      recipientEmail: subscriber.email,
-      step: step.step,
-      subject: spanish ? step.subjectEs : step.subject,
-      lines,
-    });
-    sent += 1;
+    try {
+      // Save first. An interruption before advancing is safe: the outbox's
+      // unique consent/step key retains one original message on the next run.
+      await sendLaunchUpdateEmail({
+        recipientEmail: subscriber.email,
+        step: step.step,
+        consentedAt: subscriber.consentedAt,
+        subject: spanish ? step.subjectEs : step.subject,
+        lines,
+      });
+      // A concurrent sweep, unsubscribe or new opt-in must not be overwritten
+      // by this earlier snapshot. Delivery also rechecks the saved consent.
+      const advanced = await getDb().update(launchUpdateSubscribers).set({
+        lastStepSent: step.step,
+        lastStepSentAt: now.toISOString(),
+      }).where(and(
+        eq(launchUpdateSubscribers.email, subscriber.email),
+        eq(launchUpdateSubscribers.consentedAt, subscriber.consentedAt),
+        eq(launchUpdateSubscribers.unsubscribeToken, subscriber.unsubscribeToken),
+        eq(launchUpdateSubscribers.lastStepSent, subscriber.lastStepSent),
+        eq(launchUpdateSubscribers.unsubscribedAt, ""),
+      )).returning({ email: launchUpdateSubscribers.email });
+      if (advanced.length) queued += 1;
+      else skipped += 1;
+    } catch {
+      failed += 1;
+      // Database errors can contain bound email text and opt-out tokens.
+      console.error("Unable to save a launch update; its cursor remains retryable.");
+    }
   }
-  return { sent, skipped, blocked: null };
+  return { queued, skipped, failed, blocked: null };
 }

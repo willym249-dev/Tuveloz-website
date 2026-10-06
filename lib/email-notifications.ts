@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { and, eq, like, lt, lte, ne, or } from "drizzle-orm";
+import { and, eq, exists, like, lt, lte, ne, or, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   complianceReminders,
@@ -11,13 +11,13 @@ import {
 import {
   classifyEmailEvent,
   emailEventAllowedByReleaseState,
-  MARKETING_EMAIL_EVENT_SQL_PATTERNS,
   PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
   TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
 } from "./email-event-policy";
 import { CUSTOMER_JOB_POSTING_PAUSED } from "./launch-status";
 import { runtimeMarketplaceActionAllowed } from "./runtime-marketplace-action";
 import { resendEmailsUrl } from "./resend-endpoint";
+import { LAUNCH_UPDATE_SEQUENCE, launchUpdateEventKey, launchUpdateEventPrefix } from "./launch-updates";
 
 type RuntimeEnv = Record<string, string | undefined>;
 
@@ -141,13 +141,28 @@ async function raiseDeliveryExhaustedIncident(eventKey: string, error: unknown) 
  * outbox can sit for up to fifteen minutes, which is more than enough time for
  * an unsubscribe to land in between.
  */
-async function marketingDeliveryIsAllowed(recipientEmail: string) {
-  const [subscriber] = await getDb().select({
-    unsubscribedAt: launchUpdateSubscribers.unsubscribedAt,
-  }).from(launchUpdateSubscribers)
-    .where(eq(launchUpdateSubscribers.email, cleanEmail(recipientEmail)))
-    .limit(1);
-  return Boolean(subscriber) && !subscriber.unsubscribedAt;
+function currentMarketingConsent() {
+  if (!runtimeEnv().LAUNCH_UPDATES_POSTAL_ADDRESS?.trim()) return sql`0`;
+  return exists(getDb().select({ email: launchUpdateSubscribers.email })
+    .from(launchUpdateSubscribers).where(and(
+      eq(launchUpdateSubscribers.email, emailNotificationOutbox.recipientEmail),
+      eq(launchUpdateSubscribers.unsubscribedAt, ""),
+      sql`length(trim(${launchUpdateSubscribers.consentText})) > 0`,
+      sql`length(trim(${launchUpdateSubscribers.consentVersion})) > 0`,
+      or(...LAUNCH_UPDATE_SEQUENCE.map(step => eq(emailNotificationOutbox.eventKey,
+        sql`${launchUpdateEventPrefix(step.step)} || ${launchUpdateSubscribers.consentedAt} || ':' || ${launchUpdateSubscribers.email}`,
+      ))),
+    )));
+}
+
+async function marketingDeliveryIsAllowed(eventKey: string, recipientEmail: string) {
+  const [notification] = await getDb().select({ id: emailNotificationOutbox.id })
+    .from(emailNotificationOutbox).where(and(
+      eq(emailNotificationOutbox.eventKey, eventKey),
+      eq(emailNotificationOutbox.recipientEmail, cleanEmail(recipientEmail)),
+      currentMarketingConsent(),
+    )).limit(1);
+  return Boolean(notification);
 }
 
 // Recheck persisted scope on every attempt, including outbox-only retries.
@@ -189,7 +204,7 @@ async function emailEventDeliveryIsAllowed(eventKey: string, recipientEmail: str
   }
   const classification = classifyEmailEvent(eventKey);
   if (classification.kind === "marketing") {
-    return marketingDeliveryIsAllowed(recipientEmail);
+    return marketingDeliveryIsAllowed(eventKey, recipientEmail);
   }
   if (classification.kind !== "transaction") {
     return emailEventAllowedByReleaseState(eventKey, false);
@@ -204,6 +219,15 @@ async function emailEventDeliveryIsAllowed(eventKey: string, recipientEmail: str
 async function realTransactionEmailCandidatesAreAvailable() {
   if (CUSTOMER_JOB_POSTING_PAUSED) return false;
   return runtimeMarketplaceActionAllowed("request").catch(() => false);
+}
+
+async function deliveryIdempotencyKey(eventKey: string) {
+  // Resend accepts at most 256 characters. Keep existing valid keys unchanged
+  // so previously attempted mail retains its retry identity. Long keys could
+  // not have been accepted; hash their full value rather than truncating it.
+  if (eventKey.length <= 256) return eventKey;
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(eventKey));
+  return `tuveloz:sha256:${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 async function deliverEvent(eventKey: string) {
@@ -245,7 +269,7 @@ async function deliverEvent(eventKey: string) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": notification.eventKey,
+        "Idempotency-Key": await deliveryIdempotencyKey(notification.eventKey),
       },
       body: JSON.stringify({
         from,
@@ -283,22 +307,22 @@ async function deliverEvent(eventKey: string) {
 export async function flushPendingEmailNotifications(limit = RETRY_BATCH_SIZE) {
   const safeLimit = Math.max(1, Math.min(20, Math.floor(limit)));
   const transactionCandidatesAvailable = await realTransactionEmailCandidatesAreAvailable();
-  // Marketing is always a candidate: it is gated on the recipient's own
-  // consent rather than on marketplace release state, so a paused marketplace
-  // must not strand launch updates people asked for.
+  // Filter marketing before the batch limit as well as before transport.
+  // Opted-out, superseded or legacy rows must not consume every retry slot
+  // and starve account/security mail. Legacy rows lack a consent binding and
+  // remain preserved for review rather than being automatically retransmitted.
   const candidatePatterns = transactionCandidatesAvailable
     ? [
       ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
       ...TRANSACTION_EMAIL_EVENT_SQL_PATTERNS,
-      ...MARKETING_EMAIL_EVENT_SQL_PATTERNS,
     ]
     : [
       ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
-      ...MARKETING_EMAIL_EVENT_SQL_PATTERNS,
     ];
-  const recognizedCandidate = or(...candidatePatterns.map((pattern) => (
-    like(emailNotificationOutbox.eventKey, pattern)
-  )));
+  const recognizedCandidate = or(
+    ...candidatePatterns.map(pattern => like(emailNotificationOutbox.eventKey, pattern)),
+    currentMarketingConsent(),
+  );
   const rows = await getDb().select({
     eventKey: emailNotificationOutbox.eventKey,
   }).from(emailNotificationOutbox)
@@ -375,23 +399,28 @@ export async function queueOwnerSupportMessage(input: {
 }
 
 /**
- * Queue one step of the pre-launch sequence. The event key includes the
- * subscriber and step, so the outbox's unique-key constraint makes a repeated
- * cron run a no-op rather than a duplicate send.
+ * Durably queue one consent-bound step before its subscriber cursor advances.
+ * Saving must throw on failure. A retry reuses the same unique event key and
+ * preserves the original message. The scheduled flush handles delivery after
+ * queueing; a saved row does not mean an email was accepted or delivered.
  */
 export async function sendLaunchUpdateEmail(input: {
   recipientEmail: string;
   step: number;
+  consentedAt: string;
   subject: string;
   lines: string[];
 }) {
   const recipientEmail = cleanEmail(input.recipientEmail);
-  await queueNotification({
-    eventKey: `launch-updates:${input.step}:${recipientEmail}`,
-    recipientEmail,
-    subject: input.subject,
-    textBody: input.lines.join("\n"),
-  });
+  if (!recipientEmail || !Number.isFinite(Date.parse(input.consentedAt))) {
+    throw new Error("Launch update recipient or consent time is missing");
+  }
+  const now = new Date().toISOString();
+  await getDb().insert(emailNotificationOutbox).values({
+    id: crypto.randomUUID(), eventKey: launchUpdateEventKey(input.step, input.consentedAt, recipientEmail),
+    recipientEmail, subject: input.subject, textBody: input.lines.join("\n"),
+    status: "pending", attempts: 0, lastError: "", createdAt: now, updatedAt: now, sentAt: "",
+  }).onConflictDoNothing({ target: emailNotificationOutbox.eventKey });
 }
 
 export async function sendMarketplaceUpdateEmail(input: {
