@@ -6,7 +6,7 @@ export default function TermsPage() {
       eyebrow="Legal"
       title="Terms of Use"
       summary="Plain-language terms for using Tuveloz&apos;s vehicle-service marketplace."
-      updated="September 30, 2026"
+      updated="October 5, 2026"
     >
       <section>
         <h2>Where things stand right now</h2>
@@ -98,11 +98,14 @@ export default function TermsPage() {
       <section>
         <h2>4. What Tuveloz verifies</h2>
         <p>
-          Tuveloz confirms only the specific license, registration, or
-          insurance that the law actually requires for a given service —
-          nothing else. There&apos;s no single credential that covers every kind
-          of vehicle work, so what&apos;s checked depends on the exact service and
-          location. Tuveloz doesn&apos;t represent that a provider is
+          Tuveloz reviews identity and business information, along with the
+          licenses, registrations, insurance, and other evidence needed for a
+          provider&apos;s selected services. Requirements depend on the exact
+          service, work location, and whether the applicant works as an owner
+          or an employee. Some come from law; others come from Tuveloz&apos;s
+          eligibility standards or insurance and payment-processor requirements.
+          There&apos;s no single credential that covers every kind of vehicle
+          work. Tuveloz doesn&apos;t represent that a provider is
           &quot;certified,&quot; &quot;verified,&quot; or &quot;insured&quot; beyond exactly what&apos;s been
           documented and disclosed for that service, and providers can&apos;t
           borrow, share, or rely on someone else&apos;s credentials to get job

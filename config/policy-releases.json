@@ -1,10 +1,10 @@
 {
   "terms": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-10-01T00:09:49.679Z",
-    "releaseId": "terms-2026-09-30",
-    "reviewBodyHash": "102c005d97bb5cb32a1c12f1c0d6c0e1434c3f97ca90e606cd90826147d4839f",
-    "canonicalBodyHash": "102c005d97bb5cb32a1c12f1c0d6c0e1434c3f97ca90e606cd90826147d4839f",
+    "effectiveAt": "2026-10-06T00:00:39.000Z",
+    "releaseId": "terms-2026-10-05",
+    "reviewBodyHash": "044d13127607d4c76082efbb21bb56b52d83a62d82cf4cde5c71d49765f66f7f",
+    "canonicalBodyHash": "044d13127607d4c76082efbb21bb56b52d83a62d82cf4cde5c71d49765f66f7f",
     "sourceFile": "app/terms/page.tsx"
   },
   "customer_agreement": {
@@ -17,10 +17,10 @@
   },
   "provider_agreement": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-06T04:17:11.605Z",
-    "releaseId": "provider-agreement-2026-08-06",
-    "reviewBodyHash": "210925bba9be151a251f7f08f66e188ae2e5262f08b0c39830cd9be7d902553f",
-    "canonicalBodyHash": "210925bba9be151a251f7f08f66e188ae2e5262f08b0c39830cd9be7d902553f",
+    "effectiveAt": "2026-10-06T00:00:39.000Z",
+    "releaseId": "provider-agreement-2026-10-05",
+    "reviewBodyHash": "81e59a0b7e6cb4e45da60e741301b18163f6d02c5876438c84dc6ad69d2aa3fa",
+    "canonicalBodyHash": "81e59a0b7e6cb4e45da60e741301b18163f6d02c5876438c84dc6ad69d2aa3fa",
     "sourceFile": "app/provider-agreement/page.tsx"
   },
   "privacy": {

@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-05 - Reconcile provider document requirements in both policy languages
+
+Terms section 4 and Provider Agreement section 9 incorrectly promised that
+Tuveloz requests only documents required by law. Explain the existing legal,
+platform, insurer and payment-processor requirements, scoped to the selected
+services, location and owner/employee role. Update the complete Spanish pages
+and remove one unused dictionary entry containing the old promise. No new
+application requirement, credential standard, service activation or payment
+behavior is introduced.
+
+Prepare new October 5 Terms and Provider Agreement releases with matching
+source hashes, translation hashes and current acceptance fixtures. Preserve
+the prior fixtures separately and test that old provider consent and customer
+request consent cannot qualify as acceptance of the new Terms, while original
+records remain readable. Keep legacy English consent format compatibility for
+records that reference the current policies.
+
+Validation: production build and all 1,055 tests pass. TypeScript passes; lint
+has no errors and one existing navigation warning. Local browser checks verify
+both updated pages in English and Spanish, both language-switch directions,
+the October 5 dates, no horizontal overflow at 390px, and no browser console
+errors. The first sandboxed test attempt could not resolve some project paths;
+the complete rerun with the required local access passed. Publication and
+approval of these exact policy revisions are pending; customer bookings and
+live payments remain closed. Remaining legal, insurance, tax and refund review
+is recorded in `docs/legal/provider-service-requirements-review.md`.
+
 ## 2026-10-05 - Bind repair records to the reviewed job and document
 
 The repair-record workspace previously handled only test jobs and let a
