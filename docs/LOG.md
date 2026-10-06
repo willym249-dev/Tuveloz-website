@@ -13,6 +13,17 @@ entries to catch up. Write one before you finish.
 
 ## 2026-10-06 - Preserve launch-email spacing after pauses and delivery outages
 
+During PR #293 verification, the required security audit identified the newly
+listed Sharp/librsvg advisory
+[GHSA-wq5f-xc86-pv6w](https://github.com/lovell/sharp/security/advisories/GHSA-wq5f-xc86-pv6w).
+Updated only the existing Sharp override from 0.35.4 to the maintainer's 0.35.5
+patch and its platform packages; no Cloudflare tooling downgrade or forced
+audit fix. Native loading reports librsvg 2.63.2. The security check now reports
+zero vulnerabilities, and the full build/all 1,080 tests and typecheck passed
+again with the patched dependency. The release still requires GitHub checks;
+no failed security gate was bypassed and no production deployment occurred
+while it was failing.
+
 Reproduced three overdue launch emails across three simulated cron ticks in
 30 minutes. Queue selection and outbox delivery now share a receipt-based
 spacing check: the second email waits at least seven days after service

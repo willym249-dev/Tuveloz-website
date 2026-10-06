@@ -96,7 +96,7 @@
     "braces": "$braces",
     "undici": "7.29.1",
     "postcss": "8.5.25",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "image-size": "$image-size",
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
