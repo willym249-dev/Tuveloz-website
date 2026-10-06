@@ -6,7 +6,7 @@ export default function ProviderAgreementPage() {
       eyebrow="Providers"
       title="Provider Agreement"
       summary="Plain-language terms for provider businesses working through Tuveloz."
-      updated="August 6, 2026"
+      updated="October 5, 2026"
     >
       <section>
         <h2>1. Where this stands, and what else applies</h2>
@@ -181,10 +181,14 @@ export default function ProviderAgreementPage() {
       <section>
         <h2>9. What we require from you</h2>
         <p>
-          Tuveloz will only ever ask for documentation tied to a specific
-          legal requirement for the service(s) you&apos;ve selected. We won&apos;t ask
-          for paperwork &quot;as a precaution&quot; or request anything beyond what the
-          law actually requires.
+          We ask for information and documents needed to review your identity
+          and business, set up payments, and check your eligibility for the
+          services you select. Requirements depend on the service, work
+          location, and whether you work as an owner or an employee. They
+          include legal obligations, Tuveloz&apos;s identity, insurance, and
+          competency standards, and applicable insurer and payment-processor
+          requirements. We do not ask for credentials for services you have
+          not selected.
         </p>
       </section>
 

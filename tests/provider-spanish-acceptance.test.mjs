@@ -105,37 +105,42 @@ test("Spanish evidence contains the displayed text and exact translation, while 
   }
 });
 
-test("new shared policies reject old browser consent without relabeling historical acceptance", async () => {
-  const historicalHashes = JSON.parse(read("tests/fixtures/provider-english-acceptance-hashes-20260907.json"));
-  const historicalPresentations = JSON.parse(read("tests/fixtures/provider-policy-presentations-20260907.json"));
-  const changedKeys = new Set(["terms", "payment_policy"]);
-  for (const locale of ["en", "es"]) {
-    const oldText = historicalPresentations[locale];
-    const oldDocuments = JSON.parse(oldText).documents;
-    const currentDocuments = JSON.parse(acceptance.providerPolicyPresentation(locale)).documents;
-    assert.equal(acceptance.providerPolicyPresentationLanguage(oldText), null);
-    for (const current of currentDocuments) {
-      const old = oldDocuments.find(doc => doc.key === current.key);
-      if (changedKeys.has(current.key)) {
-        assert.notEqual(current.version, old.version);
-        assert.notEqual(current.releaseId, old.releaseId);
-        assert.notEqual(current.canonicalBodyHash, old.canonicalBodyHash);
-        if (locale === "es") assert.notEqual(current.translation.translationBodyHash, old.translation.translationBodyHash);
+for (const [release, changed] of [
+  ["20260907", ["terms", "provider_agreement", "payment_policy"]],
+  ["20260930", ["terms", "provider_agreement"]],
+]) {
+  test(`current policies reject ${release} browser consent without relabeling historical acceptance`, async () => {
+    const historicalHashes = JSON.parse(read(`tests/fixtures/provider-english-acceptance-hashes-${release}.json`));
+    const historicalPresentations = JSON.parse(read(`tests/fixtures/provider-policy-presentations-${release}.json`));
+    const changedKeys = new Set(changed);
+    for (const locale of ["en", "es"]) {
+      const oldText = historicalPresentations[locale];
+      const oldDocuments = JSON.parse(oldText).documents;
+      const currentDocuments = JSON.parse(acceptance.providerPolicyPresentation(locale)).documents;
+      assert.equal(acceptance.providerPolicyPresentationLanguage(oldText), null);
+      for (const current of currentDocuments) {
+        const old = oldDocuments.find(doc => doc.key === current.key);
+        if (changedKeys.has(current.key)) {
+          assert.notEqual(current.version, old.version);
+          assert.notEqual(current.releaseId, old.releaseId);
+          assert.notEqual(current.canonicalBodyHash, old.canonicalBodyHash);
+          if (locale === "es") assert.notEqual(current.translation.translationBodyHash, old.translation.translationBodyHash);
+        } else {
+          assert.deepEqual(current, old, `${current.key}: unchanged release stays byte-compatible`);
+        }
+      }
+      assert.equal(historicalPresentations[locale], oldText, "historical evidence stays intact");
+    }
+    for (const doc of documents) {
+      const allowed = await candidates(doc);
+      if (changedKeys.has(doc.key)) {
+        assert.ok(allowed.every(item => item.hash !== historicalHashes[doc.key]), "old consent cannot qualify as a new policy acceptance");
       } else {
-        assert.deepEqual(current, old, `${current.key}: unchanged release stays byte-compatible`);
+        assert.equal(hash(evidence(doc)), historicalHashes[doc.key]);
       }
     }
-    assert.equal(historicalPresentations[locale], oldText, "historical evidence stays intact");
-  }
-  for (const doc of documents) {
-    const allowed = await candidates(doc);
-    if (changedKeys.has(doc.key)) {
-      assert.ok(allowed.every(item => item.hash !== historicalHashes[doc.key]), "old consent cannot qualify as a new policy acceptance");
-    } else {
-      assert.equal(hash(evidence(doc)), historicalHashes[doc.key]);
-    }
-  }
-});
+  });
+}
 
 test("challenge binding and final writes use the verified presentation language consistently", () => {
   const verify = read("lib/provider-application-verification.ts");

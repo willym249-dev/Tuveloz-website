@@ -2,12 +2,38 @@
 
 - **Status:** draft — source comparison complete; agency scope answers and launch review pending
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-09-27
+- **Last reviewed:** 2026-10-05
 - **Applies to:** Montgomery County provider signup; matrix schema 0.11
 
 Distinguishes the documents currently requested by Tuveloz from what the
 retrieved official sources establish. This is a review aid, not an agency
 determination, legal opinion, provider approval, or authorization to open jobs.
+
+## October 5 policy reconciliation
+
+Terms section 4 and Provider Agreement section 9 previously said Tuveloz
+requests only legally required documents. That did not match the existing
+eligibility matrix and `lib/provider-policy.ts`: identity, insurance,
+competency, personnel, tax and payment evidence can also be platform or
+processor requirements. The October 5 proposed releases explain those
+different sources in English and Spanish and keep requirements tied to the
+selected services, work location and owner/employee role. No document,
+eligibility threshold, service activation or payment rule is added or removed.
+
+Both changed documents have new versions and paired English/Spanish hashes.
+Earlier provider acceptance fixtures and customer consent records are kept
+intact; they do not count as acceptance of the new Terms. Publication requires
+approval of these exact revised pages. A published policy version would not
+constitute legal review or permission to activate a service.
+
+The remaining legal review still includes county/municipal service scope,
+insurance coverage, classification, tax-reporting responsibility and timing,
+and the refund/recovery terms. In particular, Provider Agreement section 12
+currently says a W-9 is supplied at signup and Tuveloz issues applicable
+1099s. Confirm that statement against the actual onboarding and reporting
+arrangement before launch; this wording reconciliation does not resolve it.
+Do not infer an agency answer, insurance coverage or launch approval from
+these copy changes, or resend the existing inquiries below.
 
 ## Evidence and scope
 

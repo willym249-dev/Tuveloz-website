@@ -2,7 +2,7 @@
 const policy = {
   title: "Acuerdo del proveedor",
   summary: "Condiciones en lenguaje claro para los negocios proveedores que trabajan a través de Tuveloz.",
-  updated: "6 de agosto de 2026",
+  updated: "5 de octubre de 2026",
   html: `<section><h2>1. Estado de este documento y otras condiciones aplicables</h2>
 <p>Este es un documento operativo, no un contrato legal definitivo, asesoramiento legal ni autorización para prestar todavía un servicio para vehículos a través de Tuveloz. El propietario de Tuveloz puede continuar por ahora sin un abogado particular, pero eso no reduce ningún requisito legal. Antes de habilitar un servicio, Tuveloz debe documentar y cumplir todos los requisitos federales, de Maryland, locales, de seguro, fiscales, de pagos, de privacidad y específicos del servicio que correspondan.</p>
 <p>Este acuerdo se aplica junto con los <a href="/es/terms">Términos de uso</a>, la <a href="/es/marketplace-conduct">Política de conducta en el mercado</a>, la <a href="/es/provisional-provider-policy">Política de proveedores provisionales y aprendices</a>, la <a href="/es/privacy">Política de privacidad</a> y la <a href="/es/payments">Política de pagos, cancelaciones y reembolsos</a>.</p></section>
@@ -30,7 +30,7 @@ const policy = {
 <p>Usted es el único responsable de realizar los servicios de forma segura y legal; contar con todas las licencias, registros, permisos o seguros exigidos legalmente para su servicio y lugar de trabajo; sus equipos y materiales; sus obligaciones fiscales, incluido el impuesto sobre el trabajo por cuenta propia; y los trabajadores o subcontratistas que utilice.</p>
 <p>El seguro debe corresponder realmente a su negocio, su relación con los trabajadores, el servicio exacto, el lugar y la fecha del trabajo. Un certificado por sí solo no prueba la cobertura. Informe de inmediato cualquier interrupción de cobertura o incidente, como lesiones, daños materiales o problemas de seguridad.</p></section>
 <section><h2>9. Qué le solicitamos</h2>
-<p>Tuveloz solo solicitará documentos vinculados a un requisito legal específico de los servicios seleccionados. No pediremos documentos «por precaución» ni más de lo que la ley realmente exige.</p></section>
+<p>Solicitamos la información y los documentos necesarios para revisar su identidad y su negocio, configurar sus cobros y comprobar que cumple los requisitos para los servicios que seleccione. Los requisitos dependen del servicio, el lugar de trabajo y de si trabaja como propietario o empleado. Incluyen obligaciones legales, los criterios de Tuveloz sobre identidad, seguro y competencia, y los requisitos aplicables de la aseguradora y del procesador de pagos. No solicitamos credenciales para servicios que no haya seleccionado.</p></section>
 <section><h2>10. Información de los clientes</h2>
 <p>Use los datos de contacto, vehículos, fotos o ubicación del cliente únicamente para cotizar, programar, realizar, documentar y apoyar su trabajo, o cuando la ley lo exija. No los venda, use para publicidad ajena al servicio, publique ni conserve más tiempo del razonablemente necesario. Usted es responsable del acceso y manejo de esos datos por su personal y de cumplir la <a href="/es/marketplace-conduct">Política de conducta en el mercado</a>.</p></section>
 <section><h2>11. Pagos</h2>

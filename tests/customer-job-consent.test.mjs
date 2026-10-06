@@ -35,16 +35,31 @@ for (const language of ["en", "es"]) {
   });
 }
 
-test("historical English consent remains byte-for-byte readable without relabeling", async () => {
+test("historical English consent stays readable but cannot authorize under a new Terms release", async () => {
   const historical = JSON.parse(readFileSync(new URL("./fixtures/customer-request-legacy.json", import.meta.url), "utf8"));
-  assert.equal(scopeApi.customerRequestAgreementEvidenceText(snapshot), historical.request.agreementText);
-  assert.equal(scopeApi.customerRequestPrivacyAgreementEvidenceText(snapshot), historical.privacy.agreementText);
   const before = JSON.stringify(historical);
-  assert.equal(await api.acceptedCustomerRequestConsent(Object.values(historical).map(accepted), snapshot), true);
+  for (const record of Object.values(historical)) {
+    assert.equal(hash(record.agreementText), record.agreementHash);
+    const restored = await api.customerConsentPresentation(record.agreementText);
+    assert.equal(restored.agreementVersion, record.agreementVersion);
+    assert.equal(restored.language, undefined, "do not relabel an older record");
+    assert.equal(restored.documents.find(document => document.key === "terms").version, "2026-09-30");
+  }
+  assert.notEqual(scopeApi.customerRequestAgreementEvidenceText(snapshot), historical.request.agreementText);
+  assert.notEqual(scopeApi.customerRequestPrivacyAgreementEvidenceText(snapshot), historical.privacy.agreementText);
+  assert.equal(await api.acceptedCustomerRequestConsent(Object.values(historical).map(accepted), snapshot), false);
   const current = await api.customerRequestConsentPresentation("en", snapshot);
   assert.notEqual(current.request.agreementVersion, historical.request.agreementVersion);
   assert.notEqual(current.privacy.agreementVersion, historical.privacy.agreementVersion);
   assert.equal(JSON.stringify(historical), before);
+});
+
+test("the legacy English format still validates when it references the current policies", async () => {
+  const records = await Promise.all([
+    scopeApi.customerRequestAgreementEvidenceText(snapshot),
+    scopeApi.customerRequestPrivacyAgreementEvidenceText(snapshot),
+  ].map(text => api.customerConsentPresentation(text)));
+  assert.equal(await api.acceptedCustomerRequestConsent(records.map(accepted), snapshot), true);
 });
 
 test("mixed language, text, hashes, snapshots and identities cannot authorize requests", async () => {
