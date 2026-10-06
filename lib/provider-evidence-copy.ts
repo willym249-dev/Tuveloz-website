@@ -22,6 +22,8 @@ const spanish: Record<string, string> = {
   "Choose a PDF, JPG, PNG, or WebP document.": "Elija un documento PDF, JPG, PNG o WebP.",
   "Upload a PDF, JPG, PNG, or WebP document.": "Envíe un documento PDF, JPG, PNG o WebP.",
   "The document must be 3.5 MB or smaller.": "El documento debe tener un tamaño de 3.5 MB o menos.",
+  "This upload is too large. Choose one document up to 3.5 MB and try again.": "El archivo que intenta enviar es demasiado grande. Elija un solo documento de hasta 3.5 MB e inténtelo de nuevo.",
+  "We couldn't read this upload. Choose your document again and try once more.": "No pudimos leer el archivo. Seleccione su documento de nuevo e inténtelo una vez más.",
   "This PDF is over 3.5 MB. Choose a smaller PDF from the issuer, keeping every page. If you need help, contact hello@tuveloz.com.": "Este PDF supera los 3.5 MB. Elija un PDF más pequeño de la entidad emisora que incluya todas las páginas. Si necesita ayuda, escriba a hello@tuveloz.com.",
   "This photo is over 20 MB. Choose a smaller photo or a PDF under 3.5 MB.": "Esta foto supera los 20 MB. Elija una foto más pequeña o un PDF de menos de 3.5 MB.",
   "We couldn't prepare this photo. Choose a JPG, PNG, or WebP photo, or a PDF under 3.5 MB.": "No pudimos preparar esta foto. Elija una foto JPG, PNG o WebP, o un PDF de menos de 3.5 MB.",

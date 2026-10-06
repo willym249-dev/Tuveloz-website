@@ -93,9 +93,51 @@ test("provider uploads recover from interrupted persistence without losing docum
       for (const [key, value] of Object.entries({ serviceCode: "battery_replacement", requirementKey: "ocp_vehicle_service_registration", issuer: "SYNTHETIC ISSUER", effectiveAt: "2026-01-01", expiresAt: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10) })) form.set(key, value);
       form.set("document", new File(["%PDF-1.4\nSYNTHETIC RECOVERY DOCUMENT; NOT A CREDENTIAL\n%%EOF"], "synthetic.pdf", { type: "application/pdf" }));
       for (const [key, value] of Object.entries(changes)) form.set(key, value);
-      const response = await api.POST(new Request("https://tuveloz.invalid/api/provider-evidence", { method: "POST", headers: { origin: "https://tuveloz.invalid" }, body: form }));
+      // Give the route HTTP multipart bytes. Cancelling Node's outgoing
+      // FormData encoder mid-field can reject after its stream was closed.
+      const encoded = new Request("https://tuveloz.invalid/api/provider-evidence", { method: "POST", headers: { origin: "https://tuveloz.invalid" }, body: form });
+      const response = await api.POST(new Request(encoded.url, { method: "POST", headers: encoded.headers, body: await encoded.arrayBuffer() }));
       return { status: response.status, body: await response.json() };
     };
+    await t.test("an oversized multipart request cannot bypass the document limit with extra fields", async () => {
+      reset();
+      const result = await upload({ unused: "x".repeat(3_600_000) });
+      assert.equal(result.status, 413);
+      for (const name of tables) assert.equal(count(name), 0, `${name} must remain empty`);
+      assert.equal(state.objects.size, 0);
+      assert.equal(state.notifications, 0);
+    });
+    await t.test("a full 3.5 MB document still saves with its normal multipart fields", async () => {
+      reset();
+      const document = new File(["%PDF-1.4\n", new Uint8Array(3_500_000 - 9)], "synthetic-maximum.pdf", { type: "application/pdf" });
+      const result = await upload({ document, issuer: "SYNTHETIC ISSUER ".repeat(10) });
+      assert.equal(result.status, 201);
+      assert.equal(state.objects.size, 1);
+      assert.equal([...state.objects.values()][0].bytes.byteLength, 3_500_000);
+      assert.equal(count("evidence_file_scans"), 1);
+    });
+    await t.test("malformed uploads give a recoverable error without saving or notifying", async () => {
+      reset();
+      const response = await api.POST(new Request("https://tuveloz.invalid/api/provider-evidence", {
+        method: "POST", headers: { origin: "https://tuveloz.invalid", "content-type": "multipart/form-data; boundary=missing" }, body: "invalid multipart",
+      }));
+      assert.equal(response.status, 400);
+      assert.match((await response.json()).error, /Choose your document again/);
+      for (const name of tables) assert.equal(count(name), 0);
+      assert.equal(state.objects.size, 0);
+      assert.equal(state.notifications, 0);
+    });
+    await t.test("declared oversized requests are rejected before evidence database work", async () => {
+      reset(); state.failReads = true;
+      const response = await api.POST(new Request("https://tuveloz.invalid/api/provider-evidence", {
+        method: "POST", headers: { origin: "https://tuveloz.invalid", "content-type": "multipart/form-data; boundary=fixture", "content-length": "4000000" }, body: "unread",
+      }));
+      assert.equal(response.status, 413);
+      assert.match((await response.json()).error, /one document up to 3\.5 MB/);
+      for (const name of tables) assert.equal(count(name), 0);
+      assert.equal(state.objects.size, 0);
+      assert.equal(state.notifications, 0);
+    });
     for (const table of ["evidence_file_scans", "compliance_reminders", "provider_audit_events"]) {
       await t.test(`failure saving ${table} leaves a safe retry`, async () => {
         reset(); state.fault = table;
