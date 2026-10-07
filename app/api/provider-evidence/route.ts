@@ -29,6 +29,13 @@ import {
 } from "../../../lib/provider-policy";
 import { isSameOriginRequest } from "../../../lib/request-security";
 import { parseProviderServices } from "../../../lib/service-matching";
+import { InvalidFormBodyError, readLimitedFormData } from "../../../lib/limited-form-data";
+import { RequestBodyTooLargeError } from "../../../lib/limited-json";
+import {
+  EVIDENCE_REQUEST_FORMAT_ERROR,
+  EVIDENCE_REQUEST_SIZE_ERROR,
+  MAX_EVIDENCE_REQUEST_BYTES,
+} from "../../../lib/provider-evidence-limits";
 
 const STRUCTURED_ONLY_REQUIREMENTS = new Set([
   "performing_person_service_eligibility_snapshot",
@@ -260,7 +267,7 @@ export async function POST(request: Request) {
   let documentHash = "";
   let committed = false;
   try {
-    const formData = await request.formData();
+    const formData = await readLimitedFormData(request, MAX_EVIDENCE_REQUEST_BYTES);
     const serviceCodeValue = clean(formData.get("serviceCode"), 100);
     const requirementKey = clean(formData.get("requirementKey"), 140);
     const issuer = clean(formData.get("issuer"), 180);
@@ -490,6 +497,12 @@ export async function POST(request: Request) {
       } catch {
         console.error("Provider evidence persistence needs reconciliation; private file retained", { evidenceId });
       }
+    }
+    if (error instanceof RequestBodyTooLargeError) {
+      return Response.json({ error: EVIDENCE_REQUEST_SIZE_ERROR }, { status: 413 });
+    }
+    if (error instanceof InvalidFormBodyError) {
+      return Response.json({ error: EVIDENCE_REQUEST_FORMAT_ERROR }, { status: 400 });
     }
     if (error instanceof ProviderEvidenceValidationError) {
       return Response.json({ error: error.message }, { status: 400 });

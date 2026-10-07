@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-06 - Bound provider multipart uploads before parsing
+
+The existing 3.5 MB document validation ran after the complete multipart body
+was parsed. A local runtime regression submitted a valid synthetic document
+plus 3.6 MB of unused form data and received 201 instead of rejecting the total
+request. No live endpoint, applicant or private document was used.
+
+Provider evidence now reads at most 3,500,000 bytes plus 64 KiB for multipart
+boundaries and small form fields before parsing. Both declared and actual
+streamed sizes are checked; missing or understated Content-Length cannot bypass
+the cap. Authentication and same-origin checks still precede body reading.
+Oversized requests return 413; malformed or interrupted bodies return a useful
+400. Both messages have Spanish translations. The per-document maximum remains
+3.5 MB, and a full-size PDF still saves with normal metadata.
+
+Validation: the original regression failed on the prior source, then passed
+with no database writes, stored object or notification. Ten added checks cover
+stream cancellation, absent/understated size headers, exact boundaries, malformed
+uploads, localized errors and actual route persistence. Full build/all 1,090
+tests, application/Worker typecheck and targeted lint passed. Existing Chromium
+and WebKit upload checks passed five scenarios each, including photo resizing.
+The route fixture supplies encoded HTTP bytes to avoid Node's outgoing FormData
+encoder producing an asynchronous stream-close error when cancelled mid-field.
+
+Local repair only; publication is pending. No schema, application requirement,
+document acceptance, payment, booking or promotional-email control changed.
+
 ## 2026-10-06 - Preserve launch-email spacing after pauses and delivery outages
 
 During PR #293 verification, the required security audit identified the newly
