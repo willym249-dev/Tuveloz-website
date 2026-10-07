@@ -11,6 +11,23 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Reviewed access closure for unused accounts
+
+Added an owner-only, same-origin closure action and deliberate form. The action
+requires a verified case, confirmation of both roles, retention notes, a future
+review date and a current snapshot. Closure and the verified-owner audit write
+share one transaction; privacy fulfillment remains open. Job/payment history,
+holds, published profiles and shared staffing require a separate process.
+Migration 0071 adds the private review record and blocks new jobs/quotes against
+closed accounts. No real account was read or closed. No deletion or email occurs.
+
+Local verification: build and 1,119 tests passed, plus an additional passing
+job-creation race case; TypeScript passed. Real form interactions passed Chromium
+and WebKit at 320 and 1280 pixels using synthetic loopback responses. Not pushed,
+published or deployed. Remaining: broader closure races and retention execution,
+data/files/vendors/backups, and release review before publication. Launch locks
+remain unchanged.
+
 ## 2026-10-07 - Prevent closed accounts from regaining sign-in access
 
 Added an empty-on-installation closure table and transactional session/code

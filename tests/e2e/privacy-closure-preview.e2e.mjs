@@ -51,15 +51,16 @@ try {
         const page = await context.newPage();
         page.setDefaultTimeout(6000);
         const errors = [], unexpected = [];
-        let mode = "success", calls = 0, release, markStarted;
+        let mode = "success", calls = 0, mutations = 0, release, markStarted;
         const started = new Promise(done => { markStarted = done; });
         page.on("pageerror", error => errors.push(error.message));
         await page.route("**/*", async route => {
           const req = route.request(), url = new URL(req.url());
-          if (url.origin !== origin || req.method() !== "GET") {
+          if (url.origin !== origin || (req.method() !== "GET" && !(req.method() === "POST" && url.pathname === "/api/admin/privacy-requests/close-access"))) {
             unexpected.push(req.method() + " " + req.url()); return route.abort();
           }
           const json = (status, body) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
+          if (url.pathname === "/api/admin/privacy-requests/close-access") { mutations++; const body = req.postDataJSON(); assert.equal(body.confirmWholeAccount, true); assert.equal(body.confirmIdentityAndAuthority, true); assert.equal(body.confirmRetainedDataReview, true); return json(200, { accessClosed: true, privacyFulfillmentComplete: false }); }
           if (url.pathname === "/api/admin/privacy-requests") return json(200, { requests });
           if (url.pathname === "/api/admin/privacy-requests/closure-preview") {
             calls++;
@@ -67,7 +68,7 @@ try {
             if (mode === "wait") await new Promise(done => { release = done; markStarted(); });
             if (mode === "failure") return json(503, { error: "The account review could not be loaded. Nothing was changed. Please try again." });
             if (mode === "withdrawn") return json(409, { error: "Only an open account-closure request can be previewed. Refresh the request queue." });
-            return json(200, { preview });
+            return json(200, { preview: mode === "unused" ? { ...preview, accessClosureAllowed: true, accessClosed: false, reviewToken: "a".repeat(64), flags: { legalHolds: 0, incidents: 0 } } : preview });
           }
           return route.continue();
         });
@@ -96,8 +97,21 @@ try {
         await panel.getByRole("button", { name: "Preview account records" }).click();
         await panel.getByRole("alert").filter({ hasText: "Refresh the request queue" }).waitFor();
         assert.equal(calls, 3);
+        mode = "unused";
+        await panel.getByRole("button", { name: "Preview account records" }).click();
+        const close = panel.getByRole("button", { name: "Close sign-in access", exact: true });
+        await close.waitFor();
+        assert.equal(await close.isDisabled(), true);
+        await panel.getByLabel("Verified case reference", { exact: true }).fill("CASE-synthetic-verified");
+        await panel.getByLabel("Next data-review date", { exact: true }).fill("2099-01-01");
+        await panel.getByLabel("Records to retain and reason", { exact: true }).fill("Keep records pending separate disposition review.");
+        for (const checkbox of await panel.getByRole("checkbox").all()) await checkbox.check();
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "closure form fits screen");
+        await close.click();
+        await panel.getByText("Sign-in access closed. The privacy request remains open for data review.", { exact: true }).waitFor();
+        assert.equal(mutations, 1, "one deliberate synthetic closure request");
         assert.deepEqual(errors, []); assert.deepEqual(unexpected, []);
-        report.push({ browser: type.name(), width, passed: true, previewRequests: calls, mutations: 0 });
+        report.push({ browser: type.name(), width, passed: true, previewRequests: calls, mutations });
         await context.close();
       }
     } finally { await browser.close(); }

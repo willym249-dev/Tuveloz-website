@@ -11,6 +11,7 @@ import {
 
 const REQUIRED_TABLES = [
   "account_closures",
+  "privacy_access_closure_reviews",
   "account_credentials",
   "customer_requests",
   "provider_applications",
@@ -54,6 +55,8 @@ const REQUIRED_TABLES = [
 const REQUIRED_GUARDED_TRIGGERS = [
   "account_closure_revoke_access",
   "closed_account_session_insert",
+  "closed_account_customer_request_insert",
+  "closed_account_provider_quote_insert",
   "closed_account_session_update",
   "closed_account_credentials_insert",
   "closed_account_credentials_update",

@@ -28,6 +28,7 @@ include("contact", ["account_communication_preferences", "account_notifications"
 include("contact", ["email_notification_outbox"], email("recipient_email"));
 include("contact", ["job_messages"], `${email("sender_email")} OR ${email("recipient_email")}`);
 include("privacy", ["privacy_requests", "account_closures"], email());
+include("privacy", ["privacy_access_closure_reviews"], `request_id IN (SELECT id FROM privacy_requests WHERE ${email()})`);
 include("privacy", ["data_rights_requests"], `${email("requester_email")} OR ${provider()}`);
 include("provider", ["provider_applications", "provider_application_challenges"], email());
 include("provider", ["provider_application_email_claims", "provider_application_submission_evidence"], `${email("normalized_email")} OR ${provider()}`);
@@ -73,9 +74,9 @@ export const PRIVACY_PREVIEW_TABLES = rules.map(({ table }) => table);
 // One SELECT gives a consistent point-in-time view, including the request state.
 // No file keys, tokens, password hashes, document contents or counterparty data
 // leave this query. A related job is shared data, not a deletion target.
-export const PRIVACY_CLOSURE_PREVIEW_SQL = `
+export const PRIVACY_CLOSURE_SUBJECT_SQL = `
 WITH subject AS (
-  SELECT id, email, role, request_type, status, updated_at FROM privacy_requests WHERE id = ?
+  SELECT * FROM privacy_requests WHERE id = ?
 ), providers AS (
   SELECT id FROM provider_applications WHERE ${email()}
 ), jobs AS (
@@ -87,12 +88,28 @@ WITH subject AS (
 ), payments AS (
   SELECT id FROM stripe_payments WHERE ${email("customer_email")} OR ${provider("provider_application_id")} OR ${job()}
 )
+`;
+
+// The first closure lane covers unused accounts only. History and shared
+// staffing need a separate reviewed process before access can be interrupted.
+export const UNUSED_ACCOUNT_CLOSURE_PREDICATE = [
+  ...rules.filter(rule => rule.group === "jobs" || rule.group === "payments")
+    .map(({ table, where }) => `NOT EXISTS (SELECT 1 FROM ${table} WHERE ${where})`),
+  `NOT EXISTS (SELECT 1 FROM data_rights_requests WHERE (${email("requester_email")} OR ${provider()}) AND legal_hold <> 'no')`,
+  `NOT EXISTS (SELECT 1 FROM provider_personnel WHERE ${provider()})`,
+  `NOT EXISTS (SELECT 1 FROM provider_profiles WHERE ${provider()} AND public_status = 'published')`,
+  `NOT EXISTS (SELECT 1 FROM provider_pathway_profiles WHERE ${provider("sponsoring_provider_id")} OR ${provider("registration_holder_id")})`,
+].join(" AND ");
+
+export const PRIVACY_CLOSURE_PREVIEW_SQL = `${PRIVACY_CLOSURE_SUBJECT_SQL}
 SELECT 'request' AS item, json_object('id',id,'role',role,'requestType',request_type,'status',status,'updatedAt',updated_at) AS value FROM subject
+UNION ALL SELECT 'reviewState', json_object('email',email,'role',role,'status',status,'details',details,'resolutionNote',resolution_note,'identitySource',identity_source,'updatedAt',updated_at) FROM subject
 ${rules.map(({ table, where }) => `UNION ALL SELECT '${table}', CAST(COUNT(*) AS TEXT) FROM ${table} WHERE ${where}`).join("\n")}
 UNION ALL SELECT 'legalHolds', CAST(COUNT(*) AS TEXT) FROM data_rights_requests
  WHERE (${email("requester_email")} OR ${provider()}) AND legal_hold <> 'no'
 UNION ALL SELECT 'incidents', CAST(COUNT(*) AS TEXT) FROM job_incidents
  WHERE (${job()} OR ${provider()} OR ${email("reporter_email")}) AND (status NOT IN ('resolved','closed') OR hold_payments = 'yes')
+UNION ALL SELECT 'accessClosureAllowed', CAST(COUNT(*) AS TEXT) FROM subject WHERE ${UNUSED_ACCOUNT_CLOSURE_PREDICATE}
 `;
 
 export type ClosurePreview = {
@@ -100,6 +117,9 @@ export type ClosurePreview = {
   scope: "whole-account";
   canExecute: false;
   coverageComplete: false;
+  reviewToken?: string;
+  accessClosureAllowed: boolean;
+  accessClosed: boolean;
   request: { id: string; role: string; requestType: string; status: string; updatedAt: string };
   generatedAt: string;
   groups: { id: Group; label: string; recordCount: number; sources: { table: string; recordCount: number }[] }[];
@@ -121,6 +141,8 @@ export function closurePreview(rows: { item: string; value: string }[]): Closure
   };
   return {
     mode: "review-only", scope: "whole-account", canExecute: false, coverageComplete: false,
+    accessClosureAllowed: count("accessClosureAllowed") === 1,
+    accessClosed: count("account_closures") > 0,
     request: JSON.parse(requestRow), generatedAt: new Date().toISOString(),
     groups: (Object.entries(groups) as [Group, string][]).map(([id, label]) => {
       const sources = rules.filter(rule => rule.group === id).map(({ table }) => ({ table, recordCount: count(table) }));
@@ -133,7 +155,7 @@ export function closurePreview(rows: { item: string; value: string }[]): Closure
       "Decide what to delete, de-identify or retain, with a reason and review date for each category. Shared job records also concern other people.",
       "Review jobs, payments, disputes, safety reports and legal holds. A zero count here does not confirm that no external hold exists.",
       "Review uploaded files, embedded notes, vendor records and backups separately. These counts do not confirm file existence or deletion.",
-      "Account closure and deletion execution are not available in this preview. Do not mark the request completed on the strength of this report.",
+      "Closing unused account access is a separate reviewed action. Data deletion is not available in this preview; the privacy request stays open for fulfillment review.",
     ],
   };
 }
