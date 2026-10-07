@@ -112,14 +112,22 @@ export async function POST(request: Request) {
     const ownerRecord = resolutionNote
       ? `${resolutionNote}\n\nOwner reviewer: ${reviewer}`
       : `Review opened by ${reviewer}.`;
-    await env.DB.prepare(
+    // The account holder can withdraw after the read above. Check the saved
+    // status in the write itself so that a competing change is never reopened.
+    const updated = await env.DB.prepare(
       `UPDATE privacy_requests
           SET status = ?,
               resolution_note = ?,
               updated_at = CURRENT_TIMESTAMP,
               resolved_at = CASE WHEN ? IN ('completed','denied') THEN CURRENT_TIMESTAMP ELSE '' END
-        WHERE id = ?`,
-    ).bind(status, ownerRecord, status, id).run();
+        WHERE id = ? AND status = ?`,
+    ).bind(status, ownerRecord, status, id, current.status).run();
+    if ((updated.meta?.changes ?? 0) !== 1) {
+      return Response.json(
+        { error: "This privacy request changed while you were reviewing it. Refresh the page before saving another decision." },
+        { status: 409, headers: { "cache-control": "private, no-store" } },
+      );
+    }
 
     const statusLabel = status === "in-review"
       ? "is now being reviewed"

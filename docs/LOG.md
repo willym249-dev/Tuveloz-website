@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-06 - Preserve withdrawn privacy requests during owner review
+
+A local runtime test reproduced a concurrent-update bug in the general privacy
+review route: an account-holder withdrawal between the owner's read and write
+was overwritten with `completed`, and the route sent completion notifications.
+The update now requires the saved status to match the status read for review.
+If it changed, the route returns a private, non-cacheable 409 with a refresh
+instruction before any notification is sent. Normal review decisions, owner
+verification, same-origin validation and explanation requirements are preserved.
+
+Validation: the regression failed with 200 instead of 409 before the repair.
+The real route and an in-memory SQLite database now verify preservation of a
+withdrawal and a competing review decision, correct normal completion, existing
+withdrawal rejection, invalid notes, and owner/origin rejection. Build and all
+1,095 tests, TypeScript and targeted lint passed. Authentication and transports
+are isolated test adapters; no real request, account, email or deletion was used.
+No schema, dependency, public policy, page layout or launch setting changed.
+Publication is tracked separately; this entry is not deployment proof.
+
 ## 2026-10-06 - Bound provider multipart uploads before parsing
 
 The existing 3.5 MB document validation ran after the complete multipart body
