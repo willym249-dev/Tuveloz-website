@@ -33,6 +33,10 @@ access occurs. Production Access authentication remains separately tested.
 Production build/all 1,127 tests, typecheck and lint passed (one existing
 site-language navigation warning). Log: task
 outputs/privacy-closure-d1-full-20261007.log. Publication remains pending.
+The first GitHub browser job timed out before tests: apt was still using the
+Azure mirror through /etc/apt/apt-mirrors.txt. The existing official-Ubuntu
+mirror replacement now includes that runner file in both verification jobs;
+Ubuntu signing checks, suites and packages remain unchanged. No checks skipped.
 Separate authentication/recovery work is safely retained on
 feat/privacy-auth-erasure-20261007 at c72aa5a; its new D1/R2 focused runtime
 checks pass, but production storage/recovery integration is still unfinished.

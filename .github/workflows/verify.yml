@@ -48,9 +48,10 @@ jobs:
       # The Azure mirror stalled package downloads for nearly eight minutes
       # in run 36883790261. Keep Ubuntu's suites, keyring and signature checks;
       # change only the mirror on this disposable runner, before apt is used.
+      # New runners also use a mirror list, which must receive the same fix.
       - name: Use Ubuntu primary archive for browser dependencies
         run: |
-          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/apt-mirrors.txt; do
             if [ -f "$source" ]; then
               sudo sed -Ei 's@https?://azure[.]archive[.]ubuntu[.]com/ubuntu([/[:space:]]|$)@https://archive.ubuntu.com/ubuntu\1@g' "$source"
             fi
@@ -90,7 +91,7 @@ jobs:
       # Match the isolated account job without changing repositories or trust.
       - name: Use Ubuntu primary archive for browser dependencies
         run: |
-          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources; do
+          for source in /etc/apt/sources.list /etc/apt/sources.list.d/ubuntu.sources /etc/apt/apt-mirrors.txt; do
             if [ -f "$source" ]; then
               sudo sed -Ei 's@https?://azure[.]archive[.]ubuntu[.]com/ubuntu([/[:space:]]|$)@https://archive.ubuntu.com/ubuntu\1@g' "$source"
             fi
