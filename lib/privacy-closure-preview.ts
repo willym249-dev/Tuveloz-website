@@ -102,14 +102,24 @@ export const UNUSED_ACCOUNT_CLOSURE_PREDICATE = [
 ].join(" AND ");
 
 export const PRIVACY_CLOSURE_PREVIEW_SQL = `${PRIVACY_CLOSURE_SUBJECT_SQL}
+-- A JSON row set avoids D1's compound-SELECT limit while preserving one
+-- consistent snapshot. Small arrays also bound SQL function argument counts.
+, record_counts(item, value) AS (
+ SELECT json_extract(record.value, '$[0]'), json_extract(record.value, '$[1]')
+ FROM json_each(json_array(
+ ${Array.from({ length: Math.ceil(rules.length / 20) }, (_, index) => `json_array(${rules.slice(index * 20, index * 20 + 20).map(({ table, where }) => `json_array('${table}', (SELECT CAST(COUNT(*) AS TEXT) FROM ${table} WHERE ${where}))`).join(",\n")})`).join(",\n")}
+ )) chunk, json_each(chunk.value) record
+), flags(item, value) AS (VALUES
+ ('legalHolds', (SELECT CAST(COUNT(*) AS TEXT) FROM data_rights_requests
+   WHERE (${email("requester_email")} OR ${provider()}) AND legal_hold <> 'no')),
+ ('incidents', (SELECT CAST(COUNT(*) AS TEXT) FROM job_incidents
+   WHERE (${job()} OR ${provider()} OR ${email("reporter_email")}) AND (status NOT IN ('resolved','closed') OR hold_payments = 'yes'))),
+ ('accessClosureAllowed', (SELECT CAST(COUNT(*) AS TEXT) FROM subject WHERE ${UNUSED_ACCOUNT_CLOSURE_PREDICATE}))
+)
 SELECT 'request' AS item, json_object('id',id,'role',role,'requestType',request_type,'status',status,'updatedAt',updated_at) AS value FROM subject
 UNION ALL SELECT 'reviewState', json_object('email',email,'role',role,'status',status,'details',details,'resolutionNote',resolution_note,'identitySource',identity_source,'updatedAt',updated_at) FROM subject
-${rules.map(({ table, where }) => `UNION ALL SELECT '${table}', CAST(COUNT(*) AS TEXT) FROM ${table} WHERE ${where}`).join("\n")}
-UNION ALL SELECT 'legalHolds', CAST(COUNT(*) AS TEXT) FROM data_rights_requests
- WHERE (${email("requester_email")} OR ${provider()}) AND legal_hold <> 'no'
-UNION ALL SELECT 'incidents', CAST(COUNT(*) AS TEXT) FROM job_incidents
- WHERE (${job()} OR ${provider()} OR ${email("reporter_email")}) AND (status NOT IN ('resolved','closed') OR hold_payments = 'yes')
-UNION ALL SELECT 'accessClosureAllowed', CAST(COUNT(*) AS TEXT) FROM subject WHERE ${UNUSED_ACCOUNT_CLOSURE_PREDICATE}
+UNION ALL SELECT item, value FROM record_counts
+UNION ALL SELECT item, value FROM flags
 `;
 
 export type ClosurePreview = {
