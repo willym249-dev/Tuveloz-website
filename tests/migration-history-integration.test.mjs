@@ -49,7 +49,11 @@ test("migration journal preserves upstream order before renumbered provider and 
     "0068_provider_document_pending_guard",
     "0069_signed_invoice_copy_receipt",
   ];
-  const tail = journal.entries.slice(31);
+  // This is a historical sequence, not a constraint on future migrations.
+  const tail = journal.entries.slice(31, 31 + expectedTail.length);
+
+  assert.deepEqual(journal.entries.map(entry => entry.idx), journal.entries.map((_, index) => index));
+  assert.equal(new Set(journal.entries.map(entry => entry.tag)).size, journal.entries.length);
 
   assert.deepEqual(tail.map((entry) => entry.idx), expectedTail.map((_, offset) => offset + 31));
   assert.deepEqual(tail.map((entry) => entry.tag), expectedTail);

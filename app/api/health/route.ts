@@ -10,6 +10,8 @@ import {
 } from "../../../lib/launch-status";
 
 const REQUIRED_TABLES = [
+  "account_closures",
+  "privacy_access_closure_reviews",
   "account_credentials",
   "customer_requests",
   "provider_applications",
@@ -51,6 +53,20 @@ const REQUIRED_TABLES = [
 ] as const;
 
 const REQUIRED_GUARDED_TRIGGERS = [
+  "account_closure_revoke_access",
+  "closed_account_session_insert",
+  "closed_account_customer_request_insert",
+  "closed_account_provider_quote_insert",
+  "closed_account_session_update",
+  "closed_account_credentials_insert",
+  "closed_account_credentials_update",
+  "closed_account_login_code_insert",
+  "closed_account_password_code_insert",
+  "closed_account_phone_insert",
+  "closed_account_phone_update",
+  "closed_account_phone_code_insert",
+  "closed_account_passkey_insert",
+  "closed_account_passkey_update",
   "accepted_quote_creates_initial_authorization_update",
   "accepted_quote_creates_initial_authorization_insert",
   "repair_authorization_signed_immutable",
@@ -164,7 +180,15 @@ export async function GET() {
           .filter(row => row.name !== "provider_identity_verification_insert_guard"
             || IDENTITY_VERIFICATION_CONSENT_VERSIONS.every(version => row.sql?.includes(version)))
           .filter((row) => (
-            row.name.startsWith("repair_")
+            (row.name === "account_closure_revoke_access"
+              && row.sql?.includes("DELETE FROM auth_sessions")
+              && row.sql.includes("UPDATE login_codes")
+              && row.sql.includes("UPDATE password_verification_codes")
+              && row.sql.includes("UPDATE phone_login_codes"))
+            || (row.name.startsWith("closed_account_")
+              && row.sql?.includes("account_closures")
+              && row.sql.includes("RAISE(ABORT"))
+            || row.name.startsWith("repair_")
             || row.name.startsWith("provider_invoice_")
             || row.name.startsWith("provider_job_")
             || row.name.startsWith("provider_identity_verification_")

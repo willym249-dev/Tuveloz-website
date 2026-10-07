@@ -509,6 +509,25 @@ export const authSessions = sqliteTable(
   ],
 );
 
+export const accountClosures = sqliteTable("account_closures", {
+  email: text("email").primaryKey(),
+  privacyRequestId: text("privacy_request_id").notNull(),
+  caseReference: text("case_reference").notNull(),
+  closedAt: text("closed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  reviewAfter: text("review_after").notNull(),
+});
+
+export const privacyAccessClosureReviews = sqliteTable("privacy_access_closure_reviews", {
+  requestId: text("request_id").primaryKey(),
+  reviewedBy: text("reviewed_by").notNull(),
+  scope: text("scope").notNull(),
+  caseReference: text("case_reference").notNull(),
+  reviewAfter: text("review_after").notNull(),
+  retentionNotes: text("retention_notes").notNull(),
+  snapshotDigest: text("snapshot_digest").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const accountCredentials = sqliteTable(
   "account_credentials",
   {

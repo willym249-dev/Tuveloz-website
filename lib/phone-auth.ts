@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { accountPhoneNumbers, phoneLoginCodes } from "../db/schema";
+import { accountIsClosed } from "./account-closure";
 import {
   constantTimeEqual,
   createAccountSession,
@@ -313,6 +314,7 @@ export async function requestPhoneChangeCode(
   accountEmail: string,
   rawPhone: unknown,
 ) {
+  if (await accountIsClosed(accountEmail)) return { ok: true as const, delivered: false };
   const phone = normalizeUsPhone(rawPhone);
   if (!phone) return { ok: false as const, reason: "invalid_phone" as const };
 
@@ -339,6 +341,7 @@ export async function confirmPhoneChange(
   rawPhone: unknown,
   rawCode: unknown,
 ) {
+  if (await accountIsClosed(accountEmail)) return { ok: false as const };
   const phone = normalizeUsPhone(rawPhone);
   const code = typeof rawCode === "string" ? rawCode.trim() : "";
   if (!phone || !/^\d{6}$/.test(code)) return { ok: false as const };

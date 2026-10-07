@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-06
+- **Last reviewed:** 2026-10-07
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,99 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-07 - Verify review-field recovery and final closure build
+
+A browser failure/retry check exposed an unstable accessible label when retained
+notes were repopulated. The notes label now uses an explicit field association.
+Chromium/WebKit at 320/1280 confirm retained case/notes, removal of stale action
+controls, required fresh preview and no automatic retry. Only intentional
+synthetic requests occur; external traffic is blocked. Production build/all
+1,126 tests passed; TypeScript passed. The full-test log is task
+outputs/closure-release-full-20261007.log. No real account or release changed.
+Await the specifically requested publication approval and GitHub checks; general
+privacy disposition/deletion remains unfinished, not hidden by these results.
+
+## 2026-10-07 - Complete the unused-account closure race review
+
+Completed the previously outstanding race checks: new payment, legal hold,
+personnel, published profile, sponsorship and competing closure introduced
+between preview and write all reject closure without a false audit. Combined
+closure/access/preview suite: 31 passing checks. Corrected the fulfillment
+status document, which had incorrectly still described the owner action as
+unimplemented; historical test totals remain dated rather than overwritten.
+The local feature is ready for release checks; no real account was selected,
+push/deployment performed or general deletion completed. Publication approval
+was requested for the concrete tested change and migrations. Keep every launch
+lock unchanged. No open PR was found in the current GitHub read; fetched main
+remains 9d898c8.
+
+## 2026-10-07 - Reviewed access closure for unused accounts
+
+Added an owner-only, same-origin closure action and deliberate form. The action
+requires a verified case, confirmation of both roles, retention notes, a future
+review date and a current snapshot. Closure and the verified-owner audit write
+share one transaction; privacy fulfillment remains open. Job/payment history,
+holds, published profiles and shared staffing require a separate process.
+Migration 0071 adds the private review record and blocks new jobs/quotes against
+closed accounts. No real account was read or closed. No deletion or email occurs.
+
+Local verification: build and 1,119 tests passed, plus an additional passing
+job-creation race case; TypeScript passed. Real form interactions passed Chromium
+and WebKit at 320 and 1280 pixels using synthetic loopback responses. Not pushed,
+published or deployed. Remaining: broader closure races and retention execution,
+data/files/vendors/backups, and release review before publication. Launch locks
+remain unchanged.
+
+## 2026-10-07 - Prevent closed accounts from regaining sign-in access
+
+Added an empty-on-installation closure table and transactional session/code
+revocation. Application checks cover shared customer/provider eligibility,
+password create/reset and step-up, phone changes and retained passkeys, including
+the provider privacy-session fallback. Database triggers prevent stale session,
+credential and access-method writes after closure. Runtime failures remain
+closed. Health verification requires the table and twelve guarded triggers.
+The privacy preview now explicitly classifies the additional closure table.
+
+Eleven focused tests use real authentication/HMAC/password code and fully
+migrated in-memory SQLite, with intercepted synthetic email. They prove atomic
+rollback, unrelated-account preservation, refusal of an obsolete stored session,
+all sign-in/recovery paths, stale writes and concurrent closure, plus rejection
+of missing/ineffective health guards. Full build/all 1,114 tests and typecheck
+passed; lint has zero errors and the existing navigation warning. The historical
+migration test was bounded to its known range while keeping global index/tag
+checks, so valid new migrations do not falsely fail it.
+
+Local only; no account closed, real record read, vendor contacted or launch
+setting changed. No closure-action endpoint, data deletion or reopening flow is
+enabled. Reviewed scope/authority, provider media/eligibility handling,
+retention/disposition, file/vendor execution and backup replay remain. See the
+updated `operations/privacy-fulfillment.md` before continuing.
+
+## 2026-10-06 - Add a read-only account-closure review preview
+
+Open closure requests now offer an owner-only preview of records linked to
+the shared customer/provider login. One SQL snapshot derives the subject from
+the saved request and returns counts, recorded holds and explicit manual-review
+gaps. It classifies all 77 application tables: 70 count sources and seven
+manual sources. Shared records are review candidates, never deletion authority.
+No credentials, tokens, file keys or document contents appear in the response.
+Final/withdrawn requests are rejected, failures do not leak database details,
+and refreshing a failed preview removes stale counts from the screen.
+
+Build/full suite passed (1,102 tests); an additional shared-job/counterparty
+isolation check then passed in the eight-test focused run. Typecheck passed.
+Full lint has no errors and one existing navigation warning in
+`site-language.tsx`, verified on main. Chromium and WebKit each passed phone
+320px and desktop 1280px UI checks. Tests use real migrated in-memory SQLite
+with query-only reads, real route/component code and synthetic accounts;
+all external calls and mutations are prohibited in the browser fixture.
+
+Local implementation only, not published. No real accounts, files, vendors,
+policies, schema or launch switches changed. Account disabling and deletion
+execution remain unimplemented; neither the preview nor a saved review decision
+is completion proof. See `operations/privacy-fulfillment.md` for explicit gaps
+and the remaining acceptance criteria.
 
 ## 2026-10-06 - Preserve withdrawn privacy requests during owner review
 

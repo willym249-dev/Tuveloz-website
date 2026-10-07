@@ -14,6 +14,7 @@ import type {
 import { getDb } from "../db";
 import { passkeyCredentials } from "../db/schema";
 import { sendAccountSecurityAlert } from "./email-notifications";
+import { accountIsClosed } from "./account-closure";
 import {
   createAccountSession,
   getAccountSession,
@@ -336,7 +337,7 @@ export async function finishPasskeyAuthentication(
 
   const [stored] = await getDb().select().from(passkeyCredentials)
     .where(eq(passkeyCredentials.id, response.id)).limit(1);
-  if (!stored || (stored.role !== "customer" && stored.role !== "provider")) {
+  if (!stored || (stored.role !== "customer" && stored.role !== "provider") || await accountIsClosed(stored.email)) {
     return { ok: false as const };
   }
   if (
