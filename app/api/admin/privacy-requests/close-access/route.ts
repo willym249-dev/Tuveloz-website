@@ -67,7 +67,10 @@ export async function POST(request: Request) {
          ON CONFLICT(request_id) DO NOTHING`,
       ).bind(reviewer, retentionNotes, reviewToken, id, caseReference, reviewAfter),
     ]);
-    if ((results[0].meta?.changes ?? 0) !== 1 || (results[1].meta?.changes ?? 0) !== 1) {
+    // D1 includes trigger-driven session/code revocations in the first count.
+    // SQL changes() above still checks the one direct closure insert; the
+    // separate audit insert must also succeed exactly once.
+    if ((results[0].meta?.changes ?? 0) < 1 || (results[1].meta?.changes ?? 0) !== 1) {
       return reply("The request changed or access was closed by another review. Refresh the request queue.", 409);
     }
     return Response.json({ ok: true, accessClosed: true, alreadyClosed: false, privacyFulfillmentComplete: false }, { headers });
