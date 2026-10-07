@@ -1,6 +1,7 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: reviewed unused-account access closure published in PR #296. The scoped
+Status: reviewed unused-account access closure published in PR #296, corrected
+for Cloudflare D1 in published PR #297. The scoped
 authentication-erasure engine and signed recovery journal/replay are implemented
 and tested locally, with no live action. Production recovery integration,
 operator controls and broader data/file/vendor fulfillment remain.
@@ -351,6 +352,23 @@ mid-batch rolls back both closure and deletion. Replay can safely repeat.
 The result always says `trafficMayOpen: false`; it neither opens traffic nor
 establishes that general privacy fulfillment is complete. More than 100 intents
 requires a separately reviewed batching plan.
+
+Replay also reads back closure and the seven authentication categories before
+reporting success. An unexpected trigger that silently skips a deletion must
+fail verification even if the batch itself succeeds. Phone associations remain
+while their anonymous challenges remain, so a retry can still find those codes.
+This check does not roll back an already committed batch: keep the restore
+isolated, resolve the fault and retry. The readback is not proof that source
+writes are paused, the journal is complete or unrelated data is unchanged.
+
+The integrated branch includes released PR #297. Production build/all 1,146
+tests, TypeScript and lint passed October 7 (one existing navigation warning).
+Nineteen focused checks include actual local workerd/D1/R2 behavior: silent
+passkey and phone-code deletion failures are rejected, the association survives,
+and retry completes after the injected fault is removed. Fixtures are synthetic;
+this is not a remote Cloudflare recovery rehearsal. Evidence: task
+`outputs/auth-erasure-readback-full-20261007.log` and
+`outputs/auth-erasure-readback-focused-20261007.log`.
 
 Required before activating the feature:
 

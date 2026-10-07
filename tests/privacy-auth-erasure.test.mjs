@@ -193,7 +193,7 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         for (const [table, rows] of captured) for (const row of rows) seed(table, { ...row }, restored);
         let writes = 0;
         const restoreDb = {
-          prepare(sql) { let values = []; return { bind(...params) { values = params; return this; }, execute() { writes++; return { meta: { changes: Number(restored.prepare(sql).run(...values).changes) } }; } }; },
+          prepare(sql) { let values = []; return { bind(...params) { values = params; return this; }, async first() { return restored.prepare(sql).get(...values) ?? null; }, execute() { writes++; return { meta: { changes: Number(restored.prepare(sql).run(...values).changes) } }; } }; },
           async batch(statements) { restored.exec('BEGIN'); try { const result = statements.map(statement => statement.execute()); restored.exec('COMMIT'); return result; } catch (error) { restored.exec('ROLLBACK'); throw error; } },
         };
         const review = { isolatedRestoreConfirmed: true, sourceWritesPausedConfirmed: true, recoveryCaseReference: 'RESTORE-SYNTHETIC-CASE' };

@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Verify restored authentication data before recovery success
+
+Integrated published PR #297 into the preserved private recovery branch. Found
+that replay trusted database command success without checking its postconditions.
+It now reads back closure and absence of all seven authentication categories.
+An unexpected trigger using RAISE(IGNORE) is caught. Associations remain while
+anonymous phone codes remain, preserving retry's ability to remove those codes.
+Verification failure leaves the restore isolated; committed changes are not
+described as rolled back. Source-write pause and journal completeness still
+require separate operational verification.
+
+Actual local workerd/D1/R2 fault injection confirms silent passkey and phone-code
+failures are rejected, unrelated credentials survive, and retry succeeds after
+removing the injected failure. Nineteen focused tests and production build/all
+1,146 tests passed. Typecheck passed; lint has zero errors and the one existing
+site-language navigation warning. Evidence: task outputs/auth-erasure-readback-*
+logs dated 20261007. No push, deployment, real record action, secret, binding or
+launch change. Remote private storage/recovery integration remains unfinished.
+
 ## 2026-10-07 - Integrate completed PR #297 into private recovery work
 
 PR #297 is deployed as c5c5fe1 and independently verified. Its release record
