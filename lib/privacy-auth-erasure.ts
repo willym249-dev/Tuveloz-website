@@ -98,7 +98,9 @@ export async function eraseReviewedAuthenticationData(request: Request, db: D1Da
     ON CONFLICT(request_id) DO NOTHING`)
     .bind(approval.requestId, owner.email, approval.caseReference.trim(), approval.recoveryReference.trim(),
       approval.reviewToken, JSON.stringify(snapshot.counts), approval.requestId, snapshot.raw).run();
-  if (result.meta.changes !== 1) return { status: "conflict" as const };
+  // D1 counts the receipt AND its trigger's deletions in meta.changes. An
+  // accepted insert can therefore change many rows; only zero means no insert.
+  if (!(result.meta.changes >= 1)) return { status: "conflict" as const };
   try { await journal.confirm(intent); }
   catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
   return { status: "erased" as const, completesPrivacyRequest: false as const };
