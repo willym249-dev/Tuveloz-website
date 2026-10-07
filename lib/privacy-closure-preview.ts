@@ -27,7 +27,7 @@ include("contact", ["account_communication_preferences", "account_notifications"
   "launch_update_subscribers", "fleet_inquiries", "launch_feedback", "expansion_interests"], email());
 include("contact", ["email_notification_outbox"], email("recipient_email"));
 include("contact", ["job_messages"], `${email("sender_email")} OR ${email("recipient_email")}`);
-include("privacy", ["privacy_requests"], email());
+include("privacy", ["privacy_requests", "account_closures"], email());
 include("privacy", ["data_rights_requests"], `${email("requester_email")} OR ${provider()}`);
 include("provider", ["provider_applications", "provider_application_challenges"], email());
 include("provider", ["provider_application_email_claims", "provider_application_submission_evidence"], `${email("normalized_email")} OR ${provider()}`);

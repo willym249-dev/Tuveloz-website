@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-06
+- **Last reviewed:** 2026-10-07
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,31 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-07 - Prevent closed accounts from regaining sign-in access
+
+Added an empty-on-installation closure table and transactional session/code
+revocation. Application checks cover shared customer/provider eligibility,
+password create/reset and step-up, phone changes and retained passkeys, including
+the provider privacy-session fallback. Database triggers prevent stale session,
+credential and access-method writes after closure. Runtime failures remain
+closed. Health verification requires the table and twelve guarded triggers.
+The privacy preview now explicitly classifies the additional closure table.
+
+Eleven focused tests use real authentication/HMAC/password code and fully
+migrated in-memory SQLite, with intercepted synthetic email. They prove atomic
+rollback, unrelated-account preservation, refusal of an obsolete stored session,
+all sign-in/recovery paths, stale writes and concurrent closure, plus rejection
+of missing/ineffective health guards. Full build/all 1,114 tests and typecheck
+passed; lint has zero errors and the existing navigation warning. The historical
+migration test was bounded to its known range while keeping global index/tag
+checks, so valid new migrations do not falsely fail it.
+
+Local only; no account closed, real record read, vendor contacted or launch
+setting changed. No closure-action endpoint, data deletion or reopening flow is
+enabled. Reviewed scope/authority, provider media/eligibility handling,
+retention/disposition, file/vendor execution and backup replay remain. See the
+updated `operations/privacy-fulfillment.md` before continuing.
 
 ## 2026-10-06 - Add a read-only account-closure review preview
 

@@ -509,6 +509,14 @@ export const authSessions = sqliteTable(
   ],
 );
 
+export const accountClosures = sqliteTable("account_closures", {
+  email: text("email").primaryKey(),
+  privacyRequestId: text("privacy_request_id").notNull(),
+  caseReference: text("case_reference").notNull(),
+  closedAt: text("closed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+  reviewAfter: text("review_after").notNull(),
+});
+
 export const accountCredentials = sqliteTable(
   "account_credentials",
   {

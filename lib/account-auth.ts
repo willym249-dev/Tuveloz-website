@@ -40,6 +40,7 @@ import {
 import { ELIGIBILITY_RULES_VERSION } from "./provider-eligibility-engine";
 import { resendEmailsUrl } from "./resend-endpoint";
 import { accountEmailDelivery } from "./account-email-delivery";
+import { accountIsClosed } from "./account-closure";
 
 export const ACCOUNT_ROLES = ["customer", "provider"] as const;
 export type AccountRole = (typeof ACCOUNT_ROLES)[number];
@@ -424,6 +425,7 @@ async function providerDestinationFor(email: string) {
 }
 
 export async function eligibleAccountRoles(email: string): Promise<AccountRole[]> {
+  if (await accountIsClosed(email)) return [];
   const [customerRows, credentialRows, provider] = await Promise.all([
     getDb().select({ id: customerRequests.id }).from(customerRequests)
       .where(eq(customerRequests.email, email)).limit(1),
@@ -444,15 +446,21 @@ export async function createAccountSession(email: string, role: AccountRole) {
   const token = randomToken();
   const tokenHash = await hmacHex(`session:${token}`);
   const now = new Date().toISOString();
-  await getDb().insert(authSessions).values({
-    id: crypto.randomUUID(),
-    tokenHash,
-    email,
-    role,
-    expiresAt: new Date(Date.now() + SESSION_LIFETIME_MS).toISOString(),
-    createdAt: now,
-    lastSeenAt: now,
-  });
+  try {
+    await getDb().insert(authSessions).values({
+      id: crypto.randomUUID(),
+      tokenHash,
+      email,
+      role,
+      expiresAt: new Date(Date.now() + SESSION_LIFETIME_MS).toISOString(),
+      createdAt: now,
+      lastSeenAt: now,
+    });
+  } catch (error) {
+    // The database also guards a closure committed after eligibility was read.
+    if (await accountIsClosed(email)) return null;
+    throw error;
+  }
   return {
     token,
     role,
@@ -709,6 +717,8 @@ export async function requestPasswordVerification(
     return { accepted: false, delivered: false, rateLimited: true };
   }
 
+  if (await accountIsClosed(email)) return { accepted: true, delivered: false };
+
   const [roles, credentialRows] = await Promise.all([
     eligibleAccountRoles(email),
     getDb().select({ email: accountCredentials.email })
@@ -739,6 +749,7 @@ export async function completePasswordVerification(
   acceptedTerms: boolean,
   launchNotificationConsent = false,
 ) {
+  if (await accountIsClosed(email)) return { ok: false as const };
   if (
     passwordValidationError(password)
     || (purpose === "create" && !acceptedTerms)
@@ -802,20 +813,9 @@ export async function completePasswordVerification(
   const policyRecord = purpose === "create"
     ? { termsAcceptedAt: now, termsVersion: policyVersion }
     : {};
-  await getDb().insert(accountCredentials).values({
-    email,
-    passwordHash: passwordRecord.hash,
-    passwordSalt: passwordRecord.salt,
-    passwordIterations: passwordRecord.iterations,
-    verifiedAt: now,
-    failedAttempts: 0,
-    lockedUntil: "",
-    ...policyRecord,
-    createdAt: now,
-    updatedAt: now,
-  }).onConflictDoUpdate({
-    target: accountCredentials.email,
-    set: {
+  try {
+    await getDb().insert(accountCredentials).values({
+      email,
       passwordHash: passwordRecord.hash,
       passwordSalt: passwordRecord.salt,
       passwordIterations: passwordRecord.iterations,
@@ -823,9 +823,25 @@ export async function completePasswordVerification(
       failedAttempts: 0,
       lockedUntil: "",
       ...policyRecord,
+      createdAt: now,
       updatedAt: now,
-    },
-  });
+    }).onConflictDoUpdate({
+      target: accountCredentials.email,
+      set: {
+        passwordHash: passwordRecord.hash,
+        passwordSalt: passwordRecord.salt,
+        passwordIterations: passwordRecord.iterations,
+        verifiedAt: now,
+        failedAttempts: 0,
+        lockedUntil: "",
+        ...policyRecord,
+        updatedAt: now,
+      },
+    });
+  } catch (error) {
+    if (await accountIsClosed(email)) return { ok: false as const };
+    throw error;
+  }
   // Launch-notification consent, with the provenance needed to defend it: when
   // it was given, against which policy bundle version, and from which surface.
   // Written only on an affirmative opt-in — an unchecked box records nothing
@@ -936,6 +952,7 @@ export async function signInWithPassword(
 }
 
 export async function accountHasPassword(email: string) {
+  if (await accountIsClosed(email)) return false;
   const [credential] = await getDb().select({ email: accountCredentials.email })
     .from(accountCredentials)
     .where(eq(accountCredentials.email, email))
@@ -953,6 +970,7 @@ export async function accountHasPassword(email: string) {
  * grants a session on its own.
  */
 export async function accountPasswordMatches(email: string, password: string) {
+  if (await accountIsClosed(email)) return false;
   const [credential] = await getDb().select().from(accountCredentials)
     .where(eq(accountCredentials.email, email))
     .limit(1);
@@ -1048,6 +1066,7 @@ async function authenticatedStoredAccountSession(request: Request) {
   const tokenHash = await hmacHex(`session:${token}`);
   const [session] = await getDb().select().from(authSessions)
     .where(eq(authSessions.tokenHash, tokenHash)).limit(1);
+  if (session && await accountIsClosed(session.email)) return null;
   const now = Date.now();
   const expiresAt = session ? parseStoredDate(session.expiresAt) : Number.NaN;
   const createdAt = session ? parseStoredDate(session.createdAt) : Number.NaN;

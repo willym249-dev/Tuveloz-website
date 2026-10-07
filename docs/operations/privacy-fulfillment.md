@@ -1,8 +1,9 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: review preview implemented and locally tested October 6, 2026;
-not published. Account closure/deletion execution is not implemented or approved.
-Last reviewed: October 6, 2026.
+Status: review preview and persistent sign-in closure guard implemented and
+locally tested; not published. Reviewed closure action and data/file/vendor
+deletion execution are not implemented or approved.
+Last reviewed: October 7, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
@@ -54,10 +55,53 @@ overflow and no mutations/outbound requests. Fixtures use synthetic data;
 SQLite query-only mode enforces the read boundary. No schema, public policy,
 launch setting, production account or vendor was changed.
 
-Next: scoped disposition/approval records and a persistent whole-account
-closure guard across every authentication/recovery method, followed by the
-authorized, retry-safe data/file/vendor executor and restore replay. These
-are outstanding; the acceptance matrix below is not declared complete.
+## Implemented persistent access guard — October 7
+
+Migration `0070_account_closure_access_guard` adds an initially empty
+`account_closures` table. Installing it closes no account. A future reviewed
+executor must derive the normalized account and record its request, restricted
+case reference and review date. The date triggers review, not automatic access
+restoration. There is no reopening route or default retention period.
+
+Inserting a reviewed closure revokes both roles' sessions and invalidates unused
+email/password/phone codes in the same transaction. Database triggers reject new
+sessions, password creation/replacement, auth challenges, phone associations
+and passkeys for that account, including case/whitespace variants and writes
+already in flight. Authentication checks also reject retained credentials,
+provider/customer role eligibility and the provider privacy-session fallback.
+Password reset/create cannot recreate access after credential removal. A closed
+account can still require an identity-verified support process for privacy
+rights; restoring its normal login is not that process.
+
+The guard retains job, document, personnel and credential records for separate
+disposition review. It does not remove public provider media, disable business
+service eligibility, fulfill a privacy request, send a completion notice or
+erase files/vendor records. Those steps require their own approved scope.
+No owner closure action or real closure row was created. Do not mark the
+privacy gate complete on the strength of this guard.
+
+The preview now classifies 78 tables: 71 count sources and seven manual sources;
+the earlier 77-table evidence above remains a dated result. Deployment health
+requires the closure table and twelve access triggers and rejects missing or
+ineffective guards. A migration-history test now checks its historical range
+without rejecting valid future migrations; contiguous indexes and unique tags
+are still enforced.
+
+Validation: eleven focused real-code/migrated-SQLite checks passed. They cover
+transaction rollback on failed revocation, both roles and unrelated-account
+isolation, an injected obsolete provider session, retained passwords/codes,
+phone change/sign-in, passkey rejection using a real signed challenge, raw
+stale-write guards, session/password-creation races, unavailable closure state
+and health rejection of missing/ineffective guards. The passkey fixture has no
+real authenticator and proves refusal of closed access, not a successful live
+WebAuthn ceremony. Outbound mail is intercepted locally, with synthetic
+addresses only. Build/all 1,114 tests and TypeScript passed; lint has no errors
+and the existing navigation warning. No real account or vendor was touched.
+
+Next: scoped disposition/approval records and the reviewed owner closure action,
+followed by the authorized, retry-safe data/file/vendor executor and restore
+replay. These are outstanding; the acceptance matrix below is not declared
+complete.
 
 ## 1. Establish an exact scope before producing a deletion plan
 
