@@ -2,6 +2,7 @@ import { verifyOwnerRequest } from "./owner-auth";
 import { isStrictSameOriginWriteRequest } from "./request-security";
 import { privacyReviewToken } from "./privacy-access-closure";
 import { PRIVACY_CLOSURE_SUBJECT_SQL, UNUSED_ACCOUNT_CLOSURE_PREDICATE } from "./privacy-closure-preview";
+import { AuthErasureRecoveryJournal, type AuthErasureIntent } from "./privacy-erasure-recovery";
 
 // Internal engine. No route/UI calls this until durable recovery replay is ready.
 // Records are selected by the saved request, never an operator-supplied email.
@@ -39,14 +40,15 @@ SELECT json_object(
  'records', json_object(${records})
 ) AS snapshot FROM subject`;
 
-type Snapshot = { eligible: number; records: Record<string, unknown[]> };
+type Snapshot = { eligible: number; records: Record<string, unknown[]>; request: { email: string };
+  closed: { case: string; reviewAfter: string; closedAt: string } | null };
 async function snapshotFor(db: D1Database, requestId: string) {
   const result = await db.prepare(AUTH_ERASURE_SNAPSHOT_SQL).bind(requestId).first<{ snapshot: string }>();
   if (!result) return null;
   const data = JSON.parse(result.snapshot) as Snapshot;
   const digest = await privacyReviewToken([{ item: "auth-erasure-v1", value: result.snapshot }]);
   const counts = Object.fromEntries(AUTH_ERASURE_TABLES.map(table => [table, data.records[table].length]));
-  return { raw: result.snapshot, eligible: data.eligible === 1, digest, counts };
+  return { raw: result.snapshot, eligible: data.eligible === 1, digest, counts, data };
 }
 
 export async function previewAuthenticationErasure(db: D1Database, requestId: string) {
@@ -57,7 +59,8 @@ export async function previewAuthenticationErasure(db: D1Database, requestId: st
 
 type Approval = { requestId: string; reviewToken: string; caseReference: string; recoveryReference: string;
   confirmAuthenticationOnly: boolean; confirmRetentionReviewed: boolean; confirmRecoveryRecorded: boolean };
-export async function eraseReviewedAuthenticationData(request: Request, db: D1Database, approval: Approval) {
+export async function eraseReviewedAuthenticationData(request: Request, db: D1Database, approval: Approval,
+  journal: AuthErasureRecoveryJournal) {
   const owner = await verifyOwnerRequest(request);
   if (!owner.ok || !isStrictSameOriginWriteRequest(request)) return { status: "forbidden" as const };
   if (!approval.requestId || approval.requestId.length > 100 || !/^[a-f0-9]{64}$/.test(approval.reviewToken)
@@ -65,18 +68,29 @@ export async function eraseReviewedAuthenticationData(request: Request, db: D1Da
     || approval.confirmAuthenticationOnly !== true || approval.confirmRetentionReviewed !== true || approval.confirmRecoveryRecorded !== true) {
     return { status: "invalid" as const };
   }
-  const previous = await db.prepare("SELECT case_reference, recovery_reference, snapshot_digest FROM privacy_auth_erasure_records WHERE request_id = ?")
-    .bind(approval.requestId).first<{ case_reference: string; recovery_reference: string; snapshot_digest: string }>();
+  if (!(journal instanceof AuthErasureRecoveryJournal)) return { status: "recovery-unavailable" as const };
+  const recoveryIntent = (snapshot: NonNullable<Awaited<ReturnType<typeof snapshotFor>>>, approvedBy: string): AuthErasureIntent => {
+    if (!snapshot.data.closed) throw new Error("Reviewed account closure is missing.");
+    return { requestId: approval.requestId, email: snapshot.data.request.email.trim().toLowerCase(),
+      snapshotDigest: approval.reviewToken, approvedBy, caseReference: approval.caseReference.trim(),
+      recoveryReference: approval.recoveryReference.trim(), closureCaseReference: snapshot.data.closed.case,
+      closedAt: snapshot.data.closed.closedAt, reviewAfter: snapshot.data.closed.reviewAfter };
+  };
+  const previous = await db.prepare("SELECT case_reference, recovery_reference, snapshot_digest, approved_by FROM privacy_auth_erasure_records WHERE request_id = ?")
+    .bind(approval.requestId).first<{ case_reference: string; recovery_reference: string; snapshot_digest: string; approved_by: string }>();
   if (previous) {
     const snapshot = await snapshotFor(db, approval.requestId);
     const matching = previous.case_reference === approval.caseReference.trim()
       && previous.recovery_reference === approval.recoveryReference.trim() && previous.snapshot_digest === approval.reviewToken;
-    return matching && snapshot && Object.values(snapshot.counts).every(count => count === 0)
-      ? { status: "already-erased" as const, completesPrivacyRequest: false as const }
-      : { status: "conflict" as const };
+    if (!matching || !snapshot?.data.closed || !Object.values(snapshot.counts).every(count => count === 0)) return { status: "conflict" as const };
+    try { await journal.confirm(recoveryIntent(snapshot, previous.approved_by)); }
+    catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
+    return { status: "already-erased" as const, completesPrivacyRequest: false as const };
   }
   const snapshot = await snapshotFor(db, approval.requestId);
   if (!snapshot?.eligible || snapshot.digest !== approval.reviewToken) return { status: "conflict" as const };
+  const intent = recoveryIntent(snapshot, owner.email);
+  await journal.prepare(intent);
   const result = await db.prepare(`INSERT INTO privacy_auth_erasure_records
     (request_id, scope, approved_by, case_reference, recovery_reference, snapshot_digest, record_counts)
     SELECT ?, 'authentication-records', ?, ?, ?, ?, ? FROM (${AUTH_ERASURE_SNAPSHOT_SQL}) current
@@ -84,6 +98,8 @@ export async function eraseReviewedAuthenticationData(request: Request, db: D1Da
     ON CONFLICT(request_id) DO NOTHING`)
     .bind(approval.requestId, owner.email, approval.caseReference.trim(), approval.recoveryReference.trim(),
       approval.reviewToken, JSON.stringify(snapshot.counts), approval.requestId, snapshot.raw).run();
-  return result.meta.changes === 1 ? { status: "erased" as const, completesPrivacyRequest: false as const }
-    : { status: "conflict" as const };
+  if (result.meta.changes !== 1) return { status: "conflict" as const };
+  try { await journal.confirm(intent); }
+  catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
+  return { status: "erased" as const, completesPrivacyRequest: false as const };
 }

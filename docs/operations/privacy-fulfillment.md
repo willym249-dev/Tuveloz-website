@@ -1,16 +1,18 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
 Status: reviewed unused-account access closure published in PR #296. The scoped
-authentication-erasure engine is implemented and tested locally, with no live
-action. Durable recovery replay and broader data/file/vendor fulfillment remain.
+authentication-erasure engine and signed recovery journal/replay are implemented
+and tested locally, with no live action. Production recovery integration,
+operator controls and broader data/file/vendor fulfillment remain.
 Last reviewed: October 7, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
 This fills the execution gap identified in task
-`outputs/privacy-document-review-20261006.md`. The existing review queues save
-decisions; they do not close accounts or erase data. Keep those requests in
-review until the specifically approved work and verification are complete.
+`outputs/privacy-document-review-20261006.md`. The published owner action can
+close access for reviewed unused accounts; saving a review decision alone does
+not erase data. Keep requests in review until the specifically approved work
+and verification are complete.
 Free accounts and provider applications are already open, so fulfillment is
 also an operating need before paid bookings. This review did not inspect the
 live request queue or establish that it is empty. Handle any actual request
@@ -287,8 +289,9 @@ only the seven authentication sources after a separately reviewed, unused-accoun
 closure. The snapshot returned to a reviewer contains counts and a digest; no
 email, phone number, credential, code or record identifier is returned. The
 engine requires verified owner access, same origin, explicit authentication-only
-scope and retention/recovery attestations. Recovery references record evidence;
-they do not themselves implement backup deletion or prove external durability.
+scope and retention/recovery attestations. It now also requires the separate
+signed journal described below. A typed recovery reference alone cannot allow
+deletion or prove production durability.
 
 Migration 0072 installs an initially empty receipt table and atomic erasure
 trigger. The guarded insert rechecks the entire request/record snapshot and
@@ -299,8 +302,8 @@ another account's explicit email are preserved. Permanent account-closure state
 remains so removed passwords cannot be recreated. Shared jobs, payment records,
 provider documents and the general privacy-request status are untouched.
 
-Do not expose this internal action until durable recovery instructions and
-restore replay are implemented and verified. A restored older database must not
+Do not expose this internal action until the recovery journal and restore replay
+are integrated with verified private infrastructure. An older database must not
 revive erased credentials or lose its closure restriction. This engine does not
 erase objects/vendor copies, choose legal retention rules, notify the requester
 or complete the general privacy request. No real case, account or backup was read
@@ -312,3 +315,59 @@ Eight focused checks cover exact-account isolation, explicit-email phone-code
 isolation, protected documents, owner/origin/scope checks, missing closure,
 withdrawal/hold/version/job races, rollback and idempotent retry. The privacy
 inventory now explicitly classifies 80 tables. All records were synthetic.
+
+## Separate recovery journal and replay — October 7
+
+Implemented locally in `lib/privacy-erasure-recovery.ts` and
+`lib/privacy-erasure-replay.ts`. No storage binding, secret, route, operator
+button or production restore was created. The original engine validation above
+is historical; the current validation is recorded in the newest working log.
+
+Before the guarded database mutation, the engine writes an immutable signed
+intent outside the database and verifies it with a fresh read. After the
+atomic deletion it writes and verifies the matching completion record. Lost
+object-write responses are reconciled through authenticated reads. Missing
+intent evidence prevents deletion; missing completion evidence returns
+`recovery-pending`, never success. A retry reconciles the existing database
+receipt without repeating deletion or inventing a missing intent. A stale
+snapshot or uncertain database failure can leave an unresolved intent; review
+the actual receipt and source state before reconciliation. Do not automatically
+discard the intent, infer failure from a lost reply, or reopen recovery traffic.
+
+The private journal includes normalized email, request/case references, closure
+dates, approving owner and snapshot digest. It excludes passwords, token/code
+material, phone numbers and document contents. Each intent/completion pair is
+HMAC authenticated and bound to its environment context and storage key.
+Retained keys support rotation; unknown, non-string or missing keys reject
+verification. Malformed records, incomplete pairs and invalid/excessive
+pagination stop replay. Authentication does **not** prove that an empty or
+partial bucket is the authoritative, current catalog.
+
+Replay first validates the entire supplied catalog, then uses one database
+batch to reestablish closure and remove the seven authentication categories.
+Synthetic SQLite tests restore records captured before the closure existed:
+the erased account loses access, another account remains intact, and a failure
+mid-batch rolls back both closure and deletion. Replay can safely repeat.
+The result always says `trafficMayOpen: false`; it neither opens traffic nor
+establishes that general privacy fulfillment is complete. More than 100 intents
+requires a separately reviewed batching plan.
+
+Required before activating the feature:
+
+1. Configure and verify a private, authoritative journal store separate from
+   the database being restored and its old object snapshots. Retain its signing
+   key ring in restricted secret storage. Never restore an older journal over
+   newer records. Existing backup cleanup prefixes are not production proof.
+2. Confirm the real source writes are paused, identify the current journal and
+   resolve every pending intent. These are operational checks; boolean review
+   fields alone cannot prove them. Reconcile catalog completeness separately.
+3. Restore into an isolated database, apply all required migrations, and replay
+   the current journal before considering any traffic switch. Test the actual
+   Cloudflare storage/database path; local fixture results are insufficient.
+4. Independently verify closure and absence of the approved authentication
+   records, preservation of unrelated accounts, and other recovery checks.
+   Keep traffic closed until the full recovery review is approved.
+5. Add reviewed owner controls and define case-specific retention for the
+   private journal and all remaining data/file/vendor categories. This code
+   does not authorize retaining identity references forever or destroying
+   records that still require retention.

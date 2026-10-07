@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Signed recovery journal and isolated restore replay validated
+
+Continued the existing local authentication-erasure branch; PR #296 remains the
+verified live release. The internal erasure engine now requires a separately
+stored, signed intent and a verified read before its atomic database mutation.
+It verifies a signed completion afterward. Interrupted storage/database replies
+are reconciled without repeating deletion; incomplete evidence returns pending
+or blocks execution. A retry cannot invent a missing original intent.
+
+Added owner/origin-protected internal replay for an isolated, migrated restore.
+It validates the entire signed catalog before one transactional batch reapplies
+closure and removes authentication records. It never opens traffic or treats a
+supplied catalog as proof of current authoritative completeness. The operational
+runbook records actual binding/key setup, source-write pause, catalog review,
+isolated Cloudflare rehearsal and owner controls as unfinished prerequisites.
+No route, production binding, secret, deployment or real deletion was added.
+
+Fourteen focused checks passed, including a snapshot captured before closure,
+unrelated-account preservation, rollback, interrupted intent/completion/DB
+writes, tampering, missing signing keys, key rotation and pagination failures.
+Final review found and fixed non-string signing-key lookup acceptance; a forged
+prototype-key envelope is now rejected before any database write. Production
+build/all 1,140 tests and TypeScript passed. Lint: zero errors, one existing
+site-language navigation warning. Log: task
+outputs/auth-erasure-recovery-full-20261007.log. All fixtures are synthetic and
+network calls are prohibited in these tests. Broader file/vendor disposition,
+case-specific retention and production/operator integration remain unfinished.
+
 ## 2026-10-07 - Internal authentication erasure engine validated
 
 PR #296 is published as fe8ecbee94a5274f98ec40766b6d914960152162; its dated
