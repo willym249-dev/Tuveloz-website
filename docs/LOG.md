@@ -11,6 +11,31 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-06 - Add a read-only account-closure review preview
+
+Open closure requests now offer an owner-only preview of records linked to
+the shared customer/provider login. One SQL snapshot derives the subject from
+the saved request and returns counts, recorded holds and explicit manual-review
+gaps. It classifies all 77 application tables: 70 count sources and seven
+manual sources. Shared records are review candidates, never deletion authority.
+No credentials, tokens, file keys or document contents appear in the response.
+Final/withdrawn requests are rejected, failures do not leak database details,
+and refreshing a failed preview removes stale counts from the screen.
+
+Build/full suite passed (1,102 tests); an additional shared-job/counterparty
+isolation check then passed in the eight-test focused run. Typecheck passed.
+Full lint has no errors and one existing navigation warning in
+`site-language.tsx`, verified on main. Chromium and WebKit each passed phone
+320px and desktop 1280px UI checks. Tests use real migrated in-memory SQLite
+with query-only reads, real route/component code and synthetic accounts;
+all external calls and mutations are prohibited in the browser fixture.
+
+Local implementation only, not published. No real accounts, files, vendors,
+policies, schema or launch switches changed. Account disabling and deletion
+execution remain unimplemented; neither the preview nor a saved review decision
+is completion proof. See `operations/privacy-fulfillment.md` for explicit gaps
+and the remaining acceptance criteria.
+
 ## 2026-10-06 - Preserve withdrawn privacy requests during owner review
 
 A local runtime test reproduced a concurrent-update bug in the general privacy

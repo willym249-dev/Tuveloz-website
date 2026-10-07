@@ -30,6 +30,7 @@ self-contained page.
 | [`operations/evidence-scanner-activation.md`](operations/evidence-scanner-activation.md) | How do I turn on the evidence malware scanner, and how do I confirm it actually works rather than just reporting success? |
 | [`operations/security-and-data-incident-plan.md`](operations/security-and-data-incident-plan.md) | What do I do in the first hour of a data exposure, account takeover, or vendor breach — and what must not be deleted while doing it? |
 | [`operations/vehicle-incident-claims-and-stop-work-plan.md`](operations/vehicle-incident-claims-and-stop-work-plan.md) | What do I do when someone is hurt or a vehicle is damaged on a job — how does work stop, payment hold, and evidence get preserved without directing the repair? |
+| [`operations/privacy-fulfillment.md`](operations/privacy-fulfillment.md) | What does the account-closure preview check, and what execution, retention and deletion work remains? |
 | [`operations/`](operations/) | Runbooks, procedures, and incident write-ups added from here on. |
 
 ## Product and technical

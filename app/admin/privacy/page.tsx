@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../../components/tuveloz-icons";
+import { AccountClosurePreview } from "./closure-preview";
 
 type PrivacyStatus = "submitted" | "in-review" | "completed" | "denied" | "withdrawn";
 
@@ -142,6 +143,10 @@ export default function AdminPrivacyPage() {
                     <p>{item.resolutionNote}</p>
                     {item.resolvedAt && <small>Resolved {readableDate(item.resolvedAt)}</small>}
                   </div>
+                )}
+
+                {item.requestType === "account-closure" && (item.status === "submitted" || item.status === "in-review") && (
+                  <AccountClosurePreview requestId={item.id} />
                 )}
 
                 {item.status !== "withdrawn" && (
