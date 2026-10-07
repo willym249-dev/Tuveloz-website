@@ -11,6 +11,14 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Integrate completed PR #297 into private recovery work
+
+PR #297 is deployed as c5c5fe1 and independently verified. Its release record
+supersedes dated pre-release wording below. No open PRs were found before this
+continuation. Merged current main into the preserved erasure branch, retaining
+both working-log histories. The source merge was automatic. Recovery work is
+still local: no live records, credentials, bindings or launch settings changed.
+
 ## 2026-10-07 - Signed recovery journal and isolated restore replay validated
 
 Continued the existing local authentication-erasure branch; PR #296 remains the
@@ -66,6 +74,35 @@ durable recovery instructions and restore replay are ready. Backup source review
 shows a separate private backup bucket and scoped retention prefixes; current
 backup proof does not establish preservation of later deletions after a restore.
 General file/vendor disposition and actual-case retention review remain open.
+## 2026-10-07 - Repair account review and closure on Cloudflare D1
+
+PR #296 remains the verified published release. During separate recovery work,
+the local Cloudflare runtime reproduced two defects not caught by the prior
+Node SQLite fixtures: the owner preview exceeded the compound-SELECT limit,
+and trigger-inclusive D1 change counts could report a conflict after closure.
+
+Prepared a focused branch from current main, excluding the unfinished erasure
+engine, migration 0072, journal bindings and deletion controls. The preview now
+uses bounded JSON row groups for its inventory and a small flags CTE, preserving
+one consistent snapshot and all existing subject predicates. The closure action
+accepts trigger-inclusive counts for the closure insert while still requiring
+the exact separate audit insert and SQL changes() direct-insert guard.
+
+The new ephemeral workerd/D1 test executes both actual routes using synthetic
+owner identity and accounts: complete preview, both-role session revocation,
+code invalidation, unrelated-account preservation, saved audit, safe retry and
+different-review conflict pass. No external calls, deployment or real account
+access occurs. Production Access authentication remains separately tested.
+Production build/all 1,127 tests, typecheck and lint passed (one existing
+site-language navigation warning). Log: task
+outputs/privacy-closure-d1-full-20261007.log. Publication remains pending.
+The first GitHub browser job timed out before tests: apt was still using the
+Azure mirror through /etc/apt/apt-mirrors.txt. The existing official-Ubuntu
+mirror replacement now includes that runner file in both verification jobs;
+Ubuntu signing checks, suites and packages remain unchanged. No checks skipped.
+Separate authentication/recovery work is safely retained on
+feat/privacy-auth-erasure-20261007 at c72aa5a; its new D1/R2 focused runtime
+checks pass, but production storage/recovery integration is still unfinished.
 
 ## 2026-10-07 - Verify review-field recovery and final closure build
 
