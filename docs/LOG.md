@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Repair account review and closure on Cloudflare D1
+
+PR #296 remains the verified published release. During separate recovery work,
+the local Cloudflare runtime reproduced two defects not caught by the prior
+Node SQLite fixtures: the owner preview exceeded the compound-SELECT limit,
+and trigger-inclusive D1 change counts could report a conflict after closure.
+
+Prepared a focused branch from current main, excluding the unfinished erasure
+engine, migration 0072, journal bindings and deletion controls. The preview now
+uses bounded JSON row groups for its inventory and a small flags CTE, preserving
+one consistent snapshot and all existing subject predicates. The closure action
+accepts trigger-inclusive counts for the closure insert while still requiring
+the exact separate audit insert and SQL changes() direct-insert guard.
+
+The new ephemeral workerd/D1 test executes both actual routes using synthetic
+owner identity and accounts: complete preview, both-role session revocation,
+code invalidation, unrelated-account preservation, saved audit, safe retry and
+different-review conflict pass. No external calls, deployment or real account
+access occurs. Production Access authentication remains separately tested.
+Production build/all 1,127 tests, typecheck and lint passed (one existing
+site-language navigation warning). Log: task
+outputs/privacy-closure-d1-full-20261007.log. Publication remains pending.
+Separate authentication/recovery work is safely retained on
+feat/privacy-auth-erasure-20261007 at c72aa5a; its new D1/R2 focused runtime
+checks pass, but production storage/recovery integration is still unfinished.
+
 ## 2026-10-07 - Verify review-field recovery and final closure build
 
 A browser failure/retry check exposed an unstable accessible label when retained
