@@ -60,7 +60,7 @@ try {
             unexpected.push(req.method() + " " + req.url()); return route.abort();
           }
           const json = (status, body) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
-          if (url.pathname === "/api/admin/privacy-requests/close-access") { mutations++; const body = req.postDataJSON(); assert.equal(body.confirmWholeAccount, true); assert.equal(body.confirmIdentityAndAuthority, true); assert.equal(body.confirmRetainedDataReview, true); return json(200, { accessClosed: true, privacyFulfillmentComplete: false }); }
+          if (url.pathname === "/api/admin/privacy-requests/close-access") { mutations++; const body = req.postDataJSON(); assert.equal(body.confirmWholeAccount, true); assert.equal(body.confirmIdentityAndAuthority, true); assert.equal(body.confirmRetainedDataReview, true); return mode === "action-failure" ? json(503, { error: "Closure unavailable; refresh the account review." }) : json(200, { accessClosed: true, privacyFulfillmentComplete: false }); }
           if (url.pathname === "/api/admin/privacy-requests") return json(200, { requests });
           if (url.pathname === "/api/admin/privacy-requests/closure-preview") {
             calls++;
@@ -107,9 +107,19 @@ try {
         await panel.getByLabel("Records to retain and reason", { exact: true }).fill("Keep records pending separate disposition review.");
         for (const checkbox of await panel.getByRole("checkbox").all()) await checkbox.check();
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "closure form fits screen");
+        mode = "action-failure";
+        await close.click();
+        await panel.getByRole("alert").filter({ hasText: "Closure unavailable" }).waitFor();
+        assert.equal(await close.count(), 0, "failed action requires a fresh snapshot");
+        mode = "unused";
+        await panel.getByRole("button", { name: "Preview account records" }).click();
+        await close.waitFor();
+        assert.equal(await panel.getByLabel("Verified case reference", { exact: true }).inputValue(), "CASE-synthetic-verified");
+        assert.equal(await panel.getByLabel("Records to retain and reason", { exact: true }).inputValue(), "Keep records pending separate disposition review.");
+        assert.equal(mutations, 1, "no automatic retry after failure");
         await close.click();
         await panel.getByText("Sign-in access closed. The privacy request remains open for data review.", { exact: true }).waitFor();
-        assert.equal(mutations, 1, "one deliberate synthetic closure request");
+        assert.equal(mutations, 2, "two deliberate synthetic attempts, no automatic retry");
         assert.deepEqual(errors, []); assert.deepEqual(unexpected, []);
         report.push({ browser: type.name(), width, passed: true, previewRequests: calls, mutations });
         await context.close();

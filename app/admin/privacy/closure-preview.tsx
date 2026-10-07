@@ -86,7 +86,8 @@ export function AccountClosurePreview({ requestId }: { requestId: string }) {
               <p>This closes customer and provider access together. It keeps records and the privacy request open for data review.</p>
               <label>Verified case reference<input required minLength={8} maxLength={200} value={caseReference} onChange={event => setCaseReference(event.target.value)} disabled={closing} /></label>
               <label>Next data-review date<input required type="date" value={reviewAfter} onChange={event => setReviewAfter(event.target.value)} disabled={closing} /></label>
-              <label>Records to retain and reason<textarea required minLength={20} maxLength={2000} value={retentionNotes} onChange={event => setRetentionNotes(event.target.value)} disabled={closing} /></label>
+              <label htmlFor={`closure-retention-${requestId}`}>Records to retain and reason</label>
+              <textarea id={`closure-retention-${requestId}`} required minLength={20} maxLength={2000} value={retentionNotes} onChange={event => setRetentionNotes(event.target.value)} disabled={closing} />
               {["I verified the person’s identity and authority for this request.", "The person requested closure of both customer and provider access.", "I reviewed retained records; this action does not complete the privacy request."].map((label, index) => (
                 <label key={label}><input required type="checkbox" checked={confirmations[index]} disabled={closing} onChange={event => setConfirmations(current => current.map((value, position) => position === index ? event.target.checked : value))} />{label}</label>
               ))}

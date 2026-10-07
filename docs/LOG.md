@@ -11,6 +11,18 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Verify review-field recovery and final closure build
+
+A browser failure/retry check exposed an unstable accessible label when retained
+notes were repopulated. The notes label now uses an explicit field association.
+Chromium/WebKit at 320/1280 confirm retained case/notes, removal of stale action
+controls, required fresh preview and no automatic retry. Only intentional
+synthetic requests occur; external traffic is blocked. Production build/all
+1,126 tests passed; TypeScript passed. The full-test log is task
+outputs/closure-release-full-20261007.log. No real account or release changed.
+Await the specifically requested publication approval and GitHub checks; general
+privacy disposition/deletion remains unfinished, not hidden by these results.
+
 ## 2026-10-07 - Complete the unused-account closure race review
 
 Completed the previously outstanding race checks: new payment, legal hold,
