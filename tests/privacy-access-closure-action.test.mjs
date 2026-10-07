@@ -30,5 +30,23 @@ test('reviewed access closure is atomic and preserves privacy fulfillment', asyn
  await t.test('audit failure rolls back closure and revoked sessions',async()=>{const body=await make('rollback');state.failAudit=true;assert.equal((await post(body)).status,503);state.failAudit=false;assert.equal(db.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get('rollback@example.invalid').n,2);assert.equal(db.prepare('SELECT count(*) n FROM account_closures WHERE privacy_request_id=?').get(body.id).n,0);assert.equal((await post(body)).status,200)});
  await t.test('owner, origin, confirmation and stale case checks reject mutation',async()=>{const body=await make('guard');state.owner=false;assert.equal((await post(body)).status,403);state.owner=true;assert.equal((await api.POST(request('/api/admin/privacy-requests/close-access',body,'https://other.invalid'))).status,403);assert.equal((await post({...body,confirmWholeAccount:false})).status,400);db.prepare('UPDATE privacy_requests SET details=? WHERE id=?').run('Changed private request details',body.id);assert.equal((await post(body)).status,409);assert.equal(db.prepare('SELECT count(*) n FROM account_closures WHERE privacy_request_id=?').get(body.id).n,0)});
  await t.test('a job created between review and write blocks closure without an audit',async()=>{const body=await make('jobrace');state.beforeBatch=()=>seed('customer_requests',{id:'new-job',email:'jobrace@example.invalid',parts_source:'No parts needed — labor only',parts_preference:'No preference',labor_only_parts_acknowledged_at:new Date().toISOString()});assert.equal((await post(body)).status,409);assert.equal(db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').get(body.id).n,0);assert.equal(db.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get('jobrace@example.invalid').n,2)});
+ for (const kind of ['hold','payment','staff','published','sponsor']) {
+ await t.test(`${kind} introduced during closure review prevents access changes`,async()=>{
+ const body=await make('race-'+kind), email=body.id+'@example.invalid', provider='provider-'+kind;
+ state.beforeBatch=()=>{
+ if(kind==='hold')seed('data_rights_requests',{id:'hold-race',requester_email:email,requester_role:'customer',request_type:'deletion',legal_hold:'yes'});
+ if(kind==='payment')seed('stripe_payments',{id:'payment-race',customer_email:email});
+ if(['staff','published','sponsor'].includes(kind))seed('provider_applications',{id:provider,email});
+ if(kind==='staff')seed('provider_personnel',{id:'staff-race',provider_id:provider,person_id:'other-person'});
+ if(kind==='published')seed('provider_profiles',{id:'profile-race',provider_id:provider,slug:'synthetic-race',public_status:'published'});
+ if(kind==='sponsor')seed('provider_pathway_profiles',{id:'sponsor-race',provider_id:'other-provider',sponsoring_provider_id:provider});
+ };
+ assert.equal((await post(body)).status,409);
+ assert.equal(db.prepare('SELECT count(*) n FROM account_closures WHERE privacy_request_id=?').get(body.id).n,0);
+ assert.equal(db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').get(body.id).n,0);
+ assert.equal(db.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get(email).n,2);
+ });
+ }
+ await t.test('competing closure cannot acquire an audit from the stale review',async()=>{const body=await make('competing');state.beforeBatch=()=>seed('account_closures',{email:'competing@example.invalid',privacy_request_id:'separate-case',case_reference:'SEPARATE-VERIFIED',review_after:'2099-01-01'});assert.equal((await post(body)).status,409);assert.equal(db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').get(body.id).n,0)});
  }finally{globalThis.fetch=oldFetch;delete globalThis.__closureAction;db.close();rmSync(scratch,{recursive:true,force:true})}
 });

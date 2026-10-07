@@ -11,6 +11,20 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Complete the unused-account closure race review
+
+Completed the previously outstanding race checks: new payment, legal hold,
+personnel, published profile, sponsorship and competing closure introduced
+between preview and write all reject closure without a false audit. Combined
+closure/access/preview suite: 31 passing checks. Corrected the fulfillment
+status document, which had incorrectly still described the owner action as
+unimplemented; historical test totals remain dated rather than overwritten.
+The local feature is ready for release checks; no real account was selected,
+push/deployment performed or general deletion completed. Publication approval
+was requested for the concrete tested change and migrations. Keep every launch
+lock unchanged. No open PR was found in the current GitHub read; fetched main
+remains 9d898c8.
+
 ## 2026-10-07 - Reviewed access closure for unused accounts
 
 Added an owner-only, same-origin closure action and deliberate form. The action

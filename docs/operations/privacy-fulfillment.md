@@ -1,8 +1,7 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: review preview and persistent sign-in closure guard implemented and
-locally tested; not published. Reviewed closure action and data/file/vendor
-deletion execution are not implemented or approved.
+Status: unused-account access closure and review preview implemented and locally
+validated; not published. Data/file/vendor deletion execution remains unfinished.
 Last reviewed: October 7, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
@@ -102,6 +101,35 @@ Next: scoped disposition/approval records and the reviewed owner closure action,
 followed by the authorized, retry-safe data/file/vendor executor and restore
 replay. These are outstanding; the acceptance matrix below is not declared
 complete.
+
+## Reviewed unused-account access closure — October 7
+
+The owner form and POST `/api/admin/privacy-requests/close-access` are now
+implemented locally. They require verified owner access, strict same-origin,
+a signed-in-account closure request, explicit identity/authority and both-role
+confirmation, a private case reference, retention notes, a future review date
+and an unchanged snapshot. Typed review fields survive a failed operation.
+Closing access does not mark the privacy request fulfilled, delete records,
+remove vendor copies or send a completion notice.
+
+The write rechecks request state and refuses job/payment history, recorded
+holds, personnel, published profiles and sponsorship/registration-holder
+relationships. An existing audit cannot be attached to a newly created closure.
+Closure, both-role session revocation and the verified-owner audit share a
+transaction. Replaying the same recorded action returns the existing result;
+a competing case is rejected without inventing a review record. Migration 0071
+also prevents new requests or quotes against closed accounts. Health requires
+the review table and both new guards.
+
+Validation: 12 focused migrated-SQLite checks, including withdrawal, new job,
+payment, legal hold, staff, published-profile, sponsorship and competing-closure
+races; failed audit writes restore sessions and closure state. The prior full
+build and 1,119-test suite passed, followed by seven additional passing cases.
+Chromium/WebKit at 320 and 1280 pixels verified required fields, explicit
+confirmations, one deliberate synthetic POST, no external requests and no
+overflow. No real account or request queue was read or changed. This current
+inventory has 79 tables (72 counted and seven manual); earlier totals above are
+dated evidence. General data fulfillment remains unfinished.
 
 ## 1. Establish an exact scope before producing a deletion plan
 
