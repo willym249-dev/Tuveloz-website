@@ -505,6 +505,13 @@
       "when": 1791392400000,
       "tag": "0071_reviewed_unused_account_closure",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "6",
+      "when": 1791399600000,
+      "tag": "0072_reviewed_authentication_erasure",
+      "breakpoints": true
     }
   ]
 }

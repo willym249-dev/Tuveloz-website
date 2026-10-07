@@ -509,6 +509,17 @@ export const authSessions = sqliteTable(
   ],
 );
 
+export const privacyAuthErasureRecords = sqliteTable("privacy_auth_erasure_records", {
+  requestId: text("request_id").primaryKey(),
+  scope: text("scope").notNull(),
+  approvedBy: text("approved_by").notNull(),
+  caseReference: text("case_reference").notNull(),
+  recoveryReference: text("recovery_reference").notNull(),
+  snapshotDigest: text("snapshot_digest").notNull(),
+  recordCounts: text("record_counts").notNull(),
+  completedAt: text("completed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const accountClosures = sqliteTable("account_closures", {
   email: text("email").primaryKey(),
   privacyRequestId: text("privacy_request_id").notNull(),

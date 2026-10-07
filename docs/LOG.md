@@ -11,6 +11,34 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-07 - Internal authentication erasure engine validated
+
+PR #296 is published as fe8ecbee94a5274f98ec40766b6d914960152162; its dated
+pre-release notes below are superseded by the independently verified task
+release record. Continued from that exact main on
+feat/privacy-auth-erasure-20261007 without changing the deployed site.
+
+Added an internal, owner-verified authentication erasure engine, scoped to seven
+sources for a reviewed closed unused account. The plan returns counts/digest,
+not private identifiers or credentials. One guarded insert rechecks request,
+record versions and unused-account conditions; its trigger atomically removes
+only approved authentication records and creates the audit receipt. Mid-delete
+failure rolls everything back. Same-case retries confirm existing removal;
+new holds, withdrawal or stale records conflict. Another account's explicitly
+addressed phone codes and all provider documents remain. No privacy request is
+marked fulfilled. Migration 0072 is empty on installation; health requires the
+receipt table/trigger and the inventory explicitly classifies the new table.
+
+Build/all 1,134 tests passed, including eight focused migrated-SQLite checks.
+TypeScript passed; lint has zero errors and the existing navigation warning.
+Log: task outputs/auth-erasure-full-20261007.log. No real case, account, private
+queue, object or backup was read or changed. No route/button invokes the engine;
+no push, migration deployment or real deletion. Do not expose execution until
+durable recovery instructions and restore replay are ready. Backup source review
+shows a separate private backup bucket and scoped retention prefixes; current
+backup proof does not establish preservation of later deletions after a restore.
+General file/vendor disposition and actual-case retention review remain open.
+
 ## 2026-10-07 - Verify review-field recovery and final closure build
 
 A browser failure/retry check exposed an unstable accessible label when retained

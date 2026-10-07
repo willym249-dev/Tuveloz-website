@@ -1,7 +1,8 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: unused-account access closure and review preview implemented and locally
-validated; not published. Data/file/vendor deletion execution remains unfinished.
+Status: reviewed unused-account access closure published in PR #296. The scoped
+authentication-erasure engine is implemented and tested locally, with no live
+action. Durable recovery replay and broader data/file/vendor fulfillment remain.
 Last reviewed: October 7, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
@@ -274,3 +275,40 @@ references, verified dispositions, remaining vendor/backup work, and the
 response actually delivered. Keep personal details in the restricted case.
 Only then finalize the corresponding review queue. The existing privacy launch
 gate remains open until the process and its evidence receive the required review.
+
+## Internal authentication-record erasure engine — October 7
+
+PR #296 is published and verified as `fe8ecbee94a5274f98ec40766b6d914960152162`.
+Its earlier local-only status above is historical. The new engine described in
+this section is local only and has no HTTP route or operator button.
+
+`lib/privacy-auth-erasure.ts` prepares a category-specific snapshot and erases
+only the seven authentication sources after a separately reviewed, unused-account
+closure. The snapshot returned to a reviewer contains counts and a digest; no
+email, phone number, credential, code or record identifier is returned. The
+engine requires verified owner access, same origin, explicit authentication-only
+scope and retention/recovery attestations. Recovery references record evidence;
+they do not themselves implement backup deletion or prove external durability.
+
+Migration 0072 installs an initially empty receipt table and atomic erasure
+trigger. The guarded insert rechecks the entire request/record snapshot and
+unused-account conditions at execution. Receipt creation and authentication
+record deletion succeed together or roll back together. Anonymous phone codes
+are selected only through the subject's current phone association; codes with
+another account's explicit email are preserved. Permanent account-closure state
+remains so removed passwords cannot be recreated. Shared jobs, payment records,
+provider documents and the general privacy-request status are untouched.
+
+Do not expose this internal action until durable recovery instructions and
+restore replay are implemented and verified. A restored older database must not
+revive erased credentials or lose its closure restriction. This engine does not
+erase objects/vendor copies, choose legal retention rules, notify the requester
+or complete the general privacy request. No real case, account or backup was read
+or erased during development.
+
+Validation for the internal engine: production build/all 1,134 tests passed;
+TypeScript passed; lint has no errors and the existing navigation warning.
+Eight focused checks cover exact-account isolation, explicit-email phone-code
+isolation, protected documents, owner/origin/scope checks, missing closure,
+withdrawal/hold/version/job races, rollback and idempotent retry. The privacy
+inventory now explicitly classifies 80 tables. All records were synthetic.
