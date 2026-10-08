@@ -389,3 +389,51 @@ Required before activating the feature:
    private journal and all remaining data/file/vendor categories. This code
    does not authorize retaining identity references forever or destroying
    records that still require retention.
+
+## Isolated Cloudflare rehearsal package — October 8
+
+`rehearsal-worker/build-privacy-recovery.mjs` builds the separate synthetic
+Worker in `rehearsal-worker/privacy-recovery.ts`, using the current migrations
+and actual erasure/journal/replay modules. The builder performs no network,
+credential or deployment operation. The example configuration is
+`rehearsal-worker/privacy-recovery.example.jsonc`; its database IDs are invalid
+placeholders, expiry is empty and public Worker/preview URLs are disabled.
+This package is not imported by the production application.
+
+Proposed temporary resources (none created by preparation):
+
+- Worker: `tuveloz-privacy-rehearsal-20261008`.
+- Empty source D1: `tuveloz-privacy-source-20261008`.
+- Empty restored-copy D1: `tuveloz-privacy-restore-20261008`.
+- Private R2: `tuveloz-privacy-journal-test-20261008`.
+
+Before deployment, verify the actual business account, included quota and each
+new resource's identity. Never substitute a live/staging/backup binding or use
+the example's placeholders. Prepare separate random access and signing secrets
+through secret input, never source, command arguments or test evidence. Access
+expires within one hour; missing/expired authorization denies before storage
+access. The temporary endpoint must be approved before enabling a Worker URL.
+The fixture substitutes synthetic owner verification only in this separate
+bundle; it does not test production Access or authorize a real deletion.
+
+The only operation is authenticated `POST /run`, with fixed synthetic records
+and no caller-selected account or SQL. It refuses any existing user table or
+any bucket object before writing. An atomic storage claim prevents overlapping
+runs. Existing/partial resources are never reset or retried automatically.
+Run once, retain the sanitized response and independently inspect the synthetic
+postconditions. Failures expose only a fixed stage name, not SQL or secrets.
+The checks cover signed completion/retry, conditional writes, journal tampering,
+transaction rollback, ignored phone-code deletion, restored closure, exact
+erasure and unrelated-account preservation. The result always keeps traffic
+closed. Local tests cover access expiry and refusal of occupied resources.
+
+After evidence is saved, disable the temporary endpoint and remove its secrets;
+delete only the four newly identified rehearsal resources with authorized
+cleanup. Failure or partial setup requires recording what remains. This remote
+rehearsal does not establish the real journal's completeness, live source-write
+pause, private journal production integration or a completed privacy request.
+
+On October 8, the existing business Wrangler session was valid but lacked D1
+administration. No broader authorization was silently requested. Remote setup
+remains pending the required database/storage access and concrete test approval;
+production PR #297 remains unchanged.

@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-07
+- **Last reviewed:** 2026-10-08
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,32 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-08 - Prepared isolated recovery rehearsal; cloud access pending
+
+Preserved b3b3e69 and live PR #297; refreshed main and found no open PRs.
+Existing business Wrangler OAuth works but lacks D1 administration. No new
+credential scope or cloud resource was created. Built a separate single-use
+synthetic Worker with fixed data and current schema/engine, one-hour token
+access, separate signing key, empty-resource preflight, atomic storage claim
+and no public URL enabled in its placeholder example configuration.
+
+Local workerd/D1/R2 verification completed signed erasure/retry, conditional
+writes, corrupt-journal denial, rollback, incomplete-deletion denial, restore
+readback and unrelated-account preservation. It also denies anonymous/expired
+access and refuses any occupied source, restore or bucket before mutation.
+Production build/all 1,154 tests and typecheck passed. Full lint had its existing
+site-language warning plus a new anonymous-export warning; removed the new
+warning, reran all eight package checks and targeted lint successfully, then
+rebuilt the bundle. Evidence: task outputs/privacy-recovery-package-*-20261008.
+
+The operator plan is in operations/privacy-fulfillment.md. Requested permission
+for broader Cloudflare database/storage administration and a one-hour isolated
+rehearsal using two empty databases, one private bucket and one protected Worker,
+only if existing included quota covers it, followed by cleanup of those exact
+new resources/secrets. Approval remains pending. No production deployment,
+real records, live deletion, paid upgrade or launch change occurred. Local
+success does not establish production journal integration or recovery readiness.
 
 ## 2026-10-07 - Verify restored authentication data before recovery success
 
