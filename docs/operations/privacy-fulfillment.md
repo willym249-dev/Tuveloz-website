@@ -649,3 +649,56 @@ stops rather than returning a partial report. No unresolved record is removed,
 ignored, confirmed or replayed by this check. Source-pause/provenance evidence,
 an explicit reviewed resolution procedure and retention controls remain required
 before real erasure can be exposed. No paid service or live configuration changed.
+
+## Controlled completion recovery — October 10, 2026
+
+`confirmExistingAuthenticationErasure` now supplies a separate internal path for
+repairing a missing completion acknowledgement. It cannot reach the receipt
+INSERT/deletion branch. It requires verified owner access, matching Origin,
+the original case/snapshot approval fields, the existing scope acknowledgements
+and `confirmCompletionOnly: true`. It reads the existing receipt and source
+snapshot, requires the correct scope, exact original metadata, closure and zero
+remaining authentication records, then asks the signed journal to confirm that
+exact original intent. Missing or altered intent evidence is never recreated.
+
+After the journal write it reads the source snapshot and receipt again. Observed
+movement returns conflict. An uncertain journal write returns recovery-pending;
+a lost write reply is reconciled by authenticated readback. Successful repeated
+confirmation is safe and returns completion-confirmed, with trafficMayOpen and
+completesPrivacyRequest both false. The source database receives no writes.
+Initial erasure now uses the same before/after completion checks; successful SQL
+alone cannot certify a silently skipped credential deletion.
+
+Use this procedure only in a reviewed, isolated recovery environment until the
+remaining production gates are met. No production action or HTTP route is added.
+
+1. Record the actual deployed source database identity, journal binding/context
+   and isolated restore identity in restricted case evidence. Check these against
+   current deployment configuration, not only the supplied object handles. Pause
+   relevant writers and drain in-flight work under the approved incident/change
+   procedure. These code checks do not perform or prove that pause.
+2. Run the bounded read-only recovery review. Reject a failed or changing read;
+   do not use a partial result. Keep the restore isolated throughout.
+3. For receipt-present-completion-missing, review the original signed intent and
+   exact current source receipt/closure. Use that original request ID, snapshot
+   digest, case and recovery references with the confirmation-only action. Do not
+   obtain a new erasure preview or call the original deletion action as a shortcut.
+4. For no-source-receipt, stop. Preserve the intent, source evidence and backups.
+   Investigate source provenance, transaction outcome and in-flight writers.
+   The confirmation-only action returns receipt-missing and performs no writes.
+   It cannot abandon an attempt or authorize another deletion. A reviewed fencing
+   and abandonment procedure remains required for this unresolved case.
+5. For conflict or recovery-pending, retain all evidence and review the actual
+   source again. A completion object may already exist after a lost reply or
+   concurrent source change; never delete it to manufacture a clean retry.
+6. Rerun the full read-only comparison after a confirmed result. Resolve every
+   remaining discrepancy before any isolated restore replay. Independently check
+   the restored data and other fulfillment categories. No result here authorizes
+   a traffic switch or marks the privacy request complete.
+
+Tests use migrated synthetic SQLite with query_only enforced for successful
+confirmation, signed in-memory objects and local workerd D1/R2. They cover absent
+receipts (including failed guarded attempts), owner/origin/scope rejection,
+changed case/digest/closure/scope, missing intent, remaining credentials, lost
+storage replies, concurrent source movement, safe repeats and source isolation.
+No real account, receipt, private journal entry or backup was accessed.

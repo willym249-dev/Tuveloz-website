@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Complete existing recovery acknowledgements without deleting
+
+Continued saved branch feat/privacy-pending-review-20261010 from 7f96c32.
+Fetched main and checked open PRs first: main remains released 1c44c76, with no
+open PR or competing change. Added a separate internal confirmation-only action
+for an existing erasure receipt. Missing receipt returns receipt-missing before
+any write and cannot fall through to new deletion. Owner, Origin, explicit scope,
+original metadata, closure, zero observed authentication rows and signed intent
+are required. Source snapshot and receipt must also remain unchanged across the
+confirmation. It never enables traffic or completes a privacy request.
+
+Reused those postcondition checks for the initial erasure path: a silently
+skipped credential deletion can no longer produce a completion certificate.
+No new route, UI action, migration, setting, paid service or live record change.
+The operations runbook now specifies the controlled completion-only procedure
+and stops missing-receipt cases for provenance/fencing review instead of implying
+that an absent receipt proves deletion never happened.
+
+Build/all 1,208 tests, TypeScript and local workerd D1/R2 checks passed; lint has
+zero errors and the existing site-language warning. After adding the explicit
+POST-method guard, all 53 focused authentication/recovery tests passed again.
+Evidence: outputs/privacy-completion-only-{full,types,lint,final-focused}-20261010.log.
+Real erasure,
+bookings and payments stay disabled. This does not close broader privacy,
+retention, source-pause/provenance or commercial launch requirements.
+
 ## 2026-10-10 - Read-only review of interrupted recovery records
 
 Continued from released main 1c44c76 (PRs #298/#299). Production run 38028785155
