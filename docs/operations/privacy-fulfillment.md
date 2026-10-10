@@ -537,7 +537,7 @@ The production-specific adapter in `lib/privacy-recovery-config.ts` accepts:
 
 | Configuration | Required value or handling |
 | --- | --- |
-| `PRIVACY_ERASURE_JOURNAL` | R2 binding for a separately reviewed private production journal bucket; not uploads, backups, staging or a restored snapshot. Proposed dedicated bucket: `tuveloz-privacy-journal` (not created). |
+| `PRIVACY_ERASURE_JOURNAL` | R2 binding for the dedicated private `tuveloz-privacy-journal` bucket; created October 10, binding prepared locally and not yet deployed. Separate from uploads, backups, staging and restored snapshots. |
 | `PRIVACY_ERASURE_CONTEXT` | Non-secret var `tuveloz-production`; cannot share a staging context. |
 | `PRIVACY_ERASURE_SIGNING_KEY_ID` | Non-secret identifier of the current key in the restricted ring, such as `production-v1`. |
 | `PRIVACY_ERASURE_KEYS_JSON` | Secret JSON object mapping 1–5 unique key IDs to independently generated 32-byte random secrets encoded as 64 lowercase hex characters. Set through restricted secret input, never command arguments or repository files. Keep old keys needed to verify retained records. |
@@ -575,3 +575,42 @@ closure attempts; recovery adds four deliberate reads and zero mutations.
 Evidence: task outputs/privacy-owner-recovery-{full,types,lint}-20261009.log and
 outputs/privacy-owner-recovery-browser-20261009/report.json (names retain the
 start-of-turn date; validation completed October 10).
+
+## Permanent private storage provisioned — October 10, 2026
+
+Created the empty `tuveloz-privacy-journal` bucket in the existing business
+Cloudflare account after checking for duplicates. Verified disabled r2.dev
+access, no custom domains, Standard storage and zero initial objects. Wrote one
+clearly labeled synthetic file under a unique `setup-checks/` key, downloaded it,
+verified identical SHA-256 hashes, and deleted only that probe. Subsequent
+bucket information reports zero objects and zero bytes. This proves the CLI
+storage path, not the still-undeployed application binding or signing operation.
+
+Generated a fresh 32-byte random signing key in process memory and stored its
+`production-v1` ring only in the new `PRIVACY_ERASURE_KEYS_JSON` Cloudflare
+Worker secret through stdin. Verified that the name did not previously exist
+and that all existing secret names were preserved. No key value was written to
+source, evidence, command arguments or a local secret file. Do not regenerate or
+replace the ring on a continuation. Secret installation updates the existing
+Worker configuration; it did not publish this branch's code or enable deletion.
+
+Prepared the dedicated R2 binding and non-secret context/key-ID vars in
+`wrangler.jsonc`. Actual staging-generator output excludes this binding and
+all erasure configuration; automated backup storage is separate, so its expiry
+cannot remove this journal. No paid plan was changed. No lifecycle/retention
+policy was invented for real records; the bucket remains empty and real
+deletion unavailable pending the case-specific and operational review.
+
+Live health after secret setup, at 2026-10-10T04:38:21.882Z, confirms unchanged
+release c5c5fe1, ready application/database/schema, open signup and closed
+bookings/payments. Build/all 1,171 tests, typecheck and lint passed (one existing
+site-language warning). No UI changes since the prior phone/desktop checks.
+Evidence: task outputs/privacy-production-storage-20261010.json,
+privacy-production-storage-health-20261010.json and
+privacy-storage-binding-{full,types,lint}-20261010.log.
+
+Still required: publish the reviewed code/binding through the normal release
+workflow, verify the actual owner read check and application storage access,
+finish source-pause/provenance and pending-intent handling, and review deletion
+controls/retention before exposing a real erasure action. This storage setup
+does not mark privacy fulfillment or commercial launch ready.

@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Provisioned private journal and protected signing key
+
+Created only tuveloz-privacy-journal after confirming no duplicate. Verified
+public r2.dev access disabled, no custom domains and an empty bucket. One
+synthetic setup file passed remote write/download/hash verification and was
+deleted; subsequent bucket info reports zero objects/bytes. Existing upload,
+staging and backup buckets were unchanged. No paid plan change.
+
+Generated a new signing ring in memory, piped only to Cloudflare's new
+PRIVACY_ERASURE_KEYS_JSON secret. Verified its prior absence and preservation
+of all existing secret names; no key value retained in files or logs. This
+updated the current Worker's secret configuration, not the application code.
+Do not recreate the bucket or overwrite the key in later sessions.
+
+Prepared production binding/context/key ID locally. Security tests run the
+actual staging generator and ensure the private journal cannot inherit staging
+or backup expiry bindings. Build/all 1,171 tests, typecheck and lint passed
+(one existing warning). Health at 04:38:21.882 UTC confirms unchanged c5c5fe1,
+ready schema/application, signup open and jobs/payments closed. Evidence:
+task outputs/privacy-production-storage-20261010.json, its companion health
+JSON and privacy-storage-binding-{full,types,lint}-20261010.log.
+
+Code/binding not deployed. Publishing the read-only owner setup and verifying
+its actual binding are next; real erasure remains unexposed pending operational
+source-pause, pending-intent and case-specific retention/control review.
+
 ## 2026-10-10 - Added private recovery adapter and owner read check
 
 Continued dd1f92c without replaying the completed cloud rehearsal. Refreshed main
