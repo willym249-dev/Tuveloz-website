@@ -17,7 +17,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
     for (const entry of JSON.parse(readFileSync(join(repo, 'drizzle/meta/_journal.json'), 'utf8')).entries) schema.exec(readFileSync(join(repo, 'drizzle', entry.tag + '.sql'), 'utf8'));
     const definitions = schema.prepare("SELECT sql FROM sqlite_schema WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY CASE type WHEN 'table' THEN 0 WHEN 'index' THEN 1 ELSE 2 END, name").all();
     const compiled = await build({ absWorkingDir: repo, stdin: { resolveDir: repo, loader: 'ts', contents: `
-      import { previewAuthenticationErasure, eraseReviewedAuthenticationData } from './lib/privacy-auth-erasure';
+      import { previewAuthenticationErasure, eraseReviewedAuthenticationData, confirmExistingAuthenticationErasure } from './lib/privacy-auth-erasure';
       import { AuthErasureRecoveryJournal } from './lib/privacy-erasure-recovery';
       import { replayAuthenticationErasures } from './lib/privacy-erasure-replay';
       import { POST as closeAccess } from './app/api/admin/privacy-requests/close-access/route';
@@ -33,6 +33,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
           if (path === '/preview') result = await previewAuthenticationErasure(env.SOURCE, input.requestId);
           else if (path === '/closure-preview') result = { token: await privacyReviewToken((await env.SOURCE.prepare(PRIVACY_CLOSURE_PREVIEW_SQL).bind(input.requestId).all()).results) };
           else if (path === '/erase') result = await eraseReviewedAuthenticationData(request, env.SOURCE, input, journal);
+          else if (path === '/confirm-existing') result = await confirmExistingAuthenticationErasure(request, env.SOURCE, input, journal);
           else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input, env.SOURCE);
           else if (path === '/catalog') result = { count: (await journal.completedIntents()).length };
           else return new Response('Unknown fixture operation', { status: 404 });
@@ -98,6 +99,10 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       assert.equal((await call('/close-access', input)).body.alreadyClosed, true);
     });
     await t.test('D1 deletion and R2 journal completion agree on success', async () => {
+      const missing = await call('/confirm-existing', { ...approval, confirmCompletionOnly: true });
+      assert.equal(missing.body.status, 'receipt-missing');
+      assert.equal(await count(source, 'account_credentials', target), 1);
+      assert.equal((await bucket.list()).objects.length, 0);
       assert.equal((await call('/erase', approval, { 'x-fixture-owner': 'no' })).body.status, 'forbidden');
       const erased = await call('/erase', approval);
       assert.equal(erased.status, 200); assert.equal(erased.body.status, 'erased');
@@ -105,6 +110,23 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       assert.equal(await count(source, 'account_credentials', other), 1);
       assert.equal((await call('/catalog')).body.count, 1);
       assert.equal((await call('/erase', approval)).body.status, 'already-erased');
+    });
+    await t.test('confirmation-only recovery restores only the missing R2 acknowledgement', async () => {
+      const objects = (await bucket.list()).objects;
+      const completeKey = objects.find(object => object.key.endsWith('/complete.json')).key;
+      const intentKey = objects.find(object => object.key.endsWith('/intent.json')).key;
+      const intentBefore = await (await bucket.get(intentKey)).text();
+      const sourceBefore = await source.prepare('SELECT * FROM privacy_auth_erasure_records ORDER BY request_id').all();
+      await bucket.delete(completeKey);
+      assert.equal((await call('/catalog')).status, 409);
+      const confirmed = await call('/confirm-existing', { ...approval, confirmCompletionOnly: true });
+      assert.deepEqual(confirmed.body, { status: 'completion-confirmed', completesPrivacyRequest: false, trafficMayOpen: false });
+      assert.equal((await call('/catalog')).body.count, 1);
+      assert.equal(await (await bucket.get(intentKey)).text(), intentBefore);
+      assert.deepEqual((await source.prepare('SELECT * FROM privacy_auth_erasure_records ORDER BY request_id').all()).results, sourceBefore.results);
+      assert.equal(await count(source, 'account_credentials', target), 0);
+      assert.equal(await count(source, 'account_credentials', other), 1);
+      assert.equal((await call('/confirm-existing', { ...approval, confirmCompletionOnly: true })).body.status, 'completion-confirmed');
     });
     await t.test('missing R2 catalog cannot hide a completed source deletion', async () => {
       const objects = (await bucket.list()).objects;

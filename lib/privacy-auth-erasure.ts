@@ -61,8 +61,22 @@ type Approval = { requestId: string; reviewToken: string; caseReference: string;
   confirmAuthenticationOnly: boolean; confirmRetentionReviewed: boolean; confirmRecoveryRecorded: boolean };
 export async function eraseReviewedAuthenticationData(request: Request, db: D1Database, approval: Approval,
   journal: AuthErasureRecoveryJournal) {
+  return applyReviewedAuthenticationErasure(request, db, approval, journal, false);
+}
+
+// Recovery must not fall through to a fresh deletion when a receipt is absent.
+// Internal only: no HTTP route or production caller. The original signed intent
+// supplies the case/snapshot metadata; it is not a new erasure approval.
+export async function confirmExistingAuthenticationErasure(request: Request, db: D1Database,
+  approval: Approval & { confirmCompletionOnly: boolean }, journal: AuthErasureRecoveryJournal) {
+  if (approval.confirmCompletionOnly !== true) return { status: "invalid" as const };
+  return applyReviewedAuthenticationErasure(request, db, approval, journal, true);
+}
+
+async function applyReviewedAuthenticationErasure(request: Request, db: D1Database, approval: Approval,
+  journal: AuthErasureRecoveryJournal, completionOnly: boolean) {
   const owner = await verifyOwnerRequest(request);
-  if (!owner.ok || !isStrictSameOriginWriteRequest(request)) return { status: "forbidden" as const };
+  if (!owner.ok || request.method !== "POST" || !isStrictSameOriginWriteRequest(request)) return { status: "forbidden" as const };
   if (!approval.requestId || approval.requestId.length > 100 || !/^[a-f0-9]{64}$/.test(approval.reviewToken)
     || ![approval.caseReference, approval.recoveryReference].every(value => typeof value === "string" && value.trim().length >= 8 && value.length <= 200)
     || approval.confirmAuthenticationOnly !== true || approval.confirmRetentionReviewed !== true || approval.confirmRecoveryRecorded !== true) {
@@ -76,17 +90,31 @@ export async function eraseReviewedAuthenticationData(request: Request, db: D1Da
       recoveryReference: approval.recoveryReference.trim(), closureCaseReference: snapshot.data.closed.case,
       closedAt: snapshot.data.closed.closedAt, reviewAfter: snapshot.data.closed.reviewAfter };
   };
-  const previous = await db.prepare("SELECT case_reference, recovery_reference, snapshot_digest, approved_by FROM privacy_auth_erasure_records WHERE request_id = ?")
-    .bind(approval.requestId).first<{ case_reference: string; recovery_reference: string; snapshot_digest: string; approved_by: string }>();
-  if (previous) {
+  const readReceipt = () => db.prepare("SELECT scope, case_reference, recovery_reference, snapshot_digest, approved_by FROM privacy_auth_erasure_records WHERE request_id = ?")
+    .bind(approval.requestId).first<{ scope: string; case_reference: string; recovery_reference: string; snapshot_digest: string; approved_by: string }>();
+  const confirmReceipt = async (previous: NonNullable<Awaited<ReturnType<typeof readReceipt>>>, newlyErased: boolean) => {
     const snapshot = await snapshotFor(db, approval.requestId);
     const matching = previous.case_reference === approval.caseReference.trim()
       && previous.recovery_reference === approval.recoveryReference.trim() && previous.snapshot_digest === approval.reviewToken;
-    if (!matching || !snapshot?.data.closed || !Object.values(snapshot.counts).every(count => count === 0)) return { status: "conflict" as const };
+    if (!matching || previous.scope !== "authentication-records" || !snapshot?.data.closed
+      || !Object.values(snapshot.counts).every(count => count === 0)) return { status: "conflict" as const };
     try { await journal.confirm(recoveryIntent(snapshot, previous.approved_by)); }
     catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
+    // A successful journal write is not sufficient if the source moved during
+    // confirmation. Preserve any saved evidence and require another review.
+    const after = await snapshotFor(db, approval.requestId);
+    const receiptAfter = await readReceipt();
+    if (!after || after.raw !== snapshot.raw || !receiptAfter
+      || (Object.keys(previous) as (keyof typeof previous)[]).some(key => receiptAfter[key] !== previous[key])) {
+      return { status: "conflict" as const, completesPrivacyRequest: false as const };
+    }
+    if (newlyErased) return { status: "erased" as const, completesPrivacyRequest: false as const };
+    if (completionOnly) return { status: "completion-confirmed" as const, completesPrivacyRequest: false as const, trafficMayOpen: false as const };
     return { status: "already-erased" as const, completesPrivacyRequest: false as const };
-  }
+  };
+  const previous = await readReceipt();
+  if (previous) return confirmReceipt(previous, false);
+  if (completionOnly) return { status: "receipt-missing" as const, completesPrivacyRequest: false as const, trafficMayOpen: false as const };
   const snapshot = await snapshotFor(db, approval.requestId);
   if (!snapshot?.eligible || snapshot.digest !== approval.reviewToken) return { status: "conflict" as const };
   const intent = recoveryIntent(snapshot, owner.email);
@@ -101,7 +129,8 @@ export async function eraseReviewedAuthenticationData(request: Request, db: D1Da
   // D1 counts the receipt AND its trigger's deletions in meta.changes. An
   // accepted insert can therefore change many rows; only zero means no insert.
   if (!(result.meta.changes >= 1)) return { status: "conflict" as const };
-  try { await journal.confirm(intent); }
-  catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
-  return { status: "erased" as const, completesPrivacyRequest: false as const };
+  // A trigger can silently skip a deletion. Verify absence before certifying
+  // completion instead of assuming successful SQL means every row was removed.
+  const saved = await readReceipt();
+  return saved ? confirmReceipt(saved, true) : { status: "conflict" as const, completesPrivacyRequest: false as const };
 }

@@ -86,23 +86,26 @@ export class AuthErasureRecoveryJournal {
     await this.saveOnce(`${this.prefix}${id}/complete.json`, { version: 1, context: this.context, kind: "complete",
       intentHash: await digest(JSON.stringify(stored)) });
   }
-  async completedIntents() {
+  async inspectIntents(maxIntents = 1000, maxPages = 100) {
+    if (!Number.isSafeInteger(maxIntents) || maxIntents < 1 || maxIntents > 1000
+      || !Number.isSafeInteger(maxPages) || maxPages < 1 || maxPages > 100) throw problem();
     const keys = new Set<string>(), cursors = new Set<string>();
     let cursor: string | undefined;
     let pages = 0;
     do {
-      if (++pages > 100) throw problem();
+      if (++pages > maxPages) throw problem();
       const page = await this.store.list({ prefix: this.prefix, cursor, limit: 100 });
       for (const object of page.objects) {
         if (!object.key.startsWith(this.prefix) || !/^[a-f0-9]{64}\/(intent|complete)\.json$/.test(object.key.slice(this.prefix.length))) throw problem();
         keys.add(object.key);
-        if (keys.size > 2000) throw problem();
+        if (keys.size > maxIntents * 2) throw problem();
       }
       if (!page.truncated) break;
       if (!page.cursor || cursors.has(page.cursor)) throw problem();
       cursors.add(page.cursor); cursor = page.cursor;
     } while (true);
-    const result: AuthErasureIntent[] = [];
+    if ([...keys].filter(key => key.endsWith("/intent.json")).length > maxIntents) throw problem();
+    const result: { intent: AuthErasureIntent; state: "pending" | "complete" }[] = [];
     // Validate the entire catalog before a caller is allowed to replay any row.
     for (const key of keys) {
       if (!key.endsWith("/intent.json")) {
@@ -110,11 +113,22 @@ export class AuthErasureRecoveryJournal {
         continue;
       }
       const intent = await this.read(key), completion = await this.read(key.replace(/intent\.json$/, "complete.json"));
-      if (!intent || intent.kind !== "intent" || !completion || completion.kind !== "complete"
-        || completion.intentHash !== await digest(JSON.stringify(intent))
+      if (!intent || intent.kind !== "intent"
         || key !== `${this.prefix}${await this.id(intent.intent.requestId, intent.intent.snapshotDigest)}/intent.json`) throw problem();
-      result.push(intent.intent);
+      // A missing completion is an unresolved attempt, not permission to replay.
+      // Also reject disagreement between listing and reads rather than silently
+      // accepting a changing or partial catalog.
+      if (Boolean(completion) !== keys.has(key.replace(/intent\.json$/, "complete.json"))) throw problem();
+      if (completion && (completion.kind !== "complete"
+        || completion.intentHash !== await digest(JSON.stringify(intent)))) throw problem();
+      result.push({ intent: intent.intent, state: completion ? "complete" : "pending" });
+      if (result.length > maxIntents) throw problem();
     }
     return result;
+  }
+  async completedIntents() {
+    const records = await this.inspectIntents();
+    if (records.some(record => record.state !== "complete")) throw problem();
+    return records.map(record => record.intent);
   }
 }

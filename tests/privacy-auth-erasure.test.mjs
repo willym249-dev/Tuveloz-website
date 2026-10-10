@@ -188,6 +188,108 @@ test('scoped authentication erasure uses migrated synthetic records only', async
       assert.equal((await isolated.journal.completedIntents()).length, 1);
       assert.equal(count('privacy_auth_erasure_records', 'request_id', row.approval.requestId), 1);
     });
+    await t.test('confirmation-only recovery never starts deletion when its receipt is absent', async () => {
+      const row = await make('confirm-no-receipt'), isolated = createJournal('confirm-no-receipt');
+      const before = database.prepare('SELECT total_changes() n').get().n;
+      // Even a fully eligible original deletion approval cannot cause deletion.
+      const confirm = () => api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, isolated.journal);
+      database.exec('PRAGMA query_only=ON');
+      try {
+        assert.equal((await confirm()).status, 'receipt-missing');
+        assert.equal((await confirm()).trafficMayOpen, false);
+      } finally { database.exec('PRAGMA query_only=OFF'); }
+      assert.equal(count('account_credentials', 'email', row.email), 1);
+      assert.equal(database.prepare('SELECT total_changes() n').get().n, before);
+      assert.equal(isolated.objects.size, 0);
+      // An intent left by a failed guarded write must also remain unresolved.
+      state.beforeWrite = () => database.prepare("UPDATE account_credentials SET updated_at='2099-01-01' WHERE email=?").run(row.email);
+      assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'conflict');
+      const saved = JSON.stringify([...isolated.objects]);
+      assert.equal((await confirm()).status, 'receipt-missing');
+      assert.equal(JSON.stringify([...isolated.objects]), saved);
+      await assert.rejects(() => isolated.journal.completedIntents(), /recovery evidence/);
+    });
+    await t.test('confirmation-only recovery requires owner, origin and explicit scope before reading data', async () => {
+      const row = await make('confirm-auth'), isolated = createJournal('confirm-auth');
+      const approval = { ...row.approval, confirmCompletionOnly: true }, queries = state.queries;
+      state.owner = false;
+      try { assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, approval, isolated.journal)).status, 'forbidden'); }
+      finally { state.owner = true; }
+      for (const req of [request('https://other.invalid'), new Request('https://tuveloz.invalid/internal-erasure-test', { method: 'POST' }),
+        new Request('https://tuveloz.invalid/internal-erasure-test', { headers: { origin: 'https://tuveloz.invalid' } })]) {
+        assert.equal((await api.confirmExistingAuthenticationErasure(req, db, approval, isolated.journal)).status, 'forbidden');
+      }
+      for (const field of ['confirmCompletionOnly', 'confirmAuthenticationOnly', 'confirmRetentionReviewed', 'confirmRecoveryRecorded']) {
+        assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, { ...approval, [field]: false }, isolated.journal)).status, 'invalid');
+      }
+      assert.equal(state.queries, queries); assert.equal(isolated.objects.size, 0);
+    });
+    await t.test('confirmation-only recovery writes only the missing completion and tolerates lost storage replies', async () => {
+      const row = await make('confirm-only'), isolated = createJournal('confirm-only');
+      isolated.faults.complete = true;
+      assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'recovery-pending');
+      const confirm = () => api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, isolated.journal);
+      const changes = database.prepare('SELECT total_changes() n').get().n;
+      const put = isolated.store.put, writtenKeys = [];
+      isolated.store.put = async (...args) => { writtenKeys.push(args[0]); assert.ok(args[0].endsWith('/complete.json')); return put(...args); };
+      database.exec('PRAGMA query_only=ON');
+      try {
+        assert.equal((await confirm()).status, 'recovery-pending');
+        isolated.faults.complete = false; isolated.faults.afterPut = true;
+        assert.deepEqual(await confirm(), { status: 'completion-confirmed', completesPrivacyRequest: false, trafficMayOpen: false });
+        assert.equal((await confirm()).status, 'completion-confirmed');
+        assert.equal((await isolated.journal.completedIntents()).length, 1);
+        assert.equal(database.prepare('SELECT total_changes() n').get().n, changes);
+        assert.equal(new Set(writtenKeys).size, 1);
+      } finally { database.exec('PRAGMA query_only=OFF'); }
+    });
+    for (const defect of ['case', 'digest', 'closure', 'missing-intent', 'remaining-auth', 'scope']) await t.test(`confirmation-only recovery refuses ${defect}`, async () => {
+      const row = await make('confirm-defect-' + defect), isolated = createJournal('confirm-defect-' + defect);
+      isolated.faults.complete = true;
+      assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'recovery-pending');
+      isolated.faults.complete = false;
+      const approval = { ...row.approval, confirmCompletionOnly: true };
+      if (defect === 'case') approval.caseReference = 'DIFFERENT-CASE';
+      if (defect === 'digest') approval.reviewToken = 'f'.repeat(64);
+      if (defect === 'closure') database.prepare("UPDATE account_closures SET case_reference='DIFFERENT-CLOSURE' WHERE email=?").run(row.email);
+      if (defect === 'missing-intent') isolated.objects.clear();
+      if (defect === 'remaining-auth') {
+        // Simulate an incorrectly restored row; normal insertion is blocked.
+        const guard = database.prepare("SELECT sql FROM sqlite_schema WHERE name='closed_account_session_insert'").get().sql;
+        database.exec('DROP TRIGGER closed_account_session_insert');
+        try { seed('auth_sessions', { id: 'unexpected-restored-session', email: row.email, role: 'customer' }); }
+        finally { database.exec(guard); }
+      }
+      if (defect === 'scope') database.exec(`PRAGMA ignore_check_constraints=ON; UPDATE privacy_auth_erasure_records SET scope='other' WHERE request_id='${approval.requestId}'; PRAGMA ignore_check_constraints=OFF;`);
+      const before = JSON.stringify([...isolated.objects]);
+      const result = await api.confirmExistingAuthenticationErasure(request(), db, approval, isolated.journal);
+      assert.ok(['conflict', 'recovery-pending'].includes(result.status));
+      assert.equal(JSON.stringify([...isolated.objects]), before);
+    });
+    for (const movement of ['receipt', 'snapshot']) await t.test(`confirmation rejects ${movement} movement during journal write`, async () => {
+      const row = await make('confirm-race-' + movement), isolated = createJournal('confirm-race-' + movement);
+      isolated.faults.complete = true;
+      assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'recovery-pending');
+      isolated.faults.complete = false;
+      const put = isolated.store.put;
+      isolated.store.put = async (...args) => {
+        const result = await put(...args);
+        if (movement === 'receipt') database.prepare("UPDATE privacy_auth_erasure_records SET recovery_reference='CHANGED-RECOVERY' WHERE request_id=?").run(row.approval.requestId);
+        else database.prepare("UPDATE privacy_requests SET details='Changed during confirmation' WHERE id=?").run(row.approval.requestId);
+        return result;
+      };
+      assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, isolated.journal)).status, 'conflict');
+    });
+    await t.test('fresh erasure cannot certify completion when a trigger silently preserves credentials', async () => {
+      const row = await make('source-silent-delete'), isolated = createJournal('source-silent-delete');
+      database.exec("CREATE TRIGGER synthetic_keep_credential BEFORE DELETE ON account_credentials WHEN OLD.email='source-silent-delete@example.invalid' BEGIN SELECT RAISE(IGNORE); END");
+      try {
+        assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'conflict');
+        assert.equal(count('account_credentials', 'email', row.email), 1);
+        assert.equal([...isolated.objects.keys()].some(key => key.endsWith('/complete.json')), false);
+        assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, isolated.journal)).status, 'conflict');
+      } finally { database.exec('DROP TRIGGER synthetic_keep_credential'); }
+    });
     await t.test('old backup replay validates all evidence and atomically keeps erased accounts closed', async recoveryTest => {
       const target = await make('restore-target', false), other = await make('restore-other', false);
       const captured = new Map(api.AUTH_ERASURE_TABLES.map(table => [table, database.prepare(`SELECT * FROM ${table} WHERE email IN (?, ?)${table === 'phone_login_codes' ? ' OR phone_e164 IN (?, ?)' : ''}`).all(target.email, other.email, ...(table === 'phone_login_codes' ? [target.phone, other.phone] : []))]));
