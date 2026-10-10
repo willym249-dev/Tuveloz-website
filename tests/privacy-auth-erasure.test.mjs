@@ -179,7 +179,7 @@ test('scoped authentication erasure uses migrated synthetic records only', async
       assert.equal((await isolated.journal.completedIntents()).length, 1);
       assert.equal(count('privacy_auth_erasure_records', 'request_id', row.approval.requestId), 1);
     });
-    await t.test('old backup replay validates all evidence and atomically keeps erased accounts closed', async () => {
+    await t.test('old backup replay validates all evidence and atomically keeps erased accounts closed', async recoveryTest => {
       const target = await make('restore-target', false), other = await make('restore-other', false);
       const captured = new Map(api.AUTH_ERASURE_TABLES.map(table => [table, database.prepare(`SELECT * FROM ${table} WHERE email IN (?, ?)${table === 'phone_login_codes' ? ' OR phone_e164 IN (?, ?)' : ''}`).all(target.email, other.email, ...(table === 'phone_login_codes' ? [target.phone, other.phone] : []))]));
       seed('account_closures', { email: target.email, privacy_request_id: target.approval.requestId, case_reference: 'CASE-restore-target', review_after: '2099-01-01' });
@@ -188,20 +188,51 @@ test('scoped authentication erasure uses migrated synthetic records only', async
       const isolated = createJournal('restore-test');
       assert.equal((await api.eraseReviewedAuthenticationData(request(), db, target.approval, isolated.journal)).status, 'erased');
       const restored = new DatabaseSync(':memory:');
+      const currentSource = new DatabaseSync(':memory:');
       try {
         for (const entry of JSON.parse(readFileSync(join(repo, 'drizzle/meta/_journal.json'), 'utf8')).entries) restored.exec(readFileSync(join(repo, 'drizzle', entry.tag + '.sql'), 'utf8'));
         for (const [table, rows] of captured) for (const row of rows) seed(table, { ...row }, restored);
+        // A separate source snapshot for this synthetic catalog. It contains only
+        // this isolated journal's actual receipt and matching closure.
+        for (const table of ['privacy_auth_erasure_records', 'account_closures']) {
+          currentSource.exec(database.prepare("SELECT sql FROM sqlite_schema WHERE type='table' AND name=?").get(table).sql);
+          const column = table === 'account_closures' ? 'privacy_request_id' : 'request_id';
+          seed(table, { ...database.prepare(`SELECT * FROM ${table} WHERE ${column}=?`).get(target.approval.requestId) }, currentSource);
+        }
+        const sourceDb = { prepare(sql) { return { async all() { return { success: true, results: currentSource.prepare(sql).all() }; } }; } };
         let writes = 0;
         const restoreDb = {
           prepare(sql) { let values = []; return { bind(...params) { values = params; return this; }, async first() { return restored.prepare(sql).get(...values) ?? null; }, execute() { writes++; return { meta: { changes: Number(restored.prepare(sql).run(...values).changes) } }; } }; },
           async batch(statements) { restored.exec('BEGIN'); try { const result = statements.map(statement => statement.execute()); restored.exec('COMMIT'); return result; } catch (error) { restored.exec('ROLLBACK'); throw error; } },
         };
         const review = { isolatedRestoreConfirmed: true, sourceWritesPausedConfirmed: true, recoveryCaseReference: 'RESTORE-SYNTHETIC-CASE' };
-        const replay = () => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review);
-        await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, { ...review, sourceWritesPausedConfirmed: false }), /paused source writes/);
+        const replay = () => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review, sourceDb);
+        await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, { ...review, sourceWritesPausedConfirmed: false }, sourceDb), /paused source writes/);
         const intentKey = [...isolated.objects.keys()].find(key => key.endsWith('/intent.json'));
         const completeKey = [...isolated.objects.keys()].find(key => key.endsWith('/complete.json'));
         const original = isolated.objects.get(intentKey), completion = isolated.objects.get(completeKey);
+        await recoveryTest.test('missing source, unavailable source and an empty journal cannot authorize replay', async () => {
+          await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review), /separate current source/);
+          await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review, restoreDb), /separate current source/);
+          await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review, {
+            prepare() { throw Error('Synthetic source unavailable'); },
+          }), /source unavailable/);
+          const list = isolated.store.list;
+          isolated.store.list = async () => ({ objects: [], truncated: false });
+          try { await assert.rejects(replay, /source and recovery catalog/); }
+          finally { isolated.store.list = list; }
+          assert.equal(writes, 0);
+        });
+        await recoveryTest.test('stale source metadata and missing closure evidence block all restore writes', async () => {
+          currentSource.exec('BEGIN');
+          currentSource.prepare('UPDATE privacy_auth_erasure_records SET case_reference=?').run('OTHER-REVIEW-CASE');
+          await assert.rejects(replay, /source and recovery catalog/);
+          currentSource.exec('ROLLBACK; BEGIN');
+          currentSource.exec('DELETE FROM account_closures');
+          await assert.rejects(replay, /source and recovery catalog/);
+          currentSource.exec('ROLLBACK');
+          assert.equal(writes, 0);
+        });
         const tampered = JSON.parse(original); tampered.body.intent.email = other.email;
         isolated.objects.set(intentKey, JSON.stringify(tampered));
         await assert.rejects(replay, /recovery evidence/); assert.equal(writes, 0);
@@ -225,7 +256,26 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         assert.equal(restored.prepare('SELECT count(*) n FROM account_closures WHERE email=?').get(target.email).n, 1);
         assert.throws(() => seed('account_credentials', { email: target.email }, restored), /Account access is closed/);
         assert.equal((await replay()).replayed, 1);
-      } finally { restored.close(); }
+        await recoveryTest.test('source and journal changes during replay prevent a success result', async () => {
+          const batch = restoreDb.batch;
+          currentSource.exec('BEGIN');
+          restoreDb.batch = async statements => {
+            const result = await batch(statements);
+            currentSource.prepare('UPDATE privacy_auth_erasure_records SET recovery_reference=?').run('CHANGED-DURING-REPLAY');
+            return result;
+          };
+          try { await assert.rejects(replay, /source and recovery catalog/); }
+          finally { currentSource.exec('ROLLBACK'); restoreDb.batch = batch; }
+          restoreDb.batch = async statements => {
+            const result = await batch(statements);
+            isolated.objects.delete(intentKey); isolated.objects.delete(completeKey);
+            return result;
+          };
+          try { await assert.rejects(replay, /source and recovery catalog/); }
+          finally { isolated.objects.set(intentKey, original); isolated.objects.set(completeKey, completion); restoreDb.batch = batch; }
+          assert.equal((await replay()).trafficMayOpen, false);
+        });
+      } finally { restored.close(); currentSource.close(); }
     });
     await t.test('catalog pagination loops and unresolved intents fail closed', async () => {
       await assert.rejects(() => recovery.journal.completedIntents(), /recovery evidence/, 'race intents remain unresolved');

@@ -3,9 +3,11 @@
 Status: reviewed unused-account access closure published in PR #296, corrected
 for Cloudflare D1 in published PR #297. The scoped
 authentication-erasure engine and signed recovery journal/replay are implemented
-and tested locally, with no live action. Production recovery integration,
+and tested locally and in an isolated synthetic Cloudflare rehearsal, with no
+real account action. Current-source catalog reconciliation is tested locally.
+Production recovery integration,
 operator controls and broader data/file/vendor fulfillment remain.
-Last reviewed: October 7, 2026.
+Last reviewed: October 9, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
@@ -485,3 +487,38 @@ Live health at 2026-10-10T02:46:56.357Z still reports c5c5fe1, ready application
 database/schema, open account/provider signup and closed bookings/payments.
 The approved business Wrangler login remains available; the temporary Worker
 secrets are gone. Evidence: task outputs/privacy-recovery-cleanup-20261009.json.
+
+## Independent source reconciliation — October 9, 2026
+
+`lib/privacy-erasure-catalog.ts` reads the current source's completed erasure
+receipts and their closure evidence with one bounded read-only query. Replay
+now requires a separate current-source database argument and exact agreement
+between that inventory and the signed journal before changing the isolated
+restore. Missing receipts, an empty/partial journal, extra entries, duplicate
+requests, mismatched case metadata and orphan receipts all stop recovery.
+Missing/failed source reads never become an empty inventory. The query reads
+101 rows to detect overflow rather than silently accepting the first 100.
+
+After restore readback, replay checks source agreement again and verifies that
+the journal has not changed. Detected movement prevents a success result; it
+does not undo an already committed restore batch. Traffic remains closed and
+the operator must review the isolated copy. Source/journal contents stay in
+memory and are not added to the response or logs.
+
+This requires access to the current source, not its restored backup. If the
+source is unavailable, stop: an independently preserved current inventory and
+separately reviewed disaster-recovery path are still needed. Binding provenance,
+actual source-write pause, in-flight intent reconciliation and journal retention
+remain operational prerequisites. Comparing two empty or equally stale stores
+cannot establish freshness. Object-identity rejection catches accidental reuse
+of the same database handle but cannot prove two bindings identify different
+remote resources. No public route, owner button, deployment binding or real
+deletion is enabled. This remains a local change after the completed remote
+rehearsal, not a new remote-verification claim.
+
+Validation: build/all 1,162 tests and TypeScript passed; lint has zero errors and
+the existing site-language warning. Synthetic SQLite tests cover exact membership,
+all case fields, overflow/orphans, missing source and source/journal movement.
+Local workerd/D1/R2 confirms an empty bucket cannot hide a source receipt, with
+no restore mutation; the existing rollback/isolation/retry and request-budget
+tests also pass. Evidence: task outputs/privacy-catalog-{full,types,lint}-20261009.log.

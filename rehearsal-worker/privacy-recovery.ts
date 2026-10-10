@@ -103,7 +103,7 @@ const privacyRecoveryRehearsal = {
       requireTrue(await (await env.JOURNAL.get(intentKey))!.text() === original);
       await env.JOURNAL.put(intentKey, "synthetic-corruption");
       let rejected = false;
-      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review); } catch { rejected = true; }
+      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review, env.SOURCE); } catch { rejected = true; }
       requireTrue(rejected && await count(env.RESTORE, "account_credentials", target) === 1);
       requireTrue(await count(env.RESTORE, "account_closures", target) === 0);
       await env.JOURNAL.put(intentKey, original);
@@ -112,7 +112,7 @@ const privacyRecoveryRehearsal = {
       stage = "rollback";
       await env.RESTORE.prepare("CREATE TRIGGER synthetic_abort BEFORE DELETE ON passkey_credentials BEGIN SELECT RAISE(ABORT, 'synthetic'); END").run();
       let rejected = false;
-      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review); } catch { rejected = true; }
+      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review, env.SOURCE); } catch { rejected = true; }
       requireTrue(rejected && await count(env.RESTORE, "account_closures", target) === 0);
       requireTrue(await count(env.RESTORE, "auth_sessions", target) === 2);
       await env.RESTORE.prepare("DROP TRIGGER synthetic_abort").run();
@@ -121,13 +121,13 @@ const privacyRecoveryRehearsal = {
       stage = "silent-deletion-failure";
       await env.RESTORE.prepare("CREATE TRIGGER synthetic_ignore BEFORE DELETE ON phone_login_codes BEGIN SELECT RAISE(IGNORE); END").run();
       let rejected = false;
-      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review); } catch { rejected = true; }
+      try { await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review, env.SOURCE); } catch { rejected = true; }
       requireTrue(rejected && await count(env.RESTORE, "account_phone_numbers", target) === 1);
       await env.RESTORE.prepare("DROP TRIGGER synthetic_ignore").run();
       passed.push("remaining-phone-code-denial");
       } else if (step === setupSteps + 4) {
       stage = "verified-restore";
-      const result = await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review);
+      const result = await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review, env.SOURCE);
       requireTrue(result.replayed === 1 && result.trafficMayOpen === false);
       for (const table of ["auth_sessions", "login_codes", "password_verification_codes", "passkey_credentials", "account_credentials", "account_phone_numbers"]) {
         requireTrue(await count(env.RESTORE, table, target) === 0);
@@ -136,7 +136,7 @@ const privacyRecoveryRehearsal = {
       requireTrue(await count(env.RESTORE, "account_closures", target) === 1);
       requireTrue(await count(env.RESTORE, "auth_sessions", other) === 2);
       requireTrue(await count(env.RESTORE, "account_credentials", other) === 1);
-      requireTrue((await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review)).replayed === 1);
+      requireTrue((await replayAuthenticationErasures(internalRequest, env.RESTORE, journal, review, env.SOURCE)).replayed === 1);
       passed.push("restore-readback-isolation-and-retry");
       }
       requireTrue(await env.JOURNAL.put(`rehearsal-step-${step}-done`, JSON.stringify(passed), { onlyIf: { etagDoesNotMatch: "*" } }) !== null);

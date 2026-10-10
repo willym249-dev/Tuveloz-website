@@ -11,6 +11,29 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-09 - Recovery catalog now reconciles against current source receipts
+
+Continued the existing private erasure branch after a2957fb; main remains
+c5c5fe1 and there were no open PRs. Added a bounded independent source inventory
+and required exact journal agreement before replay, source agreement afterward,
+and unchanged journal evidence before returning success. Empty/partial listings,
+orphan receipts, changed metadata, unavailable source and detected mid-replay
+movement fail closed. Restored traffic remains closed in every result.
+
+Build/all 1,162 tests and TypeScript passed; lint has zero errors and one existing
+site-language warning. Actual local workerd/D1/R2 exercises missing journal
+evidence against a completed source receipt. Synthetic tests also verify every
+metadata field, duplicate/missing/extra records, bounded overflow, source outage
+and changes during replay. Existing rehearsal request budget still passes.
+Evidence: task outputs/privacy-catalog-{full,types,lint}-20261009.log.
+
+Local only: no deployment, production configuration, real account action or
+cloud resource created. Preserve the completed remote rehearsal and cleanup.
+Current source availability/provenance and actual write pause are still required;
+this comparison is not a source lock or independent disaster-time checkpoint.
+Private journal/key setup, operational controls and case-specific retention
+remain before exposing erasure. See operations/privacy-fulfillment.md.
+
 ## 2026-10-09 - Fixed test access and completed isolated Cloudflare recovery
 
 Explicit owner approval resolved the expired OAuth request. Corrected broad

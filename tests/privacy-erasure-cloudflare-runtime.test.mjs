@@ -33,7 +33,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
           if (path === '/preview') result = await previewAuthenticationErasure(env.SOURCE, input.requestId);
           else if (path === '/closure-preview') result = { token: await privacyReviewToken((await env.SOURCE.prepare(PRIVACY_CLOSURE_PREVIEW_SQL).bind(input.requestId).all()).results) };
           else if (path === '/erase') result = await eraseReviewedAuthenticationData(request, env.SOURCE, input, journal);
-          else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input);
+          else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input, env.SOURCE);
           else if (path === '/catalog') result = { count: (await journal.completedIntents()).length };
           else return new Response('Unknown fixture operation', { status: 404 });
           return Response.json(result);
@@ -105,6 +105,18 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       assert.equal(await count(source, 'account_credentials', other), 1);
       assert.equal((await call('/catalog')).body.count, 1);
       assert.equal((await call('/erase', approval)).body.status, 'already-erased');
+    });
+    await t.test('missing R2 catalog cannot hide a completed source deletion', async () => {
+      const objects = (await bucket.list()).objects;
+      const saved = await Promise.all(objects.map(async object => [object.key, await (await bucket.get(object.key)).text()]));
+      try {
+        await bucket.delete(objects.map(object => object.key));
+        const response = await call('/replay', review);
+        assert.equal(response.status, 409);
+        assert.match(response.body.error, /source and recovery catalog/);
+        assert.equal(await count(restore, 'account_credentials', target), 1);
+        assert.equal(await count(restore, 'account_closures', target), 0);
+      } finally { for (const [key, body] of saved) await bucket.put(key, body); }
     });
     await t.test('R2 conditional writes preserve existing signed evidence', async () => {
       const objects = (await bucket.list()).objects;

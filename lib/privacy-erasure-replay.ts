@@ -1,21 +1,24 @@
 import { AuthErasureRecoveryJournal } from "./privacy-erasure-recovery";
 import { verifyOwnerRequest } from "./owner-auth";
 import { isStrictSameOriginWriteRequest } from "./request-security";
+import { assertAuthenticationCatalogMatches, assertCurrentAuthenticationCatalog } from "./privacy-erasure-catalog";
 
 // For an isolated, fully migrated restore only. This never enables traffic or
 // proves that the supplied catalog is the current authoritative store.
 export async function replayAuthenticationErasures(request: Request, db: D1Database,
   journal: AuthErasureRecoveryJournal, review: {
     isolatedRestoreConfirmed: boolean; sourceWritesPausedConfirmed: boolean; recoveryCaseReference: string;
-  }) {
+  }, source: D1Database) {
   const owner = await verifyOwnerRequest(request);
   if (!owner.ok || !isStrictSameOriginWriteRequest(request)) throw new Error("Verified owner recovery access required.");
   if (review.isolatedRestoreConfirmed !== true || review.sourceWritesPausedConfirmed !== true
     || typeof review.recoveryCaseReference !== "string" || review.recoveryCaseReference.trim().length < 8) {
     throw new Error("A restricted restore and paused source writes must be confirmed.");
   }
+  if (!source || source === db) throw new Error("A separate current source database is required for recovery reconciliation.");
   const intents = await journal.completedIntents();
   if (intents.length > 100) throw new Error("Recovery catalog requires a separately reviewed batch plan.");
+  await assertCurrentAuthenticationCatalog(source, intents);
   const statements: D1PreparedStatement[] = [];
   for (const intent of intents) {
     statements.push(db.prepare(`INSERT INTO account_closures (email, privacy_request_id, case_reference, closed_at, review_after)
@@ -51,6 +54,10 @@ export async function replayAuthenticationErasures(request: Request, db: D1Datab
       throw new Error("Recovery verification failed. Keep the restored database isolated and review remaining authentication records.");
     }
   }
+  // Catch source movement or journal changes during replay. Even a successful
+  // comparison cannot replace an actual write pause or authorize traffic.
+  await assertCurrentAuthenticationCatalog(source, intents);
+  assertAuthenticationCatalogMatches(intents, await journal.completedIntents());
   return { replayed: intents.length, recoveryCaseReference: review.recoveryCaseReference.trim(),
     trafficMayOpen: false as const, requiresCurrentCatalogAndRestoreReview: true as const };
 }
