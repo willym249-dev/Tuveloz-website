@@ -13,14 +13,14 @@ CREATE TABLE privacy_auth_erasure_records (
 -- The receipt and all removals share one SQLite statement/transaction.
 CREATE TRIGGER privacy_auth_erasure_apply AFTER INSERT ON privacy_auth_erasure_records
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM account_closures closed JOIN privacy_requests request
       ON closed.privacy_request_id = request.id AND closed.email = lower(trim(request.email))
     JOIN privacy_access_closure_reviews review ON review.request_id = request.id
     WHERE request.id = NEW.request_id AND request.request_type = 'account-closure'
       AND request.status IN ('submitted', 'in-review')
       AND request.identity_source = 'signed-in-account'
-  ) THEN RAISE(ABORT, 'Reviewed account closure required') END;
+  ) THEN RAISE(ABORT, 'Reviewed account closure required') END);
   DELETE FROM phone_login_codes WHERE lower(trim(email)) IN
     (SELECT lower(trim(email)) FROM privacy_requests WHERE id = NEW.request_id)
     OR (trim(email) = '' AND phone_e164 IN (SELECT phone_e164 FROM account_phone_numbers
