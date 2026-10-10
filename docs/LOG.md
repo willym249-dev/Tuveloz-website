@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-09
+- **Last reviewed:** 2026-10-10
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,30 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-10 - Added private recovery adapter and owner read check
+
+Continued dd1f92c without replaying the completed cloud rehearsal. Refreshed main
+(c5c5fe1) and confirmed no open PRs. Added a production-specific optional R2/key
+adapter and owner-authenticated read-only recovery-status route. The collapsed
+owner control explains missing configuration, checks source/journal agreement,
+and removes stale results after errors. No automatic scan, deletion, email or
+activation. Config validation rejects upload/backup aliases, cross-environment
+reuse, malformed/oversized rings, unknown current keys and duplicate secrets.
+No raw configuration, secret, account detail or exception is returned.
+
+Build/all 1,169 tests and TypeScript passed; lint has zero errors and the existing
+site-language warning. Chromium/WebKit at 320 and 1280px passed the real owner
+page with synthetic responses, including pending checks, failed refresh, invalid
+activation responses and all prior account-closure interactions. Evidence: task
+outputs/privacy-owner-recovery-{full,types,lint}-20261009.log and
+outputs/privacy-owner-recovery-browser-20261009/report.json.
+
+Local only. No new cloud resources, secrets, production config, deployment or
+real case access. Private journal setup is specified in operations/privacy-fulfillment.md;
+actual connection, write verification, source pause/provenance, pending-intent
+handling and reviewed deletion/retention controls remain. A successful read
+check must not be relabeled as recovery readiness or a completed privacy request.
 
 ## 2026-10-09 - Recovery catalog now reconciles against current source receipts
 

@@ -7,7 +7,7 @@ and tested locally and in an isolated synthetic Cloudflare rehearsal, with no
 real account action. Current-source catalog reconciliation is tested locally.
 Production recovery integration,
 operator controls and broader data/file/vendor fulfillment remain.
-Last reviewed: October 9, 2026.
+Last reviewed: October 10, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
@@ -522,3 +522,56 @@ all case fields, overflow/orphans, missing source and source/journal movement.
 Local workerd/D1/R2 confirms an empty bucket cannot hide a source receipt, with
 no restore mutation; the existing rollback/isolation/retry and request-budget
 tests also pass. Evidence: task outputs/privacy-catalog-{full,types,lint}-20261009.log.
+
+## Private storage adapter and owner read check — October 10, 2026
+
+Implemented locally, not deployed. The private owner page now has a collapsed
+**Account data deletion: recovery setup** section. Its explicit **Check recovery
+setup** button calls GET `/api/admin/privacy-requests/recovery-status`. Opening
+the page does not scan the journal. The route requires verified owner access,
+rejects cross-origin reads, and uses private/no-store responses. It never writes
+to the database or journal, sends email, enables deletion or selects a real case.
+Loading disables duplicate checks; a failed refresh removes the old result.
+
+The production-specific adapter in `lib/privacy-recovery-config.ts` accepts:
+
+| Configuration | Required value or handling |
+| --- | --- |
+| `PRIVACY_ERASURE_JOURNAL` | R2 binding for a separately reviewed private production journal bucket; not uploads, backups, staging or a restored snapshot. Proposed dedicated bucket: `tuveloz-privacy-journal` (not created). |
+| `PRIVACY_ERASURE_CONTEXT` | Non-secret var `tuveloz-production`; cannot share a staging context. |
+| `PRIVACY_ERASURE_SIGNING_KEY_ID` | Non-secret identifier of the current key in the restricted ring, such as `production-v1`. |
+| `PRIVACY_ERASURE_KEYS_JSON` | Secret JSON object mapping 1–5 unique key IDs to independently generated 32-byte random secrets encoded as 64 lowercase hex characters. Set through restricted secret input, never command arguments or repository files. Keep old keys needed to verify retained records. |
+| `SITE_URL` | Existing exact value `https://tuveloz.com`; this adapter refuses other environments. |
+
+Missing required configuration returns **not configured** without accessing the
+database. Invalid configuration, missing verification keys, storage/database
+failures or catalog disagreements return a fixed **needs review** message with
+no private values or raw exceptions. Valid reads and matching source receipts
+return **read check passed**, not production readiness; `deletionEnabled` is
+always false. Neither an empty catalog nor valid key formatting proves write
+permission, real key entropy, actual bucket privacy/identity, freshness, source
+pause or durable recovery. Confirm those independently during setup. A different
+binding handle can still reference the same remote bucket, so the adapter's
+alias check does not replace review of the deployed binding names/resources.
+
+No `wrangler.jsonc` binding, secret, key or bucket was added by this implementation.
+For the subsequent storage setup, first verify the business account and current
+quota, create only the dedicated private bucket, verify public access remains
+disabled, and store the new ring through secret input. Record only configuration
+names and verification outcomes. Connect through the normal reviewed deployment
+workflow. Do not change existing upload/backup bindings or expose an erasure
+route. Owner approval for the earlier temporary rehearsal is not evidence that
+permanent production configuration was performed.
+
+Validation: build/all 1,169 tests and TypeScript passed; lint has zero errors and
+the existing site-language warning. Synthetic route tests cover authorization,
+cross-origin denial, missing/invalid configuration, upload/backup alias rejection,
+cross-environment rejection, key rotation, missing source evidence and safe
+errors; no write occurs during any read check. Chromium and WebKit at 320px and
+1280px passed loading, clear errors, stale-result removal, missing setup and
+rejection of an unexpected activation response. Existing closure interactions
+still pass. Browser fixture writes are only the prior two deliberate synthetic
+closure attempts; recovery adds four deliberate reads and zero mutations.
+Evidence: task outputs/privacy-owner-recovery-{full,types,lint}-20261009.log and
+outputs/privacy-owner-recovery-browser-20261009/report.json (names retain the
+start-of-turn date; validation completed October 10).
