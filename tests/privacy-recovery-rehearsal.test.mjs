@@ -5,15 +5,67 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import { buildPrivacyRehearsal } from '../rehearsal-worker/build-privacy-recovery.mjs';
 
 test('prepared recovery rehearsal requires private access and refuses existing resources', { timeout: 120000 }, async t => {
-  const script = await buildPrivacyRehearsal();
+  const built = await buildPrivacyRehearsal();
+  assert.ok(built.includes('async fetch(request, env) {'));
+  // Count individual statements, including batches, to enforce a conservative
+  // free-plan request budget during the actual workerd/D1/R2 execution.
+  const script = built.replace('async fetch(request, env) {', `async fetch(request, env) {
+    let statements = 0;
+    const chargeQuery = n => { statements += n; if (statements > 40) throw Error('Per-request database budget exceeded'); };
+    const wrap = db => ({
+      prepare(sql) {
+        const statement = db.prepare(sql);
+        const proxy = s => new Proxy(s, { get(target, key) {
+          if (key === 'bind') return (...values) => proxy(target.bind(...values));
+          if (['first','all','run','raw'].includes(key)) return (...args) => { chargeQuery(1); return target[key](...args); };
+          if (key === '__original') return target;
+          const value = target[key]; return typeof value === 'function' ? value.bind(target) : value;
+        }});
+        return proxy(statement);
+      },
+      batch(list) { chargeQuery(list.length); return db.batch(list.map(s => s.__original)); }
+    });
+    env = { ...env, SOURCE: wrap(env.SOURCE), RESTORE: wrap(env.RESTORE) };
+  `);
   async function fixture(expiry = new Date(Date.now() + 1800000).toISOString()) {
     const token = randomBytes(32).toString('hex');
     const runtime = new Miniflare(convertV4MiniflareOptions({ host: '127.0.0.1', port: 0, workers: [{ name: 'private-rehearsal-fixture', modules: true, script, compatibilityDate: '2026-07-27',
       d1Databases: { SOURCE: 'SOURCE', RESTORE: 'RESTORE' }, r2Buckets: ['JOURNAL'],
       bindings: { REHEARSAL_TOKEN: token, JOURNAL_SIGNING_KEY: randomBytes(32).toString('hex'), EXPIRES_AT: expiry },
       outboundService: () => { throw Error('External traffic prohibited'); } }] }));
-    return { runtime, call: (authorized = true) => runtime.dispatchFetch('https://rehearsal.invalid/run', { method: 'POST', headers: authorized ? { authorization: `Bearer ${token}` } : {} }) };
+    const step = (index, authorized = true) => runtime.dispatchFetch('https://rehearsal.invalid/run', {
+      method: 'POST', headers: authorized ? { authorization: `Bearer ${token}` } : {}, body: JSON.stringify({ step: index }) });
+    return { runtime, step, call: async (authorized = true) => {
+      let index = 0;
+      for (;;) {
+        const response = await step(index, authorized);
+        if (response.status !== 200) {
+          if (authorized && index > 0) {
+            const details = await response.clone().json();
+            assert.fail(JSON.stringify({ index, details, source: await (await runtime.getD1Database('SOURCE')).prepare('SELECT (SELECT count(*) FROM privacy_requests) requests, (SELECT count(*) FROM account_closures) closures, (SELECT count(*) FROM privacy_auth_erasure_records) erased').first() }));
+          }
+          return response;
+        }
+        const body = await response.clone().json();
+        if (body.complete) return response;
+        assert.equal(body.nextStep, index + 1); index = body.nextStep;
+        assert.ok(index < 100, 'Bounded test execution');
+      }
+    } };
   }
+  await t.test('refuses out-of-order and repeated steps without advancing', async () => {
+    const f = await fixture();
+    try {
+      assert.equal((await f.step(1)).status, 409);
+      assert.equal((await (await f.runtime.getR2Bucket('JOURNAL')).list()).objects.length, 0);
+      assert.equal((await f.step(0)).status, 200);
+      assert.equal((await f.step(2)).status, 409);
+      assert.equal((await f.step(1)).status, 200);
+      assert.equal((await f.step(1)).status, 409);
+      assert.equal((await f.step(-1)).status, 400);
+      assert.equal((await f.step(100000)).status, 400);
+    } finally { await f.runtime.dispose(); }
+  });
   await t.test('denies anonymous callers, completes synthetic rehearsal, then rejects reuse', async () => {
     const f = await fixture();
     try {

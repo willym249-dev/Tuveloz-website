@@ -416,12 +416,23 @@ access. The temporary endpoint must be approved before enabling a Worker URL.
 The fixture substitutes synthetic owner verification only in this separate
 bundle; it does not test production Access or authorize a real deletion.
 
-The only operation is authenticated `POST /run`, with fixed synthetic records
-and no caller-selected account or SQL. It refuses any existing user table or
-any bucket object before writing. An atomic storage claim prevents overlapping
-runs. Existing/partial resources are never reset or retried automatically.
-Run once, retain the sanitized response and independently inspect the synthetic
-postconditions. Failures expose only a fixed stage name, not SQL or secrets.
+The only operation is authenticated `POST /run` with `{ "step": 0 }`, followed
+by each exact `nextStep` returned by a successful response. Records and SQL are
+fixed; callers cannot select an account or supply SQL. Step zero refuses any
+existing user table or bucket object before writing. Immutable per-step claims
+and completion records prevent concurrent, repeated or out-of-order mutation.
+A failed claimed step is never retried or reset automatically. An HTTP 403
+denies before storage access and can be retried during secret propagation;
+unknown outcomes and other errors require investigation. Preserve completed
+step evidence before resuming after a denied request.
+
+Schema creation uses batches of at most 20 statements in separate requests;
+fixtures and each recovery check use separate steps. This avoids putting the
+entire schema and rehearsal into one invocation on Workers Free, whose D1
+limit is [50 queries per invocation](https://developers.cloudflare.com/d1/platform/limits/).
+The local runtime test counts individual queries, including batch statements,
+and fails above 40 per invocation. Retain sanitized responses and independently
+inspect postconditions. Failures expose a fixed stage name, not SQL or secrets.
 The checks cover signed completion/retry, conditional writes, journal tampering,
 transaction rollback, ignored phone-code deletion, restored closure, exact
 erasure and unrelated-account preservation. The result always keeps traffic
@@ -437,3 +448,40 @@ On October 8, the existing business Wrangler session was valid but lacked D1
 administration. No broader authorization was silently requested. Remote setup
 remains pending the required database/storage access and concrete test approval;
 production PR #297 remains unchanged.
+
+## Remote verification — October 9, 2026 (October 10 UTC)
+
+Owner explicitly approved Account Read, User Read, Workers Write, D1 Write and
+Background Access. Restarted expired OAuth; the broad Workers scope alone did
+not authorize the subdomain API, so corrected the same Workers access with its
+explicit `workers_scripts:write` scope. Business login and D1/R2 operations
+worked. Do not restart this approval sequence or use every available scope.
+
+Dashboard verified Workers Free, D1 2/10 databases and 3.97 MB/5 GB, with 1.65k
+of 5M daily rows read and 0/100k written. R2 usage was 0.02/10 GB-months,
+88/1M Class A operations and 309/10M Class B operations; displayed usage cost
+was $0. No upgrade was made. Created only the named synthetic resources above.
+
+All 50 remote steps completed, including all five recovery checks. Initial
+HTTP 403 responses from temporary-secret propagation occurred before storage
+access; only these denials were retried. Independent read-only D1 queries
+verified all seven erased authentication categories, restored closure, and
+expected other-account counts in both synthetic databases. An independent
+journal-pair read verified the expected context/envelopes before cleanup.
+
+Build/all 1,155 tests and typecheck passed; lint has zero errors and the existing
+site-language warning. Nine focused checks include request-budget enforcement
+and rejection of occupied resources, invalid order/reuse and expired access.
+Evidence is in task outputs/privacy-recovery-remote-results-20261009.json,
+privacy-recovery-{source,restore}-readback-20261009.json and
+privacy-recovery-steps-{full,types,lint}-20261009.log. This confirms the synthetic
+Cloudflare path, not production journal integration or a real privacy case.
+
+Cleanup completed: removed the temporary Worker and both secrets, independently
+read the journal pair and deleted its 103 known synthetic objects, then deleted
+the empty bucket and both test databases. Resource inventories match the original
+two D1 databases and four R2 buckets; the retired test endpoint returns 404.
+Live health at 2026-10-10T02:46:56.357Z still reports c5c5fe1, ready application,
+database/schema, open account/provider signup and closed bookings/payments.
+The approved business Wrangler login remains available; the temporary Worker
+secrets are gone. Evidence: task outputs/privacy-recovery-cleanup-20261009.json.

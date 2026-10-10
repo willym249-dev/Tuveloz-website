@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-08
+- **Last reviewed:** 2026-10-09
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,32 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-09 - Fixed test access and completed isolated Cloudflare recovery
+
+Explicit owner approval resolved the expired OAuth request. Corrected broad
+Workers Write with its explicit Workers Scripts Write scope after Cloudflare
+rejected subdomain access. Verified existing free allowances before provisioning.
+Split the synthetic rehearsal into 50 ordered single-use steps to fit the free
+plan's per-request limit; local tests enforce at most 40 individual D1 statements.
+Build/all 1,155 tests, typecheck and lint passed (existing navigation warning).
+
+Actual Cloudflare D1/R2 rehearsal passed all five checks, including signed erasure
+and retry, tamper rejection, rollback, incomplete-deletion rejection and restored
+account isolation. Independent database readbacks verified eight categories on
+both synthetic databases. Temporary-secret propagation returned pre-storage 403s;
+only those denials were retried, with saved step evidence. No failed mutation was
+retried. A compound SELECT in the independent readback was replaced by scalar
+subqueries to fit D1; this diagnostic did not modify data or application code.
+
+Removed the test Worker and two secrets, 103 synthetic objects, private bucket
+and both test databases. Original resource inventories preserved; test URL 404.
+Live health still reports c5c5fe1 and the existing onboarding-only launch state.
+No paid upgrade, production deployment or real account operation. No need to
+repeat this completed rehearsal or authorization. Private production journal
+integration, operational catalog/source-pause review and case-specific retention
+remain unfinished. See operations/privacy-fulfillment.md and task evidence
+outputs/privacy-recovery-{remote-results,cleanup}-20261009.json.
 
 ## 2026-10-08 - Prepared isolated recovery rehearsal; cloud access pending
 
