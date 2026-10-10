@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { BrandMark } from "../../components/tuveloz-icons";
 import { AccountClosurePreview } from "./closure-preview";
+import { PrivacyRecoveryStatus } from "./recovery-status";
 
 type PrivacyStatus = "submitted" | "in-review" | "completed" | "denied" | "withdrawn";
 
@@ -106,6 +107,8 @@ export default function AdminPrivacyPage() {
 
       {error && <p className="form-error admin-control-message" role="alert">{error}</p>}
       {notice && <p className="portal-success admin-control-message" role="status">{notice}</p>}
+
+      <PrivacyRecoveryStatus />
 
       <section className="admin-section">
         <div className="admin-section-heading">

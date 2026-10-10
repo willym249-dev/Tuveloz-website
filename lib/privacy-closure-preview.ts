@@ -28,7 +28,7 @@ include("contact", ["account_communication_preferences", "account_notifications"
 include("contact", ["email_notification_outbox"], email("recipient_email"));
 include("contact", ["job_messages"], `${email("sender_email")} OR ${email("recipient_email")}`);
 include("privacy", ["privacy_requests", "account_closures"], email());
-include("privacy", ["privacy_access_closure_reviews"], `request_id IN (SELECT id FROM privacy_requests WHERE ${email()})`);
+include("privacy", ["privacy_access_closure_reviews", "privacy_auth_erasure_records"], `request_id IN (SELECT id FROM privacy_requests WHERE ${email()})`);
 include("privacy", ["data_rights_requests"], `${email("requester_email")} OR ${provider()}`);
 include("provider", ["provider_applications", "provider_application_challenges"], email());
 include("provider", ["provider_application_email_claims", "provider_application_submission_evidence"], `${email("normalized_email")} OR ${provider()}`);

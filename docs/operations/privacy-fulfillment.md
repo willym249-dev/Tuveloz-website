@@ -1,15 +1,21 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: unused-account access closure and review preview implemented and locally
-validated; not published. Data/file/vendor deletion execution remains unfinished.
-Last reviewed: October 7, 2026.
+Status: reviewed unused-account access closure published in PR #296, corrected
+for Cloudflare D1 in published PR #297. The scoped
+authentication-erasure engine and signed recovery journal/replay are implemented
+and tested locally and in an isolated synthetic Cloudflare rehearsal, with no
+real account action. Current-source catalog reconciliation is tested locally.
+Production recovery integration,
+operator controls and broader data/file/vendor fulfillment remain.
+Last reviewed: October 10, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
 This fills the execution gap identified in task
-`outputs/privacy-document-review-20261006.md`. The existing review queues save
-decisions; they do not close accounts or erase data. Keep those requests in
-review until the specifically approved work and verification are complete.
+`outputs/privacy-document-review-20261006.md`. The published owner action can
+close access for reviewed unused accounts; saving a review decision alone does
+not erase data. Keep requests in review until the specifically approved work
+and verification are complete.
 Free accounts and provider applications are already open, so fulfillment is
 also an operating need before paid bookings. This review did not inspect the
 live request queue or establish that it is empty. Handle any actual request
@@ -274,3 +280,337 @@ references, verified dispositions, remaining vendor/backup work, and the
 response actually delivered. Keep personal details in the restricted case.
 Only then finalize the corresponding review queue. The existing privacy launch
 gate remains open until the process and its evidence receive the required review.
+
+## Internal authentication-record erasure engine — October 7
+
+PR #296 is published and verified as `fe8ecbee94a5274f98ec40766b6d914960152162`.
+Its earlier local-only status above is historical. The new engine described in
+this section is local only and has no HTTP route or operator button.
+
+`lib/privacy-auth-erasure.ts` prepares a category-specific snapshot and erases
+only the seven authentication sources after a separately reviewed, unused-account
+closure. The snapshot returned to a reviewer contains counts and a digest; no
+email, phone number, credential, code or record identifier is returned. The
+engine requires verified owner access, same origin, explicit authentication-only
+scope and retention/recovery attestations. It now also requires the separate
+signed journal described below. A typed recovery reference alone cannot allow
+deletion or prove production durability.
+
+Migration 0072 installs an initially empty receipt table and atomic erasure
+trigger. The guarded insert rechecks the entire request/record snapshot and
+unused-account conditions at execution. Receipt creation and authentication
+record deletion succeed together or roll back together. Anonymous phone codes
+are selected only through the subject's current phone association; codes with
+another account's explicit email are preserved. Permanent account-closure state
+remains so removed passwords cannot be recreated. Shared jobs, payment records,
+provider documents and the general privacy-request status are untouched.
+
+Do not expose this internal action until the recovery journal and restore replay
+are integrated with verified private infrastructure. An older database must not
+revive erased credentials or lose its closure restriction. This engine does not
+erase objects/vendor copies, choose legal retention rules, notify the requester
+or complete the general privacy request. No real case, account or backup was read
+or erased during development.
+
+Validation for the internal engine: production build/all 1,134 tests passed;
+TypeScript passed; lint has no errors and the existing navigation warning.
+Eight focused checks cover exact-account isolation, explicit-email phone-code
+isolation, protected documents, owner/origin/scope checks, missing closure,
+withdrawal/hold/version/job races, rollback and idempotent retry. The privacy
+inventory now explicitly classifies 80 tables. All records were synthetic.
+
+## Separate recovery journal and replay — October 7
+
+Implemented locally in `lib/privacy-erasure-recovery.ts` and
+`lib/privacy-erasure-replay.ts`. No storage binding, secret, route, operator
+button or production restore was created. The original engine validation above
+is historical; the current validation is recorded in the newest working log.
+
+Before the guarded database mutation, the engine writes an immutable signed
+intent outside the database and verifies it with a fresh read. After the
+atomic deletion it writes and verifies the matching completion record. Lost
+object-write responses are reconciled through authenticated reads. Missing
+intent evidence prevents deletion; missing completion evidence returns
+`recovery-pending`, never success. A retry reconciles the existing database
+receipt without repeating deletion or inventing a missing intent. A stale
+snapshot or uncertain database failure can leave an unresolved intent; review
+the actual receipt and source state before reconciliation. Do not automatically
+discard the intent, infer failure from a lost reply, or reopen recovery traffic.
+
+The private journal includes normalized email, request/case references, closure
+dates, approving owner and snapshot digest. It excludes passwords, token/code
+material, phone numbers and document contents. Each intent/completion pair is
+HMAC authenticated and bound to its environment context and storage key.
+Retained keys support rotation; unknown, non-string or missing keys reject
+verification. Malformed records, incomplete pairs and invalid/excessive
+pagination stop replay. Authentication does **not** prove that an empty or
+partial bucket is the authoritative, current catalog.
+
+Replay first validates the entire supplied catalog, then uses one database
+batch to reestablish closure and remove the seven authentication categories.
+Synthetic SQLite tests restore records captured before the closure existed:
+the erased account loses access, another account remains intact, and a failure
+mid-batch rolls back both closure and deletion. Replay can safely repeat.
+The result always says `trafficMayOpen: false`; it neither opens traffic nor
+establishes that general privacy fulfillment is complete. More than 100 intents
+requires a separately reviewed batching plan.
+
+Replay also reads back closure and the seven authentication categories before
+reporting success. An unexpected trigger that silently skips a deletion must
+fail verification even if the batch itself succeeds. Phone associations remain
+while their anonymous challenges remain, so a retry can still find those codes.
+This check does not roll back an already committed batch: keep the restore
+isolated, resolve the fault and retry. The readback is not proof that source
+writes are paused, the journal is complete or unrelated data is unchanged.
+
+The integrated branch includes released PR #297. Production build/all 1,146
+tests, TypeScript and lint passed October 7 (one existing navigation warning).
+Nineteen focused checks include actual local workerd/D1/R2 behavior: silent
+passkey and phone-code deletion failures are rejected, the association survives,
+and retry completes after the injected fault is removed. Fixtures are synthetic;
+this is not a remote Cloudflare recovery rehearsal. Evidence: task
+`outputs/auth-erasure-readback-full-20261007.log` and
+`outputs/auth-erasure-readback-focused-20261007.log`.
+
+Required before activating the feature:
+
+1. Configure and verify a private, authoritative journal store separate from
+   the database being restored and its old object snapshots. Retain its signing
+   key ring in restricted secret storage. Never restore an older journal over
+   newer records. Existing backup cleanup prefixes are not production proof.
+2. Confirm the real source writes are paused, identify the current journal and
+   resolve every pending intent. These are operational checks; boolean review
+   fields alone cannot prove them. Reconcile catalog completeness separately.
+3. Restore into an isolated database, apply all required migrations, and replay
+   the current journal before considering any traffic switch. Test the actual
+   Cloudflare storage/database path; local fixture results are insufficient.
+4. Independently verify closure and absence of the approved authentication
+   records, preservation of unrelated accounts, and other recovery checks.
+   Keep traffic closed until the full recovery review is approved.
+5. Add reviewed owner controls and define case-specific retention for the
+   private journal and all remaining data/file/vendor categories. This code
+   does not authorize retaining identity references forever or destroying
+   records that still require retention.
+
+## Isolated Cloudflare rehearsal package — October 8
+
+`rehearsal-worker/build-privacy-recovery.mjs` builds the separate synthetic
+Worker in `rehearsal-worker/privacy-recovery.ts`, using the current migrations
+and actual erasure/journal/replay modules. The builder performs no network,
+credential or deployment operation. The example configuration is
+`rehearsal-worker/privacy-recovery.example.jsonc`; its database IDs are invalid
+placeholders, expiry is empty and public Worker/preview URLs are disabled.
+This package is not imported by the production application.
+
+Proposed temporary resources (none created by preparation):
+
+- Worker: `tuveloz-privacy-rehearsal-20261008`.
+- Empty source D1: `tuveloz-privacy-source-20261008`.
+- Empty restored-copy D1: `tuveloz-privacy-restore-20261008`.
+- Private R2: `tuveloz-privacy-journal-test-20261008`.
+
+Before deployment, verify the actual business account, included quota and each
+new resource's identity. Never substitute a live/staging/backup binding or use
+the example's placeholders. Prepare separate random access and signing secrets
+through secret input, never source, command arguments or test evidence. Access
+expires within one hour; missing/expired authorization denies before storage
+access. The temporary endpoint must be approved before enabling a Worker URL.
+The fixture substitutes synthetic owner verification only in this separate
+bundle; it does not test production Access or authorize a real deletion.
+
+The only operation is authenticated `POST /run` with `{ "step": 0 }`, followed
+by each exact `nextStep` returned by a successful response. Records and SQL are
+fixed; callers cannot select an account or supply SQL. Step zero refuses any
+existing user table or bucket object before writing. Immutable per-step claims
+and completion records prevent concurrent, repeated or out-of-order mutation.
+A failed claimed step is never retried or reset automatically. An HTTP 403
+denies before storage access and can be retried during secret propagation;
+unknown outcomes and other errors require investigation. Preserve completed
+step evidence before resuming after a denied request.
+
+Schema creation uses batches of at most 20 statements in separate requests;
+fixtures and each recovery check use separate steps. This avoids putting the
+entire schema and rehearsal into one invocation on Workers Free, whose D1
+limit is [50 queries per invocation](https://developers.cloudflare.com/d1/platform/limits/).
+The local runtime test counts individual queries, including batch statements,
+and fails above 40 per invocation. Retain sanitized responses and independently
+inspect postconditions. Failures expose a fixed stage name, not SQL or secrets.
+The checks cover signed completion/retry, conditional writes, journal tampering,
+transaction rollback, ignored phone-code deletion, restored closure, exact
+erasure and unrelated-account preservation. The result always keeps traffic
+closed. Local tests cover access expiry and refusal of occupied resources.
+
+After evidence is saved, disable the temporary endpoint and remove its secrets;
+delete only the four newly identified rehearsal resources with authorized
+cleanup. Failure or partial setup requires recording what remains. This remote
+rehearsal does not establish the real journal's completeness, live source-write
+pause, private journal production integration or a completed privacy request.
+
+On October 8, the existing business Wrangler session was valid but lacked D1
+administration. No broader authorization was silently requested. Remote setup
+remains pending the required database/storage access and concrete test approval;
+production PR #297 remains unchanged.
+
+## Remote verification — October 9, 2026 (October 10 UTC)
+
+Owner explicitly approved Account Read, User Read, Workers Write, D1 Write and
+Background Access. Restarted expired OAuth; the broad Workers scope alone did
+not authorize the subdomain API, so corrected the same Workers access with its
+explicit `workers_scripts:write` scope. Business login and D1/R2 operations
+worked. Do not restart this approval sequence or use every available scope.
+
+Dashboard verified Workers Free, D1 2/10 databases and 3.97 MB/5 GB, with 1.65k
+of 5M daily rows read and 0/100k written. R2 usage was 0.02/10 GB-months,
+88/1M Class A operations and 309/10M Class B operations; displayed usage cost
+was $0. No upgrade was made. Created only the named synthetic resources above.
+
+All 50 remote steps completed, including all five recovery checks. Initial
+HTTP 403 responses from temporary-secret propagation occurred before storage
+access; only these denials were retried. Independent read-only D1 queries
+verified all seven erased authentication categories, restored closure, and
+expected other-account counts in both synthetic databases. An independent
+journal-pair read verified the expected context/envelopes before cleanup.
+
+Build/all 1,155 tests and typecheck passed; lint has zero errors and the existing
+site-language warning. Nine focused checks include request-budget enforcement
+and rejection of occupied resources, invalid order/reuse and expired access.
+Evidence is in task outputs/privacy-recovery-remote-results-20261009.json,
+privacy-recovery-{source,restore}-readback-20261009.json and
+privacy-recovery-steps-{full,types,lint}-20261009.log. This confirms the synthetic
+Cloudflare path, not production journal integration or a real privacy case.
+
+Cleanup completed: removed the temporary Worker and both secrets, independently
+read the journal pair and deleted its 103 known synthetic objects, then deleted
+the empty bucket and both test databases. Resource inventories match the original
+two D1 databases and four R2 buckets; the retired test endpoint returns 404.
+Live health at 2026-10-10T02:46:56.357Z still reports c5c5fe1, ready application,
+database/schema, open account/provider signup and closed bookings/payments.
+The approved business Wrangler login remains available; the temporary Worker
+secrets are gone. Evidence: task outputs/privacy-recovery-cleanup-20261009.json.
+
+## Independent source reconciliation — October 9, 2026
+
+`lib/privacy-erasure-catalog.ts` reads the current source's completed erasure
+receipts and their closure evidence with one bounded read-only query. Replay
+now requires a separate current-source database argument and exact agreement
+between that inventory and the signed journal before changing the isolated
+restore. Missing receipts, an empty/partial journal, extra entries, duplicate
+requests, mismatched case metadata and orphan receipts all stop recovery.
+Missing/failed source reads never become an empty inventory. The query reads
+101 rows to detect overflow rather than silently accepting the first 100.
+
+After restore readback, replay checks source agreement again and verifies that
+the journal has not changed. Detected movement prevents a success result; it
+does not undo an already committed restore batch. Traffic remains closed and
+the operator must review the isolated copy. Source/journal contents stay in
+memory and are not added to the response or logs.
+
+This requires access to the current source, not its restored backup. If the
+source is unavailable, stop: an independently preserved current inventory and
+separately reviewed disaster-recovery path are still needed. Binding provenance,
+actual source-write pause, in-flight intent reconciliation and journal retention
+remain operational prerequisites. Comparing two empty or equally stale stores
+cannot establish freshness. Object-identity rejection catches accidental reuse
+of the same database handle but cannot prove two bindings identify different
+remote resources. No public route, owner button, deployment binding or real
+deletion is enabled. This remains a local change after the completed remote
+rehearsal, not a new remote-verification claim.
+
+Validation: build/all 1,162 tests and TypeScript passed; lint has zero errors and
+the existing site-language warning. Synthetic SQLite tests cover exact membership,
+all case fields, overflow/orphans, missing source and source/journal movement.
+Local workerd/D1/R2 confirms an empty bucket cannot hide a source receipt, with
+no restore mutation; the existing rollback/isolation/retry and request-budget
+tests also pass. Evidence: task outputs/privacy-catalog-{full,types,lint}-20261009.log.
+
+## Private storage adapter and owner read check — October 10, 2026
+
+Implemented locally, not deployed. The private owner page now has a collapsed
+**Account data deletion: recovery setup** section. Its explicit **Check recovery
+setup** button calls GET `/api/admin/privacy-requests/recovery-status`. Opening
+the page does not scan the journal. The route requires verified owner access,
+rejects cross-origin reads, and uses private/no-store responses. It never writes
+to the database or journal, sends email, enables deletion or selects a real case.
+Loading disables duplicate checks; a failed refresh removes the old result.
+
+The production-specific adapter in `lib/privacy-recovery-config.ts` accepts:
+
+| Configuration | Required value or handling |
+| --- | --- |
+| `PRIVACY_ERASURE_JOURNAL` | R2 binding for the dedicated private `tuveloz-privacy-journal` bucket; created October 10, binding prepared locally and not yet deployed. Separate from uploads, backups, staging and restored snapshots. |
+| `PRIVACY_ERASURE_CONTEXT` | Non-secret var `tuveloz-production`; cannot share a staging context. |
+| `PRIVACY_ERASURE_SIGNING_KEY_ID` | Non-secret identifier of the current key in the restricted ring, such as `production-v1`. |
+| `PRIVACY_ERASURE_KEYS_JSON` | Secret JSON object mapping 1–5 unique key IDs to independently generated 32-byte random secrets encoded as 64 lowercase hex characters. Set through restricted secret input, never command arguments or repository files. Keep old keys needed to verify retained records. |
+| `SITE_URL` | Existing exact value `https://tuveloz.com`; this adapter refuses other environments. |
+
+Missing required configuration returns **not configured** without accessing the
+database. Invalid configuration, missing verification keys, storage/database
+failures or catalog disagreements return a fixed **needs review** message with
+no private values or raw exceptions. Valid reads and matching source receipts
+return **read check passed**, not production readiness; `deletionEnabled` is
+always false. Neither an empty catalog nor valid key formatting proves write
+permission, real key entropy, actual bucket privacy/identity, freshness, source
+pause or durable recovery. Confirm those independently during setup. A different
+binding handle can still reference the same remote bucket, so the adapter's
+alias check does not replace review of the deployed binding names/resources.
+
+No `wrangler.jsonc` binding, secret, key or bucket was added by this implementation.
+For the subsequent storage setup, first verify the business account and current
+quota, create only the dedicated private bucket, verify public access remains
+disabled, and store the new ring through secret input. Record only configuration
+names and verification outcomes. Connect through the normal reviewed deployment
+workflow. Do not change existing upload/backup bindings or expose an erasure
+route. Owner approval for the earlier temporary rehearsal is not evidence that
+permanent production configuration was performed.
+
+Validation: build/all 1,169 tests and TypeScript passed; lint has zero errors and
+the existing site-language warning. Synthetic route tests cover authorization,
+cross-origin denial, missing/invalid configuration, upload/backup alias rejection,
+cross-environment rejection, key rotation, missing source evidence and safe
+errors; no write occurs during any read check. Chromium and WebKit at 320px and
+1280px passed loading, clear errors, stale-result removal, missing setup and
+rejection of an unexpected activation response. Existing closure interactions
+still pass. Browser fixture writes are only the prior two deliberate synthetic
+closure attempts; recovery adds four deliberate reads and zero mutations.
+Evidence: task outputs/privacy-owner-recovery-{full,types,lint}-20261009.log and
+outputs/privacy-owner-recovery-browser-20261009/report.json (names retain the
+start-of-turn date; validation completed October 10).
+
+## Permanent private storage provisioned — October 10, 2026
+
+Created the empty `tuveloz-privacy-journal` bucket in the existing business
+Cloudflare account after checking for duplicates. Verified disabled r2.dev
+access, no custom domains, Standard storage and zero initial objects. Wrote one
+clearly labeled synthetic file under a unique `setup-checks/` key, downloaded it,
+verified identical SHA-256 hashes, and deleted only that probe. Subsequent
+bucket information reports zero objects and zero bytes. This proves the CLI
+storage path, not the still-undeployed application binding or signing operation.
+
+Generated a fresh 32-byte random signing key in process memory and stored its
+`production-v1` ring only in the new `PRIVACY_ERASURE_KEYS_JSON` Cloudflare
+Worker secret through stdin. Verified that the name did not previously exist
+and that all existing secret names were preserved. No key value was written to
+source, evidence, command arguments or a local secret file. Do not regenerate or
+replace the ring on a continuation. Secret installation updates the existing
+Worker configuration; it did not publish this branch's code or enable deletion.
+
+Prepared the dedicated R2 binding and non-secret context/key-ID vars in
+`wrangler.jsonc`. Actual staging-generator output excludes this binding and
+all erasure configuration; automated backup storage is separate, so its expiry
+cannot remove this journal. No paid plan was changed. No lifecycle/retention
+policy was invented for real records; the bucket remains empty and real
+deletion unavailable pending the case-specific and operational review.
+
+Live health after secret setup, at 2026-10-10T04:38:21.882Z, confirms unchanged
+release c5c5fe1, ready application/database/schema, open signup and closed
+bookings/payments. Build/all 1,171 tests, typecheck and lint passed (one existing
+site-language warning). No UI changes since the prior phone/desktop checks.
+Evidence: task outputs/privacy-production-storage-20261010.json,
+privacy-production-storage-health-20261010.json and
+privacy-storage-binding-{full,types,lint}-20261010.log.
+
+Still required: publish the reviewed code/binding through the normal release
+workflow, verify the actual owner read check and application storage access,
+finish source-pause/provenance and pending-intent handling, and review deletion
+controls/retention before exposing a real erasure action. This storage setup
+does not mark privacy fulfillment or commercial launch ready.

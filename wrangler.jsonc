@@ -44,6 +44,12 @@
     {
       "binding": "BUCKET",
       "bucket_name": "tuveloz-uploads"
+    },
+    {
+      // Private recovery evidence stays outside uploads and backup snapshots.
+      // This binding does not enable account erasure.
+      "binding": "PRIVACY_ERASURE_JOURNAL",
+      "bucket_name": "tuveloz-privacy-journal"
     }
   ],
   "vars": {
@@ -56,6 +62,8 @@
     // appears in every one of those emails by design.
     "LAUNCH_UPDATES_POSTAL_ADDRESS": "",
     "OWNER_EMAIL": "hello@tuveloz.com",
+    "PRIVACY_ERASURE_CONTEXT": "tuveloz-production",
+    "PRIVACY_ERASURE_SIGNING_KEY_ID": "production-v1",
     "OWNER_ACCESS_AUD": "e440192c4dcff94d592a94c4661dddb4df210f07c10611a47dd308480149ed06",
     "RESEND_FROM_EMAIL": "Tuveloz <alerts@updates.tuveloz.com>",
     "SITE_URL": "https://tuveloz.com",

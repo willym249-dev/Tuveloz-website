@@ -12,6 +12,7 @@ import {
 const REQUIRED_TABLES = [
   "account_closures",
   "privacy_access_closure_reviews",
+  "privacy_auth_erasure_records",
   "account_credentials",
   "customer_requests",
   "provider_applications",
@@ -54,6 +55,7 @@ const REQUIRED_TABLES = [
 
 const REQUIRED_GUARDED_TRIGGERS = [
   "account_closure_revoke_access",
+  "privacy_auth_erasure_apply",
   "closed_account_session_insert",
   "closed_account_customer_request_insert",
   "closed_account_provider_quote_insert",
@@ -185,6 +187,12 @@ export async function GET() {
               && row.sql.includes("UPDATE login_codes")
               && row.sql.includes("UPDATE password_verification_codes")
               && row.sql.includes("UPDATE phone_login_codes"))
+            || (row.name === "privacy_auth_erasure_apply"
+              && row.sql?.includes("RAISE(ABORT")
+              && row.sql.includes("privacy_access_closure_reviews")
+              && ["auth_sessions", "account_credentials", "login_codes", "password_verification_codes",
+                "passkey_credentials", "account_phone_numbers", "phone_login_codes"]
+                .every(table => row.sql?.includes(`DELETE FROM ${table}`)))
             || (row.name.startsWith("closed_account_")
               && row.sql?.includes("account_closures")
               && row.sql.includes("RAISE(ABORT"))

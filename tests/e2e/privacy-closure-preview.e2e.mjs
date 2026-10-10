@@ -52,6 +52,8 @@ try {
         page.setDefaultTimeout(6000);
         const errors = [], unexpected = [];
         let mode = "success", calls = 0, mutations = 0, release, markStarted;
+        let recoveryMode = "wait", recoveryCalls = 0, releaseRecovery, markRecoveryStarted;
+        const recoveryStarted = new Promise(done => { markRecoveryStarted = done; });
         const started = new Promise(done => { markStarted = done; });
         page.on("pageerror", error => errors.push(error.message));
         await page.route("**/*", async route => {
@@ -62,6 +64,14 @@ try {
           const json = (status, body) => route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
           if (url.pathname === "/api/admin/privacy-requests/close-access") { mutations++; const body = req.postDataJSON(); assert.equal(body.confirmWholeAccount, true); assert.equal(body.confirmIdentityAndAuthority, true); assert.equal(body.confirmRetainedDataReview, true); return mode === "action-failure" ? json(503, { error: "Closure unavailable; refresh the account review." }) : json(200, { accessClosed: true, privacyFulfillmentComplete: false }); }
           if (url.pathname === "/api/admin/privacy-requests") return json(200, { requests });
+          if (url.pathname === "/api/admin/privacy-requests/recovery-status") {
+            recoveryCalls++;
+            if (recoveryMode === "wait") await new Promise(done => { releaseRecovery = done; markRecoveryStarted(); });
+            if (recoveryMode === "failure") return json(503, { error: "Recovery setup could not be verified. Nothing was changed." });
+            if (recoveryMode === "invalid") return json(200, { state: "read-check-passed", deletionEnabled: true, message: "Unexpected activation must not be accepted." });
+            return json(200, { state: recoveryMode === "missing" ? "not-configured" : "read-check-passed", deletionEnabled: false,
+              message: recoveryMode === "missing" ? "Private recovery storage still needs to be connected." : "Recovery storage can be read. Deletion remains unavailable." });
+          }
           if (url.pathname === "/api/admin/privacy-requests/closure-preview") {
             calls++;
             assert.equal(url.searchParams.get("id"), "closure-alpha");
@@ -77,6 +87,29 @@ try {
         await panel.waitFor();
         assert.equal(await panel.count(), 1, "only open closure requests offer a preview");
         assert.equal(calls, 0, "no automatic account scan");
+        assert.equal(recoveryCalls, 0, "no automatic recovery scan");
+        await page.getByText("Account data deletion: recovery setup", { exact: true }).click();
+        const recoveryPanel = page.getByRole("region", { name: "Privacy recovery setup" });
+        await recoveryPanel.getByRole("button", { name: "Check recovery setup", exact: true }).click();
+        await recoveryStarted;
+        assert.equal(await recoveryPanel.getByRole("button").isDisabled(), true);
+        assert.equal(recoveryCalls, 1);
+        recoveryMode = "success"; releaseRecovery();
+        await recoveryPanel.getByRole("status").filter({ hasText: "Deletion remains unavailable" }).waitFor();
+        recoveryMode = "failure";
+        await recoveryPanel.getByRole("button").click();
+        await recoveryPanel.getByRole("alert").filter({ hasText: "Nothing was changed" }).waitFor();
+        assert.equal(await recoveryPanel.getByRole("status").count(), 0, "failed refresh clears the prior result");
+        recoveryMode = "invalid";
+        await recoveryPanel.getByRole("button").click();
+        await recoveryPanel.getByRole("alert").filter({ hasText: "Please try again" }).waitFor();
+        assert.equal(await recoveryPanel.getByText("Unexpected activation must not be accepted.").count(), 0);
+        recoveryMode = "missing";
+        await recoveryPanel.getByRole("button").click();
+        await recoveryPanel.getByRole("status").filter({ hasText: "still needs to be connected" }).waitFor();
+        assert.equal(recoveryCalls, 4, "only deliberate checks, no automatic retry");
+        assert.equal(mutations, 0, "recovery checks cannot mutate an account");
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "recovery control fits screen");
         mode = "wait";
         await panel.getByRole("button", { name: "Preview account records" }).click();
         await page.waitForFunction(() => document.querySelector('[aria-label="Account closure review"] button').disabled);
@@ -121,7 +154,7 @@ try {
         await panel.getByText("Sign-in access closed. The privacy request remains open for data review.", { exact: true }).waitFor();
         assert.equal(mutations, 2, "two deliberate synthetic attempts, no automatic retry");
         assert.deepEqual(errors, []); assert.deepEqual(unexpected, []);
-        report.push({ browser: type.name(), width, passed: true, previewRequests: calls, mutations });
+        report.push({ browser: type.name(), width, passed: true, previewRequests: calls, recoveryChecks: recoveryCalls, mutations });
         await context.close();
       }
     } finally { await browser.close(); }

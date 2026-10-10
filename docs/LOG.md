@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-07
+- **Last reviewed:** 2026-10-10
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -11,6 +11,232 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Resolved PR #298 security gate with the Next.js patch
+
+Draft PR #298 opened at 53b7a26. Its browser-signup and build jobs passed, but
+the npm audit gate identified newly reported advisories affecting Next.js
+16.3.6. Verified the official 16.3.8 security release and registry metadata;
+updated only Next.js and its matching ESLint configuration to 16.3.8, retaining
+the existing major/minor line. Lockfile version changes are confined to Next
+and its companion packages. Install scripts were disabled; no force audit fix.
+
+The existing security gate now reports zero vulnerabilities and all six local
+braces protections pass. Build/all 1,171 tests, TypeScript and lint passed after
+the patch (one existing site-language warning). Evidence: task
+outputs/privacy-release-{full,types,lint,security}-20261010.log. Source:
+https://github.com/vercel/next.js/releases/tag/v16.3.8 .
+
+This patch is not live until the reviewed PR is merged and deployed. No claim
+is made that a specific advisory was exploitable in the vinext deployment.
+The private journal/secret setup remains verified; do not repeat it.
+
+## 2026-10-10 - Provisioned private journal and protected signing key
+
+Created only tuveloz-privacy-journal after confirming no duplicate. Verified
+public r2.dev access disabled, no custom domains and an empty bucket. One
+synthetic setup file passed remote write/download/hash verification and was
+deleted; subsequent bucket info reports zero objects/bytes. Existing upload,
+staging and backup buckets were unchanged. No paid plan change.
+
+Generated a new signing ring in memory, piped only to Cloudflare's new
+PRIVACY_ERASURE_KEYS_JSON secret. Verified its prior absence and preservation
+of all existing secret names; no key value retained in files or logs. This
+updated the current Worker's secret configuration, not the application code.
+Do not recreate the bucket or overwrite the key in later sessions.
+
+Prepared production binding/context/key ID locally. Security tests run the
+actual staging generator and ensure the private journal cannot inherit staging
+or backup expiry bindings. Build/all 1,171 tests, typecheck and lint passed
+(one existing warning). Health at 04:38:21.882 UTC confirms unchanged c5c5fe1,
+ready schema/application, signup open and jobs/payments closed. Evidence:
+task outputs/privacy-production-storage-20261010.json, its companion health
+JSON and privacy-storage-binding-{full,types,lint}-20261010.log.
+
+Code/binding not deployed. Publishing the read-only owner setup and verifying
+its actual binding are next; real erasure remains unexposed pending operational
+source-pause, pending-intent and case-specific retention/control review.
+
+## 2026-10-10 - Added private recovery adapter and owner read check
+
+Continued dd1f92c without replaying the completed cloud rehearsal. Refreshed main
+(c5c5fe1) and confirmed no open PRs. Added a production-specific optional R2/key
+adapter and owner-authenticated read-only recovery-status route. The collapsed
+owner control explains missing configuration, checks source/journal agreement,
+and removes stale results after errors. No automatic scan, deletion, email or
+activation. Config validation rejects upload/backup aliases, cross-environment
+reuse, malformed/oversized rings, unknown current keys and duplicate secrets.
+No raw configuration, secret, account detail or exception is returned.
+
+Build/all 1,169 tests and TypeScript passed; lint has zero errors and the existing
+site-language warning. Chromium/WebKit at 320 and 1280px passed the real owner
+page with synthetic responses, including pending checks, failed refresh, invalid
+activation responses and all prior account-closure interactions. Evidence: task
+outputs/privacy-owner-recovery-{full,types,lint}-20261009.log and
+outputs/privacy-owner-recovery-browser-20261009/report.json.
+
+Local only. No new cloud resources, secrets, production config, deployment or
+real case access. Private journal setup is specified in operations/privacy-fulfillment.md;
+actual connection, write verification, source pause/provenance, pending-intent
+handling and reviewed deletion/retention controls remain. A successful read
+check must not be relabeled as recovery readiness or a completed privacy request.
+
+## 2026-10-09 - Recovery catalog now reconciles against current source receipts
+
+Continued the existing private erasure branch after a2957fb; main remains
+c5c5fe1 and there were no open PRs. Added a bounded independent source inventory
+and required exact journal agreement before replay, source agreement afterward,
+and unchanged journal evidence before returning success. Empty/partial listings,
+orphan receipts, changed metadata, unavailable source and detected mid-replay
+movement fail closed. Restored traffic remains closed in every result.
+
+Build/all 1,162 tests and TypeScript passed; lint has zero errors and one existing
+site-language warning. Actual local workerd/D1/R2 exercises missing journal
+evidence against a completed source receipt. Synthetic tests also verify every
+metadata field, duplicate/missing/extra records, bounded overflow, source outage
+and changes during replay. Existing rehearsal request budget still passes.
+Evidence: task outputs/privacy-catalog-{full,types,lint}-20261009.log.
+
+Local only: no deployment, production configuration, real account action or
+cloud resource created. Preserve the completed remote rehearsal and cleanup.
+Current source availability/provenance and actual write pause are still required;
+this comparison is not a source lock or independent disaster-time checkpoint.
+Private journal/key setup, operational controls and case-specific retention
+remain before exposing erasure. See operations/privacy-fulfillment.md.
+
+## 2026-10-09 - Fixed test access and completed isolated Cloudflare recovery
+
+Explicit owner approval resolved the expired OAuth request. Corrected broad
+Workers Write with its explicit Workers Scripts Write scope after Cloudflare
+rejected subdomain access. Verified existing free allowances before provisioning.
+Split the synthetic rehearsal into 50 ordered single-use steps to fit the free
+plan's per-request limit; local tests enforce at most 40 individual D1 statements.
+Build/all 1,155 tests, typecheck and lint passed (existing navigation warning).
+
+Actual Cloudflare D1/R2 rehearsal passed all five checks, including signed erasure
+and retry, tamper rejection, rollback, incomplete-deletion rejection and restored
+account isolation. Independent database readbacks verified eight categories on
+both synthetic databases. Temporary-secret propagation returned pre-storage 403s;
+only those denials were retried, with saved step evidence. No failed mutation was
+retried. A compound SELECT in the independent readback was replaced by scalar
+subqueries to fit D1; this diagnostic did not modify data or application code.
+
+Removed the test Worker and two secrets, 103 synthetic objects, private bucket
+and both test databases. Original resource inventories preserved; test URL 404.
+Live health still reports c5c5fe1 and the existing onboarding-only launch state.
+No paid upgrade, production deployment or real account operation. No need to
+repeat this completed rehearsal or authorization. Private production journal
+integration, operational catalog/source-pause review and case-specific retention
+remain unfinished. See operations/privacy-fulfillment.md and task evidence
+outputs/privacy-recovery-{remote-results,cleanup}-20261009.json.
+
+## 2026-10-08 - Prepared isolated recovery rehearsal; cloud access pending
+
+Preserved b3b3e69 and live PR #297; refreshed main and found no open PRs.
+Existing business Wrangler OAuth works but lacks D1 administration. No new
+credential scope or cloud resource was created. Built a separate single-use
+synthetic Worker with fixed data and current schema/engine, one-hour token
+access, separate signing key, empty-resource preflight, atomic storage claim
+and no public URL enabled in its placeholder example configuration.
+
+Local workerd/D1/R2 verification completed signed erasure/retry, conditional
+writes, corrupt-journal denial, rollback, incomplete-deletion denial, restore
+readback and unrelated-account preservation. It also denies anonymous/expired
+access and refuses any occupied source, restore or bucket before mutation.
+Production build/all 1,154 tests and typecheck passed. Full lint had its existing
+site-language warning plus a new anonymous-export warning; removed the new
+warning, reran all eight package checks and targeted lint successfully, then
+rebuilt the bundle. Evidence: task outputs/privacy-recovery-package-*-20261008.
+
+The operator plan is in operations/privacy-fulfillment.md. Requested permission
+for broader Cloudflare database/storage administration and a one-hour isolated
+rehearsal using two empty databases, one private bucket and one protected Worker,
+only if existing included quota covers it, followed by cleanup of those exact
+new resources/secrets. Approval remains pending. No production deployment,
+real records, live deletion, paid upgrade or launch change occurred. Local
+success does not establish production journal integration or recovery readiness.
+
+## 2026-10-07 - Verify restored authentication data before recovery success
+
+Integrated published PR #297 into the preserved private recovery branch. Found
+that replay trusted database command success without checking its postconditions.
+It now reads back closure and absence of all seven authentication categories.
+An unexpected trigger using RAISE(IGNORE) is caught. Associations remain while
+anonymous phone codes remain, preserving retry's ability to remove those codes.
+Verification failure leaves the restore isolated; committed changes are not
+described as rolled back. Source-write pause and journal completeness still
+require separate operational verification.
+
+Actual local workerd/D1/R2 fault injection confirms silent passkey and phone-code
+failures are rejected, unrelated credentials survive, and retry succeeds after
+removing the injected failure. Nineteen focused tests and production build/all
+1,146 tests passed. Typecheck passed; lint has zero errors and the one existing
+site-language navigation warning. Evidence: task outputs/auth-erasure-readback-*
+logs dated 20261007. No push, deployment, real record action, secret, binding or
+launch change. Remote private storage/recovery integration remains unfinished.
+
+## 2026-10-07 - Integrate completed PR #297 into private recovery work
+
+PR #297 is deployed as c5c5fe1 and independently verified. Its release record
+supersedes dated pre-release wording below. No open PRs were found before this
+continuation. Merged current main into the preserved erasure branch, retaining
+both working-log histories. The source merge was automatic. Recovery work is
+still local: no live records, credentials, bindings or launch settings changed.
+
+## 2026-10-07 - Signed recovery journal and isolated restore replay validated
+
+Continued the existing local authentication-erasure branch; PR #296 remains the
+verified live release. The internal erasure engine now requires a separately
+stored, signed intent and a verified read before its atomic database mutation.
+It verifies a signed completion afterward. Interrupted storage/database replies
+are reconciled without repeating deletion; incomplete evidence returns pending
+or blocks execution. A retry cannot invent a missing original intent.
+
+Added owner/origin-protected internal replay for an isolated, migrated restore.
+It validates the entire signed catalog before one transactional batch reapplies
+closure and removes authentication records. It never opens traffic or treats a
+supplied catalog as proof of current authoritative completeness. The operational
+runbook records actual binding/key setup, source-write pause, catalog review,
+isolated Cloudflare rehearsal and owner controls as unfinished prerequisites.
+No route, production binding, secret, deployment or real deletion was added.
+
+Fourteen focused checks passed, including a snapshot captured before closure,
+unrelated-account preservation, rollback, interrupted intent/completion/DB
+writes, tampering, missing signing keys, key rotation and pagination failures.
+Final review found and fixed non-string signing-key lookup acceptance; a forged
+prototype-key envelope is now rejected before any database write. Production
+build/all 1,140 tests and TypeScript passed. Lint: zero errors, one existing
+site-language navigation warning. Log: task
+outputs/auth-erasure-recovery-full-20261007.log. All fixtures are synthetic and
+network calls are prohibited in these tests. Broader file/vendor disposition,
+case-specific retention and production/operator integration remain unfinished.
+
+## 2026-10-07 - Internal authentication erasure engine validated
+
+PR #296 is published as fe8ecbee94a5274f98ec40766b6d914960152162; its dated
+pre-release notes below are superseded by the independently verified task
+release record. Continued from that exact main on
+feat/privacy-auth-erasure-20261007 without changing the deployed site.
+
+Added an internal, owner-verified authentication erasure engine, scoped to seven
+sources for a reviewed closed unused account. The plan returns counts/digest,
+not private identifiers or credentials. One guarded insert rechecks request,
+record versions and unused-account conditions; its trigger atomically removes
+only approved authentication records and creates the audit receipt. Mid-delete
+failure rolls everything back. Same-case retries confirm existing removal;
+new holds, withdrawal or stale records conflict. Another account's explicitly
+addressed phone codes and all provider documents remain. No privacy request is
+marked fulfilled. Migration 0072 is empty on installation; health requires the
+receipt table/trigger and the inventory explicitly classifies the new table.
+
+Build/all 1,134 tests passed, including eight focused migrated-SQLite checks.
+TypeScript passed; lint has zero errors and the existing navigation warning.
+Log: task outputs/auth-erasure-full-20261007.log. No real case, account, private
+queue, object or backup was read or changed. No route/button invokes the engine;
+no push, migration deployment or real deletion. Do not expose execution until
+durable recovery instructions and restore replay are ready. Backup source review
+shows a separate private backup bucket and scoped retention prefixes; current
+backup proof does not establish preservation of later deletions after a restore.
+General file/vendor disposition and actual-case retention review remain open.
 ## 2026-10-07 - Repair account review and closure on Cloudflare D1
 
 PR #296 remains the verified published release. During separate recovery work,

@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "tuveloz-privacy-rehearsal-20261008",
+  "main": "outputs/privacy-recovery.mjs",
+  "compatibility_date": "2026-07-27",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "d1_databases": [
+    { "binding": "SOURCE", "database_name": "tuveloz-privacy-source-20261008", "database_id": "REPLACE_WITH_NEW_EMPTY_SOURCE_ID" },
+    { "binding": "RESTORE", "database_name": "tuveloz-privacy-restore-20261008", "database_id": "REPLACE_WITH_NEW_EMPTY_RESTORE_ID" }
+  ],
+  "r2_buckets": [{ "binding": "JOURNAL", "bucket_name": "tuveloz-privacy-journal-test-20261008" }],
+  "vars": { "EXPIRES_AT": "" }
+}
