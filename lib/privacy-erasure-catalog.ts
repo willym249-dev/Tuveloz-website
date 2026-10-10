@@ -31,11 +31,16 @@ export function assertAuthenticationCatalogMatches(expected: AuthErasureIntent[]
   if (canonicalCatalog(expected) !== canonicalCatalog(actual)) throw problem();
 }
 
-export async function assertCurrentAuthenticationCatalog(source: D1Database, intents: AuthErasureIntent[]) {
+export async function readCurrentAuthenticationCatalog(source: D1Database) {
   // Failure/unavailable source must not become an empty catalog. LEFT JOIN
   // deliberately exposes orphan receipts rather than silently omitting them.
   const result = await source.prepare(catalogSql).all<AuthErasureIntent & { scope: string }>();
   if (!result.success || !Array.isArray(result.results)
     || result.results.some(row => row.scope !== "authentication-records")) throw problem();
-  assertAuthenticationCatalogMatches(result.results, intents);
+  canonicalCatalog(result.results);
+  return result.results;
+}
+
+export async function assertCurrentAuthenticationCatalog(source: D1Database, intents: AuthErasureIntent[]) {
+  assertAuthenticationCatalogMatches(await readCurrentAuthenticationCatalog(source), intents);
 }

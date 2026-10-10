@@ -11,6 +11,35 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Read-only review of interrupted recovery records
+
+Continued from released main 1c44c76 (PRs #298/#299). Production run 38028785155
+and the actual owner recovery button were already verified; no release, setup,
+secret generation or remote rehearsal was repeated. The earlier parser failure
+is resolved. Prior release evidence: task outputs/privacy-recovery-release-20261010/.
+
+Added internal `reviewAuthenticationRecovery`, with no HTTP route or production
+caller. It compares authenticated journal attempts with the current source's
+receipt/closure catalog, identifying missing receipts, missing confirmations
+and matched completions. It rejects ambiguous attempts, metadata mismatch,
+orphan/damaged records and observed changes during its second read. It never
+resolves an intent, retries deletion, writes evidence or authorizes traffic.
+Existing completed-only readers still reject any pending intent.
+
+The diagnostic allows ten intents and four listing pages per pass, bounded to
+50 storage/database calls across both passes. Larger catalogs stop for reviewed
+batching. An absent receipt does not establish that deletion never occurred;
+matching records do not establish auth-record absence, freshness, source pause,
+binding provenance or operational readiness. Those remain separate work.
+
+Added synthetic signed-storage and actual SQLite tests for classification,
+tampering, source/journal movement, read failures, strict read-only execution,
+existing pending-intent rejection and request-budget limits. Build/all 1,195
+tests and TypeScript passed; lint has zero errors and the existing site-language
+warning. Evidence: task outputs/privacy-pending-review-{full,types,lint}-20261010.log.
+This work is local and unpublished; real
+deletion, bookings and payments remain disabled.
+
 ## 2026-10-10 - Repair remote D1 trigger parsing after PR #298
 
 Owner approved publication after every check passed. PR #298 merged as

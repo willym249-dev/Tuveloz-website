@@ -614,3 +614,38 @@ workflow, verify the actual owner read check and application storage access,
 finish source-pause/provenance and pending-intent handling, and review deletion
 controls/retention before exposing a real erasure action. This storage setup
 does not mark privacy fulfillment or commercial launch ready.
+
+## Released storage check and local interrupted-attempt review — October 10, 2026
+
+The preceding publication requirement is complete: PRs #298/#299 deployed as
+1c44c763f9b46cc323373c3e157f79ac7bbfe174 in successful production run 38028785155.
+The owner button was verified against the deployed private binding. Migration
+0072 passed after the narrow remote D1 parser correction. Preserve the existing
+bucket, signing key and release evidence; do not repeat provisioning. The
+remaining operational requirements below are still open.
+
+`reviewAuthenticationRecovery` is a new internal diagnostic, **local only**,
+with no HTTP route, UI caller or write operation. It authenticates each intent
+and any completion, then compares exact receipt/closure metadata against the
+current source database. Its returned case states mean only:
+
+| State | Meaning and required follow-up |
+| --- | --- |
+| `no-source-receipt` | A signed intent exists but the supplied source returned no receipt. This does not prove deletion never happened; verify source identity/freshness and the case before deciding any next action. |
+| `receipt-present-completion-missing` | Matching source evidence exists but its signed journal confirmation is absent. Independently check actual authentication records and the reviewed case before any explicit completion/retry procedure. |
+| `matched-completion` | Both records exist and agree. This is evidence consistency only, not verification of account-data absence or permission to open restore traffic. |
+
+The report always keeps `deletionEnabled` and `trafficMayOpen` false and requires
+operational review. It includes case IDs/states only, not email addresses or
+signed evidence. It rejects extra source receipts, missing closure metadata,
+ambiguous attempts, damaged signatures, catalog/list-read disagreement and
+observed changes during a second complete read. These reads do not create an
+atomic snapshot or establish a write pause. Existing completed-only recovery
+readers continue to reject unfinished intents.
+
+The bounded diagnostic supports at most ten intents, four listing pages per
+pass and fifty storage/database calls total. Overflow or excessive pagination
+stops rather than returning a partial report. No unresolved record is removed,
+ignored, confirmed or replayed by this check. Source-pause/provenance evidence,
+an explicit reviewed resolution procedure and retention controls remain required
+before real erasure can be exposed. No paid service or live configuration changed.
