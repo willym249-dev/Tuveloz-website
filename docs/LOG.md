@@ -11,6 +11,27 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Repair remote D1 trigger parsing after PR #298
+
+Owner approved publication after every check passed. PR #298 merged as
+8d02267 after all PR checks passed; tested and merged source trees match.
+Production run 38026185007 passed both verification jobs and its build/tests,
+but migration 0072 failed with `incomplete input` before Worker deployment.
+Read-only schema checks confirmed neither new table nor trigger was installed.
+Production remained healthy at c5c5fe1, with signup open and bookings/payments
+closed, at 2026-10-10T05:27:23.199Z.
+
+Reproduced the remote parser failure using `EXPLAIN CREATE TRIGGER` only.
+Parenthesizing CASE...END compiled successfully with zero rows written,
+changed_db false and no probe object created. This matches the reported D1
+query-parser limitation: https://github.com/cloudflare/workers-sdk/issues/4727.
+The local SQLite and workerd parser accepted the original SQL, explaining the
+earlier green checks. Added parentheses only, preserving the guard and all
+deletion behavior, plus a regression check for this remote-only syntax trap.
+Publication must use the normal checked workflow; do not retry the broken head
+or bypass migrations. The existing journal bucket/key must not be recreated.
+Evidence: task outputs/privacy-recovery-release-20261010/.
+
 ## 2026-10-10 - Resolved PR #298 security gate with the Next.js patch
 
 Draft PR #298 opened at 53b7a26. Its browser-signup and build jobs passed, but

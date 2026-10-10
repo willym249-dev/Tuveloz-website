@@ -8,6 +8,15 @@ import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { build } from 'esbuild';
 
+test('authentication erasure migration avoids the remote D1 CASE parser defect', () => {
+  // D1's remote query parser ends a trigger at an unparenthesized CASE END.
+  // Local SQLite/workerd accepts it, so behavioral tests alone miss this defect.
+  // Confirmed with read-only remote EXPLAIN; workers-sdk issue #4727.
+  const migration = readFileSync(new URL('../drizzle/0072_reviewed_authentication_erasure.sql', import.meta.url), 'utf8');
+  assert.doesNotMatch(migration, /SELECT\s+CASE\b/i);
+  assert.match(migration, /SELECT\s+\(CASE\b[\s\S]*?END\);/i);
+});
+
 test('scoped authentication erasure uses migrated synthetic records only', async t => {
   const repo = resolve(import.meta.dirname, '..'), scratch = mkdtempSync(join(tmpdir(), 'tuveloz-auth-erasure-'));
   const database = new DatabaseSync(':memory:');
