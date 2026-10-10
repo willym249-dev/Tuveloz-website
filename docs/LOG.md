@@ -11,6 +11,25 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-10 - Resolved PR #298 security gate with the Next.js patch
+
+Draft PR #298 opened at 53b7a26. Its browser-signup and build jobs passed, but
+the npm audit gate identified newly reported advisories affecting Next.js
+16.3.6. Verified the official 16.3.8 security release and registry metadata;
+updated only Next.js and its matching ESLint configuration to 16.3.8, retaining
+the existing major/minor line. Lockfile version changes are confined to Next
+and its companion packages. Install scripts were disabled; no force audit fix.
+
+The existing security gate now reports zero vulnerabilities and all six local
+braces protections pass. Build/all 1,171 tests, TypeScript and lint passed after
+the patch (one existing site-language warning). Evidence: task
+outputs/privacy-release-{full,types,lint,security}-20261010.log. Source:
+https://github.com/vercel/next.js/releases/tag/v16.3.8 .
+
+This patch is not live until the reviewed PR is merged and deployed. No claim
+is made that a specific advisory was exploitable in the vinext deployment.
+The private journal/secret setup remains verified; do not repeat it.
+
 ## 2026-10-10 - Provisioned private journal and protected signing key
 
 Created only tuveloz-privacy-journal after confirming no duplicate. Verified
