@@ -32,7 +32,13 @@ async function rows<T>(sql: string, values: unknown[] = []) {
   const result = values.length > 0
     ? await statement.bind(...values).all<T>()
     : await statement.all<T>();
-  return result.results ?? [];
+  // An empty section is valid only after a successful read. Never turn a
+  // failed or malformed query into an apparently complete personal-data file.
+  if (result?.success !== true || !Array.isArray(result.results)
+    || result.results.some(row => row === null || typeof row !== "object" || Array.isArray(row))) {
+    throw new Error("Incomplete privacy export");
+  }
+  return result.results;
 }
 
 async function commonExport(email: string, role: AccountRole) {
