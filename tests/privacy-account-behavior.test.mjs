@@ -15,7 +15,7 @@ test("privacy tools isolate real signed sessions and migrated account records", 
   const database = new DatabaseSync(":memory:");
   const originalFetch = globalThis.fetch, originalError = console.error;
   const origin = "https://tuveloz.invalid";
-  const state = { db: null, failQuery: null, env: {
+  const state = { db: null, failQuery: null, resultOverride: null, env: {
     SITE_URL: origin, AUTH_CODE_SECRET: "synthetic-local-privacy-session-secret",
     DB: { prepare(query) {
       let values = [];
@@ -26,7 +26,10 @@ test("privacy tools isolate real signed sessions and migrated account records", 
       return {
         bind(...params) { values = params; return this; },
         async first() { return statement().get(...values) ?? null; },
-        async all() { return { results: statement().all(...values) }; },
+        async all() {
+          if (state.resultOverride?.query.test(query)) return state.resultOverride.result;
+          return { success: true, results: statement().all(...values) };
+        },
         async run() { return { meta: { changes: Number(statement().run(...values).changes) } }; },
       };
     } },
@@ -169,6 +172,45 @@ test("privacy tools isolate real signed sessions and migrated account records", 
         assert.equal(response.headers.get("cache-control"), "private, no-store");
         assert.doesNotMatch(await response.text(), /SYNTHETIC PRIVATE|SELECT|customer_vehicles/);
       } finally { state.failQuery = null; }
+    });
+    await t.test("failed or malformed export sections never become successful downloads", async () => {
+      const sources = [
+        ["customer", /FROM account_notifications/i],
+        ["customer", /FROM customer_vehicles/i],
+        ["provider", /FROM provider_evidence_submissions/i],
+      ];
+      const responses = [
+        { success: false, results: [] },
+        { success: false, results: [{ private: "SYNTHETIC PRIVATE PARTIAL RESULT" }] },
+        { success: true },
+        { success: true, results: null },
+        { success: true, results: { private: "SYNTHETIC PRIVATE MALFORMED RESULT" } },
+        { results: [] },
+        { success: true, results: [null] },
+        { success: true, results: ["SYNTHETIC PRIVATE MALFORMED ROW"] },
+        { success: true, results: [[]] },
+        null,
+      ];
+      for (const [scope, query] of sources) {
+        for (const result of responses) {
+          state.resultOverride = { query, result };
+          try {
+            const response = await api.download(request("alpha", `?scope=${scope}`));
+            assert.equal(response.status, 503, `${scope}: ${String(query)} ${JSON.stringify(result)}`);
+            assert.equal(response.headers.get("content-disposition"), null);
+            assert.equal(response.headers.get("cache-control"), "private, no-store");
+            assert.equal(response.headers.get("retry-after"), "5");
+            const body = await response.json();
+            assert.equal(body.error, "We couldn't prepare your download. Please try again.");
+            assert.deepEqual(Object.keys(body), ["error"], "no partial personal data in an error");
+          } finally { state.resultOverride = null; }
+        }
+        const recovered = await api.download(request("alpha", `?scope=${scope}`));
+        assert.equal(recovered.status, 200, "a retry works after storage recovers");
+        const data = await recovered.json();
+        assert.equal(data.accountEmail, "alpha@example.invalid");
+        assert.doesNotMatch(JSON.stringify(data), /bravo|SECRET-/);
+      }
     });
     await t.test("an authentication storage outage returns a private retryable response", async () => {
       state.failQuery = /auth_sessions/i;

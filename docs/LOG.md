@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-10
+- **Last reviewed:** 2026-10-14
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,29 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-14 - Reject incomplete privacy downloads
+
+Started from verified main e47a4be (PR #300), with no open competing PR.
+Fixed the privacy export's collection reader: unsuccessful database results,
+missing result arrays and malformed rows now produce the existing private 503
+retry response instead of a downloadable, apparently complete data file.
+Successful empty sections remain valid. No partial personal data or internal
+query details are included in errors, and a later retry succeeds after recovery.
+
+Regression tests reproduced the previous 200 response for a failed read, then
+verified customer, provider and shared export sections, ten failure shapes,
+retry behavior and account isolation against migrated synthetic SQLite and
+real signed sessions. Focused 24 tests and the full build/all 1,209 tests passed;
+TypeScript passed; lint has zero errors and the existing site-language warning.
+The initial sandboxed full run hit localhost EACCES in unrelated local workerd
+tests; the approved normal-access rerun passed all tests. No test was skipped.
+Evidence: task outputs/privacy-export-{regression-before,focused,full-verified,types,lint}-20261014.log.
+
+This is an export-integrity fix, not completion of broader privacy fulfillment.
+No migration, policy text, launch switch, deletion action or paid service changed.
+No production account data was used. Publication remains separate from these
+local results; do not repeat the completed PR #300 release or recovery setup.
 
 ## 2026-10-10 - Complete existing recovery acknowledgements without deleting
 
