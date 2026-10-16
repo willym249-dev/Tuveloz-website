@@ -12,9 +12,11 @@ test('authentication erasure migration avoids the remote D1 CASE parser defect',
   // D1's remote query parser ends a trigger at an unparenthesized CASE END.
   // Local SQLite/workerd accepts it, so behavioral tests alone miss this defect.
   // Confirmed with read-only remote EXPLAIN; workers-sdk issue #4727.
-  const migration = readFileSync(new URL('../drizzle/0072_reviewed_authentication_erasure.sql', import.meta.url), 'utf8');
-  assert.doesNotMatch(migration, /SELECT\s+CASE\b/i);
-  assert.match(migration, /SELECT\s+\(CASE\b[\s\S]*?END\);/i);
+  for (const file of ['0072_reviewed_authentication_erasure.sql', '0073_authentication_recovery_write_fence.sql']) {
+    const migration = readFileSync(new URL(`../drizzle/${file}`, import.meta.url), 'utf8');
+    assert.doesNotMatch(migration, /SELECT\s+CASE\b/i);
+    assert.match(migration, /SELECT\s+\(CASE\b[\s\S]*?END\);/i);
+  }
 });
 
 test('scoped authentication erasure uses migrated synthetic records only', async t => {
@@ -29,7 +31,7 @@ test('scoped authentication erasure uses migrated synthetic records only', async
     return { bind(...params) { values = params; return this; },
       async first() { return database.prepare(sql).get(...values) ?? null; },
       async run() { if (state.beforeWrite) { const fn = state.beforeWrite; state.beforeWrite = null; fn(); }
-        const result = { meta: { changes: Number(database.prepare(sql).run(...values).changes) } };
+        const result = { success: true, meta: { changes: Number(database.prepare(sql).run(...values).changes) } };
         if (state.afterWrite) { const fn = state.afterWrite; state.afterWrite = null; fn(); }
         return result; } };
   } };
@@ -46,7 +48,7 @@ test('scoped authentication erasure uses migrated synthetic records only', async
     globalThis.fetch = async () => { throw Error('External requests forbidden'); };
     for (const entry of JSON.parse(readFileSync(join(repo, 'drizzle/meta/_journal.json'), 'utf8')).entries) database.exec(readFileSync(join(repo, 'drizzle', entry.tag + '.sql'), 'utf8'));
     const bundle = join(scratch, 'engine.cjs');
-    await build({ absWorkingDir: repo, stdin: { contents: 'export * from "./lib/privacy-auth-erasure"; export * from "./lib/privacy-erasure-recovery"; export * from "./lib/privacy-erasure-replay";', resolveDir: repo, loader: 'ts' }, bundle: true, platform: 'node', format: 'cjs', outfile: bundle, logLevel: 'silent', plugins: [{ name: 'owner-fixture', setup(builder) {
+    await build({ absWorkingDir: repo, stdin: { contents: 'export * from "./lib/privacy-auth-erasure"; export * from "./lib/privacy-erasure-recovery"; export * from "./lib/privacy-erasure-replay"; export * from "./lib/privacy-recovery-fence";', resolveDir: repo, loader: 'ts' }, bundle: true, platform: 'node', format: 'cjs', outfile: bundle, logLevel: 'silent', plugins: [{ name: 'owner-fixture', setup(builder) {
       builder.onResolve({ filter: /\/owner-auth$/ }, args => ({ path: args.path, namespace: 'fixture' }));
       builder.onLoad({ filter: /.*/, namespace: 'fixture' }, () => ({ loader: 'js', contents: 'export const verifyOwnerRequest=async()=>globalThis.__erasureFixture.owner?{ok:true,email:"owner@example.invalid"}:{ok:false};' }));
     } }] });
@@ -290,6 +292,53 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, isolated.journal)).status, 'conflict');
       } finally { database.exec('DROP TRIGGER synthetic_keep_credential'); }
     });
+    await t.test('maintenance pause requires current owner approval and freezes recovery inputs', async () => {
+      const row = await make('source-pause');
+      const pause = { expectedGeneration: 0, paused: true, caseReference: 'SOURCE-PAUSE-CASE', confirmMaintenance: true };
+      const update = input => api.setAuthenticationRecoveryPause(request(), db, input);
+      state.owner = false;
+      assert.equal((await update(pause)).status, 'forbidden'); state.owner = true;
+      assert.equal((await api.setAuthenticationRecoveryPause(request('https://elsewhere.invalid'), db, pause)).status, 'forbidden');
+      for (const invalid of [{ confirmMaintenance: false }, { expectedGeneration: -1 }, { expectedGeneration: 1.5 }, { paused: 'yes' }, { caseReference: 'short' }]) {
+        assert.equal((await update({ ...pause, ...invalid })).status, 'invalid');
+      }
+      assert.equal((await update({ ...pause, expectedGeneration: 1 })).status, 'conflict');
+      assert.equal(database.prepare('SELECT count(*) n FROM privacy_recovery_fences').get().n, 0);
+      assert.equal((await update(pause)).status, 'paused');
+      const reads = api.AUTH_ERASURE_TABLES.concat(['account_closures', 'privacy_access_closure_reviews', 'privacy_auth_erasure_records', 'privacy_requests']);
+      for (const table of reads) {
+        const column = database.prepare(`PRAGMA table_info(${table})`).all()[0].name;
+        assert.ok(database.prepare(`SELECT count(*) n FROM ${table}`).get().n > 0, table);
+        for (const sql of [`INSERT OR REPLACE INTO ${table} SELECT * FROM ${table} LIMIT 1`, `UPDATE ${table} SET ${column}=${column}`, `DELETE FROM ${table}`]) {
+          assert.throws(() => database.exec(sql), /maintenance is active/, sql);
+        }
+      }
+      assert.equal((await erase(row.approval)).status, 'source-paused');
+      assert.equal((await api.confirmExistingAuthenticationErasure(request(), db, { ...row.approval, confirmCompletionOnly: true }, recovery.journal)).status, 'source-paused');
+      assert.throws(() => database.exec('DELETE FROM privacy_recovery_fences'), /immutable/);
+      assert.throws(() => database.exec('UPDATE privacy_recovery_fences SET paused=0'), /immutable/);
+      assert.throws(() => database.exec("INSERT OR REPLACE INTO privacy_recovery_fences SELECT * FROM privacy_recovery_fences"), /transition is stale/);
+      assert.equal((await update({ ...pause, expectedGeneration: 1, paused: false, caseReference: 'WRONG-CASE' })).status, 'conflict');
+      assert.equal((await update({ ...pause, expectedGeneration: 0, paused: false })).status, 'conflict');
+      assert.equal((await update({ ...pause, expectedGeneration: 1, paused: false })).status, 'resumed');
+      assert.equal(count('account_credentials', 'email', row.email), 1);
+      assert.equal((await update({ ...pause, expectedGeneration: 1, paused: false })).status, 'conflict');
+      assert.equal((await erase(row.approval)).status, 'erased');
+    });
+    await t.test('a delayed erasure cannot commit after a pause and resume, even if its data is unchanged', async () => {
+      const row = await make('fenced-in-flight'), isolated = createJournal('fenced-in-flight');
+      const put = isolated.store.put;
+      isolated.store.put = async (...args) => {
+        const fence = await api.readAuthenticationRecoveryFence(db);
+        assert.equal((await api.setAuthenticationRecoveryPause(request(), db, { expectedGeneration: fence.generation, paused: true, caseReference: 'IN-FLIGHT-RECOVERY', confirmMaintenance: true })).status, 'paused');
+        assert.equal((await api.setAuthenticationRecoveryPause(request(), db, { expectedGeneration: fence.generation + 1, paused: false, caseReference: 'IN-FLIGHT-RECOVERY', confirmMaintenance: true })).status, 'resumed');
+        return put(...args);
+      };
+      assert.equal((await api.eraseReviewedAuthenticationData(request(), db, row.approval, isolated.journal)).status, 'conflict');
+      assert.equal(count('account_credentials', 'email', row.email), 1);
+      assert.equal(database.prepare('SELECT count(*) n FROM privacy_auth_erasure_records WHERE request_id=?').get(row.approval.requestId).n, 0);
+      assert.equal((await isolated.journal.inspectIntents())[0].state, 'pending', 'preserve late intent for reviewed reconciliation');
+    });
     await t.test('old backup replay validates all evidence and atomically keeps erased accounts closed', async recoveryTest => {
       const target = await make('restore-target', false), other = await make('restore-other', false);
       const captured = new Map(api.AUTH_ERASURE_TABLES.map(table => [table, database.prepare(`SELECT * FROM ${table} WHERE email IN (?, ?)${table === 'phone_login_codes' ? ' OR phone_e164 IN (?, ?)' : ''}`).all(target.email, other.email, ...(table === 'phone_login_codes' ? [target.phone, other.phone] : []))]));
@@ -310,7 +359,9 @@ test('scoped authentication erasure uses migrated synthetic records only', async
           const column = table === 'account_closures' ? 'privacy_request_id' : 'request_id';
           seed(table, { ...database.prepare(`SELECT * FROM ${table} WHERE ${column}=?`).get(target.approval.requestId) }, currentSource);
         }
-        const sourceDb = { prepare(sql) { return { async all() { return { success: true, results: currentSource.prepare(sql).all() }; } }; } };
+        currentSource.exec(database.prepare("SELECT sql FROM sqlite_schema WHERE type='table' AND name='privacy_recovery_fences'").get().sql);
+        currentSource.exec("INSERT INTO privacy_recovery_fences (generation, paused, case_reference, changed_by) VALUES (1, 1, 'RESTORE-SYNTHETIC-CASE', 'owner@example.invalid')");
+        const sourceDb = { prepare(sql) { return { async first() { return currentSource.prepare(sql).get() ?? null; }, async all() { return { success: true, results: currentSource.prepare(sql).all() }; } }; } };
         let writes = 0;
         const restoreDb = {
           prepare(sql) { let values = []; return { bind(...params) { values = params; return this; }, async first() { return restored.prepare(sql).get(...values) ?? null; }, execute() { writes++; return { meta: { changes: Number(restored.prepare(sql).run(...values).changes) } }; } }; },
@@ -319,6 +370,15 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         const review = { isolatedRestoreConfirmed: true, sourceWritesPausedConfirmed: true, recoveryCaseReference: 'RESTORE-SYNTHETIC-CASE' };
         const replay = () => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, review, sourceDb);
         await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal, { ...review, sourceWritesPausedConfirmed: false }, sourceDb), /paused source writes/);
+        await recoveryTest.test('a different case or unpaused source cannot start a restore', async () => {
+          await assert.rejects(() => api.replayAuthenticationErasures(request(), restoreDb, isolated.journal,
+            { ...review, recoveryCaseReference: 'DIFFERENT-RESTORE-CASE' }, sourceDb), /database-enforced source pause/);
+          currentSource.exec('BEGIN');
+          currentSource.exec("INSERT INTO privacy_recovery_fences (generation, paused, case_reference, changed_by) VALUES (2, 0, 'RESTORE-SYNTHETIC-CASE', 'owner@example.invalid')");
+          try { await assert.rejects(replay, /database-enforced source pause/); }
+          finally { currentSource.exec('ROLLBACK'); }
+          assert.equal(writes, 0);
+        });
         const intentKey = [...isolated.objects.keys()].find(key => key.endsWith('/intent.json'));
         const completeKey = [...isolated.objects.keys()].find(key => key.endsWith('/complete.json'));
         const original = isolated.objects.get(intentKey), completion = isolated.objects.get(completeKey);
@@ -367,6 +427,18 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         assert.equal(restored.prepare('SELECT count(*) n FROM account_closures WHERE email=?').get(target.email).n, 1);
         assert.throws(() => seed('account_credentials', { email: target.email }, restored), /Account access is closed/);
         assert.equal((await replay()).replayed, 1);
+        await recoveryTest.test('pause-resume-pause during replay rejects unchanged catalog evidence', async () => {
+          const batch = restoreDb.batch;
+          currentSource.exec('BEGIN');
+          restoreDb.batch = async statements => {
+            const result = await batch(statements);
+            currentSource.exec("INSERT INTO privacy_recovery_fences (generation, paused, case_reference, changed_by) VALUES (2, 0, 'RESTORE-SYNTHETIC-CASE', 'owner@example.invalid'), (3, 1, 'RESTORE-SYNTHETIC-CASE', 'owner@example.invalid')");
+            return result;
+          };
+          try { await assert.rejects(replay, /write state changed/); }
+          finally { currentSource.exec('ROLLBACK'); restoreDb.batch = batch; }
+          assert.equal((await replay()).trafficMayOpen, false);
+        });
         await recoveryTest.test('source and journal changes during replay prevent a success result', async () => {
           const batch = restoreDb.batch;
           currentSource.exec('BEGIN');

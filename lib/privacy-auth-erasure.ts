@@ -3,6 +3,7 @@ import { isStrictSameOriginWriteRequest } from "./request-security";
 import { privacyReviewToken } from "./privacy-access-closure";
 import { PRIVACY_CLOSURE_SUBJECT_SQL, UNUSED_ACCOUNT_CLOSURE_PREDICATE } from "./privacy-closure-preview";
 import { AuthErasureRecoveryJournal, type AuthErasureIntent } from "./privacy-erasure-recovery";
+import { AUTH_RECOVERY_GENERATION_SQL, readAuthenticationRecoveryFence, assertAuthenticationRecoveryFence } from "./privacy-recovery-fence";
 
 // Internal engine. No route/UI calls this until durable recovery replay is ready.
 // Records are selected by the saved request, never an operator-supplied email.
@@ -83,6 +84,8 @@ async function applyReviewedAuthenticationErasure(request: Request, db: D1Databa
     return { status: "invalid" as const };
   }
   if (!(journal instanceof AuthErasureRecoveryJournal)) return { status: "recovery-unavailable" as const };
+  const fence = await readAuthenticationRecoveryFence(db);
+  if (fence.paused) return { status: "source-paused" as const, completesPrivacyRequest: false as const };
   const recoveryIntent = (snapshot: NonNullable<Awaited<ReturnType<typeof snapshotFor>>>, approvedBy: string): AuthErasureIntent => {
     if (!snapshot.data.closed) throw new Error("Reviewed account closure is missing.");
     return { requestId: approval.requestId, email: snapshot.data.request.email.trim().toLowerCase(),
@@ -98,7 +101,11 @@ async function applyReviewedAuthenticationErasure(request: Request, db: D1Databa
       && previous.recovery_reference === approval.recoveryReference.trim() && previous.snapshot_digest === approval.reviewToken;
     if (!matching || previous.scope !== "authentication-records" || !snapshot?.data.closed
       || !Object.values(snapshot.counts).every(count => count === 0)) return { status: "conflict" as const };
-    try { await journal.confirm(recoveryIntent(snapshot, previous.approved_by)); }
+    try {
+      await assertAuthenticationRecoveryFence(db, fence);
+      await journal.confirm(recoveryIntent(snapshot, previous.approved_by));
+      await assertAuthenticationRecoveryFence(db, fence);
+    }
     catch { return { status: "recovery-pending" as const, completesPrivacyRequest: false as const }; }
     // A successful journal write is not sufficient if the source moved during
     // confirmation. Preserve any saved evidence and require another review.
@@ -118,14 +125,17 @@ async function applyReviewedAuthenticationErasure(request: Request, db: D1Databa
   const snapshot = await snapshotFor(db, approval.requestId);
   if (!snapshot?.eligible || snapshot.digest !== approval.reviewToken) return { status: "conflict" as const };
   const intent = recoveryIntent(snapshot, owner.email);
+  await assertAuthenticationRecoveryFence(db, fence);
   await journal.prepare(intent);
   const result = await db.prepare(`INSERT INTO privacy_auth_erasure_records
     (request_id, scope, approved_by, case_reference, recovery_reference, snapshot_digest, record_counts)
     SELECT ?, 'authentication-records', ?, ?, ?, ?, ? FROM (${AUTH_ERASURE_SNAPSHOT_SQL}) current
     WHERE current.snapshot = ? AND json_extract(current.snapshot, '$.eligible') = 1
+      AND ${AUTH_RECOVERY_GENERATION_SQL} = ?
+      AND COALESCE((SELECT paused FROM privacy_recovery_fences ORDER BY generation DESC LIMIT 1), 0) = 0
     ON CONFLICT(request_id) DO NOTHING`)
     .bind(approval.requestId, owner.email, approval.caseReference.trim(), approval.recoveryReference.trim(),
-      approval.reviewToken, JSON.stringify(snapshot.counts), approval.requestId, snapshot.raw).run();
+      approval.reviewToken, JSON.stringify(snapshot.counts), approval.requestId, snapshot.raw, fence.generation).run();
   // D1 counts the receipt AND its trigger's deletions in meta.changes. An
   // accepted insert can therefore change many rows; only zero means no insert.
   if (!(result.meta.changes >= 1)) return { status: "conflict" as const };

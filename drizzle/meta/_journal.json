@@ -512,6 +512,13 @@
       "when": 1791399600000,
       "tag": "0072_reviewed_authentication_erasure",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "6",
+      "when": 1792180800000,
+      "tag": "0073_authentication_recovery_write_fence",
+      "breakpoints": true
     }
   ]
 }

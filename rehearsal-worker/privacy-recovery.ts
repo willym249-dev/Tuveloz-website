@@ -2,6 +2,7 @@
 import { previewAuthenticationErasure, eraseReviewedAuthenticationData } from "../lib/privacy-auth-erasure";
 import { AuthErasureRecoveryJournal } from "../lib/privacy-erasure-recovery";
 import { replayAuthenticationErasures } from "../lib/privacy-erasure-replay";
+import { setAuthenticationRecoveryPause } from "../lib/privacy-recovery-fence";
 
 type Statement = { sql: string; values: (string | number | null)[] };
 declare const REHEARSAL_SCHEMA: string[];
@@ -94,6 +95,9 @@ const privacyRecoveryRehearsal = {
       requireTrue((await journal.completedIntents()).length === 1);
       stage = "source-other-account-readback";
       requireTrue(await count(env.SOURCE, "account_credentials", other) === 1);
+      requireTrue((await setAuthenticationRecoveryPause(internalRequest, env.SOURCE, {
+        expectedGeneration: 0, paused: true, caseReference: review.recoveryCaseReference, confirmMaintenance: true,
+      })).status === "paused");
       passed.push("signed-erasure-and-retry");
       } else if (step === setupSteps + 1) {
       stage = "tampered-journal";

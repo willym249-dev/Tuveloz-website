@@ -2,7 +2,7 @@
 
 - **Status:** active
 - **Owner:** hello@tuveloz.com
-- **Last reviewed:** 2026-10-14
+- **Last reviewed:** 2026-10-16
 
 This is the shared memory between every chat session, tool, and person working
 on Tuveloz. A conversation ends and takes its context with it; this file is what
@@ -10,6 +10,34 @@ survives.
 
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
+
+## 2026-10-16 - Enforce authentication recovery pauses in the database
+
+PR #301 is published as 2e27e4a; its tested/merged trees, production workflow
+38950539788 and exact live release checks passed. Preserve that completed work.
+Started this separate local change from that main commit after verifying no open
+competing PRs. Migration 0073 adds an empty append-only maintenance history and
+write guards for authentication and privacy recovery inputs. Installation alone
+does not pause writes. No HTTP/UI control or real erasure action is exposed.
+
+Internal maintenance requires owner/same-origin authorization and the current
+generation. Erasure cannot commit across a pause/resume cycle. Recovery replay
+requires a database-enforced pause for its case and an unchanged generation
+before and after reconciliation. It always leaves restore traffic disabled.
+Tests cover paused writes, stale commands, wrong cases, immutable history,
+delayed erasure, recovery races, normal unpaused operation and local D1/R2.
+The synthetic rehearsal now exercises the same pause control.
+
+Build and all 1,213 tests passed without skips. The initial full run identified
+the new maintenance table missing from the explicit privacy inventory; it is now
+classified for manual retention review and the complete rerun passed. TypeScript
+passed; lint has zero errors and the existing site-language warning. Evidence:
+task outputs/privacy-source-fence-{focused,full,full-verified,types,lint}-20261016.log.
+
+Local only: no push, deployment, live pause, paid service or customer data used.
+This narrows the source-pause gap; source identity/freshness, in-flight journal
+draining, unresolved intent handling and broader retention/fulfillment are not
+complete. See the updated privacy fulfillment runbook for precise scope.
 
 ## 2026-10-14 - Reject incomplete privacy downloads
 

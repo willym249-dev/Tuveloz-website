@@ -20,6 +20,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       import { previewAuthenticationErasure, eraseReviewedAuthenticationData, confirmExistingAuthenticationErasure } from './lib/privacy-auth-erasure';
       import { AuthErasureRecoveryJournal } from './lib/privacy-erasure-recovery';
       import { replayAuthenticationErasures } from './lib/privacy-erasure-replay';
+      import { setAuthenticationRecoveryPause } from './lib/privacy-recovery-fence';
       import { POST as closeAccess } from './app/api/admin/privacy-requests/close-access/route';
       import { PRIVACY_CLOSURE_PREVIEW_SQL } from './lib/privacy-closure-preview';
       import { privacyReviewToken } from './lib/privacy-access-closure';
@@ -35,6 +36,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
           else if (path === '/erase') result = await eraseReviewedAuthenticationData(request, env.SOURCE, input, journal);
           else if (path === '/confirm-existing') result = await confirmExistingAuthenticationErasure(request, env.SOURCE, input, journal);
           else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input, env.SOURCE);
+          else if (path === '/pause') result = await setAuthenticationRecoveryPause(request, env.SOURCE, input);
           else if (path === '/catalog') result = { count: (await journal.completedIntents()).length };
           else return new Response('Unknown fixture operation', { status: 404 });
           return Response.json(result);
@@ -129,6 +131,12 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       assert.equal((await call('/confirm-existing', { ...approval, confirmCompletionOnly: true })).body.status, 'completion-confirmed');
     });
     await t.test('missing R2 catalog cannot hide a completed source deletion', async () => {
+      const unpaused = await call('/replay', review);
+      assert.equal(unpaused.status, 409);
+      assert.match(unpaused.body.error, /database-enforced source pause/);
+      assert.equal((await call('/pause', { expectedGeneration: 0, paused: true, caseReference: review.recoveryCaseReference, confirmMaintenance: true })).body.status, 'paused');
+      await assert.rejects(() => source.prepare("UPDATE account_credentials SET failed_attempts = 0").run(), /maintenance is active/);
+      assert.equal((await call('/erase', approval)).body.status, 'source-paused');
       const objects = (await bucket.list()).objects;
       const saved = await Promise.all(objects.map(async object => [object.key, await (await bucket.get(object.key)).text()]));
       try {

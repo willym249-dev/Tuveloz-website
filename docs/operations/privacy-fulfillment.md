@@ -702,3 +702,42 @@ receipts (including failed guarded attempts), owner/origin/scope rejection,
 changed case/digest/closure/scope, missing intent, remaining credentials, lost
 storage replies, concurrent source movement, safe repeats and source isolation.
 No real account, receipt, private journal entry or backup was accessed.
+
+## Database-enforced authentication recovery pause — October 16, 2026
+
+Local implementation only; not deployed or activated. Migration 0073 adds an
+empty, append-only maintenance history. An empty history leaves normal writes
+enabled. The internal `setAuthenticationRecoveryPause` helper has no HTTP route
+or UI caller. It requires owner authentication, POST, same Origin, an explicit
+maintenance confirmation, a case reference and the current generation. Resume
+requires the same case. There is no automatic expiry or automatic resume.
+
+When paused, database triggers reject inserts, updates and deletes on the seven
+authentication tables plus `account_closures`, `privacy_access_closure_reviews`,
+`privacy_auth_erasure_records` and `privacy_requests`. This is a pause of those
+tables, not the whole database or object storage. Sign-in, session updates and
+privacy submissions can fail during an activated pause; planned maintenance
+and an operator-controlled recovery procedure are required before using it.
+
+Erasure records must commit against the unchanged, unpaused generation. A
+delayed attempt cannot commit after a pause/resume cycle even when its original
+data snapshot is unchanged. Completion checks reject observed generation
+changes. Replay now requires a real paused source for its exact case and checks
+that generation before writes and after reconciliation. A concurrent resume
+invalidates the result; the restore remains isolated even if replay wrote rows.
+No successful result authorizes opening traffic or completing a privacy case.
+
+This replaces reliance on a caller's pause confirmation alone. It does not
+establish the identity/freshness of a supplied database, drain in-flight object
+writes, or create an atomic D1/R2 snapshot. A late journal intent can still
+arrive; preserve it and stop for reviewed reconciliation. Missing-receipt
+abandonment, source provenance, unavailable-source recovery, case-specific
+retention and the other data/file/vendor fulfillment categories remain open.
+The existing completion-only procedure must run outside an active pause and
+then be followed by a fresh pause and full reconciliation before replay.
+
+Maintenance history contains operator identity and case references. It is
+explicitly listed as a manual privacy/retention source, not an account-owned
+deletion target. Retain it for recovery review; do not reset generations or
+delete history to unblock a stale operation. Schema rollback after activation
+requires a separately reviewed recovery plan.
