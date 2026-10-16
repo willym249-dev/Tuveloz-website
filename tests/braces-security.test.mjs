@@ -4,6 +4,7 @@ import { readFileSync, realpathSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 const root = resolve(import.meta.dirname, "..");
 const vendor = join(root, "vendor/braces");
@@ -14,14 +15,14 @@ const manifest = read(join(vendor, "patch-provenance.json"));
 const sha = path => createHash("sha256").update(readFileSync(path, "utf8").replaceAll("\r\n", "\n")).digest("hex");
 
 test("braces local patch retains its reviewed source, license and private provenance", () => {
-  assert.equal(manifest.upstreamPatchCommit, "d0d575e55e74a4e0218e5248fafb79efc3e54ebb");
+  assert.equal(manifest.upstreamPatchCommit, "28d440b5dd449dbf1fe6f3506cf94ecca4d02660");
   assert.equal(manifest.upstreamVersion, "3.0.3");
   assert.match(readFileSync(join(vendor, "LICENSE"), "utf8"), /MIT License/);
   const actual = ["index.js", "LICENSE", "package.json", ...readdirSync(join(vendor, "lib")).map(name => `lib/${name}`)].sort();
   assert.deepEqual(Object.keys(manifest.files).sort(), actual);
   for (const [path, hashes] of Object.entries(manifest.files)) assert.equal(sha(join(vendor, path)), hashes.patchedSha256, path);
   const pkg = read(join(vendor, "package.json"));
-  assert.equal(pkg.name, "@tuveloz/braces"); assert.equal(pkg.version, "3.0.3-tuveloz.1"); assert.equal(pkg.private, true);
+  assert.equal(pkg.name, "@tuveloz/braces"); assert.equal(pkg.version, "3.0.3-tuveloz.2"); assert.equal(pkg.private, true);
   assert.equal(pkg.scripts, undefined); assert.equal(pkg.devDependencies, undefined);
 });
 
@@ -46,7 +47,7 @@ test("every installed braces consumer resolves the pinned local patch", () => {
   }
   assert.ok(copies > 0 && consumers > 0, "the replacement must actually be in use");
   assert.equal(lock.packages["vendor/braces"].name, "@tuveloz/braces");
-  assert.equal(lock.packages["vendor/braces"].version, "3.0.3-tuveloz.1");
+  assert.equal(lock.packages["vendor/braces"].version, "3.0.3-tuveloz.2");
 });
 
 test("deep brace and parenthesis patterns are rejected before stack exhaustion", () => {
@@ -100,4 +101,32 @@ test("build-tool consumers reject the payload and match ordinary source globs", 
   assert.throws(() => fastGlob.sync(malicious, { cwd: root }), /exceeds max depth/);
   assert.deepEqual(micromatch(["app/page.tsx", "lib/jobs.ts", "docs/guide.md"], "{app,lib}/**/*.{ts,tsx}"), ["app/page.tsx", "lib/jobs.ts"]);
   assert.deepEqual(fastGlob.sync("lib/{test-cancellation-decision,customer-fee}.ts", { cwd: root }).sort(), ["lib/customer-fee.ts", "lib/test-cancellation-decision.ts"]);
+});
+
+test("fractional depth limits reject the next whole nesting level", () => {
+  for (const method of [braces, braces.parse, braces.compile, braces.expand, braces.stringify]) {
+    for (const [shallow, deep] of [["{a,b}", "{{a,b},c}"], ["(a)", "((a))"]]) {
+      assert.doesNotThrow(() => method(shallow, { maxDepth: 1.5 }));
+      assert.throws(() => method(deep, { maxDepth: 1.5 }), /exceeds max depth/);
+      assert.throws(() => method(shallow, { maxDepth: 0.5 }), /exceeds max depth/);
+    }
+  }
+});
+
+test("escapeInvalid preserves upstream stringify behavior for nested patterns", () => {
+  for (const pattern of ["{{a}}", "{a,{b}}", "{{x}y}", "{a,{b,{c}}", "{}{a}"]) {
+    assert.equal(braces.stringify(braces.parse(pattern), { escapeInvalid: true }), pattern);
+  }
+  assert.equal(braces.stringify({ type: "open", value: "{", invalid: true }, { escapeInvalid: true }), "\\{");
+});
+
+test("expansion rejects cyclic parent chains without hanging", () => {
+  for (const length of [1, 2, 4]) {
+    const nodes = Array.from({ length }, () => ({ type: "paren", nodes: [{ type: "text", value: "a" }] }));
+    nodes.forEach((node, index) => { node.parent = nodes[(index + 1) % length]; });
+    // A regression must fail within a bounded time, rather than hang the test runner.
+    assert.throws(() => runInNewContext("expand(ast)", { expand: braces.expand, ast: nodes[0] }, { timeout: 500 }),
+      error => error instanceof RangeError && /parent chain contains a cycle/.test(error.message));
+  }
+  assert.deepEqual(braces.expand(braces.parse("foo/({a,b})")), ["foo/(a)", "foo/(b)"]);
 });

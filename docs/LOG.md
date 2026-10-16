@@ -11,6 +11,37 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-16 - Review and correct the private braces patch
+
+Preserved completed PR #302: main/live d07f713b3019620c2e2eec540eb25f4a2878ed2d,
+production workflow 38971630244 and independent live/database checks passed.
+Started this separate branch from that main commit after finding no open PRs.
+
+Completed the October 17 dependency checkpoint early. The official npm release
+is still 3.0.3; upstream PR #72 is closed and unmerged. Reviewed its immutable
+runtime delta from d0d575e to 28d440b5dd449dbf1fe6f3506cf94ecca4d02660. Three
+new regression tests failed on the old private patch: fractional depth limits,
+escapeInvalid compatibility, and an infinite loop for cyclic AST parent links.
+Applied only the reviewed runtime delta as @tuveloz/braces@3.0.3-tuveloz.2.
+Kept the released parser's unrelated quote/invalid-state behavior, original
+license/archive hashes, fixed depth cap, and all consumer/source checks.
+
+Validation: build and all 1,216 tests passed, zero skips; nine patch-specific
+tests and npm audit passed (zero reported vulnerabilities); TypeScript passed;
+lint has zero errors and the existing site-language warning. The initial full
+run failed because the sandbox denied local loopback test connections; the full
+rerun with that access passed. Audit does not inspect private patched source.
+Evidence in task outputs: braces-regressions-{before,after}-20261016.log,
+braces-review-{full-verified,types,lint,security}-20261016.log,
+braces-reviewed-upstream-delta-20261016.json and braces-security-delta-match-20261016.json.
+
+Local only; publication pending approval. No dependency download, paid service,
+policy/schema/launch change, or real customer data used. The reviewed delta
+comparison is authoritative; the earlier whole-file comparison intentionally
+differs for parse.js because it contains unrelated upstream development work.
+Next upstream review: October 30. Do not replace the private patch with the
+unfixed official package or a moving branch.
+
 ## 2026-10-16 - Enforce authentication recovery pauses in the database
 
 PR #301 is published as 2e27e4a; its tested/merged trees, production workflow

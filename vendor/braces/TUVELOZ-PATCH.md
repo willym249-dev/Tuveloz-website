@@ -2,11 +2,11 @@
 
 This is the MIT-licensed `braces@3.0.3` source with the five runtime-file changes
 proposed in [upstream PR #72](https://github.com/micromatch/braces/pull/72),
-commit `d0d575e55e74a4e0218e5248fafb79efc3e54ebb`. That proposal is **not merged
-or released by the maintainer** as of October 3, 2026. This private local copy
+commit `28d440b5dd449dbf1fe6f3506cf94ecca4d02660`. That proposal is **closed,
+not merged or released by the maintainer** as of October 16, 2026. This private local copy
 is maintained by Tuveloz until a reviewed upstream replacement is available.
 It is not an official fixed release. The private fork is explicitly named
-`@tuveloz/braces@3.0.3-tuveloz.1`, while the root alias keeps the existing
+`@tuveloz/braces@3.0.3-tuveloz.2`, while the root alias keeps the existing
 `require('braces')` API. Upstream 3.0.3 remains recorded in the provenance.
 
 The patch caps brace/parenthesis parsing and recursive AST traversal at 100
@@ -14,6 +14,21 @@ levels, including direct AST inputs to compile, expand and stringify. Callers
 may lower this limit but cannot raise it. Ordinary patterns retain their
 existing API and behavior. Rejected input still raises a documented exception;
 applications accepting untrusted patterns must handle that exception.
+
+The October 16 review adopts the three runtime security/compatibility changes
+between the initially reviewed `d0d575e55e74a4e0218e5248fafb79efc3e54ebb` and
+the pinned commit above. Fractional limits reject the next whole nesting level;
+stringify preserves the released behavior with `escapeInvalid`; expansion rejects
+cyclic AST parent chains instead of looping forever. All three regressions were
+reproduced against the prior local copy before applying the corrections. Tests
+bound cyclic-input execution time so a regression cannot hang the test runner.
+
+Only those reviewed security changes are applied to the original 3.0.3 source.
+The upstream development branch also contains unrelated parser quote handling
+and invalid-state changes; those are not adopted. Therefore the entire parse.js
+file is not byte-identical to the proposal's development branch. The added and
+removed lines of all three adopted runtime diffs match the pinned upstream delta;
+the provenance hashes describe the exact local files.
 
 `patch-provenance.json` records the original npm archive's integrity and
 normalized SHA-256 hashes of the original and patched files. Runtime source and
