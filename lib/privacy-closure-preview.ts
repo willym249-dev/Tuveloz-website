@@ -63,6 +63,7 @@ export const PRIVACY_MANUAL_SOURCES = [
   { table: "analytics_events", reason: "Event properties need a separate scoped review." },
   { table: "public_write_rate_limits", reason: "Hashed rate-limit identifiers need a separate retention review." },
   { table: "launch_gate_decisions", reason: "Business decision notes may mention an account; ownership cannot be inferred." },
+  { table: "privacy_recovery_fences", reason: "Recovery case references and operator history need a separate retention review; they are not account-owned records." },
   { table: "referral_codes", reason: "Referral relationships and hashed signup references need a separate review." },
   { table: "referral_signups", reason: "Referral relationships and hashed signup references need a separate review." },
   { table: "self_hosted_scan_jobs", reason: "Scan jobs can link to several file types and need a separate review." },

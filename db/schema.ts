@@ -509,6 +509,14 @@ export const authSessions = sqliteTable(
   ],
 );
 
+export const privacyRecoveryFences = sqliteTable("privacy_recovery_fences", {
+  generation: integer("generation").primaryKey(),
+  paused: integer("paused").notNull(),
+  caseReference: text("case_reference").notNull(),
+  changedBy: text("changed_by").notNull(),
+  changedAt: text("changed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const privacyAuthErasureRecords = sqliteTable("privacy_auth_erasure_records", {
   requestId: text("request_id").primaryKey(),
   scope: text("scope").notNull(),
