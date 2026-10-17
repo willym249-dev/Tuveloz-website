@@ -1,8 +1,19 @@
-import { AuthErasureRecoveryJournal } from "./privacy-erasure-recovery";
+import { AuthErasureRecoveryJournal, type AuthErasureIntent } from "./privacy-erasure-recovery";
 import { verifyOwnerRequest } from "./owner-auth";
 import { isStrictSameOriginWriteRequest } from "./request-security";
 import { assertAuthenticationCatalogMatches, assertCurrentAuthenticationCatalog } from "./privacy-erasure-catalog";
 import { readAuthenticationRecoveryFence, assertAuthenticationRecoveryFence } from "./privacy-recovery-fence";
+
+const expectedClosureSql = `WITH expected(email, request_id, case_reference, closed_at, review_after)
+  AS (VALUES (?, ?, ?, ?, ?))`;
+const conflictingClosureSql = `SELECT 1 FROM account_closures closed, expected
+  WHERE (closed.email = expected.email OR closed.privacy_request_id = expected.request_id)
+  AND NOT (closed.email = expected.email AND closed.privacy_request_id = expected.request_id
+    AND closed.case_reference = expected.case_reference AND closed.closed_at = expected.closed_at
+    AND closed.review_after = expected.review_after)`;
+const closureValues = (intent: AuthErasureIntent) => [intent.email, intent.requestId,
+  intent.closureCaseReference, intent.closedAt, intent.reviewAfter];
+const closureProblem = () => new Error("The restore closure does not match the reviewed evidence. Keep the restore isolated.");
 
 // For an isolated, fully migrated restore only. This never enables traffic or
 // proves that the supplied catalog is the current authoritative store.
@@ -25,10 +36,23 @@ export async function replayAuthenticationErasures(request: Request, db: D1Datab
   if (intents.length > 100) throw new Error("Recovery catalog requires a separately reviewed batch plan.");
   await assertCurrentAuthenticationCatalog(source, intents);
   const statements: D1PreparedStatement[] = [];
+  // Validate every existing restore closure before submitting any writes. A
+  // matching email alone cannot establish the case, dates or request ownership.
   for (const intent of intents) {
-    statements.push(db.prepare(`INSERT INTO account_closures (email, privacy_request_id, case_reference, closed_at, review_after)
-      VALUES (?, ?, ?, ?, ?) ON CONFLICT(email) DO NOTHING`)
-      .bind(intent.email, intent.requestId, intent.closureCaseReference, intent.closedAt, intent.reviewAfter));
+    const existing = await db.prepare(`${expectedClosureSql}
+      SELECT EXISTS(${conflictingClosureSql}) AS conflict`).bind(...closureValues(intent)).first<{ conflict: number }>();
+    if (existing?.conflict !== 0) throw closureProblem();
+    // Recheck within the same D1 transaction as all deletions. A late conflict
+    // selects NULL for the existing NOT NULL email constraint, aborting the
+    // entire batch; it cannot overwrite another case or leave partial erasure.
+    // Exact existing records remain untouched and repeated replay stays safe.
+    statements.push(db.prepare(`${expectedClosureSql}
+      INSERT INTO account_closures (email, privacy_request_id, case_reference, closed_at, review_after)
+      SELECT (CASE WHEN EXISTS(${conflictingClosureSql}) THEN NULL ELSE email END),
+        request_id, case_reference, closed_at, review_after FROM expected WHERE true
+      ON CONFLICT(email) DO NOTHING`).bind(...closureValues(intent)));
+  }
+  for (const intent of intents) {
     // Anonymous phone challenges must be removed before their association.
     statements.push(db.prepare(`DELETE FROM phone_login_codes WHERE lower(trim(email)) = ?
       OR (trim(email) = '' AND phone_e164 IN (SELECT phone_e164 FROM account_phone_numbers WHERE lower(trim(email)) = ?))`)
@@ -52,11 +76,15 @@ export async function replayAuthenticationErasures(request: Request, db: D1Datab
   for (const intent of intents) {
     const tables = ["auth_sessions", "login_codes", "password_verification_codes", "passkey_credentials",
       "account_credentials", "account_phone_numbers", "phone_login_codes"];
-    const verified = await db.prepare(`WITH subject(email) AS (VALUES (?))
-      SELECT EXISTS(SELECT 1 FROM account_closures WHERE email = (SELECT email FROM subject)) AS closed,
-        ${tables.map(table => `(SELECT count(*) FROM ${table} WHERE lower(trim(email)) = (SELECT email FROM subject))`).join(" + ")} AS remaining`)
-      .bind(intent.email).first<{ closed: number; remaining: number }>();
-    if (verified?.closed !== 1 || verified.remaining !== 0) {
+    const verified = await db.prepare(`${expectedClosureSql}
+      SELECT EXISTS(SELECT 1 FROM account_closures closed, expected
+        WHERE closed.email = expected.email AND closed.privacy_request_id = expected.request_id
+          AND closed.case_reference = expected.case_reference AND closed.closed_at = expected.closed_at
+          AND closed.review_after = expected.review_after) AS closed,
+        EXISTS(${conflictingClosureSql}) AS conflict,
+        ${tables.map(table => `(SELECT count(*) FROM ${table} WHERE lower(trim(email)) = (SELECT email FROM expected))`).join(" + ")} AS remaining`)
+      .bind(...closureValues(intent)).first<{ closed: number; conflict: number; remaining: number }>();
+    if (verified?.closed !== 1 || verified.conflict !== 0 || verified.remaining !== 0) {
       throw new Error("Recovery verification failed. Keep the restored database isolated and review remaining authentication records.");
     }
   }

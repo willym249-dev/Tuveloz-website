@@ -36,6 +36,15 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
           else if (path === '/erase') result = await eraseReviewedAuthenticationData(request, env.SOURCE, input, journal);
           else if (path === '/confirm-existing') result = await confirmExistingAuthenticationErasure(request, env.SOURCE, input, journal);
           else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input, env.SOURCE);
+          else if (path === '/replay-late-conflict') {
+            const restore = { prepare: sql => env.RESTORE.prepare(sql), batch: async statements => {
+              const closed = await env.SOURCE.prepare('SELECT closed.* FROM account_closures closed JOIN privacy_auth_erasure_records receipt ON receipt.request_id = closed.privacy_request_id LIMIT 1').first();
+              await env.RESTORE.prepare('INSERT INTO account_closures (email, privacy_request_id, case_reference, closed_at, review_after) VALUES (?, ?, ?, ?, ?)')
+                .bind(closed.email, closed.privacy_request_id, 'RUNTIME-LATE-CONFLICT', closed.closed_at, closed.review_after).run();
+              return env.RESTORE.batch(statements);
+            } };
+            result = await replayAuthenticationErasures(request, restore, journal, input, env.SOURCE);
+          }
           else if (path === '/pause') result = await setAuthenticationRecoveryPause(request, env.SOURCE, input);
           else if (path === '/catalog') result = { count: (await journal.completedIntents()).length };
           else return new Response('Unknown fixture operation', { status: 404 });
@@ -161,6 +170,26 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       assert.equal(await count(restore, 'account_credentials', target), 1);
       assert.equal(await count(restore, 'account_closures', target), 0);
       await bucket.put(key, original);
+    });
+    await t.test('D1 refuses a conflicting closure arriving after the restore preflight', async () => {
+      const tables = ['auth_sessions', 'login_codes', 'passkey_credentials', 'password_verification_codes',
+        'account_credentials', 'account_phone_numbers', 'phone_login_codes'];
+      const saved = new Map();
+      for (const table of tables) saved.set(table, (await restore.prepare(`SELECT * FROM ${table}`).all()).results);
+      try {
+        const response = await call('/replay-late-conflict', review);
+        assert.equal(response.status, 409);
+        assert.match(response.body.error, /NOT NULL constraint failed/);
+        assert.equal(await count(restore, 'account_credentials', target), 1);
+        assert.equal(await count(restore, 'account_credentials', other), 1);
+        assert.equal((await restore.prepare('SELECT case_reference FROM account_closures WHERE email=?').bind(target).first()).case_reference, 'RUNTIME-LATE-CONFLICT');
+      } finally {
+        await restore.prepare('DELETE FROM account_closures WHERE email=?').bind(target).run();
+        for (const [table, rows] of saved) {
+          await restore.prepare(`DELETE FROM ${table}`).run();
+          for (const row of rows) await seed(restore, table, { ...row });
+        }
+      }
     });
     await t.test('D1 batch rollback and successful replay keep account isolation', async () => {
       await restore.prepare("CREATE TRIGGER synthetic_runtime_failure BEFORE DELETE ON passkey_credentials BEGIN SELECT RAISE(ABORT, 'synthetic runtime failure'); END").run();

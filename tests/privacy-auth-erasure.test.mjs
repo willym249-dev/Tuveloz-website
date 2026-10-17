@@ -404,6 +404,55 @@ test('scoped authentication erasure uses migrated synthetic records only', async
           currentSource.exec('ROLLBACK');
           assert.equal(writes, 0);
         });
+        const resetRestore = () => {
+          restored.exec('DELETE FROM account_closures');
+          for (const [table, rows] of captured) {
+            restored.exec(`DELETE FROM ${table}`);
+            for (const row of rows) seed(table, { ...row }, restored);
+          }
+          writes = 0;
+        };
+        const expectedClosure = { ...currentSource.prepare('SELECT * FROM account_closures').get() };
+        for (const [field, value] of [['privacy_request_id', 'OTHER-REQUEST'], ['case_reference', 'CONFLICTING-RESTORE-CASE'],
+          ['closed_at', '2020-01-01 00:00:00'], ['review_after', '2098-01-01'], ['email', other.email]]) {
+          await recoveryTest.test(`restore closure rejects conflicting ${field} before writes`, async () => {
+            seed('account_closures', { ...expectedClosure, [field]: value }, restored);
+            const before = restored.prepare('SELECT * FROM account_credentials ORDER BY email').all();
+            try {
+              await assert.rejects(replay, /restore closure/);
+              assert.deepEqual(restored.prepare('SELECT * FROM account_credentials ORDER BY email').all(), before);
+              assert.equal(writes, 0);
+            } finally {
+              resetRestore();
+            }
+          });
+        }
+        await recoveryTest.test('a late conflict in a later case rolls back the complete restore batch', async () => {
+          const second = { ...JSON.parse(original).body.intent, requestId: 'later-restore-case', email: 'later@example.invalid' };
+          const savedObjects = new Map(isolated.objects), batch = restoreDb.batch;
+          const secondClosure = { ...expectedClosure, email: second.email, privacy_request_id: second.requestId };
+          seed('account_closures', secondClosure, currentSource);
+          seed('privacy_auth_erasure_records', { ...currentSource.prepare('SELECT * FROM privacy_auth_erasure_records').get(), request_id: second.requestId }, currentSource);
+          await isolated.journal.prepare(second); await isolated.journal.confirm(second);
+          restoreDb.batch = async statements => {
+            seed('account_closures', { ...secondClosure, case_reference: 'LATE-CONFLICTING-CASE' }, restored);
+            return batch(statements);
+          };
+          try {
+            await assert.rejects(replay, /NOT NULL constraint failed/);
+            assert.equal(restored.prepare('SELECT count(*) n FROM account_closures WHERE email=?').get(target.email).n, 0);
+            assert.equal(restored.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get(target.email).n, 2);
+            assert.equal(restored.prepare('SELECT count(*) n FROM account_credentials WHERE email=?').get(target.email).n, 1);
+            assert.equal(restored.prepare('SELECT count(*) n FROM account_credentials WHERE email=?').get(other.email).n, 1);
+            assert.equal(restored.prepare('SELECT case_reference FROM account_closures WHERE email=?').get(second.email).case_reference, 'LATE-CONFLICTING-CASE');
+          } finally {
+            restoreDb.batch = batch;
+            currentSource.prepare('DELETE FROM privacy_auth_erasure_records WHERE request_id=?').run(second.requestId);
+            currentSource.prepare('DELETE FROM account_closures WHERE privacy_request_id=?').run(second.requestId);
+            isolated.objects.clear(); for (const [key, value] of savedObjects) isolated.objects.set(key, value);
+            resetRestore();
+          }
+        });
         const tampered = JSON.parse(original); tampered.body.intent.email = other.email;
         isolated.objects.set(intentKey, JSON.stringify(tampered));
         await assert.rejects(replay, /recovery evidence/); assert.equal(writes, 0);
@@ -427,6 +476,19 @@ test('scoped authentication erasure uses migrated synthetic records only', async
         assert.equal(restored.prepare('SELECT count(*) n FROM account_closures WHERE email=?').get(target.email).n, 1);
         assert.throws(() => seed('account_credentials', { email: target.email }, restored), /Account access is closed/);
         assert.equal((await replay()).replayed, 1);
+        await recoveryTest.test('postconditions reject closure metadata changed during replay', async () => {
+          const batch = restoreDb.batch;
+          restoreDb.batch = async statements => {
+            const result = await batch(statements);
+            restored.prepare('UPDATE account_closures SET review_after=? WHERE email=?').run('2098-01-01', target.email);
+            return result;
+          };
+          try { await assert.rejects(replay, /Recovery verification failed/); }
+          finally {
+            restoreDb.batch = batch;
+            restored.prepare('UPDATE account_closures SET review_after=? WHERE email=?').run(expectedClosure.review_after, target.email);
+          }
+        });
         await recoveryTest.test('pause-resume-pause during replay rejects unchanged catalog evidence', async () => {
           const batch = restoreDb.batch;
           currentSource.exec('BEGIN');
