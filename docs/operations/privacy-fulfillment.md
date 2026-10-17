@@ -1,13 +1,13 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
-Status: reviewed unused-account access closure published in PR #296, corrected
-for Cloudflare D1 in published PR #297. The scoped
-authentication-erasure engine and signed recovery journal/replay are implemented
-and tested locally and in an isolated synthetic Cloudflare rehearsal, with no
-real account action. Current-source catalog reconciliation is tested locally.
-Production recovery integration,
-operator controls and broader data/file/vendor fulfillment remain.
-Last reviewed: October 10, 2026.
+Status: reviewed unused-account access closure published in PR #296 and corrected
+for Cloudflare D1 in PR #297. Private recovery storage and read-only/confirmation
+checks are published through PR #301; the inactive authentication recovery write
+fence is published in PR #302. PR #303 preserves that behavior. No production
+erasure action is exposed. Restore-case conflict protection is local work below.
+Source provenance, unresolved attempts, operational controls and broader
+data/file/vendor fulfillment remain open.
+Last reviewed: October 16, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
@@ -705,8 +705,8 @@ No real account, receipt, private journal entry or backup was accessed.
 
 ## Database-enforced authentication recovery pause — October 16, 2026
 
-Local implementation only; not deployed or activated. Migration 0073 adds an
-empty, append-only maintenance history. An empty history leaves normal writes
+Published in PR #302; not activated. Migration 0073 added an empty, append-only
+maintenance history. An empty history leaves normal writes
 enabled. The internal `setAuthenticationRecoveryPause` helper has no HTTP route
 or UI caller. It requires owner authentication, POST, same Origin, an explicit
 maintenance confirmation, a case reference and the current generation. Resume
@@ -741,3 +741,29 @@ explicitly listed as a manual privacy/retention source, not an account-owned
 deletion target. Retain it for recovery review; do not reset generations or
 delete history to unblock a stale operation. Schema rollback after activation
 requires a separately reviewed recovery plan.
+
+## Exact restore-case reconciliation — October 16, 2026
+
+Local correction, not published: recovery previously treated an existing closure
+for the same email as sufficient, even when its request, case reference, closure
+date or review date contradicted the signed source evidence. A synthetic case
+reproduced a false successful replay before this correction.
+
+Replay now checks every matching email or request ID in the restored database
+before any writes. Every closure must match all five signed fields, or be absent.
+An association of the same request with a different email is also a conflict.
+The same predicate runs inside the D1 transaction: an intervening conflict causes
+the existing NOT NULL constraint to abort the entire batch, including earlier
+closure inserts and their session-revocation triggers. It never overwrites a
+conflicting case. Exact matching closures are left unchanged on safe retries.
+Postconditions compare the full closure metadata as well as remaining credentials;
+an observed change cannot produce a successful result.
+
+Validation covers each conflicting field, request/email aliasing, a late conflict
+in a later case with complete batch rollback, changed postconditions, unrelated
+account preservation, and successful repeated replay. Local Cloudflare D1/R2
+verification separately exercises the late-conflict constraint and rollback path.
+No live account, private journal object or backup was modified by these tests.
+This closes a restore-case integrity gap, not the remaining source-provenance,
+late-intent, retention or general fulfillment requirements. Keep real erasure
+unexposed and restored copies isolated.

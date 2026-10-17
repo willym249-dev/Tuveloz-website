@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-16 - Reject conflicting account-closure evidence during restore
+
+Preserved PR #303, published as f3bcb06 with production workflow 38979172621
+and independent live checks complete. Started from current main after verifying
+no competing open PRs. The existing recovery replay accepted a different closure
+case for the same account and reported success. A migrated synthetic regression
+reproduced that behavior before the correction.
+
+Replay now compares the exact account, request, case, closure date and review
+date before any restore writes, and rejects request/email aliasing. The same
+conflict predicate runs inside the D1 batch; an intervening conflict aborts and
+rolls back the complete batch, preserving existing case records. Postconditions
+verify the full metadata. Safe repeats still work. No migration or public route
+is added; real deletion remains unexposed and restore traffic remains disabled.
+
+Build/all 1,224 tests passed with zero skips; TypeScript passed; lint has zero
+errors and the existing site-language warning. New cases cover every conflicting
+field, a late conflict in a later case with transaction rollback, and changed
+postconditions. Local Cloudflare D1/R2 also rejected the injected late conflict
+and preserved both accounts. Only synthetic fixtures were used. Evidence:
+task outputs/privacy-restore-case-{before,focused,runtime,full,types,lint}-20261016.log.
+
+Updated dated recovery documentation to reflect published PR #302 instead of
+leaving it marked local. This new correction is local only, pending publication
+approval. Source identity/freshness, late/unresolved intents, unavailable-source
+recovery, retention and broader file/vendor fulfillment remain open.
+
 ## 2026-10-16 - Review and correct the private braces patch
 
 Preserved completed PR #302: main/live d07f713b3019620c2e2eec540eb25f4a2878ed2d,
