@@ -22,7 +22,7 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
       import { replayAuthenticationErasures } from './lib/privacy-erasure-replay';
       import { setAuthenticationRecoveryPause } from './lib/privacy-recovery-fence';
       import { POST as closeAccess } from './app/api/admin/privacy-requests/close-access/route';
-      import { PRIVACY_CLOSURE_PREVIEW_SQL } from './lib/privacy-closure-preview';
+      import { PRIVACY_CLOSURE_PREVIEW_SQL, closurePreview } from './lib/privacy-closure-preview';
       import { privacyReviewToken } from './lib/privacy-access-closure';
       export default { async fetch(request, env) {
         try {
@@ -32,7 +32,10 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
           const journal = new AuthErasureRecoveryJournal(env.JOURNAL, 'local-runtime-only', 'fixture-key', { 'fixture-key': env.FIXTURE_KEY });
           let result;
           if (path === '/preview') result = await previewAuthenticationErasure(env.SOURCE, input.requestId);
-          else if (path === '/closure-preview') result = { token: await privacyReviewToken((await env.SOURCE.prepare(PRIVACY_CLOSURE_PREVIEW_SQL).bind(input.requestId).all()).results) };
+          else if (path === '/closure-preview') {
+            const rows = (await env.SOURCE.prepare(PRIVACY_CLOSURE_PREVIEW_SQL).bind(input.requestId).all()).results;
+            result = { token: await privacyReviewToken(rows), files: closurePreview(rows)?.files };
+          }
           else if (path === '/erase') result = await eraseReviewedAuthenticationData(request, env.SOURCE, input, journal);
           else if (path === '/confirm-existing') result = await confirmExistingAuthenticationErasure(request, env.SOURCE, input, journal);
           else if (path === '/replay') result = await replayAuthenticationErasures(request, env.RESTORE, journal, input, env.SOURCE);
@@ -90,6 +93,21 @@ test('authentication erasure and recovery run through local Cloudflare D1 and R2
     assert.equal(preview.status, 200); assert.equal(preview.body.eligible, true);
     const approval = { requestId: id, reviewToken: preview.body.reviewToken, caseReference: 'RUNTIME-ERASURE', recoveryReference: 'RUNTIME-RECOVERY', confirmAuthenticationOnly: true, confirmRetentionReviewed: true, confirmRecoveryRecorded: true };
     const review = { isolatedRestoreConfirmed: true, sourceWritesPausedConfirmed: true, recoveryCaseReference: 'RUNTIME-RESTORE' };
+
+    await t.test('D1 file reference query identifies shared keys without returning private paths', async () => {
+      const requestId = 'runtime-file-review', email = 'runtime-file-owner@example.invalid';
+      await seed(source, 'privacy_requests', { id: requestId, email, role: 'provider', request_type: 'account-closure' });
+      await seed(source, 'provider_applications', { id: 'runtime-file-provider', email });
+      await seed(source, 'provider_gallery_items', { id: 'runtime-file-gallery', provider_id: 'runtime-file-provider', image_key: 'PRIVATE-RUNTIME-KEY' });
+      await seed(source, 'provider_gallery_items', { id: 'runtime-other-gallery', provider_id: 'unrelated-provider', image_key: 'PRIVATE-RUNTIME-KEY' });
+      const result = await call('/closure-preview', { requestId });
+      assert.equal(result.status, 200, JSON.stringify(result.body));
+      assert.equal(result.body.files.items.length, 1);
+      assert.equal(result.body.files.items[0].recordId, 'runtime-file-gallery');
+      assert.equal(result.body.files.items[0].otherReferences, 1);
+      assert.equal(result.body.files.storageChecked, false);
+      assert.doesNotMatch(JSON.stringify(result.body), /PRIVATE-RUNTIME-KEY|runtime-file-owner@/);
+    });
 
     await t.test('published closure action reports success when revocation triggers remove sessions', async () => {
       const closureId = 'runtime-access-closure', email = 'runtime-closure@example.invalid';

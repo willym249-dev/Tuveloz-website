@@ -40,6 +40,10 @@ const preview = { mode: "review-only", scope: "whole-account", canExecute: false
   request: requests[0], generatedAt: "2026-10-07T00:00:00Z",
   groups: [{ id: "access", label: "Sign-in and account settings", recordCount: 2, sources: [{ table: "auth_sessions", recordCount: 2 }] }],
   flags: { legalHolds: 1, incidents: 1 }, manualSources: [{ table: "stripe_webhook_events", reason: "Requires a separate review." }],
+  files: { mode: "references-only", canExecute: false, coverageComplete: false, storageChecked: false,
+    truncated: true, limit: 100, items: [{ source: "provider_evidence_submissions", field: "storage_key",
+      recordId: "synthetic-document-1234567890-1234567890-1234567890", label: "Provider documents", scope: "business",
+      otherReferences: 1, disposition: "needs-review" }] },
   nextSteps: ["Account closure and deletion execution are not available in this preview."] };
 const report = [];
 try {
@@ -117,15 +121,21 @@ try {
         assert.equal(calls, 1);
         mode = "success"; release();
         await panel.getByText("Review loaded. No account or data was changed.", { exact: true }).waitFor();
+        await panel.getByText("Uploaded file references: 1+ to review", { exact: true }).click();
+        await panel.getByText(/Only the first 100 references are shown/).waitFor();
+        await panel.getByText(/This file has 1 other recorded reference/).waitFor();
+        assert.ok(await panel.getByText(/storage contents and file availability have not been checked/i).isVisible());
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "file references fit the screen");
         await panel.getByText("Sign-in and account settings: 2 records", { exact: true }).click();
         await panel.getByText("auth sessions: 2", { exact: true }).waitFor();
-        assert.equal(await panel.getByRole("alert").count(), 2);
+        assert.equal(await panel.getByRole("alert").count(), 3, "holds, incidents and incomplete file coverage remain visible");
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "preview fits screen");
         if (output) await page.screenshot({ path: resolve(output, `${type.name()}-${width}.png`), fullPage: true });
         mode = "failure";
         await panel.getByRole("button", { name: "Refresh account review" }).click();
         await panel.getByRole("alert").filter({ hasText: "Nothing was changed" }).waitFor();
         assert.equal(await panel.getByText("auth sessions: 2", { exact: true }).count(), 0, "failed refresh removes stale counts");
+        assert.equal(await panel.getByText(/Uploaded file references:/).count(), 0, "failed refresh removes stale file references");
         mode = "withdrawn";
         await panel.getByRole("button", { name: "Preview account records" }).click();
         await panel.getByRole("alert").filter({ hasText: "Refresh the request queue" }).waitFor();

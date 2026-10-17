@@ -75,6 +75,16 @@ export function AccountClosurePreview({ requestId }: { requestId: string }) {
             </details>
           ))}
           <h4>Still needs review</h4>
+          {preview.files && <details>
+            <summary>Uploaded file references: {preview.files.items.length}{preview.files.truncated ? "+" : ""} to review</summary>
+            <p>These records point to files; storage contents and file availability have not been checked. Decide ownership, retention and any shared access before taking action. Nothing here deletes or downloads a file.</p>
+            {preview.files.truncated && <p role="alert">Only the first {preview.files.limit} references are shown. This list is incomplete; arrange a scoped review of the remaining references.</p>}
+            {preview.files.items.length === 0 ? <p>No file references were found in the sources checked. Embedded notes, vendor copies, backups and unlinked uploads still need a separate review.</p> :
+              <ul>{preview.files.items.map(item => <li key={`${item.source}:${item.recordId}:${item.field}`}>
+                <strong>{item.label}</strong> — record {item.recordId}, field {item.field.replaceAll("_", " ")}. Needs review.
+                {item.otherReferences > 0 && <> This file has {item.otherReferences} other recorded reference{item.otherReferences === 1 ? "" : "s"}; review them before removal.</>}
+              </li>)}</ul>}
+          </details>}
           <ul>{preview.nextSteps.map(step => <li key={step}>{step}</li>)}</ul>
           <details>
             <summary>Sources not counted automatically</summary>

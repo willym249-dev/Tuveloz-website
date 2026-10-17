@@ -5,7 +5,8 @@ for Cloudflare D1 in PR #297. Private recovery storage and read-only/confirmatio
 checks are published through PR #301; the inactive authentication recovery write
 fence is published in PR #302. PR #303 preserves that behavior. No production
 erasure action is exposed. Restore-case conflict protection is published in
-PR #304. Subject-matching consistency is local work below.
+PR #304. Subject-matching consistency is published in PR #305. The uploaded-file
+reference review below is local and tested, pending publication approval.
 Source provenance, unresolved attempts, operational controls and broader
 data/file/vendor fulfillment remain open.
 Last reviewed: October 16, 2026.
@@ -22,6 +23,43 @@ also an operating need before paid bookings. This review did not inspect the
 live request queue or establish that it is empty. Handle any actual request
 through its verified case and applicable review process while implementation
 remains pending; a closed paid-booking gate is not a reason to ignore it.
+
+## Uploaded-file reference review — October 16, 2026
+
+The existing owner-only account preview now includes a collapsed file-reference
+list from the same database snapshot as the request and record counts. It covers
+the eight explicit image/storage-key columns in provider evidence, logos,
+gallery photos, customer issue/completion photos, job evidence, message images
+and scanner jobs. Scanner references are also linked by the exact selected key.
+The request ID determines the account; a caller-supplied email cannot choose
+another subject. Shared job/business relationships remain review candidates,
+never proof that the requester owns every file.
+
+Each entry identifies the source record and field and reports other known
+references to the exact same object key. The browser receives no storage key,
+download link, document contents or counterparty details. Exact keys remain in
+the server-side snapshot used for the existing account-review token, so changing
+a selected file reference invalidates that token even if record counts match.
+Key comparisons preserve case and whitespace. At most 100 references are shown;
+an additional sentinel makes truncation explicit rather than implying coverage.
+
+Every entry needs a disposition review. `canExecute`, `coverageComplete` and
+`storageChecked` remain false. This does not check object existence, contents,
+versions, orphan uploads, embedded references, vendor copies or backups. It
+does not select retention periods or resolve holds. No deletion/download route,
+new permission, migration or public screen is added. Failed refreshes remove
+the previous list rather than leave stale evidence visible.
+
+Build/all 1,238 tests and TypeScript passed. Lint has zero errors and the existing
+site-language navigation warning. Synthetic migrated SQLite verifies selection,
+shared aliases, malformed results, exact keys, limits and stale review tokens;
+local Cloudflare D1 validates the actual query and preserved closure behavior.
+An initial D1 compound-SELECT limit was caught locally and corrected with bounded
+materialized groups before the passing full run. Chromium and WebKit passed at
+320px and 1280px, including warnings, failed refresh and no horizontal overflow.
+No real account, file or remote database was read or changed. Evidence: task
+outputs/privacy-file-review-{full,focused,types,lint}-20261016.log and
+outputs/privacy-file-review-browser-20261016/. Publication remains pending.
 
 ## Implemented review preview
 
