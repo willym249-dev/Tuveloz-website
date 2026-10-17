@@ -11,6 +11,32 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-16 - Identify uploaded-file references in the owner privacy review
+
+Started from verified main 3aa3dff after confirming no open PRs. PR #305 is
+published and live-verified; its older local/pending text below is superseded.
+Preserved credential maintenance and the completed source-metadata inspection.
+
+The owner preview previously counted records without identifying which file
+references required review. Added a collapsed, read-only list from its existing
+consistent snapshot: source record/field, reference type and other known uses
+of the exact object key. It includes eight explicit storage columns and scanner
+aliases, caps the displayed list at 100 with a visible incomplete warning, and
+keeps storage keys and file contents out of the browser response. The current
+review token now incorporates selected references. No deletion or download is
+enabled, and actual storage, ownership/disposition, vendor/backup review remain
+separate. No public page, policy, migration, payment or launch control changed.
+
+Build/all 1,238 tests passed, zero failures/skips; TypeScript passed; lint zero
+errors plus the existing site-language warning. Synthetic tests cover unrelated
+accounts, shared references, exact key comparisons, malformed results, limits
+and same-count replacement. Local Cloudflare D1 exposed a compound-query limit,
+corrected before the final passing run. Chromium/WebKit at 320px and 1280px
+passed warnings, failure/stale-state behavior and overflow checks. No real data
+was accessed. Evidence: task outputs/privacy-file-review-*20261016*.
+New change is local only, pending approval to push/create a PR and publish after
+required checks. Do not repeat PR #305 or earlier recovery rehearsals.
+
 ## 2026-10-16 - Match privacy subjects consistently before access closure
 
 Preserved completed PR #304, published as 1352930 with production workflow

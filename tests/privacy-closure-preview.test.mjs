@@ -44,6 +44,7 @@ test("closure preview reads migrated synthetic records without enabling deletion
     await build({ absWorkingDir: repo, stdin: { contents: `
       export { GET } from "./app/api/admin/privacy-requests/closure-preview/route";
       export * from "./lib/privacy-closure-preview";
+      export * from "./lib/privacy-file-review";
     `, resolveDir: repo, loader: "ts" }, bundle: true, platform: "node", format: "cjs", outfile: bundle,
       target: "node22", logLevel: "silent", plugins: [{ name: "isolated-closure-preview", setup(builder) {
         builder.onResolve({ filter: /^cloudflare:workers$|\/owner-auth$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -82,6 +83,92 @@ test("closure preview reads migrated synthetic records without enabling deletion
     const request = (query = "id=closure-alpha", origin = "https://tuveloz.invalid") => new Request(`https://tuveloz.invalid/api/admin/privacy-requests/closure-preview?${query}`, { headers: { origin } });
     const recordCounts = preview => Object.fromEntries(preview.groups.flatMap(group => group.sources.map(source => [source.table, source.recordCount])));
     database.exec("PRAGMA query_only=ON");
+
+    await t.test("file review finds exact references across both roles without exposing storage keys", async () => {
+      database.exec("PRAGMA query_only=OFF; SAVEPOINT file_review");
+      try {
+        database.prepare("UPDATE provider_evidence_submissions SET storage_key=? WHERE id='evidence-alpha'").run("SECRET-document-key");
+        database.prepare("UPDATE provider_evidence_submissions SET storage_key=? WHERE id='evidence-bravo'").run("SECRET-unrelated-key");
+        database.prepare("UPDATE customer_requests SET issue_image_key=?, completion_image_key=? WHERE id='job-alpha'").run("SECRET-shared-key", "SECRET-completion-key");
+        database.prepare("UPDATE customer_requests SET issue_image_key=? WHERE id='job-bravo'").run("SECRET-shared-key");
+        database.prepare("UPDATE job_messages SET image_key=? WHERE id='message-alpha'").run("SECRET-message-key");
+        seed("provider_profiles", { id: "profile-alpha", provider_id: "provider-alpha", slug: "alpha", logo_image_key: "SECRET-logo-key" });
+        seed("provider_gallery_items", { id: "gallery-alpha", provider_id: "provider-alpha", image_key: "SECRET-gallery-key" });
+        seed("job_evidence_items", { id: "photo-alpha", request_id: "job-alpha", customer_email: alpha, provider_email: bravo,
+          uploaded_by_email: bravo, uploaded_by_role: "provider", evidence_type: "provider-before-work", image_key: "SECRET-job-photo-key" });
+        seed("self_hosted_scan_jobs", { id: "scan-alpha", job_key: "scan-alpha-key", kind: "message", provider_id: "",
+          target_id: "message-alpha", storage_key: "SECRET-message-key" });
+        seed("self_hosted_scan_jobs", { id: "scan-bravo", job_key: "scan-bravo-key", kind: "message", provider_id: "",
+          target_id: "unrelated-message", storage_key: "SECRET-unrelated-key" });
+        database.exec("PRAGMA query_only=ON");
+        const before = database.prepare("SELECT total_changes() AS n").get().n;
+        const response = await api.GET(request("id=closure-alpha&email=bravo@example.invalid"));
+        assert.equal(response.status, 200);
+        const text = await response.text();
+        assert.doesNotMatch(text, /SECRET|alpha@example|bravo@example|objectKey|storageKey/);
+        const files = JSON.parse(text).preview.files;
+        assert.equal(files.items.length, 8);
+        assert.equal(files.canExecute, false); assert.equal(files.coverageComplete, false);
+        assert.equal(files.storageChecked, false); assert.equal(files.truncated, false);
+        assert.ok(files.items.every(item => item.disposition === "needs-review"));
+        assert.ok(!files.items.some(item => /bravo|unrelated/.test(item.recordId)));
+        assert.equal(files.items.find(item => item.recordId === "job-alpha" && item.field === "issue_image_key").otherReferences, 1);
+        assert.equal(files.items.find(item => item.recordId === "message-alpha").otherReferences, 1);
+        assert.ok(files.items.some(item => item.recordId === "scan-alpha"));
+        assert.equal(database.prepare("SELECT total_changes() AS n").get().n, before);
+        const token = JSON.parse(text).preview.reviewToken;
+        database.exec("PRAGMA query_only=OFF");
+        database.prepare("UPDATE provider_evidence_submissions SET storage_key=? WHERE id='evidence-alpha'").run("SECRET-replaced-key");
+        database.exec("PRAGMA query_only=ON");
+        assert.notEqual((await (await api.GET(request())).json()).preview.reviewToken, token,
+          "same-count file replacements invalidate the existing account review token");
+      } finally {
+        database.exec("PRAGMA query_only=OFF; ROLLBACK TO file_review; RELEASE file_review; PRAGMA query_only=ON");
+      }
+    });
+
+    await t.test("large file reviews are explicitly incomplete and bounded", async () => {
+      database.exec("PRAGMA query_only=OFF; SAVEPOINT many_files");
+      try {
+        for (let index = 0; index < 101; index++) seed("provider_gallery_items", {
+          id: `many-${String(index).padStart(3, "0")}`, provider_id: "provider-alpha", image_key: `SECRET-${index}`,
+        });
+        database.exec("PRAGMA query_only=ON");
+        const { preview } = await (await api.GET(request())).json();
+        assert.equal(preview.files.items.length, 100); assert.equal(preview.files.truncated, true);
+        assert.equal(preview.files.coverageComplete, false); assert.equal(preview.files.canExecute, false);
+      } finally {
+        database.exec("PRAGMA query_only=OFF; ROLLBACK TO many_files; RELEASE many_files; PRAGMA query_only=ON");
+      }
+    });
+
+    await t.test("empty reference inventory does not claim storage or vendor deletion", async () => {
+      const { preview } = await (await api.GET(request())).json();
+      assert.deepEqual(preview.files.items, []);
+      assert.equal(preview.files.storageChecked, false); assert.equal(preview.files.coverageComplete, false);
+    });
+
+    await t.test("known storage columns cannot silently disappear from file review", () => {
+      const columns = database.prepare("SELECT m.name AS source, p.name AS field FROM sqlite_schema m JOIN pragma_table_info(m.name) p WHERE m.type='table'").all()
+        .filter(row => /(?:image|storage)_key$/.test(row.field)).map(row => `${row.source}.${row.field}`).sort();
+      assert.deepEqual(api.PRIVACY_FILE_SOURCES.map(item => `${item.table}.${item.column}`).sort(), columns);
+    });
+    await t.test("missing, malformed and duplicate file results cannot masquerade as empty", () => {
+      for (const value of [undefined, "{}", "[null]", '[{"source":"unknown"}]']) assert.throws(() => api.privacyFileReview(value));
+      const row = { source: "job_messages", field: "image_key", recordId: "fixture", objectKey: "SECRET", otherReferences: 0 };
+      assert.throws(() => api.privacyFileReview(JSON.stringify([row, row])), /Duplicate/);
+      assert.throws(() => api.privacyFileReview(JSON.stringify([{ ...row, otherReferences: -1 }])));
+    });
+    await t.test("object keys retain their exact case and whitespace when comparing aliases", async () => {
+      database.exec("PRAGMA query_only=OFF; SAVEPOINT exact_keys");
+      try {
+        database.prepare("UPDATE customer_requests SET issue_image_key=? WHERE id='job-alpha'").run("SECRET-Key");
+        database.prepare("UPDATE customer_requests SET issue_image_key=?, completion_image_key=? WHERE id='job-bravo'").run("secret-key", " SECRET-Key ");
+        database.exec("PRAGMA query_only=ON");
+        const { preview } = await (await api.GET(request())).json();
+        assert.equal(preview.files.items.length, 1); assert.equal(preview.files.items[0].otherReferences, 0);
+      } finally { database.exec("PRAGMA query_only=OFF; ROLLBACK TO exact_keys; RELEASE exact_keys; PRAGMA query_only=ON"); }
+    });
 
     await t.test("every migrated table is explicitly counted or flagged for manual review", () => {
       const expected = database.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map(row => row.name).sort();

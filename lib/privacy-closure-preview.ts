@@ -1,3 +1,5 @@
+import { PRIVACY_FILE_REVIEW_CTES, PRIVACY_FILE_REVIEW_ROW_SQL, privacyFileReview, type PrivacyFileReview } from "./privacy-file-review";
+
 // Counts identify records needing review, never ownership or permission to erase.
 // Keep SQL identifiers/predicates static. The only input is a bound request ID.
 // Match the canonical account used by closure/authentication guards. A legacy
@@ -75,8 +77,9 @@ export const PRIVACY_MANUAL_SOURCES = [
 export const PRIVACY_PREVIEW_TABLES = rules.map(({ table }) => table);
 
 // One SELECT gives a consistent point-in-time view, including the request state.
-// No file keys, tokens, password hashes, document contents or counterparty data
-// leave this query. A related job is shared data, not a deletion target.
+// The owner response omits file keys, tokens, password hashes, document contents
+// and counterparty data. File keys stay in the server-side review snapshot.
+// A related job is shared data, not a deletion target.
 export const PRIVACY_CLOSURE_SUBJECT_SQL = `
 WITH subject AS (
   SELECT * FROM privacy_requests WHERE id = ?
@@ -105,6 +108,7 @@ export const UNUSED_ACCOUNT_CLOSURE_PREDICATE = [
 ].join(" AND ");
 
 export const PRIVACY_CLOSURE_PREVIEW_SQL = `${PRIVACY_CLOSURE_SUBJECT_SQL}
+${PRIVACY_FILE_REVIEW_CTES}
 -- A JSON row set avoids D1's compound-SELECT limit while preserving one
 -- consistent snapshot. Small arrays also bound SQL function argument counts.
 , record_counts(item, value) AS (
@@ -123,6 +127,7 @@ SELECT 'request' AS item, json_object('id',id,'role',role,'requestType',request_
 UNION ALL SELECT 'reviewState', json_object('email',email,'role',role,'status',status,'details',details,'resolutionNote',resolution_note,'identitySource',identity_source,'updatedAt',updated_at) FROM subject
 UNION ALL SELECT item, value FROM record_counts
 UNION ALL SELECT item, value FROM flags
+${PRIVACY_FILE_REVIEW_ROW_SQL}
 `;
 
 export type ClosurePreview = {
@@ -137,6 +142,7 @@ export type ClosurePreview = {
   generatedAt: string;
   groups: { id: Group; label: string; recordCount: number; sources: { table: string; recordCount: number }[] }[];
   flags: { legalHolds: number; incidents: number };
+  files: PrivacyFileReview;
   manualSources: typeof PRIVACY_MANUAL_SOURCES;
   nextSteps: string[];
 };
@@ -162,6 +168,7 @@ export function closurePreview(rows: { item: string; value: string }[]): Closure
       return { id, label, recordCount: sources.reduce((total, source) => total + source.recordCount, 0), sources };
     }),
     flags: { legalHolds: count("legalHolds"), incidents: count("incidents") },
+    files: privacyFileReview(values.get("fileReview")),
     manualSources: PRIVACY_MANUAL_SOURCES,
     nextSteps: [
       "Confirm whether the person wants to close the whole account or only one role. This preview includes both customer and provider records linked to the login.",
