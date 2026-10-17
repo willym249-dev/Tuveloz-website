@@ -170,6 +170,41 @@ test("closure preview reads migrated synthetic records without enabling deletion
       } finally { database.exec("PRAGMA query_only=OFF; ROLLBACK TO exact_keys; RELEASE exact_keys; PRAGMA query_only=ON"); }
     });
 
+    await t.test("owner route checks upload metadata only after authorization and rejects cases changed during reads", async () => {
+      database.exec("PRAGMA query_only=OFF; SAVEPOINT storage_check");
+      try {
+        database.prepare("UPDATE customer_requests SET issue_image_key=? WHERE id='job-alpha'").run("SECRET-storage-key");
+        database.exec("PRAGMA query_only=ON");
+        const calls = [];
+        state.env.BUCKET = { async head(key) { calls.push(key); return { key, version: "SECRET-v1", size: 17 }; } };
+        state.owner = false;
+        assert.equal((await api.GET(request())).status, 403);
+        state.owner = true;
+        assert.equal((await api.GET(request("id=closure-alpha", "https://other.invalid"))).status, 403);
+        assert.equal((await api.GET(request("id=absent"))).status, 404);
+        assert.deepEqual(calls, []);
+        const response = await api.GET(request());
+        assert.equal(response.status, 200);
+        const text = await response.text();
+        assert.doesNotMatch(text, /SECRET|objectKey/);
+        assert.equal(JSON.parse(text).preview.files.items[0].storage, "found");
+        assert.equal(JSON.parse(text).preview.files.storageChecked, true);
+        for (const change of ["UPDATE customer_requests SET issue_image_key='SECRET-replacement' WHERE id='job-alpha'",
+          "UPDATE privacy_requests SET status='withdrawn' WHERE id='closure-alpha'"]) {
+          state.env.BUCKET.head = async key => {
+            database.exec(`PRAGMA query_only=OFF; ${change}; PRAGMA query_only=ON`);
+            return { key, version: "SECRET-v1", size: 17 };
+          };
+          const changed = await api.GET(request());
+          assert.equal(changed.status, 409);
+          assert.equal(changed.headers.get("cache-control"), "private, no-store");
+          assert.deepEqual(Object.keys(await changed.json()), ["error"]);
+        }
+      } finally {
+        state.owner = true; delete state.env.BUCKET;
+        database.exec("PRAGMA query_only=OFF; ROLLBACK TO storage_check; RELEASE storage_check; PRAGMA query_only=ON");
+      }
+    });
     await t.test("every migrated table is explicitly counted or flagged for manual review", () => {
       const expected = database.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map(row => row.name).sort();
       const classified = [...api.PRIVACY_PREVIEW_TABLES, ...api.PRIVACY_MANUAL_SOURCES.map(source => source.table)];
