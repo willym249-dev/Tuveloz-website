@@ -105,6 +105,36 @@ test("closure preview reads migrated synthetic records without enabling deletion
       assert.deepEqual(preview.flags, { legalHolds: 1, incidents: 1 });
       assert.equal(database.prepare("SELECT total_changes() AS changes").get().changes, before);
     });
+    for (const variant of ["records", "request", "both"]) {
+      await t.test(`email case and surrounding spaces in ${variant} preserve the complete subject inventory`, async () => {
+        database.exec("PRAGMA query_only=OFF; SAVEPOINT padded_subject");
+        try {
+          if (variant !== "records") database.prepare("UPDATE privacy_requests SET email=? WHERE id='closure-alpha'").run(`  ${alpha.toUpperCase()}  `);
+          if (variant !== "request") {
+            for (const [table, column] of [["account_credentials", "email"], ["auth_sessions", "email"],
+              ["account_phone_numbers", "email"], ["provider_applications", "email"], ["customer_requests", "email"],
+              ["repair_authorization_records", "customer_email"], ["job_messages", "sender_email"],
+              ["data_rights_requests", "requester_email"], ["job_incidents", "reporter_email"]]) {
+              database.prepare(`UPDATE ${table} SET ${column}=? WHERE lower(${column})=?`).run(`  ${alpha.toUpperCase()}  `, alpha);
+            }
+          }
+          database.exec("PRAGMA query_only=ON");
+          const response = await api.GET(request());
+          assert.equal(response.status, 200);
+          const text = await response.text(), { preview } = JSON.parse(text), counts = recordCounts(preview);
+          assert.doesNotMatch(text, /ALPHA@|alpha@example|bravo@example|SECRET|12025550123/);
+          assert.equal(counts.auth_sessions, 2); assert.equal(counts.account_credentials, 1);
+          assert.equal(counts.phone_login_codes, 1); assert.equal(counts.provider_applications, 1);
+          assert.equal(counts.provider_evidence_submissions, 1); assert.equal(counts.customer_requests, 1);
+          assert.equal(counts.provider_invoice_items, 1); assert.equal(counts.repair_authorization_items, 1);
+          assert.equal(counts.job_messages, 1);
+          assert.deepEqual(preview.flags, { legalHolds: 1, incidents: 1 });
+          assert.equal(preview.accessClosureAllowed, false);
+        } finally {
+          database.exec("PRAGMA query_only=OFF; ROLLBACK TO padded_subject; RELEASE padded_subject; PRAGMA query_only=ON");
+        }
+      });
+    }
     await t.test("owner and origin checks run before any record lookup", async () => {
       const before = state.queries;
       state.owner = false;

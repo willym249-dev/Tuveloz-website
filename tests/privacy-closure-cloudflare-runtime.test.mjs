@@ -66,5 +66,25 @@ test('owner closure preview and action work in local Cloudflare D1', { timeout: 
     const stale = await close({ ...input, caseReference: 'DIFFERENT-REVIEW' });
     assert.equal(stale.status, 409);
     assert.equal((await read(id)).status, 200);
+    // The real D1 query must recognize normalized subject relationships before
+    // the unused-account lane can revoke access. No remote records are used.
+    const paddedId = 'runtime-padded', paddedEmail = 'runtime-padded@example.invalid';
+    await seed('privacy_requests', { id: paddedId, email: `  ${paddedEmail.toUpperCase()}  `,
+      role: 'customer', request_type: 'account-closure', identity_source: 'signed-in-account' });
+    await seed('auth_sessions', { id: paddedId, email: paddedEmail, role: 'customer' });
+    await seed('customer_requests', { id: 'runtime-padded-job', email: paddedEmail,
+      parts_source: 'No parts needed — labor only', parts_preference: 'No preference',
+      labor_only_parts_acknowledged_at: new Date().toISOString() });
+    const paddedResponse = await read(paddedId);
+    assert.equal(paddedResponse.status, 200);
+    const { preview: paddedPreview } = await paddedResponse.json();
+    assert.equal(paddedPreview.accessClosureAllowed, false);
+    assert.equal(paddedPreview.groups.find(group => group.id === 'jobs').sources.find(source => source.table === 'customer_requests').recordCount, 1);
+    const rejected = await close({ ...input, id: paddedId, reviewToken: paddedPreview.reviewToken });
+    assert.equal(rejected.status, 409);
+    assert.equal(await count('auth_sessions', paddedEmail), 1);
+    assert.equal(await count('auth_sessions', other), 2);
+    assert.equal(await count('account_closures', paddedEmail), 0);
+    assert.equal((await db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').bind(paddedId).first()).n, 0);
   } finally { if (runtime) await runtime.dispose(); schema.close(); }
 });

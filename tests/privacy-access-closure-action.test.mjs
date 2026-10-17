@@ -47,6 +47,24 @@ test('reviewed access closure is atomic and preserves privacy fulfillment', asyn
  assert.equal(db.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get(email).n,2);
  });
  }
+ for (const kind of ['job','hold','payment','published']) {
+ await t.test(`space-padded ${kind} relationship arriving after preview blocks closure`,async()=>{
+ const body=await make('padded-'+kind), email=body.id+'@example.invalid', padded=`  ${email.toUpperCase()}  `;
+ state.beforeBatch=()=>{
+ if(kind==='job')seed('customer_requests',{id:'padded-job',email:padded,parts_source:'No parts needed — labor only',parts_preference:'No preference',labor_only_parts_acknowledged_at:new Date().toISOString()});
+ if(kind==='hold')seed('data_rights_requests',{id:'padded-hold',requester_email:padded,requester_role:'customer',request_type:'deletion',legal_hold:'yes'});
+ if(kind==='payment')seed('stripe_payments',{id:'padded-payment',customer_email:padded});
+ if(kind==='published'){
+ seed('provider_applications',{id:'padded-provider',email:padded});
+ seed('provider_profiles',{id:'padded-profile',provider_id:'padded-provider',slug:'padded-profile',public_status:'published'});
+ }
+ };
+ assert.equal((await post(body)).status,409);
+ assert.equal(db.prepare('SELECT count(*) n FROM account_closures WHERE privacy_request_id=?').get(body.id).n,0);
+ assert.equal(db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').get(body.id).n,0);
+ assert.equal(db.prepare('SELECT count(*) n FROM auth_sessions WHERE email=?').get(email).n,2);
+ });
+ }
  await t.test('competing closure cannot acquire an audit from the stale review',async()=>{const body=await make('competing');state.beforeBatch=()=>seed('account_closures',{email:'competing@example.invalid',privacy_request_id:'separate-case',case_reference:'SEPARATE-VERIFIED',review_after:'2099-01-01'});assert.equal((await post(body)).status,409);assert.equal(db.prepare('SELECT count(*) n FROM privacy_access_closure_reviews WHERE request_id=?').get(body.id).n,0)});
  }finally{globalThis.fetch=oldFetch;delete globalThis.__closureAction;db.close();rmSync(scratch,{recursive:true,force:true})}
 });
