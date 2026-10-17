@@ -11,6 +11,33 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-16 - Match privacy subjects consistently before access closure
+
+Preserved completed PR #304, published as 1352930 with production workflow
+38988234472 and exact live verification at 2026-10-17T01:15:17.200Z. Started
+from that main commit after checking there were no competing open PRs.
+
+Reproduced a privacy-review mismatch: queries ignored surrounding email spaces,
+while account closure normalized them. The preview could omit related records;
+jobs, payments, holds or published provider relationships arriving after preview
+could be missed by the unused-account check, allowing closure incorrectly.
+The shared subject predicate now uses the same lower/trim matching as closure
+and authentication guards, both for the saved request and related records.
+
+Synthetic tests first reproduced omitted inventory and incorrectly successful
+closures. They now verify both roles, linked documents/child rows, holds and
+incidents, unrelated-account isolation, and rejection without session changes
+or closure/audit writes when padded relationships appear after preview. Local
+Cloudflare D1 separately confirms a padded request finds its job and refuses
+closure. No real account or request was read or changed.
+
+Build/all 1,231 tests passed, zero skips; TypeScript passed; lint has zero errors
+and the existing site-language warning. Evidence: task outputs/privacy-subject-
+{before,focused,full,types,lint}-20261016.log. No migration, public deletion
+control, policy, paid service or launch/payment change. This new correction is
+local only, pending publication approval. Broader privacy fulfillment remains
+unfinished; do not repeat completed PR #304 or earlier recovery rehearsals.
+
 ## 2026-10-16 - Reject conflicting account-closure evidence during restore
 
 Preserved PR #303, published as f3bcb06 with production workflow 38979172621

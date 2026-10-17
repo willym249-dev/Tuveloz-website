@@ -1,6 +1,8 @@
 // Counts identify records needing review, never ownership or permission to erase.
 // Keep SQL identifiers/predicates static. The only input is a bound request ID.
-const email = (column = "email") => `lower(${column}) IN (SELECT lower(email) FROM subject)`;
+// Match the canonical account used by closure/authentication guards. A legacy
+// space-padded address must not hide related jobs, holds or provider records.
+const email = (column = "email") => `lower(trim(${column})) IN (SELECT lower(trim(email)) FROM subject)`;
 const provider = (column = "provider_id") => `${column} IN (SELECT id FROM providers)`;
 const job = (column = "request_id") => `${column} IN (SELECT id FROM jobs)`;
 

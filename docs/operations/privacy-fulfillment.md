@@ -4,7 +4,8 @@ Status: reviewed unused-account access closure published in PR #296 and correcte
 for Cloudflare D1 in PR #297. Private recovery storage and read-only/confirmation
 checks are published through PR #301; the inactive authentication recovery write
 fence is published in PR #302. PR #303 preserves that behavior. No production
-erasure action is exposed. Restore-case conflict protection is local work below.
+erasure action is exposed. Restore-case conflict protection is published in
+PR #304. Subject-matching consistency is local work below.
 Source provenance, unresolved attempts, operational controls and broader
 data/file/vendor fulfillment remain open.
 Last reviewed: October 16, 2026.
@@ -744,7 +745,7 @@ requires a separately reviewed recovery plan.
 
 ## Exact restore-case reconciliation — October 16, 2026
 
-Local correction, not published: recovery previously treated an existing closure
+Published in PR #304: recovery previously treated an existing closure
 for the same email as sufficient, even when its request, case reference, closure
 date or review date contradicted the signed source evidence. A synthetic case
 reproduced a false successful replay before this correction.
@@ -767,3 +768,26 @@ No live account, private journal object or backup was modified by these tests.
 This closes a restore-case integrity gap, not the remaining source-provenance,
 late-intent, retention or general fulfillment requirements. Keep real erasure
 unexposed and restored copies isolated.
+
+## Consistent account matching in privacy review — October 16, 2026
+
+Local correction, not published. The account-closure write normalizes email case
+and surrounding spaces, but its related-record inventory previously matched
+only case. A saved request or related row containing surrounding spaces could
+hide records from the review and unused-account restriction. Synthetic cases
+reproduced omitted inventory and a successful closure despite a new job,
+payment, hold or published provider relationship arriving after preview.
+
+The shared subject predicate now uses lower(trim(...)) on both sides. The
+single-query preview, transaction-time closure checks and authentication-erasure
+eligibility use the same account matching. Other accounts are not included;
+matching related/shared records still does not establish ownership or authority
+to erase them. Saved records are not rewritten by this correction.
+
+Tests cover spaces in the request, related rows or both; both roles; anonymous
+phone challenges through their association; provider documents and job child
+rows; holds/incidents; no private response contents; and late conflicting
+relationships leaving sessions and closure/audit state unchanged. Local
+Cloudflare D1 confirms the same behavior. Build/all 1,231 tests and TypeScript
+pass; lint has zero errors and the existing warning. No actual privacy case was
+processed, and this does not complete the remaining fulfillment requirements.
