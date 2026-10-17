@@ -11,6 +11,26 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-17 - Check referenced upload availability without downloading files
+
+Continued from verified main 5cf3901 after confirming no open PRs. PR #306 is
+published; older pending text below is historical. Added metadata-only checks
+to the existing owner preview, capped at 20 distinct exact keys, four concurrent
+reads and three seconds total. Found, missing, unavailable and unchecked remain
+distinct; errors never masquerade as deleted files. The route rechecks the
+account snapshot after reads and rejects observed request/reference changes.
+No storage keys or metadata reach the browser; no new binding, route, migration,
+download, deletion, paid service or launch activation.
+
+Build/all 1,245 tests, TypeScript and four phone/desktop Chromium/WebKit cases
+passed. Lint has zero errors plus the existing site-language warning. Local R2
+proved HEAD present/absent behavior without changing contents; synthetic tests
+cover bounded reads, timeouts, aliases, auth and concurrent case changes. The
+local runtime test needed loopback access and the installed Miniflare adapter;
+both were corrected before final passing checks. No real account/file read.
+See operations/privacy-fulfillment.md and task outputs/privacy-file-storage-*
+20261017 evidence. Saved locally; separate publication approval remains needed.
+
 ## 2026-10-16 - Identify uploaded-file references in the owner privacy review
 
 Started from verified main 3aa3dff after confirming no open PRs. PR #305 is

@@ -49,9 +49,11 @@ UNION ALL SELECT 'fileReview', COALESCE((SELECT json_group_array(json_object(
 
 export type PrivacyFileReview = {
   mode: "references-only"; canExecute: false; coverageComplete: false;
-  storageChecked: false; truncated: boolean; limit: number;
+  storageChecked: boolean; truncated: boolean; limit: number;
+  storageCheck?: { startedAt: string; finishedAt: string; objectLimit: number };
   items: { source: string; recordId: string; field: string; label: string;
-    scope: string; otherReferences: number; disposition: "needs-review" }[];
+    scope: string; otherReferences: number; disposition: "needs-review";
+    storage?: "found" | "missing" | "unavailable" | "not-checked" }[];
 };
 
 export function privacyFileReview(value: string | undefined): PrivacyFileReview {

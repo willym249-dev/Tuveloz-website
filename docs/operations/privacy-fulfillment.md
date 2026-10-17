@@ -6,10 +6,11 @@ checks are published through PR #301; the inactive authentication recovery write
 fence is published in PR #302. PR #303 preserves that behavior. No production
 erasure action is exposed. Restore-case conflict protection is published in
 PR #304. Subject-matching consistency is published in PR #305. The uploaded-file
-reference review below is local and tested, pending publication approval.
+reference review was published and independently verified in PR #306. The
+bounded storage-availability check below is local and tested, not published.
 Source provenance, unresolved attempts, operational controls and broader
 data/file/vendor fulfillment remain open.
-Last reviewed: October 16, 2026.
+Last reviewed: October 17, 2026.
 Owner: Tuveloz owner. No real subject is selected. No retention period or
 deletion authority is established by this document.
 
@@ -24,7 +25,44 @@ live request queue or establish that it is empty. Handle any actual request
 through its verified case and applicable review process while implementation
 remains pending; a closed paid-booking gate is not a reason to ignore it.
 
-## Uploaded-file reference review — October 16, 2026
+## File availability check — October 17, 2026
+
+The existing owner preview now attempts metadata-only HEAD reads against the
+existing upload bucket after owner/origin checks and validation of an open
+account-closure request. It checks at most 20 distinct keys among the displayed
+references, with four concurrent reads and a three-second overall deadline.
+Aliases share one read; case and whitespace in keys are preserved. The 101st
+truncation sentinel is never read. No bucket listing, file download or storage
+mutation occurs. No new route, binding, permission, migration or paid service.
+
+Each entry reports found, missing, unavailable or not checked. Only a literal
+null HEAD reply means missing; failure, timeout, missing binding and malformed
+metadata remain uncertainty. Keys, versions, sizes and other metadata are never
+returned to the browser. A found result is not a content/authenticity check,
+ownership decision, retention decision or permission to delete. A missing
+result is not evidence of deletion. Lists over the object limit need a separate
+scoped review of the remainder; repeatedly refreshing the same list is not
+pagination. Unlinked objects, older copies, vendors and backups remain separate.
+
+Before returning a nonempty file review, the route rereads the account snapshot
+and rejects an observed changed request or file reference with a private 409
+response. Storage remains point-in-time, not a transaction or guarantee against
+later changes. The existing close-access token retains its database-only
+meaning. canExecute and coverageComplete remain false. storageChecked is true
+only for a nonempty, untruncated list whose displayed files all returned found
+or missing. The UI labels partial/unavailable results as pending.
+
+Local validation: production build and all 1,245 tests pass with no failures or
+skips; TypeScript passes; lint has zero errors and its existing navigation
+warning. Synthetic tests cover exact-key aliases, failed/malformed replies,
+deadlines and read caps, authorization and changing/withdrawn cases. Local
+Cloudflare R2 confirms present/absent HEAD behavior with unchanged file contents.
+Chromium/WebKit at 320/1280 pixels verify all four states, retained warnings,
+failed-refresh cleanup and no overflow/page errors. No live case or file was
+read for this change. Evidence: task outputs/privacy-file-storage-*20261017*.
+Publication approval is still required for this separate release.
+
+## Uploaded-file reference review — October 16, 2026 (published PR #306)
 
 The existing owner-only account preview now includes a collapsed file-reference
 list from the same database snapshot as the request and record counts. It covers
@@ -43,8 +81,8 @@ a selected file reference invalidates that token even if record counts match.
 Key comparisons preserve case and whitespace. At most 100 references are shown;
 an additional sentinel makes truncation explicit rather than implying coverage.
 
-Every entry needs a disposition review. `canExecute`, `coverageComplete` and
-`storageChecked` remain false. This does not check object existence, contents,
+Every entry needs a disposition review. In the published PR #306,
+`canExecute`, `coverageComplete` and `storageChecked` remain false. It does not check object existence, contents,
 versions, orphan uploads, embedded references, vendor copies or backups. It
 does not select retention periods or resolve holds. No deletion/download route,
 new permission, migration or public screen is added. Failed refreshes remove

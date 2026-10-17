@@ -77,11 +77,14 @@ export function AccountClosurePreview({ requestId }: { requestId: string }) {
           <h4>Still needs review</h4>
           {preview.files && <details>
             <summary>Uploaded file references: {preview.files.items.length}{preview.files.truncated ? "+" : ""} to review</summary>
-            <p>These records point to files; storage contents and file availability have not been checked. Decide ownership, retention and any shared access before taking action. Nothing here deletes or downloads a file.</p>
+            <p>These records point to files. Decide ownership, retention and any shared access before taking action. Nothing here deletes or downloads a file.</p>
+            {preview.files.storageCheck ? <p>File check attempted {new Date(preview.files.storageCheck.finishedAt).toLocaleString()}. Each refresh checks up to {preview.files.storageCheck.objectLimit} different files. Results can change; a missing file does not prove it was deleted. File contents, older copies, unlinked uploads and vendor backups need a separate review.</p> : <p>File availability has not been checked.</p>}
+            {preview.files.items.some(item => item.storage === "unavailable" || item.storage === "not-checked") && <p role="alert">Some files could not be checked. They remain pending; do not treat them as missing or deleted.</p>}
             {preview.files.truncated && <p role="alert">Only the first {preview.files.limit} references are shown. This list is incomplete; arrange a scoped review of the remaining references.</p>}
             {preview.files.items.length === 0 ? <p>No file references were found in the sources checked. Embedded notes, vendor copies, backups and unlinked uploads still need a separate review.</p> :
               <ul>{preview.files.items.map(item => <li key={`${item.source}:${item.recordId}:${item.field}`}>
                 <strong>{item.label}</strong> — record {item.recordId}, field {item.field.replaceAll("_", " ")}. Needs review.
+                {" "}{item.storage === "found" ? "File found in upload storage." : item.storage === "missing" ? "File missing from upload storage at this check." : item.storage === "unavailable" ? "Couldn’t check this file. Refresh to try again." : "File availability not checked."}
                 {item.otherReferences > 0 && <> This file has {item.otherReferences} other recorded reference{item.otherReferences === 1 ? "" : "s"}; review them before removal.</>}
               </li>)}</ul>}
           </details>}

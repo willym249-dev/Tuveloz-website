@@ -82,6 +82,10 @@ try {
             if (mode === "wait") await new Promise(done => { release = done; markStarted(); });
             if (mode === "failure") return json(503, { error: "The account review could not be loaded. Nothing was changed. Please try again." });
             if (mode === "withdrawn") return json(409, { error: "Only an open account-closure request can be previewed. Refresh the request queue." });
+            if (mode === "storage") return json(200, { preview: { ...preview, files: { ...preview.files,
+              storageCheck: { startedAt: "2026-10-17T04:00:00Z", finishedAt: "2026-10-17T04:00:01Z", objectLimit: 20 },
+              items: ["found", "missing", "unavailable", "not-checked"].map((storage, index) => ({ ...preview.files.items[0], recordId: `synthetic-file-${index}`, storage })),
+            } } });
             return json(200, { preview: mode === "unused" ? { ...preview, accessClosureAllowed: true, accessClosed: false, reviewToken: "a".repeat(64), flags: { legalHolds: 0, incidents: 0 } } : preview });
           }
           return route.continue();
@@ -124,12 +128,21 @@ try {
         await panel.getByText("Uploaded file references: 1+ to review", { exact: true }).click();
         await panel.getByText(/Only the first 100 references are shown/).waitFor();
         await panel.getByText(/This file has 1 other recorded reference/).waitFor();
-        assert.ok(await panel.getByText(/storage contents and file availability have not been checked/i).isVisible());
+        assert.ok(await panel.getByText("File availability has not been checked.", { exact: true }).isVisible());
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "file references fit the screen");
         await panel.getByText("Sign-in and account settings: 2 records", { exact: true }).click();
         await panel.getByText("auth sessions: 2", { exact: true }).waitFor();
         assert.equal(await panel.getByRole("alert").count(), 3, "holds, incidents and incomplete file coverage remain visible");
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "preview fits screen");
+        mode = "storage";
+        await panel.getByRole("button", { name: "Refresh account review" }).click();
+        await panel.getByText("Uploaded file references: 4+ to review", { exact: true }).click();
+        for (const text of [/File found in upload storage/, /File missing from upload storage at this check/,
+          /Couldn’t check this file/, /File availability not checked/, /a missing file does not prove it was deleted/]) {
+          assert.ok(await panel.getByText(text).isVisible());
+        }
+        await panel.getByRole("alert").filter({ hasText: "Some files could not be checked" }).waitFor();
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "storage results fit screen");
         if (output) await page.screenshot({ path: resolve(output, `${type.name()}-${width}.png`), fullPage: true });
         mode = "failure";
         await panel.getByRole("button", { name: "Refresh account review" }).click();
@@ -139,7 +152,7 @@ try {
         mode = "withdrawn";
         await panel.getByRole("button", { name: "Preview account records" }).click();
         await panel.getByRole("alert").filter({ hasText: "Refresh the request queue" }).waitFor();
-        assert.equal(calls, 3);
+        assert.equal(calls, 4);
         mode = "unused";
         await panel.getByRole("button", { name: "Preview account records" }).click();
         const close = panel.getByRole("button", { name: "Close sign-in access", exact: true });
