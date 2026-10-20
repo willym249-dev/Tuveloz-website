@@ -1,5 +1,51 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
+## October 20, 2026 — Preserve final decisions and the reviewed request
+
+Release scope for PR #308. Completed/denied decisions are read-only in the owner
+screen and rejected by the update endpoint. Corrections and appeals need a new
+linked request rather than overwriting the original outcome. Withdrawn requests
+remain protected. Older open browser tabs must refresh before submitting.
+
+Each owner-list response includes a version digest of the complete request row.
+Saving checks that digest against the current row and compares every reviewed
+field again in the database update. This rejects stale forms and changes after
+the server read, including edits that retain the same status and timestamp.
+Rejected writes send no email or in-app notice. Failed saves preserve the draft;
+a successfully completed decision removes its edit form. A refreshed row remounts
+its form so an old draft cannot silently attach to a newer version.
+
+The decision, in-app notice and email outbox record are saved in one D1 batch.
+All three writes match the complete reviewed row; a stale review queues nothing,
+and an insertion or update failure rolls back the entire batch. Existing event
+keys preserve the original notice and prevent duplicate notifications. Repeated
+in-review edits do not generate a new email for every edited note.
+
+Email delivery happens after commit and uses the existing retry system. A queued
+record is not proof of inbox delivery. If the save reply is interrupted, refresh
+before retrying; a committed final decision remains read-only and its notice is
+already durable. A failed list refresh explicitly reports that the decision was
+saved instead of implying it was rolled back.
+
+Synthetic tests first reproduced rewriting final records and overwriting a
+same-status review. All 1,261 tests pass, along with the production build, TypeScript
+and lint (existing navigation warning only). Chromium and WebKit pass at 320
+and 1280 pixels, including stale-save errors, draft preservation, version
+submission, read-only final decisions and no overflow or unexpected requests.
+Failure tests cover both notification inserts, the actual recovery-maintenance
+fence, interrupted commit replies, transport failures and list-refresh errors.
+The actual route also runs against local Cloudflare D1 with the complete schema
+and outbound traffic blocked, confirming commit, rollback and final replay
+behavior. No real privacy request or outbound notification was used.
+
+This change protects the decision record. It does not verify fulfillment
+evidence, execute erasure, resolve retention/vendor/backup work or approve launch.
+No database migration, new service or permission is introduced.
+
+Release-history clarification: PR #307's file-availability check below was
+published as 993bfcaa and independently verified October 17. Its historical
+local/pending wording below is superseded; do not repeat that release.
+
 Status: reviewed unused-account access closure published in PR #296 and corrected
 for Cloudflare D1 in PR #297. Private recovery storage and read-only/confirmation
 checks are published through PR #301; the inactive authentication recovery write

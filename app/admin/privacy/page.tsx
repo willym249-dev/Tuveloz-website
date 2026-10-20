@@ -21,6 +21,7 @@ type PrivacyRequest = {
   createdAt: string;
   updatedAt: string;
   resolvedAt: string;
+  reviewVersion: string;
 };
 
 function readableDate(value: string) {
@@ -68,6 +69,7 @@ export default function AdminPrivacyPage() {
           id: request.id,
           status: values.status,
           resolutionNote: values.resolutionNote,
+          reviewVersion: request.reviewVersion,
         }),
       });
       const result = await response.json() as { requests?: PrivacyRequest[]; error?: string };
@@ -152,8 +154,11 @@ export default function AdminPrivacyPage() {
                   <AccountClosurePreview requestId={item.id} />
                 )}
 
-                {item.status !== "withdrawn" && (
-                  <form className="credential-card" onSubmit={(event) => updateRequest(event, item)}>
+                {(item.status === "completed" || item.status === "denied") && (
+                  <p className="admin-note">This decision is final. Record a correction or appeal as a new request linked to the original.</p>
+                )}
+                {(item.status === "submitted" || item.status === "in-review") && (
+                  <form className="credential-card" key={item.reviewVersion} onSubmit={(event) => updateRequest(event, item)}>
                     <label>
                       Review status
                       <select defaultValue={item.status === "submitted" ? "in-review" : item.status} name="status">
