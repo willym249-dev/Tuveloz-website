@@ -97,8 +97,8 @@ test("owner privacy review records explanations and supports appeals", async () 
   assert.match(api, /isVerifiedOwnerRequest/);
   assert.match(api, /Record a clear customer-facing explanation/);
   assert.match(api, /You may submit an appeal/);
-  assert.match(api, /notifyMarketplaceAccount/);
-  assert.match(api, /sendMarketplaceUpdateEmail/);
+  // Notification persistence and delivery failures are exercised against the
+  // route in privacy-owner-review-behavior.test.mjs, not inferred from imports.
   assert.match(page, /Verified privacy requests/);
   assert.match(page, /does not automatically erase/);
   assert.match(page, /Customer-facing explanation/);

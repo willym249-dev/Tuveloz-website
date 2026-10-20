@@ -11,13 +11,17 @@ test("owner privacy decisions preserve final records and concurrent changes", as
   const repo = resolve(import.meta.dirname, "..");
   const scratch = mkdtempSync(join(tmpdir(), "tuveloz-privacy-owner-"));
   const database = new DatabaseSync(":memory:");
-  const state = { owner: true, beforeWrite: null, notices: [], emails: [], env: {} };
+  const state = { owner: true, beforeWrite: null, loseBatchReply: false, failDelivery: false,
+    failRefresh: false, committed: false, emails: [], env: {} };
   state.env.DB = { prepare(query) {
     let values = [];
     return {
       bind(...params) { values = params; return this; },
       async first() { return database.prepare(query).get(...values) ?? null; },
-      async all() { return { results: database.prepare(query).all(...values) }; },
+      async all() {
+        if (state.failRefresh && state.committed) throw new Error("Synthetic list refresh failure");
+        return { results: database.prepare(query).all(...values) };
+      },
       async run() {
         if (/UPDATE privacy_requests/.test(query) && state.beforeWrite) {
           const competingWrite = state.beforeWrite;
@@ -27,10 +31,44 @@ test("owner privacy decisions preserve final records and concurrent changes", as
         return { meta: { changes: Number(database.prepare(query).run(...values).changes) } };
       },
     };
+  }, async batch(statements) {
+    if (state.beforeWrite) {
+      const competingWrite = state.beforeWrite;
+      state.beforeWrite = null;
+      competingWrite();
+    }
+    database.exec("BEGIN");
+    let results;
+    try {
+      results = [];
+      for (const statement of statements) results.push(await statement.run());
+      database.exec("COMMIT");
+      state.committed = true;
+    } catch (error) {
+      database.exec("ROLLBACK");
+      throw error;
+    }
+    if (state.loseBatchReply) {
+      state.loseBatchReply = false;
+      throw new Error("Synthetic lost reply after database commit");
+    }
+    return results;
   } };
   globalThis.__privacyOwnerReview = state;
   try {
     database.exec(readFileSync(join(repo, "drizzle/0034_privacy_center.sql"), "utf8"));
+    database.exec(readFileSync(join(repo, "drizzle/0030_email_notification_outbox.sql"), "utf8"));
+    const notificationSchema = readFileSync(join(repo, "drizzle/0032_marketplace_tools.sql"), "utf8")
+      .split("--> statement-breakpoint")
+      .filter(sql => /^CREATE (TABLE `account_notifications`|(?:UNIQUE )?INDEX `account_notifications_)/.test(sql.trim()));
+    assert.equal(notificationSchema.length, 3);
+    notificationSchema.forEach(sql => database.exec(sql));
+    const fenceSchema = readFileSync(join(repo, "drizzle/0073_authentication_recovery_write_fence.sql"), "utf8")
+      .split("--> statement-breakpoint")
+      .filter(sql => /CREATE TABLE privacy_recovery_fences|CREATE TRIGGER privacy_pause_privacy_requests_update/.test(sql));
+    assert.equal(fenceSchema.length, 2);
+    fenceSchema.forEach(sql => database.exec(sql));
+    Object.defineProperty(state, "notices", { get: () => database.prepare("SELECT * FROM account_notifications").all() });
     const bundle = join(scratch, "review.cjs");
     await build({ absWorkingDir: repo, entryPoints: ["app/api/admin/privacy-requests/route.ts"],
       bundle: true, platform: "node", format: "cjs", outfile: bundle, target: "node22", logLevel: "silent",
@@ -39,7 +77,7 @@ test("owner privacy decisions preserve final records and concurrent changes", as
         builder.onLoad({ filter: /.*/, namespace: "fixture" }, args => ({ loader: "js", contents: {
           "cloudflare:workers": "export const env = globalThis.__privacyOwnerReview.env;",
           "owner-auth": 'export const isVerifiedOwnerRequest=async()=>globalThis.__privacyOwnerReview.owner; export const getAuthenticatedEmail=()=>"owner@example.invalid";',
-          "email-notifications": "export const sendMarketplaceUpdateEmail=async input=>{globalThis.__privacyOwnerReview.emails.push(input);};",
+          "email-notifications": "export const sendMarketplaceUpdateEmail=async input=>{const state=globalThis.__privacyOwnerReview; state.emails.push(input); if(state.failDelivery) throw new Error('Synthetic email transport failure');};",
           "marketplace-notifications": "export const notifyMarketplaceAccount=async input=>{globalThis.__privacyOwnerReview.notices.push(input);};",
         }[args.path] }));
       } }] });
@@ -53,12 +91,18 @@ test("owner privacy decisions preserve final records and concurrent changes", as
       });
     };
     const seed = (status = "submitted") => {
-      database.exec("DELETE FROM privacy_requests");
+      database.exec("DROP TRIGGER IF EXISTS synthetic_failure; DELETE FROM privacy_recovery_fences; DELETE FROM privacy_requests; DELETE FROM account_notifications; DELETE FROM email_notification_outbox");
       database.prepare("INSERT INTO privacy_requests (id,email,role,request_type,status) VALUES (?,?,?,?,?)")
         .run("synthetic-request", "applicant@example.invalid", "provider", "access", status);
-      state.notices.length = 0; state.emails.length = 0; state.beforeWrite = null; state.owner = true;
+      state.emails.length = 0; state.beforeWrite = null; state.owner = true;
+      state.loseBatchReply = false; state.failDelivery = false;
+      state.failRefresh = false; state.committed = false;
     };
     const row = () => database.prepare("SELECT * FROM privacy_requests WHERE id = ?").get("synthetic-request");
+    const queued = () => database.prepare("SELECT * FROM email_notification_outbox").all();
+    t.afterEach(() => {
+      assert.equal(queued().length, state.notices.length, "email and in-app notices remain paired");
+    });
 
     await t.test("completed and denied records cannot be rewritten or reopened", async () => {
       for (const finalStatus of ["completed", "denied"]) {
@@ -153,6 +197,107 @@ test("owner privacy decisions preserve final records and concurrent changes", as
       assert.match(row().resolution_note, /Owner reviewer: owner@example.invalid/);
       assert.equal(state.notices.length, 1); assert.equal(state.emails.length, 1);
       assert.equal(state.notices[0].email, "applicant@example.invalid");
+      assert.equal(state.emails[0].recipientEmail, "applicant@example.invalid");
+      assert.equal(queued().length, 1);
+      assert.equal(queued()[0].event_key, "marketplace:privacy-status-email:synthetic-request:completed");
+      assert.equal(queued()[0].text_body, state.emails[0].lines.join("\n"));
+      assert.equal(queued()[0].status, "pending", "queueing is not delivery");
+      assert.equal(queued()[0].attempts, 0);
+    });
+
+    await t.test("an in-app notice failure leaves the decision open and retryable", async () => {
+      seed();
+      const before = row();
+      database.exec("CREATE TRIGGER synthetic_failure BEFORE INSERT ON account_notifications BEGIN SELECT RAISE(ABORT, 'Synthetic notice write failure'); END");
+      assert.equal((await api.POST(await request())).status, 400);
+      assert.deepEqual(row(), before);
+      assert.equal(state.notices.length, 0); assert.equal(queued().length, 0); assert.equal(state.emails.length, 0);
+      database.exec("DROP TRIGGER synthetic_failure");
+      assert.equal((await api.POST(await request())).status, 200);
+      assert.equal(row().status, "completed");
+    });
+
+    await t.test("an email queue failure rolls back both the notice and decision", async () => {
+      seed();
+      const before = row();
+      database.exec("CREATE TRIGGER synthetic_failure BEFORE INSERT ON email_notification_outbox BEGIN SELECT RAISE(ABORT, 'Synthetic outbox write failure'); END");
+      assert.equal((await api.POST(await request())).status, 400);
+      assert.deepEqual(row(), before);
+      assert.equal(state.notices.length, 0); assert.equal(queued().length, 0); assert.equal(state.emails.length, 0);
+    });
+
+    await t.test("a decision write failure rolls back both previously queued notices", async () => {
+      seed("in-review");
+      const before = row();
+      database.exec("INSERT INTO privacy_recovery_fences (generation,paused,case_reference,changed_by) VALUES (1,1,'synthetic-test','owner@example.invalid')");
+      assert.equal((await api.POST(await request("denied"))).status, 400);
+      assert.deepEqual(row(), before);
+      assert.equal(state.notices.length, 0); assert.equal(queued().length, 0); assert.equal(state.emails.length, 0);
+    });
+
+    await t.test("a lost database reply preserves final decisions and durable notices without duplicates", async () => {
+      for (const status of ["completed", "denied"]) {
+        seed("in-review");
+        const original = await request(status);
+        const retry = original.clone();
+        state.loseBatchReply = true;
+        const response = await api.POST(original);
+        assert.equal(response.status, 400);
+        assert.match((await response.json()).error, /Unable to confirm whether your review was saved/);
+        const committed = row();
+        assert.equal(committed.status, status);
+        assert.equal(state.notices.length, 1); assert.equal(queued().length, 1);
+        assert.equal(queued()[0].status, "pending");
+        assert.equal(state.emails.length, 0, "immediate delivery was interrupted");
+        assert.equal((await api.POST(retry)).status, 409);
+        assert.deepEqual(row(), committed);
+        assert.equal(state.notices.length, 1); assert.equal(queued().length, 1);
+      }
+    });
+
+    await t.test("email transport failure does not turn a saved decision into a failed save", async () => {
+      seed();
+      state.failDelivery = true;
+      assert.equal((await api.POST(await request())).status, 200);
+      assert.equal(row().status, "completed");
+      assert.equal(state.notices.length, 1); assert.equal(queued().length, 1);
+      assert.equal(queued()[0].status, "pending");
+      assert.equal(queued()[0].sent_at, "");
+    });
+
+    await t.test("a failed list refresh reports that the decision was saved", async () => {
+      seed();
+      const submission = await request();
+      state.failRefresh = true;
+      const response = await api.POST(submission);
+      assert.equal(response.status, 409);
+      assert.match((await response.json()).error, /Your decision was saved.*Reload the page/);
+      assert.equal(row().status, "completed");
+      assert.equal(state.notices.length, 1); assert.equal(queued().length, 1);
+      assert.equal(state.emails.length, 1);
+    });
+
+    await t.test("repeated in-review saves preserve existing notifications and do not duplicate them", async () => {
+      seed();
+      assert.equal((await api.POST(await request("in-review"))).status, 200);
+      const initialNotice = state.notices[0];
+      const initialEmail = queued()[0];
+      assert.equal((await api.POST(await request("in-review", "https://tuveloz.invalid", "Additional review evidence recorded."))).status, 200);
+      assert.match(row().resolution_note, /Additional review evidence/);
+      assert.equal(state.notices.length, 1); assert.equal(queued().length, 1);
+      assert.deepEqual(state.notices[0], initialNotice);
+      assert.deepEqual(queued()[0], initialEmail);
+      assert.equal((await api.POST(await request("denied"))).status, 200);
+      assert.equal(state.notices.length, 2); assert.equal(queued().length, 2);
+    });
+
+    await t.test("both durable notices use the normalized account address", async () => {
+      seed();
+      database.prepare("UPDATE privacy_requests SET email=? WHERE id=?")
+        .run(" Applicant@Example.invalid ", "synthetic-request");
+      assert.equal((await api.POST(await request())).status, 200);
+      assert.equal(state.notices[0].email, "applicant@example.invalid");
+      assert.equal(queued()[0].recipient_email, "applicant@example.invalid");
       assert.equal(state.emails[0].recipientEmail, "applicant@example.invalid");
     });
 
