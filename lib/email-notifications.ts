@@ -324,7 +324,20 @@ export async function flushPendingEmailNotifications(limit = RETRY_BATCH_SIZE) {
       ...PROTECTIVE_EMAIL_EVENT_SQL_PATTERNS,
     ];
   const recognizedCandidate = or(
-    ...candidatePatterns.map(pattern => like(emailNotificationOutbox.eventKey, pattern)),
+    ...candidatePatterns.map(pattern => {
+      // D1 limits each LIKE pattern to 50 characters. Keep the same match for
+      // longer patterns by checking their literal prefix and remaining suffix
+      // separately; broadening the prefix would let blocked mail fill the batch.
+      const wildcardIndex = pattern.indexOf("%");
+      if (pattern.length <= 50 || wildcardIndex <= 0) {
+        return like(emailNotificationOutbox.eventKey, pattern);
+      }
+      const prefix = pattern.slice(0, wildcardIndex);
+      return and(
+        like(sql`substr(${emailNotificationOutbox.eventKey}, 1, ${prefix.length})`, prefix),
+        like(sql`substr(${emailNotificationOutbox.eventKey}, ${prefix.length + 1})`, pattern.slice(wildcardIndex)),
+      );
+    }),
     currentMarketingConsent(),
   );
   const rows = await getDb().select({

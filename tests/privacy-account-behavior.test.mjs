@@ -32,6 +32,18 @@ test("privacy tools isolate real signed sessions and migrated account records", 
         },
         async run() { return { meta: { changes: Number(statement().run(...values).changes) } }; },
       };
+    },
+    async batch(statements) {
+      database.exec("BEGIN");
+      try {
+        const results = [];
+        for (const statement of statements) results.push(await statement.run());
+        database.exec("COMMIT");
+        return results;
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
     } },
   } };
   globalThis.__privacyAccountBehavior = state;

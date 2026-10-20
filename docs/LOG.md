@@ -11,6 +11,23 @@ survives.
 **Newest entry goes at the top**, directly under this line. Read the top few
 entries to catch up. Write one before you finish.
 
+## 2026-10-20 - Honor privacy opt-outs in the launch-update mailing list
+
+Connected the explicit opt-out and saved marketing/product refusals to the
+existing subscriber suppression record. Each preference/completion write is
+atomic with suppression, so a storage failure cannot leave a false success.
+Preserved separate essential consent, unrelated records and later affirmative
+newsletter signup. The real D1 test also exposed a retry-query LIKE pattern
+above D1's limit; split its matching without broadening delivery eligibility.
+
+Added synthetic local Cloudflare regression coverage and updated the existing
+signed-session test fixture to support transactional batches. The build and all
+1,274 tests pass with no failures/skips; TypeScript passes and lint has no errors
+(the existing navigation warning remains). Independent review found no blocker.
+No UI change,
+real email, migration, new service, deletion or launch activation. Publication
+remains separate from completed PR #308; do not repeat that release.
+
 ## 2026-10-17 - Check referenced upload availability without downloading files
 
 Continued from verified main 5cf3901 after confirming no open PRs. PR #306 is

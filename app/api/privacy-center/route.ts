@@ -93,6 +93,15 @@ async function ensurePreferences(email: string, role: AccountRole) {
   ).bind(email, role).run();
 }
 
+function suppressLaunchUpdates(email: string) {
+  return env.DB.prepare(
+    `UPDATE launch_update_subscribers
+        SET unsubscribed_at = CURRENT_TIMESTAMP
+      WHERE lower(trim(email)) = lower(?)
+        AND unsubscribed_at = ''`,
+  ).bind(email);
+}
+
 async function responseData(
   email: string,
   role: AccountRole,
@@ -237,7 +246,7 @@ export async function POST(request: Request) {
       const launchNotification = account.role === "customer"
         ? yesNo(body.launchNotificationEmail)
         : "no";
-      await env.DB.prepare(
+      const savePreferences = env.DB.prepare(
         `UPDATE account_communication_preferences
             SET marketing_email = ?,
                 product_update_email = ?,
@@ -274,7 +283,16 @@ export async function POST(request: Request) {
         launchNotification,
         account.email,
         account.role,
-      ).run();
+      );
+      // This list mixes promotional and launch/product updates. An explicit
+      // refusal of either category stops it. Missing fields and default "no"
+      // rows are not a delivery veto against a later newsletter signup.
+      const stopLaunchUpdates = [body.marketingEmail, body.productUpdateEmail]
+        .some(value => value === false || value === "no");
+      await env.DB.batch([
+        savePreferences,
+        ...(stopLaunchUpdates ? [suppressLaunchUpdates(account.email)] : []),
+      ]);
       return privacyJson({
         ok: true,
         ...(await responseData(
@@ -361,17 +379,7 @@ export async function POST(request: Request) {
 
     const id = crypto.randomUUID();
     const completedImmediately = requestType === "opt-out";
-    if (completedImmediately) {
-      await env.DB.prepare(
-        `UPDATE account_communication_preferences
-            SET marketing_email = 'no',
-                product_update_email = 'no',
-                updated_at = CURRENT_TIMESTAMP
-          WHERE lower(email) = lower(?) AND role = ?`,
-      ).bind(account.email, account.role).run();
-    }
-
-    await env.DB.prepare(
+    const recordRequest = env.DB.prepare(
       `INSERT INTO privacy_requests
          (id, email, role, request_type, related_request_id, details, status,
           identity_source, resolution_note, created_at, updated_at, resolved_at)
@@ -390,7 +398,28 @@ export async function POST(request: Request) {
         ? "Marketing and optional product-update email choices were turned off immediately."
         : "",
       completedImmediately ? "completed" : "submitted",
-    ).run();
+    );
+
+    if (completedImmediately) {
+      // The launch list has its own explicit consent and delivery guard.
+      // A general marketing opt-out must revoke that consent too, including
+      // already-queued mail. Preserve its minimal suppression record and the
+      // separate customer launch-notification choice. Commit the completion
+      // receipt only if both preference stores were updated successfully.
+      await env.DB.batch([
+        env.DB.prepare(
+          `UPDATE account_communication_preferences
+              SET marketing_email = 'no',
+                  product_update_email = 'no',
+                  updated_at = CURRENT_TIMESTAMP
+            WHERE lower(email) = lower(?) AND role = ?`,
+        ).bind(account.email, account.role),
+        suppressLaunchUpdates(account.email),
+        recordRequest,
+      ]);
+    } else {
+      await recordRequest.run();
+    }
 
     await notifyMarketplaceAccount({
       eventKey: `privacy-request:${id}:${account.role}`,
