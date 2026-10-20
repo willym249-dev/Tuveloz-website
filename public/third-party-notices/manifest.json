@@ -1,5 +1,5 @@
 {
-  "reviewed": "2026-09-27",
+  "reviewed": "2026-10-20",
   "scope": "Direct dependencies only; not a complete deployed-bundle license inventory.",
   "packages": [
     {
@@ -36,7 +36,7 @@
     },
     {
       "name": "next",
-      "version": "16.3.6",
+      "version": "16.3.8",
       "declaredLicense": "MIT",
       "notice": "next-LICENSE.txt",
       "source": "node_modules/next/license.md",
