@@ -1,5 +1,35 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
+## October 20, 2026 — Preserve final decisions and the reviewed request
+
+Local fix, not published. Completed/denied decisions are read-only in the owner
+screen and rejected by the update endpoint. Corrections and appeals need a new
+linked request rather than overwriting the original outcome. Withdrawn requests
+remain protected. Older open browser tabs must refresh before submitting.
+
+Each owner-list response includes a version digest of the complete request row.
+Saving checks that digest against the current row and compares every reviewed
+field again in the database update. This rejects stale forms and changes after
+the server read, including edits that retain the same status and timestamp.
+Rejected writes send no email or in-app notice. Failed saves preserve the draft;
+a successfully completed decision removes its edit form. A refreshed row remounts
+its form so an old draft cannot silently attach to a newer version.
+
+Synthetic tests first reproduced rewriting final records and overwriting a
+same-status review. The fix passes all 1,249 tests, production build, TypeScript
+and lint (existing navigation warning only). Chromium and WebKit pass at 320
+and 1280 pixels, including stale-save errors, draft preservation, version
+submission, read-only final decisions and no overflow or unexpected requests.
+No real privacy request or outbound notification was used.
+
+This change protects the decision record. It does not verify fulfillment
+evidence, execute erasure, resolve retention/vendor/backup work or approve launch.
+No database migration, new service or permission is introduced.
+
+Release-history clarification: PR #307's file-availability check below was
+published as 993bfcaa and independently verified October 17. Its historical
+local/pending wording below is superseded; do not repeat that release.
+
 Status: reviewed unused-account access closure published in PR #296 and corrected
 for Cloudflare D1 in PR #297. Private recovery storage and read-only/confirmation
 checks are published through PR #301; the inactive authentication recovery write

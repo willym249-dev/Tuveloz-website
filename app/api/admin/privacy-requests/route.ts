@@ -31,6 +31,15 @@ function text(value: unknown, maximum: number) {
   return typeof value === "string" ? value.trim().slice(0, maximum) : "";
 }
 
+async function reviewVersion(row: PrivacyRequestRow) {
+  const snapshot = JSON.stringify([
+    row.id, row.email, row.role, row.requestType, row.relatedRequestId, row.details,
+    row.status, row.identitySource, row.resolutionNote, row.createdAt, row.updatedAt, row.resolvedAt,
+  ]);
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(snapshot));
+  return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
 async function requestRows() {
   const result = await env.DB.prepare(
     `SELECT id,
@@ -51,7 +60,7 @@ async function requestRows() {
         datetime(created_at) ASC
       LIMIT 1000`,
   ).all<PrivacyRequestRow>();
-  return result.results ?? [];
+  return Promise.all((result.results ?? []).map(async row => ({ ...row, reviewVersion: await reviewVersion(row) })));
 }
 
 export async function GET(request: Request) {
@@ -80,6 +89,7 @@ export async function POST(request: Request) {
     const id = text(body.id, 100);
     const status = text(body.status, 30) as PrivacyStatus;
     const resolutionNote = text(body.resolutionNote, 2000);
+    const expectedVersion = typeof body.reviewVersion === "string" ? body.reviewVersion : "";
     if (!id || !REVIEW_STATUSES.has(status)) {
       return Response.json({ error: "Choose a valid request and review status." }, { status: 400 });
     }
@@ -89,39 +99,56 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    if (!/^[a-f0-9]{64}$/.test(expectedVersion)) {
+      return Response.json({ error: "Refresh the privacy request before saving your review." },
+        { status: 409, headers: { "cache-control": "private, no-store" } });
+    }
 
     const current = await env.DB.prepare(
       `SELECT id, email, role,
               request_type AS requestType,
-              status
+              related_request_id AS relatedRequestId, details, status,
+              identity_source AS identitySource, resolution_note AS resolutionNote,
+              created_at AS createdAt, updated_at AS updatedAt, resolved_at AS resolvedAt
          FROM privacy_requests
         WHERE id = ? LIMIT 1`,
-    ).bind(id).first<{
-      id: string;
-      email: string;
-      role: AccountRole;
-      requestType: string;
-      status: PrivacyStatus;
-    }>();
+    ).bind(id).first<PrivacyRequestRow>();
     if (!current) return Response.json({ error: "Privacy request not found." }, { status: 404 });
     if (current.status === "withdrawn") {
       return Response.json({ error: "A withdrawn request cannot be reopened from this review screen." }, { status: 409 });
+    }
+    if (current.status === "completed" || current.status === "denied") {
+      return Response.json(
+        { error: "This decision is final. Record a correction or appeal as a new request linked to the original." },
+        { status: 409, headers: { "cache-control": "private, no-store" } },
+      );
+    }
+    if (await reviewVersion(current) !== expectedVersion) {
+      return Response.json(
+        { error: "This privacy request changed while you were reviewing it. Refresh the page before saving another decision." },
+        { status: 409, headers: { "cache-control": "private, no-store" } },
+      );
     }
 
     const reviewer = getAuthenticatedEmail(request);
     const ownerRecord = resolutionNote
       ? `${resolutionNote}\n\nOwner reviewer: ${reviewer}`
       : `Review opened by ${reviewer}.`;
-    // The account holder can withdraw after the read above. Check the saved
-    // status in the write itself so that a competing change is never reopened.
+    // Compare the full reviewed record in the write too. Timestamps alone can
+    // miss edits in the same second; status alone misses edits within review.
     const updated = await env.DB.prepare(
       `UPDATE privacy_requests
           SET status = ?,
               resolution_note = ?,
               updated_at = CURRENT_TIMESTAMP,
               resolved_at = CASE WHEN ? IN ('completed','denied') THEN CURRENT_TIMESTAMP ELSE '' END
-        WHERE id = ? AND status = ?`,
-    ).bind(status, ownerRecord, status, id, current.status).run();
+        WHERE id = ? AND status = ? AND email = ? AND role = ?
+          AND request_type = ? AND related_request_id = ? AND details = ?
+          AND identity_source = ? AND resolution_note = ? AND created_at = ?
+          AND updated_at = ? AND resolved_at = ?`,
+    ).bind(status, ownerRecord, status, id, current.status, current.email, current.role,
+      current.requestType, current.relatedRequestId, current.details, current.identitySource,
+      current.resolutionNote, current.createdAt, current.updatedAt, current.resolvedAt).run();
     if ((updated.meta?.changes ?? 0) !== 1) {
       return Response.json(
         { error: "This privacy request changed while you were reviewing it. Refresh the page before saving another decision." },
