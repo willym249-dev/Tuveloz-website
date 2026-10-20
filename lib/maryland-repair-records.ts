@@ -58,7 +58,35 @@ export type RepairLineItem = {
   lineAmountCents: number;
   laborMinutes: number;
   mechanicIdentifier: string;
+  partBrand?: string;
 };
+
+// New documents carry these additions inside their immutable snapshot. Do not
+// backfill them into older snapshots or change an existing document hash.
+export function repairWarrantyDisclosure(workmanshipWarranty: string) {
+  return {
+    warrantyProvider: workmanshipWarranty.trim() ? "provider_business" : "none_offered",
+    warrantyTerms: workmanshipWarranty.trim()
+      ? workmanshipWarranty
+      : "No provider workmanship warranty offered.",
+  };
+}
+
+export function repairItemsHaveBrands(items: readonly RepairLineItem[]) {
+  return items.every(item => item.lineType !== "part" || Boolean(item.partBrand?.trim()));
+}
+
+// Brand metadata lives with its exact line in the immutable document snapshot.
+// Existing SQL item columns remain an independent check of every original field.
+export function repairItemStoredFields(item: RepairLineItem) {
+  const stored = { ...item };
+  delete stored.partBrand;
+  return stored;
+}
+
+export function repairLaborMinutes(items: readonly RepairLineItem[]) {
+  return items.reduce((total, item) => total + (item.lineType === "labor" ? item.laborMinutes : 0), 0);
+}
 
 const LINE_TYPES = new Set<RepairLineType>([
   "labor",
@@ -113,6 +141,7 @@ export function parseRepairLineItems(value: unknown): RepairLineItem[] | null {
     const lineAmountCents = wholeNumber(record.lineAmountCents, 0, 10_000_000);
     const laborMinutes = wholeNumber(record.laborMinutes ?? 0, 0, 100_000);
     const mechanicIdentifier = clean(record.mechanicIdentifier, 120);
+    const partBrand = record.partBrand;
 
     if (
       !LINE_TYPES.has(lineType)
@@ -125,6 +154,8 @@ export function parseRepairLineItems(value: unknown): RepairLineItem[] | null {
       || lineAmountCents !== quantity * unitAmountCents
       || (lineType === "part" && (!partNumber || partCondition === "not_applicable"))
       || (lineType !== "part" && (partNumber || partCondition !== "not_applicable"))
+      || (partBrand !== undefined && (typeof partBrand !== "string" || partBrand.length > 120
+        || partBrand !== partBrand.trim() || lineType !== "part"))
     ) {
       return null;
     }
@@ -139,6 +170,7 @@ export function parseRepairLineItems(value: unknown): RepairLineItem[] | null {
       lineAmountCents,
       laborMinutes,
       mechanicIdentifier,
+      ...(partBrand === undefined ? {} : { partBrand: partBrand as string }),
     });
   }
   return items;

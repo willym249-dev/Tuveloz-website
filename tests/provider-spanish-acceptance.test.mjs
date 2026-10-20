@@ -106,9 +106,10 @@ test("Spanish evidence contains the displayed text and exact translation, while 
 });
 
 for (const [release, changed] of [
-  ["20260907", ["terms", "provider_agreement", "payment_policy"]],
-  ["20260930", ["terms", "provider_agreement"]],
-  ["20261005", ["provider_agreement"]],
+  ["20260907", ["terms", "provider_agreement", "payment_policy", "privacy"]],
+  ["20260930", ["terms", "provider_agreement", "privacy"]],
+  ["20261005", ["provider_agreement", "privacy"]],
+  ["20261020-before-privacy", ["privacy"]],
 ]) {
   test(`current policies reject ${release} browser consent without relabeling historical acceptance`, async () => {
     const historicalHashes = JSON.parse(read(`tests/fixtures/provider-english-acceptance-hashes-${release}.json`));

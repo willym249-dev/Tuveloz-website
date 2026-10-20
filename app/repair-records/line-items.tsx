@@ -30,6 +30,7 @@ export function formLineItems(form: FormData): RepairLineItem[] | null {
     return { lineType: part ? "part" : "labor", description: field("description"),
       partNumber: part ? field("partNumber") : "", partCondition: part ? field("partCondition") : "not_applicable",
       quantity, unitAmountCents, lineAmountCents: unitAmountCents === null ? NaN : quantity * unitAmountCents,
+      ...(part ? { partBrand: field("partBrand") } : {}),
       laborMinutes: part ? 0 : laborMinutes, mechanicIdentifier: field("mechanicIdentifier") };
   });
   return parseRepairLineItems(items);
@@ -45,13 +46,14 @@ type DraftLine = {
   mechanicIdentifier: string;
   partNumber: string;
   partCondition: string;
+  partBrand: string;
 };
 
 function draft(item: RepairLineItem, key: number): DraftLine {
   return { key, lineType: item.lineType === "part" ? "part" : "labor", description: item.description,
     quantity: String(item.quantity), unitPrice: (item.unitAmountCents / 100).toFixed(2),
     laborMinutes: String(item.laborMinutes), mechanicIdentifier: item.mechanicIdentifier,
-    partNumber: item.partNumber, partCondition: item.partCondition };
+    partNumber: item.partNumber, partCondition: item.partCondition, partBrand: item.partBrand ?? "" };
 }
 
 export function LineItemEditor({ items, expectedTotal, t, spanish }: {
@@ -97,6 +99,8 @@ export function LineItemEditor({ items, expectedTotal, t, spanish }: {
             onChange={event => change(line.key, "mechanicIdentifier", event.target.value)} /></label>}
           {part && <label>{t("Part number", "Número de pieza")}<input name={name("partNumber")} value={line.partNumber} required maxLength={120}
             onChange={event => change(line.key, "partNumber", event.target.value)} /></label>}
+          {part && <label>{t("Part brand (required before issuing)", "Marca de la pieza (obligatoria antes de emitir)")}<input name={name("partBrand")} value={line.partBrand} maxLength={120}
+            onChange={event => change(line.key, "partBrand", event.target.value)} /></label>}
           {part && <label>{t("Part condition", "Estado de la pieza")}<select name={name("partCondition")} value={line.partCondition}
             onChange={event => change(line.key, "partCondition", event.target.value)}>
             <option value="new">{t("New", "Nueva")}</option><option value="used">{t("Used", "Usada")}</option>
@@ -127,6 +131,7 @@ export function SavedLineItems({ items, t, spanish }: { items: RepairLineItem[];
       <div><dt>{t("Unit price", "Precio por unidad")}</dt><dd>{formatMoney(item.unitAmountCents, spanish)}</dd></div>
       <div><dt>{t("Line total", "Total de la línea")}</dt><dd>{formatMoney(item.lineAmountCents, spanish)}</dd></div>
       {item.partNumber && <div><dt>{t("Part number / condition", "Número / estado de la pieza")}</dt><dd>{item.partNumber} · {item.partCondition}</dd></div>}
+      {item.partBrand && <div><dt>{t("Part brand", "Marca de la pieza")}</dt><dd>{item.partBrand}</dd></div>}
       {item.mechanicIdentifier && <div><dt>{t("Mechanic", "Mecánico")}</dt><dd>{item.mechanicIdentifier}</dd></div>}
       {item.lineType === "labor" && <div><dt>{t("Labor minutes", "Minutos de trabajo")}</dt><dd>{item.laborMinutes}</dd></div>}
     </dl>

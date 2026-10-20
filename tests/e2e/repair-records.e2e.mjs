@@ -50,6 +50,7 @@ function snapshot(role = "customer") {
   const value = { testOnly: true, realJobsEnabled: false, role, email: `${role}@example.invalid`, version: "maryland-repair-records-2026-08-01-v2", legalNotices: {
     customerRightsHeading: repairLibrary.MARYLAND_CUSTOMER_RIGHTS_HEADING, customerRightsText: repairLibrary.MARYLAND_CUSTOMER_RIGHTS_TEXT, writtenEstimateStandard: repairLibrary.MONTGOMERY_COUNTY_WRITTEN_ESTIMATE_STANDARD, manufacturerNotice: repairLibrary.MANUFACTURER_SPECIAL_POLICY_NOTICE, responsibilityNotice: repairLibrary.REPAIR_FACILITY_RESPONSIBILITY_NOTICE, electronicSignatureNotice: repairLibrary.ELECTRONIC_SIGNATURE_NOTICE,
   }, jobs: [{ requestId: "job-a", requestStatus: "completed", vehicle: "SYNTHETIC vehicle A", service: "SYNTHETIC service", serviceCodes: '["provisional_12v_jump_start"]', quoteServiceCodes: '["provisional_12v_jump_start"]', jurisdiction: "US-MD-MontgomeryCounty", municipality: "Rockville", serviceAddress: "SYNTHETIC service address", customerName: "SYNTHETIC customer", customerEmail: "customer@example.invalid", quoteId: "job-a-quote", quotePriceCents: "10000", scopeVersion: 1, providerId: "provider", providerName: "SYNTHETIC provider", providerEmail: "provider@example.invalid", providerBusinessAddress: "SYNTHETIC business address", isTestJob: "yes", isTestProvider: "yes", isTest: true, writesAllowed: true, authorizationWritesAllowed: true, invoiceWritesAllowed: true, writeBlockReason: "", authorization: document("authorization-a", "signed"), invoice: document("invoice-a", "final") }] };
+  for (const job of value.jobs) job.quoteWorkmanshipWarranty = "";
   bindSnapshots(value); return value;
 }
 function bindSnapshots(data) {
@@ -248,8 +249,9 @@ try {
           Object.assign(job.authorization.lineItems[0], { unitAmountCents: 30, lineAmountCents: 30 }); bindSnapshots(api.state);
           api.handler = (route, request) => route.fulfill(request.method() === "GET" ? json(api.state) : json({ error: "SYNTHETIC retained validation error" }, 400));
           await api.goto(); const editor = form(api.page, "invoice"); await editor.waitFor();
-          for (const [name, value] of Object.entries({ workSummary: "SYNTHETIC completed work", warrantyWorkStatement: "SYNTHETIC no warranty work", warrantyTerms: "SYNTHETIC terms", mechanicIdentifiers: "SYNTHETIC-1" })) await editor.locator(`[name="${name}"]`).fill(value);
-          await editor.locator('[name="warrantyProvider"]').selectOption("none_offered");
+          for (const [name, value] of Object.entries({ workSummary: "SYNTHETIC completed work", warrantyWorkStatement: "SYNTHETIC no warranty work", mechanicIdentifiers: "SYNTHETIC-1" })) await editor.locator(`[name="${name}"]`).fill(value);
+          assert.equal(await editor.locator('[name="warrantyTerms"]').getAttribute("readonly"), "");
+          assert.equal(await editor.locator('[name="warrantyProvider"]').inputValue(), "none_offered");
           await editor.locator('[name="line.0.quantity"]').fill("3"); await editor.locator('[name="line.0.unitPrice"]').fill("0.11");
           await editor.locator('button[value="draft"]').click(); await api.page.getByRole("alert").first().waitFor(); assert.equal(api.posts.length, 0, "mismatched total cannot be sent");
           await editor.locator('[name="line.0.unitPrice"]').fill("0.10");
@@ -264,8 +266,11 @@ try {
           assert.equal(await editor.locator('[name="workSummary"]').inputValue(), "SYNTHETIC completed work");
           await editor.locator('button[value="final"]').click(); assert.equal(api.posts.length, 1, "final issue requires new certification");
           await editor.locator('[name="providerCertified"]').check();
+          await editor.locator('button[value="final"]').click(); assert.equal(api.posts.length, 1, "final issue requires the actual installed-part brand");
+          await editor.locator('[name="line.1.partBrand"]').fill("SYNTHETIC brand");
           await Promise.all([api.page.waitForResponse(response => response.request().method() === "POST"), editor.locator('button[value="final"]').click()]);
           assert.equal(api.posts.length, 2); assert.equal(api.posts[1].action, "save-invoice"); assert.equal(api.posts[1].status, "final"); assert.equal(api.posts[1].providerCertified, true);
+          assert.equal(api.posts[1].lineItems[1].partBrand, "SYNTHETIC brand");
         });
         await run("provider-stale-draft-reload-retains-then-replaces-correctly", async api => {
           api.state = snapshot("provider"); const job = api.state.jobs[0]; job.invoice = null; job.requestStatus = "quote accepted";
@@ -290,9 +295,49 @@ try {
           assert.equal(await editor.locator('[name="providerDiagnosis"]').inputValue(), "MY UNSAVED OLD DRAFT"); assert.equal(await editor.locator('button[value="draft"]').isDisabled(), true);
           await retry.click(); await api.page.waitForFunction(() => document.querySelector('[name="providerDiagnosis"]')?.value === "NEWER SAVED DIAGNOSIS");
           assert.equal(await editor.locator('[name="providerCertified"]').isChecked(), false);
+          await editor.locator('[name="estimatedCompletionAt"]').fill("2027-01-01T12:00");
           await editor.locator('[name="providerCertified"]').check(); await editor.locator('button[value="presented"]').click();
           await editor.waitFor({ state: "detached" }); assert.equal(api.posts.length, 2);
           assert.equal(api.posts[1].expectedUpdatedAt, nextRevision); assert.equal(api.posts[1].providerDiagnosis, "NEWER SAVED DIAGNOSIS"); assert.equal(api.posts[1].providerCertified, true);
+        });
+        await run("legal-document-draft-date-and-agreed-warranty", async api => {
+          api.state = snapshot("provider"); const job = api.state.jobs[0]; job.invoice = null; job.requestStatus = "quote accepted";
+          job.quoteWorkmanshipWarranty = "SYNTHETIC labor warranty: 30 days, provider only.";
+          Object.assign(job.authorization, { status: "draft", customerSignatureAt: "", customerSignatureName: "", workmanshipWarranty: job.quoteWorkmanshipWarranty, partsWarranty: "SYNTHETIC supplier warranty." }); bindSnapshots(api.state);
+          api.handler = (route, request) => route.fulfill(request.method() === "GET" ? json(api.state) : json({ error: "SYNTHETIC validation response; no real write" }, 400));
+          await api.goto(); const editor = form(api.page, "authorization"); await editor.waitFor();
+          assert.ok((await editor.textContent()).includes(job.quoteWorkmanshipWarranty));
+          assert.equal(await editor.locator('[name="partsWarranty"]').inputValue(), "SYNTHETIC supplier warranty.");
+          await Promise.all([api.page.waitForResponse(response => response.request().method() === "POST"), editor.locator('button[value="draft"]').click()]);
+          assert.equal(api.posts.length, 1); assert.equal(api.posts[0].estimatedCompletionAt, "", "draft need not invent a date");
+          await editor.locator('[name="providerCertified"]').check();
+          await editor.locator('button[value="presented"]').click(); assert.equal(api.posts.length, 1, "completion explanation cannot replace a presentation date");
+          await api.page.getByRole("alert").filter({ hasText: /estimated completion|fecha y hora estimadas/ }).waitFor();
+          await editor.locator('[name="estimatedCompletionAt"]').fill("2027-01-01T12:00");
+          await Promise.all([api.page.waitForResponse(response => response.request().method() === "POST"), editor.locator('button[value="presented"]').click()]);
+          assert.equal(api.posts.length, 2); assert.equal(api.posts[1].status, "presented"); assert.ok(api.posts[1].estimatedCompletionAt);
+        });
+        await run("legal-document-exact-warranties-brand-and-hourly-total", async api => {
+          const job = api.state.jobs[0], warranty = "SYNTHETIC provider labor warranty: 30 days.";
+          job.quoteWorkmanshipWarranty = warranty;
+          for (const record of [job.authorization, job.invoice]) {
+            Object.assign(record, { workmanshipWarranty: warranty, partsWarranty: "SYNTHETIC supplier parts warranty: receipt terms.", laborBillingMethod: "clock_hour",
+              warrantyProvider: "provider_business", warrantyTerms: warranty });
+            record.lineItems = [
+              { ...line, description: "SYNTHETIC first labor", unitAmountCents: 6000, lineAmountCents: 6000, laborMinutes: 25 },
+              { ...line, description: "SYNTHETIC second labor", unitAmountCents: 4000, lineAmountCents: 4000, laborMinutes: 35 },
+              { ...line, lineType: "part", description: "SYNTHETIC customer filter", partNumber: "FILTER-1", partCondition: "new", partBrand: "SYNTHETIC exact brand", unitAmountCents: 0, lineAmountCents: 0, laborMinutes: 0 },
+            ];
+          }
+          bindSnapshots(api.state); const before = JSON.stringify(api.state);
+          await api.goto();
+          const saved = api.page.locator(".repair-invoice-document"); await saved.waitFor();
+          assert.ok((await api.page.locator(".repair-authorization-document").textContent()).includes(warranty));
+          assert.ok((await saved.textContent()).includes("SYNTHETIC supplier parts warranty: receipt terms."));
+          assert.ok((await saved.textContent()).includes("SYNTHETIC exact brand"));
+          const total = saved.locator(".repair-totals > div").filter({ hasText: /Total labor time|Tiempo total de mano de obra/ });
+          assert.equal(await total.locator("dd").textContent(), "60");
+          assert.equal(api.posts.length, 0); assert.equal(JSON.stringify(api.state), before, "reading derived time does not rewrite the saved document");
         });
       }
     } finally { await browser.close(); }

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { DatabaseSync } from "node:sqlite";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import { build } from "esbuild";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
@@ -62,8 +63,8 @@ test("repair records bind participant decisions to the displayed document withou
     providerBusinessName: "SYNTHETIC provider", providerBusinessAddress: "SYNTHETIC business address", providerBusinessPhone: "2025550100", countyRegistrationNumber: "SYNTHETIC-REG",
     customerName: "SYNTHETIC customer", customerAddress: "SYNTHETIC customer address", vehicleYear: "2020", vehicleMakeModel: "SYNTHETIC car", vehicleTag: "SYNTHETIC", vehicleVin: "", odometerReading: 100,
     customerInstructions: "SYNTHETIC authorized labor request", providerDiagnosis: "SYNTHETIC diagnosis", laborBillingMethod: "other_flat_rate", laborDisclosure: "SYNTHETIC agreed flat labor price",
-    completionDisclosure: "SYNTHETIC completion plan", estimateFeeCents: 0, surchargeCents: 0, surchargeDescription: "", replacedPartsChoice: "not_applicable", providerRepresentativeName: "SYNTHETIC provider", providerRepresentativeTitle: "Technician", providerCertified: true };
-  const invoice = { action: "save-invoice", status: "final", lineItems, workSummary: "SYNTHETIC labor was completed", warrantyProvider: "none_offered", warrantyTerms: "SYNTHETIC test warranty terms", warrantyWorkStatement: "SYNTHETIC work statement", returnedPartsChoice: "not_applicable", mechanicIdentifiers: ["SYNTHETIC-1"], providerRepresentativeName: "SYNTHETIC provider", providerRepresentativeTitle: "Technician", providerCertified: true };
+    estimatedCompletionAt: new Date(Date.now() + 86400000).toISOString(), completionDisclosure: "SYNTHETIC completion plan", estimateFeeCents: 0, surchargeCents: 0, surchargeDescription: "", replacedPartsChoice: "not_applicable", providerRepresentativeName: "SYNTHETIC provider", providerRepresentativeTitle: "Technician", providerCertified: true };
+  const invoice = { action: "save-invoice", status: "final", lineItems, workSummary: "SYNTHETIC labor was completed", warrantyProvider: "none_offered", warrantyTerms: "No provider workmanship warranty offered.", warrantyWorkStatement: "SYNTHETIC work statement", returnedPartsChoice: "not_applicable", mechanicIdentifiers: ["SYNTHETIC-1"], providerRepresentativeName: "SYNTHETIC provider", providerRepresentativeTitle: "Technician", providerCertified: true };
   try {
     globalThis.fetch = async () => { networkCalls++; throw Error("External requests forbidden in repair-record rehearsal"); };
     console.error = (...args) => errors.push(args.map(String).join(" "));
@@ -203,6 +204,64 @@ test("repair records bind participant decisions to the displayed document withou
       } finally { state.realAllowed = false; state.serviceFixtureAllowed = false; state.providerAllowed = true; }
     });
     let original;
+    await t.test("draft saves permit missing dates and brands, but presentation requires both", async () => {
+      seedJob("legal-draft");
+      const part = { ...lineItems[0], lineType: "part", description: "Customer-supplied filter", partNumber: "FILTER-1", partCondition: "new", unitAmountCents: 0, lineAmountCents: 0, laborMinutes: 0, partBrand: "" };
+      const pending = { ...authorization, status: "draft", estimatedCompletionAt: "", completionDisclosure: "", lineItems: [...lineItems, part] };
+      const draft = successful(await post("legal-draft", pending, provider)).jobs[0].authorization;
+      const revision = { expectedRecordId: draft.id, expectedUpdatedAt: draft.updatedAt }, before = records();
+      assert.equal((await post("legal-draft", { ...pending, ...revision, status: "presented", completionDisclosure: "Date not known" }, provider)).status, 400);
+      assert.equal((await post("legal-draft", { ...pending, ...revision, status: "presented", estimatedCompletionAt: authorization.estimatedCompletionAt }, provider)).status, 400);
+      assert.equal((await post("legal-draft", { ...pending, ...revision, status: "presented", estimatedCompletionAt: "2030-02-30T12:00Z", lineItems }, provider)).status, 400, "an impossible calendar date must not roll into March");
+      assert.deepEqual(records(), before);
+      const saved = successful(await post("legal-draft", { ...pending, ...revision, status: "presented", estimatedCompletionAt: authorization.estimatedCompletionAt, lineItems: [...lineItems, { ...part, partBrand: "SYNTHETIC brand" }] }, provider)).jobs[0].authorization;
+      assert.equal(saved.lineItems[1].partBrand, "SYNTHETIC brand");
+      assert.equal(JSON.parse(saved.documentSnapshot).lineItems[1].partBrand, "SYNTHETIC brand");
+      const signed = successful(await post("legal-draft", { action: "sign-authorization", ...displayed(saved), acceptedByName: "SYNTHETIC customer", signatureAccepted: true })).jobs[0].authorization;
+      assert.equal(signed.documentSnapshot, saved.documentSnapshot); assert.equal(signed.documentHash, saved.documentHash);
+      database.prepare("UPDATE customer_requests SET status='completed' WHERE id=?").run("legal-draft");
+      const beforeInvoice = records();
+      assert.equal((await post("legal-draft", { ...invoice, lineItems: [...lineItems, part] }, provider)).status, 400);
+      assert.deepEqual(records(), beforeInvoice);
+      const final = successful(await post("legal-draft", { ...invoice, lineItems: [...lineItems, { ...part, partBrand: "SYNTHETIC brand" }] }, provider)).jobs[0].invoice;
+      assert.equal(final.lineItems[1].partBrand, "SYNTHETIC brand");
+    });
+    await t.test("agreed workmanship terms freeze with the estimate and cannot be replaced by invoice input", async () => {
+      seedJob("agreed-warranty");
+      const terms = "SYNTHETIC workmanship warranty: 30 days, labor only.";
+      database.prepare("UPDATE provider_quotes SET workmanship_warranty=? WHERE id=?").run(terms, "agreed-warranty-quote");
+      const partsWarranty = "SYNTHETIC supplier parts warranty: see purchaser receipt.";
+      const saved = successful(await post("agreed-warranty", { ...authorization, partsWarranty }, provider)).jobs[0].authorization;
+      assert.equal(JSON.parse(saved.documentSnapshot).workmanshipWarranty, terms);
+      successful(await post("agreed-warranty", { action: "sign-authorization", ...displayed(saved), acceptedByName: "SYNTHETIC customer", signatureAccepted: true }));
+      database.prepare("UPDATE customer_requests SET status='completed' WHERE id=?").run("agreed-warranty");
+      const before = records();
+      assert.equal((await post("agreed-warranty", invoice, provider)).status, 400);
+      assert.equal((await post("agreed-warranty", { ...invoice, warrantyProvider: "manufacturer", warrantyTerms: terms }, provider)).status, 400);
+      assert.deepEqual(records(), before);
+      assert.equal((await post("agreed-warranty", { ...invoice, warrantyProvider: "provider_business", warrantyTerms: terms, partsWarranty: "CHANGED" }, provider)).status, 400);
+      assert.deepEqual(records(), before);
+      const final = successful(await post("agreed-warranty", { ...invoice, warrantyProvider: "provider_business", warrantyTerms: terms, partsWarranty }, provider)).jobs[0].invoice;
+      assert.equal(final.warrantyTerms, terms); assert.equal(JSON.parse(final.documentSnapshot).workmanshipWarranty, terms);
+      assert.equal(JSON.parse(final.documentSnapshot).partsWarranty, partsWarranty);
+      assert.equal(database.prepare("SELECT document_snapshot FROM repair_authorization_records WHERE id=?").get(saved.id).document_snapshot, saved.documentSnapshot);
+    });
+    await t.test("changed quote warranty during save aborts the whole transaction", async () => {
+      seedJob("warranty-race"); const before = records();
+      state.beforeBatch = () => database.prepare("UPDATE provider_quotes SET workmanship_warranty='CHANGED' WHERE id=?").run("warranty-race-quote");
+      assert.equal((await post("warranty-race", authorization, provider)).status, 409);
+      assert.deepEqual(records(), before);
+    });
+    await t.test("legacy presented documents sign without rewriting their original snapshot or hash", async () => {
+      seedJob("legacy-document");
+      const current = successful(await post("legacy-document", authorization, provider)).jobs[0].authorization;
+      const legacy = JSON.parse(current.documentSnapshot); delete legacy.workmanshipWarranty; legacy.estimatedCompletionAt = "";
+      const snapshot = JSON.stringify(legacy), hash = createHash("sha256").update(snapshot).digest("hex");
+      database.prepare("UPDATE repair_authorization_records SET estimated_completion_at='', document_snapshot=?, document_hash=? WHERE id=?").run(snapshot, hash, current.id);
+      const signed = successful(await post("legacy-document", { action: "sign-authorization", expectedRecordId: current.id, expectedDocumentHash: hash, acceptedByName: "LEGACY CUSTOMER", signatureAccepted: true })).jobs[0].authorization;
+      assert.equal(signed.documentSnapshot, snapshot); assert.equal(signed.documentHash, hash);
+      assert.equal(Object.hasOwn(JSON.parse(signed.documentSnapshot), "workmanshipWarranty"), false);
+    });
     await t.test("a sequential stale draft cannot overwrite a newer edit or presentation", async () => {
       seedJob("draft-revision");
       const initial = successful(await post("draft-revision", { ...authorization, status: "draft" }, provider)).jobs.find(job => job.requestId === "draft-revision").authorization;
