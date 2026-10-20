@@ -1,5 +1,30 @@
 # Privacy fulfillment: execution plan and acceptance criteria
 
+## October 20, 2026 — Connect privacy opt-outs to queued launch updates
+
+The explicit marketing opt-out now saves account preferences, suppresses the
+separately consented launch-update list and records completion in one D1 batch.
+Saving communication choices with either marketing or product updates explicitly
+off also suppresses that mixed list atomically. A database failure rolls back
+the writes; an existing suppression timestamp is preserved.
+
+Unrelated accounts, other-role preferences, optional reminders and the separate
+customer launch-notification choice remain unchanged by the opt-out action.
+Omitted preference fields do not revoke newsletter consent. Saving positive
+preferences never enrolls a subscriber; only fresh newsletter consent can
+restart the sequence, without reviving mail queued under earlier consent.
+The existing controls do not separately display newsletter consent.
+
+The email retry query also avoids D1's 50-character LIKE-pattern limit while
+preserving candidate matching before its batch limit and the final delivery
+checks. Local Cloudflare tests exercise both roles, both refusal controls,
+rollback, retry, essential messages and fresh consent. They intercept all mail
+using synthetic records; no real message or privacy case was processed.
+
+Suppression covers queued/retried mail at its consent check, not an email already
+in transit. This correction does not complete general erasure, retention,
+vendor or backup fulfillment. No migration or launch activation is included.
+
 ## October 20, 2026 — Preserve final decisions and the reviewed request
 
 Release scope for PR #308. Completed/denied decisions are read-only in the owner
