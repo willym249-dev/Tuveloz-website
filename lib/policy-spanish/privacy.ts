@@ -2,7 +2,7 @@
 const policy = {
   title: "Política de privacidad",
   summary: "Qué información recopila Tuveloz, por qué la necesita, quién la recibe y qué opciones tiene usted.",
-  updated: "6 de agosto de 2026",
+  updated: "20 de octubre de 2026",
   html: `<section><h2>1. Alcance y fuentes</h2>
 <p>Esta política se aplica a la información personal que TUVELOZ LLC trata a través de su sitio web, cuentas, solicitudes de clientes, solicitudes de proveedores, páginas públicas de proveedores, asistencia, comunicaciones y registros de pagos. Recibimos información de usted, de la otra parte de un trabajo, de los prestadores que operan la plataforma y de los registros creados al usar Tuveloz.</p></section>
 <section><h2>2. Información que recopilamos</h2>
@@ -23,8 +23,9 @@ const policy = {
 <section><h2>5. Prestadores de servicios y otras divulgaciones</h2>
 <ul><li>Stripe procesa pagos, cuentas conectadas, transferencias, reembolsos, disputas, riesgos de pago y verificación alojada de identidad del proveedor mediante documento y selfie.</li>
 <li>Cloudflare proporciona alojamiento, seguridad, base de datos y almacenamiento privado de imágenes.</li>
-<li>Cloudmersive recibe archivos de pruebas de proveedores en cuarentena únicamente para detectar programas maliciosos y contenido inseguro antes de que Tuveloz permita revisarlos o descargarlos.</li>
-<li>Resend entrega correos electrónicos transaccionales.</li>
+<li>Tuveloz utiliza su escáner ClamAV, alojado en sus propios equipos y con acceso restringido, o Cloudmersive, cuando se selecciona ese servicio, para revisar documentos de proveedores e imágenes adjuntas a mensajes en busca de programas maliciosos y contenido inseguro antes de permitir su consulta o descarga. Los archivos se envían a Cloudmersive únicamente cuando se selecciona como servicio de análisis.</li>
+<li>Resend entrega correos sobre su cuenta y los servicios, además de las actualizaciones opcionales que usted elija recibir.</li>
+<li>Google Workspace aloja el correo empresarial de Tuveloz, incluidos los mensajes de asistencia y las solicitudes de privacidad.</li>
 <li>Los asesores profesionales pueden recibir información cuando sea razonablemente necesaria para trabajos contables, de seguro, seguridad o legales, sujetos a obligaciones apropiadas.</li>
 <li>Podemos divulgar información para cumplir la ley, procesos legales válidos, reglas de redes de pago o una necesidad de buena fe de proteger a usuarios, derechos, propiedad o seguridad de la plataforma.</li>
 <li>La información puede transferirse como parte de una fusión, financiación, adquisición, reorganización o venta, con sujeción a esta política y a la ley aplicable.</li></ul></section>

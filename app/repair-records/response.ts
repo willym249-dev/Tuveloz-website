@@ -1,4 +1,4 @@
-import { ELECTRONIC_SIGNATURE_NOTICE, MARYLAND_REPAIR_RECORDS_VERSION, parseRepairLineItems, repairLineItemTotals, sha256RepairRecord, stableRepairRecordJson } from "../../lib/maryland-repair-records";
+import { ELECTRONIC_SIGNATURE_NOTICE, MARYLAND_REPAIR_RECORDS_VERSION, parseRepairLineItems, repairLineItemTotals, repairItemsHaveBrands, repairWarrantyDisclosure, sha256RepairRecord, stableRepairRecordJson } from "../../lib/maryland-repair-records";
 import type { Action, RepairData, RepairJob, RepairRecord } from "./record-workspace";
 
 export function object(value: unknown): value is Record<string, unknown> {
@@ -20,6 +20,7 @@ async function recordData(value: unknown, job: Record<string, unknown>, invoice:
   const snapshot: unknown = JSON.parse(String(value.documentSnapshot));
   if (!object(snapshot) || snapshot.version !== version || snapshot.documentType !== (invoice ? "provider_final_repair_invoice" : "repair_authorization_and_written_estimate") || !list(snapshot.serviceCodes)) throw new Error("Invalid document snapshot");
   if ("providerCertification" in snapshot && typeof snapshot.providerCertification !== "string") throw new Error("Invalid provider certification");
+  if ("partsWarranty" in snapshot && typeof snapshot.partsWarranty !== "string") throw new Error("Invalid parts warranty");
   for (const key of ["requestId", "quoteId", "providerId", "scopeVersion"]) {
     if (value[key] !== job[key] || snapshot[key] !== job[key]) throw new Error("Document belongs to another job");
   }
@@ -29,6 +30,11 @@ async function recordData(value: unknown, job: Record<string, unknown>, invoice:
   } else if (!strings(snapshot, ["providerEmail", "providerName", "customerEmail", "estimatedCompletionAt", "completionDisclosure", "surchargeDescription", "replacedPartsChoice", "providerSignedAt", "customerRightsHeading", "customerRightsText", "writtenEstimateStandard"]) || !integer(snapshot.estimateFeeCents) || !integer(snapshot.surchargeCents)) throw new Error("Incomplete estimate");
   const items = parseRepairLineItems(snapshot.lineItems), rows = parseRepairLineItems(value.lineItems);
   if (!items || !rows || stableRepairRecordJson(snapshot.lineItems) !== stableRepairRecordJson(items) || stableRepairRecordJson(items) !== stableRepairRecordJson(rows)) throw new Error("Itemized document differs from its snapshot");
+  if ("workmanshipWarranty" in snapshot) {
+    if (typeof snapshot.workmanshipWarranty !== "string" || (value.status !== "draft" && !repairItemsHaveBrands(items))) throw new Error("Invalid warranty or part brands");
+    const warranty = repairWarrantyDisclosure(snapshot.workmanshipWarranty);
+    if (invoice && (snapshot.warrantyProvider !== warranty.warrantyProvider || snapshot.warrantyTerms !== warranty.warrantyTerms)) throw new Error("Invoice warranty differs from agreed terms");
+  }
   const totals = repairLineItemTotals(items);
   for (const [key, amount] of Object.entries(totals)) {
     if (!integer(snapshot[key]) || snapshot[key] !== amount || value[key] !== amount) throw new Error("Invalid document total");
@@ -52,11 +58,16 @@ export async function readRepairData(value: unknown): Promise<RepairData> {
   const jobs = await Promise.all(value.jobs.map(async (job: unknown) => {
     if (!object(job) || !strings(job, ["requestId", "requestStatus", "vehicle", "service", "serviceCodes", "customerName", "customerEmail", "serviceAddress", "quoteId", "quotePriceCents", "providerId", "providerName", "providerEmail", "providerBusinessAddress", "writeBlockReason"]) || !nonempty(job.requestId) || !nonempty(job.quoteId) || !nonempty(job.providerId) || !integer(job.scopeVersion) || job.scopeVersion < 1 || !/^\d+$/.test(String(job.quotePriceCents)) || !integer(Number(job.quotePriceCents)) || !["isTest", "writesAllowed", "authorizationWritesAllowed", "invoiceWritesAllowed"].every(key => typeof job[key] === "boolean")) throw new Error("Invalid job response");
     const participant = value.role === "provider" ? job.providerEmail : job.customerEmail;
+    if (typeof job.quoteWorkmanshipWarranty !== "string") throw new Error("The agreed quote warranty is unavailable");
     if (String(participant).trim().toLowerCase() !== String(value.email).trim().toLowerCase() || ids.has(String(job.requestId))) throw new Error("Invalid account binding");
     ids.add(String(job.requestId));
     const authorization = await recordData(job.authorization, job, false, String(value.version));
     const invoice = await recordData(job.invoice, job, true, String(value.version));
     if (invoice && (!authorization || invoice.authorizationRecordId !== authorization.id || invoice.authorizationDocumentHash !== authorization.documentHash)) throw new Error("Invoice does not match its authorization");
+    if (invoice && authorization && typeof authorization.workmanshipWarranty === "string"
+      && invoice.workmanshipWarranty !== authorization.workmanshipWarranty) throw new Error("Invoice changed the agreed workmanship warranty");
+    if (invoice && authorization && typeof authorization.partsWarranty === "string"
+      && invoice.partsWarranty !== authorization.partsWarranty) throw new Error("Invoice changed the agreed parts warranty");
     return { ...job, authorization, invoice } as RepairJob;
   }));
   return { ...value, jobs } as RepairData;

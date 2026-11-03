@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandMark } from "../components/tuveloz-icons";
+import { repairItemsHaveBrands } from "../../lib/maryland-repair-records";
 import { formLineItems, type Translate } from "./line-items";
 import { RepairWorkspace, type Action, type Label, type RepairData } from "./record-workspace";
 import { hasReceipt, object, readRepairData } from "./response";
@@ -148,6 +149,12 @@ export default function RepairRecordsPage() {
         setError(["Complete each item and make the total match the agreed provider amount. Your entries are still here.", "Complete cada concepto y haga que el total coincida con el importe acordado del proveedor. Sus datos siguen aquí."]); return;
       }
       values.lineItems = items;
+      if (values.status !== "draft" && !repairItemsHaveBrands(items)) {
+        setError(["Enter the brand of every installed part before presenting or issuing the document. You can save a draft first.", "Indique la marca de cada pieza instalada antes de presentar o emitir el documento. Puede guardar un borrador primero."]); return;
+      }
+      if (action === "save-authorization" && values.status === "presented" && !values.estimatedCompletionAt) {
+        setError(["Enter an estimated completion date and time before presenting the estimate. You can save a draft first.", "Indique una fecha y hora estimadas de finalización antes de presentar el presupuesto. Puede guardar un borrador primero."]); return;
+      }
       if (values.estimatedCompletionAt) {
         const date = new Date(String(values.estimatedCompletionAt));
         if (!Number.isFinite(date.getTime())) { setError(["Enter a valid completion date and time.", "Ingrese una fecha y hora de finalización válidas."]); return; }

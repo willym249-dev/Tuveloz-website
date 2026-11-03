@@ -25,10 +25,10 @@
   },
   "privacy": {
     "releaseStatus": "active",
-    "effectiveAt": "2026-08-07T04:59:47.172Z",
-    "releaseId": "privacy-2026-08-07",
-    "reviewBodyHash": "17d10664958ca8666a8285e3b05c26a31209ad87fbf7a3b29011ab60b03ad6e7",
-    "canonicalBodyHash": "17d10664958ca8666a8285e3b05c26a31209ad87fbf7a3b29011ab60b03ad6e7",
+    "effectiveAt": "2026-10-20T07:22:27.000Z",
+    "releaseId": "privacy-2026-10-20",
+    "reviewBodyHash": "79b0a117681b96d97d733096ac0f7c51dbd84b2c37e26fd5b54b9cb3afff629a",
+    "canonicalBodyHash": "79b0a117681b96d97d733096ac0f7c51dbd84b2c37e26fd5b54b9cb3afff629a",
     "sourceFile": "app/privacy/page.tsx"
   },
   "payment_policy": {

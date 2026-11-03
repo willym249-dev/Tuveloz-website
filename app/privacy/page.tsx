@@ -6,7 +6,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy"
       title="Privacy Policy"
       summary="What Tuveloz collects, why it is needed, who receives it, and the choices available to you."
-      updated="August 6, 2026"
+      updated="October 20, 2026"
     >
       <section>
         <h2>1. Scope and sources</h2>
@@ -95,8 +95,9 @@ export default function PrivacyPage() {
         <ul>
           <li>Stripe processes checkout, connected accounts, transfers, refunds, disputes, payment risk, and hosted provider identity document-and-selfie verification.</li>
           <li>Cloudflare provides hosting, security, database, and private image-storage services.</li>
-          <li>Cloudmersive receives a quarantined provider-evidence file solely to scan it for malware and unsafe file content before Tuveloz permits review or download.</li>
-          <li>Resend provides transactional email delivery.</li>
+          <li>Tuveloz uses its restricted, self-hosted ClamAV scanner or, when selected, Cloudmersive to check provider documents and message images for malware and unsafe file content before permitting review or download. Files are sent to Cloudmersive only when it is selected as the scanning service.</li>
+          <li>Resend delivers account and service emails and optional updates you choose to receive.</li>
+          <li>Google Workspace hosts Tuveloz&apos;s business email, including support and privacy-request messages.</li>
           <li>Professional advisers may receive information when reasonably necessary for accounting, insurance, security, or legal work and subject to appropriate duties.</li>
           <li>Information may be disclosed to comply with law, valid legal process, payment-network rules, or a good-faith need to protect users, rights, property, or platform security.</li>
           <li>Information may transfer as part of a merger, financing, acquisition, reorganization, or sale, subject to this policy and applicable law.</li>

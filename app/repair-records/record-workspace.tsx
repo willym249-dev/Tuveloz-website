@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent, ReactNode } from "react";
-import { REPAIR_AUTHORIZATION_PROVIDER_CERTIFICATION, REPAIR_INVOICE_PROVIDER_CERTIFICATION, type RepairLineItem } from "../../lib/maryland-repair-records";
+import { REPAIR_AUTHORIZATION_PROVIDER_CERTIFICATION, REPAIR_INVOICE_PROVIDER_CERTIFICATION, repairWarrantyDisclosure, repairLaborMinutes, type RepairLineItem } from "../../lib/maryland-repair-records";
 import { formatMoney, LineItemEditor, SavedLineItems, type Translate } from "./line-items";
 
 export type RepairRecord = Record<string, unknown> & {
@@ -12,6 +12,7 @@ export type Invoice = RepairRecord & { invoiceNumber: string; customerCopyDelive
 export type RepairJob = {
   requestId: string; requestStatus: string; vehicle: string; service: string; serviceCodes: string;
   customerName: string; customerEmail: string; serviceAddress: string; quoteId: string; quotePriceCents: string;
+  quoteWorkmanshipWarranty: string;
   scopeVersion: number; providerId: string; providerName: string; providerEmail: string; providerBusinessAddress: string;
   isTest: boolean; writesAllowed: boolean; writeBlockReason: string; authorizationWritesAllowed: boolean; invoiceWritesAllowed: boolean;
   authorization: RepairRecord | null; invoice: Invoice | null;
@@ -98,6 +99,9 @@ type WorkspaceProps = { job: RepairJob; data: RepairData; t: Translate; spanish:
 
 export function RepairWorkspace({ job, data, t, spanish, blocked, submit }: WorkspaceProps) {
   const authorization = job.authorization, invoice = job.invoice;
+  if (typeof job.quoteWorkmanshipWarranty !== "string") return <p role="alert">{t("The agreed quote warranty could not be verified. Reload the saved records.", "No se pudo verificar la garantía de la cotización aceptada. Vuelva a cargar los documentos guardados.")}</p>;
+  const invoiceWarranty = repairWarrantyDisclosure(typeof authorization?.workmanshipWarranty === "string"
+    ? authorization.workmanshipWarranty : job.quoteWorkmanshipWarranty);
   const copiesRecorded = Boolean(invoice?.customerSignatureAt && invoice.customerCopyDeliveredAt && invoice.providerCopyRetainedAt && invoice.customerCopyDeliveryMethod === "secure-account-copy" && text(invoice.customerCopyDeliveredTo).trim().toLowerCase() === job.customerEmail.trim().toLowerCase());
   const initial: Record<string, unknown> = { providerBusinessName: job.providerName, providerBusinessAddress: job.providerBusinessAddress,
     customerName: job.customerName, customerAddress: job.serviceAddress, vehicleMakeModel: job.vehicle, ...authorization };
@@ -121,8 +125,10 @@ export function RepairWorkspace({ job, data, t, spanish, blocked, submit }: Work
           <Select t={t} label={["Labor billing method", "Método de cobro de mano de obra"]} name="laborBillingMethod" value={authorization?.laborBillingMethod} options={billing} />
           <Area t={t} label={["Complete labor billing disclosure", "Explicación completa del cobro de mano de obra"]} name="laborDisclosure" value={authorization?.laborDisclosure} max={1200} />
           <Field t={t} field={{ name: "estimatedCompletionAt", label: ["Estimated completion date/time", "Fecha y hora estimadas de finalización"], type: "datetime-local", optional: true }} value={localDateTime(authorization?.estimatedCompletionAt)} />
-          <Area t={t} label={["Completion disclosure when a date cannot be determined", "Explicación cuando no se puede determinar una fecha de finalización"]} name="completionDisclosure" value={authorization?.completionDisclosure} optional max={600} />
-          <p className="repair-help">{t("Enter either a completion date or an explanation above.", "Ingrese una fecha de finalización o una explicación arriba.")}</p>
+          <p className="repair-help">{t("An estimated completion date is required before presenting this estimate. You can save a draft first.", "Debe indicar una fecha estimada de finalización antes de presentar este presupuesto. Puede guardar un borrador primero.")}</p>
+          <Area t={t} label={["Additional completion notes (optional)", "Notas adicionales de finalización (opcionales)"]} name="completionDisclosure" value={authorization?.completionDisclosure} optional max={600} />
+          <div className="repair-legal-notice"><strong>{t("Agreed provider workmanship warranty", "Garantía de mano de obra acordada con el proveedor")}</strong><p>{job.quoteWorkmanshipWarranty || t("No provider workmanship warranty offered.", "El proveedor no ofrece garantía de mano de obra.")}</p><p className="repair-help">{t("Copied from the accepted quote. This does not describe a parts warranty.", "Copiada de la cotización aceptada. No describe una garantía de piezas.")}</p></div>
+          <Area t={t} label={["Separate parts warranty, if offered (exact terms and who provides it)", "Garantía de piezas por separado, si se ofrece (condiciones exactas y quién la ofrece)"]} name="partsWarranty" value={authorization?.partsWarranty} optional max={2000} />
           <input name="estimateFeeCents" type="hidden" value="0" /><input name="surchargeCents" type="hidden" value="0" /><input name="surchargeDescription" type="hidden" value="" />
           <Select t={t} label={["Replaced-parts handling", "Tratamiento de las piezas reemplazadas"]} name="replacedPartsChoice" value={authorization?.replacedPartsChoice ?? "not_applicable"} options={partsOptions(false)} />
           <LineItemEditor items={startingLines(job, false)} expectedTotal={Number(job.quotePriceCents)} t={t} spanish={spanish} />
@@ -140,8 +146,10 @@ export function RepairWorkspace({ job, data, t, spanish, blocked, submit }: Work
         <fieldset disabled={blocked || !job.invoiceWritesAllowed}><legend>{t("Work, warranty and itemized labor", "Trabajo, garantía y mano de obra detallada")}</legend>
           <Area t={t} label={["All work performed, including warranty work", "Todo el trabajo realizado, incluido el trabajo de garantía"]} name="workSummary" value={invoice?.workSummary} max={3000} />
           <Area t={t} label={["Warranty work statement", "Declaración del trabajo de garantía"]} name="warrantyWorkStatement" value={invoice?.warrantyWorkStatement} max={1200} />
-          <Select t={t} label={["Warranty provider", "Proveedor de la garantía"]} name="warrantyProvider" value={invoice?.warrantyProvider} options={warranties} />
-          <Area t={t} label={["Specific warranty terms and limitations", "Condiciones y limitaciones específicas de la garantía"]} name="warrantyTerms" value={invoice?.warrantyTerms} max={2000} />
+          <input type="hidden" name="warrantyProvider" value={invoiceWarranty.warrantyProvider} />
+          <label>{t("Agreed provider workmanship warranty", "Garantía de mano de obra acordada con el proveedor")}<textarea name="warrantyTerms" readOnly value={invoiceWarranty.warrantyTerms} rows={3} /></label>
+          <p className="repair-help">{t("These terms are preserved from the accepted estimate or quote. They cannot be replaced in the invoice and do not describe a parts warranty.", "Estas condiciones se conservan del presupuesto o la cotización aceptados. No pueden reemplazarse en la factura ni describen una garantía de piezas.")}</p>
+          <label>{t("Separate parts warranty, if offered (exact terms and who provides it)", "Garantía de piezas por separado, si se ofrece (condiciones exactas y quién la ofrece)")}<textarea name="partsWarranty" maxLength={2000} rows={3} readOnly={typeof authorization?.partsWarranty === "string"} defaultValue={text(authorization?.partsWarranty ?? invoice?.partsWarranty)} /></label>
           <Select t={t} label={["Final replaced-parts result", "Resultado final de las piezas reemplazadas"]} name="returnedPartsChoice" value={invoice?.returnedPartsChoice ?? "not_applicable"} options={partsOptions(true)} />
           <Field t={t} field={{ name: "mechanicIdentifiers", label: ["Mechanic names, initials, or numbers (comma-separated)", "Nombres, iniciales o números de los mecánicos (separados por comas)"], max: 2000 }} value={stringList(invoice?.mechanicIdentifiers)} />
           <LineItemEditor items={startingLines(job, true)} expectedTotal={authorization.totalAmountCents} t={t} spanish={spanish} />
@@ -202,6 +210,8 @@ function SavedDocument({ record, invoice, job, data, t, spanish, children }: {
         {row(["Labor billing disclosure", "Explicación del cobro de mano de obra"], record.laborDisclosure)}
         {!invoice && row(["Estimated completion", "Finalización estimada"], when(record.estimatedCompletionAt, spanish))}
         {!invoice && row(["Completion disclosure", "Explicación de la finalización"], record.completionDisclosure)}
+        {!invoice && typeof record.workmanshipWarranty === "string" && row(["Agreed provider workmanship warranty", "Garantía de mano de obra acordada con el proveedor"], record.workmanshipWarranty || t("No provider workmanship warranty offered.", "El proveedor no ofrece garantía de mano de obra."))}
+        {typeof record.partsWarranty === "string" && row(["Separate parts warranty", "Garantía de piezas por separado"], record.partsWarranty || t("No parts warranty recorded in this document.", "No se registró una garantía de piezas en este documento."))}
         {!invoice && row(["Estimate fee", "Cargo por presupuesto"], formatMoney(record.estimateFeeCents, spanish))}
         {!invoice && row(["Surcharge / description", "Recargo / descripción"], `${formatMoney(record.surchargeCents, spanish)} ${text(record.surchargeDescription)}`)}
         {invoice && row(["Work performed", "Trabajo realizado"], record.workSummary)}{invoice && row(["Warranty work", "Trabajo de garantía"], record.warrantyWorkStatement)}
@@ -217,6 +227,7 @@ function SavedDocument({ record, invoice, job, data, t, spanish, children }: {
         {row(["Labor", "Mano de obra"], formatMoney(record.laborAmountCents, spanish))}{row(["Parts", "Piezas"], formatMoney(record.partsAmountCents, spanish))}
         {row(["Tax", "Impuestos"], formatMoney(record.taxAmountCents, spanish))}{row(["Other charges", "Otros cargos"], formatMoney(record.otherAmountCents, spanish))}
         {row(["Provider total", "Total del proveedor"], formatMoney(record.totalAmountCents, spanish))}
+        {invoice && record.laborBillingMethod === "clock_hour" && row(["Total labor time (minutes)", "Tiempo total de mano de obra (minutos)"], repairLaborMinutes(record.lineItems))}
       </dl>
       <div className="repair-original-notices"><p className="repair-help">{t("The notices and signature statements below retain their original English wording. Review the complete record before signing.", "Los avisos y las declaraciones de firma de abajo conservan su redacción original en inglés. Revise el documento completo antes de firmar.")}</p>
         {record.providerCertification ? <div className="repair-legal-notice" lang="en"><p>{text(record.providerCertification)}</p></div> : null}

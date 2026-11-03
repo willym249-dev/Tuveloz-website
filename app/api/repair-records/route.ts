@@ -12,6 +12,9 @@ import {
   REPAIR_INVOICE_PROVIDER_CERTIFICATION,
   parseRepairLineItems,
   repairLineItemTotals,
+  repairItemsHaveBrands,
+  repairItemStoredFields,
+  repairWarrantyDisclosure,
   sha256RepairRecord,
   stableRepairRecordJson,
   type RepairLineItem,
@@ -38,6 +41,7 @@ type ParticipantJob = {
   quoteId: string;
   quotePriceCents: string;
   quoteServiceCodes: string;
+  quoteWorkmanshipWarranty: string;
   scopeVersion: number;
   assignmentVersion: number;
   providerId: string;
@@ -227,10 +231,12 @@ function parseStringList(value: unknown, maximum = 20) {
 
 function validFutureOrCurrentDate(value: unknown) {
   const raw = clean(value, 50);
-  if (!raw) return "";
+  const iso = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?Z$/.exec(raw);
+  if (!iso) return "";
   const time = Date.parse(raw);
   if (!Number.isFinite(time) || time < Date.now() - 24 * 60 * 60 * 1000) return "";
-  return new Date(time).toISOString();
+  const normalized = new Date(time).toISOString();
+  return normalized === `${iso[1]}:${iso[2] ?? "00"}.${(iso[3] ?? "").padEnd(3, "0")}Z` ? normalized : "";
 }
 
 async function participantJobs(role: AccountRole, email: string, requestId = "") {
@@ -251,6 +257,7 @@ async function participantJobs(role: AccountRole, email: string, requestId = "")
             quote.id AS quoteId,
             quote.price_cents AS quotePriceCents,
             quote.service_codes AS quoteServiceCodes,
+            quote.workmanship_warranty AS quoteWorkmanshipWarranty,
             quote.scope_version AS scopeVersion,
             request.assignment_version AS assignmentVersion,
             provider.id AS providerId,
@@ -351,13 +358,13 @@ async function guardedBatch(job: ParticipantJob, invoice: boolean, records: Reco
     WHERE request.id = ? AND quote.id = ? AND provider.id = ?
       AND json_array(request.status, lower(request.email), request.is_test_job, request.assignment_version,
         request.service_codes, request.jurisdiction, quote.scope_version, quote.price_cents,
-        quote.service_codes, lower(provider.email), provider.is_test_provider)
+        quote.service_codes, lower(provider.email), provider.is_test_provider, quote.workmanship_warranty)
         = ?
       AND (SELECT count(*) FROM provider_quotes accepted WHERE accepted.request_id = request.id AND accepted.status = 'accepted') = 1
   )`, [job.requestId, job.quoteId, job.providerId, JSON.stringify([
     job.requestStatus, job.customerEmail, job.isTestJob, job.assignmentVersion,
     job.serviceCodes, job.jurisdiction, job.scopeVersion, job.quotePriceCents,
-    job.quoteServiceCodes, job.providerEmail, job.isTestProvider,
+    job.quoteServiceCodes, job.providerEmail, job.isTestProvider, job.quoteWorkmanshipWarranty,
   ])]);
   const guards = records.map(({ table, row }) => {
     if (!row) return snapshotAssertion(`NOT EXISTS (SELECT 1 FROM ${table} WHERE request_id = ? AND scope_version = ?)`, [job.requestId, job.scopeVersion]);
@@ -566,12 +573,23 @@ async function recordData(job: ParticipantJob, gates: Awaited<ReturnType<typeof 
     ...job,
     ...repairRecordAccess(job, gates),
     authorization: authorization
-      ? { ...authorization, lineItems: authorizationLineItems }
+      ? { ...authorization, lineItems: snapshotLineItems(authorization, authorizationLineItems) }
       : null,
     invoice: invoice
-      ? { ...invoice, lineItems: invoiceLineItems }
+      ? { ...invoice, lineItems: snapshotLineItems(invoice, invoiceLineItems) }
       : null,
   };
+}
+
+function snapshotLineItems(record: AuthorizationRecord | InvoiceRecord, storedItems: StoredLineItem[]) {
+  const snapshot = JSON.parse(record.documentSnapshot) as Record<string, unknown>;
+  const items = parseRepairLineItems(storedItems);
+  const frozen = parseRepairLineItems(snapshot.lineItems);
+  if (!items || !frozen
+    || stableRepairRecordJson(items) !== stableRepairRecordJson(frozen.map(repairItemStoredFields))) {
+    throw new RepairRecordError("The saved itemized work differs from the document snapshot.");
+  }
+  return frozen;
 }
 
 async function responseData(role: AccountRole, email: string, requestId = "") {
@@ -704,7 +722,9 @@ async function saveAuthorization(
     || !providerDiagnosis
     || !["clock_hour", "flat_rate_manual", "other_flat_rate"].includes(laborBillingMethod)
     || !laborDisclosure
-    || (!estimatedCompletionAt && !completionDisclosure)
+    || (status === "presented" && !estimatedCompletionAt)
+    || (status === "presented" && !repairItemsHaveBrands(lineItems))
+    || typeof job.quoteWorkmanshipWarranty !== "string"
     || estimateFeeCents === null
     || estimateFeeCents !== 0
     || surchargeCents === null
@@ -716,13 +736,15 @@ async function saveAuthorization(
     || (status === "presented" && payload.providerCertified !== true)
   ) {
     return response({
-      error: "Complete the provider, customer, vehicle, diagnosis, labor disclosure, completion, customer-supplied-parts record, and provider-signature fields. Separate estimate fees and surcharges cannot be charged through Tuveloz.",
+      error: "Complete the provider, customer, vehicle, diagnosis, labor disclosure, and provider-signature fields. An estimated completion date and each installed part's brand are required before presenting the record. Separate estimate fees and surcharges cannot be charged through Tuveloz.",
     }, 400);
   }
 
   const now = nextRecordTime(existing?.updatedAt);
   const providerSignedAt = status === "presented" ? now : "";
   const fields = {
+    workmanshipWarranty: job.quoteWorkmanshipWarranty,
+    partsWarranty: clean(payload.partsWarranty, 2000),
     providerEmail: cleanEmail(job.providerEmail),
     providerName: job.providerName,
     providerBusinessName,
@@ -969,6 +991,15 @@ async function saveInvoice(
     return response({ error: "The final provider invoice total must exactly match the customer-signed authorized provider amount." }, 409);
   }
   const status = clean(payload.status, 20);
+  const authorizationSnapshot = JSON.parse(authorization.documentSnapshot) as Record<string, unknown>;
+  const workmanshipWarranty = typeof authorizationSnapshot.workmanshipWarranty === "string"
+    ? authorizationSnapshot.workmanshipWarranty : job.quoteWorkmanshipWarranty;
+  if (typeof workmanshipWarranty !== "string") {
+    return response({ error: "The agreed workmanship warranty is unavailable. Clarify the accepted quote before preparing this invoice." }, 409);
+  }
+  const agreedWarranty = repairWarrantyDisclosure(workmanshipWarranty);
+  const partsWarranty = typeof authorizationSnapshot.partsWarranty === "string"
+    ? authorizationSnapshot.partsWarranty : clean(payload.partsWarranty, 2000);
   const workSummary = clean(payload.workSummary, 3000);
   const warrantyProvider = clean(payload.warrantyProvider, 60);
   const warrantyTerms = clean(payload.warrantyTerms, 2000);
@@ -980,8 +1011,10 @@ async function saveInvoice(
   if (
     !["draft", "final"].includes(status)
     || workSummary.length < 10
-    || !["provider_business", "manufacturer", "none_offered"].includes(warrantyProvider)
-    || warrantyTerms.length < 5
+    || warrantyProvider !== agreedWarranty.warrantyProvider
+    || warrantyTerms !== agreedWarranty.warrantyTerms
+    || (typeof authorizationSnapshot.partsWarranty === "string" && clean(payload.partsWarranty, 2000) !== partsWarranty)
+    || (status === "final" && !repairItemsHaveBrands(lineItems))
     || warrantyWorkStatement.length < 5
     || !["returned", "customer_declined", "warranty_return", "not_applicable"].includes(returnedPartsChoice)
     || mechanicIdentifiers.length === 0
@@ -989,7 +1022,7 @@ async function saveInvoice(
     || !providerRepresentativeTitle
     || (status === "final" && payload.providerCertified !== true)
   ) {
-    return response({ error: "Complete the itemized work, warranty-work statement, warranty terms, replaced-parts result, mechanic identifiers, and provider representative certification." }, 400);
+    return response({ error: "Complete the itemized work, warranty-work statement, installed-part brands, replaced-parts result, mechanic identifiers, and provider representative certification. The warranty must match the agreed provider warranty." }, 400);
   }
   if (status === "final" && job.requestStatus.toLowerCase() !== "completed") {
     return response({ error: "Record the authorized job as completed before issuing the final invoice." }, 409);
@@ -1005,6 +1038,8 @@ async function saveInvoice(
     .join("; ")
     .slice(0, 1600);
   const fields = {
+    workmanshipWarranty,
+    partsWarranty,
     invoiceNumber,
     providerBusinessName: authorization.providerBusinessName,
     providerBusinessAddress: authorization.providerBusinessAddress,
@@ -1170,8 +1205,21 @@ async function verifyDocument(job: ParticipantJob, record: AuthorizationRecord |
   const storedItems = isInvoice ? await invoiceItems(record.id) : await authorizationItems(record.id);
   const items = parseRepairLineItems(storedItems);
   const snapshotItems = parseRepairLineItems(snapshot.lineItems);
-  if (!items || !snapshotItems || stableRepairRecordJson(items) !== stableRepairRecordJson(snapshotItems)) {
+  if (!items || !snapshotItems || stableRepairRecordJson(items) !== stableRepairRecordJson(snapshotItems.map(repairItemStoredFields))) {
     throw new RepairRecordError("The displayed itemized work differs from the exact document snapshot.");
+  }
+  if ("workmanshipWarranty" in snapshot && (typeof snapshot.workmanshipWarranty !== "string"
+    || !repairItemsHaveBrands(snapshotItems))) {
+    throw new RepairRecordError("The stored warranty or installed-part brands are invalid.");
+  }
+  if ("partsWarranty" in snapshot && typeof snapshot.partsWarranty !== "string") {
+    throw new RepairRecordError("The stored parts warranty is invalid.");
+  }
+  if (isInvoice && typeof snapshot.workmanshipWarranty === "string") {
+    const warranty = repairWarrantyDisclosure(snapshot.workmanshipWarranty);
+    if (snapshot.warrantyProvider !== warranty.warrantyProvider || snapshot.warrantyTerms !== warranty.warrantyTerms) {
+      throw new RepairRecordError("The invoice warranty differs from its agreed warranty.");
+    }
   }
 }
 
